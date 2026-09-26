@@ -37,5 +37,6 @@ done < /work/mu300-mainline.config
 make O=$O ARCH=arm64 -j"$(nproc)" Image > $O/build.log 2>&1 || { grep -E "error|Error|ERROR" $O/build.log | head -20; exit 1; }
 cpp -nostdinc -undef -D__DTS__ -x assembler-with-cpp -I include -I scripts/dtc/include-prefixes \
   /work/dts/ums9620-mu300.dts | dtc -I dts -O dtb -o $O/ums9620-mu300.dtb -
+mkdir -p /work/out
 cp $O/arch/arm64/boot/Image $O/ums9620-mu300.dtb /work/out/
 ls -la /work/out
