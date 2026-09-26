@@ -49,6 +49,22 @@ boot/flash-trial.sh boot-mainline.img      # slot b only, falls back to Android
 * `debug/install-probe.py` (`MU300_PROBE_STAGE=N` for `build.sh`): resets at a chosen boot stage; the cycle time tells
   whether the stage was reached. This located the custom-DTB hang in `setup_machine_fdt`.
 
+## Newer kernels (7.x)
+
+The whole port - kernel and all 31 out-of-tree modules - also builds against **7.2.8**, the newest stable release
+(2026-09-26), from the same sources as 6.18; it has not been run on the device yet. One source serves both:
+
+* `port/install.py` recognises the layout of what it edits (`sprd-sc27xx-spi.c` was reworked in 7.x), and every
+  edit is checked afterwards, so a drifted anchor stops the build instead of being skipped.
+* The modules get the missing pieces from `modules/wcn_bsp/kinclude`: `mu300_compat.h` (7.x-only shims:
+  `strncpy`, alarmtimer, `linux/hex.h`) and `linux/of_gpio.h`, a shim kbuild only finds when the kernel has no
+  such header. API changes that need more than a shim are under `LINUX_VERSION_CODE` (the cfg80211 ops taking a
+  `wireless_dev`, `dma_fence_signal()` returning nothing).
+* `.github/workflows/mainline.yml` builds the port every week against the current longterm and the newest stable
+  release, so the next break shows up as a red run rather than at the next jump.
+
+To try another version: `KV=7.2.8` for `build.sh` and `build-modules.sh`.
+
 ## Remaining mainline work (as of 2026-09-26)
 
 - The forced command line still carries the bring-up crutches `clk_ignore_unused pd_ignore_unused
