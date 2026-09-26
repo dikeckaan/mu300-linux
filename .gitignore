@@ -1,6 +1,8 @@
 # device dumps, proprietary blobs and build outputs never belong in this repository
 dumps/
 firmware/
+# ...but not the kernel source directory of that name in the mainline port
+!upstream/port/drivers/firmware/
 android-subset/
 out/
 *.img
