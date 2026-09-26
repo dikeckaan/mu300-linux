@@ -190,10 +190,22 @@ the stock header) as it is and gets the release's kernel and the generic part of
 nothing from Android are needed. The previous image is kept for `rollback-boot`, and a kernel that does not start
 sends the device back to Android on its own after the usual number of failed boots.
 
-**Installed before this existed?** Your `mu300-update` does not know about the boot image yet. Run
-`sudo mu300-update apply`, reboot, and run `sudo mu300-update apply` once more: the first run installs the new
-system, which brings the new `mu300-update` - it is in use after the reboot - and the second one updates the
-kernel and the boot image (and skips the system, which is already current). Reboot again to start the new kernel.
+`mu300-update apply` downloads and checks every file first and changes nothing before all of them are there; from
+v2026.09.28 on it also switches to the updater of the release it installs before it starts.
+
+**Updating from v2026.09.27 or older?** Fetch the new updater first, then update; do both right after a reboot
+(older boot images can lose mobile data after a few quiet minutes, see docs/FINDINGS.md 32):
+
+```sh
+sudo curl -fL https://github.com/dikeckaan/mu300-linux/releases/latest/download/mu300-update -o /opt/mu300/bin/mu300-update
+sudo mu300-update apply
+```
+
+On OpenWrt, as root: `wget -O /opt/mu300/bin/mu300-update https://github.com/dikeckaan/mu300-linux/releases/latest/download/mu300-update`
+and then `mu300-update apply`. Reboot afterwards to start the new system and kernel.
+
+**Stuck in Android after an update?** The boot image did not survive the update. From a computer, run the
+installer again and choose `update`: it writes a fresh boot image and keeps your settings and data.
 
 ## Uninstall
 

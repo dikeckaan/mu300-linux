@@ -1489,3 +1489,42 @@ under the connection thread it had already started. On Ubuntu the delegate is lo
 the call returns 0, and none of this happens. Fixed in the module: `-EINPROGRESS` is success, the result of
 `sipa_delegator_start()` is checked, the Wi-Fi offload dependencies (unused here) are warnings, and the delegator
 is no longer devm-allocated.
+
+## Updating on the device
+
+### 32. Old kernels, an idle IPA, and an update that ended in Android
+A report: a device on the vendor 5.4 kernel, updated with `mu300-update`, only ever started Android afterwards.
+Reproduced on the test board with an older installer boot image (kernel #11 of 20 September) and the systems of
+v2026.09.21. The boot image of v2026.09.27 (kernel #13) does not have the problem below: its downlink works after
+four and a half idle minutes, with the same failed power-off messages in the log. Which of the published boot
+images have it was not established, so the update protects all of them:
+
+* After about two minutes without mobile traffic the IPA tries to power off and fails
+  (`Polling check power off reg timed out`, `sipa power off maybe fail`). From then on the downlink is dead
+  until the next boot: `rx_packets` of `sipa_eth0` stops, TLS handshakes time out, and neither the data
+  watchdog (the address is still right) nor a reconnect of mobile data brings it back.
+* The old `mu300-update` downloaded one system, unpacked it for a few minutes - exactly the quiet time the IPA
+  needs - and then started the next download. `curl` had no timeout and hung there, and twice the board reset
+  without a trace (no pstore, no persistent log) right when the next network transfer started: once between
+  the two systems, once at the start of the boot image step. A reset while boot_b is being written leaves slot b
+  unbootable, and LK then falls back to Android on every boot - the reported symptom.
+
+`mu300-update` now:
+* downloads everything the update needs (the systems and the kernel bundle) first, checks every file against
+  the release's `SHA256SUMS`, and only then changes anything; the unpacking and the boot_b write need no network;
+* keeps the IPA from going idle while it runs: a ping every 3 s (to 1.1.1.1 and to 223.5.5.5, which is reachable
+  from mainland China). With it, a 26 MB download after four otherwise quiet minutes on kernel #11 ran at 5 MB/s;
+  without it the download after the same pause never started;
+* cuts off stalled transfers (`--connect-timeout`, `--speed-limit`) and resumes partial files, so a dead downlink
+  is an error message ("reboot, then run mu300-update apply right away") instead of a hang;
+* stops the data watchdog while it installs, so no redial happens in the middle of the boot_b write.
+
+The full old-user path (installer boot_b with kernel #11, both systems reinstalled, boot image written) then took
+40 s, and the board started the new kernel.
+
+Found on the way: the account merge rewrote `/etc/passwd` and friends in place (a reader at first boot could see a
+half-written file: `Failed to resolve user 'messagebus'`); it now writes a copy and renames it, and
+`mu300-accounts` runs before tmpfiles, sysusers and D-Bus. `rollback` removed `<os>.broken` even when that was the
+system still running (only rm's `--preserve-root` stopped it), and `apply`, `rollback` and `clean` could remove
+`<os>.old` while it was the running system (an apply or rollback without the reboot in between); all of them now
+check whether a directory is the running root (`[ / -ef dir ]`) first.
