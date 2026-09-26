@@ -1,7 +1,12 @@
-# Mainline (LTS) kernel on the MU300 — boots to userspace
+# Mainline (LTS) kernel on the MU300
 
-Mainline **Linux 6.18.52** boots on the ZTE F50 / MU300 (Unisoc UMS9620): all 8 CPUs (4×A55, 4×A76), GICv3, arch
-timer, PSCI 1.0, 1.5 GiB RAM, pstore/ramoops, initramfs `/init`, and reboot through the UMP9620 PMIC.
+Mainline **Linux 6.18.54** (the current longterm series) runs Ubuntu 24.04 and OpenWrt 25.12 on the ZTE F50 /
+MU300 (Unisoc UMS9620): all 8 CPUs (4×A55, 4×A76), eMMC, USB NCM + ACM, the 5 GHz hotspot, Bluetooth, the modem
+with mobile data (downlink and uplink), SMS, the VPN, the Mali GPU, thermal/cpufreq, the PMIC watchdog and
+reboot. `docs/FINDINGS.md` 31-31f has what it took and what is still open.
+
+On a device: `sudo mu300-update kernel 6.18` (from a release that carries `mu300-kernel-6.18.tar.gz`), and
+`sudo mu300-update kernel 5.4` back. Both kernels' modules stay installed.
 
 Reference: Unisoc's UMS9620 DT series (LKML, 2023-12-15, "arm64: dts: sprd: Add support for Unisoc's UMS9620", not
 merged) describes the same GIC/UART/timer layout; this device is derived from their ums9620-2h10 reference board.
@@ -22,10 +27,19 @@ merged) describes the same GIC/UART/timer layout; this device is derived from th
 ## Build and test
 ```sh
 docker build -t mu300-mainline-build upstream/
-docker volume create mu300-mainline   # unpack linux-6.18.52 into /src of this volume
+docker volume create mu300-mainline   # build.sh fetches linux-$KV (default 6.18.54) into it, checked against kernel.org
 docker run --rm -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build.sh
+docker run --rm -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build-modules.sh
+upstream/make-bundle.sh mu300-kernel-6.18.tar.gz        # Image for LK, generic ramdisk segment, modules
+# on the device: MU300_KERNEL_BUNDLE=/path/mu300-kernel-6.18.tar.gz mu300-update boot
+```
+The build stops on anything that drifts silently: a patch that neither applies nor is applied, a config option
+Kconfig does not take (unless listed in `config-ignored.txt`), a port edit whose anchor moved, or a module whose
+vermagic does not match the kernel. `tools/make-release.sh` packages the same bundle as `mu300-kernel-6.18.tar.gz`.
+
+The bring-up path of old (hand-built image, `init-bringup`, `boot/flash-trial.sh`) still works for experiments:
+```sh
 python3 upstream/wrap-image.py upstream/out/Image upstream/out/Image.lk
-python3 boot/build-boot-image.py --kernel upstream/out/Image.lk --init upstream/init-bringup ... --out boot-mainline.img
 boot/flash-trial.sh boot-mainline.img      # slot b only, falls back to Android
 ```
 
@@ -35,7 +49,17 @@ boot/flash-trial.sh boot-mainline.img      # slot b only, falls back to Android
 * `debug/install-probe.py` (`MU300_PROBE_STAGE=N` for `build.sh`): resets at a chosen boot stage; the cycle time tells
   whether the stage was reached. This located the custom-DTB hang in `setup_machine_fdt`.
 
-## Remaining mainline work
+## Remaining mainline work (as of 2026-09-26)
+
+- The forced command line still carries the bring-up crutches `clk_ignore_unused pd_ignore_unused
+  regulator_ignore_unused fw_devlink=permissive` - they cost power, and taking them out needs a way to measure it.
+- The early crashes and the missing OpenWrt downlink were one bug, the delegate's (FINDINGS 31f), fixed; one
+  Ubuntu boot that died early before the crash capture existed (31d) is unexplained, and has not recurred in the
+  reboot loops since (Ubuntu 6/6, OpenWrt 4/4).
+- Poweroff has not been tried (it needs someone at the device to switch it on again).
+- Audio: not ported (it does not work on 5.4 either).
+
+## Earlier status notes
 Clocks, pinctrl, power domains, USB 3.1 gadget, eMMC, PCIe, thermal, cpufreq, watchdog, LEDs and Wi-Fi/BT are
 working (see the status below). What is still missing:
 

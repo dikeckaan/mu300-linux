@@ -17,6 +17,7 @@
 #define pr_fmt(fmt) "sipa_dele: " fmt
 
 #include <linux/delay.h>
+#include <linux/slab.h>
 #include <linux/device.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
@@ -158,9 +159,11 @@ int cp_delegator_init(struct sipa_delegator_create_params *params)
 {
 	int ret;
 
-	s_cp_delegator = devm_kzalloc(params->pdev,
-				      sizeof(*s_cp_delegator),
-				      GFP_KERNEL);
+	/*
+	 * MU300: not devm. The connection thread starts inside sipa_delegator_start() and cannot be stopped while it
+	 * waits on the channel, so a probe that fails after that point must not free what the thread is using.
+	 */
+	s_cp_delegator = kzalloc(sizeof(*s_cp_delegator), GFP_KERNEL);
 	if (!s_cp_delegator)
 		return -ENOMEM;
 	ret = sipa_delegator_init(&s_cp_delegator->delegator,
@@ -173,18 +176,25 @@ int cp_delegator_init(struct sipa_delegator_create_params *params)
 	s_cp_delegator->delegator.pd_eb_flag = false;
 	s_cp_delegator->delegator.pd_get_flag = false;
 	s_cp_delegator->delegator.smsg_cnt = 0;
-	sipa_delegator_start(&s_cp_delegator->delegator);
-	pm_runtime_enable(s_cp_delegator->delegator.pdev);
-
-	ret = sipa_rm_add_dependency(SIPA_RM_RES_CONS_WIFI_UL,
-				     s_cp_delegator->delegator.prod_id);
+	/* MU300: its result used to be ignored, so a PROD_CP it had deleted again went unnoticed */
+	ret = sipa_delegator_start(&s_cp_delegator->delegator);
 	if (ret)
 		return ret;
+	pm_runtime_enable(s_cp_delegator->delegator.pdev);
+
+	/*
+	 * MU300: the Wi-Fi offload path, which this device does not use (the CONS_WIFI resources stay released): a
+	 * failure here is reported, not fatal - failing the probe left the running delegate without its device.
+	 */
+	ret = sipa_rm_add_dependency(SIPA_RM_RES_CONS_WIFI_UL,
+				     s_cp_delegator->delegator.prod_id);
+	if (ret && ret != -EINPROGRESS)
+		dev_warn(params->pdev, "CONS_WIFI_UL -> PROD_CP: %d\n", ret);
 
 	ret = sipa_rm_add_dependency(SIPA_RM_RES_CONS_WIFI_DL,
 				     s_cp_delegator->delegator.prod_id);
-	if (ret)
-		return ret;
+	if (ret && ret != -EINPROGRESS)
+		dev_warn(params->pdev, "CONS_WIFI_DL -> PROD_CP: %d\n", ret);
 
 	sipa_dele_init_sysfs(s_cp_delegator);
 

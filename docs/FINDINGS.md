@@ -1407,3 +1407,85 @@ instead (`vbc_proc_write` -> `dsp_vbc_reg_write`, e.g. `echo 1700eb0 1`); never 
 * Verified: `bluetoothd` powers the adapter and LE/BR-EDR scanning lists nearby devices.
 * Rebuilding with a modified tree appends `-dirty` to the kernel release and breaks module loading; `.scmversion` with
   `-gb50db5b6224c` in the source tree keeps the release string stable.
+
+## Mainline 6.18 as a daily kernel
+
+Everything here was measured on the test device (64 GB F50, Vodafone TR, 5G NSA) with 6.18.54 and the
+upstream/ modules, running the release's Ubuntu and OpenWrt images.
+
+### 31. Ubuntu on 6.18, and what it takes
+Ubuntu had never been booted on the mainline kernel. With the kernel bundle from `upstream/make-bundle.sh`,
+installed by `mu300-update` (modules into every system, the boot image built on the device), it boots in under
+45 s and runs the hotspot, USB NCM, Bluetooth, the modem with SMS, the VPN and mobile data - the downlink
+included, which had never been shown on 6.18: the delegate's handshake completes and a 20 MB download goes
+through.
+
+Speed at one spot, alternating kernels within minutes (signal -99 to -107 dBm, so downloads say little):
+upload is about twice as fast on 6.18 (0.29-0.34 MB/s against 5.4's 0.167 MB/s). 5.4 never exceeded exactly
+166 650 B/s in any upload, with or without the VPN - a ceiling that constant is the device's, not the network's.
+
+### 31a. Wi-Fi RX: sync_for_device stopped invalidating (hang under load)
+A client uploading over Wi-Fi hung the board within 40 s. The Marlin3 driver waits for the device to finish an
+RX buffer by reading a flag in it and "refreshed" the buffer between retries with `dma_sync_single_for_device()`.
+On arm64 that call invalidated `DMA_FROM_DEVICE` buffers until 5.19 and cleans them since, so the CPU kept
+reading a stale line: every check failed (`hw still writing`, 369 times in the hung boot's log), the checksum
+taken from the same stale descriptor was wrong (`hw csum failure`), and each failure went to the 115200 baud
+console at loglevel 8 from the RX path. `dma_sync_single_for_cpu()` is the call for reading what the device
+wrote. After the fix: 3 x 15 MB uploads and a 30 MB download over Wi-Fi, no error. The IPA driver syncs the right
+way round already.
+
+Consequence for 5.4: IPv6 TCP and UDP from Wi-Fi clients get through on 6.18 (SSH and DNS over IPv6 measured),
+but not on 5.4, whose Wi-Fi driver carries `wlan_combo-rx-software-checksum.patch` - the only difference in that
+path. The patch's "hw csum failure" may well have had this stale read as its cause too.
+
+### 31b. The modem units' ordering cycle (both kernels)
+`cp_diskserver` was ordered before `mu300-vendor`, which runs before `sysinit.target`, while its default
+dependencies put it after `sysinit.target`: a cycle, which systemd broke by dropping `cp_diskserver` and
+`refnotify` from the boot transaction (on 5.4 it happened to break it elsewhere). On 6.18 it showed because the
+modem's nodes appear about 18 s in, after the units' `ConditionPathExists=/dev/modem` had been evaluated.
+`cp_diskserver` has no default dependencies now, the conditions look for the driver
+(`/sys/module/sprd_modem_loader`), and `mu300-vendor` waits for the node.
+
+### 31c. A context that comes back with a new address (both kernels)
+After the radio or the network dropped the bearer, the LTE modem attaches again by itself and the default context
+is active again - with a new address, while `sipa_eth0` keeps the old one: it sends and never receives. The
+watchdog only asked whether the context was active and the interface had an address. It compares the address
+(`AT+CGPADDR`) now. `AT+CFUN=4` from scratch: radio back on, new address noticed, internet back after 72 s.
+
+### 31d. Evidence of a failed boot
+Two boots in about twenty (one Ubuntu, one OpenWrt) died shortly after `switch_root` - the OpenWrt one between 11
+and 21 s by the early recorder - and left nothing. Three gaps, all closed:
+* The 6.18 config had no lockup detectors, so `softlockup_panic`/`hardlockup_panic` from `boot/init` had nothing
+  behind them. Soft and (buddy) hard lockup detectors now panic; hung tasks are only reported.
+* `mu300-early-recorder` was never enabled in the Ubuntu image; it is, and writes every 2 s for the first 90 s.
+* pstore works: `sysrq-c` -> panic -> Linux again a minute later, with the panic in
+  `/var/lib/systemd/pstore/dmesg-ramoops-0`. `systemd-pstore` moves the records out of `/sys/fs/pstore` at boot,
+  which is why that directory looked empty after the failures.
+Also: the Wi-Fi driver's per-frame traces pushed a boot's messages out of the ring buffer within a minute (now
+`pr_debug`, and `log_buf_len=4M`), and systemd's 10 min reboot watchdog was rejected by the UMP9620 PMIC watchdog
+(maximum 300 s), so a hang during reboot was not caught (`RebootWatchdogSec=2min`).
+
+### 31e. sipa-set-rps: a thread that never started
+The vendor comments the thread's wake-up out ("zsw changed", to keep `rps_cpus` fixed) but still creates it, so it
+sat in its pre-start state - uninterruptible - for good: one more on the load average, and on 6.18 a hung-task
+report every two minutes. It is not created any more.
+
+### 31f. The delegate on OpenWrt: -EINPROGRESS taken for a failure
+On OpenWrt the downlink died on some boots and the board crashed on others, and the recorder and pstore (31d)
+caught both crashes in the delegate's connection thread `dele-4-5`: a call through NULL (`pc : 0x0`,
+`lr : conn_thread+0x188 [sipa_dele]`) and a soft lockup, 22 s in `console_flush_all`. The probe log explains
+them:
+
+    sipa_rm: driver CB returned with -115
+    sipa_rm: SIPA_RM_RES_PROD_CP state changed 1->3
+    sipa_rm: SIPA_RM_RES_PROD_CP does not exist
+    sipa_delegate soc:ipa-apb:sipa-dele: cp_delegator_init failed: -22
+
+OpenWrt brings the WAN up before the delegate is loaded (at ~80 s), so `CONS_WWAN_UL` is already granted when
+`sipa_delegator_start()` makes it depend on `PROD_CP`. That starts requesting the producer and returns
+`-EINPROGRESS` - which the vendor code took for a failure: it deleted `PROD_CP` again, `cp_delegator_init()`
+ignored that result, failed on the next dependency ("does not exist"), and the failed probe freed the delegator
+under the connection thread it had already started. On Ubuntu the delegate is loaded before there is traffic,
+the call returns 0, and none of this happens. Fixed in the module: `-EINPROGRESS` is success, the result of
+`sipa_delegator_start()` is checked, the Wi-Fi offload dependencies (unused here) are warnings, and the delegator
+is no longer devm-allocated.

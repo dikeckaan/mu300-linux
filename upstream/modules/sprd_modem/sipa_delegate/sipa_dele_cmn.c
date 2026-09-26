@@ -484,6 +484,15 @@ int sipa_delegator_start(struct sipa_delegator *delegator)
 
 	ret = sipa_rm_add_dependency(delegator->cons_prod,
 				     delegator->prod_id);
+	/*
+	 * MU300: -EINPROGRESS is not a failure. When the consumer is granted already - traffic flowing before the
+	 * delegate is loaded, which is how OpenWrt boots - adding the dependency starts requesting this producer and
+	 * the grant completes later. Treating it as an error deleted PROD_CP here, cp_delegator_init() then failed
+	 * with "SIPA_RM_RES_PROD_CP does not exist", and the thread started above ran on freed memory: a NULL call
+	 * from conn_thread, or a soft lockup (docs/FINDINGS.md 31f).
+	 */
+	if (ret == -EINPROGRESS)
+		ret = 0;
 	if (ret)
 		goto del_res;
 

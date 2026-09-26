@@ -147,8 +147,9 @@ static void sipa_free_sent_items(void)
 		while (!node->address && --retry_cnt)
 			udelay(1);
 
+		/* MU300: per packet, and it comes in bursts while the delegate is not up yet: rate limited */
 		if (node->err_code || !retry_cnt)
-			dev_err(sender->dev,
+			dev_err_ratelimited(sender->dev,
 				"node->address = 0x%llx, have node transfer err = %d retry_cnt = %d\n",
 				(u64)node->address, node->err_code, retry_cnt);
 
