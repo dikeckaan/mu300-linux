@@ -9,16 +9,6 @@
 
 #include "div.h"
 
-long sprd_div_helper_round_rate(struct sprd_clk_common *common,
-				const struct sprd_div_internal *div,
-				unsigned long rate,
-				unsigned long *parent_rate)
-{
-	return divider_round_rate(&common->hw, rate, parent_rate,
-				  NULL, div->width, 0);
-}
-EXPORT_SYMBOL_GPL(sprd_div_helper_round_rate);
-
 static int sprd_div_determine_rate(struct clk_hw *hw,
 				   struct clk_rate_request *req)
 {

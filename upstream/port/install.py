@@ -42,14 +42,40 @@ if 'SPRD_UMS9620_IPA_PD' not in k:
 # UMP9620 PMIC: MFD match data (IRQ base 0x80, 11 IRQs) and the ported regulator driver
 mfd = os.path.join(tree, 'drivers/mfd/sprd-sc27xx-spi.c')
 m = open(mfd).read()
-if 'ump9620' not in m:
-    m = m.replace('static const struct sprd_pmic_data sc2731_data = {',
-                  'static const struct sprd_pmic_data ump9620_data = {\n\t.irq_base = 0x80,\n\t.num_irqs = 11,\n\t.charger_det = SPRD_SC2730_CHG_DET,\n};\n\nstatic const struct sprd_pmic_data sc2731_data = {', 1)
-    m = m.replace('\t{ .compatible = "sprd,sc2731", .data = &sc2731_data },\n',
-                  '\t{ .compatible = "sprd,sc2731", .data = &sc2731_data },\n\t{ .compatible = "sprd,ump9620", .data = &ump9620_data },\n', 1)
-    m = m.replace('\t{ .name = "sc2731", .driver_data = (unsigned long)&sc2731_data },\n',
-                  '\t{ .name = "sc2731", .driver_data = (unsigned long)&sc2731_data },\n\t{ .name = "ump9620", .driver_data = (unsigned long)&ump9620_data },\n', 1)
-    open(mfd, 'w').write(m)
+def once(marker, old, new):
+    """replace old by new unless marker is there already: every edit on its own, so a tree a failed run left
+    half-edited is finished rather than skipped"""
+    global m
+    if marker not in m:
+        m = m.replace(old, new, 1)
+once('ump9620_data = {', 'static const struct sprd_pmic_data sc2731_data = {',
+     'static const struct sprd_pmic_data ump9620_data = {\n\t.irq_base = 0x80,\n\t.num_irqs = 11,\n\t.charger_det = SPRD_SC2730_CHG_DET,\n};\n\nstatic const struct sprd_pmic_data sc2731_data = {')
+if 'enum sprd_pmic_type' not in m:
+    # up to 6.x: the match data is the pmic data, and the DT's sub-nodes are populated as they are
+    once('"sprd,ump9620"', '\t{ .compatible = "sprd,sc2731", .data = &sc2731_data },\n',
+         '\t{ .compatible = "sprd,sc2731", .data = &sc2731_data },\n\t{ .compatible = "sprd,ump9620", .data = &ump9620_data },\n')
+    once('.name = "ump9620"', '\t{ .name = "sc2731", .driver_data = (unsigned long)&sc2731_data },\n',
+         '\t{ .name = "sc2731", .driver_data = (unsigned long)&sc2731_data },\n\t{ .name = "ump9620", .driver_data = (unsigned long)&ump9620_data },\n')
+else:
+    # 7.x: the match data is a PMIC type, and each type brings a list of MFD cells. The vendor DT's sub-nodes are
+    # in no list, so UMP9620 gets no cells and its sub-nodes populated as before.
+    once('PMIC_TYPE_UMP9620,', '\tPMIC_TYPE_SC2731,\n', '\tPMIC_TYPE_SC2731,\n\tPMIC_TYPE_UMP9620,\n')
+    once('case PMIC_TYPE_UMP9620:', '\tdefault:\n\t\tdev_err(&spi->dev, "Invalid device ID\\n");',
+         '\tcase PMIC_TYPE_UMP9620:\n\t\t/* MU300: no cells; the DT\'s own sub-nodes are populated below */\n'
+         '\t\tpdata = &ump9620_data;\n\t\tcells = NULL;\n\t\tnum_cells = 0;\n\t\tbreak;\n'
+         '\tdefault:\n\t\tdev_err(&spi->dev, "Invalid device ID\\n");')
+    once('if (pmic_type == PMIC_TYPE_UMP9620) {',
+         '\t\tdev_err(&spi->dev, "Failed to populate sub-devices %d\\n", ret);\n\t\treturn ret;\n\t}\n',
+         '\t\tdev_err(&spi->dev, "Failed to populate sub-devices %d\\n", ret);\n\t\treturn ret;\n\t}\n\n'
+         '\tif (pmic_type == PMIC_TYPE_UMP9620) {\n\t\tret = devm_of_platform_populate(&spi->dev);\n'
+         '\t\tif (ret)\n\t\t\treturn ret;\n\t}\n')
+    once('"sprd,ump9620"', '\t{ .compatible = "sprd,sc2731", .data = (void *)PMIC_TYPE_SC2731 },\n',
+         '\t{ .compatible = "sprd,sc2731", .data = (void *)PMIC_TYPE_SC2731 },\n'
+         '\t{ .compatible = "sprd,ump9620", .data = (void *)PMIC_TYPE_UMP9620 },\n')
+    once('.name = "ump9620"', '\t{ .name = "sc2731", .driver_data = PMIC_TYPE_SC2731 },\n',
+         '\t{ .name = "sc2731", .driver_data = PMIC_TYPE_SC2731 },\n\t{ .name = "ump9620", .driver_data = PMIC_TYPE_UMP9620 },\n')
+    once('linux/of_platform.h', '#include <linux/module.h>', '#include <linux/module.h>\n#include <linux/of_platform.h>')
+open(mfd, 'w').write(m)
 append_once('drivers/regulator/Makefile', 'ump9620-regulator.o', 'obj-$(CONFIG_REGULATOR_UMP9620) += ump9620-regulator.o\n')
 rk = os.path.join(tree, 'drivers/regulator/Kconfig')
 r = open(rk).read()
@@ -146,7 +172,9 @@ if 'ump96xx-rtc' not in t:
 # Every edit above is a text substitution, and one whose anchor drifted in a new kernel release changes nothing
 # without saying so. Check the result rather than trusting the substitutions.
 expect = [
-    ('drivers/mfd/sprd-sc27xx-spi.c', ['ump9620_data = {', '"sprd,ump9620"', '.name = "ump9620"']),
+    ('drivers/mfd/sprd-sc27xx-spi.c', ['ump9620_data = {', '"sprd,ump9620"', '.name = "ump9620"']
+     + (['case PMIC_TYPE_UMP9620:', 'if (pmic_type == PMIC_TYPE_UMP9620) {', 'linux/of_platform.h']
+        if 'enum sprd_pmic_type' in open(os.path.join(tree, 'drivers/mfd/sprd-sc27xx-spi.c')).read() else [])),
     ('drivers/mmc/host/sdhci-sprd.c', ['MU300: only the non-removable eMMC', 'DLL_PHASE_INTERNAL\t0x2 /* MU300 r11p3 */']),
     ('drivers/nvmem/sprd-efuse.c', ['"sprd,qogirn6pro-efuse"', 'econfig.read_only = true;']),
     ('drivers/rtc/rtc-sc27xx.c', ['"sprd,ump96xx-rtc"']),
