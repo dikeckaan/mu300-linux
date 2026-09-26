@@ -37,8 +37,8 @@ done < /work/mu300-mainline.config
 # on failure show the compiler's own messages: a plain grep for "error" also matches object names like
 # fdt_strerror.o and used to fill the report with those
 make O=$O ARCH=arm64 -j"$(nproc)" Image > $O/build.log 2>&1 || {
-    grep -n -E "(error|Error):|undefined reference|No such file" -A3 $O/build.log | head -60
-    grep -q -E "(error|Error):|undefined reference|No such file" $O/build.log || tail -40 $O/build.log
+    grep -n -E "(error|Error):|undefined reference|No such file|Killed|internal compiler error" -A3 $O/build.log | head -60 || true
+    echo "--- end of build.log:"; tail -25 $O/build.log || true
     exit 1
 }
 cpp -nostdinc -undef -D__DTS__ -x assembler-with-cpp -I include -I scripts/dtc/include-prefixes \
