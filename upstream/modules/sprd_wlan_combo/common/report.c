@@ -13,6 +13,13 @@
 #include "delay_work.h"
 #include "chip_ops.h"
 
+/* MU300: cfg80211_new_sta()/del_sta() take the wireless_dev in 7.x, the net_device before */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 0, 0))
+#define MU300_STA_DEV(vif) (&(vif)->wdev)
+#else
+#define MU300_STA_DEV(vif) ((vif)->ndev)
+#endif
+
 void sprd_report_scan_done(struct sprd_vif *vif, bool abort)
 {
 	struct sprd_priv *priv = vif->priv;
@@ -86,10 +93,10 @@ void sprd_report_softap(struct sprd_vif *vif, u8 is_connect, u8 *addr,
 			netif_carrier_on(vif->ndev);
 			netif_wake_queue(vif->ndev);
 		}
-		cfg80211_new_sta(vif->ndev, addr, &sinfo, GFP_KERNEL);
+		cfg80211_new_sta(MU300_STA_DEV(vif), addr, &sinfo, GFP_KERNEL);
 		netdev_info(vif->ndev, "New station (%pM) connected\n", addr);
 	} else {
-		cfg80211_del_sta(vif->ndev, addr, GFP_KERNEL);
+		cfg80211_del_sta(MU300_STA_DEV(vif), addr, GFP_KERNEL);
 		netdev_info(vif->ndev, "The station (%pM) disconnected\n",
 			    addr);
 	}

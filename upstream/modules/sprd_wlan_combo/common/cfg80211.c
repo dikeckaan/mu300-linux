@@ -1561,21 +1561,80 @@ int sprd_uninit_fw(struct sprd_vif *vif)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 0, 0))
+/*
+ * MU300: 7.x hands the key and station ops a wireless_dev where 6.x passed the net_device, and adds rx_addr to
+ * remain_on_channel. The driver's functions stay as they are; these adapt the calls.
+ */
+static int sprd_cfg80211_add_key_wdev(struct wiphy *wiphy, struct wireless_dev *wdev, int link_id,
+				      u8 key_index, bool pairwise, const u8 *mac_addr,
+				      struct key_params *params)
+{
+	return sprd_cfg80211_add_key(wiphy, wdev->netdev, link_id, key_index, pairwise, mac_addr, params);
+}
+
+static int sprd_cfg80211_del_key_wdev(struct wiphy *wiphy, struct wireless_dev *wdev, int link_id,
+				      u8 key_index, bool pairwise, const u8 *mac_addr)
+{
+	return sprd_cfg80211_del_key(wiphy, wdev->netdev, link_id, key_index, pairwise, mac_addr);
+}
+
+static int sprd_cfg80211_set_default_mgmt_key_wdev(struct wiphy *wiphy, struct wireless_dev *wdev,
+						   int link_id, u8 key_index)
+{
+	return sprd_cfg80211_set_default_mgmt_key(wiphy, wdev->netdev, link_id, key_index);
+}
+
+static int sprd_cfg80211_add_station_wdev(struct wiphy *wiphy, struct wireless_dev *wdev,
+					  const u8 *mac, struct station_parameters *params)
+{
+	return sprd_cfg80211_add_station(wiphy, wdev->netdev, mac, params);
+}
+
+static int sprd_cfg80211_del_station_wdev(struct wiphy *wiphy, struct wireless_dev *wdev,
+					  struct station_del_parameters *params)
+{
+	return sprd_cfg80211_del_station(wiphy, wdev->netdev, params);
+}
+
+static int sprd_cfg80211_change_station_wdev(struct wiphy *wiphy, struct wireless_dev *wdev,
+					     const u8 *mac, struct station_parameters *params)
+{
+	return sprd_cfg80211_change_station(wiphy, wdev->netdev, mac, params);
+}
+
+static int sprd_cfg80211_get_station_wdev(struct wiphy *wiphy, struct wireless_dev *wdev,
+					  const u8 *mac, struct station_info *sinfo)
+{
+	return sprd_cfg80211_get_station(wiphy, wdev->netdev, mac, sinfo);
+}
+
+static int sprd_cfg80211_remain_on_channel_wdev(struct wiphy *wiphy, struct wireless_dev *wdev,
+						struct ieee80211_channel *chan, unsigned int duration,
+						u64 *cookie, const u8 *rx_addr)
+{
+	return sprd_cfg80211_remain_on_channel(wiphy, wdev, chan, duration, cookie);
+}
+#define MU300_WDEV_OP(f) f##_wdev
+#else
+#define MU300_WDEV_OP(f) f
+#endif
+
 static struct cfg80211_ops sprd_cfg80211_ops = {
 	.add_virtual_intf = sprd_cfg80211_add_iface,
 	.del_virtual_intf = sprd_cfg80211_del_iface,
 	.change_virtual_intf = sprd_cfg80211_change_iface,
-	.add_key = sprd_cfg80211_add_key,
-	.del_key = sprd_cfg80211_del_key,
+	.add_key = MU300_WDEV_OP(sprd_cfg80211_add_key),
+	.del_key = MU300_WDEV_OP(sprd_cfg80211_del_key),
 	.set_default_key = sprd_cfg80211_set_default_key,
-	.set_default_mgmt_key = sprd_cfg80211_set_default_mgmt_key,
+	.set_default_mgmt_key = MU300_WDEV_OP(sprd_cfg80211_set_default_mgmt_key),
 	.start_ap = sprd_cfg80211_start_ap,
 	.change_beacon = sprd_cfg80211_change_beacon,
 	.stop_ap = sprd_cfg80211_stop_ap,
-	.add_station = sprd_cfg80211_add_station,
-	.del_station = sprd_cfg80211_del_station,
-	.change_station = sprd_cfg80211_change_station,
-	.get_station = sprd_cfg80211_get_station,
+	.add_station = MU300_WDEV_OP(sprd_cfg80211_add_station),
+	.del_station = MU300_WDEV_OP(sprd_cfg80211_del_station),
+	.change_station = MU300_WDEV_OP(sprd_cfg80211_change_station),
+	.get_station = MU300_WDEV_OP(sprd_cfg80211_get_station),
 	.libertas_set_mesh_channel = sprd_cfg80211_set_channel,
 	.scan = sprd_cfg80211_scan,
 	.connect = sprd_cfg80211_connect,
@@ -1585,7 +1644,7 @@ static struct cfg80211_ops sprd_cfg80211_ops = {
 	.set_pmksa = sprd_cfg80211_set_pmksa,
 	.del_pmksa = sprd_cfg80211_del_pmksa,
 	.flush_pmksa = sprd_cfg80211_flush_pmksa,
-	.remain_on_channel = sprd_cfg80211_remain_on_channel,
+	.remain_on_channel = MU300_WDEV_OP(sprd_cfg80211_remain_on_channel),
 	.cancel_remain_on_channel = sprd_cfg80211_cancel_remain_on_channel,
 	.mgmt_tx = sprd_cfg80211_mgmt_tx,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0))

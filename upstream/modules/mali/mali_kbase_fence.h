@@ -142,7 +142,13 @@ static inline int kbase_fence_out_signal(struct kbase_jd_atom *katom,
 		katom->dma_fence.fence->status = status;
 #endif
 	}
+#if (KERNEL_VERSION(7, 0, 0) <= LINUX_VERSION_CODE)
+	/* MU300: dma_fence_signal() returns nothing in 7.x */
+	dma_fence_signal(katom->dma_fence.fence);
+	return 0;
+#else
 	return dma_fence_signal(katom->dma_fence.fence);
+#endif
 }
 
 #if IS_ENABLED(CONFIG_SYNC_FILE)
