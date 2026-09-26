@@ -327,7 +327,7 @@ sc2355_rx_mh_addr_process(struct rx_mgmt *rx_mgmt, void *data,
 		pr_debug("%s: Add TX complete code here\n", __func__);
 
 		if (time != 0 && ((jiffies - time) >= msecs_to_jiffies(1000))) {
-			pr_err("%s: out of time %d\n",
+			pr_err_ratelimited("%s: out of time %d\n",
 			       __func__, jiffies_to_msecs(jiffies - time));
 		}
 

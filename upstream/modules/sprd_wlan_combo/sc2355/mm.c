@@ -439,7 +439,7 @@ static void mm_normal_data_process(struct mem_mgmt *mm_entry,
 	struct sprd_hif *hif = rx_mgmt->hif;
 
 	if (unlikely(len < sizeof(struct rx_msdu_desc))) {
-		pr_err("%s: data len is %d, too short\n", __func__, len);
+		pr_err_ratelimited("%s: data len is %d, too short\n", __func__, len);
 		free_data = true;
 	} else {
 		if (hif->hw_type == SPRD_HW_SC2355_PCIE)
@@ -453,7 +453,7 @@ static void mm_normal_data_process(struct mem_mgmt *mm_entry,
 			skb = mm_build_skb(data, skb_len, buffer_type);
 		else {
 			/* Should not happen */
-			pr_err("%s: data len is %d, skb need %d\n",
+			pr_err_ratelimited("%s: data len is %d, skb need %d\n",
 			       __func__, len, skb_len);
 			skb = mm_data2skb_process(mm_entry, data,
 						  SKB_WITH_OVERHEAD(skb_len));

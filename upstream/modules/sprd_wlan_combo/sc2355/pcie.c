@@ -1032,13 +1032,13 @@ unsigned char sc2355_pcie_find_lut_index(struct sprd_hif *hif, struct sprd_vif *
 			}
 		}
 		if (vif->mode == SPRD_MODE_AP) {
-			pr_info("%s,AP mode, group bssid,\n"
+			pr_debug("%s,AP mode, group bssid,\n"
 				"lut not found, ctx_id:%d, return lut:4\n",
 				__func__, vif->ctx_id);
 			return 4;
 		}
 		if (vif->mode == SPRD_MODE_P2P_GO) {
-			pr_info("%s,GO mode, group bssid,\n"
+			pr_debug("%s,GO mode, group bssid,\n"
 				"lut not found, ctx_id:%d, return lut:5\n",
 				__func__, vif->ctx_id);
 			return 5;
@@ -1309,7 +1309,7 @@ int sc2355_pcie_tx_data_pop_list(int channel, struct mbuf_t *head,
 		__func__, channel, head, tail, num);
 
 	/* same window as in sc2355_pcie_tx_cmd_pop_list() below */
-	if (!hif || !hif->tx_mgmt) {
+	if (!hif || !smp_load_acquire(&hif->tx_mgmt)) {
 		pr_warn("%s: no tx context yet, freeing %d buffer(s)\n", __func__, num);
 		sprdwcn_bus_list_free(channel, head, tail, num);
 		return 0;
@@ -1392,7 +1392,7 @@ int sc2355_tx_free_pcie_data(unsigned char *data)
 {
 	int i;
 	struct sprd_hif *hif = sc2355_pcie_get_hif();
-	struct tx_mgmt *tx_mgmt = (struct tx_mgmt *)hif->tx_mgmt;
+	struct tx_mgmt *tx_mgmt = (struct tx_mgmt *)smp_load_acquire(&hif->tx_mgmt);
 	void *data_addr_ptr;
 	unsigned long pcie_addr;
 	unsigned short data_num;
@@ -1408,6 +1408,10 @@ int sc2355_tx_free_pcie_data(unsigned char *data)
 
 	pr_debug("%s:=0x%x %p %p\n", __func__, data, tx_mgmt, hif);
 
+	/* a TX-complete event outside the tx context's lifetime (see sc2355_pcie_tx_cmd_pop_list) */
+	if (!tx_mgmt)
+		return 0;
+
 	if (tx_mgmt->net_stopped == 1) {
 		sprd_net_flowcontrl(priv, SPRD_MODE_NONE, true);
 		tx_mgmt->net_stopped = 0;
@@ -1418,12 +1422,12 @@ int sc2355_tx_free_pcie_data(unsigned char *data)
 	tx_mgmt->txc_num += data_num;
 	tmp = (unsigned char *)txc_addr;
 	pr_debug("%s: seq_num=0x%x", __func__, *(tmp + 1));
-	pr_info("%s, total free num:%lu; total tx_num:%lu\n", __func__,
+	pr_debug("%s, total free num:%lu; total tx_num:%lu\n", __func__,
 		 tx_mgmt->txc_num, tx_mgmt->tx_num);
 
 
 	if (printk_timed_ratelimit(&caller_jiffies, 1000)) {
-		pr_info("%s, free_num: %d, to_free_list num: %d\n",
+		pr_debug("%s, free_num: %d, to_free_list num: %d\n",
 			__func__, data_num,
 			atomic_read(&tx_mgmt->xmit_msg_list.free_num));
 	}
@@ -1480,12 +1484,15 @@ int sc2355_pcie_tx_cmd_pop_list(int channel, struct mbuf_t *head,
 	 * sc2355_pcie_tx_cmd_pop_list+0x2c, "paging request at 00000000000030b0"). The buffers still have to
 	 * go back to the bus, so hand them over and leave.
 	 */
-	if (!hif || !hif->tx_mgmt) {
+	/* one acquire load: tx_init() publishes tx_mgmt with a release store once it is complete, and
+	 * tx_deinit() clears it and waits (synchronize_rcu) for handlers like this one before freeing it
+	 */
+	tx_mgmt = hif ? (struct tx_mgmt *)smp_load_acquire(&hif->tx_mgmt) : NULL;
+	if (!tx_mgmt) {
 		pr_warn("%s: no tx context yet, freeing %d buffer(s)\n", __func__, num);
 		sprdwcn_bus_list_free(channel, head, tail, num);
 		return 0;
 	}
-	tx_mgmt = (struct tx_mgmt *)hif->tx_mgmt;
 
 	pr_debug("%s len: %d buf: %s\n", __func__, head->len, head->buf + 4);
 
@@ -1515,7 +1522,7 @@ int sc2355_pcie_tx_cmd_pop_list(int channel, struct mbuf_t *head,
 	}
 
 	tx_mgmt->cmd_poped += num;
-	pr_info("tx_cmd_pop num: %d,cmd_poped=%d, cmd_send=%d\n",
+	pr_debug("tx_cmd_pop num: %d,cmd_poped=%d, cmd_send=%d\n",
 		num, tx_mgmt->cmd_poped, tx_mgmt->cmd_send);
 	sprdwcn_bus_list_free(channel, head, tail, num);
 
@@ -1794,7 +1801,7 @@ void sc2355_pcie_handle_tx_return(struct sprd_hif *hif,
 {
 	if (ret == -2) {
 		atomic_sub(send_num, &list->ref);
-		pr_info("%s,%d,debug: %d\n", __func__, __LINE__, atomic_read(&list->ref));
+		pr_debug("%s,%d,debug: %d\n", __func__, __LINE__, atomic_read(&list->ref));
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0))
 		usleep_range_state(100, 200, TASK_UNINTERRUPTIBLE);
 #else
@@ -1809,7 +1816,7 @@ void sc2355_pcie_handle_tx_return(struct sprd_hif *hif,
 #endif
 		return;
 	} else {
-		pr_info("%s,%d,debug: %d\n", __func__, __LINE__, atomic_read(&list->ref));
+		pr_debug("%s,%d,debug: %d\n", __func__, __LINE__, atomic_read(&list->ref));
 	}
 }
 
@@ -1916,14 +1923,14 @@ int sc2355_pcie_fc_get_send_num(struct sprd_hif *hif,
 
 	free_num = atomic_read(&tx_mgmt->xmit_msg_list.free_num);
 	if (printk_timed_ratelimit(&caller_jiffies, 1000)) {
-		pr_info("%s, free_num=%d, data_num=%d\n", __func__,
+		pr_debug("%s, free_num=%d, data_num=%d\n", __func__,
 			free_num, data_num);
 		if (list_empty(&tx_mgmt->xmit_msg_list.to_free_list))
 			pr_info("%s: to free list empty\n", __func__);
 	}
 
 	if ((free_num + data_num) >= tx_buf_max) {
-		pr_info("%s, free_num=%d, data_num=%d\n", __func__,
+		pr_debug("%s, free_num=%d, data_num=%d\n", __func__,
 				   free_num, data_num);
 		return (tx_buf_max - free_num);
 	} else {
@@ -1949,7 +1956,7 @@ int sc2355_pcie_fc_test_send_num(struct sprd_hif *hif,
 
 	free_num = atomic_read(&tx_mgmt->xmit_msg_list.free_num);
 	if (printk_timed_ratelimit(&caller_jiffies, 1000)) {
-		pr_info("%s,%d free_num=%d, data_num=%d\n", __func__,
+		pr_debug("%s,%d free_num=%d, data_num=%d\n", __func__,
 			__LINE__, free_num, data_num);
 		if (list_empty(&tx_mgmt->xmit_msg_list.to_free_list))
 			pr_info("%s: to free list empty\n", __func__);

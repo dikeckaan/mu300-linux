@@ -43,6 +43,11 @@ python3 "$TOP/boot/build-boot-image.py" --generic-ramdisk --modules "$IN/out/mod
 tar -C "$K" -czf "$D/mu300-kernel.tar.gz" .
 rm -rf "$K"
 
+echo "==> mainline kernel bundle"
+# the 6.18 kernel for "mu300-update kernel 6.18": built by upstream/build.sh + build-modules.sh at this commit
+[ -f "$TOP/upstream/out/Image" ] || { echo "upstream/out/Image missing (upstream/build.sh, build-modules.sh)" >&2; exit 1; }
+sh "$TOP/upstream/make-bundle.sh" "$D/mu300-kernel-6.18.tar.gz" "$D/mu300-kernel.tar.gz"
+
 echo "==> Ubuntu root filesystem (generic)"
 B=$D/ubuntu-build && mkdir -p "$B"
 tar -C "$TOP/rootfs" --exclude ./base.tar --exclude './*.tar.gz' -cf - . | tar -xf - -C "$B"
@@ -60,7 +65,7 @@ mv "$TOP/openwrt/mu300-openwrt-release.tar.gz" "$D/mu300-openwrt-rootfs.tar.gz"
 
 echo "==> audit"
 fail=0
-for a in mu300-kernel mu300-ubuntu-rootfs mu300-openwrt-rootfs; do
+for a in mu300-kernel mu300-kernel-6.18 mu300-ubuntu-rootfs mu300-openwrt-rootfs; do
     bad=$(tar -tzf "$D/$a.tar.gz" | sed 's|^\./||' | grep -E \
         -e '(^|/)lib/firmware/(wcnmodem|gnssmodem|wifi_board_config|bt_configure)' \
         -e '^opt/mu300/android/.+' -e '__properties__|dev-properties' \
@@ -87,6 +92,7 @@ Prebuilt images for \`./install.sh\` (ZTE F50 / MU300). Check your device first 
 | file | contents |
 |---|---|
 | mu300-kernel.tar.gz | Linux 5.4.254 \`Image\` and modules, static busybox and logdw for the boot image, and the generic boot ramdisk segment \`mu300-update\` uses |
+| mu300-kernel-6.18.tar.gz | mainline Linux 6.18 (longterm) for \`mu300-update kernel 6.18\`: \`Image\`, modules, generic boot ramdisk segment |
 | mu300-ubuntu-rootfs.tar.gz | Ubuntu 24.04 LTS root filesystem |
 | mu300-openwrt-rootfs.tar.gz | OpenWrt 25.12.5 root filesystem |
 

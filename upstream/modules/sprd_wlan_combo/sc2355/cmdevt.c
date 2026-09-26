@@ -428,7 +428,7 @@ static int cmdevt_lock_cmd(struct sprd_cmd *cmd, struct sprd_hif *hif)
 #endif
 	if (hif->priv->is_suspending == 0)
 		__pm_stay_awake(cmd->wake_lock);
-	pr_info("cmd->refcnt=%x\n", atomic_read(&cmd->refcnt));
+	pr_debug("cmd->refcnt=%x\n", atomic_read(&cmd->refcnt));
 
 	return 0;
 }
@@ -459,7 +459,7 @@ static int cmdevt_send_cmd(struct sprd_priv *priv, struct sprd_msg *msg)
 	if (hdr->common.rsp)
 		cmdevt_set_cmd(&priv->cmd, hdr);
 
-	pr_warn("[%u]ctx_id %d send[%s]\n",
+	pr_debug("[%u]ctx_id %d send[%s]\n",
 		le32_to_cpu(hdr->mstime),
 		hdr->common.mode, cmdevt_cmd2str(hdr->cmd_id));
 
@@ -4136,7 +4136,7 @@ unsigned short sc2355_rx_rsp_process(struct sprd_priv *priv, u8 *msg)
 	spin_lock_bh(&cmd->lock);
 	if (!cmd->data && SPRD_GET_LE32(hdr->mstime) == cmd->mstime &&
 	    hdr->cmd_id == cmd->cmd_id) {
-		pr_info("ctx_id %d recv rsp[%s]\n",
+		pr_debug("ctx_id %d recv rsp[%s]\n",
 			hdr->common.mode, cmdevt_cmd2str(hdr->cmd_id));
 		if (unlikely(hdr->status != 0)) {
 			pr_err("%s ctx_id %d recv rsp[%s] status[%s]\n",

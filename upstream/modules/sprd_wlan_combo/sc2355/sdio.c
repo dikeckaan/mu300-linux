@@ -715,13 +715,13 @@ unsigned char sc2355_find_lut_index(struct sprd_hif *hif, struct sprd_vif *vif)
 			}
 		}
 		if (vif->mode == SPRD_MODE_AP) {
-			pr_info("%s,AP mode, group bssid,\n"
+			pr_debug("%s,AP mode, group bssid,\n"
 				"lut not found, ctx_id:%d, return lut:4\n",
 				__func__, vif->ctx_id);
 			return 4;
 		}
 		if (vif->mode == SPRD_MODE_P2P_GO) {
-			pr_info("%s,GO mode, group bssid,\n"
+			pr_debug("%s,GO mode, group bssid,\n"
 				"lut not found, ctx_id:%d, return lut:5\n",
 				__func__, vif->ctx_id);
 			return 5;
@@ -1003,7 +1003,7 @@ int sc2355_tx_cmd_pop_list(int channel, struct mbuf_t *head,
 	}
 
 	tx_mgmt->cmd_poped += num;
-	pr_info("tx_cmd_pop num: %d,cmd_poped=%d, cmd_send=%d\n",
+	pr_debug("tx_cmd_pop num: %d,cmd_poped=%d, cmd_send=%d\n",
 		num, tx_mgmt->cmd_poped, tx_mgmt->cmd_send);
 	sprdwcn_bus_list_free(channel, head, tail, num);
 

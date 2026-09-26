@@ -6,6 +6,7 @@
 #   mu300-update boot             only the kernel and the boot image
 #   mu300-update rollback [OS]    go back to the previous version kept as <os>.old
 #   mu300-update rollback-boot    go back to the previous boot image
+#   mu300-update kernel [5.4|6.18]  show, or change, the kernel (vendor 5.4 or mainline 6.18) and install it
 #   mu300-update clean            delete the kept <os>.old copies
 #
 # How it works: the new filesystem is unpacked next to the old one as <os>.new on the Linux partition, your settings
@@ -62,7 +63,7 @@ check() {
     printf 'newest release    %s\n' "$latest"
     printf 'systems on disk   %s\n' "$(installed_systems)"
     printf 'running now       %s\n' "$(running_os)"
-    printf 'kernel            %s (boot image: %s)\n' "$(uname -r)" "$(cat "$BOOTDIR/installed.tag" 2>/dev/null || echo "from the installer")"
+    printf 'kernel            %s (boot image: %s; kernel choice %s)\n' "$(uname -r)" "$(cat "$BOOTDIR/installed.tag" 2>/dev/null || echo "from the installer")" "$(kernel_choice)"
     for os in $(installed_systems); do
         [ -d "$DISK/$os.old" ] && printf 'rollback available for %s (%s)\n' "$os" "$(cat "$DISK/$os.old/etc/mu300/image-version" 2>/dev/null || echo unknown)"
     done
@@ -233,6 +234,13 @@ apply_one() {  # apply_one OS TAG
 BOOTDIR=$DISK/boot
 PERSIST_LOG=$((48 << 20))   # boot_b keeps the persistent init log from 48 MiB on (boot/build-boot-image.py)
 
+# Which kernel this device runs: the vendor 5.4 (mu300-kernel.tar.gz) or mainline 6.18 (mu300-kernel-6.18.tar.gz).
+# Kept on the Linux partition, so both systems and every update follow it - without it an update of a device on
+# 6.18 installed the release's 5.4 kernel. "mu300-update kernel 6.18" changes it.
+KERNEL_CHOICE=$BOOTDIR/kernel
+kernel_choice() { c=$(cat "$KERNEL_CHOICE" 2>/dev/null); case $c in 6.18) echo 6.18 ;; *) echo 5.4 ;; esac; }
+kernel_asset() { case $(kernel_choice) in 6.18) echo mu300-kernel-6.18.tar.gz ;; *) echo mu300-kernel.tar.gz ;; esac; }
+
 part_dev() {  # part_dev NAME -> /dev/<block device of that partition>
     for u in /sys/class/block/*/uevent; do
         grep -qx "PARTNAME=$1" "$u" 2>/dev/null || continue
@@ -281,10 +289,11 @@ boot_update() {  # boot_update TAG   (MU300_KERNEL_BUNDLE=FILE uses a local mu30
     if [ -z "$bundle" ]; then
         base=https://github.com/$REPO/releases/download/$tag
         sums=$(fetch_stdout "$base/SHA256SUMS") || { echo "boot: cannot download SHA256SUMS" >&2; return 1; }
-        want=$(printf '%s\n' "$sums" | awk '$2 == "mu300-kernel.tar.gz" || $2 == "*mu300-kernel.tar.gz" {print $1}')
-        [ -n "$want" ] || { echo "boot: release $tag has no kernel bundle" >&2; return 1; }
-        bundle=$tmp/mu300-kernel.tar.gz
-        fetch_file "$base/mu300-kernel.tar.gz" "$bundle" || { echo "boot: download failed" >&2; return 1; }
+        asset=$(kernel_asset)
+        want=$(printf '%s\n' "$sums" | awk -v f="$asset" '$2 == f || $2 == "*" f {print $1}')
+        [ -n "$want" ] || { echo "boot: release $tag has no $asset (kernel $(kernel_choice))" >&2; return 1; }
+        bundle=$tmp/$asset
+        fetch_file "$base/$asset" "$bundle" || { echo "boot: download failed" >&2; return 1; }
         [ "$(sha256sum "$bundle" | cut -d' ' -f1)" = "$want" ] || { echo "boot: checksum mismatch, nothing was changed" >&2; return 1; }
     fi
     [ -s "$bundle" ] || { echo "boot: $bundle not found" >&2; return 1; }
@@ -353,6 +362,7 @@ boot_update() {  # boot_update TAG   (MU300_KERNEL_BUNDLE=FILE uses a local mu30
     # keep the current image for rollback-boot, then write
     cp "$tmp/body" "$BOOTDIR/prev.body"; cp "$tmp/vbmeta" "$BOOTDIR/prev.vbmeta"; cp "$tmp/footer" "$BOOTDIR/prev.footer"
     cat "$BOOTDIR/installed.tag" > "$BOOTDIR/prev.tag" 2>/dev/null || echo installer > "$BOOTDIR/prev.tag"
+    cat "$BOOTDIR/installed.kernel" > "$BOOTDIR/prev.kernel" 2>/dev/null || echo 5.4 > "$BOOTDIR/prev.kernel"
     sync
     if ! write_boot "$dev" "$psize" "$tmp/new" "$tmp/vbmeta" "$tmp/newfooter"; then
         echo "boot: writing boot_b failed verification; restoring the previous image" >&2
@@ -363,11 +373,32 @@ boot_update() {  # boot_update TAG   (MU300_KERNEL_BUNDLE=FILE uses a local mu30
     sha256sum < "$tmp/new" | cut -d' ' -f1 > "$BOOTDIR/written.sha256"
     echo "$id" > "$BOOTDIR/installed.id"
     echo "$tag" > "$BOOTDIR/installed.tag"
+    kernel_choice > "$BOOTDIR/installed.kernel"
     sync
     rm -rf "$tmp"
     printf 'boot: updated to %s (kernel %s bytes, ramdisk %s bytes). If it does not start, the device falls back\n' "$tag" "$nksz" "$nrsz"
     printf '      to Android by itself; mu300-update rollback-boot restores the previous image.\n'
     BOOT_CHANGED=1
+}
+
+kernel_cmd() {  # kernel [5.4|6.18]: show or change the kernel, and install it
+    mounted_disk
+    case ${1:-} in
+        '') printf 'kernel: %s (running %s)\n' "$(kernel_choice)" "$(uname -r)"; return 0 ;;
+        5.4|6.18) ;;
+        *) die "usage: mu300-update kernel [5.4|6.18]" ;;
+    esac
+    mkdir -p "$BOOTDIR"
+    old=$(kernel_choice)
+    echo "$1" > "$KERNEL_CHOICE"
+    t=${MU300_RELEASE:-$(latest_release)}
+    [ -n "$t" ] || { echo "$old" > "$KERNEL_CHOICE"; die "could not reach GitHub (is the device online?)"; }
+    if ! boot_update "$t"; then
+        echo "$old" > "$KERNEL_CHOICE"
+        die "the $1 kernel was not installed; staying on $old"
+    fi
+    sync
+    printf '\nkernel %s selected. Reboot to start it (mu300-update rollback-boot goes back).\n' "$1"
 }
 
 rollback_boot() {
@@ -380,6 +411,12 @@ rollback_boot() {
     sha256sum < "$BOOTDIR/prev.body" | cut -d' ' -f1 > "$BOOTDIR/written.sha256"
     rm -f "$BOOTDIR/installed.id"
     cat "$BOOTDIR/prev.tag" > "$BOOTDIR/installed.tag" 2>/dev/null
+    # the image that is back belongs to a kernel choice too: without this the next update would reinstall the
+    # kernel just rolled back from
+    if [ -s "$BOOTDIR/prev.kernel" ]; then
+        cat "$BOOTDIR/prev.kernel" > "$KERNEL_CHOICE"
+        cat "$BOOTDIR/prev.kernel" > "$BOOTDIR/installed.kernel"
+    fi
     sync
     printf 'boot: previous boot image (%s) restored. Reboot to start it.\n' "$(cat "$BOOTDIR/prev.tag" 2>/dev/null || echo unknown)"
 }
@@ -458,8 +495,9 @@ case ${1:-check} in
           boot_update "$t" || exit 1; [ -n "${BOOT_CHANGED:-}" ] && printf '\nReboot to start the new kernel.\n' ;;
     rollback) shift; rollback "$@" ;;
     rollback-boot) rollback_boot ;;
+    kernel) shift; kernel_cmd "$@" ;;
     accounts) accounts ;;
     clean) clean ;;
-    -h|--help|help) sed -n '2,10s/^# \{0,1\}//p' "$0" ;;
-    *) echo "usage: mu300-update check|apply [os...]|boot|rollback [os]|rollback-boot|clean" >&2; exit 2 ;;
+    -h|--help|help) sed -n '2,11s/^# \{0,1\}//p' "$0" ;;
+    *) echo "usage: mu300-update check|apply [os...]|boot|kernel [5.4|6.18]|rollback [os]|rollback-boot|clean" >&2; exit 2 ;;
 esac

@@ -127,7 +127,9 @@ for c in mu300-toolkit mu300-next-boot mu300-os mu300-update mobile-data mu300-a
 rm -rf $R/lib/modules/6.* $R/boot
 # out-of-tree modules for the experimental mainline kernel (upstream/)
 if ls /in/mainline-modules/*.ko >/dev/null 2>&1; then
-    mkdir -p $R/lib/modules/6.18.52 && cp /in/mainline-modules/*.ko $R/lib/modules/6.18.52/
+    # the release the modules were built for (their vermagic), not a version written down here
+    krel=$(for f in /in/mainline-modules/*.ko; do tr "\0" "\n" < $f | sed -n "s/^vermagic=\([^ ]*\) .*/\1/p"; break; done)
+    [ -n "$krel" ] && mkdir -p $R/lib/modules/$krel && cp /in/mainline-modules/*.ko $R/lib/modules/$krel/
 fi
 cd $R && tar -czf /out/$OUT .
 ls -la /out/$OUT'

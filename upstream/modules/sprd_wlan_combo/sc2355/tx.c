@@ -934,7 +934,7 @@ static int tx_mc_pkt(struct sk_buff *skb, struct net_device *ndev)
 	}
 
 	if (tx_is_multicast_mac_addr(hif->skb_da) && vif->mode == SPRD_MODE_AP) {
-		pr_info
+		pr_debug
 		    ("%s,AP mode, multicast bssid: %02x:%02x:%02x:%02x:%02x:%02x\n",
 		     __func__, hif->skb_da[0], hif->skb_da[1], hif->skb_da[2],
 		     hif->skb_da[3], hif->skb_da[4], hif->skb_da[5]);
@@ -1840,7 +1840,7 @@ int sc2355_reset_self(struct sprd_priv *priv)
 	}
 
 	hif->drv_resetting = 1;
-	pr_info("enter %s\n", __func__);
+	pr_debug("enter %s\n", __func__);
 
 	list_for_each_entry_safe(vif, tmp, &priv->vif_list, vif_node) {
 		pr_info("%s handle vif : name %s, mode %d, sm_state %d\n", __func__,
@@ -2045,8 +2045,11 @@ int sc2355_tx_init(struct sprd_hif *hif)
 		goto err_txlist;
 	}
 
-	hif->tx_mgmt = (void *)tx_mgmt;
+	/* publish only once it is complete: the PCIe completion handlers run from the MSI and read it
+	 * with smp_load_acquire()
+	 */
 	tx_mgmt->hif = hif;
+	smp_store_release(&hif->tx_mgmt, (void *)tx_mgmt);
 
 	sprd_qos_reset_wmmac_parameters(tx_mgmt->hif->priv);
 	sprd_qos_reset_wmmac_ts_info(hif->priv);
@@ -2096,6 +2099,13 @@ void sc2355_tx_deinit(struct sprd_hif *hif)
 		kthread_stop(tx_mgmt->tx_thread);
 		tx_mgmt->tx_thread = NULL;
 	}
+
+	/* The completion handlers run from the MSI and may be walking these lists right now: unpublish the
+	 * context and wait for every handler already inside (interrupt context is an RCU read side) before
+	 * anything below frees it. They used to find it freed first and NULL only afterwards.
+	 */
+	WRITE_ONCE(hif->tx_mgmt, NULL);
+	synchronize_rcu();
 
 	/*need to check if there is some data and cmdpending
 	 *or sending by HIF, and wait until tx complete and freed
