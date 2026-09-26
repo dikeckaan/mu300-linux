@@ -1509,6 +1509,12 @@ images have it was not established, so the update protects all of them:
   the two systems, once at the start of the boot image step. A reset while boot_b is being written leaves slot b
   unbootable, and LK then falls back to Android on every boot - the reported symptom.
 
+A reset does not have to hit the boot_b write to end in Android, though. With the boot scheme of the older boot
+images slot b is armed for one boot (`tries_remaining 2`, see 1); a crash leaves it at 1, and LK's log on the next
+start reads `check rollback slot 1 tries: 1` - `Have not get right slot` - Android, for good, with boot_b intact.
+`su -c mu300-linux` in Android (or the Magisk module's button) arms slot b again and Linux starts as before; the
+newer boot images count failed boots instead (5 in a row before Android).
+
 `mu300-update` now:
 * downloads everything the update needs (the systems and the kernel bundle) first, checks every file against
   the release's `SHA256SUMS`, and only then changes anything; the unpacking and the boot_b write need no network;

@@ -475,11 +475,14 @@ apply() {
     [ -n "$tag" ] || { offline_hint; die "could not reach GitHub (is the device online?)"; }
     # The release's own updater does the update when it differs from this one (releases from v2026.09.28 on
     # carry it): fixes to the update itself then reach a device before the update runs, not one update later.
+    # $0 is usually the link in /usr/local/bin: the file it points to is replaced, never the link (a file there
+    # would be kept by every later update, with usr/local, and hide the updater of the system)
+    self=$(readlink -f "$0" 2>/dev/null || echo "$0")
     if [ -z "${MU300_SELF_UPDATED:-}" ] && fetch_verified "$tag" mu300-update 2>/dev/null &&
-        ! cmp -s "$STAGE/mu300-update" "$0" && sh -n "$STAGE/mu300-update"; then
+        ! cmp -s "$STAGE/mu300-update" "$self" && sh -n "$STAGE/mu300-update"; then
         printf 'continuing with the mu300-update of %s\n' "$tag"
         keepalive_stop
-        cp "$STAGE/mu300-update" "$0.new" && chmod 755 "$0.new" && mv -f "$0.new" "$0" 2>/dev/null || true
+        cp "$STAGE/mu300-update" "$self.new" && chmod 755 "$self.new" && mv -f "$self.new" "$self" 2>/dev/null || true
         MU300_SELF_UPDATED=1 MU300_RELEASE=$tag exec sh "$STAGE/mu300-update" apply "$@"
     fi
     list=$*

@@ -204,8 +204,11 @@ sudo mu300-update apply
 On OpenWrt, as root: `wget -O /opt/mu300/bin/mu300-update https://github.com/dikeckaan/mu300-linux/releases/latest/download/mu300-update`
 and then `mu300-update apply`. Reboot afterwards to start the new system and kernel.
 
-**Stuck in Android after an update?** The boot image did not survive the update. From a computer, run the
-installer again and choose `update`: it writes a fresh boot image and keeps your settings and data.
+**Back in Android after an update?** With the older boot images a single crash or reset of Linux (the update could
+cause one, see above) makes the device fall back to Android and stay there. Start Linux again with the Linux button
+of the Magisk module or `su -c mu300-linux`, then update as above. If Linux does not start any more, the boot image
+did not survive: run the installer again from a computer and choose `update` - it writes a fresh boot image and
+keeps your settings and data.
 
 ## Uninstall
 
