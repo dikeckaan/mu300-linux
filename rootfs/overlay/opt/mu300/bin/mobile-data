@@ -384,8 +384,19 @@ watch() {
         [ -c "$DEV" ] || continue
         tty_setup
         if at "AT+CGACT?" | grep -q "+CGACT:$CID,1" && ip -4 addr show "$IFACE" 2>/dev/null | grep -q inet; then
-            fails=0
-            continue
+            # An active context is not enough: after the radio or the network dropped the bearer, an LTE modem
+            # attaches again by itself and the context comes back with a new address, while the interface keeps
+            # the old one - it sends with it and nothing ever comes back (measured: rx 0, the modem on
+            # 10.160.167.97, sipa_eth0 on 10.200.191.225). Reconnect as soon as the two differ.
+            # the context's IPv4 address: the first field after the cid when it has four parts (an IPv6 one has 16)
+            want=$(at "AT+CGPADDR=$CID" 4 | awk -F'[ ,"]+' '/^\+CGPADDR:/ { if (split($3, o, ".") == 4 && $3 != "0.0.0.0") print $3; exit }' || true)
+            have=$(ip -4 -o addr show "$IFACE" 2>/dev/null | awk '{ split($4, a, "/"); print a[1]; exit }' || true)
+            if [ -z "$want" ] || [ "$want" = "$have" ]; then
+                fails=0
+                continue
+            fi
+            echo "the network gave the context a new address ($want; $IFACE still has $have), reconnecting" >&2
+            fails=1   # no second look needed: the next step reconnects
         fi
         # a switched-off radio never comes back on its own
         at 'AT+CFUN?' 4 | grep -q '+CFUN: 1' || { echo "radio was off, switching it on" >&2; radio_on || true; }
