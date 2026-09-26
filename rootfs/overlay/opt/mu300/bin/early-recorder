@@ -29,5 +29,7 @@ while [ "$(cut -d. -f1 /proc/uptime)" -lt "$end" ]; do
     [ "$blocks" -gt 2048 ] && blocks=2048
     dd if=/run/mu300-early.txt of="$BOOTB" bs=4096 seek=12288 count="$blocks" conv=notrunc 2>/dev/null
     sync
-    sleep 10
+    # every 2 s for the first minute and a half, where the intermittent early hangs have happened; a 10 s gap
+    # left a single snapshot of a boot that died between 11 and 21 s
+    if [ "$(cut -d. -f1 /proc/uptime)" -lt 90 ]; then sleep 2; else sleep 10; fi
 done

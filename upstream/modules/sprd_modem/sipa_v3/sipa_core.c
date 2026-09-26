@@ -1899,12 +1899,13 @@ static int sipa_plat_drv_probe(struct platform_device *pdev_p)
 	ipa->daemon_timer.function = sipa_daemon_timer_handler;
 
 	init_waitqueue_head(&ipa->set_rps_waitq);
-	ipa->set_rps_thread = kthread_create(sipa_set_rps_thread, ipa,
-					     "sipa-set-rps");
-	if (IS_ERR(ipa->set_rps_thread)) {
-		dev_err(dev, "failed to create set_rps_thread\n");
-		return PTR_ERR(ipa->set_rps_thread);
-	}
+	/*
+	 * MU300: the vendor keeps rps_cpus fixed ("zsw changed" in sipa resume) and so never wakes this thread, but
+	 * still created it: it sat in its pre-start state for good - uninterruptible, a hung-task report every two
+	 * minutes and one more on the load average. Its wakers only signal set_rps_waitq, which needs no thread.
+	 */
+	(void)sipa_set_rps_thread;
+	ipa->set_rps_thread = NULL;
 
 	ret = sipa_init(dev);
 	if (ret) {
