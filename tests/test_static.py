@@ -76,6 +76,20 @@ class Rules(unittest.TestCase):
             bad = [i for i, b in enumerate(data) if b > 127]
             self.assertFalse(bad, f'{name}: non-ASCII byte at offset {bad[:1]}')
 
+    def test_single_quoted_scripts_have_no_apostrophes(self):
+        # A script handed to `sh -c '...'` (docker run) ends at its first apostrophe: "the U30 Air's charger" in a
+        # comment there broke OpenWrt's build at release time, while every parser still saw balanced quotes.
+        for name in ('openwrt/build-rootfs.sh', 'tools/make-release.sh'):
+            lines = (TOP / name).read_text().splitlines()
+            for n, line in enumerate(lines):
+                if not line.rstrip().endswith("-c '"):
+                    continue
+                for m in range(n + 1, len(lines)):
+                    if "'" in lines[m]:
+                        self.assertTrue(lines[m].rstrip().endswith("'") and lines[m].count("'") == 1,
+                                        f'{name}:{m + 1}: an apostrophe inside the script of line {n + 1}')
+                        break
+
     def test_init_finds_partitions_after_the_modules(self):
         # the eMMC driver is one of the vendor modules: misc and boot_b cannot be found before they are loaded
         init = (TOP / 'boot' / 'init').read_text()

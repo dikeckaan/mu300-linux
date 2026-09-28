@@ -61,7 +61,7 @@ docker run --rm --platform linux/arm64 \
 mkdir -p /var/lock /var/run /tmp
 apk update >/dev/null
 # openssl-util: mu300-vpn fetches the VPN server certificate with it to pin, for links that ask for allowInsecure;
-# i2c-tools, gpiod-tools: mu300-usb (the U30 Air's charger) and mu300-nfc (its NFC tag)
+# i2c-tools, gpiod-tools: mu300-usb (the charger of the U30 Air) and mu300-nfc (its NFC tag)
 apk add wpad-basic-mbedtls wifi-scripts iwinfo wireless-regdb iw bash ip-full coreutils-stty openssl-util \
     i2c-tools gpiod-tools >/dev/null
 # ujail drops CAP_PERFMON (38), which this 5.4 kernel does not know: jailed services (dnsmasq, ntpd) crash-loop
