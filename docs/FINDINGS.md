@@ -1747,3 +1747,31 @@ neither kernel.
 Two restarts during these tests, both about 600 s after boot, were not the USB: `mu300-update` keeps the device
 segment of whatever image is in boot_b, and boot_b held a `--trial-guard 600` experiment - so every boot restarted
 after ten minutes. init now honours a guard only in a trial boot (Linux not the default), and says so.
+
+### 33f. The U30 Air's LEDs: three kinds of wiring, and lights that never went out
+
+Under mainline the network and Wi-Fi lights stayed lit whatever Linux did. Lighting each LED the kernel knew, one
+at a time, while someone watched the device, showed where they are:
+
+| light | colour | wired to |
+|---|---|---|
+| battery | white, red, blue | the PMIC's RGB LED (`sc27xx-bltc`): its *green* channel is white |
+| network | blue | GPIO 117 (`net_blue`) |
+| network | white | LDO VDDCAMA0 |
+| network | red | the PMIC's keypad backlight sink (`keyboard-backlight`) |
+| Wi-Fi | white | LDO VDDCAMA1 |
+| Wi-Fi | blue | LDO VDDCAMA2 |
+
+The device tree's six other GPIO LEDs (`pwr_green`, `net_red`, `net_green`, `net_white`, `wifi_blue`,
+`wifi_white`) light nothing; they come from a ZTE board file shared with other products, and Android never writes
+them either. The lights that never went out were the LDO ones: ZTE's `zte_ldo_leds` switches the camera supplies
+VDDCAMA0-2 (3.3 V) through `vddcamaN_status`, mainline had no consumer for them, and `regulator_ignore_unused`
+kept the bootloader's "on". `leds-zte-ldo` (upstream/port) makes them `zte-ldo0..2` and starts them dark, and
+`leds-sc27xx-kpled` (after Unisoc's keypad driver, current mode) brings the red back under its Android name. What
+each colour means was read from Android: sampling `/sys/class/leds` with the radio off shows the network LED
+cycling red / white / off, and `vddcama0` lit on 5G. mu300-led now follows it (blue on 4G, white on 5G, red
+without service); `mobile-data` reads the access technology (`AT+COPS?`) again on every watchdog round, since it
+changes under a live connection.
+
+The PMIC's LED also carries the heat alarm (`thermal-guard`, now running on 5.4 too, where it only watches): one
+colour at a time, since the white outshines red and blue when they are mixed.

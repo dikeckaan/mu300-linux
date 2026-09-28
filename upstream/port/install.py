@@ -185,3 +185,20 @@ missing = [(p, w) for p, ws in expect for w in ws if w not in open(os.path.join(
 if missing:
     sys.exit('port: edits did not apply (anchor changed in this kernel?): ' + '; '.join(f'{p}: {w}' for p, w in missing))
 print('port installed')
+
+# LEDs of the ZTE U30 Air: its white ones on PMIC LDOs (leds-zte-ldo.c), and its red on the PMIC's keypad backlight
+# sink (leds-sc27xx-kpled.c)
+LED_DRIVERS = (
+    ('LEDS_ZTE_LDO', 'leds-zte-ldo', 'LEDs on PMIC LDOs (ZTE U30 Air)', 'LEDS_CLASS && REGULATOR && OF',
+     "The ZTE U30 Air's white LEDs, powered by three PMIC LDOs."),
+    ('LEDS_SC27XX_KPLED', 'leds-sc27xx-kpled', 'Spreadtrum/Unisoc PMIC keypad backlight',
+     'LEDS_CLASS && MFD_SC27XX_PMIC && OF', "The PMIC's keypad backlight sink: the U30 Air's red network LED."),
+)
+kl = os.path.join(tree, 'drivers/leds/Kconfig')
+kls = open(kl).read()
+for sym, obj, title, deps, text in LED_DRIVERS:
+    append_once('drivers/leds/Makefile', obj + '.o', f'obj-$(CONFIG_{sym})\t\t+= {obj}.o\n')
+    if f'config {sym}\n' not in kls:
+        i = kls.rindex('endif # NEW_LEDS')
+        kls = kls[:i] + f'config {sym}\n\ttristate "{title}"\n\tdepends on {deps}\n\thelp\n\t  {text}\n\n' + kls[i:]
+open(kl, 'w').write(kls)

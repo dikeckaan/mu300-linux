@@ -1,22 +1,37 @@
 #!/bin/sh
 # Thermal safety for kernels without SoC trip points (mainline: the stock DT only has trips on the vendor virtual
 # zone). Reads the hottest on-die sensor every 5 s: above HOT caps every cpufreq policy one step lower, below COOL
-# lifts the cap one step, above CRIT powers off. The 5.4 vendor kernel throttles itself, so this exits there.
+# lifts the cap one step, above CRIT powers off. The 5.4 vendor kernel throttles itself, so there it only watches.
+# On every kernel: the SoC at HOT or the battery at BATT_HOT (tenths of a degree, as power_supply reports it) sets
+# off the LED alarm (mu300-led alarm: a red and blue siren), until the SoC is down to COOL and the battery to
+# BATT_COOL.
 HOT=${MU300_THERMAL_HOT:-85000}
 COOL=${MU300_THERMAL_COOL:-75000}
 CRIT=${MU300_THERMAL_CRIT:-105000}
+BATT_HOT=${MU300_BATTERY_HOT:-500}
+BATT_COOL=${MU300_BATTERY_COOL:-450}
+R=${MU300_SYSROOT:-}   # (for tests/: a fake /, one round)
+LED=${MU300_BIN:-/opt/mu300/bin}/mu300-led
 
-for z in /sys/class/thermal/thermal_zone*; do
-    [ -e "$z/trip_point_0_temp" ] && { echo "kernel thermal trips present, nothing to do"; exit 0; }
+throttle=1
+for z in "$R"/sys/class/thermal/thermal_zone*; do
+    [ -e "$z/trip_point_0_temp" ] && { throttle=0; echo "kernel thermal trips present: only the LED alarm here"; break; }
 done
 
 hottest() {
     local max=0 t
-    for z in /sys/class/thermal/thermal_zone*/temp; do
+    for z in "$R"/sys/class/thermal/thermal_zone*/temp; do
         read -r t < "$z" 2>/dev/null || continue
         [ "$t" -gt "$max" ] 2>/dev/null && max=$t
     done
     echo "$max"
+}
+battery() {  # the battery's temperature in tenths of a degree, nothing without one (the F50)
+    local b t
+    for b in "$R"/sys/class/power_supply/*; do
+        [ "$(cat "$b/type" 2>/dev/null)" = Battery ] || continue
+        read -r t < "$b/temp" 2>/dev/null && [ -n "$t" ] && { echo "$t"; return; }
+    done
 }
 
 # step POLICY DIR (-1 lower, +1 higher): move scaling_max_freq to the neighbouring available frequency
@@ -33,18 +48,31 @@ step() {
     [ -n "$next" ] && echo "$next" > "$p/scaling_max_freq"
 }
 
+# the alarm's state outlives a restart of this service, so a cooled device is never left flashing
+ALARM=$R/run/mu300/thermal-alarm
 while :; do
     t=$(hottest)
-    if [ "$t" -ge "$CRIT" ]; then
+    b=$(battery)
+    if [ "$t" -ge "$CRIT" ] && [ "$throttle" = 1 ]; then
         logger -t thermal-guard "critical temperature ${t} mC, powering off"
         poweroff
-    elif [ "$t" -ge "$HOT" ]; then
-        for p in /sys/devices/system/cpu/cpufreq/policy*; do step "$p" -1; done
+    elif [ "$t" -ge "$HOT" ] && [ "$throttle" = 1 ]; then
+        for p in "$R"/sys/devices/system/cpu/cpufreq/policy*; do step "$p" -1; done
         logger -t thermal-guard "hot (${t} mC): lowered cpufreq limits"
-    elif [ "$t" -le "$COOL" ]; then
-        for p in /sys/devices/system/cpu/cpufreq/policy*; do
+    elif [ "$t" -le "$COOL" ] && [ "$throttle" = 1 ]; then
+        for p in "$R"/sys/devices/system/cpu/cpufreq/policy*; do
             [ "$(cat $p/scaling_max_freq)" -lt "$(cat $p/cpuinfo_max_freq)" ] && step "$p" 1
         done
     fi
+    if [ ! -e "$ALARM" ] && { [ "$t" -ge "$HOT" ] || [ "${b:-0}" -ge "$BATT_HOT" ]; }; then
+        mkdir -p "${ALARM%/*}" && : > "$ALARM"
+        logger -t thermal-guard "too hot (SoC ${t} mC, battery ${b:--} dC): LED alarm on"
+        "$LED" alarm on
+    elif [ -e "$ALARM" ] && [ "$t" -le "$COOL" ] && [ "${b:-0}" -le "$BATT_COOL" ]; then
+        rm -f "$ALARM"
+        logger -t thermal-guard "cooled down (SoC ${t} mC, battery ${b:--} dC): LED alarm off"
+        "$LED" alarm off
+    fi
+    [ -n "$R" ] && exit 0
     sleep 5
 done

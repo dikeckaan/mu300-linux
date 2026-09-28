@@ -13,8 +13,16 @@ IFACE=sipa_eth$((CID - 1))
 # "write error: Invalid argument"), and under `set -e` that killed up() one line before it could report the
 # connection it had just established - so the call was live while the caller saw a failure. Cosmetic writes
 # must never decide that.
-# led on|off|error: see mu300-led (which LED that is depends on the device)
+# led on|5g|off|error: see mu300-led (which LED that is depends on the device)
 led() { /opt/mu300/bin/mu300-led data "$1" 2>/dev/null || true; }
+# data is up: the LED tells 4G from 5G as ZTE's firmware does (the U30 Air: blue on 4G, white on 5G). The access
+# technology changes under a live connection, so the watchdog asks again on every round.
+led_up() {
+    case $(at 'AT+COPS?' 4 | sed -n 's/^+COPS: [0-9],[0-9],"[^"]*",\([0-9]*\).*/\1/p') in
+        11|12|13) led 5g ;;
+        *) led on ;;
+    esac
+}
 
 ATLOCK=/run/mu300-at/owner
 
@@ -322,7 +330,7 @@ table ip mu300_nat {
 }
 NFT
     [ -n "$iid" ] && v6_up "$iid"
-    led on
+    led_up
     echo "mobile data up on $IFACE ($(at 'AT+COPS?' | sed -n 's/^+COPS: [0-9],[0-9],"\([^"]*\)".*/\1/p'))"
 }
 
@@ -391,6 +399,7 @@ watch() {
             have=$(ip -4 -o addr show "$IFACE" 2>/dev/null | awk '{ split($4, a, "/"); print a[1]; exit }' || true)
             if [ -z "$want" ] || [ "$want" = "$have" ]; then
                 fails=0
+                led_up
                 continue
             fi
             echo "the network gave the context a new address ($want; $IFACE still has $have), reconnecting" >&2

@@ -1,5 +1,7 @@
 """Small device scripts, against a fake / (MU300_SYSROOT) and stub commands: mu300-device, mu300-lan-ip, mu300-led,
 mu300-ttl. They run on Ubuntu (dash, bash) and OpenWrt (busybox ash)."""
+import shutil
+import time
 import unittest
 
 from helpers import BIN, ShellTest
@@ -34,22 +36,27 @@ class Device(ShellTest):
 
 
 class Led(ShellTest):
-    LEDS = ['sc27xx:blue', 'sc27xx:red', 'pwr_green', 'net_blue', 'net_red', 'wifi_blue', 'wifi_white']
+    # the U30 Air's: power is the battery LED's white (the PMIC's green channel), the network LED blue on 4G
+    # (net_blue), white on 5G (zte-ldo0), red without service (keyboard-backlight); the Wi-Fi LED's colours are LDOs too
+    LEDS = ['sc27xx:blue', 'sc27xx:red', 'sc27xx:green', 'net_blue', 'keyboard-backlight', 'zte-ldo0', 'zte-ldo1', 'zte-ldo2']
 
     def setUp(self):
         super().setUp()
         self.root = self.tmp / 'root'
-        for n in self.LEDS:
-            d = self.root / 'sys' / 'class' / 'leds' / n
-            d.mkdir(parents=True)
-            (d / 'brightness').write_text('0\n')
-            (d / 'max_brightness').write_text('255\n')
-            (d / 'trigger').write_text('[none] timer\n')
+        self.setUp_leds()
         (self.root / 'run' / 'mu300').mkdir(parents=True)
         (self.root / 'proc').mkdir()
         self.conf = self.tmp / 'led.conf'
         self.uptime(100)
         self.stub('iw', 'cat "$STUBLOG/iw.out" 2>/dev/null')
+
+    def setUp_leds(self):
+        for n in self.LEDS:
+            d = self.root / 'sys' / 'class' / 'leds' / n
+            d.mkdir(parents=True, exist_ok=True)
+            (d / 'brightness').write_text('0\n')
+            (d / 'max_brightness').write_text('255\n')
+            (d / 'trigger').write_text('[none] timer\n')
 
     def uptime(self, s):
         (self.root / 'proc' / 'uptime').write_text(f'{s}.42 1234.00\n')
@@ -77,10 +84,20 @@ class Led(ShellTest):
             self.assertEqual(self.led(shell, 'u30air', 'power', 'on').returncode, 0)
             self.assertEqual(self.led(shell, 'u30air', 'data', 'error').returncode, 0)
             s = self.state()
-            self.assertEqual((s['pwr_green'], s['net_red'], s['net_blue']), ('255', '255', '0'))
+            self.assertEqual((s['sc27xx:green'], s['keyboard-backlight'], s['net_blue']), ('255', '255', '0'))
             self.led(shell, 'u30air', 'data', 'on')
             s = self.state()
-            self.assertEqual((s['net_red'], s['net_blue']), ('0', '255'))
+            self.assertEqual((s['keyboard-backlight'], s['net_blue']), ('0', '255'))
+            self.led(shell, 'u30air', 'data', '5g')
+            s = self.state()
+            self.assertEqual((s['keyboard-backlight'], s['net_blue'], s['zte-ldo0']), ('0', '0', '255'))
+            self.led(shell, 'u30air', 'data', 'on')           # back to 4G
+            s = self.state()
+            self.assertEqual((s['net_blue'], s['zte-ldo0']), ('255', '0'))
+            self.led(shell, 'u30air', 'data', '5g')
+            self.led(shell, 'u30air', 'data', 'error')
+            s = self.state()
+            self.assertEqual((s['keyboard-backlight'], s['net_blue'], s['zte-ldo0']), ('255', '0', '0'))
             self.led(shell, 'u30air', 'data', 'off')
             self.assertEqual(self.state()['net_blue'], '0')
             self.assertEqual(self.state()['sc27xx:blue'], '0')  # the F50's LED is not touched
@@ -89,18 +106,18 @@ class Led(ShellTest):
         for shell in self.each_shell():
             self.reset()
             self.led(shell, 'u30air', 'power', 'on')
-            for iw, lit, dark in (('channel 36 (5180 MHz), width: 80 MHz', 'wifi_blue', 'wifi_white'),
-                                  ('channel 6 (2437 MHz), width: 20 MHz', 'wifi_white', 'wifi_blue')):
+            for iw, lit, dark in (('channel 36 (5180 MHz), width: 80 MHz', 'zte-ldo2', 'zte-ldo1'),
+                                  ('channel 6 (2437 MHz), width: 20 MHz', 'zte-ldo1', 'zte-ldo2')):
                 (self.tmp / 'iw.out').write_text(f'Interface wlan0\n\ttype AP\n\t{iw}\n')
                 self.led(shell, 'u30air', 'wifi', 'on')
                 s = self.state()
                 self.assertEqual((s[lit], s[dark]), ('255', '0'), iw)
             self.led(shell, 'u30air', 'wifi', 'off')
-            self.assertEqual((self.state()['wifi_blue'], self.state()['wifi_white']), ('0', '0'))
+            self.assertEqual((self.state()['zte-ldo2'], self.state()['zte-ldo1']), ('0', '0'))
             # the hotspot just started and has no channel yet: its setting decides
             (self.tmp / 'iw.out').write_text('Interface wlan0\n\ttype AP\n')
             conf = self.tmp / 'hotspot.conf'
-            for band, lit in (('2.4', 'wifi_white'), ('5', 'wifi_blue')):
+            for band, lit in (('2.4', 'zte-ldo1'), ('5', 'zte-ldo2')):
                 conf.write_text(f'SSID=x\nPSK=12345678\nBAND={band}\n')
                 (self.root / 'run/mu300/device').write_text('u30air\n')
                 self.script(shell, BIN / 'mu300-led', 'wifi', 'on', MU300_SYSROOT=self.root, MU300_BIN=BIN,
@@ -121,17 +138,17 @@ class Led(ShellTest):
             self.assertEqual({v for v in self.state().values()}, {'0'})
             # a change while dark is kept, and shown on the next wake
             self.led(shell, 'u30air', 'data', 'error')
-            self.assertEqual(self.state()['net_red'], '0')
+            self.assertEqual(self.state()['keyboard-backlight'], '0')
             self.led(shell, 'u30air', 'wake')
             s = self.state()
-            self.assertEqual((s['pwr_green'], s['net_red'], s['net_blue']), ('255', '255', '0'))
+            self.assertEqual((s['sc27xx:green'], s['keyboard-backlight'], s['net_blue']), ('255', '255', '0'))
             # and the timeout counts from the wake
             self.uptime(161 + 59)
             self.led(shell, 'u30air', 'sleep', '--if-due')
-            self.assertEqual(self.state()['pwr_green'], '255')
+            self.assertEqual(self.state()['sc27xx:green'], '255')
             self.uptime(161 + 61)
             self.led(shell, 'u30air', 'sleep', '--if-due')
-            self.assertEqual(self.state()['pwr_green'], '0')
+            self.assertEqual(self.state()['sc27xx:green'], '0')
 
     def test_no_timeout(self):
         for shell in self.each_shell():
@@ -157,6 +174,64 @@ class Led(ShellTest):
             s = self.state()
             self.assertEqual(s['sc27xx:blue'], '255')
             self.assertEqual({v for k, v in s.items() if k != 'sc27xx:blue'}, {'0'})
+            self.led(shell, 'f50', 'data', '5g')              # one LED: blue on 5G too
+            self.assertEqual(self.state()['sc27xx:blue'], '255')
+
+    def test_vendor_ldo_switches_on_5_4(self):
+        # the 5.4 kernel has no zte-ldoN LEDs: ZTE's zte_ldo_leds switches the same LDOs through vddcamaN_status
+        for shell in self.each_shell():
+            self.reset()
+            for n in ('zte-ldo0', 'zte-ldo1', 'zte-ldo2'):
+                shutil.rmtree(self.root / 'sys/class/leds' / n)
+            vendor = self.root / 'sys/devices/platform/zte_ldo_leds'
+            vendor.mkdir(parents=True, exist_ok=True)
+            for i in range(3):
+                (vendor / f'vddcama{i}_status').write_text('0\n')
+            self.led(shell, 'u30air', 'power', 'on')
+            self.led(shell, 'u30air', 'data', '5g')
+            (self.tmp / 'iw.out').write_text('Interface wlan0\n\ttype AP\n\tchannel 36 (5180 MHz)\n')
+            self.led(shell, 'u30air', 'wifi', 'on')
+            self.assertEqual([(vendor / f'vddcama{i}_status').read_text().strip() for i in range(3)], ['1', '0', '1'])
+            self.led(shell, 'u30air', 'sleep')
+            self.assertEqual([(vendor / f'vddcama{i}_status').read_text().strip() for i in range(3)], ['0', '0', '0'])
+            shutil.rmtree(self.root / 'sys/devices')
+            self.setUp_leds()
+
+    def test_alarm_siren(self):
+        # too hot: red and blue take turns on the PMIC's LED until the alarm is off, then the LEDs are as before
+        for shell in self.each_shell():
+            for device in ('u30air', 'f50'):
+                self.reset()
+                self.conf.write_text('LED_TIMEOUT=0\n')
+                self.led(shell, device, 'power', 'on')
+                self.led(shell, device, 'data', 'on')
+                pid = self.root / 'run/mu300/led-siren.pid'
+                try:
+                    self.assertEqual(self.led(shell, device, 'alarm', 'on').returncode, 0)
+                    self.assertTrue(pid.exists())
+                    self.led(shell, device, 'alarm', 'on')        # a second one starts no second siren
+                    # one colour at a time: white (the U30 Air's green channel) never mixed in
+                    want = ({('255', '0', '0'), ('0', '255', '0'), ('0', '0', '255')} if device == 'u30air'
+                            else {('255', '0', '0'), ('0', '0', '255')})
+                    seen = set()
+                    deadline = time.time() + 4
+                    while time.time() < deadline and not want <= seen:
+                        s = self.state()
+                        seen.add((s['sc27xx:red'], s['sc27xx:green'], s['sc27xx:blue']))
+                        time.sleep(0.03)
+                    self.assertLessEqual(want, seen, device)
+                    if device == 'f50':
+                        self.assertEqual({g for _, g, _ in seen}, {'0'})    # the F50's green is green
+                finally:
+                    self.led(shell, device, 'alarm', 'off')
+                self.assertFalse(pid.exists())
+                time.sleep(0.4)                                   # a killed siren writes no more
+                s = self.state()
+                self.assertEqual(s['sc27xx:red'], '0')
+                # the F50's blue is its data LED: back on; the U30 Air's white is its power LED
+                self.assertEqual(s['sc27xx:blue'], '255' if device == 'f50' else '0', device)
+                self.assertEqual(s['sc27xx:green'], '255' if device == 'u30air' else '0', device)
+                self.assertEqual(self.led(shell, device, 'alarm', 'off').returncode, 0)   # off twice
 
     def test_missing_leds_and_bad_usage(self):
         for shell in self.each_shell():
@@ -222,6 +297,56 @@ class Buttons(ShellTest):
                 self.assertEqual(r.returncode, 0, r.stderr)
                 calls = (self.tmp / 'calls').read_text().splitlines() if (self.tmp / 'calls').exists() else []
                 self.assertEqual([c for c in calls if not c.startswith('logger')], want, event)
+
+
+class ThermalGuard(ShellTest):
+    """thermal-guard's LED alarm (one round against a fake /: MU300_SYSROOT)."""
+    def setUp(self):
+        super().setUp()
+        self.root = self.tmp / 'root'
+        self.bin = self.tmp / 'bin'
+        self.bin.mkdir()
+        led = self.bin / 'mu300-led'
+        led.write_text('#!/bin/sh\necho "mu300-led $*" >> "$STUBLOG/calls"\n')
+        led.chmod(0o755)
+        self.stub('logger', ':')
+        self.stub('poweroff', 'echo poweroff >> "$STUBLOG/calls"')
+
+    def round(self, shell, soc, battery=None, trips=False):
+        z = self.root / 'sys/class/thermal/thermal_zone0'
+        z.mkdir(parents=True, exist_ok=True)
+        (z / 'temp').write_text(f'{soc}\n')
+        if trips:
+            (z / 'trip_point_0_temp').write_text('95000\n')
+        if battery is not None:
+            b = self.root / 'sys/class/power_supply/battery'
+            b.mkdir(parents=True, exist_ok=True)
+            (b / 'type').write_text('Battery\n')
+            (b / 'temp').write_text(f'{battery}\n')
+        (self.tmp / 'calls').unlink(missing_ok=True)
+        r = self.script(shell, BIN / 'thermal-guard', MU300_SYSROOT=self.root, MU300_BIN=self.bin)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return (self.tmp / 'calls').read_text().splitlines() if (self.tmp / 'calls').exists() else []
+
+    def test_alarm_on_and_off(self):
+        for shell in self.each_shell():
+            shutil.rmtree(self.root, ignore_errors=True)
+            self.assertEqual(self.round(shell, 60000, 300), [])
+            self.assertEqual(self.round(shell, 86000, 300), ['mu300-led alarm on'])
+            self.assertEqual(self.round(shell, 90000, 300), [])                # on already
+            self.assertEqual(self.round(shell, 80000, 300), [])                # not cool enough yet
+            self.assertEqual(self.round(shell, 74000, 300), ['mu300-led alarm off'])
+            self.assertEqual(self.round(shell, 60000, 510), ['mu300-led alarm on'])   # the battery alone
+            self.assertEqual(self.round(shell, 60000, 460), [])
+            self.assertEqual(self.round(shell, 60000, 440), ['mu300-led alarm off'])
+
+    def test_vendor_kernel_only_watches(self):
+        # 5.4 has its own trip points: no throttling or power-off here, but the alarm still works
+        for shell in self.each_shell():
+            shutil.rmtree(self.root, ignore_errors=True)
+            self.assertEqual(self.round(shell, 110000, trips=True), ['mu300-led alarm on'])
+            shutil.rmtree(self.root, ignore_errors=True)
+            self.assertEqual(self.round(shell, 110000), ['poweroff', 'mu300-led alarm on'])   # mainline: critical
 
 
 class Ttl(ShellTest):

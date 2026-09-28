@@ -29,7 +29,8 @@ is talking to; see [Supported devices](#supported-devices).
 |---|---|---|
 | Board, chip | `ums9620_2h10_feimao`, Unisoc T760 (UMS9620) | the same |
 | Power | USB only | battery (4050 mAh), charger and fuel gauge |
-| LEDs used by Linux | the blue LED: mobile data | power, network (blue: data, red: no service), Wi-Fi |
+| LEDs used by Linux | the blue LED: mobile data | as in ZTE's firmware: battery (white: Linux is up), network (blue: 4G, white: 5G, red: no service), Wi-Fi (white: 2.4 GHz, blue: 5 GHz) |
+| Heat alarm | the LED flashes red and blue | the battery LED flashes red, white, blue in turn: the SoC at 85 °C or the battery at 50 °C, until they cool down (`thermal-guard`) |
 | USB network | `192.168.77.1` | `192.168.78.1` (so both can be plugged into one computer) |
 | Tested | everything below | 5.4, 6.18 and 7.2: USB, Wi-Fi hotspot, Bluetooth, mobile data, VPN, LEDs |
 | Battery | - | level, voltage, current, temperature and charging state in `mu300-toolkit` and `/sys/class/power_supply` on every kernel (mainline: `sc27xx-fgu`) |
