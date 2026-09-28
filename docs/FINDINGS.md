@@ -1775,3 +1775,19 @@ changes under a live connection.
 
 The PMIC's LED also carries the heat alarm (`thermal-guard`, now running on 5.4 too, where it only watches): one
 colour at a time, since the white outshines red and blue when they are mixed.
+
+### 33g. The U30 Air's NFC tag
+
+The device tree's `st,st21nfc` at `i2c@2260000` 0x08 is a leftover: nothing answers there. The tag is a Fudan FM11NT08
+dual-interface EEPROM at 0x57 on the same bus (I2C bus 2), which answers only while GPIO 190 (ZTE's
+`ntag-reset-gpio`, driven by its `fm11tag` module under 5.4) is low; GPIO 127 is its field-detect interrupt. The
+memory is NTAG-like: UID and lock bytes, the capability container `e1 10 6d 00` (872 bytes of NDEF), then the NDEF
+TLV from 0x10. ZTE's `Fm11ntagService` writes a WSC Wi-Fi record (WPA2-PSK, AES) with the hotspot's name and
+password; `mu300-nfc wifi` writes the same bytes (compared page by page against ZTE's: nothing to write).
+
+A phone got nothing from the tag at first, under Linux and under Android alike, although the field-detect interrupt
+counted every tap. ZTE's web interface had NFC off (`settings global webserver_nfc_switch_status=0`, the factory
+state of this unit); switching it on there once made the tag answer phones from then on, under Linux too, so the
+switch is kept in the chip, presumably in its configuration block at 0x3b0 (which also holds the I2C address).
+The data area was unchanged by it. Which bit it is has not been found yet: the "off" state of 0x380-0x3ff was never
+read. With it on, URLs and text written by `mu300-nfc` reached a phone.

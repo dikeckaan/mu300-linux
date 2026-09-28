@@ -71,7 +71,7 @@ for u in mu300-accounts.service:sysinit.target mu300-early-recorder.service:sysi
 done
 # the commands people are told to run must be on PATH, including sudo's secure_path, which does not contain
 # /opt/mu300/bin - without these links every "sudo mu300-os ..." in the README is a "command not found"
-for c in mu300-toolkit mu300-next-boot mu300-os mu300-update mobile-data mu300-at mu300-vpn wifi-client mu300-ttl mu300-wifi-band mu300-led mu300-usb; do ln -sfn /opt/mu300/bin/$c $R/usr/local/bin/$c; done
+for c in mu300-toolkit mu300-next-boot mu300-os mu300-update mobile-data mu300-at mu300-vpn wifi-client mu300-ttl mu300-wifi-band mu300-led mu300-usb mu300-nfc; do ln -sfn /opt/mu300/bin/$c $R/usr/local/bin/$c; done
 # no graphical/serial login noise on a headless dongle; keep ttyS1 console for debugging
 ln -sfn /dev/null $R/etc/systemd/system/getty@tty1.service
 cd $R && tar --numeric-owner -czf /w/mu300-ubuntu-$UBUNTU-rootfs.tar.gz .

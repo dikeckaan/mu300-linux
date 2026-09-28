@@ -349,6 +349,142 @@ class ThermalGuard(ShellTest):
             self.assertEqual(self.round(shell, 110000), ['poweroff', 'mu300-led alarm on'])   # mainline: critical
 
 
+class Nfc(ShellTest):
+    """mu300-nfc against a fake FM11NT08: 1 KiB behind a stub i2ctransfer, which answers only while a stub gpioset
+    holds line 190 low, as the tag does."""
+    EEPROM = r'''
+import os, sys
+mem = os.path.join(os.environ['STUBLOG'], 'tag.bin')
+data = bytearray(open(mem, 'rb').read())
+args = [a for a in sys.argv[1:] if a != '-y']
+bus, op = args[0], args[1]
+if not os.path.exists(os.path.join(os.environ['STUBLOG'], 'held')) or bus != '2' or not op.endswith('@0x57'):
+    sys.exit('Error: Sending messages failed: Remote I/O error')
+n = int(op[1:op.index('@')])
+addr = int(args[2], 16) << 8 | int(args[3], 16)
+if op.startswith('w') and len(args) > 4 and args[4].startswith('r'):
+    print(' '.join('0x%02x' % b for b in data[addr:addr + int(args[4][1:])]))
+elif op.startswith('w'):
+    body = [int(x, 16) for x in args[4:]]
+    assert len(body) == n - 2 and len(body) <= 16 and addr % 16 == 0 and addr >= 16, args
+    data[addr:addr + len(body)] = bytes(body)
+    open(mem, 'wb').write(bytes(data))
+    open(os.path.join(os.environ['STUBLOG'], 'writes'), 'a').write('%x\\n' % addr)
+'''
+    # what ZTE's firmware leaves there: UID, capability container (NDEF, 872 bytes), a Wi-Fi record
+    ZTE = bytes.fromhex('1df4bcdd99030012 88b20000e1106d00'.replace(' ', ''))
+
+    def setUp(self):
+        super().setUp()
+        self.root = self.tmp / 'root'
+        (self.root / 'run/mu300').mkdir(parents=True)
+        chip = self.tmp / 'devices/platform/soc/64170000.gpio/gpiochip4'
+        chip.mkdir(parents=True)
+        (self.root / 'sys/bus/gpio/devices').mkdir(parents=True)
+        (self.root / 'sys/bus/gpio/devices/gpiochip4').symlink_to(chip)
+        (self.tmp / 'eeprom.py').write_text(self.EEPROM)
+        self.stub('i2ctransfer', 'exec python3 "$STUBLOG/eeprom.py" "$@"')
+        # libgpiod 2: holds the line until killed
+        self.stub('gpioset', '[ "$1" = --help ] && { echo "  -c, --chip"; exit 0; }; '
+                             '[ "$*" = "-c gpiochip4 190=0" ] || exit 1; touch "$STUBLOG/held"; '
+                             'trap \'rm -f "$STUBLOG/held"; exit 0\' TERM; while :; do sleep 0.05; done')
+        self.conf = self.tmp / 'hotspot.conf'
+        self.conf.write_text('SSID=U30 AIR\nPSK=secret pass!\nBAND=5\n')
+
+    def blank(self, ndef=b'\x03\x00\xfe'):
+        (self.tmp / 'tag.bin').write_bytes(self.ZTE + ndef + bytes(1024 - 16 - len(ndef)))
+        (self.tmp / 'writes').unlink(missing_ok=True)
+
+    def nfc(self, shell, *args, device='u30air'):
+        (self.root / 'run/mu300/device').write_text(device + '\n')
+        return self.script(shell, BIN / 'mu300-nfc', *args, MU300_SYSROOT=self.root, MU300_BIN=BIN,
+                           MU300_HOTSPOT_CONF=self.conf)
+
+    def writes(self):
+        w = self.tmp / 'writes'
+        return w.read_text().split() if w.exists() else []
+
+    def test_wifi_record_is_zte_s(self):
+        # byte for byte what the stock firmware writes (WSC credential, WPA2-PSK, AES)
+        for shell in self.each_shell():
+            self.blank()
+            r = self.nfc(shell, 'wifi')
+            self.assertEqual((r.returncode, r.stdout.strip()), (0, 'wifi: U30 AIR (with its password)'), r.stderr)
+            self.assertNotIn('secret', r.stdout + r.stderr)
+            ssid, key = b'U30 AIR', b'secret pass!'
+            cred = (b'\x10\x45\x00' + bytes([len(ssid)]) + ssid + b'\x10\x03\x00\x02\x00\x20\x10\x0f\x00\x02\x00\x08'
+                    + b'\x10\x27\x00' + bytes([len(key)]) + key + b'\x10\x20\x00\x06' + bytes(6)
+                    + b'\x10\x49\x00\x06\x00\x37\x2a\x00\x01\x20')
+            payload = b'\x10\x0e\x00' + bytes([len(cred)]) + cred
+            rec = b'\xd2\x17' + bytes([len(payload)]) + b'application/vnd.wfa.wsc' + payload
+            want = b'\x03' + bytes([len(rec)]) + rec + b'\xfe'
+            data = (self.tmp / 'tag.bin').read_bytes()
+            self.assertEqual(data[16:16 + len(want)], want)
+            self.assertEqual(data[:16], self.ZTE)                     # UID and capability container untouched
+            self.assertFalse((self.tmp / 'held').exists())            # the line is let go
+            # again: nothing changed, nothing written
+            (self.tmp / 'writes').unlink()
+            self.assertEqual(self.nfc(shell, 'wifi').returncode, 0)
+            self.assertEqual(self.writes(), [])
+
+    def test_url_text_clear(self):
+        for shell in self.each_shell():
+            self.blank()
+            for args, shown in ((('url', 'https://github.com/dikeckaan/mu300-linux'),
+                                 'url: https://github.com/dikeckaan/mu300-linux'),
+                                (('url', 'tel:+905551112233'), 'url: tel:+905551112233'),
+                                (('url', 'geo:41.0,29.0'), 'url: geo:41.0,29.0'),
+                                (('text', 'Merhaba, şifre kutunun altında'), 'text: Merhaba, şifre kutunun altında'),
+                                (('clear',), 'empty')):
+                r = self.nfc(shell, *args)
+                self.assertEqual((r.returncode, r.stdout.strip()), (0, shown), r.stderr)
+                self.assertEqual(self.nfc(shell).stdout.strip(), shown)
+            data = (self.tmp / 'tag.bin').read_bytes()
+            self.assertEqual(data[16:19], b'\x03\x00\xfe')
+
+    def test_long_url(self):
+        # over 255 bytes: a long record and a three-byte TLV length
+        for shell in self.each_shell():
+            self.blank()
+            url = 'https://example.com/' + 'x' * 400
+            r = self.nfc(shell, 'url', url)
+            self.assertEqual(r.stdout.strip(), 'url: ' + url, r.stderr)
+            data = (self.tmp / 'tag.bin').read_bytes()
+            self.assertEqual((data[16], data[17]), (0x03, 0xff))
+            r = self.nfc(shell, 'url', 'https://example.com/' + 'x' * 900)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('too long', r.stderr)
+
+    def test_sync_keeps_what_the_user_wrote(self):
+        for shell in self.each_shell():
+            self.blank()
+            self.conf.write_text('SSID=U30 AIR\nPSK=secret pass!\nBAND=5\n')
+            self.assertEqual(self.nfc(shell, 'sync').stdout.strip(), 'wifi: U30 AIR (with its password)')
+            self.conf.write_text('SSID=Ev\nPSK=another one\n')
+            self.assertEqual(self.nfc(shell, 'sync').stdout.strip(), 'wifi: Ev (with its password)')
+            self.nfc(shell, 'url', 'https://example.com/')
+            (self.tmp / 'writes').unlink()
+            r = self.nfc(shell, 'sync')
+            self.assertIn('left as it is', r.stdout)
+            self.assertEqual(self.writes(), [])
+            self.assertEqual(self.nfc(shell).stdout.strip(), 'url: https://example.com/')
+
+    def test_refusals(self):
+        for shell in self.each_shell():
+            self.blank()
+            r = self.nfc(shell, 'wifi', device='f50')
+            self.assertEqual(r.returncode, 1)
+            self.assertIn('only the U30 Air', r.stderr)
+            self.assertEqual(self.nfc(shell, 'blink').returncode, 2)
+            self.assertEqual(self.nfc(shell, 'url').returncode, 1)
+            # no capability container: not written
+            (self.tmp / 'tag.bin').write_bytes(bytes(1024))
+            r = self.nfc(shell, 'url', 'https://example.com/')
+            self.assertEqual(r.returncode, 1)
+            self.assertIn('capability container', r.stderr)
+            self.assertEqual(self.writes(), [])
+
+
 class Ttl(ShellTest):
     def setUp(self):
         super().setUp()

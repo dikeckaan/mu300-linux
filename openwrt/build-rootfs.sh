@@ -60,8 +60,10 @@ docker run --rm --platform linux/arm64 \
   -e KREL=$KREL -e OUT="$(basename "$OUT")" -e MU300_VERSION="${MU300_VERSION:-dev}" mu300-$FLAVOUR-base:$VER /bin/sh -eu -c '
 mkdir -p /var/lock /var/run /tmp
 apk update >/dev/null
-# openssl-util: mu300-vpn fetches the VPN server certificate with it to pin, for links that ask for allowInsecure
-apk add wpad-basic-mbedtls wifi-scripts iwinfo wireless-regdb iw bash ip-full coreutils-stty openssl-util >/dev/null
+# openssl-util: mu300-vpn fetches the VPN server certificate with it to pin, for links that ask for allowInsecure;
+# i2c-tools, gpiod-tools: mu300-usb (the U30 Air's charger) and mu300-nfc (its NFC tag)
+apk add wpad-basic-mbedtls wifi-scripts iwinfo wireless-regdb iw bash ip-full coreutils-stty openssl-util \
+    i2c-tools gpiod-tools >/dev/null
 # ujail drops CAP_PERFMON (38), which this 5.4 kernel does not know: jailed services (dnsmasq, ntpd) crash-loop
 apk del procd-ujail procd-seccomp >/dev/null 2>&1 || true
 # online firmware upgrades flash whole-disk armsr images: that would overwrite the eMMC, so remove them
@@ -123,7 +125,7 @@ for s in mu300-accounts mu300-vendor mu300-hw mu300-post mu300-toolkit mu300-atd
     ln -sf ../init.d/$s $R/etc/rc.d/S$n$s
 done
 # busybox PATH is /usr/sbin:/usr/bin:/sbin:/bin, so the commands go into /usr/bin
-for c in mu300-toolkit mu300-next-boot mu300-os mu300-update mobile-data mu300-at mu300-vpn wifi-client mu300-ttl mu300-wifi-band mu300-led mu300-usb; do ln -sf /opt/mu300/bin/$c $R/usr/bin/$c; done
+for c in mu300-toolkit mu300-next-boot mu300-os mu300-update mobile-data mu300-at mu300-vpn wifi-client mu300-ttl mu300-wifi-band mu300-led mu300-usb mu300-nfc; do ln -sf /opt/mu300/bin/$c $R/usr/bin/$c; done
 # no kernel of its own: OpenWrt kmods (6.12) and grub are unused on this device
 rm -rf $R/lib/modules/6.* $R/boot
 # out-of-tree modules for the experimental mainline kernel (upstream/)

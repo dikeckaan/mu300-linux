@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     iproute2 iputils-ping net-tools nftables dnsmasq-base ethtool \
     openssh-server busybox-static \
     wpasupplicant hostapd iw wireless-regdb rfkill bluez \
+    i2c-tools gpiod \
     ca-certificates openssl alsa-utils curl wget nano vim-tiny less htop sudo bash-completion \
     libcap2-bin locales tzdata e2fsprogs dosfstools file procps psmisc lsof strace usbutils pciutils \
  && rm -rf /var/lib/apt/lists/*

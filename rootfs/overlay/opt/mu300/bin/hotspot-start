@@ -83,4 +83,6 @@ ip link set wlan0 up
 mkdir -p /run/motd.d && chmod 755 /run/motd.d
 printf 'MU300 hotspot: SSID "%s"  password "%s"  (edit /etc/mu300/hotspot.conf)\n' "$SSID" "$PSK" > /run/motd.d/50-mu300-hotspot
 chmod 640 /run/motd.d/50-mu300-hotspot
+# the U30 Air's NFC tag: the name and password again if that is what it holds (a slow I2C write, in the background)
+[ "$(/opt/mu300/bin/mu300-device)" = u30air ] && { /opt/mu300/bin/mu300-nfc sync 2>&1 | logger -t mu300-nfc & }
 exec hostapd /run/mu300-hostapd.conf
