@@ -329,6 +329,16 @@ function Fetch($url, $out) {
 }
 # shell scripts and config files for the device must keep Unix line endings
 function WriteUnix($path, $text) { [IO.File]::WriteAllText($path, ($text -replace "`r`n", "`n")) }
+# adb push of a script or other text file for the device, with LF line ends: a clone with core.autocrlf=true has
+# CRLF files, and Android's sh stops at "do\r" before it runs a single command (issue #7)
+function PushUnix($src, $dst) {
+    $tmp = Join-Path $Work ('lf-' + (Split-Path $src -Leaf))
+    WriteUnix $tmp ([IO.File]::ReadAllText($src))
+    & adb push $tmp $dst | Out-Null
+    $ok = $LASTEXITCODE
+    Remove-Item $tmp
+    $ok -eq 0
+}
 
 # first of all, make this the newest installer (it runs the updated one and ends when it changed)
 if (SelfUpdate) {
@@ -703,7 +713,7 @@ Write-Host ('  ' + (T 'writes:         Linux region at offset {1}, boot_b, 32 by
 if ((Ask (T 'Type INSTALL to continue') 'no') -ne 'INSTALL') { Die (T 'cancelled') }
 
 Say (T 'Copying to the device')
-& adb push "$Top\tools\android-mount-mu300root.sh" "$Top\tools\android-install.sh" "$T/" | Out-Null
+foreach ($f in 'android-mount-mu300root.sh', 'android-install.sh') { PushUnix "$Top\tools\$f" "$T/$f" | Out-Null }
 foreach ($os in $OSES) {
     & adb push "$REL\$(RootfsFile $os)" "$T/mu300-$os.tar.gz" | Out-Null
     & adb push "$Work\mu300-vendor-$os.tar.gz" "$T/mu300-vendor-$os.tar.gz" | Out-Null
@@ -737,9 +747,9 @@ if ((SuDo 'magisk -v')) {
     Quiet { adb shell "rm -rf $MTmp" } | Out-Null
     Quiet { adb shell "mkdir -p $MTmp/system/bin" } | Out-Null
     foreach ($f in 'module.prop', 'switch.sh', 'action.sh') {
-        Quiet { adb push (Join-Path $ModSrc $f) "$MTmp/$f" } | Out-Null
+        Quiet { PushUnix (Join-Path $ModSrc $f) "$MTmp/$f" } | Out-Null
     }
-    Quiet { adb push (Join-Path $ModSrc 'system\bin\mu300-linux') "$MTmp/system/bin/mu300-linux" } | Out-Null
+    Quiet { PushUnix (Join-Path $ModSrc 'system\bin\mu300-linux') "$MTmp/system/bin/mu300-linux" } | Out-Null
     SuDo "rm -rf $Mod && mkdir -p $Mod/system/bin && cp -a $MTmp/module.prop $MTmp/switch.sh $MTmp/action.sh $Mod/ && cp -a $MTmp/system/bin/mu300-linux $Mod/system/bin/ && chown -R 0:0 $Mod && chmod 755 $Mod/switch.sh $Mod/action.sh $Mod/system/bin/mu300-linux && chmod 644 $Mod/module.prop && rm -rf $MTmp && sync" | Out-Null
     if ((SuDo "[ -x $Mod/switch.sh ] && echo yes") -eq 'yes') {
         Write-Host ('  ' + (T "installed: 'su -c mu300-linux' on the device starts Linux after the next Android boot"))

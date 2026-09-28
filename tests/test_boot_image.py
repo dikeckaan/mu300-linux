@@ -94,6 +94,8 @@ class GenericRamdisk(unittest.TestCase):
         for n in (BOOT / 'module-order.txt').read_text().split():
             self.assertIn('linux-modules/' + n, files)
         self.assertNotIn('etc/mu300-device', files)
+        # an empty trial guard: disarms one an experiment left in the device segment that mu300-update keeps
+        self.assertEqual(files['etc/mu300-trial-guard'][1], b'')
         self.assertFalse([f for f in files if f.startswith('linux-modules/u30air/')])
 
     def test_device_modules(self):
@@ -108,6 +110,21 @@ class GenericRamdisk(unittest.TestCase):
         # every module the U30 Air order names is in the image, in its own set or the base one
         for n in (BOOT / 'module-order-u30air.txt').read_text().split():
             self.assertTrue('linux-modules/u30air/' + n in files or 'linux-modules/' + n in files, n)
+
+    def test_crlf_checkout(self):
+        # a Windows clone with core.autocrlf=true (issue #7): the device's shell must still get LF
+        crlf = {}
+        for name, src in (('init', BOOT / 'init'), ('perms', TOP / 'android-vendor' / 'ueventd-perms.sh'),
+                          ('order', BOOT / 'module-order.txt')):
+            crlf[name] = self.tmp / name
+            crlf[name].write_bytes(src.read_bytes().replace(b'\n', b'\r\n'))
+        r, out = self.build('--init', str(crlf['init']), '--ueventd-perms', str(crlf['perms']),
+                            '--module-order', str(crlf['order']))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        files = cpio_files(unlz4_legacy(out.read_bytes()))
+        self.assertEqual(files['init'][1], (BOOT / 'init').read_bytes())
+        self.assertEqual(files['etc/ueventd-perms.sh'][1], (TOP / 'android-vendor' / 'ueventd-perms.sh').read_bytes())
+        self.assertEqual(files['etc/module-order'][1], (BOOT / 'module-order.txt').read_bytes())
 
     def test_generic_refuses_device_settings(self):
         # the generic segment is the same for every device: it must not name one, nor carry a trial guard

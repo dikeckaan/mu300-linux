@@ -1561,6 +1561,58 @@ int sprd_uninit_fw(struct sprd_vif *vif)
 	return 0;
 }
 
+/*
+ * MU300: the stations of the access point. hostapd knows them, but iw, iwinfo and so LuCI ask the driver, which
+ * had no dump_station (issue #8). The firmware's peer table has them: the entries of this interface with a
+ * unicast address other than its own (the table also holds the interface itself and its broadcast entry). The
+ * firmware reports no signal or byte counts for them, so only the address is filled in.
+ */
+static int sprd_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *ndev, int idx, u8 *mac,
+				      struct station_info *sinfo)
+{
+	struct sprd_vif *vif = netdev_priv(ndev);
+	struct sprd_hif *hif = &vif->priv->hif;
+	int i, n = 0;
+
+	if (vif->wdev.iftype != NL80211_IFTYPE_AP && vif->wdev.iftype != NL80211_IFTYPE_P2P_GO)
+		return -ENOENT;
+	for (i = 0; i < MAX_LUT_NUM; i++) {
+		const u8 *da = hif->peer_entry[i].tx.da;
+
+		if (hif->peer_entry[i].ctx_id != vif->ctx_id || !is_valid_ether_addr(da) ||
+		    ether_addr_equal(da, ndev->dev_addr))
+			continue;
+		if (n++ < idx)
+			continue;
+		ether_addr_copy(mac, da);
+		sinfo->filled = 0;
+		return 0;
+	}
+	return -ENOENT;
+}
+
+/* MU300: the access point's channel, which cfg80211 keeps from start_ap (iwinfo showed "Channel: 0") */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0))
+static int sprd_cfg80211_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev, unsigned int link_id,
+				     struct cfg80211_chan_def *chandef)
+{
+	if ((wdev->iftype != NL80211_IFTYPE_AP && wdev->iftype != NL80211_IFTYPE_P2P_GO) ||
+	    !wdev->links[link_id].ap.chandef.chan)
+		return -ENODATA;
+	*chandef = wdev->links[link_id].ap.chandef;
+	return 0;
+}
+#else
+static int sprd_cfg80211_get_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+				     struct cfg80211_chan_def *chandef)
+{
+	if ((wdev->iftype != NL80211_IFTYPE_AP && wdev->iftype != NL80211_IFTYPE_P2P_GO) || !wdev->chandef.chan)
+		return -ENODATA;
+	*chandef = wdev->chandef;
+	return 0;
+}
+#endif
+
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 0, 0))
 /*
  * MU300: 7.x hands the key and station ops a wireless_dev where 6.x passed the net_device, and adds rx_addr to
@@ -1609,6 +1661,12 @@ static int sprd_cfg80211_get_station_wdev(struct wiphy *wiphy, struct wireless_d
 	return sprd_cfg80211_get_station(wiphy, wdev->netdev, mac, sinfo);
 }
 
+static int sprd_cfg80211_dump_station_wdev(struct wiphy *wiphy, struct wireless_dev *wdev, int idx, u8 *mac,
+					   struct station_info *sinfo)
+{
+	return sprd_cfg80211_dump_station(wiphy, wdev->netdev, idx, mac, sinfo);
+}
+
 static int sprd_cfg80211_remain_on_channel_wdev(struct wiphy *wiphy, struct wireless_dev *wdev,
 						struct ieee80211_channel *chan, unsigned int duration,
 						u64 *cookie, const u8 *rx_addr)
@@ -1635,6 +1693,8 @@ static struct cfg80211_ops sprd_cfg80211_ops = {
 	.del_station = MU300_WDEV_OP(sprd_cfg80211_del_station),
 	.change_station = MU300_WDEV_OP(sprd_cfg80211_change_station),
 	.get_station = MU300_WDEV_OP(sprd_cfg80211_get_station),
+	.dump_station = MU300_WDEV_OP(sprd_cfg80211_dump_station),
+	.get_channel = sprd_cfg80211_get_channel,
 	.libertas_set_mesh_channel = sprd_cfg80211_set_channel,
 	.scan = sprd_cfg80211_scan,
 	.connect = sprd_cfg80211_connect,

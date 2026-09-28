@@ -1789,5 +1789,16 @@ A phone got nothing from the tag at first, under Linux and under Android alike, 
 counted every tap. ZTE's web interface had NFC off (`settings global webserver_nfc_switch_status=0`, the factory
 state of this unit); switching it on there once made the tag answer phones from then on, under Linux too, so the
 switch is kept in the chip, presumably in its configuration block at 0x3b0 (which also holds the I2C address).
-The data area was unchanged by it. Which bit it is has not been found yet: the "off" state of 0x380-0x3ff was never
-read. With it on, URLs and text written by `mu300-nfc` reached a phone.
+The data area was unchanged by it: reading all 1 KiB with the switch on and off, the only difference is bit 5 of
+byte 0x3bf (0x20 set: off), in the configuration block at 0x3b0 that also holds the I2C address (0x57 at 0x3b3).
+`mu300-nfc on|off` changes that bit alone. With it on, URLs and text written by `mu300-nfc` reached a phone; a
+Wi-Fi record joins Android phones, while iOS reads URL records by itself but does nothing with a WSC record.
+
+### 33h. A trial guard that outlived its experiment, again
+
+The U30 Air restarted about every ten minutes after coming back from Android (`su -c mu300-linux`). init said
+`stage=trial-guard 600s`: the device segment of boot_b still held the guard of an old `--trial-guard 600`
+experiment, and `mu300-update` keeps that segment. 33e made init honour a guard only in a trial boot, but a boot
+from Android with mu300-linux is exactly that. The generic ramdisk segment, which every update appends behind the
+device segment, now carries an empty `etc/mu300-trial-guard` (a later file replaces an earlier one), and an
+experiment's guard goes into a segment of its own behind the generic one.

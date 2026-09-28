@@ -76,6 +76,15 @@ class Rules(unittest.TestCase):
             bad = [i for i, b in enumerate(data) if b > 127]
             self.assertFalse(bad, f'{name}: non-ASCII byte at offset {bad[:1]}')
 
+    def test_windows_pushes_text_with_lf(self):
+        # a CRLF clone pushed its scripts as they were and Android's sh ran none of them (issue #7): the Windows
+        # installers send text files through PushUnix, never a plain adb push
+        for name in ('install.ps1', 'uninstall.ps1'):
+            for n, line in enumerate((TOP / name).read_text().splitlines(), 1):
+                if 'adb push' in line:
+                    self.assertNotRegex(line, r'\.(sh|prop)\b|mu300-linux"|\$f"', f'{name}:{n}')
+        self.assertIn('eol=lf', (TOP / '.gitattributes').read_text())
+
     def test_single_quoted_scripts_have_no_apostrophes(self):
         # A script handed to `sh -c '...'` (docker run) ends at its first apostrophe: "the U30 Air's charger" in a
         # comment there broke OpenWrt's build at release time, while every parser still saw balanced quotes.

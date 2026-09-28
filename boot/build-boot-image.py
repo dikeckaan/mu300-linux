@@ -142,13 +142,16 @@ def main():
     if not a.generic_ramdisk and not (a.stock_boot and a.misc_head and a.kernel):
         ap.error('--stock-boot, --misc-head and --kernel are required unless --generic-ramdisk is given')
 
+    def text(path):  # scripts and lists for the device's shell, LF whatever the checkout did (issue #7)
+        return path.read_bytes().replace(b'\r\n', b'\n')
+
     files = {
-        'init': (a.init.read_bytes(), stat.S_IFREG | 0o755),
+        'init': (text(a.init), stat.S_IFREG | 0o755),
         'bin/busybox': (a.busybox.read_bytes(), stat.S_IFREG | 0o755),
         'bin/sh': (b'busybox', stat.S_IFLNK | 0o777),
         'bin/logdw': (a.logdw.read_bytes(), stat.S_IFREG | 0o755),
-        'etc/ueventd-perms.sh': (a.ueventd_perms.read_bytes(), stat.S_IFREG | 0o755),
-        'etc/module-order': (a.module_order.read_bytes(), stat.S_IFREG | 0o644),
+        'etc/ueventd-perms.sh': (text(a.ueventd_perms), stat.S_IFREG | 0o755),
+        'etc/module-order': (text(a.module_order), stat.S_IFREG | 0o644),
     }
     dirs = {'bin', 'sbin', 'etc', 'proc', 'sys', 'dev', 'run', 'tmp', 'root', 'config', 'linux-modules'}
     for name in a.module_order.read_text().split():
@@ -159,7 +162,7 @@ def main():
     for spec in a.device_modules:
         dev, _, ddir = spec.partition('=')
         order = HERE / f'module-order-{dev}.txt'
-        files[f'etc/module-order-{dev}'] = (order.read_bytes(), stat.S_IFREG | 0o644)
+        files[f'etc/module-order-{dev}'] = (text(order), stat.S_IFREG | 0o644)
         dirs.add('linux-modules/' + dev)
         # the kernel these were built for: a mainline kernel's generic segment replaces the modules and the order
         # of the base set, but not these, and init must not load them into a kernel they were not built for
@@ -173,10 +176,8 @@ def main():
                 if not (a.modules / name).exists():
                     sys.exit(f'missing module {name} for {dev} (neither {ko} nor in --modules)')
                 files['linux-modules/' + name] = ((a.modules / name).read_bytes(), stat.S_IFREG | 0o644)
-    if a.trial_guard:
-        if a.generic_ramdisk:
-            ap.error('--trial-guard does not go into a generic ramdisk')
-        files['etc/mu300-trial-guard'] = (b'%d\n' % a.trial_guard, stat.S_IFREG | 0o644)
+    if a.trial_guard and a.generic_ramdisk:
+        ap.error('--trial-guard does not go into a generic ramdisk')
     if a.device:
         # only in the device segment: a generic segment is the same for every device
         if a.generic_ramdisk:
@@ -185,6 +186,10 @@ def main():
     if a.generic_ramdisk:
         # The kernel unpacks concatenated ramdisk segments in turn and a later file replaces an earlier one of the
         # same name, so this segment behind the device's own ramdisk updates everything that is not the device's.
+        # That includes a trial guard an experiment left in the device segment: mu300-update keeps that segment,
+        # and a guard in it restarted an installed system every ten minutes whenever it booted as a trial (from
+        # Android with mu300-linux). An empty file here disarms it; an experiment's guard goes behind this.
+        files['etc/mu300-trial-guard'] = (b'', stat.S_IFREG | 0o644)
         ram = lz4_legacy(cpio_archive(dirs, files))
         a.out.write_bytes(ram)
         manifest = {
@@ -253,6 +258,10 @@ def main():
         # booted into standalone mode (issue #5). Our init is the one built for this device (the installer writes
         # its offset in) and searches for the region as well, so it goes behind as a third segment, unpacked last.
         ram += lz4_legacy(cpio_archive(set(), {'init': files['init']}))
+    if a.trial_guard:
+        # last of all, behind the generic segment and its empty guard
+        ram += lz4_legacy(cpio_archive(set(), {'etc/mu300-trial-guard': (b'%d\n' % a.trial_guard,
+                                                                         stat.S_IFREG | 0o644)}))
 
     kern = a.kernel.read_bytes()
     hdr = bytearray(base[:PAGE])

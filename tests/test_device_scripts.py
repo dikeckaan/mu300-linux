@@ -366,7 +366,8 @@ if op.startswith('w') and len(args) > 4 and args[4].startswith('r'):
     print(' '.join('0x%02x' % b for b in data[addr:addr + int(args[4][1:])]))
 elif op.startswith('w'):
     body = [int(x, 16) for x in args[4:]]
-    assert len(body) == n - 2 and len(body) <= 16 and addr % 16 == 0 and addr >= 16, args
+    # NDEF pages of 16 bytes; the configuration byte on its own
+    assert len(body) == n - 2 and (len(body) <= 16 and addr % 16 == 0 and addr >= 16 or (addr, len(body)) == (0x3bf, 1)), args
     data[addr:addr + len(body)] = bytes(body)
     open(mem, 'wb').write(bytes(data))
     open(os.path.join(os.environ['STUBLOG'], 'writes'), 'a').write('%x\\n' % addr)
@@ -468,6 +469,24 @@ elif op.startswith('w'):
             self.assertIn('left as it is', r.stdout)
             self.assertEqual(self.writes(), [])
             self.assertEqual(self.nfc(shell).stdout.strip(), 'url: https://example.com/')
+
+    def test_on_off(self):
+        # ZTE's NFC switch: bit 5 of the configuration byte 0x3bf (set: phones get nothing); nothing else changes
+        for shell in self.each_shell():
+            self.blank()
+            data = bytearray((self.tmp / 'tag.bin').read_bytes())
+            data[0x3b0:0x3c0] = bytes.fromhex('0578f057806002 1e0000009e44000420'.replace(' ', ''))
+            (self.tmp / 'tag.bin').write_bytes(bytes(data))
+            r = self.nfc(shell)
+            self.assertIn('NFC is off', r.stdout)
+            r = self.nfc(shell, 'on')
+            self.assertEqual((r.returncode, r.stdout.strip()), (0, 'NFC on'), r.stderr)
+            after = (self.tmp / 'tag.bin').read_bytes()
+            self.assertEqual(after[0x3b0:0x3c0], bytes.fromhex('0578f0578060021e0000009e44000400'))
+            self.assertEqual(after[:0x3bf], bytes(data[:0x3bf]))
+            self.assertNotIn('NFC is off', self.nfc(shell).stdout)
+            self.assertEqual(self.nfc(shell, 'off').stdout.strip(), 'NFC off')
+            self.assertEqual((self.tmp / 'tag.bin').read_bytes()[0x3bf], 0x20)
 
     def test_refusals(self):
         for shell in self.each_shell():

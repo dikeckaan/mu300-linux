@@ -5,6 +5,7 @@
 #   mu300-nfc url URL         a link the phone opens (https://..., tel:..., mailto:..., geo:...)
 #   mu300-nfc text TEXT       plain text
 #   mu300-nfc clear           empty
+#   mu300-nfc on|off          phones read the tag / get nothing (the switch in ZTE's web interface)
 #   mu300-nfc sync            at hotspot start: "wifi" again if the tag holds Wi-Fi (or nothing), and only if the
 #                             name or password changed; a URL or text written here stays
 # The tag is a Fudan FM11NT08 (NTAG-like dual interface EEPROM): the phone reads it over RF by itself, Linux writes it
@@ -12,11 +13,14 @@
 # line low and lets it go afterwards. Memory: 16 bytes of UID, lock bits and capability container, then the NDEF
 # TLV from 0x10 (the container's size byte: 0x6d, 872 bytes). ZTE's firmware writes the same Wi-Fi record (WSC,
 # WPA2-PSK). Anyone holding a phone to the device can read what is on it - which is what it is for.
+# ZTE's NFC switch is bit 5 of the chip's configuration byte 0x3bf (set: the RF side stays silent, though the
+# field-detect interrupt still counts every tap), found by reading the chip with the switch on and off; this
+# changes that one byte and nothing else there (the same block holds the tag's I2C address).
 # (MU300_SYSROOT, MU300_BIN, MU300_HOTSPOT_CONF are for tests/)
 export PATH="$PATH:/opt/mu300/bin:/usr/sbin:/sbin"
 R=${MU300_SYSROOT:-}
 CONF=${MU300_HOTSPOT_CONF:-/etc/mu300/hotspot.conf}
-BUS=2 ADDR=0x57 LINE=190 START=16
+BUS=2 ADDR=0x57 LINE=190 START=16 CFG=0x3bf RF_OFF=0x20
 
 die() { echo "mu300-nfc: $*" >&2; exit 1; }
 i2ct() {  # i2ctransfer ARGS: i2c-tools when there, else busybox's
@@ -96,6 +100,20 @@ write_ndef() {  # write_ndef HEX...: from START, 16 bytes per write, each page o
         fi
         o=$((o + 16))
     done
+}
+
+rf() {  # rf [on|off]: the RF side's switch, shown or set
+    v=$(i2ct "$BUS" "w2@$ADDR" 0x03 0xbf r1) || die "cannot read the tag's configuration"
+    v=$((v))
+    case ${1:-} in
+        on) n=$((v & ~RF_OFF)) ;;
+        off) n=$((v | RF_OFF)) ;;
+        *) [ $((v & RF_OFF)) -eq 0 ] && echo on || echo off; return ;;
+    esac
+    [ "$n" = "$v" ] && return
+    i2ct "$BUS" "w3@$ADDR" 0x03 0xbf "$(printf 0x%02x "$n")" || die "cannot write the tag's configuration"
+    sleep 0.02 2>/dev/null || sleep 1
+    [ $(( $(i2ct "$BUS" "w2@$ADDR" 0x03 0xbf r1) )) = "$n" ] || die "the tag did not keep its new configuration"
 }
 
 # --- NDEF -------------------------------------------------------------------------------------------------------
@@ -178,7 +196,7 @@ describe() {  # describe HEX: the NDEF message in words (hex on stdin as words)
 # --- main -------------------------------------------------------------------------------------------------------
 [ "$(${MU300_BIN:-/opt/mu300/bin}/mu300-device)" = u30air ] || die "only the U30 Air has an NFC tag"
 case ${1:-show} in
-    show|status|wifi|url|text|clear|sync) ;;
+    show|status|wifi|url|text|clear|sync|on|off) ;;
     *) sed -n '2,10s/^# \{0,1\}//p' "$0" >&2; exit 2 ;;
 esac
 [ -n "$R" ] || [ "$(id -u)" = 0 ] || die "run as root (sudo mu300-nfc ...)"
@@ -194,9 +212,12 @@ EOF
         new=$(tlv "$(wifi_record "$ssid" "$psk")") ;;
 esac
 enable
+case ${1:-show} in on|off) rf "$1"; echo "NFC $(rf)"; exit 0 ;; esac
 now=$(describe "$(read_ndef)")
 case ${1:-show} in
-    show|status) echo "$now" ;;
+    show|status)
+        echo "$now"
+        [ "$(rf)" = on ] || echo "NFC is off: phones get nothing (sudo mu300-nfc on)" ;;
     sync)
         case $now in wifi:*|empty) ;; *) echo "the tag holds something else, left as it is: $now"; exit 0 ;; esac
         write_ndef $new
