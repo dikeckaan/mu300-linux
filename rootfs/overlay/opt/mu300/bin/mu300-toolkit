@@ -476,6 +476,8 @@ info() {
 # ---------------------------------------------------------------- menus
 menu() {  # menu TITLE "label" ... -> sets CHOICE to the number (0 = back)
     t=$1; shift; title "$t"
+    # a newer release (mu300-update notice, at boot and every 6 hours)
+    [ "$t" = "Main menu" ] && [ -s /run/mu300/update-available ] && printf '  %s%s%s\n\n' "$B" "$(cat /run/mu300/update-available)" "$N"
     i=1; for l in "$@"; do printf '  %s%2d%s  %s\n' "$C" "$i" "$N" "$l"; i=$((i + 1)); done
     printf '\n  %s 0%s  %s\n\n  > ' "$C" "$N" "$( [ "$t" = "Main menu" ] && echo Exit || echo Back)"
     read -r CHOICE || CHOICE=0
@@ -517,6 +519,10 @@ wifi_pick_and_join() {
         read -r w || return
         case $w in
             1) /opt/mu300/bin/wifi-client scan-mode on 2>&1 | sed 's/^/  /'
+               # the reboot takes the hotspot away: whoever came in over it loses this session (reported)
+               printf '\n  %sConnected through this hotspot? The session ends here, and the hotspot is off after the\n' "$Y"
+               printf '  reboot. Come back over USB (%s) or wait: it returns within 10 minutes if no network\n' "$(/opt/mu300/bin/mu300-lan-ip 2>/dev/null || echo 192.168.77.1)"
+               printf '  is joined.%s\n' "$N"
                printf '\n  %sReboot now?%s [y/N] ' "$B" "$N"
                read -r a
                case $a in y|Y|e|E) printf '\n  rebooting...\n'; sync; reboot ;; esac

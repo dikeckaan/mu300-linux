@@ -1,8 +1,10 @@
 [Unit]
 # the radio does one thing at a time: no hotspot while the device is a client of another network
 ConditionPathExists=!/run/mu300-wifi-client.active
-# "wifi-client scan-mode on": this boot leaves the radio a station so that networks can be listed
-ConditionPathExists=!/etc/mu300/wifi-scan-mode
+# "wifi-client scan-mode on": this boot leaves the radio a station so that networks can be listed (taken from
+# /etc/mu300/wifi-scan-mode by mu300-wifi-scan-mode.service, for this boot only)
+ConditionPathExists=!/run/mu300-wifi-scan-mode
+After=mu300-wifi-scan-mode.service
 Description=MU300 Wi-Fi hotspot (hostapd on wlan0, bridged into br-lan)
 After=mu300-wifi.service mu300-lan.service
 Requires=mu300-wifi.service

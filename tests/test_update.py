@@ -30,6 +30,27 @@ class Update(ShellTest):
             r = self.up(shell, 'echo loaded')
             self.assertEqual((r.returncode, r.stdout), (0, 'loaded\n'), r.stderr)
 
+    def test_notice(self):
+        # a note for the login message and mu300-toolkit when a newer release is out; nothing else happens
+        note, motd = self.tmp / 'run/update-available', self.tmp / 'motd.d'
+        env = dict(MU300_NOTICE=str(note), MU300_MOTD_DIR=str(motd))
+        for shell in self.each_shell():
+            for installed, latest, noted in (('v2026.10.06', 'v2026.10.08', True), ('v2026.10.08', 'v2026.10.08', False),
+                                             ('v2026.10.09', 'v2026.10.08', False)):   # a test release: no note
+                r = self.up(shell, f'latest_release() {{ echo {latest}; }}; installed_version() {{ echo {installed}; }}; '
+                                   'notice; echo rc=$?', **env)
+                self.assertIn('rc=0', r.stdout, r.stderr)
+                self.assertEqual(note.exists(), noted, (installed, latest))
+                self.assertEqual((motd / '60-mu300-update').exists(), noted)
+                if noted:
+                    self.assertEqual(note.read_text(), f'mu300-linux {latest} is out (this is {installed}): '
+                                                       'sudo mu300-update apply\n')
+            # offline: the note stays, and the caller hears it (to ask again sooner)
+            self.up(shell, 'latest_release() { echo v2026.10.08; }; installed_version() { echo v2026.10.06; }; notice', **env)
+            r = self.up(shell, 'latest_release() { :; }; notice; echo rc=$?', **env)
+            self.assertIn('rc=1', r.stdout)
+            self.assertTrue(note.exists())
+
     def test_rootfs_asset(self):
         osr = self.disk / 'ubuntu' / 'etc' / 'os-release'
         cases = [('24.04', {}, 'mu300-ubuntu-rootfs.tar.gz'),

@@ -1802,3 +1802,13 @@ experiment, and `mu300-update` keeps that segment. 33e made init honour a guard 
 from Android with mu300-linux is exactly that. The generic ramdisk segment, which every update appends behind the
 device segment, now carries an empty `etc/mu300-trial-guard` (a later file replaces an earlier one), and an
 experiment's guard goes into a segment of its own behind the generic one.
+
+### 33i. A reboot "with the hotspot off" that never brought it back
+
+Reported: after rebooting from mu300-toolkit because the hotspot was on, SSH was gone. The toolkit's "join a
+network" offers exactly that reboot when the radio is the access point (this driver cannot turn an AP back into a
+station), and `wifi-client scan-mode on` left `/etc/mu300/wifi-scan-mode` in place until a network was joined: the
+hotspot stayed off at that boot and at every boot after, and whoever had come in over it had no way back but USB.
+The flag is now taken at boot into `/run` (mu300-wifi-scan-mode.service), for that boot only, a transient timer
+brings the hotspot back after 10 minutes when nothing was joined, and the toolkit says before the reboot that a
+session over the hotspot ends there and where to come back. Newer-release notes at login came in the same change.

@@ -9,6 +9,8 @@
 #   mu300-update kernel [5.4|6.18|7.2]  show, or change, the kernel (vendor 5.4, mainline 6.18 LTS or the newest
 #                                 stable mainline, 7.2) and install it
 #   mu300-update clean            delete the kept <os>.old copies
+#   mu300-update notice           only look: a note for the login message and mu300-toolkit when a newer release is
+#                                 out (at boot and every 6 hours; nothing is installed without apply)
 #
 # How it works: the new filesystem is unpacked next to the old one as <os>.new on the Linux partition, your settings
 # and the vendor files are carried over, and only then are the directories swapped (<os> -> <os>.old, <os>.new ->
@@ -121,6 +123,27 @@ latest_release() {
 
 mounted_disk() {
     [ -d "$DISK/ubuntu" ] || [ -d "$DISK/openwrt" ] || die "the Linux partition is not mounted at $DISK"
+}
+
+# notice: the note that a newer release is out. It is shown at login (Ubuntu: the motd, OpenWrt: /etc/profile.d)
+# and at the top of mu300-toolkit. Nothing is ever installed by itself: an update that went wrong on a device
+# nobody is watching could leave it unreachable.
+NOTICE=${MU300_NOTICE:-/run/mu300/update-available}
+MOTD_DIR=${MU300_MOTD_DIR:-/run/motd.d}
+notice() {
+    latest=$(latest_release)
+    [ -n "$latest" ] || return 1   # offline: the note stays as it was, the next round asks again
+    inst=$(installed_version)
+    mkdir -p "${NOTICE%/*}"
+    # tags are dates (vYYYY.MM.DD), so they sort as text; a test release newer than the newest is no reason to note
+    if [ "$inst" != "$latest" ] && [ "$(printf '%s\n%s\n' "$inst" "$latest" | sort | tail -n1)" = "$latest" ]; then
+        printf 'mu300-linux %s is out (this is %s): sudo mu300-update apply\n' "$latest" "$inst" > "$NOTICE"
+    else
+        rm -f "$NOTICE"
+    fi
+    [ -e /etc/openwrt_release ] && [ -z "${MU300_MOTD_DIR:-}" ] && return 0
+    mkdir -p "$MOTD_DIR" && chmod 755 "$MOTD_DIR"
+    if [ -s "$NOTICE" ]; then cp "$NOTICE" "$MOTD_DIR/60-mu300-update"; else rm -f "$MOTD_DIR/60-mu300-update"; fi
 }
 
 check() {
@@ -670,6 +693,7 @@ case ${1:-check} in
     kernel) shift; kernel_cmd "$@" ;;
     accounts) accounts ;;
     clean) clean ;;
-    -h|--help|help) sed -n '2,12s/^# \{0,1\}//p' "$0" ;;
-    *) echo "usage: mu300-update check|apply [os...]|boot|kernel [5.4|6.18|7.2]|rollback [os]|rollback-boot|clean" >&2; exit 2 ;;
+    notice) notice ;;
+    -h|--help|help) sed -n '2,14s/^# \{0,1\}//p' "$0" ;;
+    *) echo "usage: mu300-update check|apply [os...]|boot|kernel [5.4|6.18|7.2]|rollback [os]|rollback-boot|clean|notice" >&2; exit 2 ;;
 esac

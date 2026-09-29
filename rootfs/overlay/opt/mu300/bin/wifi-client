@@ -7,8 +7,9 @@
 #   wifi-client up                   join the remembered network again (used at boot)
 #   wifi-client disconnect           leave, and put the hotspot back if it was running
 #   wifi-client forget               disconnect and delete the saved network
-#   wifi-client scan-mode on|off     off: hotspot as usual. on: the next boot leaves the radio a station, so
-#                                    networks can be listed and joined from the menu (needs that one reboot)
+#   wifi-client scan-mode on|off     off: hotspot as usual. on: the next boot (that one only) leaves the radio a
+#                                    station, so networks can be listed and joined from the menu; the hotspot
+#                                    comes back by itself if nothing is joined within 10 minutes
 #
 # The SC2355 radio does one thing at a time, and the switch only goes one way: the driver creates wlan0 in
 # station mode, hostapd turns it into an access point, and nothing turns it back - "iw set type" is refused
@@ -32,8 +33,14 @@ AP_FLAG=/run/mu300-wifi-client-had-ap
 # hotspot would otherwise come up right after this script joined a network and take the radio back
 ACTIVE=/run/mu300-wifi-client.active
 # set by "wifi-client scan-mode on": keeps the hotspot from starting at the next boot, so the radio stays a
-# station and can look for networks. It survives the reboot on purpose; leaving scan mode removes it.
+# station and can look for networks. It survives the reboot on purpose, and that boot takes it
+# (mu300-wifi-scan-mode.service: "scan-mode boot") into SCANRUN, for that boot alone. It used to stay until a
+# network was joined: someone who rebooted into it from an SSH session over the hotspot, and joined nothing,
+# found the hotspot gone at every boot after, and with it the way in. Now the next boot has the hotspot again,
+# and this one gets it back after SCAN_TIMEOUT when nothing was joined.
 SCANMODE=/etc/mu300/wifi-scan-mode
+SCANRUN=/run/mu300-wifi-scan-mode
+SCAN_TIMEOUT=${MU300_SCAN_TIMEOUT:-10min}
 
 # --------------------------------------------------------------------- udhcpc calls this script back with an
 # action in $1 and the lease in the environment; keep it first so nothing else runs in that context
@@ -247,7 +254,7 @@ connect() {  # connect SSID [PASS]
     fi
 
     save_network "$ssid" "$psk"
-    rm -f "$SCANMODE"
+    rm -f "$SCANMODE" "$SCANRUN"
     : > "$ACTIVE"
     say "connected: $ssid  $addr"
     status
@@ -270,6 +277,7 @@ status() {
         printf 'mode        off (neither hotspot nor connected)\n'
     fi
     [ -e "$SCANMODE" ] && printf 'scan mode   armed: the hotspot stays off at the next boot\n'
+    [ -e "$SCANRUN" ] && printf 'scan mode   this boot: the hotspot is off until a network is joined (at most %s)\n' "$SCAN_TIMEOUT"
     saved=$(conf_get SSID)
     [ -n "$saved" ] && printf 'saved       %s (rejoined at boot when ENABLE=1)\n' "$saved"
     true
@@ -284,15 +292,27 @@ case ${1:-status} in
         [ -n "$ssid" ] || { say "no saved network (wifi-client connect SSID PASSWORD)"; exit 0; }
         [ "$(conf_get ENABLE)" = 1 ] || { say "the saved network is disabled (ENABLE=0 in $CONF)"; exit 0; }
         connect "$ssid" "$(conf_get PSK)" ;;
-    disconnect) stop_client; rm -f "$SCANMODE"; start_ap; say "disconnected" ;;
-    forget) stop_client; rm -f "$CONF" "$SCANMODE"; start_ap; say "the saved network was deleted" ;;
+    disconnect) stop_client; rm -f "$SCANMODE" "$SCANRUN"; start_ap; say "disconnected" ;;
+    forget) stop_client; rm -f "$CONF" "$SCANMODE" "$SCANRUN"; start_ap; say "the saved network was deleted" ;;
     scan-mode)
         case ${2:-} in
             on) mkdir -p /etc/mu300; : > "$SCANMODE"
-                say "scan mode is armed: reboot, and the hotspot stays off so the radio can list networks."
+                say "scan mode is armed: reboot, and for that boot the hotspot stays off so the radio can list"
+                say "networks. Joined to none within $SCAN_TIMEOUT, the hotspot comes back; the boot after has it anyway."
                 say "(\"wifi-client scan-mode off\" cancels it, and joining or disconnecting ends it too.)" ;;
-            off) rm -f "$SCANMODE"; start_ap; say "scan mode is off, the hotspot is back" ;;
-            *) [ -e "$SCANMODE" ] && say "scan mode: armed for the next boot" || say "scan mode: off" ;;
+            off) rm -f "$SCANMODE" "$SCANRUN"; start_ap; say "scan mode is off, the hotspot is back" ;;
+            boot)   # (mu300-wifi-scan-mode.service, at boot before the hotspot) this boot only
+                [ -e "$SCANMODE" ] || exit 0
+                rm -f "$SCANMODE"; : > "$SCANRUN"
+                systemd-run --quiet --unit=mu300-wifi-scan-timeout --on-active="$SCAN_TIMEOUT" \
+                    /opt/mu300/bin/wifi-client scan-mode timeout 2>/dev/null || true
+                say "scan mode for this boot: the hotspot stays off (at most $SCAN_TIMEOUT unless a network is joined)" ;;
+            timeout)   # nothing joined in time: the hotspot again, so a device reached over it is reachable again
+                [ -e "$SCANRUN" ] && [ ! -e "$ACTIVE" ] || exit 0
+                rm -f "$SCANRUN"; start_ap; say "scan mode timed out, the hotspot is back" ;;
+            *) if [ -e "$SCANRUN" ]; then say "scan mode: this boot"
+               elif [ -e "$SCANMODE" ]; then say "scan mode: armed for the next boot"
+               else say "scan mode: off"; fi ;;
         esac ;;
     status) status ;;
     -h|--help|help) sed -n '2,15s/^# \{0,1\}//p' "$0" ;;
