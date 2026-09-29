@@ -309,8 +309,14 @@ class ThermalGuard(ShellTest):
         led = self.bin / 'mu300-led'
         led.write_text('#!/bin/sh\necho "mu300-led $*" >> "$STUBLOG/calls"\n')
         led.chmod(0o755)
+        shutil.copy(BIN / 'mu300-device', self.bin / 'mu300-device')
+        self.device('u30air')
         self.stub('logger', ':')
         self.stub('poweroff', 'echo poweroff >> "$STUBLOG/calls"')
+
+    def device(self, name):
+        (self.root / 'run/mu300').mkdir(parents=True, exist_ok=True)
+        (self.root / 'run/mu300/device').write_text(name + '\n')
 
     def round(self, shell, soc, battery=None, trips=False):
         z = self.root / 'sys/class/thermal/thermal_zone0'
@@ -331,6 +337,7 @@ class ThermalGuard(ShellTest):
     def test_alarm_on_and_off(self):
         for shell in self.each_shell():
             shutil.rmtree(self.root, ignore_errors=True)
+            self.device('u30air')
             self.assertEqual(self.round(shell, 60000, 300), [])
             self.assertEqual(self.round(shell, 86000, 300), ['mu300-led alarm on'])
             self.assertEqual(self.round(shell, 90000, 300), [])                # on already
@@ -340,12 +347,24 @@ class ThermalGuard(ShellTest):
             self.assertEqual(self.round(shell, 60000, 460), [])
             self.assertEqual(self.round(shell, 60000, 440), ['mu300-led alarm off'])
 
+    def test_f50_battery_is_ignored(self):
+        # the F50 has no battery, but mainline's fuel gauge reports one at 75.0 C from an open NTC input: the
+        # alarm went on at every boot and never off (v2026.10.06)
+        for shell in self.each_shell():
+            shutil.rmtree(self.root, ignore_errors=True)
+            self.device('f50')
+            self.assertEqual(self.round(shell, 46000, 750), [])
+            self.assertEqual(self.round(shell, 86000, 750), ['mu300-led alarm on'])    # the SoC still counts
+            self.assertEqual(self.round(shell, 74000, 750), ['mu300-led alarm off'])
+
     def test_vendor_kernel_only_watches(self):
         # 5.4 has its own trip points: no throttling or power-off here, but the alarm still works
         for shell in self.each_shell():
             shutil.rmtree(self.root, ignore_errors=True)
+            self.device('u30air')
             self.assertEqual(self.round(shell, 110000, trips=True), ['mu300-led alarm on'])
             shutil.rmtree(self.root, ignore_errors=True)
+            self.device('u30air')
             self.assertEqual(self.round(shell, 110000), ['poweroff', 'mu300-led alarm on'])   # mainline: critical
 
 

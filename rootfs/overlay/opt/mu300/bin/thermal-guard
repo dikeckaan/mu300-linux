@@ -2,7 +2,7 @@
 # Thermal safety for kernels without SoC trip points (mainline: the stock DT only has trips on the vendor virtual
 # zone). Reads the hottest on-die sensor every 5 s: above HOT caps every cpufreq policy one step lower, below COOL
 # lifts the cap one step, above CRIT powers off. The 5.4 vendor kernel throttles itself, so there it only watches.
-# On every kernel: the SoC at HOT or the battery at BATT_HOT (tenths of a degree, as power_supply reports it) sets
+# On every kernel: the SoC at HOT or (U30 Air) the battery at BATT_HOT (tenths of a degree, as power_supply reports it) sets
 # off the LED alarm (mu300-led alarm: a red and blue siren), until the SoC is down to COOL and the battery to
 # BATT_COOL.
 HOT=${MU300_THERMAL_HOT:-85000}
@@ -26,8 +26,12 @@ hottest() {
     done
     echo "$max"
 }
-battery() {  # the battery's temperature in tenths of a degree, nothing without one (the F50)
+DEVICE=$(${MU300_BIN:-/opt/mu300/bin}/mu300-device)
+battery() {  # the battery's temperature in tenths of a degree; the U30 Air only
     local b t
+    # The F50 has no battery, but under mainline the PMIC's fuel gauge probes on it too and reports one, at a
+    # temperature read from an unconnected NTC input (750: 75 C): the alarm went on at every boot and never off.
+    [ "$DEVICE" = u30air ] || return 0
     for b in "$R"/sys/class/power_supply/*; do
         [ "$(cat "$b/type" 2>/dev/null)" = Battery ] || continue
         read -r t < "$b/temp" 2>/dev/null && [ -n "$t" ] && { echo "$t"; return; }
