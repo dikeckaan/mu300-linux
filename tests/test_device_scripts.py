@@ -1,5 +1,6 @@
 """Small device scripts, against a fake / (MU300_SYSROOT) and stub commands: mu300-device, mu300-lan-ip, mu300-led,
 mu300-ttl. They run on Ubuntu (dash, bash) and OpenWrt (busybox ash)."""
+import os
 import shutil
 import time
 import unittest
@@ -176,6 +177,27 @@ class Led(ShellTest):
             self.assertEqual({v for k, v in s.items() if k != 'sc27xx:blue'}, {'0'})
             self.led(shell, 'f50', 'data', '5g')              # one LED: blue on 5G too
             self.assertEqual(self.state()['sc27xx:blue'], '255')
+
+    def test_stale_siren_stops(self):
+        # a siren the pid file does not name (left behind by a restart) stops by itself: two of them flashed
+        # together, white lit throughout
+        for shell in self.each_shell():
+            self.reset()
+            pid = self.root / 'run/mu300/led-siren.pid'
+            self.led(shell, 'u30air', 'alarm', 'on')
+            p = int(pid.read_text())
+            pid.write_text('1\n')                                 # someone else's now
+            deadline = time.time() + 3
+            while time.time() < deadline:
+                try:
+                    os.kill(p, 0)
+                except ProcessLookupError:
+                    break
+                time.sleep(0.1)
+            else:
+                os.kill(p, 15)
+                self.fail('the stale siren kept running')
+            pid.unlink()
 
     def test_vendor_ldo_switches_on_5_4(self):
         # the 5.4 kernel has no zte-ldoN LEDs: ZTE's zte_ldo_leds switches the same LDOs through vddcamaN_status

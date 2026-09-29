@@ -116,7 +116,15 @@ case "$1 ${2:-}" in
         for l in $SIREN; do write "$l" 0; done
         if awake; then show_all; fi ;;   # the U30 Air's white is its power LED, the F50's blue its data LED
     "siren "*)   # (alarm on runs this in the background)
+        # Only the siren named in the pid file runs: one left behind (its alarm switched off while it was
+        # between writes, a restarted service) stops by itself instead of flashing along with the new one.
+        # The file is written just after the start, so a missing one counts only after the first round.
+        n=0
         while :; do
+            own=$(cat "$SIREN_PID" 2>/dev/null)
+            if [ -n "$own" ]; then [ "$own" = $$ ] || exit 0
+            elif [ $n -gt 0 ]; then exit 0; fi
+            n=$((n + 1))
             for on in $SIREN; do
                 for l in $SIREN; do [ "$l" = "$on" ] || write "$l" 0; done
                 write "$on" 1; nap 0.25
