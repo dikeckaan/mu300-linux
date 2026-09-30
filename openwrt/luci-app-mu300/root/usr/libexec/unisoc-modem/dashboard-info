@@ -1,0 +1,265 @@
+#!/bin/sh
+# mu300-dash-info -- the dashboard's system/network snapshot: ONE line of JSON on stdout.
+#
+# The LuCI home page (luci-app-mu300) polls this through the rpcd backend
+# /usr/libexec/rpcd/mu300dash every few seconds. It reads only files and asks
+# ubus/uci/iw, so it never touches the modem's AT channel - the cell readings
+# live in mu300-dash-cell, which has its own cache and its own pace.
+#
+# CPU time and interface byte counters are "since boot" cumulative values; the
+# page subtracts two consecutive snapshots to get CPU% and live rates, so the
+# poll interval never skews the numbers.
+#
+# Every external call is wrapped in a hard timeout: netifd mid-reload or a wedged
+# driver must not void the whole snapshot (the same lesson the V50 panel learned
+# in the field - one hung call used to blank every readout on the page).
+#
+# Known traps this deliberately works around (docs/FINDINGS.md and the V50
+# research archive):
+#   * loadavg is meaningless here - three vendor kernel threads sit in D state
+#     and pin it around 3.5 forever. It is not reported at all.
+#   * iw/iwinfo never report tx-power or a sane channel on the sprd WCN driver;
+#     SSID/channel come from uci instead.
+#   * thermal zones are matched by type, never by zone number.
+
+export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/libexec/unisoc-modem:/usr/sbin:/sbin"
+
+BB=/opt/mu300/bin/busybox
+[ -x "$BB" ] || BB=busybox
+t3() { "$BB" timeout -s KILL 3 "$@" 2>/dev/null; }   # external asks: netifd, uci, iw...
+t2() { "$BB" timeout -s KILL 2 "$@" 2>/dev/null; }
+
+rd() { cat "$1" 2>/dev/null; }
+n_or_null() { case "$1" in ''|*[!0-9.-]*) echo null ;; *) echo "$1" ;; esac; }
+f_or_null() { case "$1" in ''|*[!0-9.-]*) echo null ;; *) echo "$1" ;; esac; }
+# JSON string escaping (and drop newlines: the output is one line)
+esc() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | tr -d '\r\n'; }
+qs() { [ -n "$1" ] && printf '"%s"' "$(esc "$1")" || echo null; }
+
+# ------------------------------------------------------------- temperature
+# type -> label, the four zones this SoC actually has; hottest covers the rest
+temp_of() {
+    local z t
+    for z in /sys/class/thermal/thermal_zone*; do
+        [ -r "$z/type" ] || continue
+        [ "$(rd "$z/type")" = "$1" ] || continue
+        t=$(rd "$z/temp")
+        [ -n "$t" ] || return 0
+        awk -v v="$t" 'BEGIN{printf "%.1f", v/1000}'
+        return 0
+    done
+}
+temp_hottest() {
+    rd /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -n | tail -n1 | awk '{printf "%.1f", $1/1000}'
+}
+
+# ------------------------------------------------------- a ubus scalar field
+# the ubus CLI pretty-prints with spaces, so sed on the literal key; first match
+# wins (the fields used here appear once, ipv4 before ipv6 in the address blocks)
+jval() { printf '%s' "$1" | sed -n "s/.*\"$2\": *\"\{0,1\}\([^,\"}\]*\).*/\1/p" | head -n1; }
+
+# ----------------------------------------------------------------- WAN (ubus)
+cfg() { uci -q get "unisoc_modem.main.$1" 2>/dev/null || true; }
+DATA_IFACE=$(cfg data_interface); DATA_IFACE=${DATA_IFACE:-wan}
+DATA_IFACE6=$(cfg data_interface_v6); DATA_IFACE6=${DATA_IFACE6:-wan6}
+WANJSON=$(t3 ubus call "network.interface.$DATA_IFACE" status)
+WAN6JSON=$(t3 ubus call "network.interface.$DATA_IFACE6" status)
+DATA_DEVICE=$(cfg data_device)
+[ -n "$DATA_DEVICE" ] || DATA_DEVICE=$(jval "$WANJSON" l3_device)
+[ -n "$DATA_DEVICE" ] || DATA_DEVICE=sipa_eth0
+LAN_DEVICE=$(cfg lan_device); LAN_DEVICE=${LAN_DEVICE:-br-lan}
+WIFI_DEVICE=$(cfg wifi_device); WIFI_DEVICE=${WIFI_DEVICE:-wlan0}
+USB_DEVICE=$(cfg usb_device); USB_DEVICE=${USB_DEVICE:-usb0}
+jaddr4() { printf '%s' "$1" | sed -n 's/.*"address": *"\([^"]*\)".*/\1/p' | head -n1; }
+jarr_dns() { printf '%s' "$1" | sed -n 's/.*"dns-server": *\[\([^]]*\)\].*/\1/p' | tr -d '"' ; }
+
+wan_up=$(jval "$WANJSON" up)
+[ "$wan_up" = "true" ] && wan_up=1 || wan_up=0
+wan_uptime=$(jval "$WANJSON" uptime)
+wan_proto=$(jval "$WANJSON" proto)
+wan_ip4=$(jaddr4 "$WANJSON")
+wan6_up=$(jval "$WAN6JSON" up)
+[ "$wan6_up" = "true" ] && wan6_up=1 || wan6_up=0
+wan6_ip=$(t2 ip -6 addr show "$DATA_DEVICE" 2>/dev/null | awk '/inet6 [23]/{split($2,s,"/"); print s[1]; exit}')
+wan_dns=$(jarr_dns "$WANJSON")
+apn=$(t3 uci -q get "network.$DATA_IFACE.apn")
+[ -n "$apn" ] || apn="(SIM default)"
+
+# ------------------------------------------------------------------- system
+NOW=$(date +%s)
+UPTIME=$(cut -d' ' -f1 /proc/uptime | cut -d. -f1)
+HOST=$(t3 uci -q get system.@system[0].hostname)
+[ -n "$HOST" ] || HOST=$(rd /proc/sys/kernel/hostname)
+MODEL=$(rd /tmp/sysinfo/model 2>/dev/null)
+[ -n "$MODEL" ] || MODEL=$(rd /proc/device-tree/model 2>/dev/null | tr -d '\0')
+FW=$(sed -n "s/^DISTRIB_DESCRIPTION='\(.*\)'$/\1/p" /etc/openwrt_release 2>/dev/null)
+[ -n "$FW" ] || FW=$(uname -sr)
+
+# /proc/stat first line: cpu user nice system idle iowait irq softirq steal ...
+# busy = everything except idle+iowait; the page deltas this against the last poll
+read -r _cpu _u _n _s _i _w _irq _sirq _st _rest < /proc/stat
+CPU_TOTAL=$(( _u + _n + _s + _i + _w + _irq + _sirq + _st ))
+CPU_IDLE=$(( _i + _w ))
+CPUN=$(grep -c '^processor' /proc/cpuinfo)
+# one freq pair per policy (big.LITTLE shows two; the page averages or shows both)
+FREQS=
+for p in /sys/devices/system/cpu/cpufreq/policy*/scaling_cur_freq; do
+    [ -r "$p" ] || continue
+    d=$(dirname "$p")
+    FREQS="$FREQS{\"cur\":$(n_or_null "$(rd "$p")"),\"max\":$(n_or_null "$(rd "$d/cpuinfo_max_freq")")},"
+done
+FREQS=${FREQS%,}
+
+MEM_T=$(awk '/^MemTotal/{print $2}' /proc/meminfo)
+MEM_A=$(awk '/^MemAvailable/{print $2}' /proc/meminfo)
+
+# df on / (the ext4 mu300root loop device)
+DF=$(df -k / 2>/dev/null | awk 'NR==2{print $2, $3, $4}')
+set -- $DF; DISK_T=$1; DISK_U=$2; DISK_A=$3
+
+T_SOC=$(temp_of soc-thmzone)
+T_CPU=$(temp_of apcpu0-thmzone)
+T_NR=$(temp_of nr0-thmzone)
+T_BRD=$(temp_of board-thmzone)
+T_HOT=$(temp_hottest)
+
+# ------------------------------------------------------------------- power
+# The F50 has a battery; the V50 (same SoC) does not - a missing capacity file
+# simply means "no battery" and the page hides the tile. voltage_now is
+# microvolts on this PMIC; current_now microamps (negative = charging on some
+# firmwares, positive on others - the sign is reported raw and the page only
+# shows magnitude + charging state from `status`).
+P_CAP=$(rd /sys/class/power_supply/battery/capacity)
+P_STATUS=$(rd /sys/class/power_supply/battery/status)
+P_V=$(rd /sys/class/power_supply/battery/voltage_now)
+P_I=$(rd /sys/class/power_supply/battery/current_now)
+P_USB=$(rd /sys/class/power_supply/usb/online)
+case "$P_CAP" in ''|*[!0-9]*) P_PRESENT=0 ;; *) P_PRESENT=1 ;; esac
+P_V=$(n_or_null "$(awk -v v="$P_V" 'BEGIN{if(v+0>0)printf "%.2f",v/1000000}')")
+P_I=$(n_or_null "$(awk -v v="$P_I" 'BEGIN{if(v!="")printf "%d",v}')")
+
+# ------------------------------------------------------- interface counters
+net_obj() {  # net_obj IFACE -> {"rx":N,"tx":N,"up":0|1} or null
+    local d=/sys/class/net/$1
+    [ -d "$d" ] || { echo null; return; }
+    local rx tx up
+    rx=$(rd "$d/statistics/rx_bytes"); tx=$(rd "$d/statistics/tx_bytes")
+    case "$(rd "$d/operstate")" in up) up=1 ;; *) up=0 ;; esac
+    printf '{"rx":%s,"tx":%s,"up":%d}' "$(n_or_null "$rx")" "$(n_or_null "$tx")" "$up"
+}
+
+# ------------------------------------------------------------------- Wi-Fi
+# configuration truth is uci (the driver reports nothing useful); per-client detail
+# comes from the driver's station table, names and addresses from the DHCP leases.
+# ONE "uci show wireless" instead of nine "uci get": each uci call costs a fork
+# plus config parse and they added up to most of this script's runtime.
+WSHOW=$(t3 uci -q show wireless 2>/dev/null)
+wu() {  # wu KEY -> value ('' when absent); KEY like "radio0.channel"
+    printf '%s\n' "$WSHOW" | sed -n "s/^wireless\\.$1='\\(.*\\)'$/\\1/p" | head -n1
+}
+# anonymous sections appear in "uci show" under their cfg id, and named ones use
+# their name - either way the section type line has no quotes; resolve the first
+# wifi-iface section once and read its options through that key
+IFKEY=$(printf '%s\n' "$WSHOW" | sed -n "s/^wireless\\.\\([^.]*\\)=wifi-iface\$/\\1/p" | head -n1)
+W_SSID=$(wu "${IFKEY:-x}.ssid")
+W_CH=$(wu 'radio0.channel')
+W_BAND=$(wu 'radio0.band')
+[ -n "$W_BAND" ] || W_BAND=$(wu 'radio0.hwmode')
+W_HT=$(wu 'radio0.htmode')   # HE80 / VHT40 / HT20 -> the number is the width
+W_WIDTH=$(printf '%s' "$W_HT" | tr -cd '0-9' | head -c 2)
+[ -n "$W_WIDTH" ] && W_WIDTH="$W_WIDTH MHz"
+W_COUNTRY=$(wu 'radio0.country')
+W_ENC=$(wu "${IFKEY:-x}.encryption")
+[ -n "$W_ENC" ] || W_ENC=none
+W_HIDDEN=$(wu "${IFKEY:-x}.hidden")
+W_HOSTAPD=0
+HAPD=$(t3 ubus call "hostapd.$WIFI_DEVICE" get_status 2>/dev/null)
+printf '%s' "$HAPD" | grep -q '"status": *"ENABLED"' && W_HOSTAPD=1
+W_DIS=$(wu 'radio0.disabled')
+[ "$W_DIS" = "1" ] && W_UP=0 || W_UP=1
+[ -d "/sys/class/net/$WIFI_DEVICE" ] || W_UP=0
+[ "$W_HOSTAPD" = 1 ] || W_UP=0
+# station table: one block per client - mac, signal, tx/rx bitrate, connected time
+W_CLIENTS=$(t3 iw dev "$WIFI_DEVICE" station dump 2>/dev/null | awk -F':\t*' '
+    /^Station / { mac = $2; sub(/ .*/, "", mac); sig = tx = rx = ct = "" }
+    /^	signal:/ { sig = $2 + 0 }
+    /^	tx bitrate:/ { tx = $2; sub(/ .*/, "", tx); sub(/$/, " Mbit/s", tx) }
+    /^	rx bitrate:/ { rx = $2; sub(/ .*/, "", rx); sub(/$/, " Mbit/s", rx) }
+    /^	connected time:/ { ct = $2 + 0; ct = int(ct / 60) + " min" }
+    mac != "" && sig != "" && !seen[mac]++ {
+        printf "%s|%s|%s|%s|%s\n", mac, sig, tx, rx, ct; sig = ""
+    }')
+W_CN=0; W_CLIST=
+while IFS='|' read -r mac sig txr rxr ct; do
+    [ -n "$mac" ] || continue
+    umac=$(echo "$mac" | tr 'a-f' 'A-F')
+    line=$(awk -v m="$umac" '$2 == m { print $3 "|" $4; exit }' /tmp/dhcp.leases 2>/dev/null)
+    ip=${line%%|*}; host=${line#*|}
+    [ "$host" = "$line" ] && host=
+    W_CLIST="$W_CLIST{\"mac\":\"$mac\",\"host\":$(qs "$host"),\"ip\":$(qs "$ip"),\"signal\":$(n_or_null "$sig"),\"tx\":$(qs "$txr"),\"rx\":$(qs "$rxr"),\"conn\":$(qs "$ct")},"
+    W_CN=$((W_CN + 1))
+done <<EOF2
+$(printf '%s\n' "$W_CLIENTS")
+EOF2
+W_CLIST=${W_CLIST%,}
+LAN_LEASES=$(cat /tmp/dhcp.leases 2>/dev/null | wc -l)
+# recent DHCP leases (host/ip/mac + remaining time) - shows devices that were
+# here even when nobody is associated right now
+NOWS=$NOW
+LEASES=
+while read -r exp mac ip host _cid; do
+    [ -n "$mac" ] || continue
+    [ "$host" = "*" ] && host=
+    left=$(( exp - NOWS ))
+    [ "$left" -lt 0 ] && left=0
+    LEASES="$LEASES{\"host\":$(qs "$host"),\"ip\":$(qs "$ip"),\"mac\":$(qs "$mac"),\"left\":$left},"
+done < /tmp/dhcp.leases 2>/dev/null
+LEASES=${LEASES%,}
+LAN_IP=$(t2 ip -4 addr show "$LAN_DEVICE" 2>/dev/null | awk '/inet /{split($2,a,"/"); print a[1]; exit}')
+
+# ---------------------------------------------------------------- modem/path
+# the same liveness rule mu300-atd uses: the URC log on nr0 is written to as
+# long as the modem is running, whatever it thinks of our commands
+URCLOG=/run/mu300-at/urc/stty_nr0.log
+if [ -f "$URCLOG" ]; then
+    AGE=$(( NOW - $(date -r "$URCLOG" +%s 2>/dev/null || echo 0) ))
+    [ "$AGE" -lt 240 ] && MODEM_ALIVE=1 || MODEM_ALIVE=0
+else
+    MODEM_ALIVE=0
+fi
+ATD_OK=0; /usr/libexec/unisoc-modem/at --available >/dev/null 2>&1 && ATD_OK=1
+[ "$MODEM_ALIVE" = 1 ] || MODEM_ALIVE=$ATD_OK
+DATA_PAUSED=0; [ -e /run/mu300-mobile-data-down ] && DATA_PAUSED=1
+CONNS=$(cat /proc/net/nf_conntrack 2>/dev/null | wc -l)
+
+# --------------------------------------------------------------------- VPN
+VPN_ENABLED=0; VPN_ENGINE=""; VPN_UP=0
+if [ -r /etc/mu300/vpn.conf ]; then
+    grep -q '^ENABLE=1' /etc/mu300/vpn.conf && VPN_ENABLED=1
+    VPN_ENGINE=$(sed -n 's/^ENGINE=//p' /etc/mu300/vpn.conf | tail -n1)
+fi
+if ip link show xtun >/dev/null 2>&1 || ip link show sbtun >/dev/null 2>&1; then VPN_UP=1; fi
+CAP_VPN=0; [ -x /etc/init.d/mu300-vpn ] && CAP_VPN=1
+CAP_DUALBOOT=0; [ -x /opt/mu300/bin/mu300-next-boot ] && CAP_DUALBOOT=1
+
+# ------------------------------------------------------------------ output
+printf '{"ts":%d,"uptime":%d,"host":%s,"model":%s,"fw":%s,"kernel":%s,' \
+    "$NOW" "$UPTIME" "$(qs "$HOST")" "$(qs "$MODEL")" "$(qs "$FW")" "$(qs "$(uname -r)")"
+printf '"cpu":{"n":%d,"total":%d,"idle":%d,"freqs":[%s]},' "$CPUN" "$CPU_TOTAL" "$CPU_IDLE" "${FREQS:-}"
+printf '"mem":{"total_kb":%s,"avail_kb":%s},' "$(n_or_null "$MEM_T")" "$(n_or_null "$MEM_A")"
+printf '"storage":{"total_kb":%s,"used_kb":%s,"avail_kb":%s},' "$(n_or_null "$DISK_T")" "$(n_or_null "$DISK_U")" "$(n_or_null "$DISK_A")"
+printf '"temps":{"soc":%s,"cpu":%s,"modem":%s,"board":%s,"hottest":%s},' \
+    "$(f_or_null "$T_SOC")" "$(f_or_null "$T_CPU")" "$(f_or_null "$T_NR")" "$(f_or_null "$T_BRD")" "$(f_or_null "$T_HOT")"
+printf '"power":{"present":%d,"capacity":%s,"status":%s,"volt":%s,"ua":%s,"usb":%s},' \
+    "$P_PRESENT" "$(n_or_null "$P_CAP")" "$(qs "$P_STATUS")" "$P_V" "$P_I" "$(n_or_null "$P_USB")"
+printf '"net":{"mobile":%s,"sipa_eth0":%s,"brlan":%s,"wlan0":%s,"usb0":%s},' \
+    "$(net_obj "$DATA_DEVICE")" "$(net_obj "$DATA_DEVICE")" "$(net_obj "$LAN_DEVICE")" "$(net_obj "$WIFI_DEVICE")" "$(net_obj "$USB_DEVICE")"
+printf '"wan":{"up":%d,"uptime":%s,"proto":%s,"apn":%s,"ip4":%s,"ip6":%s,"dns":%s},' \
+    "$wan_up" "$(n_or_null "$wan_uptime")" "$(qs "$wan_proto")" "$(qs "$apn")" "$(qs "$wan_ip4")" "$(qs "$wan6_ip")" "$(qs "$wan_dns")"
+printf '"wifi":{"up":%d,"ssid":%s,"channel":%s,"band":%s,"width":%s,"country":%s,"enc":%s,"hidden":%s,"hostapd":%d,"clients":[%s],"clients_n":%d},' \
+    "$W_UP" "$(qs "$W_SSID")" "$(qs "$W_CH")" "$(qs "$W_BAND")" "$(qs "$W_WIDTH")" "$(qs "$W_COUNTRY")" "$(qs "$W_ENC")" "$(n_or_null "$W_HIDDEN")" "$W_HOSTAPD" "${W_CLIST:-}" "$W_CN"
+printf '"lan":{"leases":%s,"ip":%s,"list":[%s]},' "$(n_or_null "$LAN_LEASES")" "$(qs "$LAN_IP")" "${LEASES:-}"
+printf '"modem":{"alive":%d,"atd":%d,"data_paused":%d},' "$MODEM_ALIVE" "$ATD_OK" "$DATA_PAUSED"
+printf '"capabilities":{"vpn":%d,"dualboot":%d},' "$CAP_VPN" "$CAP_DUALBOOT"
+printf '"conns":%s,' "$(n_or_null "$CONNS")"
+printf '"vpn":{"enabled":%d,"engine":%s,"up":%d}}\n' "$VPN_ENABLED" "$(qs "$VPN_ENGINE")" "$VPN_UP"

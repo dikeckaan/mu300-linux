@@ -1,0 +1,72 @@
+{
+	"admin/home": {
+		"title": "状态看板",
+		"order": 5,
+		"action": {
+			"type": "view",
+			"path": "mu300/home"
+		},
+		"depends": {
+			"acl": [ "luci-app-mu300" ]
+		}
+	},
+
+	"admin/modem": {
+		"title": "蜂窝",
+		"order": 25,
+		"action": {
+			"type": "firstchild"
+		},
+		"depends": {
+			"acl": [ "luci-app-mu300" ]
+		}
+	},
+
+	"admin/modem/locks": {
+		"title": "网络锁定",
+		"order": 1,
+		"action": {
+			"type": "view",
+			"path": "mu300/locks"
+		},
+		"depends": {
+			"acl": [ "luci-app-mu300" ]
+		}
+	},
+
+	"admin/modem/sms": {
+		"title": "短信",
+		"order": 2,
+		"action": {
+			"type": "view",
+			"path": "mu300/sms"
+		},
+		"depends": {
+			"acl": [ "luci-app-mu300" ]
+		}
+	},
+
+	"admin/modem/at": {
+		"title": "AT 终端",
+		"order": 3,
+		"action": {
+			"type": "view",
+			"path": "mu300/at"
+		},
+		"depends": {
+			"acl": [ "luci-app-mu300" ]
+		}
+	},
+
+	"admin/modem/settings": {
+		"title": "适配设置",
+		"order": 4,
+		"action": {
+			"type": "view",
+			"path": "mu300/settings"
+		},
+		"depends": {
+			"acl": [ "luci-app-mu300" ]
+		}
+	}
+}

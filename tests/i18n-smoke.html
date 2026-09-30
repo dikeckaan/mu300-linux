@@ -1,0 +1,53 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>MU300 i18n smoke</title></head><body>
+<nav><ul id="topmenu"></ul></nav>
+<main id="app"></main><pre id="result">pending</pre>
+<script>
+window.L = {env: {lang: 'en'}, resolveDefault: p => Promise.resolve(p)};
+const base = '../openwrt/luci-app-mu300/htdocs/luci-static/resources/';
+const source = path => fetch(base + path).then(r => { if (!r.ok) throw Error(path); return r.text(); });
+Promise.all([source('mu300/common.js'), ...['at', 'sms', 'locks'].map(n => source('view/mu300/' + n + '.js'))]).then(async files => {
+  const M = new Function('rpc', 'baseclass', files[0])({declare: () => () => Promise.resolve({})}, {extend: x => x});
+  M.watchSms = () => {};
+  M.callAtHist = () => Promise.resolve({history: ''});
+  M.callSmsList = () => Promise.resolve({pages: 1, msgs: []});
+  M.callLockGet = () => Promise.resolve({mode: {label: 'auto'}});
+  M.callStatus = () => Promise.resolve({cell: {}});
+  M.callSignal = () => Promise.resolve({nr: {band: 78, pci: 1, arfcn: 627264}, operator: {name: '中国联通'}});
+  const view = {extend: x => x}, poll = {add: () => {}};
+  const app = document.getElementById('app'), checks = {};
+  for (const lang of ['en', 'tr', 'zh']) {
+    L.env.lang = lang;
+    document.documentElement.lang = lang;
+    document.getElementById('topmenu').replaceChildren();
+    app.replaceChildren();
+    for (let i = 0; i < 3; i++) {
+      const page = new Function('view', 'poll', 'M', files[i + 1])(view, poll, M);
+      app.appendChild(page.render());
+    }
+    /* Real Bootstrap menu is inserted after view initialization; parent href
+       is #, not /admin/modem. Exercise that race and DOM shape directly. */
+    document.getElementById('topmenu').innerHTML = '<li><a href="/cgi-bin/luci/admin/home">状态看板</a></li>' +
+      '<li class="dropdown"><a class="menu" href="#">蜂窝</a><ul class="dropdown-menu">' +
+      '<li><a href="/cgi-bin/luci/admin/modem/locks">网络锁定</a></li>' +
+      '<li><a href="/cgi-bin/luci/admin/modem/sms">短信</a></li>' +
+      '<li><a href="/cgi-bin/luci/admin/modem/at">AT 终端</a></li>' +
+      '<li><a href="/cgi-bin/luci/admin/modem/settings">适配设置</a></li></ul></li>';
+    await new Promise(resolve => setTimeout(resolve, 50));
+    M.confirmBox('清空本地短信池', '只删本地文件，SIM 上的不动。', {danger: true});
+    const dialog = document.querySelector('.mud-dlg-wrap');
+    M.choiceBox('删除这条短信', '删除后不可恢复。',
+      [{label: '取消', value: null}, {label: '仅删本地', value: 'local'}, {label: '本地 + SIM', value: 'sim'}]);
+    const choice = document.querySelectorAll('.mud-dlg-wrap')[1];
+    const toast = M.toast('发送失败：未知错误', {timeout: 0});
+    const toasts = document.querySelectorAll('.mud-toast');
+    const visible = document.querySelector('nav').textContent + app.textContent + dialog.textContent + choice.textContent + toasts[toasts.length - 1].textContent;
+    checks[lang] = {ok: (lang === 'zh' ? /[\u3400-\u9fff]/.test(visible) : !/[\u3400-\u9fff]/.test(visible)) &&
+      (lang === 'en' ? app.textContent.includes('China Unicom') : lang === 'tr' ? app.textContent.includes('China Unicom') : app.textContent.includes('中国联通')),
+      menu: document.querySelector('nav').textContent, untranslated: (visible.match(/[\u3400-\u9fff]+/g) || []).slice(0, 20)};
+    dialog.querySelector('[data-r="0"]').click();
+    choice.querySelector('[data-i="0"]').click();
+    toast.close();
+  }
+  document.getElementById('result').textContent = JSON.stringify(checks);
+}).catch(e => document.getElementById('result').textContent = 'ERROR: ' + e.stack);
+</script></body></html>

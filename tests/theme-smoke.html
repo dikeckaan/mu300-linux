@@ -1,0 +1,26 @@
+<!doctype html>
+<html class="official"><head><meta charset="utf-8">
+<style>
+html.official{--background-color-high:#fff;--background-color-low:#f5f5f5;--border-color-low:#eee;--text-color-high:#222;--text-color-medium:#555;--text-color-low:#777;--primary-color-high:#1976d2;--success-color-high:#00ac59;--warn-color-high:#efbd0b;--error-color-high:#e8210d;--on-primary-color:#fff}
+html.official[data-darkmode="true"]{--background-color-high:#222;--background-color-low:#292929;--border-color-low:#333;--text-color-high:#eee;--text-color-medium:#ccc;--text-color-low:#aaa;--primary-color-high:#4da1c0}
+html.aurora{--surface:#fef6e4;--text:#332200;--hairline:#dbbd99;--brand:#663399}
+</style></head><body>
+<div class="mud"><div class="mud-card" id="card">Theme smoke test</div></div>
+<pre id="result">pending</pre>
+<script>
+window.L = {env: {lang: 'en'}};
+fetch('../openwrt/luci-app-mu300/htdocs/luci-static/resources/mu300/common.js').then(r => r.text()).then(src => {
+  const M = new Function('rpc', 'baseclass', src)(
+    {declare: () => () => {}}, {extend: obj => obj});
+  const root = document.documentElement, card = document.getElementById('card');
+  const sample = () => { M.injectCss(); return [getComputedStyle(card).backgroundColor, getComputedStyle(card).color]; };
+  const light = sample();
+  root.dataset.darkmode = 'true';
+  const dark = sample();
+  root.className = 'aurora'; root.removeAttribute('data-darkmode');
+  const aurora = sample();
+  const ok = light[0] === 'rgb(255, 255, 255)' && dark[0] === 'rgb(34, 34, 34)' &&
+    dark[1] === 'rgb(238, 238, 238)' && aurora[0] === 'rgb(254, 246, 228)';
+  document.getElementById('result').textContent = JSON.stringify({ok, light, dark, aurora});
+}).catch(e => document.getElementById('result').textContent = 'ERROR: ' + e);
+</script></body></html>
