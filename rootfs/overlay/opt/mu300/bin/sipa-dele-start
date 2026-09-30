@@ -67,5 +67,5 @@ while [ "$n" -lt "$WAIT" ]; do
     sleep 2
 done
 
-log "modem still silent after ${WAIT}s, loading anyway so the resources exist"
-insmod "$KO" 2>/dev/null && log "loaded sipa-dele" || log "FAILED sipa-dele"
+log "packet domain not ready after ${WAIT}s; refusing unsafe delegate load"
+exit 1

@@ -26,6 +26,30 @@ USB dependency chain, the PM watchdog, the `modem_control` process-name check, m
 
 ## Build steps
 
+### Clean Linux 7.2 + OpenWrt TF Magisk package
+
+The TF package is deliberately self-contained: it builds against the clean upstream branch, writes the OpenWrt
+rootfs to a card labelled `mu300sd`, writes only `boot_b`, and arms slot b without rebooting from inside Magisk.
+If no valid TF filesystem is present at boot, the initramfs falls back to the existing internal `mu300root` rootfs.
+The TF rootfs includes the standalone `openwrt/luci-app-mu300` package by default. The package remains a separate
+LuCI application and can be built for other Unisoc OpenWrt systems; `MU300_LUCI_PLUGIN_SRC` can point to a different
+source checkout when testing a newer plugin version.
+
+```sh
+docker build -t mu300-mainline-build upstream
+docker volume create mu300-mainline
+docker run --rm -e KV=7.2.8 -e OUTDIR=out-7.2 \
+  -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build.sh
+docker run --rm -e KV=7.2.8 -e OUTDIR=out-7.2 \
+  -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build-modules.sh
+MU300_INPUTS=/path/to/private-build-inputs MU300_UPSTREAM_OUT="$PWD/upstream/out-7.2" \
+  tools/build-openwrt-tf-magisk.sh mu300-linux-openwrt-tf.zip
+```
+
+The private input directory contains the stock `dumps/boot_a.img`, `dumps/misc-head.bin`, Android-derived vendor
+files and the existing 5.4 device modules. They are consumed during the build but are not committed. During Magisk
+installation, proprietary modem/Wi-Fi firmware is copied from the running Android system into the TF rootfs.
+
 ### 1. Kernel
 One step, from the pinned public sources (kernel tree, realme Wi-Fi/Bluetooth/Mali modules) with all patches applied:
 ```sh
@@ -109,4 +133,3 @@ copies the current Android hotspot into it before the first boot, otherwise a ra
 
 From Android, `boot/android-boot-linux.sh boot-linux-slotb.img` boots the image already on `boot_b` again without reflashing.
 If Linux ever fails before `mu300-boot-ok` runs, LK sees `tries_remaining=1` on the next boot and falls back to Android.
-

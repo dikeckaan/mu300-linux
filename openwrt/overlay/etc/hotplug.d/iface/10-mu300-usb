@@ -1,20 +1,12 @@
-# MU300: the ECM gadget was bound in the initramfs; macOS keeps the link inactive after netifd reconfigures usb0
-# (at boot and on every network restart). Re-enumerate the gadget whenever the LAN comes up, at most every 20 s,
-# so the host starts DHCP on a fresh link.
+#!/bin/sh
+# Stop the temporary preinit DHCP server only when the real LAN is up.
 [ "$ACTION" = ifup ] && [ "$INTERFACE" = lan ] || exit 0
-stamp=/tmp/mu300-usb-rebound
-now=$(cut -d. -f1 /proc/uptime)
-[ -e $stamp ] && [ $((now - $(cat $stamp))) -lt 20 ] && exit 0
-echo "$now" > $stamp
-C=/sys/kernel/config
-grep -q " $C configfs" /proc/mounts || mount -t configfs configfs $C 2>/dev/null
-g=$C/usb_gadget/linux
-[ -e $g/UDC ] || exit 0
-udc=$(cat $g/UDC)
-[ -n "$udc" ] || udc=$(ls /sys/class/udc | head -1)
-(
-	sleep 2
-	echo "" > $g/UDC 2>/dev/null
-	sleep 1
-	echo "$udc" > $g/UDC && logger -t mu300 "usb gadget re-enumerated on $udc"
-) &
+pid=$(cat /run/mu300-early-udhcpd.pid 2>/dev/null)
+[ -n "$pid" ] && kill "$pid" 2>/dev/null
+rm -f /run/mu300-early-udhcpd.pid
+# netifd has transferred usb0 to br-lan without changing the management IP or
+# DHCP lease.
+
+# The final NCM endpoint health check/rebind is a procd one-shot in mu300-post.
+# A detached child launched by hotplug can be reaped with the hotplug process;
+# keep this hook limited to the deterministic DHCP handoff above.

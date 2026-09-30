@@ -1,0 +1,81 @@
+#!/bin/sh
+# Keep the local SMS pool in step with the SIM (see mu300-sms).
+#
+# Receiving is +CMTI-driven where it can be: mu300-atd logs every unsolicited line of every
+# channel into /run/mu300-at/urc/*.log, so a new "+CMTI:" anywhere changes the md5 of the
+# +CMTI lines and that is the trigger. The logs are capped and truncated, not rotated - a
+# truncation changes the signature too, and a sync is idempotent, so a spurious trigger costs
+# one paced AT+CMGL. A full sync also runs once per MU300_SMS_SYNC_INTERVAL regardless, as the
+# safety net for an announcement missed while nobody watched.
+#
+# Nothing here ever deletes from the SIM; deletion is the operator's explicit "delete --sim".
+set -u
+export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/sbin:/sbin"
+
+POOL=${MU300_SMS_POOL:-/var/lib/mu300/sms}
+ATDIR=${MU300_AT_DIR:-/run/mu300-at}
+URCDIR=$ATDIR/urc
+POLL=${MU300_SMS_POLL:-5}
+SYNC_INTERVAL=${MU300_SMS_SYNC_INTERVAL:-30}
+SMS=${MU300_SMS_BIN:-$(command -v mu300-sms 2>/dev/null || echo /opt/mu300/bin/mu300-sms)}
+
+# one daemon, the house pattern: a second instance (procd respawning, a service started twice)
+# waits for the lock only as long as the holder is alive, then takes over
+LOCK=${MU300_SMS_LOCK:-/run/mu300-smsd.lock}
+while ! mkdir "$LOCK" 2>/dev/null; do
+    owner=$(cat "$LOCK/pid" 2>/dev/null || true)
+    if [ -n "$owner" ] && [ -d "/proc/$owner" ] &&
+       tr '\0' ' ' < "/proc/$owner/cmdline" 2>/dev/null | grep -q mu300-smsd; then
+        echo "mu300-smsd: pid $owner is already pooling into $POOL" >&2
+        exit 0
+    fi
+    rm -rf "$LOCK"
+done
+echo $$ > "$LOCK/pid"
+trap '[ "$(cat "$LOCK/pid" 2>/dev/null)" = $$ ] && rm -rf "$LOCK"; exit 0' INT TERM
+
+# mu300-atd owns the AT channel; until its command fifo exists nothing can be asked at all
+n=0
+until [ -p "$ATDIR/cmd" ]; do
+    n=$((n + 1))
+    [ "$n" -gt 120 ] && { echo "mu300-smsd: no command fifo from mu300-atd, exiting" >&2; exit 1; }
+    sleep 5
+done
+
+# the SIM needs its time after a boot (mobile-data waits 15 s for it); poll for READY, but a
+# modem that never answers still gets its periodic sync attempts in the main loop below
+n=0
+until mu300-at -t 4 'AT+CPIN?' 2>/dev/null | grep -q READY; do
+    n=$((n + 1))
+    [ "$n" -gt 60 ] && { echo "mu300-smsd: SIM never became ready, syncing anyway" >&2; break; }
+    sleep 10
+done
+# Without CNMI the modem files incoming messages silently (measured 0,0,0,1,0),
+# the +CMTI trigger below never fires and arrival waits for the 30 s net. Ask
+# for storage indications; a refusal still leaves the periodic sync working.
+mu300-at -t 4 'AT+CNMI=2,1,0,0,0' >/dev/null 2>&1 || true
+"$SMS" sync
+
+signature() {
+    cat "$URCDIR"/*nr*.log 2>/dev/null | grep -aF '+CMTI' | md5sum 2>/dev/null | cut -d' ' -f1
+}
+
+last=$(signature)
+elapsed=0
+echo "mu300-smsd: pooling into $POOL (poll ${POLL}s, full sync every ${SYNC_INTERVAL}s)" >&2
+while :; do
+    sleep "$POLL"
+    s=$(signature)
+    if [ "$s" != "$last" ]; then
+        last=$s
+        sleep 2   # let the message land in the SIM storage before listing it
+        "$SMS" sync || echo "mu300-smsd: sync failed, will retry on the next trigger" >&2
+        elapsed=0
+        continue
+    fi
+    elapsed=$((elapsed + POLL))
+    if [ "$elapsed" -ge "$SYNC_INTERVAL" ]; then
+        elapsed=0
+        "$SMS" sync || true
+    fi
+done

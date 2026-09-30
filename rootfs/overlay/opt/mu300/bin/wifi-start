@@ -9,8 +9,15 @@ command -v depmod >/dev/null && depmod -a
 for m in pcie-sprd-misc pcie-sprd; do
     modprobe "$m" 2>/dev/null || [ -d /sys/bus/platform/drivers/sprd-pcie ]
 done
+# modprobe needs modules.dep/modules.bb, which this rootfs does not ship; the modules sit
+# flat in /lib/modules/<release> (and under extra/ on Ubuntu), so insmod them directly
+K=/lib/modules/$(uname -r)
 for m in wcn_bsp sprd_wlan_combo; do
-    grep -q "^$m " /proc/modules || modprobe "$m"
+    grep -q "^$m " /proc/modules && continue
+    f=$K/$m.ko
+    [ -f "$f" ] || f=$K/extra/$m.ko
+    [ -f "$f" ] || { echo "missing $m.ko" >&2; exit 1; }
+    insmod "$f"
 done
 for n in $(seq 1 30); do [ -e /sys/class/net/wlan0 ] && break; sleep 1; done
 # wcn_bsp turns the Marlin3 firmware (ARM) log on at boot; every firmware log packet is printed to the kernel log

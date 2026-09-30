@@ -4,6 +4,7 @@
 #   mu300-linux            arm the one-shot trial and reboot
 #   mu300-linux status     show what is on each slot, change nothing
 #   mu300-linux --dry-run  do everything except writing and rebooting
+#   mu300-linux --no-reboot arm the trial without rebooting (for installers)
 #
 # The only thing written is the 32-byte AOSP bootloader_control block at offset 0x800 of the misc partition:
 # slot b gets the highest priority with tries_remaining = 2, slot a stays bootable and marked successful. LK then
@@ -17,12 +18,14 @@ SLOT_A_ARMED=158        # 0x9e: priority 14, tries 1, successful 1
 SLOT_B_ARMED=47         # 0x2f: priority 15, tries 2, successful 0
 
 DRY=0
+DO_REBOOT=1
 case ${1:-} in
     status) ACTION=status ;;
     --dry-run|-n) DRY=1; ACTION=switch ;;
+    --no-reboot) DO_REBOOT=0; ACTION=switch ;;
     ''|switch) ACTION=switch ;;
     -h|--help|help) sed -n '2,12s/^# \{0,1\}//p' "$0"; exit 0 ;;
-    *) echo "usage: mu300-linux [status|--dry-run]" >&2; exit 2 ;;
+    *) echo "usage: mu300-linux [status|--dry-run|--no-reboot]" >&2; exit 2 ;;
 esac
 
 die() { echo "mu300-linux: $*" >&2; exit 1; }
@@ -30,7 +33,7 @@ die() { echo "mu300-linux: $*" >&2; exit 1; }
 [ "$(id -u)" = 0 ] || die "run as root (su -c mu300-linux)"
 
 # busybox: Magisk's own copy is the one that is always there, and it has the awk this script needs
-for b in "$MAGISKTMP/busybox" /data/adb/magisk/busybox /data/adb/busybox; do
+for b in "${MU300_BUSYBOX:-}" "$MAGISKTMP/busybox" /data/adb/magisk/busybox /data/adb/busybox; do
     [ -x "$b" ] && { BB=$b; break; }
 done
 [ -n "${BB:-}" ] || die "Magisk's busybox was not found"
@@ -139,7 +142,9 @@ back=$(hex_of "$MISC" "$BC_OFFSET" 32)
 [ "$back" = "$new" ] || die "misc verify failed ($back) - reboot normally, Android is unaffected"
 
 echo
-echo "slot b armed for one boot. Rebooting into Linux."
+echo "slot b armed for one boot."
 echo "If it does not boot, the device returns to Android by itself."
+[ "$DO_REBOOT" = 0 ] && exit 0
+echo "Rebooting into Linux."
 sleep 3
 reboot

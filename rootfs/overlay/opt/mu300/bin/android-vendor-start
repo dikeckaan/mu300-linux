@@ -3,14 +3,24 @@
 # PM co-processor watchdog cuts power ~290 s after boot. See linux-boot/STATUS.md (v9).
 set -e
 A=/opt/mu300/android
+mark() { [ -x /opt/mu300/bin/bootmark ] && /opt/mu300/bin/bootmark "$@" || true; }
+mark vendor-start
 # wait for the modem stack: on the mainline kernel the modules are loaded by userspace (see extra-modules), so
 # this service can start before /dev/modem exists
 for n in $(seq 1 90); do
     [ -e /dev/modem ] || [ -e /dev/pmsys ] || { sleep 1; continue; }
     break
 done
+mark vendor-stack-present
 mkdir -p /dev/socket /dev/block/by-name
-[ -S /dev/socket/logdw ] || { /opt/mu300/bin/logdw /dev/socket/logdw >> /var/log/android-logcat.txt 2>&1 & sleep 1; }
+# No need to wait for logdw's socket. modem_control is still more than a second away (the chroot mounts, the
+# node ownership and the cmdline bind all come first), and /dev is rbind-mounted into the chroot, so a socket
+# that appears late shows up in $A/dev just the same. The old flat "sleep 1" was a second of the boot waiting
+# for nothing - it actually did wait it out on two of three measured boots (boot-timeline: vendor-start 8.31
+# -> vendor-props 9.33).
+if [ ! -S /dev/socket/logdw ]; then
+    /opt/mu300/bin/logdw /dev/socket/logdw >> /var/log/android-logcat.txt 2>&1 &
+fi
 # bind the read-only Android property area instead of copying it: it is ~85 MiB (RAM on tmpfs) and OpenWrt's /dev
 # is a 512 KiB tmpfs, where the copy silently ends up as empty files and modem_control never boots the modem
 if ! [ -s /dev/__properties__/property_info ]; then
@@ -18,13 +28,20 @@ if ! [ -s /dev/__properties__/property_info ]; then
     mkdir -p /dev/__properties__
     mount --bind $A/dev-properties /dev/__properties__
 fi
+mark vendor-props
+# Two ln calls per partition plus basename/sed/dirname is about 365 fork()s over the 73 partitions (measured:
+# 0.64 s, all of it on the boot path between the CP being released and the modem being asked to start).
+# Take the path and PARTNAME in the shell itself and keep only the ln calls.
 for u in /sys/class/block/mmcblk0p*/uevent; do
-    d=$(basename "$(dirname "$u")")
-    n=$(sed -n 's/^PARTNAME=//p' "$u")
+    [ -e "$u" ] || continue
+    d=${u%/uevent}; d=${d##*/}
+    n=
+    while IFS='=' read -r k v; do [ "$k" = PARTNAME ] && n=$v; done < "$u"
     ln -sfn /dev/$d /dev/block/$d
     [ -n "$n" ] && ln -sfn /dev/$d /dev/block/by-name/$n
 done
 sh /opt/mu300/bin/ueventd-perms.sh
+mark vendor-perms
 for m in dev proc sys; do mkdir -p $A/$m; done
 mkdir -p $A/data/vendor $A/mnt $A/tmp
 mountpoint -q $A/dev || mount --rbind /dev $A/dev
@@ -41,4 +58,5 @@ mount --bind /run/mu300-cmdline.android $A/proc/cmdline
 # OpenWrt's procd preloads /lib/libsetlbf.so into services; the bionic linker in the chroot cannot load it
 unset LD_PRELOAD
 export LD_LIBRARY_PATH=/apex/com.android.runtime/lib64/bionic:/system/lib64:/vendor/lib64
+mark vendor-chroot-ready
 exec chroot $A /vendor/bin/modem_control

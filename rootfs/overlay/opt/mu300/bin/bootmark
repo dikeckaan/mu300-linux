@@ -1,0 +1,9 @@
+#!/bin/sh
+# 开机时间线打点。只做一件事：把 /proc/uptime 记到 /etc/mu300/boot-timeline.txt。
+# 故意不依赖 procd/netifd/systemd，preinit 钩子里也能用；每条都是一个进程一次短写，
+# 多进程并发追加不会互相撕行。
+# (来自 V50 开机提速研究的现役实现，测量方法见 01-逐文件改动说明.md)
+f=/etc/mu300/boot-timeline.txt
+[ "${1:-}" = "-r" ] && { : >"$f"; shift; }
+printf 't=%-9s %s\n' "$(cut -d' ' -f1 /proc/uptime)" "$*" >>"$f" 2>/dev/null
+exit 0

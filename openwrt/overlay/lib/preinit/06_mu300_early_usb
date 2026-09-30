@@ -1,0 +1,30 @@
+#!/bin/sh
+# Keep the USB host usable across switch_root. The initramfs DHCP server only
+# lives for ~0.6 s after NCM binds, which is shorter than Windows needs to load
+# its driver and ask for a lease. Restart it immediately in the real rootfs;
+# the LAN ifup hook stops it when dnsmasq/netifd take ownership.
+#
+# The lease is one hour, not the initramfs's ten minutes. The host keeps the
+# early lease until dnsmasq answers a fresh request. The final dnsmasq host
+# entry broadcasts its OFFER/ACK, so Windows can complete that handoff even if
+# it has already removed the old address; no USB re-enumeration is involved.
+# The config is written here rather than reused from the initramfs so this file
+# alone decides the pool and lease time.
+mu300_early_usb() {
+	[ -e /sys/class/net/usb0 ] || return 0
+	/opt/mu300/bin/led-status boot 2>/dev/null
+	/opt/mu300/bin/busybox ifconfig usb0 192.168.77.1 netmask 255.255.255.0 up
+	cat > /run/udhcpd-usb0.conf <<'EOF'
+start 192.168.77.200
+end 192.168.77.200
+interface usb0
+option subnet 255.255.255.0
+option router 192.168.77.1
+option lease 3600
+lease_file /run/udhcpd-usb0.leases
+EOF
+	/opt/mu300/bin/busybox udhcpd -f /run/udhcpd-usb0.conf >/dev/null 2>&1 &
+	echo $! > /run/mu300-early-udhcpd.pid
+}
+
+boot_hook_add preinit_essential mu300_early_usb

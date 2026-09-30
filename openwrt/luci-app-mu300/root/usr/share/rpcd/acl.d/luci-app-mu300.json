@@ -1,0 +1,21 @@
+{
+ "luci-app-mu300": {
+  "description": "MU300 控制中心：状态看板、网络锁定、AT 终端与短信",
+  "read": {
+   "ubus": {
+    "mu300dash": [ "*" ]
+   },
+   "uci": {
+    "unisoc_modem": [ "*" ]
+   }
+  },
+  "write": {
+   "ubus": {
+    "mu300dash": [ "*" ]
+   },
+   "uci": {
+    "unisoc_modem": [ "*" ]
+   }
+  }
+ }
+}

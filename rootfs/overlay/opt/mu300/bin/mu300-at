@@ -42,7 +42,7 @@ if [ -p "$DIR/cmd" ]; then
             rm -rf "$lock"; continue
         fi
         n=$((n + 1)); [ "$n" -gt $((wait * 10)) ] && { echo "mu300-at: busy" >&2; exit 1; }
-        sleep 0.1 2>/dev/null || sleep 1
+        sleep 0.1 2>/dev/null || /opt/mu300/bin/busybox sleep 0.1 2>/dev/null || sleep 1
     done
     echo $$ > "$lock/pid" 2>/dev/null || true
     trap 'rm -rf "$lock" 2>/dev/null' EXIT INT TERM
@@ -51,18 +51,45 @@ if [ -p "$DIR/cmd" ]; then
     answer=$DIR/answer.$$
     rm -f "$answer" "$answer.part"
     trap 'rm -rf "$lock" "$answer" "$answer.part" 2>/dev/null' EXIT INT TERM
-    if command -v timeout >/dev/null 2>&1; then
-        timeout $((T + 6)) sh -c 'printf "%s %s %s\n" "$1" "$2" "$3" > "$4"' _ "$T" "$answer" "$cmd" "$DIR/cmd" || {
-            echo "mu300-at: the daemon is not reading commands" >&2; exit 1; }
-    else
-        printf '%s %s %s\n' "$T" "$answer" "$cmd" > "$DIR/cmd"
-    fi
+    # write to the daemon's command fifo. The old `timeout N sh -c 'printf ...'` wrapper
+    # cost 200+ ms per command (two forks + timer setup on this SoC, visible only when
+    # the whole thing ran inside a CGI where every fork's pipe-close is waited for by
+    # uhttpd). The daemon is always reading this fifo, so the write completes in
+    # microseconds; if the daemon is dead the client hits its own answer-file timeout
+    # below, which is the same outcome the timeout wrapper was trying to avoid.
+    # Open the FIFO read-write.  A write-only open blocks until a reader opens
+    # the *same inode*.  If procd replaces the daemon between the path lookup and
+    # that open, the client and the new daemon wait forever on two different,
+    # unlinked FIFOs while this client keeps the global command lock.  O_RDWR
+    # never blocks; with no daemon the answer timeout below releases the lock.
+    exec 9<> "$DIR/cmd" 2>/dev/null || {
+        echo "mu300-at: the daemon is not reading commands" >&2; exit 1; }
+    printf '%s %s %s\n' "$T" "$answer" "$cmd" >&9 || {
+        exec 9>&-; echo "mu300-at: the daemon is not reading commands" >&2; exit 1; }
+    exec 9>&-
     n=0
+    # fast poll: the daemon typically writes the answer in ~20 ms, so a 1 s sleep
+    # here adds a full second to every AT round trip. The system /bin/sleep (busybox
+    # applet) rejects fractional arguments on this image ("invalid number"), which
+    # quietly sank the chain below into `sleep 1` - every command cost a flat
+    # second (measured: 30 commands in 30.6 s). The static busybox next to us
+    # accepts fractions; use it when present.
+    zz=$([ -x /opt/mu300/bin/busybox ] && echo /opt/mu300/bin/busybox || echo sleep)
     while [ ! -e "$answer" ]; do
         n=$((n + 1))
-        [ "$n" -gt $(( (T + 8) * 10 )) ] && { echo "mu300-at: no answer from the daemon" >&2; exit 1; }
-        sleep 0.1 2>/dev/null || sleep 1
+        [ "$n" -gt $(( (T + 1) * 100 )) ] && { echo "mu300-at: no answer from the daemon" >&2; exit 1; }
+        "$zz" sleep 0.01 2>/dev/null || "$zz" sleep 0.1 2>/dev/null || sleep 1
     done
+    # atd always creates the answer file, including for a timeout. An empty
+    # file is therefore not success: callers such as atwatch use the exit code
+    # to distinguish a responding channel from a silent one.
+    # A timed-out daemon can leave CR/LF or an echoed fragment in the answer
+    # file. Success requires a real final result code; otherwise callers must
+    # be able to fail over instead of accepting a blank/partial frame.
+    grep -aEq '^(OK|ERROR|\+CME ERROR|\+CMS ERROR|CONNECT|NO CARRIER)' "$answer" 2>/dev/null || {
+        echo "mu300-at: modem returned no final response" >&2
+        exit 1
+    }
     cat "$answer"
     exit 0
 fi

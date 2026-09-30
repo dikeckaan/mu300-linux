@@ -1,8 +1,10 @@
 #!/system/bin/sh
 # Device side of install.sh (runs as root on Android). Settings come from /data/local/tmp/mu300-install.env:
-#   OFF SIZE           free eMMC region (bytes) after the last GPT partition, as strings
+#   SD_MODE=0          rootfs in the free eMMC region after the last GPT partition
+#   SD_MODE=1 SD_DEV   rootfs on the TF card, formatted ext4 with label mu300sd
+#   OFF SIZE           free eMMC region (bytes) after the last GPT partition, as strings (SD_MODE=0)
 #   OFF_S SIZE_S       the same in 512-byte sectors (Android's mksh has 32-bit arithmetic: never compute with bytes)
-#   FORMAT=0|1         create the ext4 filesystem "mu300root" in that region
+#   FORMAT=0|1         create ext4 mu300root internally or mu300sd on TF
 #   OSES="ubuntu openwrt"  systems to (re)install from /data/local/tmp/mu300-<os>.tar.gz
 #                      (plus mu300-vendor-<os>.tar.gz with the device's own vendor files for prebuilt images)
 #   WIPE_LEGACY=0|1    remove a first-generation Ubuntu that lives directly in the filesystem root
@@ -14,11 +16,43 @@
 #   IMPORT_HOTSPOT=0|1 copy Android's hotspot SSID/passphrase into each system
 #   KERNEL=5.4|6.18|7.2  the kernel in the new boot image; mu300-update keeps installing that one (boot/kernel)
 set -e
-T=/data/local/tmp
-. $T/mu300-install.env
+T=${MU300_INSTALL_TMP:-/data/local/tmp}
+P=${MU300_PAYLOAD_DIR:-$T}
+. "$P/mu300-install.env"
 M=$T/mu300root
 say() { echo "[device] $*"; }
 
+if [ "${SD_MODE:-0}" = 1 ]; then
+    R=${SD_DEV:?SD_DEV is not set}
+    [ -b "$R" ] || { say "no block device $R (is the TF card inserted?)"; exit 1; }
+    vol=$(sm list-volumes 2>/dev/null | sed -n 's/^\(public:[^ ]*\) mounted.*/\1/p')
+    if [ -n "$vol" ]; then
+        say "asking vold to unmount $vol"
+        sm unmount "$vol" 2>/dev/null || true
+        sm list-volumes 2>/dev/null | grep -q "^$vol mounted" && {
+            say "vold still has the card mounted; unmount it in Android Storage settings"; exit 1; }
+    fi
+    for m in $(grep -o '^/dev/block/mmcblk1[^ ]*' /proc/mounts 2>/dev/null); do
+        umount "$m" 2>/dev/null || umount -f "$m" 2>/dev/null || true
+    done
+    magic=$(dd if="$R" bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d ' \n')
+    label=$(dd if="$R" bs=1 skip=1144 count=16 2>/dev/null | tr -d '\000')
+    if [ "$FORMAT" = 1 ]; then
+        [ "$magic" != 53ef ] || [ "$label" = mu300sd ] || {
+            say "refusing to format foreign ext4 filesystem '$label'"; exit 1; }
+        say "creating ext4 mu300sd on $R"
+        if command -v make_ext4fs >/dev/null 2>&1; then
+            make_ext4fs -L mu300sd "$R"
+        else
+            mke2fs -b 4096 -L mu300sd "$R"
+        fi
+    elif [ "$magic" != 53ef ] || [ "$label" != mu300sd ]; then
+        say "no mu300sd filesystem on $R (FORMAT=1 is required)"; exit 1
+    fi
+    mkdir -p "$M"
+    mount -t ext4 -o noatime "$R" "$M"
+    trap 'sync; umount "$M" >/dev/null 2>&1 || true' EXIT
+else
 # --- the region must not overlap any partition (checked again here, on the device itself)
 end=0
 for p in /sys/block/mmcblk0/mmcblk0p*; do
@@ -54,6 +88,7 @@ fi
 
 MU300_OFF=$OFF MU300_SIZE=$SIZE sh $T/android-mount-mu300root.sh $M
 trap 'sync; sh $T/android-mount-mu300root.sh -u $M >/dev/null 2>&1; true' EXIT
+fi
 
 if [ "$WIPE_LEGACY" = 1 ] && { [ -x $M/lib/systemd/systemd ] || [ -L $M/lib ]; }; then
     say "removing the root-level Ubuntu"
@@ -71,15 +106,17 @@ if [ "$IMPORT_HOTSPOT" = 1 ]; then
 fi
 
 for os in $OSES; do
-    tarball=$T/mu300-$os.tar.gz
+    tarball=$P/mu300-$os.tar.gz
     [ -f $tarball ] || { say "missing $tarball"; exit 1; }
     say "installing $os"
     rm -rf $M/$os.new && mkdir $M/$os.new
     tar -xzpf $tarball -C $M/$os.new
     # prebuilt images: firmware and Android userspace pulled from this device by install.sh (tools/vendor-overlay.py)
-    if [ -f $T/mu300-vendor-$os.tar.gz ]; then
-        tar -xzpf $T/mu300-vendor-$os.tar.gz -C $M/$os.new
-        rm -f $T/mu300-vendor-$os.tar.gz
+    if [ -f $P/mu300-vendor-$os.tar.gz ]; then
+        tar -xzpf $P/mu300-vendor-$os.tar.gz -C $M/$os.new
+        [ "${MU300_KEEP_PAYLOAD:-0}" = 1 ] || rm -f $P/mu300-vendor-$os.tar.gz
+    elif [ "${MU300_VENDOR_FROM_DEVICE:-0}" = 1 ]; then
+        sh "$P/mu300-vendor-from-device.sh" "$M/$os.new" "$os"
     fi
     # update: carry the settings and user data of the previous installation over to the new system
     if [ "${UPDATE:-0}" = 1 ] && [ -d $M/$os ]; then
@@ -127,6 +164,8 @@ for os in $OSES; do
     fi
     rm -rf $M/$os && mv $M/$os.new $M/$os
     R=$M/$os
+    [ "${SD_MODE:-0}" = 1 ] && [ -f $R/etc/fstab ] && \
+        sed -i 's|LABEL=mu300root|LABEL=mu300sd|' $R/etc/fstab
     mkdir -p $R/etc/mu300
     if [ -n "$ssid" ] && ! { [ "${UPDATE:-0}" = 1 ] && [ -s $R/etc/mu300/hotspot.conf ]; }; then
         umask 077
@@ -142,7 +181,7 @@ for os in $OSES; do
             openwrt) sed -i "s|^root:[^:]*:|root:$PWHASH:|" $R/etc/shadow ;;
         esac
     fi
-    rm -f $tarball
+    [ "${MU300_KEEP_PAYLOAD:-0}" = 1 ] || rm -f $tarball
 done
 mkdir -p $M/.mu300
 echo "$BOOT_OS" > $M/.mu300/boot-os
@@ -154,5 +193,5 @@ esac
 rm -f $M/boot/installed.tag
 [ -n "$ssid" ] && say "hotspot: SSID $ssid imported (passphrase ${#psk} chars)"
 say "installed: $(ls -d $M/ubuntu $M/openwrt 2>/dev/null | sed "s|$M/||g" | tr '\n' ' ')boot-os=$BOOT_OS default-linux=$DEFAULT_LINUX"
-rm -f $T/mu300-install.env
+[ "${MU300_KEEP_PAYLOAD:-0}" = 1 ] || rm -f $P/mu300-install.env
 echo MU300-INSTALL-OK   # install.sh checks for this line (set -e stops before it on any failure)

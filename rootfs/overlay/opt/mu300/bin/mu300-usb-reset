@@ -1,35 +1,54 @@
 #!/bin/sh
-# Make the host re-enumerate the USB gadget, so it asks for a DHCP lease again.
-#
-# Why this exists: the host starts its DHCP the moment the gadget appears and gives up after a few seconds. A
-# device that is still booting (modules, modem, services) answers too late, the host falls back to a
-# self-assigned 169.254 address and, on macOS at least, stops asking. Re-enumerating looks like a fresh cable to
-# the host and it tries again.
+# Manual disaster recovery for a wedged USB gadget. Normal boot, PDP setup and
+# IPv6 updates never call this: the early DHCP handoff and broadcast replies
+# keep the existing NCM function usable without a fake cable event.
 #
 # It detaches itself on purpose: unbinding the gadget kills the ACM console (and the SSH session over ECM) that
 # this was most likely started from, and a rebind that never runs leaves the device with no USB at all.
 set -u
+export PATH="$PATH:/opt/mu300/busybox-bin:/usr/sbin:/sbin"
 G=${MU300_GADGET:-/sys/kernel/config/usb_gadget/linux}
-[ -d "$G" ] || { echo "mu300-usb-reset: no gadget at $G" >&2; exit 1; }
 
-# "--if-no-lease": used at the end of the boot. If the host took an address, leave it alone; if it is still
-# waiting (it gave up while the device was booting), re-enumerate once.
-if [ "${1:-}" = --if-no-lease ]; then
-    sleep "${2:-20}"
-    for f in /tmp/dhcp.leases /var/lib/misc/dnsmasq.leases /var/lib/dnsmasq/dnsmasq.leases; do
-        [ -s "$f" ] && exit 0
-    done
-    set -- --detach
+if [ "${1:-}" = --ready ]; then
+    setsid "$0" --fast-run </dev/null >/dev/null 2>&1 &
+    exit 0
 fi
 
-if [ "${1:-}" != --run ]; then
+if [ "${1:-}" != --run ] && [ "${1:-}" != --fast-run ]; then
     setsid "$0" --run </dev/null >/dev/null 2>&1 &
     echo "re-enumerating: the console and any SSH session drop for a few seconds"
     exit 0
 fi
 
+# initramfs used /config and unmounted it before switch_root. Mount configfs at
+# the normal rootfs location so the same gadget can be rebound from OpenWrt.
+if [ ! -d "$G" ]; then
+    mkdir -p /sys/kernel/config
+    mount -t configfs configfs /sys/kernel/config 2>/dev/null || true
+fi
+[ -d "$G" ] || { echo "mu300-usb-reset: no gadget at $G" >&2; exit 1; }
+
 udc=$(cat "$G/UDC" 2>/dev/null)
 [ -n "$udc" ] || udc=$(ls /sys/class/udc 2>/dev/null | head -n1)
+if [ "${1:-}" = --fast-run ]; then
+    echo "" > "$G/UDC" 2>/dev/null
+    n=0
+    while [ -n "$(cat "$G/UDC" 2>/dev/null)" ] && [ "$n" -lt 100 ]; do
+        n=$((n + 1)); /opt/mu300/bin/busybox usleep 20000 2>/dev/null || sleep 1
+    done
+    # USB 2.0 requires a visible disconnect interval; 100 ms is enough for the
+    # Windows NCM stack to observe removal while remaining far below the old 5 s.
+    /opt/mu300/bin/busybox usleep 100000 2>/dev/null || sleep 1
+    n=0
+    while [ "$n" -lt 100 ]; do
+        echo "$udc" > "$G/UDC" 2>/dev/null && [ "$(cat "$G/UDC" 2>/dev/null)" = "$udc" ] && break
+        n=$((n + 1)); /opt/mu300/bin/busybox usleep 20000 2>/dev/null || sleep 1
+    done
+    ip link set usb0 master br-lan 2>/dev/null || true
+    ip link set usb0 up 2>/dev/null || ifconfig usb0 up 2>/dev/null
+    logger -t mu300-usb "fast gadget rebind completed on $udc"
+    exit 0
+fi
 sleep 2
 echo "" > "$G/UDC" 2>/dev/null
 sleep 3

@@ -1,0 +1,642 @@
+#!/bin/sh
+# Local SMS pool for the MU300 modem: everything the SIM holds (or arrives later) is mirrored into
+# $POOL, one file per message, and everything the pool can do it does without touching the SIM
+# except through an explicit --sim.
+#   mu300-sms list [PAGE]        newest first, MU300_SMS_PAGE per page (default 10)
+#   mu300-sms show ID            whole message (marks a received one read)
+#   mu300-sms send NUM TEXT...   UCS-2 PDU submit, so non-ASCII travels correctly
+#   mu300-sms delete ID|all      pool entry only; --sim also CMGDs the matching SIM slot
+#   mu300-sms mark ID read|unread
+#   mu300-sms sync               pull everything AT+CMGL lists into the pool
+# All AT traffic goes through mu300-atd (via mu300-at); the AT channel is never opened here.
+set -u
+export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/sbin:/sbin"
+
+POOL=${MU300_SMS_POOL:-/var/lib/mu300/sms}
+MSGDIR=$POOL/msg
+ATDIR=${MU300_AT_DIR:-/run/mu300-at}
+PAGE=${MU300_SMS_PAGE:-10}
+
+die() { echo "mu300-sms: $*" >&2; exit 1; }
+
+at() {  # at CMD [timeout] -> reply lines
+    mu300-at -t "${2:-6}" "$1"
+}
+
+# ------------------------------------------------------------------ the pool
+# One file per message: "field: value" headers, a blank line, then the body verbatim to EOF
+# (bodies span lines). Everything the pool writes goes through name.part + mv so a reader never
+# sees a half-written message; the pool lock keeps two writers from sharing an id.
+pool_init() {
+    mkdir -p "$MSGDIR" || die "cannot create $MSGDIR"
+    [ -f "$POOL/next_id" ] || echo 0 > "$POOL/next_id"
+}
+
+# mkdir lock with pid-liveness takeover, the house pattern: a writer killed with SIGKILL leaves
+# the directory behind, and the next writer must be able to tell a live holder from a stale one.
+pool_lock() {
+    local lock=$POOL/.lock pid=
+    local n=0
+    while ! mkdir "$lock" 2>/dev/null; do
+        pid=$(cat "$lock/pid" 2>/dev/null || true)
+        if [ -n "$pid" ] && [ -d "/proc/$pid" ] &&
+           tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -q mu300-sms; then
+            n=$((n + 1)); [ "$n" -gt 120 ] && die "another mu300-sms writer has held the pool for two minutes"
+            sleep 1
+            continue
+        fi
+        rm -rf "$lock"
+    done
+    echo $$ > "$lock/pid"
+}
+
+pool_unlock() { rm -rf "$POOL/.lock" 2>/dev/null || true; }
+
+hdr() {  # hdr FILE field (headers only: the body may legitimately repeat any "field: " line)
+    sed -n "1,/^$/s/^$2: //p" "$1" 2>/dev/null | head -1
+}
+
+set_hdr() {  # set_hdr FILE field value
+    sed -i "1,/^$/s/^$2: .*/$2: $3/" "$1"
+}
+
+body_of() { sed -n '1,/^$/!p' "$1" 2>/dev/null; }
+
+# md5 of from|scts|body, the identity of a message across pool and SIM listings. Two identical
+# messages from one sender inside the same SCTS minute dedupe into one - acceptable next to the
+# alternative (index-based keys, which go stale the moment anything deletes from the SIM).
+fingerprint() {
+    printf '%s|%s|%s' "$1" "$2" "$3" | md5sum 2>/dev/null | cut -d' ' -f1
+}
+
+next_id() {
+    local id
+    id=$(($(cat "$POOL/next_id" 2>/dev/null || echo 0) + 1))
+    echo "$id" > "$POOL/next_id"
+    printf '%06d' "$id"
+}
+
+store_msg() {  # store_msg dir status peer scts sim_index coding body -> id on stdout
+    local dir=$1 status=$2 peer=$3 scts=$4 simidx=$5 coding=$6 text=$7 id f part
+    id=$(next_id)
+    f=$MSGDIR/$id
+    part=$f.part
+    {
+        printf 'id: %s\n' "$id"
+        printf 'dir: %s\n' "$dir"
+        printf 'status: %s\n' "$status"
+        if [ "$dir" = mt ]; then printf 'from: %s\n' "$peer"; else printf 'to: %s\n' "$peer"; fi
+        printf 'scts: %s\n' "$scts"
+        printf 'received: %s\n' "$(date +%s)"
+        printf 'sim_index: %s\n' "$simidx"
+        printf 'coding: %s\n' "$coding"
+        printf 'fingerprint: %s\n' "$(fingerprint "$peer" "$scts" "$text")"
+        printf 'length: %s\n' "$(printf '%s' "$text" | wc -c | tr -d ' ')"
+        printf '\n'
+        printf '%s\n' "$text"
+    } > "$part"
+    mv "$part" "$f"
+    echo "$id"
+}
+
+ids_newest_first() { ls -1 "$MSGDIR" 2>/dev/null | grep -E '^[0-9]+$' | sort -rn; }
+
+# With CSCS left at UCS2 (the send path sets it), text-mode CMGL encodes the
+# originating address as ASCII-hex: 17674544422 arrives as "313736373435...3232".
+# Decode byte pairs back, but only when every pair is printable and the result
+# is digit-major - a plain numeric address must never be mangled.
+peer_decode() {
+    printf '%s' "$1" | LC_ALL=C awk '
+        BEGIN { split("0123456789abcdef", H, ""); for (i = 1; i <= 16; i++) v[H[i]] = i - 1 }
+        {
+            orig = $0; s = tolower($0)
+            if (s !~ /^[0-9a-f]+$/ || length(s) % 2 != 0 || length(s) < 4) { print orig; exit }
+            out = ""; digits = 0; n = 0
+            for (i = 1; i <= length(s); i += 2) {
+                hi = v[substr(s, i, 1)]; lo = v[substr(s, i + 1, 1)]
+                b = hi * 16 + lo
+                if (b < 32 || b > 126) { print orig; exit }
+                c = sprintf("%c", b); out = out c; n++
+                if (c ~ /[0-9]/) digits++
+            }
+            if (digits * 2 >= n) print out; else print orig
+        }'
+}
+
+# ------------------------------------------------------------------ codecs
+# UCS-2 hex -> "\ooo" escapes (printf %b turns them into bytes). Backslash itself is doubled.
+# Surrogate pairs join; an unpaired one decodes to '?'. All string ops are byte-wise (LC_ALL=C).
+ucs2_to_esc() {
+    LC_ALL=C awk '
+        BEGIN {
+            split("0123456789abcdef", H, "")
+            for (i = 1; i <= 16; i++) hv[H[i]] = i - 1
+        }
+        function h4(s, i) { return hv[substr(s, i, 1)] * 4096 + hv[substr(s, i + 1, 1)] * 256 + hv[substr(s, i + 2, 1)] * 16 + hv[substr(s, i + 3, 1)] }
+        function e(b) { return (b == 92) ? "\\\\" : sprintf("\\%03o", b) }
+        function u8(cp) {
+            if (cp < 128) return e(cp)
+            if (cp < 2048) return e(192 + int(cp / 64)) e(128 + cp % 64)
+            if (cp < 65536) return e(224 + int(cp / 4096)) e(128 + int(cp / 64) % 64) e(128 + cp % 64)
+            cp -= 65536
+            return e(240 + int(cp / 262144)) e(128 + int(cp / 4096) % 64) \
+                   e(128 + int(cp / 64) % 64) e(128 + cp % 64)
+        }
+        {
+            s = tolower($0); gsub(/[^0-9a-f]/, "", s); n = length(s); out = ""; i = 1
+            while (i + 3 <= n) {
+                cp = h4(s, i)
+                if (cp >= 55296 && cp <= 56319 && i + 7 <= n) {
+                    lo = h4(s, i + 4)
+                    if (lo >= 56320 && lo <= 57343) { cp = 65536 + (cp - 55296) * 1024 + (lo - 56320); i += 4 }
+                }
+                out = out u8(cp)
+                i += 4
+            }
+            print out
+        }'
+}
+
+# UTF-8 -> UCS-2 hex (surrogate pair above 0xFFFF). Malformed bytes become "?" rather than
+# aborting the message.
+utf8_to_ucs2() {
+    LC_ALL=C awk '
+        BEGIN { for (i = 1; i < 256; i++) ord[sprintf("%c", i)] = i }
+        {
+            s = $0; n = length(s); i = 1; out = ""
+            while (i <= n) {
+                b1 = ord[substr(s, i, 1)]
+                if (b1 < 128)      { cp = b1; w = 1 }
+                else if (b1 < 224) { cp = b1 % 32; w = 2 }
+                else if (b1 < 240) { cp = b1 % 16; w = 3 }
+                else if (b1 < 245) { cp = b1 % 8; w = 4 }
+                else               { cp = 63; w = 1 }
+                for (j = 2; j <= w; j++) {
+                    b = ord[substr(s, i + j - 1, 1)]
+                    if (b < 128 || b > 191) { cp = 63; w = 1; break }
+                    cp = cp * 64 + (b % 64)
+                }
+                i += w
+                if (cp > 65535) {
+                    cp -= 65536
+                    out = out sprintf("%04x%04x", 55296 + int(cp / 1024), 56320 + cp % 1024)
+                } else {
+                    out = out sprintf("%04x", cp)
+                }
+            }
+            print out
+        }'
+}
+
+# BCD digits -> semioctets ("10086" -> "0180F6"): low nibble carries the first digit, an odd
+# count pads the high nibble of the last octet with F.
+pack_semi() {
+    LC_ALL=C awk '{
+        s = $0; gsub(/[^0-9]/, "", s); n = length(s); out = ""
+        for (i = 1; i <= n; i += 2) {
+            d2 = (i < n) ? substr(s, i + 1, 1) : "F"
+            out = out d2 substr(s, i, 1)
+        }
+        print out
+    }'
+}
+
+# ------------------------------------------------------------------ AT+CMGL
+# Text-mode listing: one "+CMGL: idx,\"stat\",\"oa\",[\"alpha\"],\"scts\"" header, body lines after
+# it, until the next header or the final code. mu300-atd does not demux URCs out of a reply
+# (that is this chain's known weakness), so the parser drops the URC lines this modem is known
+# to emit mid-reply. Bodies are newline-escaped with \001 for the TSV trip.
+parse_cmgl() {
+    LC_ALL=C awk '
+        function flush() { if (idx != "") { sub(/\001$/, "", body); printf "%s\t%s\t%s\t%s\t%s\n", idx, stat, oa, scts, body } }
+        /^\+CMGL:/ {
+            flush()
+            inbody = 1; body = ""; stat = ""; oa = ""; scts = ""
+            line = $0; sub(/^\+CMGL: */, "", line)
+            idx = line; sub(/,.*/, "", idx)
+            k = 0
+            while (match(line, /"[^"]*"/)) {
+                k++
+                t = substr(line, RSTART + 1, RLENGTH - 2)
+                if (k == 1) stat = t
+                else if (k == 2) oa = t
+                else if (t ~ /\//) scts = t
+                line = substr(line, RSTART + RLENGTH)
+            }
+            next
+        }
+        /^(OK|ERROR|\+CMS ERROR|\+CME ERROR)/ { flush(); inbody = 0; idx = ""; next }
+        inbody && /^\+(CSQ|CESQ|SPPCI|ECIND|SIND|CREG|CGREG|CEREG|C5GREG|CTZV|CGEV|CMTI|SPNRINDICATE|SPERRLOG)/ { next }
+        # a blank line right after the header (this modem emits one on some UCS2
+        # records) must not become a leading newline inside the body
+        inbody { if (body == "" && $0 == "") next; body = body (body == "" ? "" : "\001") $0 }
+        END { flush() }
+    '
+}
+
+# AT+CMGR answers one record shaped like a +CMGL header, with the index supplied by us (the
+# firmware does not repeat it). Same TSV, same URC-skipping, as parse_cmgl.
+parse_cmgr() {  # parse_cmgr INDEX
+    LC_ALL=C awk -v want="$1" '
+        function flush() { if (idx != "") { sub(/\001$/, "", body); printf "%s\t%s\t%s\t%s\t%s\n", idx, stat, oa, scts, body } }
+        BEGIN { idx = "" }
+        /^\+CMGR:/ {
+            flush()
+            inbody = 1; body = ""; stat = ""; oa = ""; scts = ""
+            line = $0; sub(/^\+CMGR: */, "", line)
+            k = 0
+            while (match(line, /"[^"]*"/)) {
+                k++
+                t = substr(line, RSTART + 1, RLENGTH - 2)
+                if (k == 1) stat = t
+                else if (k == 2) oa = t
+                else if (t ~ /\//) scts = t
+                line = substr(line, RSTART + RLENGTH)
+            }
+            idx = want
+            next
+        }
+        /^(OK|ERROR|\+CMS ERROR|\+CME ERROR)/ { flush(); inbody = 0; idx = ""; next }
+        inbody && /^\+(CSQ|CESQ|SPPCI|ECIND|SIND|CREG|CGREG|CEREG|C5GREG|CTZV|CGEV|CMTI|SPNRINDICATE|SPERRLOG)/ { next }
+        # a blank line right after the header (this modem emits one on some UCS2
+        # records) must not become a leading newline inside the body
+        inbody { if (body == "" && $0 == "") next; body = body (body == "" ? "" : "\001") $0 }
+        END { flush() }
+    '
+}
+
+select_storage() {
+    local s reply line used total best= cache=${MU300_SMS_STORE_CACHE:-/run/mu300-sms-store}
+    if [ -s "$cache" ]; then
+        s=$(cat "$cache" 2>/dev/null)
+        case $s in SM|MT|ME)
+            at "AT+CPMS=\"$s\"" 6 >/dev/null 2>&1 && { echo "$s"; return 0; }
+            ;;
+        esac
+        rm -f "$cache"
+    fi
+    # This modem rejects the usual three-argument CPMS form. Probe with the
+    # supported single-argument form, prefer a store containing messages, then
+    # any store with real capacity (ME is commonly 0/0 on this hardware).
+    for s in SM MT ME; do
+        reply=$(at "AT+CPMS=\"$s\"" 6 2>/dev/null || true)
+        line=$(printf '%s\n' "$reply" | grep '^+CPMS:' | head -1)
+        used=$(printf '%s\n' "$line" | awk -F'[,:]' '{gsub(/ /,"",$2); print $2}')
+        total=$(printf '%s\n' "$line" | awk -F'[,:]' '{gsub(/ /,"",$3); print $3}')
+        case "$used:$total" in *[!0-9:]*|:*) continue ;; esac
+        if [ "$used" -gt 0 ]; then
+            echo "$s" > "$cache"
+            echo "$s"
+            return 0
+        fi
+        [ "$total" -gt 0 ] && [ -z "$best" ] && best=$s
+    done
+    [ -n "$best" ] || best=ME
+    at "AT+CPMS=\"$best\"" 6 >/dev/null || return 1
+    echo "$best" > "$cache"
+    echo "$best"
+}
+
+# List the SIM as TSV records, by whichever door this firmware opens. The measured cases:
+#   * CMGF=1 refused        -> report; nothing to list with
+#   * AT+CMGL="ALL" refused -> some firmwares only take the numeric stat (CMGL=4) in text mode
+#   * both refused          -> this firmware offers no listing at all (the E5 of this family
+#     is read by CMGR after each +CMTI - see unisoc-cpd FINDINGS), so scan slots instead;
+#     the fingerprint dedupe in sync absorbs the overlap
+sim_list() {
+    local reply store
+    store=$(select_storage) || {
+        echo "mu300-sms: no usable SMS storage" >&2
+        return 1
+    }
+    reply=$(at 'AT+CMGF=1' 6)
+    case $reply in *OK*) ;; *)
+        echo "mu300-sms: AT+CMGF=1 refused: $(printf '%s\n' "$reply" | head -1)" >&2
+        return 1 ;;
+    esac
+    sleep 1   # this CP asserts on unpaced command bursts; every sync is rare, so be generous
+    reply=$(at 'AT+CMGL="ALL"' 15)
+    case $reply in *'+CMS ERROR'*|*'+CME ERROR'*)
+        reply=$(at 'AT+CMGL=4' 15) ;;
+    esac
+    case $reply in *'+CMS ERROR'*|*'+CME ERROR'*)
+        local i misses=0 scan
+        scan=$(mktemp "${TMPDIR:-/tmp}/mu300-sms.XXXXXX")
+        for i in $(seq 1 ${MU300_SMS_SCAN:-30}); do
+            reply=$(at "AT+CMGR=$i" 6)
+            case $reply in
+                *'+CMS ERROR'*|*'+CME ERROR'*|"") misses=$((misses + 1)); [ "$misses" -ge 3 ] && break; continue ;;
+            esac
+            printf '%s\n' "$reply" | parse_cmgr "$i" >> "$scan"
+            misses=0
+        done
+        cat "$scan"
+        rm -f "$scan"
+        return 0 ;;
+    esac
+    printf '%s\n' "$reply" | parse_cmgl
+}
+
+# ------------------------------------------------------------------ commands
+cmd_sync() {
+    pool_init
+    local reply tmp new=0 total=0
+    tmp=$(mktemp "${TMPDIR:-/tmp}/mu300-sms.XXXXXX") || die mktemp
+    sim_list > "$tmp" || { rm -f "$tmp"; die "cannot list the SIM storage"; }
+    # Concatenated SMS arrive as one SIM record per part; text mode hides the UDH,
+    # but every part of one message carries the same sender and the same SCTS.
+    # Fold parts (CMGL lists them in index order) into one record per (oa,scts).
+    # The odd genuinely-separate same-second pair from one sender folds too - the
+    # same tradeoff the fingerprint dedupe below already makes.
+    local merged
+    merged=$(mktemp "${TMPDIR:-/tmp}/mu300-sms.XXXXXX")
+    LC_ALL=C awk -F'\t' '
+        NF >= 5 {
+            key = $3 "|" $4
+            b = $5; for (i = 6; i <= NF; i++) b = b "\t" $i   # keep tabs inside the body
+            # parts join seamlessly: for UCS2 that is plain hex concatenation (a
+            # separator would break the all-hex test downstream), for GSM text
+            # it is the correct continuation of the message
+            if (key in body) { body[key] = body[key] b; next }
+            body[key] = b; stat[key] = $2; idx[key] = $1; order[++n] = key
+        }
+        END { for (i = 1; i <= n; i++) { k = order[i]; split(k, a, "|"); print idx[k] "\t" stat[k] "\t" a[1] "\t" a[2] "\t" body[k] } }
+    ' "$tmp" > "$merged" && mv "$merged" "$tmp"
+    pool_lock
+    trap pool_unlock EXIT INT TERM
+    # fingerprints of what the pool already holds, so a sync is idempotent and the SIM index of
+    # a still-present message stays current (indexes shift whenever anything deletes from the SIM)
+    local fpfile idx stat oa scts body f fpid
+    fpfile=$(mktemp "${TMPDIR:-/tmp}/mu300-sms.XXXXXX")
+    for f in "$MSGDIR"/[0-9]*; do
+        [ -f "$f" ] || continue
+        printf '%s %s\n' "$(hdr "$f" fingerprint)" "$f" >> "$fpfile"
+    done
+    while IFS="$(printf '\t')" read -r idx stat oa scts body; do
+        [ -n "${idx:-}" ] || continue
+        case $stat in REC*|ALL) ;; *) continue ;; esac   # STO UNSENT/SENT are mobile-originated
+        total=$((total + 1))
+        oa=$(peer_decode "$oa")
+        body=$(printf '%s' "$body" | tr '\001' '\n')
+        local coding=gsm
+        case $body in
+            *[!0-9A-Fa-f]*|"") ;;
+            *) if [ $(( ${#body} % 4 )) -eq 0 ] && [ -n "$body" ]; then
+                   body=$(printf '%b' "$(printf '%s\n' "$body" | ucs2_to_esc)")
+                   coding=ucs2
+               fi ;;
+        esac
+        fpid=$(fingerprint "$oa" "$scts" "$body")
+        local known=""
+        while read -r kf kfile; do
+            [ "$kf" = "$fpid" ] && { known=$kfile; break; }
+        done < "$fpfile"
+        # locally-deleted messages stay deleted: their fingerprints are on the
+        # tombstone list, otherwise the next sync would just re-import them
+        grep -qxF "$fpid" "$POOL/deleted" 2>/dev/null && continue
+        if [ -n "$known" ]; then
+            [ "$(hdr "$known" sim_index)" != "$idx" ] && set_hdr "$known" sim_index "$idx"
+        else
+            local newid st=unread
+            # the SIM's own read state carries over: a message already read (on the phone,
+            # before this pool ever saw it) does not arrive here pretending to be new
+            case $stat in *UNREAD*) st=unread ;; *) st=read ;; esac
+            newid=$(store_msg mt "$st" "$oa" "$scts" "$idx" "$coding" "$body")
+            printf '%s %s\n' "$fpid" "$MSGDIR/$newid" >> "$fpfile"
+            new=$((new + 1))
+            echo "new: $newid from ${oa:-?} ${scts:-}"
+        fi
+    done < "$tmp"
+    rm -f "$tmp" "$fpfile"
+    echo "sync: $new new, $total on the SIM, $(ids_newest_first | wc -l | tr -d ' ') in the pool"
+    pool_unlock
+    trap - EXIT INT TERM
+}
+
+cmd_list() {
+    pool_init
+    local page=${1:-1} total pages skip n=0 shown=0 id f dir status peer scts text unread=0
+    case $page in ''|*[!0-9]*) page=1 ;; esac
+    [ "$page" -ge 1 ] || page=1
+    total=$(ids_newest_first | wc -l | tr -d ' ')
+    for f in "$MSGDIR"/[0-9]*; do
+        [ -f "$f" ] || continue
+        [ "$(hdr "$f" status)" = unread ] && unread=$((unread + 1))
+    done
+    pages=$(( (total + PAGE - 1) / PAGE ))
+    [ "$pages" -ge 1 ] || pages=1
+    echo "pool: $total message(s), $unread unread - page $page/$pages ($PAGE per page)"
+    [ "$total" -eq 0 ] && return 0
+    skip=$(( (page - 1) * PAGE ))
+    for id in $(ids_newest_first); do
+        n=$((n + 1))
+        [ "$n" -le "$skip" ] && continue
+        [ "$shown" -ge "$PAGE" ] && break
+        shown=$((shown + 1))
+        f=$MSGDIR/$id
+        dir=$(hdr "$f" dir); status=$(hdr "$f" status)
+        peer=$(hdr "$f" from); [ -n "$peer" ] || peer=$(hdr "$f" to)
+        scts=$(hdr "$f" scts)
+        # preview: first line, at most 44 BYTES, backed off to a UTF-8 character
+        # boundary (cut -c1-44 chopped multi-byte characters in half and the
+        # replacement square ended up in the UI). The backoff runs ONLY after a
+        # real cut: an all-multibyte line that is already short must not be
+        # nibbled to nothing from its tail.
+        text=$(body_of "$f" | head -1 | LC_ALL=C awk '
+            BEGIN { for (i = 0; i < 256; i++) o[sprintf("%c", i)] = i }
+            {
+                s = $0
+                if (length(s) > 44) {
+                    s = substr(s, 1, 44)
+                    while (length(s) > 0) {
+                        b = o[substr(s, length(s), 1)]
+                        if (b < 128) break                    # ASCII tail: complete char
+                        if (b >= 192) { s = substr(s, 1, length(s) - 1); break }  # lead byte: drop once, done
+                        s = substr(s, 1, length(s) - 1)       # continuation: keep backing up
+                    }
+                }
+                print s
+            }')
+        printf '%-7s %-7s %-3s %-18s %-21s %s\n' \
+            "$id" "$status" "$dir" "${peer:-?}" "${scts:-?}" "$text"
+    done
+}
+
+cmd_show() {
+    local id=${1:-} f dir status peer scts idx coding recv text n
+    case $id in ''|*[!0-9]*) die "show needs a numeric id (see: mu300-sms list)" ;; esac
+    n=$(printf '%s' "$id" | sed 's/^0*//'); [ -n "$n" ] || n=0
+    f=$MSGDIR/$(printf '%06d' "$n")
+    [ -f "$f" ] || die "no message $id"
+    dir=$(hdr "$f" dir); status=$(hdr "$f" status)
+    peer=$(hdr "$f" from); [ -n "$peer" ] || peer=$(hdr "$f" to)
+    scts=$(hdr "$f" scts); idx=$(hdr "$f" sim_index); coding=$(hdr "$f" coding)
+    recv=$(hdr "$f" received)
+    echo "id:        $id"
+    echo "direction: $([ "$dir" = mt ] && echo 'received (MT)' || echo 'sent (MO)')"
+    echo "status:    $status"
+    echo "$([ "$dir" = mt ] && echo from || echo to):        $peer"
+    echo "time:      ${scts:-?}"
+    echo "sim index: ${idx:-not on the SIM}"
+    [ -n "$recv" ] && echo "pooled:    $(date -u -d "@$recv" 2>/dev/null || date -u -r "$recv" 2>/dev/null || echo "$recv") UTC"
+    [ "$coding" = ucs2 ] && echo "coding:    UCS-2 (decoded)"
+    echo "---"
+    body_of "$f"
+    # mark-read on first view. The && chain returns 1 for an already-read
+    # message, and as the last command that became cmd_show's exit status -
+    # every rpcd sms_show of a read message answered ok:0 with the full text
+    # hidden in the error field (bubbles never updated past the preview).
+    [ "$dir" = mt ] && [ "$status" = unread ] && set_hdr "$f" status read
+    return 0
+}
+
+cmd_mark() {
+    local id=${1:-} what=${2:-} f n
+    case $id in ''|*[!0-9]*) die "mark needs a numeric id" ;; esac
+    case $what in read|unread) ;; *) die "mark ID read|unread" ;; esac
+    n=$(printf '%s' "$id" | sed 's/^0*//'); [ -n "$n" ] || n=0
+    f=$MSGDIR/$(printf '%06d' "$n")
+    [ -f "$f" ] || die "no message $id"
+    set_hdr "$f" status "$what"
+}
+
+# This CP's prompt has no newline, so a two-stage AT+CMGS conversation loses the
+# ">" in atd's line reader. Send command, literal CR, PDU and Ctrl-Z as one
+# atomic atd request; the modem accepts this form and replies with +CMGS/OK.
+cmd_send() {
+    local num=${1:-} text idigits toa ud udl pdu len
+    shift $(($# > 0 ? 1 : 0))
+    text=$*
+    case $num in
+        '+'*[0-9][0-9][0-9]*) toa=91; idigits=${num#+} ;;
+        [0-9][0-9][0-9]*)     toa=81; idigits=$num ;;
+        *) die "send needs a phone number and a text (mu300-sms send 10086 你好)" ;;
+    esac
+    case $idigits in ''|*[!0-9]*) die "$num is not a phone number" ;; esac
+    [ -n "$text" ] || die "send needs a text"
+    [ -p "$ATDIR/cmd" ] || die "mu300-atd is not running - a submit needs its two-phase path"
+    ud=$(printf '%s' "$text" | utf8_to_ucs2)
+    [ $(( ${#ud} / 4 )) -gt 70 ] &&
+        die "text is $(( ${#ud} / 4 )) UCS-2 units; one SMS part carries 70 (concatenation not implemented)"
+    udl=$(( ${#ud} / 2 ))
+    # 00: empty SMSC (the modem's default service centre - the vendor's own submit carries it
+    # empty too); 01: submit, no VP octet follows (a 0x11 here - promising a validity period
+    # the PDU never carries - is a measured +CMS ERROR: 302 on this CP family); 00: message
+    # reference. CMGS's length counts the octets after the SMSC field.
+    pdu="000100$(printf '%02X' "${#idigits}")${toa}$(printf '%s' "$idigits" | pack_semi)0008$(printf '%02X' "$udl")$ud"
+    pdu=$(printf '%s' "$pdu" | tr 'a-f' 'A-F')
+    len=$(( (${#pdu} - 2) / 2 ))
+    echo "submitting to $num ($len octets, $((udl / 2)) UCS-2 units)"
+
+    local r0 r2 submit
+    r0=$(at 'AT+CAVIMS=1' 6)
+    case $r0 in *OK*) ;; *) die "modem refused AT+CAVIMS=1: $r0" ;; esac
+    r0=$(at 'AT+CMGF=0' 6)       # PDU mode for the submit
+    case $r0 in *OK*) ;; *) die "modem refused AT+CMGF=0: $r0" ;; esac
+    submit=$(printf 'AT+CMGS=%s\r%s\032' "$len" "$pdu")
+    r2=$(at "$submit" 25)
+    # back to text mode whatever happened: this firmware boots in PDU mode, where a manual
+    # AT+CMGL="ALL" answers +CMS ERROR: 302, and leaving PDU behind after every submit is how
+    # the next reader gets confused
+    at 'AT+CMGF=1' 6 >/dev/null || true
+    if ! printf '%s\n' "$r2" | grep -q '^+CMGS:'; then
+        die "submit failed: $(printf '%s\n' "$r2" | grep -E 'CMS|ERROR' | head -1)"
+    fi
+    pool_init
+    pool_lock
+    # bytes above 0x7F mean the text is not plain GSM-7 ASCII and travelled as UCS-2
+    local coding=gsm
+    [ -n "$(printf '%s' "$text" | LC_ALL=C tr -d '\000-\177')" ] && coding=ucs2
+    store_msg mo sent "$num" "$(date '+%y/%m/%d,%H:%M:%S')" "" "$coding" "$text" >/dev/null
+    pool_unlock
+    echo "sent ($(printf '%s\n' "$r2" | sed -n 's/^+CMGS: //p' | head -1))"
+}
+
+# Lock order, everywhere: the AT *client* lock ($ATDIR/lock) is only ever taken by a path
+# that holds no pool lock, and the pool lock is only ever taken by a path that makes no AT
+# calls while holding it. The two AT-talking commands (sync, delete --sim) finish their AT
+# conversation before touching the pool; send takes the client lock first and the pool lock
+# only around the pool append. Getting this backwards deadlocks send against sync.
+cmd_delete() {
+    local what=${1:-} wantsim=false id n f
+    for a in "$@"; do [ "$a" = --sim ] && wantsim=true; done
+    [ "$what" = --sim ] && { shift; what=${1:-}; }
+    pool_init
+    # tombstone every removed message so a later sync does not re-import it
+    # from the SIM (a local-only delete must actually delete something)
+    tombstone() { [ -n "$(hdr "$1" fingerprint)" ] &&
+        printf '%s\n' "$(hdr "$1" fingerprint)" >> "$POOL/deleted" 2>/dev/null; }
+    if [ "$what" = all ]; then
+        for id in $(ids_newest_first); do
+            tombstone "$MSGDIR/$id"
+            [ "$wantsim" = true ] && sim_delete "$id"
+        done
+        pool_lock
+        trap pool_unlock EXIT INT TERM
+        rm -f "$MSGDIR"/[0-9]* 2>/dev/null
+        pool_unlock
+        trap - EXIT INT TERM
+        echo "pool emptied"
+        return 0
+    fi
+    case "$what" in ''|*[!0-9]*) die "delete needs an id or \"all\" (optionally --sim)" ;; esac
+    n=$(printf '%s' "$what" | sed 's/^0*//'); [ -n "$n" ] || n=0
+    id=$(printf '%06d' "$n")
+    f=$MSGDIR/$id
+    [ -f "$f" ] || die "no message $what"
+    tombstone "$f"
+    [ "$wantsim" = true ] && sim_delete "$id"
+    rm -f "$f"
+    echo "deleted $what"
+}
+
+# CMGD by index alone is dangerous (indexes shift with every deletion), so the SIM is re-listed
+# and the slot whose fingerprint matches the pool entry is the one deleted. No match: nothing
+# happens to the SIM, which is also the answer for a message the SIM never held.
+sim_delete() {
+    local id=$1 f=$MSGDIR/$id want simidx reply idx stat oa scts body fpid
+    [ -f "$f" ] || return 0
+    want=$(hdr "$f" fingerprint)
+    reply=$(sim_list) || return 0
+    simidx=""
+    while IFS="$(printf '\t')" read -r idx stat oa scts body; do
+        [ "$idx" = "" ] && continue
+        body=$(printf '%s' "$body" | tr '\001' '\n')
+        case $body in
+            *[!0-9A-Fa-f]*|"") ;;
+            *) [ $(( ${#body} % 4 )) -eq 0 ] && body=$(printf '%b' "$(printf '%s\n' "$body" | ucs2_to_esc)") ;;
+        esac
+        [ "$(fingerprint "$oa" "$scts" "$body")" = "$want" ] && { simidx=$idx; break; }
+    done <<EOF
+$(printf '%s\n' "$reply" | tr -d '\r')
+EOF
+    if [ -z "$simidx" ]; then
+        echo "message $id is not on the SIM (already gone, or never stored there)" >&2
+        return 0
+    fi
+    at "AT+CMGD=$simidx" 6 | grep -q '^OK' && echo "deleted SIM slot $simidx for message $id"
+}
+
+usage() {
+    cat <<EOF
+usage: mu300-sms list [PAGE]     paged inbox, newest first (MU300_SMS_PAGE per page, default 10)
+       mu300-sms show ID         the whole message; marks a received one read
+       mu300-sms send NUM TEXT   UCS-2 submit (non-ASCII travels correctly)
+       mu300-sms delete ID|all   pool only; --sim also deletes the matching SIM slot
+       mu300-sms mark ID read|unread
+       mu300-sms sync            pull everything AT+CMGL lists into the pool
+pool: $POOL (MU300_SMS_POOL to move it)
+EOF
+}
+
+case ${1:-list} in
+    list)   shift $(($# > 0 ? 1 : 0)); cmd_list "${1:-}" ;;
+    show)   shift; cmd_show "$@" ;;
+    send)   shift; cmd_send "$@" ;;
+    delete) shift; cmd_delete "$@" ;;
+    del)    shift; cmd_delete "$@" ;;
+    mark)   shift; cmd_mark "$@" ;;
+    sync)   cmd_sync ;;
+    -h|--help|help) usage ;;
+    *) usage; exit 2 ;;
+esac

@@ -2,6 +2,7 @@
 # Build mainline for the MU300 inside mu300-mainline-build: Image + DTB. /work = this directory, /src = kernel tree volume
 set -eo pipefail
 KV=${KV:-6.18.54}
+[ "$(uname -m)" = aarch64 ] || export CROSS_COMPILE=${CROSS_COMPILE:-aarch64-linux-gnu-}
 # where Image, DTB and modules.builtin go: /work/out for 6.18, OUTDIR=out-7.2 keeps another kernel next to it
 OUT=/work/${OUTDIR:-out}
 # the kernel source, fetched once into the volume and checked against kernel.org's checksum list

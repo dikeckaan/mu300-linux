@@ -1,14 +1,74 @@
 #!/bin/sh /etc/rc.common
-# keep the modem's AT channel open (closing it wedges the SIPC tty; see /opt/mu300/bin/mu300-atd)
-START=91
+# Keep the modem's AT channels open (closing a SIPC tty wedges it; see mu300-atd).
+#
+# The vendor RIL opens three channels per SIM slot (socket_id*3 .. socket_id*3+2):
+#   nr0/nr1/nr2 = slot 0 group, nr3/nr4/nr5 = slot 1 group, nr31 = engpc.
+# Within a group the %3==1 channel (nr1) is the handshake channel (AT+SMMSWAP=0).
+# We mirror this: nr1 stays the general-purpose command channel (mu300-at,
+# toolkit, diagnostics), and nr2 - the same slot 0 group's third channel - is
+# dedicated to mobile-data. During AT+CGDATA's 10-20 s wait on nr2, nr1 stays
+# free for signal checks, SMS and everything else.
+#
+# START=19, not 91. The wan protocol (S20network) dials through mobile-data, and every AT command of
+# that dial goes through mu300-at -> one of these daemons. At 91 the daemon did not exist yet while
+# netifd ran the first attach, so mu300-at fell back to opening /dev/stty_nr1 directly - and that
+# fallback "works once, and then the channel needs a modem restart" (see mu300-at). Then the daemon
+# opened the same channel again. Two readers on one SIPC tty is exactly the failure both files warn
+# about, so the order was not just slow, it was the wrong side of a documented hazard.
+# (V50 开机提速研究实测，见 01-逐文件改动说明.md)
+START=19
 USE_PROCD=1
 export PATH="$PATH:/opt/mu300/busybox-bin"
 
+# wait for a SIPC tty inside the procd command: the nodes appear when the CP is alive, and an init
+# script that returns without opening an instance never gets a second chance. Bounded (240 s) so a
+# kernel without the modem stack says so instead of spinning silently - procd respawns and retries.
+wait_and_exec() {
+	# $1 = tty node, $2.. = the daemon and its env is set by the caller
+	local dev=$1; shift
+	echo "n=0; while [ ! -c $dev ]; do n=\$((n+1)); if [ \"\$n\" -gt 240 ]; then echo 'mu300-atd: $dev never appeared' >&2; exit 1; fi; sleep 1; done; exec $*"
+}
+
 start_service() {
-	[ -c /dev/stty_nr1 ] || return 0
+	# Optional plugin handshake: reserve nr1's first-command window for the
+	# platform radio-on path. The generic worker waits for this marker to clear.
+	[ ! -x /usr/libexec/unisoc-modem/lock ] || : > /run/unisoc-modem-early-hook-pending
+	[ -x /opt/mu300/bin/bootmark ] && /opt/mu300/bin/bootmark S19-atd-init
 	procd_open_instance atd
-	procd_set_param command /opt/mu300/bin/mu300-atd
+	procd_set_param command /bin/sh -c "$(wait_and_exec /dev/stty_nr1 /opt/mu300/bin/mu300-atd)"
 	procd_set_param respawn 3600 10 0
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+
+	# second instance on nr2 (mobile-data's dedicated channel)
+	procd_open_instance atd2
+	procd_set_param command /bin/sh -c "$(wait_and_exec /dev/stty_nr2 /opt/mu300/bin/mu300-atd)"
+	procd_set_param env MU300_AT_DEV=/dev/stty_nr2 MU300_AT_DIR=/run/mu300-at2 MU300_AT_URC_CHANNELS=
+	procd_set_param respawn 3600 10 0
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+
+	# Keep slot 1's nr3/nr4/nr5 open like the vendor RIL does. The optional
+	# nr6/nr7 channels are the bounded slot-0 dashboard pool; all descriptors
+	# remain open for the life of the boot so failover never requires a reopen.
+	for n in 3 4 5 6 7; do
+		procd_open_instance atd$n
+		procd_set_param command /bin/sh -c "$(wait_and_exec /dev/stty_nr$n /opt/mu300/bin/mu300-atd)"
+		procd_set_param env MU300_AT_DEV=/dev/stty_nr$n MU300_AT_DIR=/run/mu300-at$n MU300_AT_URC_CHANNELS=
+		procd_set_param respawn 3600 10 0
+		procd_set_param stdout 1
+		procd_set_param stderr 1
+		procd_close_instance
+	done
+
+	# Turn the radio on as soon as nr1's persistent daemon is ready, in a
+	# separate procd process. This overlaps the remaining rc scripts and leaves
+	# PDP activation to netifd. The FIFO is the readiness event; mobile-data's
+	# radio lock excludes a simultaneous dial-up state machine.
+	procd_open_instance radio-warmup
+	procd_set_param command /bin/sh -c 'n=0; until [ -p /run/mu300-at/cmd ]; do n=$((n+1)); [ "$n" -gt 90 ] && exit 1; sleep 1; done; exec /opt/mu300/bin/mobile-data radio-on'
 	procd_set_param stdout 1
 	procd_set_param stderr 1
 	procd_close_instance

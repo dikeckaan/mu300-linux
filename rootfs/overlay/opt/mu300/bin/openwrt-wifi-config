@@ -22,7 +22,8 @@ uci -q batch <<UCI
 set wireless.$radio.band='$band'
 set wireless.$radio.channel='$CHANNEL'
 set wireless.$radio.htmode='$htmode'
-set wireless.$radio.country='${COUNTRY:-TR}'
+set wireless.$radio.country='${COUNTRY:-CN}'
+set wireless.$radio.noscan='1'
 set wireless.$radio.disabled='0'
 delete wireless.default_$radio
 delete wireless.$radio.disabled

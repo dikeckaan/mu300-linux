@@ -2,26 +2,86 @@
 # First boot: one LAN for USB and Wi-Fi (192.168.77.1/24 on an F50, 192.168.78.1/24 on a U30 Air), cellular WAN through the modem, hostname, USB console.
 # lan ip6assign 64: a carrier hands out one /64 (the wan_6 that mu300cell adds), and the default /60 request
 # would leave the LAN without IPv6
+usb_host_mac=$(cat /run/mu300-usb-host-mac 2>/dev/null)
+[ -n "$usb_host_mac" ] || usb_host_mac=$(tr -d '\000\r\n' < /sys/kernel/config/usb_gadget/linux/functions/ncm.usb0/host_addr 2>/dev/null)
+[ -n "$usb_host_mac" ] || {
+	devmac=$(cat /sys/class/net/usb0/address 2>/dev/null)
+	[ -n "$devmac" ] && usb_host_mac=${devmac%:*}:02
+}
+[ -n "$usb_host_mac" ] || usb_host_mac='02:50:00:00:77:03'
+lan_ip=$(/opt/mu300/bin/mu300-lan-ip)
+usb_host_ip=${lan_ip%.*}.200
 uci -q batch <<UCI
 set system.@system[0].hostname='mu300'
 set system.@system[0].zonename='Europe/Istanbul'
 set system.@system[0].timezone='<+03>-3'
-set network.lan.ipaddr='$(/opt/mu300/bin/mu300-lan-ip)'
+set network.lan.ipaddr='$lan_ip'
 set network.lan.netmask='255.255.255.0'
 set network.lan.ip6assign='64'
 delete network.wan6
 set network.wan=interface
 set network.wan.proto='mu300cell'
 set network.wan.apn=''
+set network.wan.pdptype='IPV4V6'
 UCI
+# IPv6 the way this carrier actually serves it (China Telecom IoT, measured): the context is
+# dual-stack but CGCONTRDP only ever shows a placeholder - the real public address arrives by
+# SLAAC from the carrier's RA on the bearer, and clients get that same /64 relayed onto the LAN.
+# - wan.pdptype IPV4V6 + mu300cell.sh enable accept_ra=2 on the bearer (the RA is solicited)
+# - dhcp.wan master: odhcpd relays RS/RA both ways between the LAN and wan, so clients
+#   SLAAC real public addresses out of the carrier's /64 (no separate wan6 interface is
+#   needed - the relay master just needs to point at the interface that owns sipa_eth0)
+# - firewall masq6: egress NAT66 through the device's own public address (the carrier routes
+#   one address per bearer; Android's tethering does the same)
+# - lan ip6assign + a ULA: a local range for the LAN itself
+# - ndp-learn (init.d/mu300-ndp) pins host routes for each client public address: without
+#   them NAT66 replies follow sipa_eth0's connected /64 and never reach the client
+uci -q batch <<UCI
+set network.lan.ip6assign='60'
+set network.globals.ula_prefix='fd66:1126:7956::/48'
+set dhcp.wan=dhcp
+set dhcp.wan.interface='wan'
+set dhcp.wan.master='1'
+set dhcp.wan.ra='relay'
+set dhcp.wan.dhcpv6='relay'
+set dhcp.wan.ndp='relay'
+set dhcp.lan.ra='relay'
+set dhcp.lan.dhcpv6='relay'
+set dhcp.lan.ndp='relay'
+# Windows can keep requesting the initramfs lease while it has already removed
+# that IPv4 address. A unicast DHCPOFFER to the removed address then disappears
+# in the NCM host stack. Pin the USB host and tag its OFFER/ACK for broadcast.
+set dhcp.mu300_usb=host
+set dhcp.mu300_usb.name='mu300-usb-host'
+set dhcp.mu300_usb.mac='$usb_host_mac'
+set dhcp.mu300_usb.ip='$usb_host_ip'
+set dhcp.mu300_usb.broadcast='1'
+UCI
+zone=$(uci -q show firewall | sed -n "s/^\(firewall\.@zone\[[0-9]*\]\)\.name='wan'$/\1/p")
+[ -n "$zone" ] && uci -q set $zone.masq6='1'
+# Before netifd creates br-lan, the early management address lives directly on
+# usb0. Give that local-only path the same input policy as LAN; forwarding stays
+# blocked, and once bridged packets enter through br-lan as usual.
+early=$(uci -q show firewall | sed -n "s/^\(firewall\.@zone\[[0-9]*\]\)\.name='earlyusb'$/\1/p")
+if [ -z "$early" ]; then
+	early=$(uci add firewall zone)
+	uci set firewall.$early.name='earlyusb'
+	uci add_list firewall.$early.device='usb0'
+	uci set firewall.$early.input='ACCEPT'
+	uci set firewall.$early.output='ACCEPT'
+	uci set firewall.$early.forward='REJECT'
+fi
 # the armsr default bridges eth0; the MU300 LAN bridge carries the USB gadget (Wi-Fi joins via wireless config)
 dev=$(uci -q show network | sed -n "s/^network\.\(@device\[[0-9]*\]\)\.name='br-lan'$/\1/p" | head -1)
 if [ -n "$dev" ]; then
 	uci -q delete network.$dev.ports
 	uci add_list network.$dev.ports='usb0'
-	uci add_list network.$dev.ports='rndis0'   # the gadget's RNDIS configuration (Windows)
+	# Do not wait for the wireless bridge member before creating the wired LAN.
+	uci set network.$dev.bridge_empty='1'
 fi
 uci commit system
 uci commit network
+uci commit dhcp
+uci commit firewall
 grep -q '^ttyGS0:' /etc/inittab || echo 'ttyGS0::askfirst:/usr/libexec/login.sh' >> /etc/inittab
 exit 0

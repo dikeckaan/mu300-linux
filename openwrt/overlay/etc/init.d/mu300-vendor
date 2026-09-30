@@ -1,6 +1,17 @@
 #!/bin/sh /etc/rc.common
 # Android vendor services in a chroot: modem_control (PM watchdog + modem boot), cp_diskserver (modem NV), refnotify
-START=11
+#
+# START=9, not 11. This service has exactly one job on the boot path: release the CP so it can start booting.
+# The CP then needs about fifteen seconds before its AT channel answers, so every second this starts earlier
+# is a second off "the modem is on the network". Sitting behind S00sysfixtime/S00urngd/S10boot/S10system cost
+# 1.4 s (boot-timeline: preinit-end 6.95 -> S11-vendor-init 8.40). At 9 it runs right after urngd.
+# Everything it touches is already there once preinit is done (/dev, /proc, /sys, /opt, /run), and it waits
+# for /dev/modem or /dev/pmsys for up to 90 s by itself, so running earlier cannot make it wrong.
+# (V50 开机提速研究实测，见 01-逐文件改动说明.md)
+# Keep the leading zero: rc.common embeds START verbatim in the rc.d link.
+# S9 sorts after S19 lexically and delayed CP bring-up by about 31 seconds;
+# S09 runs before the AT daemons and network as intended.
+START=09
 USE_PROCD=1
 export PATH="$PATH:/opt/mu300/busybox-bin"
 
@@ -10,6 +21,7 @@ start_service() {
 	# wait for it themselves (android-vendor-start waits for /dev/modem, android-run for the chroot).
 	[ -f /lib/modules/$(uname -r)/sipc-core.ko ] || [ -e /dev/modem ] || [ -e /dev/pmsys ] || {
 		logger -t mu300-vendor "no modem stack in $(uname -r)"; return 0; }
+	/opt/mu300/bin/bootmark S09-vendor-init
 	# the NV server first: the modem asks for its data while it boots, and a modem that does not get it
 	# stalls with "wait modem alive timeout" (this is what kept the mainline kernel without a modem)
 	procd_open_instance cp_diskserver
@@ -19,7 +31,9 @@ start_service() {
 	procd_close_instance
 
 	procd_open_instance modem_control
-	procd_set_param command /bin/sh -c "sleep 5; exec /opt/mu300/bin/android-vendor-start"
+	# The helper already waits on the actual modem nodes. Start it immediately so
+	# CP bring-up and registration are not held back by an unconditional delay.
+	procd_set_param command /opt/mu300/bin/android-vendor-start
 	procd_set_param env PATH="$PATH"
 	procd_set_param respawn 3600 10 0
 	procd_set_param stdout 1

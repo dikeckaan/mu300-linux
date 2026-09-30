@@ -8,3 +8,5 @@
 *.tar binary
 *.lz4 binary
 *.ko binary
+# Patch files contain unified-diff context markers followed by source indentation.
+kernel/patches/*.patch whitespace=-blank-at-eol,-space-before-tab,-blank-at-eof

@@ -105,6 +105,35 @@ class Rules(unittest.TestCase):
         calls = [l.strip() for l in init.splitlines() if l.strip() in ('load_vendor_modules', 'find_partitions')]
         self.assertEqual(calls, ['load_vendor_modules', 'find_partitions'])
 
+    def test_tf_boot_and_package_stay_wired_to_mainline(self):
+        init = (TOP / 'boot' / 'init').read_text()
+        builder = (TOP / 'tools' / 'build-openwrt-tf-magisk.sh').read_text()
+        customize = (TOP / 'android' / 'magisk' / 'mu300-openwrt-tf' / 'customize.sh').read_text()
+        port = (TOP / 'upstream' / 'port' / 'install.py').read_text()
+        self.assertIn('/dev/mmcblk[1-9]p1', init)
+        self.assertIn('mu300sd', init)
+        self.assertIn('root_mounted', init)  # TF miss must retain the internal-root fallback
+        self.assertIn('MU300_MAINLINE_OUT', builder)
+        self.assertIn('--append-ramdisk', builder)
+        self.assertIn('7.2.*', builder)
+        self.assertIn('/dev/block/by-name/boot_b', customize)
+        self.assertIn('--no-reboot', customize)
+        self.assertIn("t = t.replace(old, '')", port)
+        self.assertNotIn("return -ENODEV;\\n' + t[j:]", port)
+
+    def test_tf_bundle_keeps_usb_and_cellular_handoffs(self):
+        init = (TOP / 'boot' / 'init').read_text()
+        post = (TOP / 'openwrt' / 'overlay' / 'etc' / 'init.d' / 'mu300-post').read_text()
+        defaults = (TOP / 'openwrt' / 'overlay' / 'etc' / 'uci-defaults' / '90-mu300').read_text()
+        builder = (TOP / 'tools' / 'build-openwrt-tf-magisk.sh').read_text()
+        self.assertIn('udhcpd /run/udhcpd-usb0.conf', init)
+        self.assertIn('mu300-usb-host-mac', init)
+        self.assertIn('mu300-usb-reset --fast-run', post)
+        self.assertIn('cat /run/mu300-usb-host-mac', defaults)
+        self.assertIn('mu300cell-v6.sh', builder)
+        self.assertIn('tools/keys/mu300-keys', builder)
+        self.assertTrue((TOP / 'openwrt' / 'overlay' / 'lib' / 'netifd' / 'proto' / 'mu300cell-v6.sh').is_file())
+
     def test_every_device_has_its_files(self):
         # a device the installers know needs its module order; its modules come from kernel/build-<device>.sh
         for dev in ('u30air',):

@@ -1,0 +1,381 @@
+#!/bin/sh
+# mu300dash -- the compatibility RPC object of luci-app-mu300.
+#
+# Called by LuCI as:  ubus call mu300dash <method> '{...}'
+#   rpcd runs this script as:  mu300dash call <method>   with the params JSON on stdin,
+#   and `mu300dash list` must print the method declaration blob.
+# The reply is one JSON line on stdout.
+#
+# Methods:
+#   status [refresh]  system snapshot (mu300-dash-info, fast, no AT) + the cellular
+#                     cache (mu300-dash-cell) with its age. A stale cache triggers a
+#                     background refresh (setsid) - the call itself NEVER waits for AT:
+#                     LuCI's /admin/ubus endpoint kills a call after 30 s, and an AT
+#                     round inside a page request starves the dial watchdog (V50 lesson).
+#   act op [arg]      mu300-dash-act; slow ops run detached via setsid and return
+#                     immediately ("started":1), fast ones run inline.
+#   at cmd            one raw AT command through mu300-at, with the same guards the
+#                     V50 panel used: must start with AT, no ";" command chaining, and
+#                     AT+SPENGMD=0,1,0 is hard-denied (it switches the port into
+#                     streaming mode and kills the AT channel until a reboot).
+#                     Reply includes the raw modem output; last 40 commands are kept
+#                     in the package runtime directory.
+#   at_history        that history, raw text.
+#
+# The AT lock wait is capped well below the 30 s endpoint limit so a busy channel
+# answers "busy" instead of dying; the frontend simply retries those.
+
+export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/libexec/unisoc-modem:/usr/sbin:/sbin"
+
+DASH=${MU300_DASH_BIN:-/usr/libexec/unisoc-modem}
+# One pool everywhere: a platform SMS adapter may honor this environment value.
+# Keep the former MU300 path as an automatic upgrade fallback.
+SMS_POOL=$(uci -q get unisoc_modem.main.sms_pool 2>/dev/null)
+[ -d "${SMS_POOL:-/etc/unisoc-modem/sms}" ] || [ ! -d /etc/mu300/sms ] || SMS_POOL=/etc/mu300/sms
+export MU300_SMS_POOL=${MU300_SMS_POOL:-${SMS_POOL:-/etc/unisoc-modem/sms}}
+SMS=${MU300_SMS_BIN:-$(uci -q get unisoc_modem.main.sms_command 2>/dev/null)}
+[ -n "$SMS" ] || SMS=$(command -v mu300-sms 2>/dev/null || true)
+AT=${MU300_AT:-/usr/libexec/unisoc-modem/at}
+DIR=${MU300_DASH_DIR:-/tmp/unisoc-modem}
+CELL=$DIR/cell.json
+SIGF=$DIR/sig.json
+COLLECT_LCK=$DIR/collect.lck
+FAST_LCK=$DIR/fast.lck
+HIST=$DIR/at-history
+TTL=${MU300_DASH_TTL:-5}          # full tier: neighbours/QoS/operator
+TTL_FAST=${MU300_DASH_TTL_FAST:-1} # serving tier: kick whenever older than 1 s (a fast round is ~300 ms)
+MU300_AT_LOCK_WAIT=12
+export MU300_AT_LOCK_WAIT
+
+INPUT=$(cat 2>/dev/null)
+inp() {  # inp JSONPATH [default] -> param value
+    _v=$(printf '%s' "$INPUT" | jsonfilter -e "$1" 2>/dev/null)
+    case $_v in ''|null) _v=${2-} ;; esac
+    printf '%s' "$_v"
+}
+esc() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | tr -d '\r'; }
+now() { date +%s; }
+collecting() {
+    _p=$(cat "$COLLECT_LCK/pid" 2>/dev/null)
+    [ -n "$_p" ] && [ -d "/proc/$_p" ] &&
+        tr '\0' ' ' < "/proc/$_p/cmdline" 2>/dev/null | grep -q '/unisoc-modem/cell'
+}
+fast_busy() {
+    _p=$(cat "$FAST_LCK/pid" 2>/dev/null)
+    [ -n "$_p" ] && [ -d "/proc/$_p" ] &&
+        tr '\0' ' ' < "/proc/$_p/cmdline" 2>/dev/null | grep -q '/unisoc-modem/cell'
+}
+age_of() { [ -s "$1" ] && echo $(( $(now) - $(date -r "$1" +%s 2>/dev/null || echo 0) )) || echo -1; }
+
+m_status() {
+    local info cage sage busy=0 fbusy=0
+    info=$("$DASH/dashboard-info" 2>/dev/null)
+    [ -n "$info" ] || info='{"error":"dashboard-info failed"}'
+    cage=$(age_of "$CELL"); sage=$(age_of "$SIGF")
+    # two refresh tiers, both detached: the fast one keeps the serving-cell data
+    # within ~3 s of reality, the full one refreshes neighbours/QoS/operator.
+    # a full round in flight also writes the fast cache, so it counts for both.
+    # During a lock apply (SFUN restart) do not kick anything: the modem answers
+    # garbage mid-restart and the collectors would only burn the AT channel.
+    if [ -d /run/unisoc-modem-lock-apply ]; then busy=1; fbusy=1; fi
+    if collecting; then busy=1; fbusy=1; fi
+    fast_busy && fbusy=1
+    # A full round also refreshes sig.json. Prefer it when both tiers are stale;
+    # starting full and fast together doubles the AT burst for no benefit.
+    if { [ "$cage" -lt 0 ] || [ "$cage" -gt "$TTL" ]; } && [ "$busy" = 0 ]; then
+        setsid "$DASH/cell" >/dev/null 2>&1 &
+        busy=1; fbusy=1
+    elif { [ "$sage" -lt 0 ] || [ "$sage" -gt "$TTL_FAST" ]; } && [ "$fbusy" = 0 ]; then
+        setsid "$DASH/cell" fast >/dev/null 2>&1 &
+        fbusy=1
+    fi
+    printf '{"info":%s,"cell":%s,"sig":%s,"cell_age":%d,"sig_age":%d,"refreshing":%d}\n' \
+        "$info" \
+        "$([ -s "$CELL" ] && cat "$CELL" || echo null)" \
+        "$([ -s "$SIGF" ] && cat "$SIGF" || echo null)" \
+        "$cage" "$sage" "$busy"
+}
+
+# Live serving-cell snapshot for views where stale radio readings are actively
+# misleading (notably the lock page hero). This intentionally uses an isolated
+# temporary directory and returns the just-completed AT round, never cell.json
+# or sig.json from an earlier request. The bounded nr6/nr7 pool keeps it off
+# nr1 while limiting the number of concurrent modem collectors.
+m_signal() {
+    # During a lock apply the protocol stack is restarting: live AT reads in
+    # that window return garbage or wedge, and rpcd died with a userspace
+    # segfault (sessions wiped -> LuCI login loop) on at least one live
+    # read's output. Serve the last snapshot until the apply finishes.
+    if [ -d /run/unisoc-modem-lock-apply ]; then
+        if [ -s "$SIGF" ]; then
+            cat "$SIGF"
+        else
+            printf '{"error":"正在应用网络锁定，暂无实时信号"}\n'
+        fi
+        return
+    fi
+    local live="$DIR/live.$$"
+    mkdir -p "$live" 2>/dev/null
+    # The output is deliberately uncached, but the modem channel is not
+    # unbounded parallel work. The collector claims one of the verified
+    # slot-0 nr6/nr7 channels and drops excess overlap immediately.
+    MU300_DASH_DIR="$live" MU300_DASH_LOCK_DIR="$DIR" \
+        "$DASH/cell" fast >/dev/null 2>&1
+    if [ -s "$live/sig.json" ]; then
+        cat "$live/sig.json"
+    else
+        printf '{"error":"live signal read failed"}\n'
+    fi
+    rm -rf "$live"
+}
+
+m_act() {
+    local op arg
+    op=$(inp '@.op')
+    arg=$(inp '@.arg')
+    case "$op" in
+        radio)      # the SFUN dance can run half a minute: never inside the request
+            setsid "$DASH/action" radio "$arg" >/dev/null 2>&1 &
+            printf '{"ok":1,"started":1,"op":"radio %s"}\n' "$arg"
+            ;;
+        modem-reset|reboot|vpn)
+            setsid "$DASH/action" "$op" "$arg" >/dev/null 2>&1 &
+            printf '{"ok":1,"started":1,"op":"%s"}\n' "$op$arg"
+            ;;
+        # os runs inline: arming takes milliseconds and a failure (misc write
+        # rejected, tool missing) must reach the page instead of a silent no-op
+        data|wifi|os)
+            "$DASH/action" "$op" "$arg" 2>/dev/null || true
+            ;;
+        *)
+            printf '{"ok":0,"error":"unknown op"}\n'
+            ;;
+    esac
+}
+
+m_at() {
+    local cmd reply
+    cmd=$(inp '@.cmd')
+    case "$cmd" in
+        AT+SPENGMD=0,1,0)
+            printf '{"ok":0,"error":"denied: this command wedges the AT port until a reboot"}\n'
+            return
+            ;;
+        AT*|at*) ;;
+        *)
+            printf '{"ok":0,"error":"must be an AT command"}\n'
+            return
+            ;;
+    esac
+    case "$cmd" in *';'*)
+        printf '{"ok":0,"error":"no \";\" command chaining"}\n'
+        return
+        ;;
+    esac
+    # a lock apply in flight means the modem is restarting (SFUN) - say so instead
+    # of a generic busy, so it does not look like the console died
+    if [ -d /run/unisoc-modem-lock-apply ]; then
+        printf '{"ok":0,"busy":1,"error":"正在应用网络锁定，调制解调器重启中（约半分钟），请稍后再试"}
+'
+        return
+    fi
+    # mu300-at itself gives up waiting for the lock and says so; turn that into a
+    # retryable "busy" instead of letting the page show a dead console
+    reply=$("$AT" -t 8 "$cmd" 2>&1)
+    case "$reply" in *"busy"*)
+        printf '{"ok":0,"busy":1,"error":"AT 通道正忙，命令未发出，请重试"}\n'
+        return
+        ;;
+    esac
+    mkdir -p "$DIR" 2>/dev/null
+    printf '%s %s\n' "$(date '+%m-%d %H:%M:%S')" "$cmd" >> "$HIST"
+    tail -n 40 "$HIST" > "$HIST.t" 2>/dev/null && mv "$HIST.t" "$HIST"
+    printf '{"ok":1,"cmd":"%s","reply":"%s"}\n' "$(esc "$cmd")" \
+        "$(printf '%s' "$reply" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | awk 'NR>1 { printf "\\n" } { printf "%s", $0 }')"
+}
+
+m_at_history() {
+    printf '{"history":"%s"}\n' \
+        "$(sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' "$HIST" 2>/dev/null | awk 'NR>1 { printf "\\n" } { printf "%s", $0 }')"
+}
+
+m_lock_set() {
+    local kind val q=0
+    kind=$(inp '@.kind')
+    val=$(inp '@.val')
+    case "$kind" in
+        mode|endc|lte|nr|cell|auto_apply) ;;
+        *) printf '{"ok":0,"error":"unknown lock kind"}\n'; return ;;
+    esac
+    # applying restarts the protocol stack (SFUN 5 -> 4): half a minute without
+    # cellular - exactly the thing that must never run inside a request
+    # queued=1 tells the page another apply is still running (SFUN restart);
+    # the new one waits for the modem and the page can say so
+    [ -d /run/unisoc-modem-lock-apply ] && q=1
+    setsid "$DASH/lock" apply "$kind" "$val" >/dev/null 2>&1 &
+    printf '{"ok":1,"started":1,"queued":%d,"op":"lock %s=%s"}\n' "$q" "$kind" "$val"
+}
+
+# --------------------------------------------------------------------- SMS
+# Everything below talks to the LOCAL pool via mu300-sms (the sms daemon keeps
+# it in step with the SIM). list/show are file reads; send goes through AT
+# (UCS-2 PDU submit, seconds); sync runs detached because CMGL walks the SIM.
+
+esc_ml() {  # multi-line text -> one JSON string
+    printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | tr -d '\r' |
+        awk 'NR>1 { printf "\\n" } { printf "%s", $0 }'
+}
+
+m_sms_list() {
+    local page out
+    page=$(inp '@.page'); case "$page" in ''|*[!0-9]*) page=1 ;; esac
+    out=$("$SMS" list "$page" 2>/dev/null) || out=''
+    [ -n "$out" ] || { printf '{"error":"mu300-sms 不可用（短信服务没装或没起来）"}\n'; return; }
+    # first line "pool: N message(s), U unread - page P/T (10 per page)",
+    # then fixed-width rows (see mu300-sms cmd_list); parse by column position
+    printf '%s\n' "$out" | awk '
+        NR == 1 {
+            total = $0; sub(/^pool: /, "", total); sub(/ message.*/, "", total)
+            unread = $0; sub(/^pool: [0-9]+ message\(s\), /, "", unread); sub(/ unread.*/, "", unread)
+            pg = $0; sub(/.*page /, "", pg); sub(/\/.*/, "", pg)
+            pgs = $0; sub(/.*page [0-9]+\//, "", pgs); sub(/ \(.*/, "", pgs)
+            printf "{\"total\":%s,\"unread\":%s,\"page\":%s,\"pages\":%s,\"msgs\":[",
+                (total ~ /^[0-9]+$/ ? total : 0), (unread ~ /^[0-9]+$/ ? unread : 0),
+                (pg ~ /^[0-9]+$/ ? pg : 1), (pgs ~ /^[0-9]+$/ ? pgs : 1)
+            next
+        }
+        {
+            id = substr($0, 1, 7); st = substr($0, 9, 7); dir = substr($0, 17, 3)
+            peer = substr($0, 21, 18); tm = substr($0, 40, 21); prev = substr($0, 62)
+            gsub(/^[ \t]+|[ \t]+$/, "", id); gsub(/^[ \t]+|[ \t]+$/, "", st)
+            gsub(/^[ \t]+|[ \t]+$/, "", dir); gsub(/^[ \t]+|[ \t]+$/, "", peer)
+            gsub(/^[ \t]+|[ \t]+$/, "", tm); gsub(/^[ \t]+|[ \t]+$/, "", prev)
+            gsub(/\\/,"\\\\",prev); gsub(/"/,"\\\"",prev)
+            if (id ~ /^[0-9]+$/)
+                printf "%s{\"id\":\"%s\",\"status\":\"%s\",\"dir\":\"%s\",\"peer\":\"%s\",\"time\":\"%s\",\"preview\":\"%s\"}",
+                    (n++ ? "," : ""), id, st, dir, peer, tm, prev
+        }
+        END { print "]}" }'
+}
+
+m_sms_show() {
+    local id; id=$(inp '@.id')
+    case "$id" in ''|*[!0-9]*) printf '{"ok":0,"error":"bad id"}\n'; return ;; esac
+    local text
+    text=$("$SMS" show "$id" 2>/dev/null)
+    if [ $? = 0 ] && [ -n "$text" ]; then
+        printf '{"ok":1,"text":"%s"}\n' "$(esc_ml "$text")"
+    else
+        printf '{"ok":0,"error":"%s"}\n' "$(esc_ml "${text:-读取失败}")"
+    fi
+}
+
+m_sms_send() {
+    local num text
+    num=$(inp '@.num')
+    text=$(inp '@.text')
+    case "$num" in ''|*[!+0-9]) printf '{"ok":0,"error":"号码只能是数字（可带 +）"}\n'; return ;; esac
+    [ -n "$text" ] || { printf '{"ok":0,"error":"内容为空"}\n'; return; }
+    [ ${#text} -le 480 ] || { printf '{"ok":0,"error":"内容太长（>480 字符）"}\n'; return; }
+    local out
+    out=$("$SMS" send "$num" "$text" 2>&1)
+    case "$out" in
+        *"busy"*) printf '{"ok":0,"busy":1,"error":"AT 通道正忙，命令未发出，请重试"}\n' ;;
+        *sent*|*OK*)
+            printf '{"ok":1,"reply":"%s"}\n' "$(esc_ml "$out")" ;;
+        *)
+            printf '{"ok":0,"error":"%s"}\n' "$(esc_ml "$(printf '%s' "$out" | tail -n1)")" ;;
+    esac
+}
+
+m_sms_delete() {
+    local id sim
+    id=$(inp '@.id')
+    sim=$(inp '@.sim')
+    case "$id" in all|[0-9][0-9]*) ;; *) printf '{"ok":0,"error":"bad id"}\n'; return ;; esac
+    # sim=1 also removes the message from the SIM storage (mu300-sms delete --sim)
+    [ "$sim" = 1 ] && "$SMS" delete "$id" --sim >/dev/null 2>&1 ||
+        "$SMS" delete "$id" >/dev/null 2>&1
+    printf '{"ok":1}\n'
+}
+
+m_sms_sync() {
+    setsid "$SMS" sync >/dev/null 2>&1 &
+    printf '{"ok":1,"started":1}\n'
+}
+
+m_sysinfo() {
+    # 纯本地快照：无 AT、无缓存、无 kick —— 首屏先把这个画出来
+    "$DASH/dashboard-info" 2>/dev/null || printf '{"error":"dashboard-info failed"}
+'
+}
+
+do_list() {
+    cat <<EOF
+{
+	"sysinfo": { },
+	"status": { },
+	"signal": { },
+	"act": { "op": "String", "arg": "String" },
+	"at": { "cmd": "String" },
+	"at_history": { },
+	"lock_get": { "fresh": "String" },
+	"lock_set": { "kind": "String", "val": "String" },
+	"sms_list": { "page": "String" },
+	"sms_show": { "id": "String" },
+	"sms_send": { "num": "String", "text": "String" },
+	"sms_delete": { "id": "String", "sim": "String" },
+	"sms_sync": { }
+}
+EOF
+}
+
+# Forensics for the rpcd crash (2026-09-28): rpcd segfaulted while parsing a
+# script reply during a lock apply, wiping every session (LuCI bounced to the
+# login page). Every method's raw stdout is appended here, so the last entry
+# at the moment of a crash is the input that killed the parser.
+LASTLOG=$DIR/last-outputs.log
+run_m() {
+    local out
+    out=$(eval "$2" 2>/dev/null)
+    printf '=== %s %s len=%s\n%s\n' "$(date '+%m-%d %H:%M:%S')" "$1" "${#out}" "$out" >> "$LASTLOG" 2>/dev/null
+    tail -n 400 "$LASTLOG" > "$LASTLOG.t" 2>/dev/null && mv "$LASTLOG.t" "$LASTLOG"
+    printf '%s\n' "$out"
+}
+
+case "${1:-}" in
+list)
+    do_list
+    ;;
+call)
+    case ${2:-} in
+        sysinfo)    run_m sysinfo    'm_sysinfo' ;;
+        status)     run_m status     'm_status' ;;
+        signal)     run_m signal     'm_signal' ;;
+        act)        run_m act        'm_act' ;;
+        at)         run_m at         'm_at' ;;
+        at_history) run_m at_history 'm_at_history' ;;
+        lock_get)
+            # default serves the lock cache instantly (a real read is seven AT
+            # round trips, about a second each); fresh=1 does the real read -
+            # the page uses it only behind the manual refresh button
+            if [ "$(inp '@.fresh')" = "1" ]; then
+                run_m lock_get:fresh '"$DASH/lock" get fresh 2>/dev/null || printf "{\"error\":\"lock read failed\"}\n"'
+            else
+                run_m lock_get '"$DASH/lock" get 2>/dev/null || printf "{\"error\":\"lock read failed\"}\n"'
+            fi
+            ;;
+        lock_set)   run_m lock_set   'm_lock_set' ;;
+        sms_list)   run_m sms_list   'm_sms_list' ;;
+        sms_show)   run_m sms_show   'm_sms_show' ;;
+        sms_send)   run_m sms_send   'm_sms_send' ;;
+        sms_delete) run_m sms_delete 'm_sms_delete' ;;
+        sms_sync)   run_m sms_sync   'm_sms_sync' ;;
+        *)          printf '{"ok":0,"error":"no such method"}\n' ;;
+    esac
+    ;;
+*)
+    echo "usage: $0 {list|call <method>}" >&2
+    exit 2
+    ;;
+esac

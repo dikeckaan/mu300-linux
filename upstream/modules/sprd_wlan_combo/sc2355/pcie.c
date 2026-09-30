@@ -2034,6 +2034,14 @@ int pcie_post_init(struct sprd_hif *hif)
 	int ret = -EINVAL, chn = 0;
 
 	sc2355_hif.hif = (void *)hif;
+	/*
+	 * A failed/aborted earlier power cycle clears this pointer in the
+	 * error path below.  The vendor driver only restores it in pcie_init(),
+	 * but a later WCN power-on may call post_init directly.  Passing
+	 * &NULL[0] to mchn_init then makes Wi-Fi permanently fail until reboot.
+	 * The channel table is static, so make every post-init self-contained.
+	 */
+	sc2355_hif.mchn_ops = sc2355_pcie_hif_ops;
 	sc2355_hif.max_num =
 		sizeof(sc2355_pcie_hif_ops) / sizeof(struct mchn_ops_t);
 

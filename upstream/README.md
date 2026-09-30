@@ -178,7 +178,8 @@ Fixes needed on top of the port:
 
 - `sdhci-sprd`: UMS9620 has the r11p3 controller; the vendor driver programs DLL phase `0x2`
   (mainline `0x3`). With `0x3` reads work in HS400ES but every write fails with data CRC errors.
-- `sdhci-sprd`: only the non-removable eMMC is probed (the SD slot is unpopulated and floods the log).
+- `sdhci-sprd`: both the soldered eMMC and removable TF controller are probed. The TF controller is needed by
+  the optional OpenWrt-on-TF installer; systems without a card simply continue with the internal rootfs.
 - UMP9620 PMIC watchdog, armed by LK for 300 s, is disabled by `ump9620-pmic-wdt-off`.
 - Userspace config: cgroups/namespaces/seccomp, bridge, nftables, IPv6, zram.
 - Thermal: vendor `sprd_thermal_r5p0` (19 on-die zones) with calibration from the UMS9620 eFuse; the eFuse

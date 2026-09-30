@@ -27,7 +27,14 @@ fi
 # Both places: OpenWrt keeps the modules flat in $M, the Ubuntu image under $M/extra. Looking only in $M meant
 # the delegate was never started on Ubuntu, and Ubuntu had no mobile data downlink at all.
 if { [ -f "$M/sipa-dele.ko" ] || [ -f "$M/extra/sipa-dele.ko" ]; } && ! grep -q '^sipa_dele ' /proc/modules; then
-    /opt/mu300/bin/sipa-dele-start >/tmp/mu300-sipa-dele.log 2>&1 &
+    if [ -f /etc/openwrt_release ]; then
+        # mobile-data inserts it synchronously after registration and before
+        # CGACT. A background loader can race PDP activation and panic inside
+        # the delegate probe when SIPA resources are already active.
+        :
+    else
+        /opt/mu300/bin/sipa-dele-start >/tmp/mu300-sipa-dele.log 2>&1 &
+    fi
 fi
 
 # The PM co-processor keeps its own watchdog, and it power-cuts the device a few minutes after boot unless this

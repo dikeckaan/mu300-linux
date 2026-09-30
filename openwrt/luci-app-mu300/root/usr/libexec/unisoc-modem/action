@@ -1,0 +1,109 @@
+#!/bin/sh
+# mu300-dash-act -- the dashboard's actions, one op per invocation:
+#   mu300-dash-act radio on|off     radio (airplane) via AT+CFUN / the SFUN dance
+#   mu300-dash-act data up|down     netifd wan interface up/down (no AT in-band)
+#   mu300-dash-act wifi on|off      uci wireless disabled flag + wifi up/down
+#   mu300-dash-act modem-reset      the SFUN 5/3/2/4 sequence mobile-data uses for sim-reset
+#   mu300-dash-act vpn start|stop   /etc/init.d/mu300-vpn
+#   mu300-dash-act reboot           the whole box, after a 3 s grace for the HTTP reply
+#
+# Every op prints one JSON line on stdout. The rpcd backend (/usr/libexec/rpcd/mu300dash)
+# runs the slow ones via setsid and returns immediately: LuCI's /admin/ubus endpoint
+# kills a call after 30 s, and AT-heavy sequences must never run inside a request
+# anyway (they would starve the dial watchdog; same rule as the collector).
+#
+# The radio sequences are the ones measured working in this repo (mobile-data):
+# the radio comes up with AT+SFUN=4 and answers +CFUN: 1; if the stack is wedged,
+# AT+SFUN=2 then AT+SFUN=4 brings it back. AT+CFUN=0 is the plain radio-off state
+# this modem boots into, so it is safe to use for "airplane on".
+
+export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/libexec/unisoc-modem:/usr/sbin:/sbin"
+
+AT=${MU300_AT:-/usr/libexec/unisoc-modem/at}
+DATA_IFACE=$(uci -q get unisoc_modem.main.data_interface 2>/dev/null)
+DATA_IFACE=${DATA_IFACE:-wan}
+ok()   { printf '{"ok":1,"op":"%s"}\n' "$1"; }
+fail() { printf '{"ok":0,"op":"%s","error":%s}\n' "$1" "$(printf '%s' "$2" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | tr -d '\r\n' | sed 's/.*/"&"/')"; }
+
+radio_on() {
+    # data interface first: the mu300cell proto retries AT forever while the radio
+    # is off, so bring wan down, raise the radio, then bring wan back
+    ifdown "$DATA_IFACE" 2>/dev/null
+    "$AT" -t 20 'AT+SFUN=4' >/dev/null 2>&1
+    "$AT" -t 4 'AT+CFUN?' 2>/dev/null | grep -q '+CFUN: 1' && { ifup "$DATA_IFACE"; return 0; }
+    "$AT" -t 5 'AT+SFUN=2' >/dev/null 2>&1
+    "$AT" -t 30 'AT+SFUN=4' >/dev/null 2>&1
+    "$AT" -t 4 'AT+CFUN?' 2>/dev/null | grep -q '+CFUN: 1'
+    ifup "$DATA_IFACE"
+}
+
+radio_off() {
+    ifdown "$DATA_IFACE" 2>/dev/null
+    "$AT" -t 6 'AT+CFUN=0' >/dev/null 2>&1
+}
+
+case "${1:-}:${2:-}" in
+    radio:on)
+        radio_on && ok "radio on" || fail "radio on" "radio did not come up"
+        ;;
+    radio:off)
+        radio_off
+        ok "radio off"
+        ;;
+    data:up)
+        ifup "$DATA_IFACE" 2>/dev/null
+        ok "data up"
+        ;;
+    data:down)
+        ifdown "$DATA_IFACE" 2>/dev/null
+        ok "data down"
+        ;;
+    wifi:on|wifi:off)
+        # persistent through reboots: the uci flag, not just a runtime wifi down
+        case $2 in on) d=0 ;; off) d=1 ;; esac
+        [ -n "${d:-}" ] || { fail "wifi $2" "need on or off"; exit 1; }
+        uci -q set wireless.@wifi-device[0].disabled=$d
+        uci -q commit wireless
+        case $2 in on) wifi up ;; off) wifi down ;; esac >/dev/null 2>&1
+        ok "wifi $2"
+        ;;
+    modem-reset:)
+        if [ -x /opt/mu300/bin/mobile-data ]; then
+            /opt/mu300/bin/mobile-data sim-reset >/dev/null 2>&1
+        else
+            "$AT" -t 10 'AT+SFUN=5' >/dev/null 2>&1
+            "$AT" -t 30 'AT+SFUN=4' >/dev/null 2>&1
+        fi
+        ok "modem-reset"
+        ;;
+    vpn:start|vpn:stop)
+        if [ -x /etc/init.d/mu300-vpn ]; then
+            /etc/init.d/mu300-vpn "$2" >/dev/null 2>&1
+            ok "vpn $2"
+        else
+            fail "vpn $2" "VPN integration is not provided by this platform"
+        fi
+        ;;
+    reboot:)
+        sleep 3   # the reply has to make it out first
+        reboot
+        ;;
+    os:android)
+        # arm inline (fast, failures surface to the page); reboot DETACHED so
+        # the reply reaches the browser before the box goes down - a reboot
+        # inside the rpcd call kills the ubus reply pipe first
+        if [ ! -x /opt/mu300/bin/mu300-next-boot ]; then
+            fail "os android" "dual-boot integration is not provided by this platform"
+        elif out=$(/opt/mu300/bin/mu300-next-boot android 2>&1); then
+            ok "os android"
+            setsid sh -c 'sleep 3; reboot' >/dev/null 2>&1 &
+        else
+            fail "os android" "${out:-mu300-next-boot failed}"
+        fi
+        ;;
+    *)
+        echo "usage: $0 radio on|off | data up|down | wifi on|off | modem-reset | vpn start|stop | reboot | os android" >&2
+        printf '{"ok":0,"error":"unknown op"}\n'
+        exit 2
+        ;;
+esac

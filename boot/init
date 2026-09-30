@@ -75,9 +75,9 @@ echo 1 > /proc/sys/kernel/panic_on_oops
 [ -e /proc/sys/kernel/hardlockup_panic ] && echo 1 > /proc/sys/kernel/hardlockup_panic
 echo 1 > /proc/sys/kernel/sysrq
 
-# Safety net: reboot after 5 minutes. By then misc points back at slot a.
+# Safety net: reboot after 90 seconds. By then misc points back at slot a.
 # Create /run/stay (e.g. over telnet) to keep Linux running.
-(sleep 300
+(sleep 90
  if [ -e /run/stay ]; then log "stage=timer-skipped"; exit 0; fi
  log "stage=timer-reboot"
  while ! persist_done=$(mkdir /run/persist.lock 2>/dev/null && echo 1); do sleep 1; done
@@ -275,6 +275,27 @@ setup_usb_gadget() {
     # f_ecm (and f_ncm alike) reports the link state in its first CONNECT notification, and macOS' ECM driver does not
     # pick up a later "connected" notification (v10 left usb0 down until systemd ran -> host "inactive").
     ifconfig usb0 up
+    # Windows requests DHCP as soon as NCM enumerates, before OpenWrt starts
+    # dnsmasq. Serve the final LAN address immediately and keep the same host
+    # lease across switch_root. The post-rootfs rebind renews this same lease.
+    if [ -e /sys/class/net/usb0 ]; then
+        ifconfig usb0 "$NET.1" netmask 255.255.255.0 up
+        echo "$MAC:02" > /run/mu300-usb-host-mac
+        cat > /run/udhcpd-usb0.conf <<EOF
+start $NET.200
+end $NET.200
+interface usb0
+option subnet 255.255.255.0
+option router $NET.1
+option dns $NET.1
+option lease 3600
+lease_file /run/udhcpd-usb0.leases
+pidfile /run/udhcpd-usb0.pid
+EOF
+        touch /run/udhcpd-usb0.leases
+        udhcpd /run/udhcpd-usb0.conf 2>/dev/null &
+        log "stage=usb-dhcp-early ip=$NET.1 host=$NET.200"
+    fi
 }
 
 # The vendor modules first, the gadget last. The host starts asking for a DHCP lease the moment the gadget
@@ -290,9 +311,13 @@ ROOT_OFFSET=27762098176   # linux-boot/rootfs-region.env; outside every GPT part
 # this file - with the default above. Devices whose region is elsewhere then booted into standalone mode and went
 # back to Android. So find it the way the installer places it - the first 2 MiB boundary after the last partition
 # - and take the first candidate that really holds the mu300root filesystem (ext4 magic and label).
-is_mu300root() {  # is_mu300root OFFSET
-    [ "$(dd if=/dev/mmcblk0 bs=1 skip=$(($1 + 1080)) count=2 2>/dev/null | od -An -tx1 | tr -d ' \n')" = 53ef ] &&
-    [ "$(dd if=/dev/mmcblk0 bs=1 skip=$(($1 + 1144)) count=9 2>/dev/null)" = mu300root ]
+is_mu300root() {  # is_mu300root OFFSET; loop setup seeks instead of reading through tens of GiB
+    probe=$(losetup -f 2>/dev/null) || return 1
+    losetup -o "$1" "$probe" /dev/mmcblk0 2>/dev/null || return 1
+    magic=$(dd if="$probe" bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d ' \n')
+    label=$(dd if="$probe" bs=1 skip=1144 count=9 2>/dev/null)
+    losetup -d "$probe" 2>/dev/null
+    [ "$magic" = 53ef ] && [ "$label" = mu300root ]
 }
 find_root_offset() {
     e=0
@@ -306,11 +331,29 @@ find_root_offset() {
     done
     return 1
 }
-if found=$(find_root_offset); then
-    [ "$found" = "$ROOT_OFFSET" ] || log "stage=root-offset found=$found (default $ROOT_OFFSET)"
-    ROOT_OFFSET=$found
-else
-    log "stage=root-offset not-found (trying the default $ROOT_OFFSET)"
+# Prefer an ext4 TF filesystem labelled mu300sd. A missing/foreign card costs
+# at most the short device-enumeration window and falls back to internal eMMC.
+sd_root=
+for n in $(seq 1 8); do
+    seen=
+    for d in /dev/mmcblk[1-9]p1 /dev/mmcblk[1-9]; do
+        [ -b "$d" ] || continue
+        seen=1
+        magic=$(dd if="$d" bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d ' \n')
+        label=$(dd if="$d" bs=1 skip=1144 count=16 2>/dev/null | tr -d '\000')
+        [ "$magic" = 53ef ] && [ "$label" = mu300sd ] && { sd_root=$d; break 2; }
+    done
+    [ -n "$seen" ] && break
+    mdev -s; sleep 1
+done
+log "stage=sd-scan dev=${sd_root:-none} blocks=$(ls /dev/mmcblk[1-9]* 2>/dev/null | tr '\n' ',')"
+if [ -z "$sd_root" ]; then
+    if found=$(find_root_offset); then
+        [ "$found" = "$ROOT_OFFSET" ] || log "stage=root-offset found=$found (default $ROOT_OFFSET)"
+        ROOT_OFFSET=$found
+    else
+        log "stage=root-offset not-found (trying the default $ROOT_OFFSET)"
+    fi
 fi
 mkdir -p /newroot
 # busybox mount only sets up a loop for regular files; for a block device the loop options would
@@ -327,12 +370,23 @@ pick_root() {
     done
 }
 mkdir -p /disk
-rootloop=$(losetup -f 2>/run/rootmount.err)
-if [ -n "$rootloop" ] && losetup -o $ROOT_OFFSET "$rootloop" /dev/mmcblk0 2>>/run/rootmount.err \
-   && [ "$(cat /sys/block/${rootloop#/dev/}/loop/offset)" = "$ROOT_OFFSET" ] \
-   && [ "$(dd if="$rootloop" bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d ' ')" = 53ef ] \
-   && mount -t ext4 -o noatime "$rootloop" /disk 2>>/run/rootmount.err \
-   && rootdir=$(pick_root) && [ -n "$rootdir" ]; then
+rootloop=
+root_mounted=0
+if [ -n "$sd_root" ]; then
+    rootloop=$sd_root
+    mount -t ext4 -o noatime "$sd_root" /disk 2>>/run/rootmount.err && root_mounted=1
+    log "stage=sd-root dev=$sd_root mounted=$root_mounted"
+fi
+if [ "$root_mounted" = 0 ]; then
+    rootloop=$(losetup -f 2>/run/rootmount.err)
+    if [ -n "$rootloop" ] && losetup -o $ROOT_OFFSET "$rootloop" /dev/mmcblk0 2>>/run/rootmount.err \
+       && [ "$(cat /sys/block/${rootloop#/dev/}/loop/offset)" = "$ROOT_OFFSET" ] \
+       && [ "$(dd if="$rootloop" bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d ' ')" = 53ef ] \
+       && mount -t ext4 -o noatime "$rootloop" /disk 2>>/run/rootmount.err; then
+        root_mounted=1
+    fi
+fi
+if [ "$root_mounted" = 1 ] && rootdir=$(pick_root) && [ -n "$rootdir" ]; then
     # A way back to Android with no computer and no keyboard: cut the power during boot N times in a row (N is
     # .mu300/boot-attempts, 5 without it). Every boot counts up here and mu300-next-boot --rearm clears the count
     # once the system is really up, so only boots that never got that far add up. LK does the same with the
@@ -403,6 +457,7 @@ if [ -n "$rootloop" ] && losetup -o $ROOT_OFFSET "$rootloop" /dev/mmcblk0 2>>/ru
             </dev/null >/dev/null 2>&1 &
     fi
     umount /config 2>/dev/null
+    killall udhcpd 2>/dev/null
     mkdir -p /newroot/dev /newroot/proc /newroot/sys /newroot/run
     mount --move /dev /newroot/dev
     mount --move /proc /newroot/proc
@@ -427,7 +482,7 @@ touch /run/udhcpd.leases
 udhcpd /etc/udhcpd.conf
 telnetd -b $NET.1 -p 23 -l /bin/sh
 mkdir -p /run/www
-echo "MU300 standalone Linux v5: telnet $NET.1; auto reboot to Android after 300s unless /run/stay exists" > /run/www/index.html
+echo "MU300 standalone Linux v5: telnet $NET.1; auto reboot to Android after 90s unless /run/stay exists" > /run/www/index.html
 httpd -p $NET.1:80 -h /run/www
 log "stage=ready"
 

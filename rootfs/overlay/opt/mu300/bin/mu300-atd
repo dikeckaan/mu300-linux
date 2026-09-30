@@ -98,7 +98,10 @@ open_tty || { echo "mu300-atd: cannot open $DEV" >&2; exit 1; }
 URCDIR=$DIR/urc
 URCMAX=${MU300_AT_URC_MAX:-65536}
 mkdir -p "$URCDIR"
-for n in ${MU300_AT_URC_CHANNELS:-0}; do
+# Use '-' rather than ':-': an explicitly empty value means this secondary
+# daemon must not open any URC channel. With ':-', atd2 and atd3 both fell back
+# to nr0 and three readers split/lost the unsolicited stream.
+for n in ${MU300_AT_URC_CHANNELS-0}; do
     other=${DEV%[0-9]}$n
     [ "$other" = "$DEV" ] && continue
     [ -c "$other" ] || continue
@@ -137,6 +140,12 @@ drain() {  # throw away whatever the modem sent while nobody was asking (URCs), 
     # written the next command we would read it as that command's reply and stay one answer behind for ever.
     # This modem makes that easy to hit - AT+CGACT and AT+CGDATA answer "^ORIG: <cid>,<n>" first and OK or
     # CONNECT ten to twenty seconds later (docs/FINDINGS.md 13f).
+    #
+    # FAST PATH: when the previous reply ended in a clean final result code (OK/ERROR/
+    # CONNECT), the channel is known-quiet - there is nothing to drain, and the 1 s wait
+    # below was pure tax on every single AT round trip. The slow path stays for the
+    # after-timeout case, where a late reply really can be on its way.
+    [ "${PREV_CLEAN:-0}" = 1 ] && { PREV_CLEAN=0; return 0; }
     end=$(( $(now) + ${DRAIN_MAX:-3} ))
     while [ "$(now)" -lt "$end" ]; do
         junk=
@@ -186,6 +195,10 @@ while :; do
     drain
     printf '%s\r' "$cmd" >&3
     reply=$(collect "$t")
+    # did this command end with a clean final result code? If so, the channel is quiet
+    # and the next drain can skip its 1 s wait (see drain's fast path)
+    PREV_CLEAN=0
+    echo "$reply" | grep -qE '^(OK|ERROR|\+CME ERROR|\+CMS ERROR|CONNECT|NO CARRIER)' && PREV_CLEAN=1
     # When the modem restarts (AT+SFUN=4 during a bring-up, or a CP crash) this descriptor is left attached to a
     # channel that no longer exists: it reads nothing for ever, and because it still holds the channel, nobody
     # else can talk to the modem either. Reopening is the only cure for that case - but it is also the way to

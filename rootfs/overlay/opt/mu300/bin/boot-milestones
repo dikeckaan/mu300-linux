@@ -1,0 +1,26 @@
+#!/bin/sh
+# 开机里程碑记录。服务侧的里程碑（谁在几秒启动、射频什么时候开、什么时候注册上）由各服务自己用
+# /opt/mu300/bin/bootmark 写进 /etc/mu300/boot-timeline.txt；这个脚本只补「结果侧」的三条，
+# 然后立刻退出。
+#
+# 它**一个 AT 命令都不发**：mu300-at 的锁是全局的（$DIR/lock），开机时任何 AT 轮询都会把拨号
+# 自己的命令挤到后面（第一版探针就是这样凭空造出 43 s 的假延迟，见 docs/FINDINGS.md §43）。
+# OpenWrt 由 /etc/rc.local 拉起，Ubuntu 由 mu300-boot-milestones.service 拉起，只活到 DNS 通为止。
+f=/etc/mu300/boot-timeline.txt
+mark() { printf 't=%-9s %s\n' "$(cut -d' ' -f1 /proc/uptime)" "$*" >>"$f" 2>/dev/null; }
+i=0
+while [ "$i" -lt 180 ]; do
+    ip -4 addr show sipa_eth0 2>/dev/null | grep -q 'inet ' && { mark "milestone-iface-ip"; break; }
+    sleep 1; i=$((i + 1))
+done
+i=0
+while [ "$i" -lt 30 ]; do
+    ip route | grep -q '^default dev sipa_eth0' && { mark "milestone-route"; break; }
+    sleep 1; i=$((i + 1))
+done
+i=0
+while [ "$i" -lt 60 ]; do
+    nslookup www.qq.com >/dev/null 2>&1 && { mark "milestone-dns-ok 真正可上网"; break; }
+    sleep 1; i=$((i + 1))
+done
+exit 0
