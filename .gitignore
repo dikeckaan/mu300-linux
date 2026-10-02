@@ -33,7 +33,7 @@ backup/
 arch/*.tar.gz
 arch/ArchLinuxARM-*
 android/magisk/*.zip
-/mu300-linux-openwrt-tf.zip
+/mu300-linux-openwrt-tf*.zip
 /tools/pcmhost/pcmhost
 
 # built by tools/ctlset/build.sh

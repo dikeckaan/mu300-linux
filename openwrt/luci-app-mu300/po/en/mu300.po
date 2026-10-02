@@ -20,3 +20,6 @@ msgstr "AT terminal"
 
 msgid "适配设置"
 msgstr "Adapter settings"
+
+msgid "设备管理"
+msgstr "Device management"

@@ -7,6 +7,29 @@ rm -f /run/mu300-early-udhcpd.pid
 # netifd has transferred usb0 to br-lan without changing the management IP or
 # DHCP lease.
 
+# With the RNDIS-only gadget, initramfs gives rndis0 the LAN address to serve
+# early DHCP. netifd can retain that address after enslaving rndis0, creating
+# two equal 192.168.77.0/24 routes; replies then leave through the wrong
+# device and the Windows host cannot even ping br-lan. Keep the IP on br-lan
+# only, after netifd has installed it. This also handles an NCM handoff if
+# that driver ever retains its early address.
+bridge_ip=$(ip -4 -o addr show dev br-lan 2>/dev/null | awk 'NR == 1 { print $4 }')
+if [ -n "$bridge_ip" ]; then
+	for nic in usb0 rndis0; do
+		ip -o link show dev "$nic" 2>/dev/null | grep -q 'master br-lan' || continue
+		ip -4 -o addr show dev "$nic" 2>/dev/null | grep -Fq "inet $bridge_ip " || continue
+		ip addr del "$bridge_ip" dev "$nic" 2>/dev/null || true
+	done
+fi
+
+# On an already-installed rootfs, firstboot's bridge UCI section predates a
+# later switch to RNDIS. Reattach its gadget netdev after every LAN ifup, not
+# only the first boot; this also covers a network reload from Device Management.
+if [ -e /sys/class/net/rndis0 ]; then
+	ip link set rndis0 master br-lan 2>/dev/null
+	ip link set rndis0 up 2>/dev/null
+fi
+
 # The final NCM endpoint health check/rebind is a procd one-shot in mu300-post.
 # A detached child launched by hotplug can be reaped with the hotplug process;
 # keep this hook limited to the deterministic DHCP handoff above.

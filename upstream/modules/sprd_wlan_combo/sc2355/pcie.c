@@ -1911,7 +1911,6 @@ int sc2355_pcie_fc_get_send_num(struct sprd_hif *hif,
 {
 	int free_num = 0;
 	struct tx_mgmt *tx_mgmt = hif->tx_mgmt;
-	static unsigned long caller_jiffies;
 	/*send all data in buff with PCIe interface*/
 	unsigned int tx_buf_max = get_max_fw_tx_dscr() >
 				  pcie_get_tx_buf_num() ?
@@ -1922,12 +1921,6 @@ int sc2355_pcie_fc_get_send_num(struct sprd_hif *hif,
 		return 0;
 
 	free_num = atomic_read(&tx_mgmt->xmit_msg_list.free_num);
-	if (printk_timed_ratelimit(&caller_jiffies, 1000)) {
-		pr_debug("%s, free_num=%d, data_num=%d\n", __func__,
-			free_num, data_num);
-		if (list_empty(&tx_mgmt->xmit_msg_list.to_free_list))
-			pr_info("%s: to free list empty\n", __func__);
-	}
 
 	if ((free_num + data_num) >= tx_buf_max) {
 		pr_debug("%s, free_num=%d, data_num=%d\n", __func__,
@@ -1944,7 +1937,6 @@ int sc2355_pcie_fc_test_send_num(struct sprd_hif *hif,
 {
 	int free_num = 0;
 	struct tx_mgmt *tx_mgmt = hif->tx_mgmt;
-	static unsigned long caller_jiffies;
 	/*send all data in buff with PCIe interface, TODO*/
 	unsigned int tx_buf_max = get_max_fw_tx_dscr() >
 				  pcie_get_tx_buf_num() ?
@@ -1955,12 +1947,6 @@ int sc2355_pcie_fc_test_send_num(struct sprd_hif *hif,
 		return 0;
 
 	free_num = atomic_read(&tx_mgmt->xmit_msg_list.free_num);
-	if (printk_timed_ratelimit(&caller_jiffies, 1000)) {
-		pr_debug("%s,%d free_num=%d, data_num=%d\n", __func__,
-			__LINE__, free_num, data_num);
-		if (list_empty(&tx_mgmt->xmit_msg_list.to_free_list))
-			pr_info("%s: to free list empty\n", __func__);
-	}
 
 	if ((free_num + data_num) >= tx_buf_max) {
 		pr_err("%s,%d free_num=%d, data_num=%d\n",

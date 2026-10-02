@@ -518,7 +518,8 @@ case " $OSES " in *" ubuntu "*) reuse ubuntu || {
 esac
 case " $OSES " in *" openwrt "*) reuse openwrt || {
     say "$(t 'Building the OpenWrt root filesystem')"
-    MU300_INPUTS="$WORK" sh "$TOP/openwrt/build-rootfs.sh" mu300-openwrt-rootfs.tar.gz >/dev/null
+    MU300_INPUTS="$WORK" MU300_LUCI_PLUGIN_SRC="$TOP/openwrt/luci-app-mu300" \
+      sh "$TOP/openwrt/build-rootfs.sh" mu300-openwrt-rootfs.tar.gz >/dev/null
     mv "$TOP/openwrt/mu300-openwrt-rootfs.tar.gz" "$WORK/mu300-openwrt.tar.gz"; } ;;
 esac
 BUSYBOX=$WORK/busybox; LOGDW=$WORK/tools/logdw/logdw

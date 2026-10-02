@@ -325,7 +325,11 @@ do_list() {
 	"sms_show": { "id": "String" },
 	"sms_send": { "num": "String", "text": "String" },
 	"sms_delete": { "id": "String", "sim": "String" },
-	"sms_sync": { }
+	"sms_sync": { },
+	"usb_get": { },
+	"usb_set": { "kind": "String", "value": "String", "scope": "String", "auto": "String" },
+	"usb_net_list": { },
+	"usb_net_add": { "iface": "String" }
 }
 EOF
 }
@@ -371,6 +375,16 @@ call)
         sms_send)   run_m sms_send   'm_sms_send' ;;
         sms_delete) run_m sms_delete 'm_sms_delete' ;;
         sms_sync)   run_m sms_sync   'm_sms_sync' ;;
+        usb_get)    run_m usb_get    '"$DASH/device-usb" get' ;;
+        usb_set)
+            kind=$(inp '@.kind'); value=$(inp '@.value'); scope=$(inp '@.scope'); auto=$(inp '@.auto')
+            case $kind in
+                role) run_m usb_set:role '"$DASH/device-usb" set-role "$value" "$auto"' ;;
+                net)  run_m usb_set:net  '"$DASH/device-usb" set-net "$value" "$scope" "$auto"' ;;
+                *)    printf '{"ok":0,"error":"unknown USB setting"}\n' ;;
+            esac ;;
+        usb_net_list) run_m usb_net_list '"$DASH/device-usb" net-list' ;;
+        usb_net_add)  iface=$(inp '@.iface'); run_m usb_net_add '"$DASH/device-usb" net-add "$iface"' ;;
         *)          printf '{"ok":0,"error":"no such method"}\n' ;;
     esac
     ;;

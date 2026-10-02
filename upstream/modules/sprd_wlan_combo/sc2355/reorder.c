@@ -9,6 +9,8 @@
 * as published by the Free Software Foundation.
 */
 
+#include <linux/moduleparam.h>
+
 #include "cmdevt.h"
 #include "common/cmd.h"
 #include "common/common.h"
@@ -18,6 +20,27 @@
 #include "rx.h"
 
 static void reorder_ba_timeout(struct timer_list *t);
+
+/* Opt-in, bounded-cost diagnostics for distinguishing BA stalls from other
+ * Wi-Fi latency.  Disabled unless explicitly enabled through sysfs. */
+static bool mu300_ba_probe;
+static atomic64_t mu300_ba_packets = ATOMIC64_INIT(0);
+static atomic64_t mu300_ba_fast = ATOMIC64_INIT(0);
+static atomic64_t mu300_ba_timeouts = ATOMIC64_INIT(0);
+module_param_named(mu300_ba_probe, mu300_ba_probe, bool, 0644);
+
+static int mu300_ba_stats_get(char *buffer, const struct kernel_param *kp)
+{
+	return scnprintf(buffer, 128, "packets=%lld fast=%lld timeouts=%lld\n",
+		(long long)atomic64_read(&mu300_ba_packets),
+		(long long)atomic64_read(&mu300_ba_fast),
+		(long long)atomic64_read(&mu300_ba_timeouts));
+}
+
+static const struct kernel_param_ops mu300_ba_stats_ops = {
+	.get = mu300_ba_stats_get,
+};
+module_param_cb(mu300_ba_stats, &mu300_ba_stats_ops, NULL, 0444);
 
 static inline unsigned int reorder_get_index_size(unsigned int size)
 {
@@ -77,8 +100,11 @@ reorder_set_skb_list(struct rx_ba_entry *ba_entry,
 static inline void reorder_mod_timer(struct rx_ba_node *ba_node)
 {
 	if (ba_node->rx_ba->buff_cnt) {
-		mod_timer(&ba_node->reorder_timer,
-			  jiffies + RX_BA_LOSS_RECOVERY_TIMEOUT);
+		/* A stream of out-of-order frames must not keep moving the
+		 * deadline forward and hold an older frame indefinitely. */
+		if (!timer_pending(&ba_node->reorder_timer))
+			mod_timer(&ba_node->reorder_timer,
+				  jiffies + RX_BA_LOSS_RECOVERY_TIMEOUT);
 	} else {
 		del_timer(&ba_node->reorder_timer);
 		ba_node->timeout_cnt = 0;
@@ -383,6 +409,8 @@ static void reorder_msdu_process(struct rx_ba_entry *ba_entry,
 
 	spin_lock_bh(&ba_node->ba_node_lock);
 	if (likely(ba_node->active)) {
+		if (unlikely(READ_ONCE(mu300_ba_probe)))
+			atomic64_inc(&mu300_ba_packets);
 		pr_debug("%s: seq: %d, last_msdu_of_mpdu: %d\n",
 			 __func__, seq_num, last_msdu_flag);
 		pr_debug("%s: win_start: %d, win_tail: %d, buff_cnt: %d\n",
@@ -391,6 +419,8 @@ static void reorder_msdu_process(struct rx_ba_entry *ba_entry,
 
 		if (seq_num == ba_node_desc->win_start &&
 		    !ba_node_desc->buff_cnt && last_msdu_flag) {
+			if (unlikely(READ_ONCE(mu300_ba_probe)))
+				atomic64_inc(&mu300_ba_fast);
 			reorder_send_order_msdu(ba_entry, msdu_desc, skb,
 						ba_node_desc);
 			goto out;
@@ -747,6 +777,8 @@ static void reorder_ba_timeout(struct timer_list *t)
 	spin_lock_bh(&ba_node->ba_node_lock);
 	if (ba_node->active && ba_node_desc->buff_cnt &&
 	    !timer_pending(&ba_node->reorder_timer)) {
+		if (unlikely(READ_ONCE(mu300_ba_probe)))
+			atomic64_inc(&mu300_ba_timeouts);
 		pos_seqno = reorder_get_first_seqno_in_buff(ba_node_desc);
 		reorder_send_msdu_with_gap(ba_entry, ba_node_desc, pos_seqno);
 		ba_node_desc->win_start = pos_seqno;

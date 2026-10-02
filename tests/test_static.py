@@ -115,7 +115,9 @@ class Rules(unittest.TestCase):
         self.assertIn('root_mounted', init)  # TF miss must retain the internal-root fallback
         self.assertIn('MU300_MAINLINE_OUT', builder)
         self.assertIn('--append-ramdisk', builder)
-        self.assertIn('7.2.*', builder)
+        self.assertIn('MU300_KERNEL', builder)
+        self.assertIn('6.18) DEFAULT_UO=$TOP/upstream/out', builder)
+        self.assertIn('7.2) DEFAULT_UO=$TOP/upstream/out-7.2', builder)
         self.assertIn('/dev/block/by-name/boot_b', customize)
         self.assertIn('--no-reboot', customize)
         self.assertIn("t = t.replace(old, '')", port)
@@ -133,6 +135,15 @@ class Rules(unittest.TestCase):
         self.assertIn('mu300cell-v6.sh', builder)
         self.assertIn('tools/keys/mu300-keys', builder)
         self.assertTrue((TOP / 'openwrt' / 'overlay' / 'lib' / 'netifd' / 'proto' / 'mu300cell-v6.sh').is_file())
+
+    def test_aurora_is_baked_into_openwrt_and_default(self):
+        rootfs = (TOP / 'openwrt' / 'build-rootfs.sh').read_text()
+        builder = (TOP / 'tools' / 'build-openwrt-tf-magisk.sh').read_text()
+        self.assertIn('luci-theme-aurora-1.4.0-r20260920.apk', rootfs)
+        self.assertIn('apk add --allow-untrusted /in/luci-theme-aurora.apk', rootfs)
+        self.assertIn('Aurora theme is not the LuCI default', rootfs)
+        self.assertIn('./www/luci-static/aurora/main.css', builder)
+        self.assertIn('built rootfs does not enable Aurora by default', builder)
 
     def test_every_device_has_its_files(self):
         # a device the installers know needs its module order; its modules come from kernel/build-<device>.sh

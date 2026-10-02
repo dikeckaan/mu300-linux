@@ -1,9 +1,71 @@
 #!/bin/sh
-# Watch the LAN for public SLAAC addresses (odhcpd relay hands the carrier's /64 to
-# clients) and pin a host route for each one. Without it, a reply coming back through
-# NAT66 follows sipa_eth0's connected /64 route and dies on the wrong interface -
-# measured: ICMP 100% loss, TCP connect timeouts, until the /128 exists.
+# Watch the bearer's public SLAAC prefix and keep it routed to the LAN.
+#
+# The carrier hands out one /64 by RA on sipa_eth0, and odhcpd relays it to LAN
+# clients, which SLAAC their own public addresses out of it. Replies to those
+# addresses (NAT66 DNAT on the way back, or any traffic inside the prefix) must
+# be delivered on br-lan - but no on-link route for the prefix exists there:
+# mu300cell.sh flushes the bearer's v6 routes on every setup, so a lookup for
+# a client address falls through to the default route and the reply leaves via
+# the modem towards the carrier gateway, where it disappears. Measured: every
+# connection from a client address without a pinned /128 timed out (stable
+# SLAAC addresses never made it into the neighbour table, so only the privacy
+# addresses ever got pinned), and Android clients reacted by suppressing AAAA
+# queries for the whole network - "DNS resolves nothing over IPv6, IPv6 looks
+# dead end to end" - until the next reconnect forgot the verdict.
+#
+# The /64 on br-lan is the primary mechanism: NDP there resolves each client
+# on demand, with no race for addresses that never showed up in the neighbour
+# table. The per-neighbour /128 pins below are kept as a small latency
+# optimisation for known neighbours. The prefix is tracked so a carrier
+# renumber replaces the route instead of stacking a stale one.
+
+drop_old_prefix() {
+    [ -n "$1" ] || return
+    ip -6 route del "$1" dev br-lan 2>/dev/null
+    old_stem=${1%::/64}
+    # `ip route show` prints host routes without the implicit /128 suffix.
+    for r in $(ip -6 route show dev br-lan 2>/dev/null |
+               awk -v stem="$old_stem:" '$1 !~ /\// && index($1,stem)==1 {print $1}'); do
+        ip -6 route del "$r/128" dev br-lan 2>/dev/null
+    done
+}
+
+last_prefix=
 while :; do
+    # /proc/net/if_inet6 uses fixed-width hex, so this also handles prefixes
+    # whose first four hextets are compressed by `ip -6 addr`.
+    prefix=$(awk '$6=="sipa_eth0" && $4=="00" {
+        for (i=1; i<=4; i++) {
+            h=substr($1,(i-1)*4+1,4); sub(/^0+/,"",h);
+            if (h=="") h="0";
+            printf "%s%s", (i>1?":":""), h;
+        }
+        print "::/64"; exit
+    }' /proc/net/if_inet6 2>/dev/null)
+    if [ -z "$prefix" ] && [ -n "$last_prefix" ]; then
+        drop_old_prefix "$last_prefix"
+        last_prefix=
+    fi
+    if [ -n "$prefix" ] && [ "$prefix" != "$last_prefix" ]; then
+        drop_old_prefix "$last_prefix"
+        ip -6 route replace "$prefix" dev br-lan metric 1024 2>/dev/null
+        last_prefix=$prefix
+        logger -t ndp-learn "LAN prefix route: $prefix dev br-lan"
+    fi
+    # odhcpd can learn a downstream client's /128 on the WAN side. That
+    # more-specific route overrides the LAN /64 and blackholes NAT66 replies.
+    # Remove only host routes inside the shared prefix; the LAN /64 resolves
+    # the client by NDP even before it appears in the neighbour table.
+    if [ -n "$prefix" ]; then
+        stem=${prefix%::/64}
+        for r in $(ip -6 route show dev sipa_eth0 2>/dev/null |
+                   awk -v stem="$stem:" '$1 !~ /\// && index($1,stem)==1 {print $1}'); do
+            ip -6 route del "$r/128" dev sipa_eth0 2>/dev/null
+        done
+        ip -6 route show "$prefix" dev br-lan 2>/dev/null | grep -q 'dev br-lan' ||
+            ip -6 route replace "$prefix" dev br-lan metric 1024 2>/dev/null
+    fi
     for a in $(ip -6 neigh show dev br-lan 2>/dev/null | cut -d' ' -f1 |
                grep -E '^[23][0-9a-f]*:'); do
         ip -6 route show "$a/128" 2>/dev/null | grep -q 'dev br-lan' ||

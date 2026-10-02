@@ -9,6 +9,10 @@ set -u
 export PATH="$PATH:/opt/mu300/busybox-bin:/usr/sbin:/sbin"
 G=${MU300_GADGET:-/sys/kernel/config/usb_gadget/linux}
 
+# A gadget rebind is meaningless in host role and could race a deliberate
+# boot-time role switch. Leave the host controller and its attached NICs alone.
+[ "$(cat /sys/class/usb_role/25100000.dwc3-role-switch/role 2>/dev/null)" = host ] && exit 0
+
 if [ "${1:-}" = --ready ]; then
     setsid "$0" --fast-run </dev/null >/dev/null 2>&1 &
     exit 0
@@ -44,8 +48,15 @@ if [ "${1:-}" = --fast-run ]; then
         echo "$udc" > "$G/UDC" 2>/dev/null && [ "$(cat "$G/UDC" 2>/dev/null)" = "$udc" ] && break
         n=$((n + 1)); /opt/mu300/bin/busybox usleep 20000 2>/dev/null || sleep 1
     done
-    ip link set usb0 master br-lan 2>/dev/null || true
-    ip link set usb0 up 2>/dev/null || ifconfig usb0 up 2>/dev/null
+    for nic in usb0 rndis0; do
+        [ -e "/sys/class/net/$nic" ] || continue
+        ip link set "$nic" master br-lan 2>/dev/null || true
+        ip link set "$nic" up 2>/dev/null || ifconfig "$nic" up 2>/dev/null
+    done
+    # The second enumeration can happen after lan/ifup. Complete the same
+    # handoff once more so the initramfs IP is not left on a bridge port.
+    ACTION=ifup INTERFACE=lan /etc/hotplug.d/iface/10-mu300-usb
+    cut -d ' ' -f 1 /proc/uptime > /run/mu300-usb-rebind-done
     logger -t mu300-usb "fast gadget rebind completed on $udc"
     exit 0
 fi

@@ -9,6 +9,10 @@
 * as published by the Free Software Foundation.
 */
 
+#include <linux/icmp.h>
+#include <linux/ip.h>
+#include <linux/ktime.h>
+#include <linux/moduleparam.h>
 #include <net/ip6_checksum.h>
 
 #include "cmdevt.h"
@@ -19,6 +23,65 @@
 #include "common/chip_ops.h"
 #include "rx.h"
 #include "txrx.h"
+
+/* Opt-in diagnostic: driver ingress to network-stack delivery for ICMP.
+ * No timestamping or per-packet accounting occurs while disabled. */
+static bool mu300_rx_probe;
+static atomic64_t mu300_rx_0_5 = ATOMIC64_INIT(0);
+static atomic64_t mu300_rx_5_10 = ATOMIC64_INIT(0);
+static atomic64_t mu300_rx_10_20 = ATOMIC64_INIT(0);
+static atomic64_t mu300_rx_20_50 = ATOMIC64_INIT(0);
+static atomic64_t mu300_rx_50_plus = ATOMIC64_INIT(0);
+module_param_named(mu300_rx_probe, mu300_rx_probe, bool, 0644);
+
+static int mu300_rx_stats_get(char *buffer, const struct kernel_param *kp)
+{
+	return scnprintf(buffer, 160, "lt5=%lld 5to10=%lld 10to20=%lld 20to50=%lld ge50=%lld\n",
+		(long long)atomic64_read(&mu300_rx_0_5),
+		(long long)atomic64_read(&mu300_rx_5_10),
+		(long long)atomic64_read(&mu300_rx_10_20),
+		(long long)atomic64_read(&mu300_rx_20_50),
+		(long long)atomic64_read(&mu300_rx_50_plus));
+}
+
+static const struct kernel_param_ops mu300_rx_stats_ops = {
+	.get = mu300_rx_stats_get,
+};
+module_param_cb(mu300_rx_stats, &mu300_rx_stats_ops, NULL, 0444);
+
+static void mu300_rx_probe_icmp(struct sk_buff *skb)
+{
+	const struct ethhdr *eth;
+	const struct iphdr *ip;
+	const struct icmphdr *icmp;
+	s64 ms;
+
+	if (skb->len < ETH_HLEN + sizeof(*ip))
+		return;
+	eth = (const struct ethhdr *)skb->data;
+	if (eth->h_proto != htons(ETH_P_IP))
+		return;
+	ip = (const struct iphdr *)(skb->data + ETH_HLEN);
+	if (ip->protocol != IPPROTO_ICMP || ip->ihl < 5 ||
+	    skb->len < ETH_HLEN + ip->ihl * 4 + sizeof(*icmp))
+		return;
+	icmp = (const struct icmphdr *)(skb->data + ETH_HLEN + ip->ihl * 4);
+	if (icmp->type != ICMP_ECHO && icmp->type != ICMP_ECHOREPLY)
+		return;
+	if (!ktime_to_ns(skb->tstamp))
+		return;
+	ms = ktime_ms_delta(ktime_get(), skb->tstamp);
+	if (ms < 5)
+		atomic64_inc(&mu300_rx_0_5);
+	else if (ms < 10)
+		atomic64_inc(&mu300_rx_5_10);
+	else if (ms < 20)
+		atomic64_inc(&mu300_rx_10_20);
+	else if (ms < 50)
+		atomic64_inc(&mu300_rx_20_50);
+	else
+		atomic64_inc(&mu300_rx_50_plus);
+}
 
 static bool rx_mh_ipv6_ext_hdr(unsigned char nexthdr)
 {
@@ -191,6 +254,10 @@ static void rx_skb_process(struct sprd_priv *priv, struct sk_buff *skb)
 	ndev = vif->ndev;
 	skb_reserve(skb, msdu_desc->msdu_offset);
 	skb_put(skb, msdu_desc->msdu_len);
+	if (unlikely(READ_ONCE(mu300_rx_probe))) {
+		mu300_rx_probe_icmp(skb);
+		skb->tstamp = 0;
+	}
 
 	eth = (struct ethhdr *)skb->data;
 	if (eth->h_proto == htons(ETH_P_IPV6))
@@ -313,7 +380,6 @@ sc2355_rx_mh_addr_process(struct rx_mgmt *rx_mgmt, void *data,
 	struct sprd_common_hdr *hdr =
 	    (struct sprd_common_hdr *)(data + hif->hif_offset);
 	struct sprd_work *misc_work = NULL;
-	static unsigned long time;
 
 	pr_debug("%s: rx_data_addr=0x%lx\n", __func__, (unsigned long)data);
 
@@ -325,14 +391,6 @@ sc2355_rx_mh_addr_process(struct rx_mgmt *rx_mgmt, void *data,
 
 	} else {
 		pr_debug("%s: Add TX complete code here\n", __func__);
-
-		if (time != 0 && ((jiffies - time) >= msecs_to_jiffies(1000))) {
-			pr_err_ratelimited("%s: out of time %d\n",
-			       __func__, jiffies_to_msecs(jiffies - time));
-		}
-
-		time = jiffies;
-
 		sc2355_tx_free_data_num(hif, (unsigned char *)data);
 		misc_work = sprd_alloc_work(sizeof(void *));
 
@@ -370,21 +428,17 @@ static void rx_net_work_queue(struct work_struct *work)
 
 inline int sc2355_fill_skb_csum(struct sk_buff *skb, unsigned short csum)
 {
-	int ret = 0;
-
-	if (csum) {
-		ret = rx_ipv6_csum(skb->data, (__force __wsum)csum);
-		if (!ret) {
-			skb->ip_summed = CHECKSUM_COMPLETE;
-			skb->csum = (__force __wsum)csum;
-		} else if (ret > 0) {
-			skb->ip_summed = CHECKSUM_UNNECESSARY;
-		}
-	} else {
-		skb->ip_summed = CHECKSUM_NONE;
-	}
-
-	return ret;
+	/*
+	 * The firmware checksum does not match what the stack expects for CHECKSUM_COMPLETE: forwarded frames trigger
+	 * "hw csum failure" with a full packet dump each time. Let the stack verify checksums in software.
+	 * (Same as kernel/patches/wlan_combo-rx-software-checksum.patch does for the 5.4 build: without this,
+	 * rx_ipv6_csum() returns -1 for IPv6 TCP/UDP frames whose msdu_len counts WiFi padding, and mm.c then
+	 * drops the skb before netif_rx - every client IPv6 TCP/UDP frame over Wi-Fi vanished there.)
+	 */
+	(void)rx_ipv6_csum;
+	(void)csum;
+	skb->ip_summed = CHECKSUM_NONE;
+	return 0;
 }
 
 void sc2355_rx_send_cmd(struct sprd_hif *hif, void *data, int len,
@@ -433,6 +487,8 @@ void sc2355_rx_up(struct rx_mgmt *rx_mgmt)
 
 void sc2355_rx_process(struct rx_mgmt *rx_mgmt, struct sk_buff *pskb)
 {
+	if (pskb && unlikely(READ_ONCE(mu300_rx_probe)))
+		pskb->tstamp = ktime_get();
 	sc2355_reorder_data_process(&rx_mgmt->ba_entry, pskb);
 
 	if (!work_pending(&rx_mgmt->rx_net_work))

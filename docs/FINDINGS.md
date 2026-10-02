@@ -1492,6 +1492,13 @@ is no longer devm-allocated. The 5.4 kernel has the same driver in its own tree 
 panic - not syncing: CFI failure (target: 0x0)" in `dele-4-5`, caught while testing v2026.09.29); it gets the same
 fix as `kernel/patches/sipa-delegate-einprogress.patch`.
 
+On 2026-10-02 a separate delegate bug caused a 6.18.54 trial to panic after 4792 seconds and fall back to Android.
+The CP sent ENABLE while the IPA device was already runtime-active. `pm_runtime_get_sync()` returned 1 (success), but
+`cp_dele_on_commad()` treated every nonzero result as failure and retried forever with `mdelay(1)` and a printk on
+each iteration. The `dele-4-5` thread then hit a 22-second soft lockup in `console_flush_all`. The handler now uses
+`pm_runtime_resume_and_get()` (0 on success, negative on failure), acknowledges errors without spinning, and avoids
+taking a second reference for a repeated ENABLE. The matching 6.18.54 and 7.2.8 `sipa-dele.ko` modules were rebuilt.
+
 ### 31g. Three warnings on every boot, three vendor bugs
 6.18 printed three `WARNING:`s on every boot; each one is a bug in the vendor drivers:
 * `kernel/softirq.c:429 __local_bh_enable_ip` from `sc2355_free_cmd_buf`: the Wi-Fi command list's `complock` is
@@ -1793,6 +1800,70 @@ The data area was unchanged by it: reading all 1 KiB with the switch on and off,
 byte 0x3bf (0x20 set: off), in the configuration block at 0x3b0 that also holds the I2C address (0x57 at 0x3b3).
 `mu300-nfc on|off` changes that bit alone. With it on, URLs and text written by `mu300-nfc` reached a phone; a
 Wi-Fi record joins Android phones, while iOS reads URL records by itself but does nothing with a WSC record.
+
+### 33i. USB ping is not the Wi-Fi latency baseline
+
+On the 6.18 trial boot, Windows 11's `UsbNcm.sys` on the high-speed (480 Mb/s) gadget link pinged
+`192.168.77.1` at 3–7 ms (20 packets, mean 4 ms); the device pinged Windows at
+0.924–6.362 ms (20 packets, mean 4.586 ms). The same device pinging its own
+`192.168.77.1` was 0.062–0.437 ms (mean 0.280 ms), with no loss in any series.
+The gadget NCM transmit aggregation timeout in the 6.18 source is 300 microseconds,
+so it cannot by itself explain a consistent 4–5 ms. The extra time lies around
+the USB transfer and host path, not the bridge or Linux IP response: simultaneous
+`tcpdump` on `usb0` measured just 0.130–0.176 ms from request ingress to reply
+egress while Windows reported 3–6 ms RTT. This does **not** establish a common
+IP-stack delay that would also explain the phone's 10–15 ms Wi-Fi RTT.
+
+CPU0 deep idle is, however, a demonstrated contributor to USB RTT. At 100 ms
+intervals, disabling the 20 ms `cluster-pd` cpuidle state on all CPUs reduced
+Windows USB RTT from 4.375 to 2.325 ms (40 packets each); restoring it returned
+RTT to 4.475 ms. Disabling that state only on CPU0, where dwc3 and WCN IRQs
+actually execute, yielded 2.625 ms; disabling CPU0's shallower `core-sleep-lit`
+as well yielded 2.325 ms. At the normal one-second ping interval, CPU0
+`cluster-pd` disabled yielded 1–4 ms, mean 2 ms (12 packets). All cpuidle
+settings were restored after the tests. Whether this also improves Wi-Fi RTT
+needs a phone-side comparison; a previous CPU0-only Wi-Fi test showed no clear
+benefit. Permanently disabling deep idle trades standby power for latency and
+is not yet a chosen fix.
+
+Removing two misleading SC2355 idle-path log messages (`to free list empty` and
+`out of time` between normal TX completions) eliminated those messages in the
+live 6.18 driver, but the user's phone ping did not noticeably improve. This is
+log-overhead cleanup, not a demonstrated Wi-Fi latency fix. The 6.18 driver
+must not be hot-unloaded while hostapd is active: an earlier `wifi down` returned
+before hostapd exited, and unloading it then caused a hostapd cfg80211 use-after-free
+and a panic. Replace the module file and reboot instead.
+
+A second controlled check disabled `wlan0` RPS temporarily (`04` → `00`), keeping
+the hotspot up. The phone reported no meaningful RTT change, so RPS was restored
+to `04`; there is no reason to persist that setting. During this check, 20 ICMP
+request/reply pairs captured on `wlan0` spent only 0.15–0.33 ms between Linux RX
+and Linux TX. As on USB, most measured RTT is outside the Linux IP response path.
+At the time, `wlan0` had zero link errors/drops and CPU was mostly idle. The
+two media have not been shown to share a single larger bottleneck: CPU0 deep
+idle explains about 2 ms of the USB RTT, but the phone did not show a comparable
+Wi-Fi gain when it was disabled. Do not attribute the remaining Wi-Fi 10–15 ms
+to RPS, flow offload, or the Linux bridge without new evidence.
+
+### 33j. USB NCM short-frame latency, fixed in the 6.18 trial
+
+The gadget NCM function delayed an underfilled NTB for 300 microseconds and
+completed it from a soft hrtimer callback. Although the timer value is short,
+the actual short-frame path added several milliseconds on this device. The
+`0008-usb-ncm-flush-small-frames.patch` trial packages frames of at most 256
+bytes immediately, leaving the ordinary aggregation window for larger frames.
+It changes neither USB enumeration nor the early DHCP/host-lease recovery path.
+
+On the same Windows USB NCM link, 100 ICMP pings at 100 ms intervals went from
+mean 4.42 ms (40-packet pre-change baseline, 2–7 ms) to mean 1.02 ms (100
+packets, 0–3 ms), with no loss. The device's cpuidle settings were both back
+to their defaults (`state1/disable=0`, `state2/disable=0`) for the patched
+measurement. At the standard one-second interval, 20 pings were all at most
+3 ms and most were under 1 ms. `iperf3` on the USB link transferred 321 Mbit/s
+host-to-device and 342 Mbit/s device-to-host using two streams, with no TCP
+retransmits reported in the reverse test. USB came back automatically after
+the kernel-only trial boot; no manual replug was needed. The user's Android
+default-boot choice and five-failure fallback were restored after validation.
 
 ### 33h. A trial guard that outlived its experiment, again
 

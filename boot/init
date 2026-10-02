@@ -179,27 +179,26 @@ setup_usb_gadget() {
     # NCM by default, in a single configuration with the ACM console: Windows 10 2004+/11 bind their inbox
     # UsbNcm.sys to it, macOS and Linux their own drivers - all measured, none needs an INF. ECM, which Windows has
     # no driver for, is the fallback. MU300_USBNET (kernel command line) picks the functions.
-    # "rndis ncm" is for Windows without NCM (7, 8, 10 before 2004): RNDIS gets configuration 1 and NCM moves to
-    # configuration 2. Windows only ever uses the first, and binds rndis.sys to it through the MS OS descriptors
-    # below; Linux skips RNDIS configurations on purpose. macOS does not: it takes configuration 1 as well, finds
-    # no driver for RNDIS and has no network (measured) - which is why RNDIS is not the default.
+    # RNDIS uses a single configuration with ACM. Windows does not create its
+    # composite parent for a device with multiple configurations: the old
+    # RNDIS+NCM arrangement bound the whole device to usbser and exposed no
+    # network adapter. macOS has no RNDIS driver, so NCM remains the default.
     rndis= netfunc=
     for f in ${MU300_USBNET:-ncm ecm}; do
         case $f in
             rndis) [ -z "$rndis" ] && mkdir -p "$g/functions/rndis.rn0" 2>/dev/null && rndis=1 ;;
-            *) [ -z "$netfunc" ] && mkdir -p "$g/functions/$f.usb0" 2>/dev/null && netfunc=$f ;;
+            *) [ -z "$netfunc$rndis" ] && mkdir -p "$g/functions/$f.usb0" 2>/dev/null && netfunc=$f ;;
         esac
     done
     [ -n "$netfunc$rndis" ] || log "stage=usb-no-net-function (console only)"
     cdc=c.1
-    [ -n "$rndis" ] && cdc=c.2
     echo 0x0525 > "$g/idVendor"
     echo 0xa4a1 > "$g/idProduct"
     echo 0x0200 > "$g/bcdUSB"
-    # Windows asks for the MS OS descriptors (below) once per VID/PID/bcdDevice and caches the answer, "none"
-    # included: the default bcdDevice follows the kernel version and was cached as "none" by every PC that met
-    # the earlier gadget. A value of our own makes them ask again. Change it whenever the descriptors change.
-    echo 0x0301 > "$g/bcdDevice"
+    # Windows caches OS-descriptor support by VID/PID/bcdDevice. Use a new
+    # revision for the corrected, single-configuration RNDIS descriptor.
+    if [ -n "$rndis" ]; then echo 0x0302 > "$g/bcdDevice"
+    else echo 0x0301 > "$g/bcdDevice"; fi
     # Miscellaneous / IAD: the network and the ACM functions each span two interfaces, and without this device class
     # Windows' composite driver ignores their association descriptors and hands out the interfaces one by one, so a
     # class driver never sees its function as a whole
@@ -221,8 +220,8 @@ setup_usb_gadget() {
         ln -s "$g/functions/acm.GS0" "$g/configs/c.1/f2"
         # MS OS descriptors: Windows asks for them with vendor request 0xcd and binds rndis.sys by compatible ID.
         # They are what identifies the function: the stock f_rndis' control interface is 02/02/ff, which Windows
-        # would otherwise hand to usbser (a device with two configurations is never composite on Windows, so the
-        # first interface names the whole device).
+        # would otherwise hand to usbser. A single configuration lets Windows
+        # enumerate RNDIS and ACM as separate interface collections.
         echo 1 > "$g/os_desc/use"
         echo 0xcd > "$g/os_desc/b_vendor_code"
         echo MSFT100 > "$g/os_desc/qw_sign"
@@ -256,15 +255,26 @@ setup_usb_gadget() {
     # Never rebind the gadget from a shell running on its own ACM console: the console dies with the unbind and the
     # rebind never runs, which leaves the device with no USB at all until it is power-cycled.
     log "stage=usb-bind-start"
-    [ -n "$udc" ] && echo "$udc" > "$g/UDC"
-    log "stage=usb-bind-done rc=$?"
+    bound=0
+    [ -n "$udc" ] && echo "$udc" > "$g/UDC" && bound=1
+    log "stage=usb-bind-done bound=$bound"
+    # Consume a one-shot policy only if its requested function was actually
+    # created and the gadget bound successfully, never just because a config
+    # file was readable.
+    if [ "$bound" = 1 ]; then
+        case ${MU300_USB_REQUESTED:-} in
+            ecm|ncm) [ "$netfunc" = "$MU300_USB_REQUESTED" ] && echo "$MU300_USB_REQUESTED" > /run/unisoc-usb-net-applied ;;
+            rndis) [ -n "$rndis" ] && echo rndis > /run/unisoc-usb-net-applied ;;
+        esac
+    fi
     persist
 
     # The functions register their netdevs as they are bound, configuration by configuration, so RNDIS would take
     # usb0 - the name lan-start and the OpenWrt bridge expect for the CDC link. Name them by function instead.
     if [ -n "$rndis" ]; then
         r=$(cat "$g/functions/rndis.rn0/ifname" 2>/dev/null)
-        c=$(cat "$g/functions/$netfunc.usb0/ifname" 2>/dev/null)
+        c=
+        [ -z "$netfunc" ] || c=$(cat "$g/functions/$netfunc.usb0/ifname" 2>/dev/null)
         case $r in ""|"(unnamed net_device)"|rndis0) ;; *) ip link set "$r" name rndis0 ;; esac
         case $c in ""|"(unnamed net_device)"|usb0) ;; *) ip link set "$c" name usb0 ;; esac
         log "stage=usb-ifnames rndis=$r->rndis0 cdc=${c:-none}->usb0"
@@ -274,17 +284,23 @@ setup_usb_gadget() {
     # Bring usb0 up immediately after binding, before the host selects the data interface:
     # f_ecm (and f_ncm alike) reports the link state in its first CONNECT notification, and macOS' ECM driver does not
     # pick up a later "connected" notification (v10 left usb0 down until systemd ran -> host "inactive").
-    ifconfig usb0 up
+    early_net=usb0
+    early_host_mac=$MAC:02
+    if [ -n "$rndis" ] && [ -z "$netfunc" ]; then
+        early_net=rndis0
+        early_host_mac=$MAC:04
+    fi
+    ifconfig "$early_net" up
     # Windows requests DHCP as soon as NCM enumerates, before OpenWrt starts
     # dnsmasq. Serve the final LAN address immediately and keep the same host
     # lease across switch_root. The post-rootfs rebind renews this same lease.
-    if [ -e /sys/class/net/usb0 ]; then
-        ifconfig usb0 "$NET.1" netmask 255.255.255.0 up
-        echo "$MAC:02" > /run/mu300-usb-host-mac
+    if [ -e "/sys/class/net/$early_net" ]; then
+        ifconfig "$early_net" "$NET.1" netmask 255.255.255.0 up
+        echo "$early_host_mac" > /run/mu300-usb-host-mac
         cat > /run/udhcpd-usb0.conf <<EOF
 start $NET.200
 end $NET.200
-interface usb0
+interface $early_net
 option subnet 255.255.255.0
 option router $NET.1
 option dns $NET.1
@@ -303,7 +319,26 @@ EOF
 # server starts right after switch_root), the more reliably the host gets an address.
 load_vendor_modules
 find_partitions
-setup_usb_gadget
+# Read the optional LuCI package's USB policy before configfs enumeration.
+# Use the already-mounted TF root: a separate ro,noload peek can miss a new
+# setting still in the ext4 journal, even after the block device appears.
+read_usb_boot_policy() {
+    [ -z "${MU300_USBNET:-}" ] || return 0
+    for p in /disk/openwrt/etc/unisoc-modem/usb-boot.conf \
+             /disk/etc/unisoc-modem/usb-boot.conf; do
+        [ -r "$p" ] || continue
+        mode=$(sed -n 's/^mode=//p' "$p" | head -n1)
+        case $mode in
+            ecm) MU300_USBNET='ecm ncm' ;;
+            ncm) MU300_USBNET='ncm ecm' ;;
+            rndis) MU300_USBNET='rndis ncm' ;;
+            *) continue ;;
+        esac
+        MU300_USB_REQUESTED=$mode
+        log "stage=usb-boot-policy mode=$mode dev=$sd_root"
+        break
+    done
+}
 ROOT_OFFSET=27762098176   # linux-boot/rootfs-region.env; outside every GPT partition
 # The region is not at the same place on every device (eMMC size, partition layout), and a number in this file is
 # not enough: the installer writes the device's offset in here, but the generic ramdisk segment that updates put
@@ -347,6 +382,18 @@ for n in $(seq 1 8); do
     mdev -s; sleep 1
 done
 log "stage=sd-scan dev=${sd_root:-none} blocks=$(ls /dev/mmcblk[1-9]* 2>/dev/null | tr '\n' ',')"
+# No additional wait or second mount: the root scan has established the TF
+# device, and the root mount lets us read the current (journaled) policy.
+mkdir -p /disk
+rootloop=
+root_mounted=0
+if [ -n "$sd_root" ]; then
+    rootloop=$sd_root
+    mount -t ext4 -o noatime "$sd_root" /disk 2>>/run/rootmount.err && root_mounted=1
+    log "stage=sd-root dev=$sd_root mounted=$root_mounted"
+fi
+[ "$root_mounted" = 1 ] && read_usb_boot_policy
+setup_usb_gadget
 if [ -z "$sd_root" ]; then
     if found=$(find_root_offset); then
         [ "$found" = "$ROOT_OFFSET" ] || log "stage=root-offset found=$found (default $ROOT_OFFSET)"
@@ -369,14 +416,6 @@ pick_root() {
         [ "$os" = ubuntu ] && [ -x /disk/lib/systemd/systemd ] && { echo /disk; return; }
     done
 }
-mkdir -p /disk
-rootloop=
-root_mounted=0
-if [ -n "$sd_root" ]; then
-    rootloop=$sd_root
-    mount -t ext4 -o noatime "$sd_root" /disk 2>>/run/rootmount.err && root_mounted=1
-    log "stage=sd-root dev=$sd_root mounted=$root_mounted"
-fi
 if [ "$root_mounted" = 0 ]; then
     rootloop=$(losetup -f 2>/run/rootmount.err)
     if [ -n "$rootloop" ] && losetup -o $ROOT_OFFSET "$rootloop" /dev/mmcblk0 2>>/run/rootmount.err \

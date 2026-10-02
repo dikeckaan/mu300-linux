@@ -26,6 +26,14 @@ for m in "$UO"/modules/*.ko; do
     v=$(strings "$m" | sed -n 's/^vermagic=\([^ ]*\) .*/\1/p' | head -1)
     [ "$v" = "$krel" ] || { echo "$m is built for '$v', the kernel is '$krel'" >&2; exit 1; }
 done
+# A matching vermagic is not enough: the shared WLAN source may have changed
+# after this output was built (the IPv6 RX checksum fix exposed exactly that).
+# Refuse a bundle containing the old binary rather than silently shipping it.
+wlan_module=$UO/modules/sprd_wlan_combo.ko
+if [ -f "$wlan_module" ] && [ -n "$(find "$U/modules/sprd_wlan_combo" -type f -newer "$wlan_module" -print -quit)" ]; then
+    echo "WLAN source is newer than $wlan_module; rebuild sprd_wlan_combo for $krel" >&2
+    exit 1
+fi
 for m in $(cat "$U/module-order.txt"); do
     [ -f "$UO/modules/$m" ] || { echo "module-order.txt names $m, which was not built" >&2; exit 1; }
 done

@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-mu300
 PKG_VERSION:=1.0.1
-PKG_RELEASE:=1
+PKG_RELEASE:=3
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=MU300 Linux contributors
 PKGARCH:=all
@@ -34,6 +34,7 @@ define Package/luci-app-mu300/install
 	$(INSTALL_DIR) $(1)/www
 	$(CP) ./htdocs/. $(1)/www/
 	$(CP) ./root/. $(1)/
+	chmod 0755 $(1)/etc/init.d/unisoc-modem-ui $(1)/etc/hotplug.d/net/90-unisoc-usb-host $(1)/etc/hotplug.d/iface/90-unisoc-usb-host $(1)/usr/libexec/rpcd/mu300dash $(1)/usr/libexec/unisoc-modem/*
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
 	$(CP) ./lmo/. $(1)/usr/lib/lua/luci/i18n/
 endef
@@ -64,6 +65,7 @@ define Package/luci-app-mu300/postrm
 	if [ "$$1" = remove ]; then
 		/etc/init.d/unisoc-modem-ui stop 2>/dev/null || true
 		/etc/init.d/unisoc-modem-ui disable 2>/dev/null || true
+		rm -f /etc/unisoc-modem/usb-boot.conf
 	fi
 	rm -f /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null
 	/etc/init.d/rpcd restart 2>/dev/null || true

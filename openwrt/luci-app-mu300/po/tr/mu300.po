@@ -20,3 +20,6 @@ msgstr "AT terminali"
 
 msgid "适配设置"
 msgstr "Bağdaştırıcı ayarları"
+
+msgid "设备管理"
+msgstr "Cihaz yönetimi"

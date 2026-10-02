@@ -16,7 +16,6 @@
 #endif
 #define pr_fmt(fmt) "sipa_dele: " fmt
 
-#include <linux/delay.h>
 #include <linux/slab.h>
 #include <linux/device.h>
 #include <linux/init.h>
@@ -42,28 +41,38 @@ static void cp_dele_on_commad(void *priv, u16 flag, u32 data)
 	switch (flag) {
 	case SMSG_FLG_DELE_ENABLE:
 		delegator->pd_eb_flag = true;
-check_again:
-		ret = pm_runtime_get_sync(delegator->pdev);
-		if (ret) {
-			pm_runtime_put(delegator->pdev);
-			pr_warn("sipa_dele get pd fail ret = %d\n", ret);
-			mdelay(1);
-			goto check_again;
-		} else {
-			delegator->pd_get_flag = true;
-			sipa_set_enabled(true);
+		/* A repeated ENABLE must not take another runtime-PM reference. */
+		if (delegator->pd_get_flag) {
 			sipa_dele_start_done_work(delegator,
 						  SMSG_FLG_DELE_ENABLE,
 						  SMSG_VAL_DELE_REQ_SUCCESS);
-			pr_info("sipa_dele get pd success ret = %d\n", ret);
+			break;
 		}
+		/* get_sync() can return 1 on success and keeps its reference on error. */
+		ret = pm_runtime_resume_and_get(delegator->pdev);
+		if (ret < 0) {
+			delegator->pd_eb_flag = false;
+			pr_warn("sipa_dele get pd fail ret = %d\n", ret);
+			sipa_dele_start_done_work(delegator,
+						  SMSG_FLG_DELE_ENABLE,
+						  SMSG_VAL_DELE_REQ_FAIL);
+			break;
+		}
+		delegator->pd_get_flag = true;
+		sipa_set_enabled(true);
+		sipa_dele_start_done_work(delegator,
+					  SMSG_FLG_DELE_ENABLE,
+					  SMSG_VAL_DELE_REQ_SUCCESS);
+		pr_info("sipa_dele get pd success ret = %d\n", ret);
 
 		break;
 	case SMSG_FLG_DELE_DISABLE:
 		delegator->pd_eb_flag = false;
-		sipa_set_enabled(false);
-		pm_runtime_put(delegator->pdev);
-		delegator->pd_get_flag = false;
+		if (delegator->pd_get_flag) {
+			sipa_set_enabled(false);
+			pm_runtime_put(delegator->pdev);
+			delegator->pd_get_flag = false;
+		}
 		break;
 	default:
 		break;

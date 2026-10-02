@@ -3,6 +3,8 @@
 A self-contained LuCI application for Unisoc cellular devices. It provides the
 dashboard, live radio readings, persistent network/band/cell/EN-DC locks, a
 guarded AT terminal and an SMS UI.
+The Device Management page controls USB role and gadget network policy, and
+lists host-side USB network adapters for optional attachment to the LAN bridge.
 
 The dashboard follows LuCI's selected language (English, Turkish, or Simplified
 Chinese) without an extra language package. Its colors follow Aurora's existing
@@ -60,6 +62,40 @@ available; a successful marker prevents duplicate application. `early` is
 deliberately not a user-selectable setting because it is only safe at that exact
 point in the platform radio sequence.
 
+## USB device management
+
+USB role defaults to device at every boot. The page can switch it immediately;
+checking host auto-apply asks the package's boot worker to reapply host mode
+at every boot. On the battery-less F50, the plugin writes the requested role
+to sysfs directly: USB management disappears and an attached adapter may need
+an externally powered hub. U30 Air uses `mu300-usb` and its charger boost/VBUS
+checks. Other hardware can use the sysfs fallback or configure
+`unisoc_modem.usb.role_command` with a platform-specific executable that
+accepts `host` or `device`. The plugin must not bypass a known platform's
+power-safety checks.
+
+NCM/ECM/RNDIS selection is stored in `/etc/unisoc-modem/usb-boot.conf` only
+when "Enable selected protocol" is checked. The optional TF-platform hook in `boot/init`
+reads that file from the mounted TF root before gadget enumeration; other OpenWrt builds can
+implement the same two-line `mode=...`/`scope=...` contract at their own early
+gadget setup point. The plugin itself owns the policy and UI, not the kernel
+or gadget. `once` is consumed after a successful boot only if initramfs
+recorded that it applied the selection; subsequent boots use the platform's
+default NCM. Selecting persistent host mode automatically disables USB
+network auto-apply. While the current role is host, network-mode controls are
+disabled. The backend validates the same rules regardless of UI state.
+The TF boot implementation exposes RNDIS as a single USB configuration with
+the ACM console; Windows does not bind a composite RNDIS adapter when the
+device offers both RNDIS and NCM configurations. On LAN handoff, the temporary
+initramfs IPv4 address is removed from `rndis0` so only `br-lan` owns it.
+
+USB adapter discovery uses the USB sysfs parent of each network device. On
+refresh it attempts to bring discovered devices up. “Add to LAN” adds only a
+verified USB adapter to the configured LAN bridge device's UCI port list,
+commits `network`, and reloads networking. The selected port is reattached
+on USB netdev hotplug and LAN ifup, without a polling daemon or another
+network reload. The action is idempotent and only available in host mode.
+
 ## Build
 
 Copy this directory alone to `package/luci-app-mu300` in any compatible OpenWrt
@@ -70,6 +106,8 @@ runtime.
 
 For a source-tree hot install (without an `.ipk`/`.apk`), copy `root/` to `/`,
 `htdocs/` to `/www/`, and `lmo/` to `/usr/lib/lua/luci/i18n/`; then
+make `/etc/init.d/unisoc-modem-ui`, `/usr/libexec/rpcd/mu300dash` and the
+`/usr/libexec/unisoc-modem/*` adapters executable; then
 enable/start `unisoc-modem-ui` and
 restart `rpcd`. Copying only `root/` leaves the LuCI menu visible but makes
 `/luci-static/resources/view/mu300/*.js` return HTTP 404. Normal package

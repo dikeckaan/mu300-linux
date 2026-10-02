@@ -18,7 +18,7 @@
 #include "common/hif.h"
 
 #define NUM_TIDS		8
-#define RX_BA_LOSS_RECOVERY_TIMEOUT	(HZ / 10)
+#define RX_BA_LOSS_RECOVERY_TIMEOUT	msecs_to_jiffies(20)
 #define MAX_TIMEOUT_CNT		60
 #define MIN_INDEX_SIZE		BIT(6)
 #define INDEX_SIZE_MASK(index_size)	((index_size) - 1)

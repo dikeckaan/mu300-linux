@@ -6,7 +6,8 @@
 #   out/modules/*.ko  out/modules.builtin*  firmware/  android-subset/  android-gpu-subset/
 #   tools/logdw/logdw  tools/bt-init/mu300-bt-init  tools/keys/mu300-keys  tools/gpu/cltest  busybox (static, full)
 #   xray, hev-socks5-tunnel (tools/fetch-xray.sh) and sing-box (tools/fetch-sing-box.sh), for mu300-vpn
-#   upstream/out/modules/*.ko (optional: out-of-tree WCN modules for the mainline 6.18 kernel)
+#   MU300_MAINLINE_OUT/modules/*.ko (optional: out-of-tree WCN modules for the selected mainline kernel)
+#   The standalone LuCI plugin in openwrt/luci-app-mu300 is included by default.
 set -eu
 FLAVOUR=${MU300_FLAVOUR:-openwrt}
 case $FLAVOUR in
@@ -26,13 +27,31 @@ for f in mu300cell.sh mu300cell-v6.sh; do
         echo "required cellular protocol helper missing: $f" >&2; exit 1;
     }
 done
-PLUGIN=${MU300_LUCI_PLUGIN_SRC:-}
+PLUGIN=${MU300_LUCI_PLUGIN_SRC:-$TOP/openwrt/luci-app-mu300}
 if [ -n "$PLUGIN" ]; then
     PLUGIN=$(cd "$PLUGIN" && pwd)
     for f in Makefile root/usr/libexec/unisoc-modem/lock htdocs/luci-static/resources/view/mu300/home.js lmo/mu300.en.lmo lmo/mu300.tr.lmo; do
         [ -s "$PLUGIN/$f" ] || { echo "incomplete LuCI plugin: $PLUGIN/$f" >&2; exit 1; }
     done
 fi
+# Keep the upstream Aurora theme reproducible. Its APK is installed while
+# assembling the rootfs, so the theme is present on first boot without a
+# network-dependent uci-defaults install step. Bootstrap remains available.
+THEME_APK=${MU300_LUCI_THEME_APK:-$TOP/work/luci-theme-aurora-1.4.0-r20260920.apk}
+THEME_SHA=${MU300_LUCI_THEME_SHA256:-05f9015e0a4e2859f6a153f69e472f2984481490d4ce6db19b8a41bba7264f1e}
+if [ ! -s "$THEME_APK" ]; then
+    [ -z "${MU300_LUCI_THEME_APK:-}" ] || {
+        echo "theme package missing: $THEME_APK" >&2; exit 1;
+    }
+    mkdir -p "$TOP/work"
+    curl -fL -o "$THEME_APK.part" \
+      https://github.com/eamonxg/luci-theme-aurora/releases/download/v1.4.0/luci-theme-aurora-1.4.0-r20260920.apk
+    mv "$THEME_APK.part" "$THEME_APK"
+fi
+theme_hash=$(sha256sum "$THEME_APK" | cut -d' ' -f1)
+[ "$theme_hash" = "$THEME_SHA" ] || {
+    echo "Aurora APK checksum mismatch: $THEME_APK" >&2; exit 1;
+}
 TARBALL=$FLAVOUR-$VER-armsr-armv8-rootfs.tar.gz
 URL=$BASEURL/$VER/targets/armsr/armv8
 
@@ -67,11 +86,13 @@ done
 # shellcheck disable=SC2046
 docker run --rm --platform linux/arm64 \
   -v "$TOP/rootfs/overlay/opt/mu300":/in/opt-mu300:ro -v "$TOP/rootfs/overlay/etc/mu300/vpn.conf.example":/in/vpn.conf.example:ro -v "$TOP/openwrt/overlay":/in/overlay:ro \
+  -v "$TOP/openwrt/patches/fw4-sipa-offload.patch":/in/fw4-sipa-offload.patch:ro \
   -v "$TOP/boot/module-order.txt":/in/module-order.txt:ro -v "$IN/out/modules":/in/modules:ro \
   $(opt out/modules.builtin modules.builtin) $(opt out/modules.builtin.modinfo modules.builtin.modinfo) \
   $(opt firmware firmware) $(opt android-subset android-subset) $(opt android-gpu-subset android-gpu-subset) \
   $(opt tools/logdw/logdw logdw) $(opt tools/bt-init/mu300-bt-init bt-init) $(opt tools/keys/mu300-keys keys) $(opt tools/gpu/cltest cltest) \
   $(opt busybox busybox) $(opt sing-box sing-box) $(opt xray xray) $(opt hev-socks5-tunnel hev-socks5-tunnel) $(mainline_opt modules mainline-modules) $(plugin_opt) -v "$TOP/openwrt":/out -v "$REGDB":/in/regdb:ro \
+  -v "$THEME_APK":/in/luci-theme-aurora.apk:ro \
   -e KREL=$KREL -e OUT="$(basename "$OUT")" -e MU300_VERSION="${MU300_VERSION:-dev}" mu300-$FLAVOUR-base:$VER /bin/sh -eu -c '
 mkdir -p /var/lock /var/run /tmp
 apk update >/dev/null
@@ -79,6 +100,7 @@ apk update >/dev/null
 # i2c-tools, gpiod-tools: mu300-usb (the charger of the U30 Air) and mu300-nfc (its NFC tag)
 apk add wpad-basic-mbedtls wifi-scripts iwinfo wireless-regdb iw bash ip-full coreutils-stty openssl-util \
     i2c-tools gpiod-tools >/dev/null
+apk add --allow-untrusted /in/luci-theme-aurora.apk >/dev/null
 # ujail drops CAP_PERFMON (38), which this 5.4 kernel does not know: jailed services (dnsmasq, ntpd) crash-loop
 apk del procd-ujail procd-seccomp >/dev/null 2>&1 || true
 # online firmware upgrades flash whole-disk armsr images: that would overwrite the eMMC, so remove them
@@ -99,9 +121,19 @@ printf "127.0.0.1\tlocalhost\n\n::1\tlocalhost ip6-localhost ip6-loopback\nff02:
 printf "mu300\n" > $R/etc/hostname   # the real one comes from uci (etc/uci-defaults/90-mu300)
 cp -a /in/opt-mu300 $R/opt/mu300
 cp -a /in/overlay/. $R/
+[ -s $R/www/luci-static/aurora/main.css ] || { echo "Aurora theme assets missing" >&2; exit 1; }
+grep -q "mediaurlbase .*/luci-static/aurora" $R/etc/config/luci || {
+    echo "Aurora theme is not the LuCI default" >&2; exit 1;
+}
+# mu300cell reports sipa_eth0 as l3_device only. fw4 otherwise omits it from
+# its software flowtable, leaving cellular downlink on the slow forwarding path.
+# Fail the build if a changed fw4 version no longer matches this targeted patch.
+apk add patch >/dev/null
+patch --batch --fuzz=0 -d $R -p1 -i /in/fw4-sipa-offload.patch
 if [ -d /in/luci-plugin ]; then
     cp -a /in/luci-plugin/root/. $R/
     cp -a /in/luci-plugin/htdocs/. $R/www/
+    chmod 0755 $R/etc/init.d/unisoc-modem-ui $R/etc/hotplug.d/net/90-unisoc-usb-host $R/etc/hotplug.d/iface/90-unisoc-usb-host $R/usr/libexec/rpcd/mu300dash $R/usr/libexec/unisoc-modem/*
     mkdir -p $R/usr/lib/lua/luci/i18n
     cp -a /in/luci-plugin/lmo/. $R/usr/lib/lua/luci/i18n/
     # The source-tree install does not run the package postinst. Register only

@@ -20,12 +20,18 @@ start_service() {
 	# counts grow and dnsmasq logs DHCPOFFER, but Windows receives nothing.
 	# One tracked 100 ms rebind after br-lan/dnsmasq are ready restores TX and
 	# makes Windows renew the same reserved lease without a physical replug.
-	procd_open_instance usb-ready
-	procd_set_param command /opt/mu300/bin/mu300-usb-reset --fast-run
-	procd_set_param oneshot 1
-	procd_set_param stdout 1
-	procd_set_param stderr 1
-	procd_close_instance
+	if [ "$(cat /sys/class/usb_role/25100000.dwc3-role-switch/role 2>/dev/null)" != host ]; then
+		# netifd may have emitted lan/ifup before the gadget's early address
+		# became visible to hotplug. Repeat the idempotent LAN handoff here;
+		# do not wait or poll for readiness.
+		ACTION=ifup INTERFACE=lan /etc/hotplug.d/iface/10-mu300-usb
+		procd_open_instance usb-ready
+		procd_set_param command /opt/mu300/bin/mu300-usb-reset --fast-run
+		procd_set_param oneshot 1
+		procd_set_param stdout 1
+		procd_set_param stderr 1
+		procd_close_instance
+	fi
 
 	# U30 Air exposes a second function on some kernels. Keep it in the LAN;
 	# PDP and IPv4/IPv6 lease changes themselves never re-enumerate the gadget.

@@ -26,7 +26,7 @@ USB dependency chain, the PM watchdog, the `modem_control` process-name check, m
 
 ## Build steps
 
-### Clean Linux 7.2 + OpenWrt TF Magisk package
+### Clean Linux 6.18 / 7.2 + OpenWrt TF Magisk packages
 
 The TF package is deliberately self-contained: it builds against the clean upstream branch, writes the OpenWrt
 rootfs to a card labelled `mu300sd`, writes only `boot_b`, and arms slot b without rebooting from inside Magisk.
@@ -34,6 +34,9 @@ If no valid TF filesystem is present at boot, the initramfs falls back to the ex
 The TF rootfs includes the standalone `openwrt/luci-app-mu300` package by default. The package remains a separate
 LuCI application and can be built for other Unisoc OpenWrt systems; `MU300_LUCI_PLUGIN_SRC` can point to a different
 source checkout when testing a newer plugin version.
+The rootfs also includes the upstream Aurora LuCI theme (pinned APK and SHA256 in `openwrt/build-rootfs.sh`) and
+selects it by default. Bootstrap remains installed and can be selected later in LuCI. A fresh TF installation gets
+this default; an update that preserves `/etc/config` keeps the user's existing theme preference.
 
 ```sh
 docker build -t mu300-mainline-build upstream
@@ -42,8 +45,11 @@ docker run --rm -e KV=7.2.8 -e OUTDIR=out-7.2 \
   -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build.sh
 docker run --rm -e KV=7.2.8 -e OUTDIR=out-7.2 \
   -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build-modules.sh
-MU300_INPUTS=/path/to/private-build-inputs MU300_UPSTREAM_OUT="$PWD/upstream/out-7.2" \
-  tools/build-openwrt-tf-magisk.sh mu300-linux-openwrt-tf.zip
+MU300_KERNEL=7.2 MU300_INPUTS=/path/to/private-build-inputs \
+  tools/build-openwrt-tf-magisk.sh mu300-linux-openwrt-tf-7.2.zip
+# Build 6.18 with upstream/build.sh and build-modules.sh (their defaults), then:
+MU300_KERNEL=6.18 MU300_INPUTS=/path/to/private-build-inputs \
+  tools/build-openwrt-tf-magisk.sh mu300-linux-openwrt-tf-6.18.zip
 ```
 
 The private input directory contains the stock `dumps/boot_a.img`, `dumps/misc-head.bin`, Android-derived vendor

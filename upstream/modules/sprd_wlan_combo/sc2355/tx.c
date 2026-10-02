@@ -1083,6 +1083,17 @@ static int tx_filter_ip_pkt(struct sk_buff *skb, struct net_device *ndev)
 			skb->ip_summed = CHECKSUM_NONE;
 		}
 
+		/* AP DNS is ordinary client traffic.  The board NVM can leave
+		 * special_data_flag outside its 0..2 enum (observed: 32); using
+		 * CMD_TX_DATA for every DNS reply can wedge the firmware command
+		 * queue and assert CP2.  Keep DHCP and VoWiFi on their paths.
+		 */
+		if ((vif->mode == SPRD_MODE_AP ||
+		     vif->mode == SPRD_MODE_P2P_GO) &&
+		    (is_ipv4_dns || is_ipv6_dns) &&
+		    !is_ipv4_dhcp && !is_ipv6_dhcp && !is_vowifi2cmd)
+			return 1;
+
 		spin_lock_bh(&adap_info.adap_lock);
 		pr_info("%s special_data_flag: %d\n",
 			__func__, adap_info.special_data_flag);
@@ -2251,6 +2262,12 @@ int sprd_tx_filter_packet(struct sk_buff *skb, struct net_device *ndev)
 #endif
 
 	if (ethhdr->h_proto == htons(ETH_P_ARP)) {
+		/* ARP replies from an AP must use the regular data queue.  Sending
+		 * them one by one through CMD_TX_DATA exhausts the command channel
+		 * under an ARP burst and can leave WCN stuck in carddump status.
+		 */
+		if (vif->mode == SPRD_MODE_AP || vif->mode == SPRD_MODE_P2P_GO)
+			return 1;
 		pr_info("incoming ARP packet\n");
 
 		spin_lock_bh(&adap_info.adap_lock);

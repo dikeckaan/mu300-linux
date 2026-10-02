@@ -24,7 +24,7 @@ class DashboardI18n(unittest.TestCase):
         self.assertIn('$(CP) ./lmo/. $(1)/usr/lib/lua/luci/i18n/', makefile)
         self.assertNotIn('uci set luci.languages.zh_cn', makefile)
         self.assertIn('/etc/init.d/unisoc-modem-ui enable', makefile)
-        for name in ('home', 'at', 'locks', 'sms', 'settings'):
+        for name in ('home', 'at', 'locks', 'sms', 'settings', 'device'):
             self.assertTrue((PACKAGE / f'htdocs/luci-static/resources/view/mu300/{name}.js').is_file())
 
     def test_global_menu_catalogs_are_complete(self):
