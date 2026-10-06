@@ -1268,7 +1268,11 @@ static int sprd_ep_resume(struct device *dev)
 
 	wcn_bus_change_state(priv, WCN_BUS_UP);
 	atomic_set(&priv->is_suspending, 0);
-	wcn_set_armlog(true);
+	/*
+	 * MU300: the vendor turned the firmware's ARM log on here after every resume. The firmware keeps the setting
+	 * through D3hot, and with the log on it pulls PCIe WAKE# within 0-2 s of every L2 entry to push log packets:
+	 * a system sleep with Wi-Fi up ended at once (FINDINGS 37). It is off by default (sysfs.c); leave it as it was.
+	 */
 	mdbg_device_lock_notify();
 	for (chn = 0; chn < 16; chn++) {
 		ops = mchn_ops(chn);

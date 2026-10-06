@@ -1064,6 +1064,14 @@ int init_wcn_sysfs(void)
 		atomic_set(&sysfs_info.is_reset, 0x0);
 		sysfs_info.armlog_status = 1;
 #endif
+	/*
+	 * MU300: the firmware's ARM log off, as in Android's user builds (it is turned on at every chip power-on
+	 * from this value, and wifi-start's "at+armlog=0" did not outlive the next power-on). With it on, the
+	 * firmware pulls PCIe WAKE# within 0-2 s of every L2 entry to push log packets, and a system sleep with
+	 * PCIe wakeup enabled ended at once (FINDINGS 37). echo 1 > /sys/devices/virtual/misc/wcn/devices/armlog_status
+	 * turns it on for debugging.
+	 */
+	sysfs_info.armlog_status = 0;
 
 	return 0;
 }
