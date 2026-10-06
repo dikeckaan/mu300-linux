@@ -4,6 +4,11 @@
  * Android, the PM co-processor firmware takes it over. Mainline has no PM firmware, so this driver takes it over
  * instead: it shortens the timeout and lets the watchdog core ping it until userspace opens /dev/watchdog. A hard
  * hang then resets the board, and LK falls back to Android. MU300 bring-up driver.
+ *
+ * The watchdog runs on the PMIC's 32 kHz clock and keeps counting while the AP sleeps, where nothing pings it
+ * (Android has the PM co-processor feed it): a system sleep longer than the timeout reset the board (FINDINGS 37).
+ * It is stopped as the last thing before the sleep and armed again, with a fresh count, as the first thing after
+ * it - the vendor's sprd_wdt does the same for the AP watchdog.
  */
 #include <linux/bits.h>
 #include <linux/delay.h>
@@ -30,6 +35,7 @@ struct ump9620_wdt {
 	struct watchdog_device wdd;
 	struct regmap *map;
 	u32 base;
+	bool suspended;		/* stopped for a system sleep, to be armed again on resume */
 };
 
 static int ump9620_wdt_load(struct ump9620_wdt *w, unsigned int timeout)
@@ -88,6 +94,36 @@ static int ump9620_wdt_set_timeout(struct watchdog_device *wdd, unsigned int t)
 	return ump9620_wdt_ping(wdd);
 }
 
+static int ump9620_wdt_suspend_noirq(struct device *dev)
+{
+	struct ump9620_wdt *w = dev_get_drvdata(dev);
+	u32 ctrl = 0;
+
+	regmap_read(w->map, w->base + WDT_CTRL, &ctrl);
+	w->suspended = ctrl & WDT_CNT_EN;
+	if (w->suspended)
+		ump9620_wdt_ctrl(w, false);
+	return 0;
+}
+
+static int ump9620_wdt_resume_noirq(struct device *dev)
+{
+	struct ump9620_wdt *w = dev_get_drvdata(dev);
+	int ret;
+
+	if (!w->suspended)
+		return 0;
+	w->suspended = false;
+	ret = ump9620_wdt_load(w, w->wdd.timeout);
+	if (ret)
+		dev_warn(dev, "reload after the sleep: %d\n", ret);
+	return ump9620_wdt_ctrl(w, true);
+}
+
+static const struct dev_pm_ops ump9620_wdt_pm_ops = {
+	NOIRQ_SYSTEM_SLEEP_PM_OPS(ump9620_wdt_suspend_noirq, ump9620_wdt_resume_noirq)
+};
+
 static const struct watchdog_info ump9620_wdt_info = {
 	.options = WDIOF_SETTIMEOUT | WDIOF_KEEPALIVEPING | WDIOF_MAGICCLOSE,
 	.identity = "UMP9620 PMIC watchdog",
@@ -133,6 +169,7 @@ static int ump9620_wdt_probe(struct platform_device *pdev)
 			return ret;
 	}
 
+	platform_set_drvdata(pdev, w);
 	ret = devm_watchdog_register_device(&pdev->dev, &w->wdd);
 	if (ret)
 		return ret;
@@ -148,7 +185,7 @@ static const struct of_device_id ump9620_wdt_match[] = {
 
 static struct platform_driver ump9620_wdt_driver = {
 	.probe = ump9620_wdt_probe,
-	.driver = { .name = "ump9620-wdt", .of_match_table = ump9620_wdt_match },
+	.driver = { .name = "ump9620-wdt", .of_match_table = ump9620_wdt_match, .pm = pm_sleep_ptr(&ump9620_wdt_pm_ops) },
 };
 module_platform_driver(ump9620_wdt_driver);
 MODULE_DESCRIPTION("UMP9620 PMIC watchdog");
