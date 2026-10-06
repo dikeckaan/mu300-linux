@@ -2522,5 +2522,7 @@ reports and the mobile-data poll off before a long sleep, or the modem wakes the
 **Not measured:** power. The F50 has no battery; the U30 Air (fuel gauge) is where suspend's saving can be
 measured, unplugged.
 
-Logs of every run stayed on F50-B under `/root/susp/` (`*.log`, dmesg before/after, `/proc/interrupts`, the two
-panic records). F50-B was put back on the v2026.10.10 6.18 kernel afterwards.
+Logs of every run stayed on F50-B under `/root/susp/` (the spike: `*.log`, dmesg before/after, `/proc/interrupts`,
+the two panic records) and `/root/susp2/` (the follow-up, with the scripts that ran them). F50-B was left on the
+6.18.55 build of branch `suspend-drivers` (radio on, Wi-Fi client, one more 20 s `mem` checked). The 7.2.9
+build of the branch compiles, kernel and all modules; it has not been booted yet.
