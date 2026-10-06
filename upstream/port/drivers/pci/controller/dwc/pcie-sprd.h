@@ -109,6 +109,8 @@ struct sprd_pcie {
 	unsigned int is_suspended:1;
 	struct regulator *vpower;
 	unsigned int is_wakedown:1;
+	/* WAKE# armed as a system wakeup for this sleep (power/wakeup enabled) */
+	unsigned int wake_armed:1;
 
 	/* when pci enter suspend cannot reinit the pci */
 	unsigned int reinit_disable:1;

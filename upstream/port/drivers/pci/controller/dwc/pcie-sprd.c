@@ -9,6 +9,7 @@
 #include <linux/clk.h>
 #include <linux/gpio/consumer.h>
 #include <linux/interrupt.h>
+#include <linux/irq.h>
 #include <linux/mfd/syscon.h>
 #include <linux/module.h>
 #include <linux/of.h>
@@ -151,13 +152,18 @@ static void sprd_pcie_notify_client(struct sprd_pcie *ctrl,
  * When AP is in deep state, an endpoint can wakeup AP by pulling the wake
  * signal to low. After AP is activated, the endpoint must pull the wake signal
  * to high.
+ *
+ * MU300: a wakeup only when power/wakeup asks for one. The Marlin3 pulls WAKE# within 0-2 s of every L2 entry, so
+ * as a wakeup it ended every system sleep with Wi-Fi up at once (FINDINGS 37). Off by default; writing "enabled"
+ * to the controller's power/wakeup arms it.
  */
 static irqreturn_t sprd_pcie_wakeup_irq(int irq, void *data)
 {
 	struct sprd_pcie *ctrl = data;
 	struct dw_pcie *pci = ctrl->pci;
 
-	pm_wakeup_hard_event(pci->dev);
+	if (device_may_wakeup(pci->dev))
+		pm_wakeup_hard_event(pci->dev);
 
 	return IRQ_WAKE_THREAD;
 }
@@ -267,16 +273,22 @@ static int sprd_add_pcie_port(struct dw_pcie *pci, struct platform_device *pdev)
 
 	snprintf(ctrl->wakeup_label, ctrl->label_len,
 		 "%s wakeup", dev_name(dev));
+	/*
+	 * MU300: not IRQF_NO_SUSPEND and not wake-armed for good. A system sleep disables the line like any other,
+	 * and unlazily, so that it is masked in the EIC: PSCI SYSTEM_SUSPEND returns on any interrupt that reaches
+	 * the GIC, whatever the kernel thinks of it. sprd_pcie_pm_suspend() arms it only when power/wakeup is
+	 * enabled, which it is not by default.
+	 */
+	irq_set_status_flags(ctrl->wakeup_irq, IRQ_DISABLE_UNLAZY);
 	ret = devm_request_threaded_irq(dev, ctrl->wakeup_irq,
 					sprd_pcie_wakeup_irq,
 					sprd_pcie_wakeup_thread_irq,
-					IRQF_TRIGGER_FALLING | IRQF_NO_SUSPEND,
+					IRQF_TRIGGER_FALLING,
 					ctrl->wakeup_label, ctrl);
 	if (ret < 0)
 		dev_warn(dev, "cannot request wakeup irq\n");
-
-	enable_irq_wake(ctrl->wakeup_irq);
-	device_init_wakeup(dev, true);
+	else
+		device_set_wakeup_capable(dev, true);
 
 no_wakeup:
 
@@ -781,8 +793,31 @@ static int sprd_pcie_resume_noirq(struct device *dev)
 	return 0;
 }
 
+/* MU300: WAKE# as a system wakeup only when power/wakeup is enabled (see sprd_pcie_wakeup_irq()) */
+static int sprd_pcie_pm_suspend(struct device *dev)
+{
+	struct sprd_pcie *ctrl = dev_get_drvdata(dev);
+
+	if (!ctrl || IS_ERR_OR_NULL(ctrl->gpiod_wakeup) || ctrl->wakeup_irq <= 0)
+		return 0;
+	ctrl->wake_armed = device_may_wakeup(dev) && !enable_irq_wake(ctrl->wakeup_irq);
+	return 0;
+}
+
+static int sprd_pcie_pm_resume(struct device *dev)
+{
+	struct sprd_pcie *ctrl = dev_get_drvdata(dev);
+
+	if (ctrl && ctrl->wake_armed) {
+		disable_irq_wake(ctrl->wakeup_irq);
+		ctrl->wake_armed = 0;
+	}
+	return 0;
+}
+
 static const struct dev_pm_ops sprd_pcie_pm_ops = {
 	.prepare = sprd_pcie_pm_prepare,
+	SET_SYSTEM_SLEEP_PM_OPS(sprd_pcie_pm_suspend, sprd_pcie_pm_resume)
 	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(sprd_pcie_suspend_noirq,
 				      sprd_pcie_resume_noirq)
 };
