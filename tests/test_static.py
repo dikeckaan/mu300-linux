@@ -260,6 +260,38 @@ class Rules(unittest.TestCase):
         # and the build stops when the edit did not apply
         self.assertIn("'MU300: the eMMC is mmc0', 'WRITE_ONCE(sdhci_sprd_emmc_added, true);'", port)
 
+    def test_mainline_can_suspend(self):
+        # System suspend (PSCI SYSTEM_SUSPEND) and a tickless idle: under the periodic tick a CPU brought back online
+        # was left out of the timer broadcast and locked up, which every suspend (and `cpu7 offline/online`) hit
+        cfg = (TOP / 'upstream' / 'mu300-mainline.config').read_text()
+        for k in ('CONFIG_SUSPEND', 'CONFIG_PM_SLEEP', 'CONFIG_NO_HZ_IDLE', 'CONFIG_HIGH_RES_TIMERS'):
+            self.assertRegex(cfg, rf'(?m)^{k}=y$')
+        drv = TOP / 'upstream' / 'port' / 'drivers'
+        # the PMIC watchdog keeps counting while the AP sleeps: stopped for the sleep, armed again after it
+        wdt = (drv / 'watchdog' / 'ump9620-pmic-wdt.c').read_text()
+        self.assertIn('NOIRQ_SYSTEM_SLEEP_PM_OPS(ump9620_wdt_suspend_noirq, ump9620_wdt_resume_noirq)', wdt)
+        self.assertIn('.pm = pm_sleep_ptr(&ump9620_wdt_pm_ops)', wdt)
+        self.assertIn('platform_set_drvdata(pdev, w);', wdt)
+        # PCIe WAKE# is a wakeup only when power/wakeup says so, and is masked (unlazily) for the sleep otherwise
+        pcie = (drv / 'pci' / 'controller' / 'dwc' / 'pcie-sprd.c').read_text()
+        self.assertIn('if (device_may_wakeup(pci->dev))\n\t\tpm_wakeup_hard_event(pci->dev);', pcie)
+        self.assertNotIn('IRQF_TRIGGER_FALLING | IRQF_NO_SUSPEND', pcie)
+        self.assertIn('irq_set_status_flags(ctrl->wakeup_irq, IRQ_DISABLE_UNLAZY);', pcie)
+        self.assertNotIn('device_init_wakeup(dev, true)', pcie)
+        self.assertIn('SET_SYSTEM_SLEEP_PM_OPS(sprd_pcie_pm_suspend, sprd_pcie_pm_resume)', pcie)
+        # the firmware's debug log pulled WAKE# right after every L2 entry: off by default, and a resume leaves it be
+        mods = TOP / 'upstream' / 'modules'
+        sysfs = (mods / 'wcn_bsp' / 'platform' / 'sysfs.c').read_text()
+        self.assertRegex(sysfs, r'#endif\n(\t.*\n)*\tsysfs_info\.armlog_status = 0;\n')
+        ep = (mods / 'wcn_bsp' / 'pcie' / 'pcie.c').read_text()
+        resume = ep[ep.index('static int sprd_ep_resume('):ep.index('const struct dev_pm_ops sprd_ep_pm_ops')]
+        self.assertNotIn('wcn_set_armlog(true)', resume)
+        # without a WoWLAN configuration cfg80211 closed the interfaces while the bus was going down, and the
+        # firmware asserted at the next Wi-Fi open: WoWLAN "any" from the wiphy's registration on
+        iface = (mods / 'sprd_wlan_combo' / 'common' / 'iface.c').read_text()
+        self.assertIn('wowlan->any = true;\n\t\t\twiphy->wowlan_config = wowlan;', iface)
+        self.assertLess(iface.index('ret = wiphy_register(wiphy);'), iface.index('wiphy->wowlan_config = wowlan;'))
+
     def test_mainline_config_has_kvm_and_the_module_set(self):
         # /dev/kvm (the CPUs start at EL2) and the router/container modules; the kernel's own modules reach the bundle
         cfg = (TOP / 'upstream' / 'mu300-mainline.config').read_text()

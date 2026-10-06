@@ -2404,7 +2404,7 @@ Can mainline sleep the way Android idles - the AP asleep, the modem awake? Teste
 USB-powered, the SIM without service: `+CEREG: 2,8`) on 2026-10-06 with the config change of branch
 `suspend-spike` (`CONFIG_SUSPEND`, `PM_DEBUG`, `PM_ADVANCED_DEBUG`, `PM_SLEEP_DEBUG`, `PM_WAKELOCKS`,
 `PM_AUTOSLEEP` - autosleep built, off - and the tick change below). Short answer: **yes, the firmware does it**;
-what stands in the way is three drivers and one config default.
+what stood in the way was three drivers and one config default (all fixed below, in the follow-up).
 
 **The firmware.** `/sys/kernel/debug/psci` on the release kernel already says `SYSTEM_SUSPEND is supported`
 (PSCI v1.0 under the DT's `arm,psci-0.2`). The vendor 5.4 kernel has no platform suspend driver either; mainline's
@@ -2439,32 +2439,85 @@ interrupt again (`arch_timer` count frozen, `taskset -c 7 sleep 1` never returns
 (arm64's defconfig) gives the one-shot broadcast that is armed on every idle entry: hotplug and suspend work.
 It also stops waking all eight CPUs 250 times a second at idle; its effect on idle power was not measured here.
 
-**What broke, and needs work before suspend is usable:**
+**What broke in the spike** (the PCIe WAKE#, Wi-Fi after a suspend, the PMIC watchdog) was taken apart on
+branch `suspend-drivers` (2026-10-06/07, F50-B, the same kernel plus the changes below; logs in `/root/susp2/`).
+Two of the spike's conclusions were wrong, and the table above reads differently with what was found:
 
-* **PCIe WAKE# (pcie-sprd).** The handler calls `pm_wakeup_hard_event()` unconditionally, and Marlin3 asserts
-  WAKE# within 0-2 s of every L2 entry. With wakeup enabled s2idle aborts at once; `mem` wakes in hardware
-  (the EIC line is a wake source for the firmware) whatever the kernel says. Needed: honour
-  `device_may_wakeup()`, and find out why the chip asks for the host (the vendor's WCN suspend handshake -
-  `sprd_ep_suspend` only does `pci_enable_wake(D3hot)` - or a pending event).
-* **Wi-Fi after a suspend while it was closed.** Opening wlan0 afterwards gets `CMD_DOWNLOAD_INI ... UNKNOWN_ERROR`
-  and a firmware assert (`WCN Assert in mchn.c line 137 ... get_wcn_bus_ops, chn10`); only a reboot recovers.
-  wlan0 down/up without a suspend works. The WCN resume (`sprd_ep_resume`, edma channels) does not restore what
-  a later open needs. While Wi-Fi is up, suspend and resume work (the driver disconnects and reconnects).
-* **The PMIC watchdog** (`ump9620-pmic-wdt`, 60 s, pinged by the watchdog core) has no suspend hook and keeps
-  counting while the AP sleeps: a suspend longer than ~60 s would reset the board. Not tried; every run here was
-  20 s. It needs stop-on-suspend (or the PM co-processor's ping, as on Android).
-* `ums9620-ipa-sys-pd: power off maybe failed` on every suspend (the IPA power domain), harmless so far.
-* The USB gadget disconnects for the sleep (dwc3 suspend, `br-lan: port usb0 disabled`); ssh from the Mac
-  worked again after every resume.
+* **WAKE# was the firmware's debug log.** wcn_bsp's `sprd_ep_resume()` sends `at+armlog=1` after every resume
+  (vendor code), and its sysfs default turns the log on at every chip power-on; `wifi-start`'s `at+armlog=0` did
+  not outlive the next power-on (Bluetooth's start powers the chip up again). With the log on, the firmware pulls
+  WAKE# within 0-2 s of every L2 entry to push log packets. Measured with PCIe wakeup enabled and Wi-Fi up:
+  log on, `mem` returned after 1.0-1.3 s (`pm_wakeup_irq` 18, the WAKE# line); `echo 0 > armlog_status`, the
+  full 20 s, woken by the RTC; the next resume turned the log on again and the sleep after it returned after
+  4 s. Fixed in wcn_bsp: the log is off by default and the resume leaves it as it was (`echo 1 >
+  /sys/devices/virtual/misc/wcn/devices/armlog_status` turns it on for debugging). Three `mem` runs in a row
+  with Wi-Fi up and PCIe wakeup enabled then slept the full 20 s.
+* **"Wi-Fi does not come back after a suspend while it was closed" was a suspend while it was *open*.**
+  Without a WoWLAN configuration cfg80211's `wiphy_suspend()` closes every interface (`cfg80211_leave_all`: the
+  P2P device's `CMD_CLOSE`, the station's `CMD_DISCONNECT`), and the WCN PCI function, which suspends
+  asynchronously, had usually taken the bus down by then: both commands were dropped (`send [CMD_CLOSE] fail
+  because bus done`), the firmware kept them open, and the driver thought them closed. Wi-Fi itself reconnected
+  after the resume. The *next close and open of Wi-Fi* - with or without a suspend in between - then got the
+  firmware assert (`WCN Assert in mchn.c line 137 ... get_wcn_bus_ops, chn10`), after which the chip is in
+  "card dump" and only a reboot helps. In the spike the Wi-Fi-up runs came first, so the closed-Wi-Fi runs got
+  the blame. Reproduced on demand: a Wi-Fi-up `mem`, then `ip link set wlan0 down/up` and no second suspend:
+  assert. On a chip with no Wi-Fi-up suspend since its power-on, sleeps with Wi-Fi closed (Bluetooth on) were
+  fine three times out of three (`mem`, s2idle, `mem`), and so was one with the chip off (Wi-Fi and Bluetooth
+  closed). `iw phy phy0 wowlan enable any` before the sleep avoided the assert, which proved the mechanism.
+  Fixed in sprd_wlan_combo: WoWLAN "any" is configured when the wiphy registers, so cfg80211 leaves the
+  interfaces as they are, and the firmware learns about the sleep through the PCIe channel's `power_notify`
+  (`CMD_POWER_SAVE`), as before. The station stays associated across the sleep (no reconnect); a hotspot stays an
+  access point. `iw phy phy0 wowlan disable` brings the old behaviour back. A device link that orders the WCN
+  platform device's suspend before the PCI function's was tried first: the commands then reached the firmware,
+  but the queued disconnect made `power_notify` refuse the suspend (`Q not empty suspend not allowed`, -EBUSY)
+  and the next sleep ended with `CMD_SET_REGDOM` timeouts and an assert; dropped.
 
-**Wake sources** with the options (`power/wakeup` enabled): gpio-keys (power, volume), the PMIC (spi4.0, which
-the RTC alarm, the power key and the other PMIC EIC lines go through), RTC/alarmtimer, fgu, PCIe RC and the
-Marlin3 function, SIPA (`enable_irq_wake` on its general and multi irqs). The modem mailbox irqs are
-`IRQF_NO_SUSPEND`, not wake-armed, and the mailbox driver masks its "no-wakeup" outbox from PM_SUSPEND_PREPARE on;
-a CP message marked wakeup makes `sprd-mpm` take a wakeup source, which ends s2idle. Proven: the RTC (IRQ 23).
-Not tested: the power key (needs a hand on it; it shares IRQ 23 with the RTC, so it should), a USB plug (the
-extcon/VBUS line is a PMIC EIC; dwc3 itself is not a wake source), an incoming SMS or data (the SIM had no
-service, and no mailbox interrupt arrived during any sleep).
+**Fixed, measured on F50-B** (6.18.55, these changes; each run `rtcwake`, `pm_wakeup_irq` 23 = the RTC):
+
+| run | result |
+|---|---|
+| idle, release kernel (periodic tick) | arch_timer 0/s, timer broadcast IPIs **1725/s**, sprd_timer 246/s, all IRQs 2162/s (20 s, twice) |
+| idle, NO_HZ_IDLE + HIGH_RES_TIMERS | arch_timer 400-520/s, broadcast IPIs **112-120/s**, sprd_timer 170/s, all IRQs **980-1125/s** |
+| `cpu7` offline/online ×3, then CPUs 1-6 at once | no lockup, `taskset -c N sleep` returns on every CPU (release kernel: panic) |
+| `mem` 20 s, Wi-Fi client up | woken by the modem after 11.5 s (see wake sources); Wi-Fi associated, ping fine |
+| `mem` 90 s, Wi-Fi up, radio off (`AT+CFUN=4`) | **91.1 s asleep, no reset**; the PMIC watchdog counts again afterwards (CTRL 0xa, counter running) |
+| `mem` 120 s, Wi-Fi up | 120.8 s, Wi-Fi associated, ping fine |
+| `mem` ×2, Wi-Fi up, then wlan0 down/up | no `bus done`, no assert, Wi-Fi rejoins |
+| Wi-Fi closed (BT on): `mem` and s2idle, then open | no assert, Wi-Fi rejoins, ping fine |
+| s2idle 20 s, Wi-Fi up | 21.3 s, RTC |
+| `mem` 20 s, hotspot (AP) up | 21.2 s; still an AP on channel 36 with hostapd running (no client was at hand to associate) |
+| `mem`, Wi-Fi up, PCIe `power/wakeup` enabled | woken by WAKE# after ~1 s: with WoWLAN "any" the firmware wakes the host for traffic, as asked |
+
+The rest:
+
+* **The PMIC watchdog** (`ump9620-pmic-wdt`) keeps counting while the AP sleeps. It is now stopped in its
+  `suspend_noirq` callback, if it was running, and loaded with a fresh count and started again in `resume_noirq`
+  - what the vendor's `sprd_wdt` does for the AP watchdog. A hang in the last suspend steps or the first resume
+  steps is not covered; the vendor accepts the same window.
+* **pcie-sprd's WAKE#** is no longer `IRQF_NO_SUSPEND` and wake-armed for good: `pm_wakeup_hard_event()` only when
+  `device_may_wakeup()`, the line is disabled for the sleep like any other and unlazily (`IRQ_DISABLE_UNLAZY`), so
+  that it is masked in the EIC - PSCI SYSTEM_SUSPEND returns on any interrupt that reaches the GIC, whatever the
+  kernel thinks of it - and armed (`enable_irq_wake`) only when `power/wakeup` is enabled. It is off by default:
+  `echo enabled > /sys/devices/platform/soc/26100000.pcie/power/wakeup` makes Wi-Fi traffic wake the device.
+  With it off the firmware's WAKE# request waits for the resume (`wake# value:1, wake down count:N` in the log).
+* `ums9620-ipa-sys-pd: power off maybe failed` on every suspend, harmless; the USB gadget drops for the sleep
+  (`br-lan: port usb0 disabled`) and comes back.
+* The PM debug options cost nothing at runtime: `pm_print_times` and `pm_debug_messages` are 0 by default, so a
+  suspend logs what it logged before; they stay (pm_test).
+
+**Wake sources.** The RTC (PMIC irq 23) every time. **The modem wakes `mem` by itself**: the mailbox irq is
+`IRQF_NO_SUSPEND`, as in the vendor 5.4 driver, and its interrupt reaches the GIC, which ends PSCI
+SYSTEM_SUSPEND; no change was needed. With the radio on, the first sleeps ended after 11.5, 20 and 11.7 s on
+`irq read smsg: dst=5, channel=6, type=4` (the AT channel's sbuf event): the modem's unsolicited `+CSQ`/`+CESQ`
+signal reports on `stty_nr0`, every few seconds, and `mobile-data`'s registration poll (`up`, every 2 s, while
+there is no service). With `AT+CFUN=4` the sleep ran to the alarm. A long sleep with the radio on needs those
+reports off (what Android's RIL does on screen-off) - for `mu300-power`, not the kernel. Not tested yet (needs a
+hand or a SIM with service): the power key (it shares the PMIC irq 23 with the RTC), a USB plug (a PMIC EIC
+line), an incoming SMS (a `+CMTI` URC on the same channel as the reports, so it should).
+
+**What `mu300-power` can rely on:** `mem` with Wi-Fi up, down or the chip off; Wi-Fi as it was afterwards; sleeps
+longer than the PMIC watchdog's 60 s; PCIe wakeup as an opt-in. What it has to arrange: the modem's signal
+reports and the mobile-data poll off before a long sleep, or the modem wakes the device every 10-20 s.
 
 **Not measured:** power. The F50 has no battery; the U30 Air (fuel gauge) is where suspend's saving can be
 measured, unplugged.
