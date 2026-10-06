@@ -91,7 +91,7 @@ exit 0
 DEFAULTS = {
     'dashboard-info': '{"ok":1,"host":"f50"}', 'cell': '{"ok":1}', 'action': '{"ok":1,"op":"x"}',
     'lock': '{"ok":1,"mode":{"label":"auto"}}', 'device-usb': '{"ok":1}', 'at': 'OK', 'sms': 'sent (12)',
-    'languages': '{"ok":1}',
+    'languages': '{"ok":1}', 'ttl': '{"ok":1}',
 }
 
 # The methods that start something with setsid (in the background of mu300dash)
@@ -213,7 +213,7 @@ class Inventory(Mu300Dash):
     METHODS = {'sysinfo', 'status', 'signal', 'act', 'at', 'at_history', 'lock_get', 'lock_set', 'sms_list',
                'sms_show', 'sms_send', 'sms_delete', 'sms_sync', 'forward_get', 'forward_status', 'forward_set',
                'forward_test', 'traffic_get', 'traffic_set', 'usb_get', 'usb_set', 'usb_net_list', 'usb_net_add',
-               'lang_get', 'lang_set'}
+               'lang_get', 'lang_set', 'ttl_get', 'ttl_set'}
 
     def test_list_declares_every_method(self):
         for shell in self.each_shell():
@@ -235,7 +235,7 @@ class Inventory(Mu300Dash):
     def test_the_changed_scripts_parse(self):
         for shell in self.each_shell():
             for p in [DASH, LIB] + [ADAPTERS / n for n in ('action', 'at', 'boot-replay', 'cell', 'dashboard-info',
-                                                         'device-usb', 'lock', 'languages', 'sms-forward')]:
+                                                         'device-usb', 'lock', 'languages', 'sms-forward', 'ttl')]:
                 with self.subTest(p=p.name):
                     r = subprocess.run(shell + ['-n', str(p)], capture_output=True, text=True)
                     self.assertEqual(r.returncode, 0, r.stderr)
@@ -281,6 +281,8 @@ class Refusals(Mu300Dash):
         ('usb_set', {'kind': 'net', 'value': 'ncm', 'scope': 'once', 'auto': '1'}, 'scope', 'once'),
         ('usb_set', {'kind': 'net', 'value': 'ncm', 'scope': 'once', 'auto': '1'}, 'auto', '1'),
         ('usb_net_add', {}, 'iface', 'eth1'),
+        ('ttl_set', {}, 'value', '64'),
+        ('ttl_set', {}, 'value', 'off'),
     ]
 
     def test_hostile_values_are_refused(self):
@@ -335,6 +337,19 @@ class Refusals(Mu300Dash):
             ('lang install codes', 'lang_set', {'op': 'install', 'source': 'file', 'codes': 'de'}),
             ('lang enable source', 'lang_set', {'op': 'enable', 'codes': 'de', 'source': 'file'}),
             ('lang remove codes', 'lang_set', {'op': 'remove', 'codes': 'de'}),
+            ('ttl zero', 'ttl_set', {'value': '0'}),
+            ('ttl 256', 'ttl_set', {'value': '256'}),
+            ('ttl 999', 'ttl_set', {'value': '999'}),
+            ('ttl four digits', 'ttl_set', {'value': '1000'}),
+            ('ttl leading zero', 'ttl_set', {'value': '064'}),
+            ('ttl negative', 'ttl_set', {'value': '-1'}),
+            ('ttl empty', 'ttl_set', {'value': ''}),
+            ('ttl missing', 'ttl_set', {}),
+            ('ttl OFF', 'ttl_set', {'value': 'OFF'}),
+            ('ttl word', 'ttl_set', {'value': 'on'}),
+            ('ttl float', 'ttl_set', {'value': '64.5'}),
+            ('ttl hex', 'ttl_set', {'value': '0x40'}),
+            ('ttl two', 'ttl_set', {'value': '64 65'}),
         ]
         for shell in self.each_shell():
             self.assert_refused(shell, jobs)
@@ -380,6 +395,12 @@ class Passthrough(Mu300Dash):
         ('lang_set', {'op': 'install', 'source': 'release'}, [['languages', 'install', 'release']]),
         ('lang_set', {'op': 'install', 'source': 'file'}, [['languages', 'install', 'file']]),
         ('lang_set', {'op': 'remove'}, [['languages', 'remove']]),
+        ('ttl_get', {}, [['ttl', 'get']]),
+        ('ttl_set', {'value': '64'}, [['ttl', 'set', '64']]),
+        ('ttl_set', {'value': 128}, [['ttl', 'set', '128']]),
+        ('ttl_set', {'value': '255'}, [['ttl', 'set', '255']]),
+        ('ttl_set', {'value': '1'}, [['ttl', 'set', '1']]),
+        ('ttl_set', {'value': 'off'}, [['ttl', 'set', 'off']]),
     ]
 
     def test_valid_values_reach_the_adapter(self):
@@ -441,7 +462,7 @@ class Replies(Mu300Dash):
         ('lock_get', {'fresh': '1'}), ('lock_set', {'kind': 'lte', 'val': '1'}), ('sms_list', {}),
         ('sms_show', {'id': '1'}), ('sms_send', {'num': '123', 'text': 'x'}), ('sms_delete', {'id': '1'}),
         ('sms_sync', {}), ('usb_get', {}), ('usb_set', {'kind': 'role', 'value': 'device', 'auto': '0'}),
-        ('usb_net_list', {}), ('usb_net_add', {'iface': 'eth1'}),
+        ('usb_net_list', {}), ('usb_net_add', {'iface': 'eth1'}), ('ttl_get', {}), ('ttl_set', {'value': '64'}),
     ]
     OUTPUTS = {
         'garbage': NASTY,
@@ -468,7 +489,7 @@ class Replies(Mu300Dash):
         want = json.loads(NASTY_JSON)
         for shell in self.each_shell():
             for m, p in [('sysinfo', {}), ('act', {'op': 'wifi', 'arg': 'on'}), ('lock_get', {}), ('usb_get', {}),
-                         ('usb_net_list', {})]:
+                         ('usb_net_list', {}), ('ttl_get', {}), ('ttl_set', {'value': 'off'})]:
                 with self.subTest(method=m):
                     r, _, _ = self.call(shell, m, p)
                     self.assertEqual(self.reply(r), want)
@@ -680,12 +701,80 @@ class LanguagesAdapter(ShellTest):
             (self.job / 'lang-job.pid').unlink()
 
 
+class TtlAdapter(ShellTest):
+    """unisoc-modem/ttl: mu300-ttl's state as JSON for the TTL page, and set/off with the value checked again"""
+
+    def setUp(self):
+        super().setUp()
+        self.state = self.tmp / 'state'
+        self.state.write_text('TTL=64\nBACKEND=tc\nIFACES=sipa_eth0 sipa_eth1\nOFFLOAD=1\n')
+        # mu300-ttl: records its arguments; "state" prints $STUBLOG/state; set fails with $STUBLOG/fail's text
+        self.stub('mu300-ttl', 'echo "$*" >> "$STUBLOG/ttl.log"\n'
+                               'case $1 in state) cat "$STUBLOG/state" ;;\n'
+                               '  *) echo "TTL: something"; [ -e "$STUBLOG/fail" ] && { cat "$STUBLOG/fail" >&2; exit 1; } ;; esac\n'
+                               'exit 0')
+
+    def run_ad(self, shell, *args):
+        r = self.script(shell, ADAPTERS / 'ttl', *args, MU300_TTL_CMD=self.stubs / 'mu300-ttl')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return json.loads(r.stdout)
+
+    def log(self):
+        p = self.tmp / 'ttl.log'
+        t = p.read_text() if p.exists() else ''
+        p.unlink(missing_ok=True)
+        return t
+
+    def test_get(self):
+        for shell in self.each_shell():
+            self.state.write_text('TTL=64\nBACKEND=tc\nIFACES=sipa_eth0 sipa_eth1\nOFFLOAD=1\n')
+            self.assertEqual(self.run_ad(shell, 'get'), {'ok': 1, 'enabled': 1, 'value': 64, 'backend': 'tc',
+                                                         'offload': 1, 'iface': ['sipa_eth0', 'sipa_eth1']})
+            self.state.write_text('TTL=128\nBACKEND=nft\nIFACES=\nOFFLOAD=0\n')
+            self.assertEqual(self.run_ad(shell, 'get'), {'ok': 1, 'enabled': 1, 'value': 128, 'backend': 'nft',
+                                                         'offload': 0, 'iface': []})
+            # off, Ubuntu (no fw4), and whatever odd text: still JSON, nothing odd passed on
+            self.state.write_text('TTL=\nBACKEND=none\nIFACES=\nOFFLOAD=\n')
+            self.assertEqual(self.run_ad(shell, 'get'), {'ok': 1, 'enabled': 0, 'value': None, 'backend': 'none',
+                                                         'offload': None, 'iface': []})
+            self.state.write_text('TTL=6"4\nBACKEND=x"y\nIFACES=sipa_eth0 a"b\\c\nOFFLOAD=1"\n')
+            self.assertEqual(self.run_ad(shell, 'get'), {'ok': 1, 'enabled': 0, 'value': None, 'backend': 'none',
+                                                         'offload': None, 'iface': ['sipa_eth0']})
+
+    def test_set_and_off(self):
+        for shell in self.each_shell():
+            self.log()
+            for v in ('1', '64', '65', '128', '255'):
+                self.assertEqual(self.run_ad(shell, 'set', v), {'ok': 1}, v)
+                self.assertEqual(self.log(), f'set {v}\n')
+            self.assertEqual(self.run_ad(shell, 'set', 'off'), {'ok': 1})
+            self.assertEqual(self.log(), 'off\n')
+
+    def test_bad_values_run_nothing(self):
+        for shell in self.each_shell():
+            self.log()
+            for v in ('0', '256', '1000', '064', '-1', '', 'abc', '6 4', '64;reboot', '$(id)', '--help', 'OFF'):
+                with self.subTest(v=v):
+                    r = self.run_ad(shell, 'set', v)
+                    self.assertEqual(r, {'ok': 0, 'error': 'Invalid TTL'})
+                    self.assertEqual(self.log(), '')
+            self.assertEqual(self.run_ad(shell, 'rm')['ok'], 0)
+            self.assertEqual(self.log(), '')
+
+    def test_a_failure_says_why(self):
+        (self.tmp / 'fail').write_text('first\nthe rule could not be set "x" \\ (tc and nftables)\n')
+        for shell in self.each_shell():
+            r = self.run_ad(shell, 'set', '64')
+            self.assertEqual(r, {'ok': 0, 'error': 'The TTL could not be set',
+                                 'detail': 'the rule could not be set "x" \\ (tc and nftables)'})
+
+
 class Acl(unittest.TestCase):
     # SMS bodies (one-time codes) and the AT history (AT+CPIN PINs) are not for read-only users (ruling R14)
     READ = {'sysinfo', 'status', 'signal', 'lock_get', 'usb_get', 'usb_net_list', 'lang_get', 'traffic_get',
-            'forward_get', 'forward_status'}
+            'forward_get', 'forward_status', 'ttl_get'}
     WRITE = {'act', 'at', 'at_history', 'lock_set', 'sms_list', 'sms_show', 'sms_send', 'sms_delete', 'sms_sync',
-             'usb_set', 'usb_net_add', 'lang_set', 'traffic_set', 'forward_set', 'forward_test'}
+             'usb_set', 'usb_net_add', 'lang_set', 'traffic_set', 'forward_set', 'forward_test', 'ttl_set'}
 
     def test_actions_need_write_access(self):
         acl = json.loads(ACL.read_text())['luci-app-mu300']

@@ -279,6 +279,44 @@ class Rules(unittest.TestCase):
         self.assertIn('INSTALL_MOD_STRIP=1 DEPMOD=true modules_install', mods)
         self.assertIn('has the name of an in-tree module', mods)
 
+    def test_ttl_page_is_wired(self):
+        # Cellular > TTL: the menu entry right after the AT terminal, its view, the rpc declarations in common.js,
+        # ttl_get readable and ttl_set only with write access, the adapter executable
+        import json
+        app = TOP / 'openwrt' / 'luci-app-mu300'
+        menu = json.loads((app / 'root/usr/share/luci/menu.d/luci-app-mu300.json').read_text())
+        ttl = menu['admin/modem/ttl']
+        self.assertEqual(ttl['title'], 'TTL')
+        self.assertEqual(ttl['action'], {'type': 'view', 'path': 'mu300/ttl'})
+        cellular = sorted((v['order'], k) for k, v in menu.items() if k.startswith('admin/modem/'))
+        keys = [k for _, k in cellular]
+        self.assertEqual(keys[keys.index('admin/modem/at') + 1], 'admin/modem/ttl')
+        self.assertEqual(len({o for o, _ in cellular}), len(cellular), 'two Cellular pages with the same order')
+        self.assertTrue((app / 'htdocs/luci-static/resources/view/mu300/ttl.js').is_file())
+        common = (app / 'htdocs/luci-static/resources/mu300/common.js').read_text()
+        self.assertIn("method: 'ttl_get'", common)
+        self.assertIn("method: 'ttl_set', params: [ 'value' ]", common)
+        self.assertIn('callTtlGet: callTtlGet, callTtlSet: callTtlSet', common)
+        acl = json.loads((app / 'root/usr/share/rpcd/acl.d/luci-app-mu300.json').read_text())['luci-app-mu300']
+        self.assertIn('ttl_get', acl['read']['ubus']['mu300dash'])
+        self.assertNotIn('ttl_set', acl['read']['ubus']['mu300dash'])
+        self.assertIn('ttl_set', acl['write']['ubus']['mu300dash'])
+        self.assertTrue((app / 'root/usr/libexec/unisoc-modem/ttl').stat().st_mode & 0o111)
+        # the fast-path note belongs to the nft backend only
+        view = (app / 'htdocs/luci-static/resources/view/mu300/ttl.js').read_text()
+        self.assertRegex(view, r"if \(st\.backend === 'nft'\)\s*card\.appendChild\([^;]*firewall fast-path is off")
+
+    def test_mainline_rewrites_the_ttl_in_tc(self):
+        # mu300-ttl's tc backend (clsact egress, matchall, pedit, csum): the flowtable transmits through egress, so
+        # flow offloading stays on. The 5.4 kernel has no pedit: mu300-ttl falls back to nftables there.
+        cfg = (TOP / 'upstream' / 'mu300-mainline.config').read_text()
+        for k in ('CONFIG_NET_SCH_INGRESS', 'CONFIG_NET_CLS_ACT'):
+            self.assertRegex(cfg, rf'(?m)^{k}=y$')
+        for k in ('CONFIG_NET_CLS_MATCHALL', 'CONFIG_NET_ACT_PEDIT', 'CONFIG_NET_ACT_CSUM'):
+            self.assertRegex(cfg, rf'(?m)^{k}=[ym]$')
+        # tc itself: tc-tiny comes with sqm-scripts on OpenWrt
+        self.assertIn('sqm-scripts', (TOP / 'openwrt' / 'build-rootfs.sh').read_text())
+
     def test_every_release_kernel_bundle_has_the_sd_host(self):
         # 5.4 reads the card as well (FINDINGS 31j): its bundle says so, and the release audit fails when any of the
         # three bundles does not (mu300-update refuses such a bundle for a system on the card)

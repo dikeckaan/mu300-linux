@@ -411,7 +411,7 @@ if (selected !== true) throw Error('the Bootstrap token bridge must survive the 
 
 
 VIEWS = APP / 'htdocs/luci-static/resources/view/mu300'
-VIEW_NAMES = ('home', 'locks', 'sms', 'at', 'settings', 'device', 'languages')
+VIEW_NAMES = ('home', 'locks', 'sms', 'at', 'settings', 'device', 'languages', 'ttl')
 CJK_RE = re.compile('[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]')
 
 
@@ -733,9 +733,21 @@ rpcReply = { ok: 1, job: { state: 'done' }, extra: {} }; timers.splice(0).forEac
 rpcReply = { ok: 1 }; await V.set(null, 'disable', 'ja'); await flush();
 return notes();'''
 
+    TTL = '''
+V.render({ ok: 1, enabled: 1, value: 64, backend: 'nft', offload: 0, iface: [] });
+V.paint({ ok: 1, enabled: 0, value: null, backend: 'tc', offload: 1, iface: [ 'sipa_eth0' ] });
+rpcReply = { ok: 0, error: 'Invalid TTL' }; await V.set(null, 64); await flush();
+rpcReply = { ok: 1, enabled: 1, value: 65, backend: 'tc', offload: 1, iface: [ 'sipa_eth0' ] };
+await V.set(null, 65); await flush(); await flush();
+return notes();'''
+
     # a backend error on each page: (view, body returning what was shown, [(template, error, detail)]); the
     # page shows the error through the catalog, inside its template if any, and the detail after it as data
     BACKEND_ERRORS = [
+        ('ttl', """V.render({}); toasts.length = 0;
+rpcReply = { ok: 0, error: 'The TTL could not be set', detail: 'tc and nftables' };
+await V.set(null, 64); await flush();
+return [ notes().pop() ];""", [('Failed: %s', 'The TTL could not be set', 'tc and nftables')]),
         ('home', """V.render(); await flush(); toasts.length = 0;
 rpcReply = { ok: 0, op: 'wifi on', error: 'Expected on or off' };
 get('mud-btn-wifi').onclick.call(get('mud-btn-wifi')); await flush();

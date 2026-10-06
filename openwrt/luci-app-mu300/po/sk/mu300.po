@@ -21,6 +21,9 @@ msgstr "AT terminal"
 msgid "Adapter settings"
 msgstr "Adapter settings"
 
+msgid "TTL"
+msgstr "TTL"
+
 msgid "Device management"
 msgstr "Device management"
 
@@ -1383,6 +1386,45 @@ msgstr "This sets the current cycle’s used value to the entered amount; the da
 msgid "Saving the traffic pool settings…"
 msgstr "Saving the traffic pool settings…"
 
+msgid "Current setting"
+msgstr "Current setting"
+
+msgid "Fixed at %d"
+msgstr "Fixed at %d"
+
+msgid "Not changed (default)"
+msgstr "Not changed (default)"
+
+msgid "Rule in force"
+msgstr "Rule in force"
+
+msgid "Flow offloading"
+msgstr "Flow offloading"
+
+msgid "TTL of mobile data"
+msgstr "TTL of mobile data"
+
+msgid "Every packet that leaves through mobile data gets this TTL (IPv6: hop limit). A phone or laptop behind the hotspot sends 64 (Windows: 128) and the device forwards it with one less, which is how an operator can tell tethered traffic apart."
+msgstr "Every packet that leaves through mobile data gets this TTL (IPv6: hop limit). A phone or laptop behind the hotspot sends 64 (Windows: 128) and the device forwards it with one less, which is how an operator can tell tethered traffic apart."
+
+msgid "On this kernel the firewall fast-path is off while a TTL is set"
+msgstr "On this kernel the firewall fast-path is off while a TTL is set"
+
+msgid "Set %d"
+msgstr "Set %d"
+
+msgid "Set"
+msgstr "Set"
+
+msgid "Enter a number from 1 to 255"
+msgstr "Enter a number from 1 to 255"
+
+msgid "Turn off"
+msgstr "Turn off"
+
+msgid "64 makes every packet leave like the device's own traffic"
+msgstr "64 makes every packet leave like the device's own traffic"
+
 msgid "Dashboard info failed"
 msgstr "Dashboard info failed"
 
@@ -1508,6 +1550,12 @@ msgstr "Unknown source"
 
 msgid "traffic_unavailable"
 msgstr "traffic_unavailable"
+
+msgid "The TTL adapter gave no valid reply"
+msgstr "The TTL adapter gave no valid reply"
+
+msgid "Invalid TTL"
+msgstr "Invalid TTL"
 
 msgid "Request too large"
 msgstr "Request too large"
@@ -1637,3 +1685,12 @@ msgstr "Lock cache unavailable"
 
 msgid "No serving cell to lock to"
 msgstr "No serving cell to lock to"
+
+msgid "The TTL setting could not be read"
+msgstr "The TTL setting could not be read"
+
+msgid "The TTL could not be set"
+msgstr "The TTL could not be set"
+
+msgid "Unknown TTL operation"
+msgstr "Unknown TTL operation"

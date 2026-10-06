@@ -22,6 +22,7 @@
 #                     in the package runtime directory.
 #   at_history        that history, raw text.
 #   lang_get, lang_set  LuCI's languages and the lang extra (unisoc-modem/languages, mu300-extra)
+#   ttl_get, ttl_set value  the TTL of mobile data (unisoc-modem/ttl, mu300-ttl); value off or 1-255
 #
 # The AT terminal's whole wait is capped below the 30 s endpoint limit (AT_LOCK_WAIT
 # for the channel lock plus AT_BUDGET for the answer, mu300-at's MU300_AT_BUDGET),
@@ -521,6 +522,18 @@ m_forward_test() { setsid "$DASH/sms-forward" test-run >/dev/null 2>&1 & printf 
 m_traffic_get() { ubus -t 3 call unisoc.traffic get 2>/dev/null || printf '{"error":"traffic_unavailable"}\n'; }
 m_traffic_set() { ubus -t 5 call unisoc.traffic set "$INPUT" 2>/dev/null || printf '{"ok":0,"error":"traffic_unavailable"}\n'; }
 
+# ---------------------------------------------------------------- TTL
+# The TTL page: mu300-ttl through the adapter, which checks the value again
+TTLA=${MU300_TTL_BIN:-$DASH/ttl}
+m_ttl_get() { reply_obj "$("$TTLA" get 2>/dev/null)" 'The TTL adapter gave no valid reply'; }
+m_ttl_set() {
+    local value
+    inp '@.value'; value=$V
+    allowed "$value" '(off|[1-9][0-9]{0,2})' || { refuse 'Invalid TTL'; return; }
+    [ "$value" = off ] || [ "$value" -le 255 ] || { refuse 'Invalid TTL'; return; }
+    reply_obj "$("$TTLA" set "$value" 2>/dev/null)" 'The TTL adapter gave no valid reply'
+}
+
 do_list() {
     cat <<EOF
 {
@@ -548,7 +561,9 @@ do_list() {
 	"usb_net_list": { },
 	"usb_net_add": { "iface": "String" },
 	"lang_get": { },
-	"lang_set": { "op": "String", "codes": "String", "source": "String" }
+	"lang_set": { "op": "String", "codes": "String", "source": "String" },
+	"ttl_get": { },
+	"ttl_set": { "value": "String" }
 }
 EOF
 }
@@ -606,6 +621,8 @@ call)
         usb_net_add)  run_m usb_net_add  m_usb_net_add ;;
         lang_get)     run_m lang_get     m_lang_get ;;
         lang_set)     run_m lang_set     m_lang_set ;;
+        ttl_get)      run_m ttl_get      m_ttl_get ;;
+        ttl_set)      run_m ttl_set      m_ttl_set ;;
         *)            refuse 'No such method' ;;
     esac
     ;;

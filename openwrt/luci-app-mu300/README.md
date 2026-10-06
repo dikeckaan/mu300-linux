@@ -7,6 +7,8 @@ dashboard, live radio readings, persistent network/band/cell/EN-DC locks, a
 guarded AT terminal and an SMS UI.
 The Device Management page controls USB role and gadget network policy, and
 lists host-side USB network adapters for optional attachment to the LAN bridge.
+The TTL page (Cellular) sets the TTL of everything that leaves through mobile data
+(`mu300-ttl`, through the `unisoc-modem/ttl` adapter).
 
 The dashboard follows LuCI's selected language. Its colors follow Aurora's existing
 tokens when present, or the official Bootstrap theme's light/dark tokens.

@@ -544,6 +544,20 @@ at() {
         self.assertFalse([c for c in cmds if c.startswith('sipa-dele-start')], cmds)
         self.assertIn('AT+CGACT=1,1', cmds)
 
+    def test_up_applies_the_ttl(self):
+        """Every bring-up (netifd, the watchdog's reconnect) re-applies mu300-ttl's rule: the tc backend's filters
+        belong to the interface. Its output never reaches netifd's parser, and its failure fails nothing."""
+        env = dict(MU300_NETIFD=1, MU300_AT_DEV='/dev/null', MU300_URC_LOG=self.tmp / 'none', MU300_CFUN_WAIT=0,
+                   CEREG='+CEREG: 2,1,"1A2B","0123ABCD",7', MU300_TTL_CMD=self.stubs / 'ttl')
+        for rc in (0, 1):
+            self.stub('ttl', f'echo "$*" >> "$STUBLOG/ttl.log"; echo noise; echo err >&2; exit {rc}')
+            (self.tmp / 'ttl.log').unlink(missing_ok=True)
+            r, _ = self.lib('up_locked', **env)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn('IP=10.1.2.3\n', r.stdout)
+            self.assertNotIn('noise', r.stdout)
+            self.assertEqual((self.tmp / 'ttl.log').read_text(), 'apply\n')
+
     def test_sipa_dele_only_with_the_module(self):
         """R35: a kernel without sipa-dele.ko (neither in /lib/modules/<release> nor under extra/) dials without the
         loader, and the boot timeline has no dial-sipa-dele mark; with the module (either place) the loader runs and
@@ -1720,6 +1734,7 @@ class Ttl(ShellTest):
         super().setUp()
         self.conf = self.tmp / 'etc' / 'ttl.conf'
         self.stub('id', 'echo 0')
+        self.stub('modprobe', 'exit 1')   # no act_pedit (the 5.4 kernel): the nft backend; test_ttl.TtlTc has tc
         # nft records its arguments, and the ruleset it is given on stdin
         self.stub('nft', 'echo "$*" >> "$STUBLOG/nft.args"; [ "$1" = -f ] && cat >> "$STUBLOG/nft.in"; '
                          '[ "$1" = list ] && exit 1; exit 0')

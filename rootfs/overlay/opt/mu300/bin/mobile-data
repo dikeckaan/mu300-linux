@@ -608,6 +608,8 @@ up_locked() {
     # On OpenWrt this is undone a moment later - netifd turns IPv6 back on while it configures the interface -
     # so the proto handler repeats it after proto_send_update. Relay mode (v6_relay_ra) keeps it on instead.
     v6_relay_ra || { [ -n "$iid" ] || v6_off; }
+    # mu300-ttl's rule, again on every bring-up: its tc backend's filters belong to the interface (idempotent)
+    "${MU300_TTL_CMD:-/opt/mu300/bin/mu300-ttl}" apply >/dev/null 2>&1 || true
     if [ "${MU300_NETIFD:-0}" = 1 ]; then
         # OpenWrt: netifd (proto mu300cell) configures the address, routes, DNS and firewall itself
         printf 'IFACE=%s\nIP=%s\nPREFIX=%s\nDNS1=%s\nDNS2=%s\nIID6=%s\n' "$IFACE" "$ip4" "$prefix" "$dns1" "$dns2" "$iid"

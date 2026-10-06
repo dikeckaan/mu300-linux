@@ -21,6 +21,9 @@ msgstr "AT 终端"
 msgid "Adapter settings"
 msgstr "适配设置"
 
+msgid "TTL"
+msgstr "TTL"
+
 msgid "Device management"
 msgstr "设备管理"
 
@@ -1383,6 +1386,45 @@ msgstr "这会把当前周期的已用量设为输入值；每日与自然月记
 msgid "Saving the traffic pool settings…"
 msgstr "正在保存流量池设置…"
 
+msgid "Current setting"
+msgstr "当前设置"
+
+msgid "Fixed at %d"
+msgstr "固定为 %d"
+
+msgid "Not changed (default)"
+msgstr "未更改（默认）"
+
+msgid "Rule in force"
+msgstr "生效的规则"
+
+msgid "Flow offloading"
+msgstr "流量分载（flow offloading）"
+
+msgid "TTL of mobile data"
+msgstr "移动数据的 TTL"
+
+msgid "Every packet that leaves through mobile data gets this TTL (IPv6: hop limit). A phone or laptop behind the hotspot sends 64 (Windows: 128) and the device forwards it with one less, which is how an operator can tell tethered traffic apart."
+msgstr "经移动数据发出的每个数据包都会使用此 TTL（IPv6：跳数限制）。热点后面的手机或笔记本电脑发送 64（Windows：128），设备转发时会减一，运营商可以借此识别共享流量。"
+
+msgid "On this kernel the firewall fast-path is off while a TTL is set"
+msgstr "在此内核上，设置 TTL 期间防火墙快速路径处于关闭状态"
+
+msgid "Set %d"
+msgstr "设为 %d"
+
+msgid "Set"
+msgstr "设置"
+
+msgid "Enter a number from 1 to 255"
+msgstr "请输入 1 到 255 之间的数字"
+
+msgid "Turn off"
+msgstr "关闭"
+
+msgid "64 makes every packet leave like the device's own traffic"
+msgstr "64 使每个数据包都像设备自身的流量一样发出"
+
 msgid "Dashboard info failed"
 msgstr "获取仪表盘信息失败"
 
@@ -1508,6 +1550,12 @@ msgstr "未知的来源"
 
 msgid "traffic_unavailable"
 msgstr "流量统计服务不可用"
+
+msgid "The TTL adapter gave no valid reply"
+msgstr "TTL 适配器未返回有效回复"
+
+msgid "Invalid TTL"
+msgstr "无效的 TTL"
 
 msgid "Request too large"
 msgstr "请求过大"
@@ -1637,3 +1685,12 @@ msgstr "锁定缓存不可用"
 
 msgid "No serving cell to lock to"
 msgstr "没有可锁定的服务小区"
+
+msgid "The TTL setting could not be read"
+msgstr "无法读取 TTL 设置"
+
+msgid "The TTL could not be set"
+msgstr "无法设置 TTL"
+
+msgid "Unknown TTL operation"
+msgstr "未知的 TTL 操作"

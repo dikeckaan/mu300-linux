@@ -38,6 +38,8 @@ var callForwardSet = rpc.declare({ object: 'mu300dash', method: 'forward_set', p
 var callForwardTest = rpc.declare({ object: 'mu300dash', method: 'forward_test', expect: { '': {} } });
 var callTrafficGet = rpc.declare({ object: 'mu300dash', method: 'traffic_get', expect: { '': {} } });
 var callTrafficSet = rpc.declare({ object: 'mu300dash', method: 'traffic_set', params: [ 'payload' ], expect: { '': {} } });
+var callTtlGet = rpc.declare({ object: 'mu300dash', method: 'ttl_get', expect: { '': {} } });
+var callTtlSet = rpc.declare({ object: 'mu300dash', method: 'ttl_set', params: [ 'value' ], expect: { '': {} } });
 
 /* Mainland carriers by PLMN, for when COPS gives the numeric format. The names are messages: translated once, when
  * the module loads (a page's language does not change without a reload). */
@@ -624,6 +626,7 @@ return baseclass.extend({
 	callUsbGet: callUsbGet, callUsbSet: callUsbSet,
 	callUsbNetList: callUsbNetList, callUsbNetAdd: callUsbNetAdd,
 	callLangGet: callLangGet, callLangSet: callLangSet,
+	callTtlGet: callTtlGet, callTtlSet: callTtlSet,
 	carrierName: carrierName, qLevel: qLevel, qLevelLabel: qLevelLabel, qLabel: qLabel, qCol: qCol, qScore: qScore,
 	esc: esc, fmtBytes: fmtBytes, fmtTrafficBytes: fmtTrafficBytes, fmtRate: fmtRate, fmtUptime: fmtUptime, PLMN_CN: PLMN_CN,
 	injectCss: injectCss, v: v, set: set, spark: spark, neighborRows: neighborRows,

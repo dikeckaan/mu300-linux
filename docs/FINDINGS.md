@@ -2372,6 +2372,22 @@ Air, ten `ifdown wan; ifup wan` gave the WAN back in
   fix should re-derive it from the LAN).
 * **TTL and the flowtable (K28, R23)**: `mu300-ttl set 64` turned flow offloading off and the sipa_eth0 flowtable
   went (1 -> 0); `off` brought both back.
+* **TTL in tc keeps the flowtable (mainline)**: the nft rule sits in postrouting, which an offloaded flow never
+  reaches: `nf_flow_offload_ip_hook` (ingress of br-lan) rewrites the packet and hands it to `neigh_xmit` ->
+  `dev_queue_xmit` on sipa_eth0. `dev_queue_xmit` still runs clsact's egress hook (`sch_handle_egress`) before the
+  qdisc, for every packet whichever way it came, so a `matchall` filter there with `pedit ex munge ip ttl set N pipe
+  csum ip` (and `ip6 hoplimit set N`) rewrites offloaded and device-own traffic alike, and flow offloading can stay
+  on. Needs `NET_SCH_INGRESS` (clsact), `NET_CLS_ACT`, `NET_CLS_MATCHALL`, `NET_ACT_PEDIT` and `NET_ACT_CSUM`
+  (mu300-mainline.config: the last three are modules, loaded one by one - OpenWrt's kmodloader `modprobe` takes one
+  module per call) and a `tc` that has pedit's `ex` syntax (OpenWrt's `tc-tiny` 6.18, which sqm-scripts brings,
+  does). The 5.4 vendor kernel has no `act_pedit`: there mu300-ttl keeps the nft rule and turns offloading off.
+  matchall cannot replace a filter (`tc filter replace` answers EEXIST once one is there), so `apply` deletes its
+  own (prefs 10 and 11) and adds them again; the filters belong to each sipa_eth* (all 16 get them), and
+  mobile-data's bring-up calls `mu300-ttl apply`. Checked on the U30 Air (7.2.9, openwrt-luci): `set 64` put both
+  filters on every sipa_eth*, the counters grew with traffic (538 packets for a 1 MB download), `flow_offloading`
+  stayed 1 and no nft table was made; `set 65` changed the key to 0x41; the filters removed by hand came back with
+  `ifup wan`; `off` removed them all. The VPN was on during the check, so the forwarded LAN traffic left through
+  xray's own sockets rather than an offloaded flow.
 * **The panel**: every page (Status, Network locks, SMS, AT terminal, Adapter settings, Device management) in a
   browser set to English, German, Turkish and Chinese on both devices: no Chinese in English, German or Turkish, no
   string of the catalogs left in English in Turkish or Chinese, German shows English. Backend refusals (a bad
