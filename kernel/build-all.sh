@@ -55,10 +55,18 @@ fi
 echo -gb50db5b6224c > .scmversion
 M=kernel_modules/kernel5.4
 fetch /src/realme "$MODULES_REPO" "$MODULES_REV" $M/wcn/wlan/wlan_combo $M/wcn/bluetooth/driver $M/gpu/natt/mali
-[ -d /src/ext-wlan_combo ] || cp -r /src/realme/$M/wcn/wlan/wlan_combo /src/ext-wlan_combo
-[ -d /src/ext-sprdbt ] || cp -r /src/realme/$M/wcn/bluetooth/driver /src/ext-sprdbt
-# like build-wlan.sh does for Wi-Fi: the MU300 fixes of the Bluetooth driver, skipped when already applied
-(cd /src/ext-sprdbt && for p in /work/patches/sprdbt-*.patch; do patch -p1 --forward -s < "$p" || true; done)
+# The driver trees are the pristine copy plus exactly their patches, like the kernel above: a copy patched in place
+# cannot take a changed patch set (a second run found wlan_combo-pcie-post-init-retry neither applied nor reverted,
+# because a later patch had moved its lines), so the copy is remade whenever the patch files change.
+patched_copy() { # patched_copy DEST SOURCE PATCH-GLOB
+    local sum; sum=$(cat /work/patches/$3 | sha256sum | cut -d" " -f1)
+    [ "$(cat "$1/.mu300-patches" 2>/dev/null)" = "$sum" ] && return 0
+    rm -rf "$1" && cp -r "$2" "$1"
+    (cd "$1" && for p in /work/patches/$3; do patch -p1 -s -f < "$p"; done)
+    echo "$sum" > "$1/.mu300-patches"
+}
+patched_copy /src/ext-wlan_combo /src/realme/$M/wcn/wlan/wlan_combo 'wlan_combo-*.patch'
+patched_copy /src/ext-sprdbt /src/realme/$M/wcn/bluetooth/driver 'sprdbt-*.patch'
 [ -d /src/ext-mali ] || cp -r /src/realme/$M/gpu/natt/mali /src/ext-mali
 
 echo "==> kernel"
