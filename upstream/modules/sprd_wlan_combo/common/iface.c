@@ -1724,6 +1724,25 @@ static int iface_core_init(struct device *dev, struct sprd_priv *priv)
 		wiphy_err(wiphy, "failed to regitster wiphy(%d)!\n", ret);
 		goto out;
 	}
+#ifdef CONFIG_PM
+	/*
+	 * MU300: WoWLAN "any" on by default. Without a WoWLAN configuration cfg80211's wiphy_suspend() closes every
+	 * interface (cfg80211_leave_all), and the WCN PCI function, which suspends asynchronously, has usually taken
+	 * the bus down by then: CMD_CLOSE and CMD_DISCONNECT were dropped ("fail because bus done"), the firmware kept
+	 * them open, and the next close and open of Wi-Fi after the resume hit a firmware assert (mchn.c line 137)
+	 * that only a reboot cleared (FINDINGS 37). With a configuration the interfaces stay as they are; the
+	 * firmware is told about the sleep through the PCIe channel's power_notify, as before. "iw phy phy0 wowlan
+	 * disable" brings the old behaviour back. wiphy_unregister() frees it.
+	 */
+	if (!wiphy->wowlan_config) {
+		struct cfg80211_wowlan *wowlan = kzalloc(sizeof(*wowlan), GFP_KERNEL);
+
+		if (wowlan) {
+			wowlan->any = true;
+			wiphy->wowlan_config = wowlan;
+		}
+	}
+#endif
 
 	rtnl_lock();
 	wdev = sprd_add_iface(priv, "wlan%d", NL80211_IFTYPE_STATION, NULL);
