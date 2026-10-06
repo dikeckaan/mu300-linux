@@ -2397,3 +2397,77 @@ Air, ten `ifdown wan; ifup wan` gave the WAN back in
 * **LEDs (K38, K39, K68)**: not ported here. The F50's lamp states were measured with someone watching and are
   implemented by the f50-leds-fixes work (FINDINGS 34); the fork's boot chase, lamp switches and LED page
   follow that branch.
+
+### 37. System suspend
+
+Can mainline sleep the way Android idles - the AP asleep, the modem awake? Tested on F50-B (6.18.55, Ubuntu,
+USB-powered, the SIM without service: `+CEREG: 2,8`) on 2026-10-06 with the config change of branch
+`suspend-spike` (`CONFIG_SUSPEND`, `PM_DEBUG`, `PM_ADVANCED_DEBUG`, `PM_SLEEP_DEBUG`, `PM_WAKELOCKS`,
+`PM_AUTOSLEEP` - autosleep built, off - and the tick change below). Short answer: **yes, the firmware does it**;
+what stands in the way is three drivers and one config default.
+
+**The firmware.** `/sys/kernel/debug/psci` on the release kernel already says `SYSTEM_SUSPEND is supported`
+(PSCI v1.0 under the DT's `arm,psci-0.2`). The vendor 5.4 kernel has no platform suspend driver either; mainline's
+`psci_init_system_suspend()` registers `mem`. With the options: `/sys/power/state` = `freeze mem`,
+`/sys/power/mem_sleep` = `s2idle [deep]`.
+
+**Results** (`rtcwake -s 20`; `pm_test` stages first):
+
+| run | result |
+|---|---|
+| `freeze`, pm_test=freezer / `mem`, pm_test=devices | return after 5 s, everything works afterwards |
+| `mem`, pm_test=processors, **periodic tick** | **panic**: hard lockup on CPU1 after the CPUs came back, board restarted by itself |
+| one CPU offline/online, periodic tick, no suspend | the same panic: the CPU's timers never fire again |
+| `mem` processors / core, **NO_HZ_IDLE + HIGH_RES_TIMERS** | return after 5 s |
+| `freeze` (s2idle), Wi-Fi up | returns at once: the PCIe WAKE# irq calls `pm_wakeup_hard_event()` during noirq suspend |
+| s2idle, Wi-Fi up, PCIe `power/wakeup` disabled | **20 s** (1.08 s, a WAKE# wakeup, back to sleep, 18.97 s), RTC wake through the PMIC irq (23); USB network, Wi-Fi client, AT, Bluetooth all fine |
+| `mem` (PSCI SYSTEM_SUSPEND), Wi-Fi up | **returns after 0.43 s**: Marlin3 pulls WAKE# low right after its L2 entry; USB, Wi-Fi, AT, BT fine |
+| `mem`, Wi-Fi and BT closed | **19.94 s asleep**, RTC wake (IRQ 23); USB, AT, BT fine; **Wi-Fi does not come back** |
+| s2idle, Wi-Fi closed | 20 s; Wi-Fi does not come back either |
+
+So PSCI SYSTEM_SUSPEND enters and returns, the DDR content survives, the CPUs come back, and the modem keeps
+running across it (AT answers at once, `sprd-mpm` sees its channels awake, no modem restart). No callback failed
+(`suspend_stats`: 0 failures in every run) and no `Call trace` outside the two panics.
+
+**The tick.** allnoconfig leaves `HZ_PERIODIC` (250 Hz) without high-resolution timers. cpuidle's power-down
+states stop the local timer, so `cpuidle_register_driver()` puts every CPU into the *periodic* broadcast once
+(`tick_broadcast_mask: ff`, all `arch_sys_timer` shut down, the `sprd_timer` IPIs the tick to all eight CPUs).
+`tick_broadcast_offline()` takes a CPU out of that mask and nothing puts it back when it comes online; without
+`TICK_ONESHOT`, `tick_broadcast_enter()` still lets it into the power-down state, and it never gets a timer
+interrupt again (`arch_timer` count frozen, `taskset -c 7 sleep 1` never returns, the buddy watchdog panics
+~30 s later). Suspend takes CPUs 1-7 down and up, so it hit this every time. `NO_HZ_IDLE` + `HIGH_RES_TIMERS`
+(arm64's defconfig) gives the one-shot broadcast that is armed on every idle entry: hotplug and suspend work.
+It also stops waking all eight CPUs 250 times a second at idle; its effect on idle power was not measured here.
+
+**What broke, and needs work before suspend is usable:**
+
+* **PCIe WAKE# (pcie-sprd).** The handler calls `pm_wakeup_hard_event()` unconditionally, and Marlin3 asserts
+  WAKE# within 0-2 s of every L2 entry. With wakeup enabled s2idle aborts at once; `mem` wakes in hardware
+  (the EIC line is a wake source for the firmware) whatever the kernel says. Needed: honour
+  `device_may_wakeup()`, and find out why the chip asks for the host (the vendor's WCN suspend handshake -
+  `sprd_ep_suspend` only does `pci_enable_wake(D3hot)` - or a pending event).
+* **Wi-Fi after a suspend while it was closed.** Opening wlan0 afterwards gets `CMD_DOWNLOAD_INI ... UNKNOWN_ERROR`
+  and a firmware assert (`WCN Assert in mchn.c line 137 ... get_wcn_bus_ops, chn10`); only a reboot recovers.
+  wlan0 down/up without a suspend works. The WCN resume (`sprd_ep_resume`, edma channels) does not restore what
+  a later open needs. While Wi-Fi is up, suspend and resume work (the driver disconnects and reconnects).
+* **The PMIC watchdog** (`ump9620-pmic-wdt`, 60 s, pinged by the watchdog core) has no suspend hook and keeps
+  counting while the AP sleeps: a suspend longer than ~60 s would reset the board. Not tried; every run here was
+  20 s. It needs stop-on-suspend (or the PM co-processor's ping, as on Android).
+* `ums9620-ipa-sys-pd: power off maybe failed` on every suspend (the IPA power domain), harmless so far.
+* The USB gadget disconnects for the sleep (dwc3 suspend, `br-lan: port usb0 disabled`); ssh from the Mac
+  worked again after every resume.
+
+**Wake sources** with the options (`power/wakeup` enabled): gpio-keys (power, volume), the PMIC (spi4.0, which
+the RTC alarm, the power key and the other PMIC EIC lines go through), RTC/alarmtimer, fgu, PCIe RC and the
+Marlin3 function, SIPA (`enable_irq_wake` on its general and multi irqs). The modem mailbox irqs are
+`IRQF_NO_SUSPEND`, not wake-armed, and the mailbox driver masks its "no-wakeup" outbox from PM_SUSPEND_PREPARE on;
+a CP message marked wakeup makes `sprd-mpm` take a wakeup source, which ends s2idle. Proven: the RTC (IRQ 23).
+Not tested: the power key (needs a hand on it; it shares IRQ 23 with the RTC, so it should), a USB plug (the
+extcon/VBUS line is a PMIC EIC; dwc3 itself is not a wake source), an incoming SMS or data (the SIM had no
+service, and no mailbox interrupt arrived during any sleep).
+
+**Not measured:** power. The F50 has no battery; the U30 Air (fuel gauge) is where suspend's saving can be
+measured, unplugged.
+
+Logs of every run stayed on F50-B under `/root/susp/` (`*.log`, dmesg before/after, `/proc/interrupts`, the two
+panic records). F50-B was put back on the v2026.10.10 6.18 kernel afterwards.
