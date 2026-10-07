@@ -1,0 +1,1276 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ro\n"
+
+msgid "Status dashboard"
+msgstr "Panou de stare"
+
+msgid "Cellular"
+msgstr "Celular"
+
+msgid "Network locks"
+msgstr "Blocări de rețea"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "AT terminal"
+msgstr "Terminal AT"
+
+msgid "Adapter settings"
+msgstr "Setări adaptor"
+
+msgid "Device management"
+msgstr "Gestionare dispozitiv"
+
+msgid "Languages"
+msgstr "Limbi"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
+msgstr "Centru de control MU300: panou de stare, blocări de rețea, terminal AT și SMS"
+
+msgid "China Mobile"
+msgstr "China Mobile"
+
+msgid "China Unicom"
+msgstr "China Unicom"
+
+msgid "China Telecom"
+msgstr "China Telecom"
+
+msgid "China Broadnet"
+msgstr "China Broadnet"
+
+msgid "China Tietong"
+msgstr "China Tietong"
+
+msgid "Excellent"
+msgstr "Excelent"
+
+msgid "Good"
+msgstr "Bun"
+
+msgid "Fair"
+msgstr "Acceptabil"
+
+msgid "Poor"
+msgstr "Slab"
+
+msgid "Unknown"
+msgstr "Necunoscut"
+
+msgid "%d d %d h"
+msgstr "%d z %d h"
+
+msgid "%d h %d min"
+msgstr "%d h %d min"
+
+msgid "%d min"
+msgstr "%d min"
+
+msgid "No neighbor-cell data"
+msgstr "Nu există date despre celulele vecine"
+
+msgid "Locked"
+msgstr "Blocat"
+
+msgid "Lock"
+msgstr "Blocare"
+
+msgid "Unknown error"
+msgstr "Eroare necunoscută"
+
+msgid "Confirm"
+msgstr "Confirmare"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Cancel"
+msgstr "Anulare"
+
+msgid "New SMS · %s"
+msgstr "SMS nou · %s"
+
+msgid "Unknown number"
+msgstr "Număr necunoscut"
+
+msgid "Select"
+msgstr "Selectare"
+
+msgid "Basic"
+msgstr "De bază"
+
+msgid "Registration/signal"
+msgstr "Înregistrare/semnal"
+
+msgid "Bearer"
+msgstr "Purtător"
+
+msgid "Engineering mode"
+msgstr "Mod inginerie"
+
+msgid "AT command (↑↓ history, Enter to send)"
+msgstr "Comandă AT (↑↓ istoric, Enter pentru trimitere)"
+
+msgid "Send"
+msgstr "Trimitere"
+
+msgid "Clear screen"
+msgstr "Golire ecran"
+
+msgid "Ready."
+msgstr "Pregătit."
+
+msgid "Session history (click to reuse)"
+msgstr "Istoricul sesiunii (clic pentru reutilizare)"
+
+msgid "(no output)"
+msgstr "(fără ieșire)"
+
+msgid "Request failed"
+msgstr "Cererea a eșuat"
+
+msgid "(empty)"
+msgstr "(gol)"
+
+msgid "USB role"
+msgstr "Rol USB"
+
+msgid "Current role"
+msgstr "Rol curent"
+
+msgid "Switch USB role"
+msgstr "Comutare rol USB"
+
+msgid "Device mode"
+msgstr "Mod dispozitiv"
+
+msgid "Host mode"
+msgstr "Mod gazdă"
+
+msgid "Enable host mode at boot"
+msgstr "Activare mod gazdă la pornire"
+
+msgid "Apply role"
+msgstr "Aplicare rol"
+
+msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
+msgstr "Modul gazdă deconectează rețeaua USB și portul serial de pe acest port. F50 nu are baterie; accesul de administrare se poate pierde, iar un adaptor USB are de obicei nevoie de un hub alimentat."
+
+msgid "USB network mode"
+msgstr "Mod rețea USB"
+
+msgid "Network protocol"
+msgstr "Protocol de rețea"
+
+msgid "Apply duration"
+msgstr "Durata aplicării"
+
+msgid "Next reboot only"
+msgstr "Doar la următoarea repornire"
+
+msgid "Permanent"
+msgstr "Permanent"
+
+msgid "Enable selected protocol"
+msgstr "Activare protocol selectat"
+
+msgid "Save; apply after reboot"
+msgstr "Salvare; aplicare după repornire"
+
+msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
+msgstr "NCM este implicit. Windows nu suportă nativ ECM; RNDIS schimbă enumerarea. Cu Activare protocol selectat dezactivat, se salvează doar alegerea. Doar la următoarea repornire se aplică o singură dată, apoi revine la NCM."
+
+msgid "USB adapters"
+msgstr "Adaptoare USB"
+
+msgid "Refresh"
+msgstr "Reîmprospătare"
+
+msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
+msgstr "Disponibil doar în modul gazdă. Reîmprospătarea activează adaptoarele USB găsite; adăugarea la LAN salvează puntea și reîncarcă rețeaua."
+
+msgid "Unavailable"
+msgstr "Indisponibil"
+
+msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
+msgstr "Modul rețea USB nu este disponibil în modul gazdă; pornirea automată a modului gazdă dezactivează și pornirea automată a rețelei USB."
+
+msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
+msgstr "Modul gazdă deconectează imediat administrarea prin USB. F50 nu are baterie, iar perifericele pot necesita alimentare externă; asigurați-vă că există o altă cale de administrare."
+
+msgid "USB networking and serial will re-enumerate in device mode."
+msgstr "Rețeaua USB și portul serial vor fi reenumerate în modul dispozitiv."
+
+msgid "Switch USB role?"
+msgstr "Comutați rolul USB?"
+
+msgid "Apply"
+msgstr "Aplicare"
+
+msgid "Switching USB role…"
+msgstr "Se comută rolul USB…"
+
+msgid "Switch failed: %s"
+msgstr "Comutarea a eșuat: %s"
+
+msgid "Management connection lost; reconnect to confirm the USB role."
+msgstr "Conexiunea de administrare s-a pierdut; reconectați-vă pentru a confirma rolul USB."
+
+msgid "Switch request accepted; the USB connection may briefly disconnect."
+msgstr "Cererea de comutare a fost acceptată; conexiunea USB se poate întrerupe scurt."
+
+msgid "USB role applied"
+msgstr "Rol USB aplicat"
+
+msgid "Save USB network mode?"
+msgstr "Salvați modul rețea USB?"
+
+msgid "The network mode applies on the next reboot; USB management may need to reconnect."
+msgstr "Modul de rețea se aplică la următoarea repornire; administrarea prin USB poate necesita reconectare."
+
+msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
+msgstr "Se salvează doar selecția; cu protocolul selectat dezactivat, următoarea pornire folosește tot NCM implicit."
+
+msgid "Save"
+msgstr "Salvare"
+
+msgid "Saving USB network settings…"
+msgstr "Se salvează setările rețelei USB…"
+
+msgid "Settings saved"
+msgstr "Setări salvate"
+
+msgid "Save failed: %s"
+msgstr "Salvarea a eșuat: %s"
+
+msgid "Unable to confirm the role yet; reconnect and refresh the page."
+msgstr "Rolul nu poate fi confirmat încă; reconectați-vă și reîmprospătați pagina."
+
+msgid "Switch to host mode to see USB adapters."
+msgstr "Comutați la modul gazdă pentru a vedea adaptoarele USB."
+
+msgid "Scanning USB adapters…"
+msgstr "Se caută adaptoare USB…"
+
+msgid "No USB adapters found."
+msgstr "Nu s-au găsit adaptoare USB."
+
+msgid "Link connected"
+msgstr "Legătură conectată"
+
+msgid "No link; enable attempted"
+msgstr "Fără legătură; s-a încercat activarea"
+
+msgid "Added to LAN"
+msgstr "Adăugat la LAN"
+
+msgid "Add to LAN"
+msgstr "Adăugare la LAN"
+
+msgid "Add USB adapter to LAN?"
+msgstr "Adăugați adaptorul USB la LAN?"
+
+msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
+msgstr "Aceasta salvează configurația punții și reîncarcă rețeaua; conexiunile existente se pot întrerupe scurt."
+
+msgid "Add"
+msgstr "Adăugare"
+
+msgid "Adding USB adapter…"
+msgstr "Se adaugă adaptorul USB…"
+
+msgid "Add failed: %s"
+msgstr "Adăugarea a eșuat: %s"
+
+msgid "Modulation DL/UL"
+msgstr "Modulație DL/UL"
+
+msgid "Estimated from current MCS"
+msgstr "Estimată din MCS curent"
+
+msgid "MCS DL/UL"
+msgstr "MCS DL/UL"
+
+msgid "BLER DL/UL"
+msgstr "BLER DL/UL"
+
+msgid "Link & traffic"
+msgstr "Legătură și trafic"
+
+msgid "Download rate"
+msgstr "Viteză descărcare"
+
+msgid "Upload rate"
+msgstr "Viteză încărcare"
+
+msgid "Total received"
+msgstr "Total primit"
+
+msgid "Total sent"
+msgstr "Total trimis"
+
+msgid "Session duration"
+msgstr "Durata sesiunii"
+
+msgid "Registration"
+msgstr "Înregistrare"
+
+msgid "Bandwidth"
+msgstr "Lățime de bandă"
+
+msgid "AMBR DL/UL"
+msgstr "AMBR DL/UL"
+
+msgid "Wi-Fi · LAN · Device · SIM"
+msgstr "Wi-Fi · LAN · Dispozitiv · SIM"
+
+msgid "CPU usage"
+msgstr "Utilizare CPU"
+
+msgid "Memory"
+msgstr "Memorie"
+
+msgid "Storage"
+msgstr "Stocare"
+
+msgid "Battery"
+msgstr "Baterie"
+
+msgid "Channel"
+msgstr "Canal"
+
+msgid "Encryption"
+msgstr "Criptare"
+
+msgid "Hidden SSID"
+msgstr "SSID ascuns"
+
+msgid "Country"
+msgstr "Țară"
+
+msgid "AP status"
+msgstr "Stare AP"
+
+msgid "USB network"
+msgstr "Rețea USB"
+
+msgid "Connection tracking"
+msgstr "Urmărire conexiuni"
+
+msgid "LAN address"
+msgstr "Adresă LAN"
+
+msgid "Wi-Fi clients"
+msgstr "Clienți Wi-Fi"
+
+msgid "DHCP leases"
+msgstr "Alocări DHCP"
+
+msgid "Device model"
+msgstr "Model dispozitiv"
+
+msgid "System"
+msgstr "Sistem"
+
+msgid "Modem"
+msgstr "Modem"
+
+msgid "Carrier"
+msgstr "Operator"
+
+msgid "Module"
+msgstr "Modul"
+
+msgid "Firmware"
+msgstr "Firmware"
+
+msgid "Show SIM identifiers"
+msgstr "Afișare identificatori SIM"
+
+msgid "Quick controls"
+msgstr "Comenzi rapide"
+
+msgid "Data connection"
+msgstr "Conexiune de date"
+
+msgid "Cellular radio"
+msgstr "Radio celular"
+
+msgid "Wi-Fi hotspot"
+msgstr "Hotspot Wi-Fi"
+
+msgid "Restart modem"
+msgstr "Repornire modem"
+
+msgid "Restart device"
+msgstr "Repornire dispozitiv"
+
+msgid "Switch to Android"
+msgstr "Comutare la Android"
+
+msgid "Neighbor cells"
+msgstr "Celule vecine"
+
+msgid "RAT/Band"
+msgstr "RAT/Bandă"
+
+msgid "Frequency"
+msgstr "Frecvență"
+
+msgid "Running %s…"
+msgstr "Se rulează %s…"
+
+msgid "Started in background: %s"
+msgstr "Pornit în fundal: %s"
+
+msgid "Done: %s"
+msgstr "Finalizat: %s"
+
+msgid "Failed: %s"
+msgstr "Eșuat: %s"
+
+msgid "Disconnecting data…"
+msgstr "Se deconectează datele…"
+
+msgid "Connecting data…"
+msgstr "Se conectează datele…"
+
+msgid "Turn off cellular radio"
+msgstr "Oprire radio celular"
+
+msgid "Cellular connectivity will be interrupted."
+msgstr "Conectivitatea celulară va fi întreruptă."
+
+msgid "Turn on cellular radio"
+msgstr "Pornire radio celular"
+
+msgid "The SFUN power-on sequence will run (up to about 1 minute)."
+msgstr "Se va rula secvența de pornire SFUN (până la aproximativ 1 minut)."
+
+msgid "Cellular connectivity may stop for 1–2 minutes."
+msgstr "Conectivitatea celulară se poate opri timp de 1–2 minute."
+
+msgid "Restart the entire device"
+msgstr "Repornirea întregului dispozitiv"
+
+msgid "All connections will be interrupted."
+msgstr "Toate conexiunile vor fi întrerupte."
+
+msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
+msgstr "Următoarea pornire va intra în Android, iar dispozitivul repornește acum. Această pagină de administrare și partajarea celulară se vor deconecta."
+
+msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
+msgstr "Pentru a reveni la OpenWrt, rulați mu300-next-boot linux în Android și reporniți."
+
+msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
+msgstr "Sau nu faceți nimic: după cinci porniri care nu se finalizează, revine automat."
+
+msgid "Switch and reboot"
+msgstr "Comutare și repornire"
+
+msgid "Preparing Android boot and rebooting…"
+msgstr "Se pregătește pornirea Android și se repornește…"
+
+msgid "Hide SIM identifiers"
+msgstr "Ascundere identificatori SIM"
+
+msgid "Lock cell %s?"
+msgstr "Blocați celula %s?"
+
+msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
+msgstr "Stiva radio va reporni (SFUN); serviciul celular se va opri aproximativ 30 de secunde."
+
+msgid "Locking %s in the background, about 30 seconds"
+msgstr "Se blochează %s în fundal, aproximativ 30 de secunde"
+
+msgid "Locked %s in the background; the status will refresh shortly"
+msgstr "%s blocat în fundal; starea se va reîmprospăta în curând"
+
+msgid "Lock failed: %s"
+msgstr "Blocarea a eșuat: %s"
+
+msgid "Uptime %s"
+msgstr "Timp de funcționare %s"
+
+msgid "Radio off"
+msgstr "Radio oprit"
+
+msgid "No response"
+msgstr "Niciun răspuns"
+
+msgid "%s · Signal %s %s/10"
+msgstr "%s · Semnal %s %s/10"
+
+msgid "%s · Signal %s"
+msgstr "%s · Semnal %s"
+
+msgid "Anchor B%s"
+msgstr "Ancoră B%s"
+
+msgid "No serving cell"
+msgstr "Nicio celulă de servire"
+
+msgid "Not registered"
+msgstr "Neînregistrat"
+
+msgid "Registered"
+msgstr "Înregistrat"
+
+msgid "Searching"
+msgstr "Se caută"
+
+msgid "Registration denied"
+msgstr "Înregistrare refuzată"
+
+msgid "Registered (roaming)"
+msgstr "Înregistrat (roaming)"
+
+msgid "Emergency only"
+msgstr "Doar urgențe"
+
+msgid "Status %s"
+msgstr "Stare %s"
+
+msgid "LTE anchor"
+msgstr "Ancoră LTE"
+
+msgid "LTE link"
+msgstr "Legătură LTE"
+
+msgid "Hidden"
+msgstr "Ascuns"
+
+msgid "No"
+msgstr "Nu"
+
+msgid "Running"
+msgstr "Rulează"
+
+msgid "Not running"
+msgstr "Nu rulează"
+
+msgid "Connected"
+msgstr "Conectat"
+
+msgid "Disconnected"
+msgstr "Deconectat"
+
+msgid "%s entries"
+msgstr "%s intrări"
+
+msgid "%s clients"
+msgstr "%s clienți"
+
+msgid "Recent DHCP leases"
+msgstr "Alocări DHCP recente"
+
+msgid "%d h"
+msgstr "%d h"
+
+msgid "Board"
+msgstr "Placă"
+
+msgid "No temperature readings"
+msgstr "Nu există citiri de temperatură"
+
+msgid "Cluster %d"
+msgstr "Cluster %d"
+
+msgid "Total %s · free %s"
+msgstr "Total %s · liber %s"
+
+msgid "charging %s W"
+msgstr "se încarcă cu %s W"
+
+msgid "charging"
+msgstr "se încarcă"
+
+msgid "drawing %s W"
+msgstr "consumă %s W"
+
+msgid "not charging"
+msgstr "nu se încarcă"
+
+msgid "on battery"
+msgstr "pe baterie"
+
+msgid "full"
+msgstr "plină"
+
+msgid "USB in %s W"
+msgstr "intrare USB %s W"
+
+msgid "Online"
+msgstr "Online"
+
+msgid "AT adapter unavailable"
+msgstr "Adaptor AT indisponibil"
+
+msgid "Saved"
+msgstr "Salvat"
+
+msgid "Management connection lost"
+msgstr "Conexiunea de administrare s-a pierdut"
+
+msgid "Installing the language pack…"
+msgstr "Se instalează pachetul de limbi…"
+
+msgid "The language pack is installed"
+msgstr "Pachetul de limbi este instalat"
+
+msgid "The language pack could not be installed"
+msgstr "Pachetul de limbi nu a putut fi instalat"
+
+msgid "Upload failed: %s"
+msgstr "Încărcarea a eșuat: %s"
+
+msgid "Language of the browser"
+msgstr "Limba browserului"
+
+msgid "Language of the web interface"
+msgstr "Limba interfeței web"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "Engleza, turca și chineza vin cu sistemul; pachetul de limbi le adaugă pe celelalte."
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "Aceeași setare se află în Sistem > Sistem > Limba și stilul interfeței."
+
+msgid "Language pack"
+msgstr "Pachet de limbi"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "Pachetul de limbi (mu300-extra-lang.tar.gz, aproximativ 2 MB) adaugă LuCI în încă aproximativ 40 de limbi și acest panou în 29 dintre ele. Descărcați-l din versiunea acestui sistem sau încărcați fișierul de pe pagina versiunii când dispozitivul nu are internet."
+
+msgid "Download from the release"
+msgstr "Descărcare din versiune"
+
+msgid "Upload the file…"
+msgstr "Încărcare fișier…"
+
+msgid "Release"
+msgstr "Versiune"
+
+msgid "Enable all"
+msgstr "Activare toate"
+
+msgid "Disable all"
+msgstr "Dezactivare toate"
+
+msgid "Remove the language pack"
+msgstr "Eliminare pachet de limbi"
+
+msgid "Remove the language pack?"
+msgstr "Eliminați pachetul de limbi?"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "Limbile sale dispar din listă; o pagină într-una dintre ele trece la engleză."
+
+msgid "Remove"
+msgstr "Eliminare"
+
+msgid "Disable"
+msgstr "Dezactivare"
+
+msgid "Enable"
+msgstr "Activare"
+
+msgid "LuCI and this panel"
+msgstr "LuCI și acest panou"
+
+msgid "LuCI only"
+msgstr "Doar LuCI"
+
+msgid "Enabled"
+msgstr "Activat"
+
+msgid "Disabled"
+msgstr "Dezactivat"
+
+msgid "Language"
+msgstr "Limbă"
+
+msgid "Code"
+msgstr "Cod"
+
+msgid "Translated"
+msgstr "Tradus"
+
+msgid "State"
+msgstr "Stare"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "Traducerile proprii ale LuCI provin din OpenWrt. Traducerile acestui panou, cu excepția turcei și chinezei, sunt traduceri automate (AI); corecturile sunt binevenite."
+
+msgid "Automatic"
+msgstr "Automat"
+
+msgid "4G only"
+msgstr "Doar 4G"
+
+msgid "Serving network"
+msgstr "Rețea de servire"
+
+msgid "Network mode · EN-DC"
+msgstr "Mod rețea · EN-DC"
+
+msgid "Refresh lock status"
+msgstr "Reîmprospătare stare blocări"
+
+msgid "Apply at startup"
+msgstr "Aplicare la pornire"
+
+msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
+msgstr "Dezactivarea opțiunii oprește doar reaplicarea la următoarea pornire; setările salvate pentru modul de rețea, EN-DC, bandă și celulă rămân."
+
+msgid "Band locking"
+msgstr "Blocare benzi"
+
+msgid "NR bands"
+msgstr "Benzi NR"
+
+msgid "LTE bands"
+msgstr "Benzi LTE"
+
+msgid "Apply NR bands"
+msgstr "Aplicare benzi NR"
+
+msgid "Apply LTE bands"
+msgstr "Aplicare benzi LTE"
+
+msgid "Neighbor cells and cell locking"
+msgstr "Celule vecine și blocare celulă"
+
+msgid "Lock current serving cell"
+msgstr "Blocare celulă de servire curentă"
+
+msgid "Unlock cell"
+msgstr "Deblocare celulă"
+
+msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
+msgstr "Aplicarea repornește stiva radio (SFUN) și întrerupe scurt serviciul celular. Setările sunt salvate și reaplicate de plugin după ce AT este pregătit, dacă Aplicare la pornire este activat. Un hook pre-radio al platformei poate reaplica fără repornire. Aplicați fără benzi selectate pentru a reveni la modul automat."
+
+msgid "Apply “%s”?"
+msgstr "Aplicați „%s”?"
+
+msgid "Applying %s in the background…"
+msgstr "Se aplică %s în fundal…"
+
+msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
+msgstr "Se aplică %s în fundal… (repornire SFUN și reînregistrare, aproximativ 30 de secunde)"
+
+msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
+msgstr "În coadă: altă blocare se aplică în timpul repornirii SFUN; aceasta va intra în vigoare după"
+
+msgid "Confirming the EN-DC status…"
+msgstr "Se confirmă starea EN-DC…"
+
+msgid "Confirming apply at startup…"
+msgstr "Se confirmă aplicarea la pornire…"
+
+msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Pornit în fundal: %s (repornire SFUN, aproximativ 30 de secunde); se citește starea…"
+
+msgid "Network mode: %s"
+msgstr "Mod rețea: %s"
+
+msgid "Disable EN-DC (NSA anchor)"
+msgstr "Dezactivare EN-DC (ancoră NSA)"
+
+msgid "Enable EN-DC (NSA anchor)"
+msgstr "Activare EN-DC (ancoră NSA)"
+
+msgid "Disable apply at startup"
+msgstr "Dezactivare aplicare la pornire"
+
+msgid "Enable apply at startup"
+msgstr "Activare aplicare la pornire"
+
+msgid "Reading the modem directly (a few seconds at most)…"
+msgstr "Se citește direct modemul (cel mult câteva secunde)…"
+
+msgid "Refreshed"
+msgstr "Reîmprospătat"
+
+msgid "Refresh failed"
+msgstr "Reîmprospătarea a eșuat"
+
+msgid "NR bands: back to automatic"
+msgstr "Benzi NR: înapoi la automat"
+
+msgid "NR band lock: %s"
+msgstr "Blocare benzi NR: %s"
+
+msgid "LTE bands: back to automatic"
+msgstr "Benzi LTE: înapoi la automat"
+
+msgid "LTE band lock: %s"
+msgstr "Blocare benzi LTE: %s"
+
+msgid "Remove the %s cell lock"
+msgstr "Eliminare blocare celulă %s"
+
+msgid "The radio stack will restart (SFUN), taking about 30 seconds."
+msgstr "Stiva radio va reporni (SFUN), durând aproximativ 30 de secunde."
+
+msgid "Removing the %s cell lock…"
+msgstr "Se elimină blocarea celulei %s…"
+
+msgid "Unlock failed: %s"
+msgstr "Deblocarea a eșuat: %s"
+
+msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Deblocare pornită în fundal (repornire SFUN, aproximativ 30 de secunde); se citește starea…"
+
+msgid "Locking %s in the background…"
+msgstr "Se blochează %s în fundal…"
+
+msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "%s blocat în fundal (repornire SFUN, aproximativ 30 de secunde); se citește starea…"
+
+msgid "No serving-network data"
+msgstr "Nu există date despre rețeaua de servire"
+
+msgid "NR serving cell"
+msgstr "Celulă de servire NR"
+
+msgid "Status confirmed"
+msgstr "Stare confirmată"
+
+msgid "Readback timed out; select “Refresh lock status”"
+msgstr "Citirea de verificare a expirat; selectați „Reîmprospătare stare blocări”"
+
+msgid "Applied (EN-DC does not require a radio-stack restart)"
+msgstr "Aplicat (EN-DC nu necesită repornirea stivei radio)"
+
+msgid "Apply at startup is on"
+msgstr "Aplicare la pornire este activat"
+
+msgid "Apply at startup is off"
+msgstr "Aplicare la pornire este dezactivat"
+
+msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Citirea stării EN-DC a expirat; folosiți „Reîmprospătare stare blocări” pentru confirmare"
+
+msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Citirea stării aplicării la pornire a expirat; folosiți „Reîmprospătare stare blocări” pentru confirmare"
+
+msgid "Locked cells"
+msgstr "Celule blocate"
+
+msgid "Unlock %s"
+msgstr "Deblocare %s"
+
+msgid "Automatic (%d supported)"
+msgstr "Automat (%d suportate)"
+
+msgid "%d locked: %s"
+msgstr "%d blocate: %s"
+
+msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
+msgstr "Configurați modul în care acest plugin se conectează la platforma OpenWrt Unisoc curentă. Modificările nu necesită editarea paginilor de panou, AT, blocări sau SMS."
+
+msgid "Platform adapter"
+msgstr "Adaptor de platformă"
+
+msgid "AT backend"
+msgstr "Backend AT"
+
+msgid "Auto-detect"
+msgstr "Detectare automată"
+
+msgid "atinout + serial port"
+msgstr "atinout + port serial"
+
+msgid "Custom adapter"
+msgstr "Adaptor personalizat"
+
+msgid "AT serial port"
+msgstr "Port serial AT"
+
+msgid "Custom AT adapter"
+msgstr "Adaptor AT personalizat"
+
+msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
+msgstr "Executabilul primește un timp limită în secunde și comanda AT completă, în această ordine. Trebuie să partajeze blocarea portului serial cu dialer-ul platformei."
+
+msgid "SMS adapter"
+msgstr "Adaptor SMS"
+
+msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
+msgstr "Implementați subcomenzile list, show, send, delete și sync; lăsați gol pentru a găsi automat mu300-sms."
+
+msgid "SMS pool directory"
+msgstr "Director pool SMS"
+
+msgid "Cellular logical interface"
+msgstr "Interfață logică celulară"
+
+msgid "Cellular IPv6 interface"
+msgstr "Interfață IPv6 celulară"
+
+msgid "Cellular network device"
+msgstr "Dispozitiv de rețea celular"
+
+msgid "Leave blank to detect from netifd"
+msgstr "Lăsați gol pentru detectare din netifd"
+
+msgid "LAN bridge"
+msgstr "Punte LAN"
+
+msgid "Wi-Fi device"
+msgstr "Dispozitiv Wi-Fi"
+
+msgid "USB device"
+msgstr "Dispozitiv USB"
+
+msgid "Maximum wait for AT readiness (seconds)"
+msgstr "Așteptare maximă pentru disponibilitatea AT (secunde)"
+
+msgid "Home dashboard refresh interval (seconds)"
+msgstr "Interval de reîmprospătare a panoului principal (secunde)"
+
+msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
+msgstr "Controlează doar rata de reîmprospătare a panoului principal; 0,5–60 de secunde. Redeschideți pagina principală după salvare pentru aplicare."
+
+msgid "Persistent state directory"
+msgstr "Director de stare persistentă"
+
+msgid "Recipient: number, e.g. 10086 or +86..."
+msgstr "Destinatar: număr, de ex. 10086 sau +86..."
+
+msgid "Sync from SIM"
+msgstr "Sincronizare din SIM"
+
+msgid "Clear local pool"
+msgstr "Golire pool local"
+
+msgid "Loading…"
+msgstr "Se încarcă…"
+
+msgid "Select a conversation on the left, or enter a number below to send."
+msgstr "Selectați o conversație din stânga sau introduceți un număr mai jos pentru a trimite."
+
+msgid "Message (Enter to send, Shift+Enter for newline)"
+msgstr "Mesaj (Enter pentru trimitere, Shift+Enter pentru rând nou)"
+
+msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
+msgstr "Trimiterea folosește AT+CMGS (mod PDU); reîncercați dacă canalul este ocupat. Pentru a șterge un mesaj, folosiți pictograma coș de pe bula acestuia."
+
+msgid "Syncing from the SIM in the background (AT+CMGL)…"
+msgstr "Se sincronizează din SIM în fundal (AT+CMGL)…"
+
+msgid "SIM sync started; the list refreshes in a few seconds."
+msgstr "Sincronizarea SIM a pornit; lista se reîmprospătează în câteva secunde."
+
+msgid "Clear local SMS pool"
+msgstr "Golire pool SMS local"
+
+msgid "Only local files will be deleted; messages on the SIM remain."
+msgstr "Vor fi șterse doar fișierele locale; mesajele de pe SIM rămân."
+
+msgid "Clear"
+msgstr "Golire"
+
+msgid "Delete this SMS"
+msgstr "Ștergeți acest SMS"
+
+msgid "Deletion cannot be undone."
+msgstr "Ștergerea nu poate fi anulată."
+
+msgid "Local only"
+msgstr "Doar local"
+
+msgid "Local + SIM"
+msgstr "Local + SIM"
+
+msgid "Delete failed"
+msgstr "Ștergerea a eșuat"
+
+msgid "Deleted (local + SIM)"
+msgstr "Șters (local + SIM)"
+
+msgid "Deleted (local only)"
+msgstr "Șters (doar local)"
+
+msgid "Enter both a number and a message."
+msgstr "Introduceți atât un număr, cât și un mesaj."
+
+msgid "Sending…"
+msgstr "Se trimite…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Trimis; lista se reîmprospătează în curând."
+
+msgid "Sending failed"
+msgstr "Trimiterea a eșuat"
+
+msgid "· %d messages, %d unread · %d conversations"
+msgstr "· %d mesaje, %d necitite · %d conversații"
+
+msgid "· %d messages · %d conversations"
+msgstr "· %d mesaje · %d conversații"
+
+msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
+msgstr "Pool-ul este gol. Mesajele primite și trimise apar aici, sau selectați „Sincronizare din SIM”."
+
+msgid "Me: %s"
+msgstr "Eu: %s"
+
+msgid "Delete"
+msgstr "Ștergere"
+
+msgid "Dashboard info failed"
+msgstr "Informațiile panoului au eșuat"
+
+msgid "Applying network locks: no live signal right now"
+msgstr "Se aplică blocările de rețea: momentan nu există semnal live"
+
+msgid "Live signal read failed"
+msgstr "Citirea semnalului live a eșuat"
+
+msgid "Unknown op"
+msgstr "Operație necunoscută"
+
+msgid "Invalid argument for this op"
+msgstr "Argument invalid pentru această operație"
+
+msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
+msgstr "Radioul este ocupat: apelarea sau watchdog-ul îl comută, reîncercați în curând"
+
+msgid "The action gave no valid reply"
+msgstr "Acțiunea nu a dat un răspuns valid"
+
+msgid "An AT command is one line of printable ASCII, at most 512 characters"
+msgstr "O comandă AT este un singur rând de ASCII imprimabil, cel mult 512 caractere"
+
+msgid "Must be an AT command"
+msgstr "Trebuie să fie o comandă AT"
+
+msgid "No \";\" command chaining"
+msgstr "Fără înlănțuirea comenzilor cu \";\""
+
+msgid "Denied: this command wedges the AT port until a reboot"
+msgstr "Refuzat: această comandă blochează portul AT până la o repornire"
+
+msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
+msgstr "Se aplică blocările de rețea: modemul repornește (aproximativ jumătate de minut), reîncercați în curând"
+
+msgid "The AT channel is busy; the command was not sent, try again"
+msgstr "Canalul AT este ocupat; comanda nu a fost trimisă, reîncercați"
+
+msgid "The modem did not answer in time; the command may still run, check before sending it again"
+msgstr "Modemul nu a răspuns la timp; comanda poate încă rula, verificați înainte de a o trimite din nou"
+
+msgid "The fresh parameter must be 0 or 1"
+msgstr "Parametrul fresh trebuie să fie 0 sau 1"
+
+msgid "Lock read failed"
+msgstr "Citirea blocărilor a eșuat"
+
+msgid "Unknown lock kind"
+msgstr "Tip de blocare necunoscut"
+
+msgid "Invalid value for this lock kind"
+msgstr "Valoare invalidă pentru acest tip de blocare"
+
+msgid "Invalid page"
+msgstr "Pagină invalidă"
+
+msgid "mu300-sms is not available (the SMS service is not installed or not running)"
+msgstr "mu300-sms nu este disponibil (serviciul SMS nu este instalat sau nu rulează)"
+
+msgid "No output"
+msgstr "Fără ieșire"
+
+msgid "Bad ID"
+msgstr "ID invalid"
+
+msgid "Read failed"
+msgstr "Citirea a eșuat"
+
+msgid "The number may only contain digits (and a leading +)"
+msgstr "Numărul poate conține doar cifre (și un + la început)"
+
+msgid "The message is empty"
+msgstr "Mesajul este gol"
+
+msgid "The message is too long (over 480 characters)"
+msgstr "Mesajul este prea lung (peste 480 de caractere)"
+
+msgid "The message contains a control character"
+msgstr "Mesajul conține un caracter de control"
+
+msgid "The sim parameter must be 0 or 1"
+msgstr "Parametrul sim trebuie să fie 0 sau 1"
+
+msgid "The USB adapter (device-usb) gave no valid reply"
+msgstr "Adaptorul USB (device-usb) nu a dat un răspuns valid"
+
+msgid "The auto parameter must be 0 or 1"
+msgstr "Parametrul auto trebuie să fie 0 sau 1"
+
+msgid "Invalid USB role"
+msgstr "Rol USB invalid"
+
+msgid "A USB role takes no scope"
+msgstr "Un rol USB nu acceptă domeniu"
+
+msgid "Invalid USB network mode"
+msgstr "Mod rețea USB invalid"
+
+msgid "Invalid USB network scope"
+msgstr "Domeniu rețea USB invalid"
+
+msgid "Unknown USB setting"
+msgstr "Setare USB necunoscută"
+
+msgid "Invalid interface name"
+msgstr "Nume de interfață invalid"
+
+msgid "The languages adapter gave no valid reply"
+msgstr "Adaptorul de limbi nu a dat un răspuns valid"
+
+msgid "Unknown language operation"
+msgstr "Operație de limbă necunoscută"
+
+msgid "Invalid language code"
+msgstr "Cod de limbă invalid"
+
+msgid "Invalid language request"
+msgstr "Cerere de limbă invalidă"
+
+msgid "Unknown source"
+msgstr "Sursă necunoscută"
+
+msgid "Request too large"
+msgstr "Cerere prea mare"
+
+msgid "The runtime directory is not safe; nothing was run"
+msgstr "Directorul de execuție nu este sigur; nu s-a rulat nimic"
+
+msgid "No such method"
+msgstr "Metodă inexistentă"
+
+msgid "Radio did not come up"
+msgstr "Radioul nu a pornit"
+
+msgid "Expected on or off"
+msgstr "Se așteaptă on sau off"
+
+msgid "VPN integration is not provided by this platform"
+msgstr "Integrarea VPN nu este oferită de această platformă"
+
+msgid "Dual-boot integration is not provided by this platform"
+msgstr "Integrarea dual-boot nu este oferită de această platformă"
+
+msgid "mu300-next-boot failed"
+msgstr "mu300-next-boot a eșuat"
+
+msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
+msgstr "Backend-ul AT nu a răspuns (radio oprit, modem în repornire sau adaptor indisponibil)"
+
+msgid "USB role adapter is not executable"
+msgstr "Adaptorul de rol USB nu este executabil"
+
+msgid "USB role adapter failed"
+msgstr "Adaptorul de rol USB a eșuat"
+
+msgid "USB role switch is unavailable"
+msgstr "Comutarea rolului USB nu este disponibilă"
+
+msgid "USB role switch failed"
+msgstr "Comutarea rolului USB a eșuat"
+
+msgid "USB role switch was refused by platform safety checks"
+msgstr "Comutarea rolului USB a fost refuzată de verificările de siguranță ale platformei"
+
+msgid "Cannot create USB boot settings directory"
+msgstr "Nu se poate crea directorul setărilor de pornire USB"
+
+msgid "Cannot write USB boot settings"
+msgstr "Nu se pot scrie setările de pornire USB"
+
+msgid "Cannot save USB boot settings"
+msgstr "Nu se pot salva setările de pornire USB"
+
+msgid "Invalid boot-auto value"
+msgstr "Valoare boot-auto invalidă"
+
+msgid "Device is the boot default; host auto-apply is the only persistent role"
+msgstr "Dispozitiv este implicit la pornire; aplicarea automată a modului gazdă este singurul rol persistent"
+
+msgid "Cannot save USB role policy"
+msgstr "Nu se poate salva politica rolului USB"
+
+msgid "Cannot disable USB network boot policy"
+msgstr "Nu se poate dezactiva politica de pornire a rețelei USB"
+
+msgid "Cannot commit USB role policy"
+msgstr "Nu se poate confirma politica rolului USB"
+
+msgid "USB network mode is unavailable in host role"
+msgstr "Modul rețea USB nu este disponibil în rolul gazdă"
+
+msgid "Disable host boot-auto before configuring USB network"
+msgstr "Dezactivați boot-auto pentru gazdă înainte de a configura rețeaua USB"
+
+msgid "Cannot save USB network policy"
+msgstr "Nu se poate salva politica rețelei USB"
+
+msgid "Cannot commit USB network policy"
+msgstr "Nu se poate confirma politica rețelei USB"
+
+msgid "USB host mode is required"
+msgstr "Este necesar modul gazdă USB"
+
+msgid "Not a USB network interface"
+msgstr "Nu este o interfață de rețea USB"
+
+msgid "LAN bridge device section was not found"
+msgstr "Secțiunea de dispozitiv a punții LAN nu a fost găsită"
+
+msgid "Cannot bring USB network interface up"
+msgstr "Nu se poate activa interfața de rețea USB"
+
+msgid "Cannot add interface to LAN bridge"
+msgstr "Nu se poate adăuga interfața la puntea LAN"
+
+msgid "Cannot save LAN bridge"
+msgstr "Nu se poate salva puntea LAN"
+
+msgid "Network reload failed"
+msgstr "Reîncărcarea rețelei a eșuat"
+
+msgid "Cannot attach USB interface to LAN bridge"
+msgstr "Nu se poate atașa interfața USB la puntea LAN"
+
+msgid "The language pack is not installed"
+msgstr "Pachetul de limbi nu este instalat"
+
+msgid "No language given"
+msgstr "Nu s-a specificat nicio limbă"
+
+msgid "The language could not be changed"
+msgstr "Limba nu a putut fi schimbată"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI nu oferă această limbă"
+
+msgid "No uploaded language pack"
+msgstr "Niciun pachet de limbi încărcat"
+
+msgid "An installation is already running"
+msgstr "O instalare rulează deja"
+
+msgid "The language pack could not be removed"
+msgstr "Pachetul de limbi nu a putut fi eliminat"
+
+msgid "Lock cache unavailable"
+msgstr "Cache-ul blocărilor nu este disponibil"
+
+msgid "No serving cell to lock to"
+msgstr "Nicio celulă de servire pe care să se blocheze"

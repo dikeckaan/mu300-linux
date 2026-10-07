@@ -1873,6 +1873,63 @@ Not covered:
 kernel logged an Oops and panicked. A chip powered down by `stop_marlin` under a live PCIe link could stall a bus
 access, though, so this fix may remove some of that class. Not shown.
 
+### 31o. KVM, and the module set a router needs
+The mainline config (allnoconfig plus `mu300-mainline.config`) never had `CONFIG_KVM`, so 6.18 and 7.2 had no
+`/dev/kvm`, although the firmware starts every CPU at EL2 (`CPU: All CPU(s) started at EL2` on all three kernels).
+The vendor 5.4 kernel has it: on F50-B, 5.4.254 logs `kvm [1]: Hyp mode initialized successfully` (nVHE: 5.4 runs
+the host at EL1). With `VIRTUALIZATION`/`KVM` built in, 6.18.55 and 7.2.9 log `kvm [1]: VHE mode initialized
+successfully` (IPA size limit 40 bits, GICv3 system registers, no GICv2 emulation: the stock DT has no GICV
+region). A static test program (`KVM_GET_API_VERSION` 12, a VM, one vCPU, four guest instructions whose store to an
+unmapped address must come back as an MMIO exit with the value 42) passed on 5.4, 6.18 and 7.2.
+
+The same change brought the modules people expect on a router or a small server, as modules so the Image stays
+small: netfilter (conntrack helpers, queue/log, the remaining nft expressions, ipset types, the xt matches and
+targets iptables-nft and Docker use through `nft_compat`, IPVS, br_netfilter), tunnels and links (bonding, team,
+dummy, ifb, macvtap, ipvlan, vxlan, geneve, VRF, IPIP/GRE/FOU, ip6 tunnels and GRE), IPsec (xfrm_user, ESP/AH/
+IPcomp, xfrm interfaces), L2TP, PPPoE, PPTP, MPPE, TLS, socket diagnostics, tc (HTB, HFSC, netem, fq, PIE, flower,
+u32, ematches, police/mirred/ctinfo/ct and the other actions), vhost-net/vsock, USB (QMI/MBIM/Huawei NCM/EEM
+modems, AQC111, printers, MediaTek/Ralink/Realtek Wi-Fi sticks with mac80211, btusb, snd-usb-audio, uinput/uhid),
+device mapper (crypt, verity, snapshot, thin), MD RAID 0/1/10, NBD, filesystems (btrfs, f2fs, XFS, ntfs3, HFS+,
+FUSE, ISO 9660/UDF, NFS client and server, CIFS, ksmbd), the crypto user API with XTS/CTR/CBC/GCM/CCM/
+ChaCha20-Poly1305 and the ARMv8 AES/GHASH engines, and binfmt_misc. Built in, because they cost little and
+container runtimes look for them: `/proc/config.gz` (check-config scripts read it without loading a module), PSI,
+the net_prio/net_cls/misc cgroups, CFS bandwidth, block throttling. What was built in stays built in: three defaults the new options would have turned into modules (SIT,
+the AX8817X and CDC subset USB drivers) were left out of the fragment. Not taken: legacy iptables/ebtables tables
+(`NETFILTER_XTABLES_LEGACY`: Ubuntu and OpenWrt run iptables over nftables), kexec (arm64 has it only with
+`PM_SLEEP_SMP`, not built here).
+
+| | 6.18.55 before | 6.18.55 after | 7.2.9 before | 7.2.9 after |
+|---|---|---|---|---|
+| Image (bytes) | 16 281 608 | 17 311 752 | 16 705 544 | 17 864 712 |
+| modules in the bundle | 31 (vendor) | 360 | 31 | 377 |
+| bundle (`mu300-kernel-*.tar.gz`) | 9.4 MB | 15.7 MB | 9.6 MB | 16.4 MB |
+
+The modules unpack to 20 MiB (6.18, debug sections stripped) under `/lib/modules/<release>`. Boot time on F50-B
+(Ubuntu 24.04, no SIM) did not move: kernel 5.50 s before, 5.43 s after (7.2: 5.42 s); userspace is 3 min 42 s
+both times, the mobile-data watch waiting for a modem without a SIM.
+
+Packaging: `build-modules.sh` now runs `modules_install` (stripped) and puts the kernel's own modules flat into
+`out/modules` next to the vendor ones, refusing a vendor module with an in-tree name. The layout on the device did
+not change: `mu300-update` already put the bundle's flat directory under `extra/` on Ubuntu, where depmod indexes
+every module there (`modprobe dm-crypt` pulls in `dm-mod`), and flat into `/lib/modules/<release>` on OpenWrt, where
+ubox's kmodloader resolves dependencies from each module's `depends=`. With a set this size it now replaces the
+modules of an earlier bundle of the same release instead of adding to them (a module a newer bundle dropped stayed
+loadable). The generic ramdisk still loads only `module-order.txt`. On F50-B, `modprobe` of 34 new modules
+(sch_cake, ntfs3, cdc_ether, cdc_mbim, dm-crypt, vhost_net, xfrm_user, esp4, pppoe, bonding, vxlan, btrfs, nfs,
+cifs, snd-usb-audio, btusb, mt7921u, br_netfilter, ip_vs, ifb, act_mirred, algif_skcipher and others) succeeded on
+6.18 and 7.2, a cake qdisc went onto a dummy link, and no Oops followed; USB network, the Wi-Fi client and the 5 GHz
+hotspot came up on both.
+
+OpenWrt's packages ask for `kmod-*` packages, which apk installs from the feed for OpenWrt's own kernel (6.12);
+`build-rootfs.sh` then deletes `lib/modules/6.*` as it always did, so apk's database is satisfied and the running
+kernel's modules (built in, or from the bundle) are what loads; the `/etc/modules.d` lists the kmods leave behind
+make kmodloader load the matching mainline modules at boot. The images now carry wireguard-tools and
+luci-proto-wireguard, PPTP and L2TP (xl2tpd), 6in4/6rd/DS-Lite, GRE and VXLAN with their LuCI protocols, ipset,
+and SQM (sqm-scripts, luci-app-sqm; cake is built in on mainline and on 5.4, ifb a module on both); apk resolves
+the whole set together (65 kmods). xl2tpd starts at boot and listens on UDP 1701, which fw4 closes on WAN. The
+images also carry the 6.18 modules from `upstream/out` (about 20 MiB unpacked, some 6 MB more in the tarball), so
+the switch to 6.18 needs nothing more. Not tried on an OpenWrt device in this round.
+
 ## Updating on the device
 
 ### 32. Old kernels, an idle IPA, and an update that ended in Android

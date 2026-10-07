@@ -129,19 +129,59 @@ T_BRD=$(temp_of board-thmzone)
 T_HOT=$(temp_hottest)
 
 # ------------------------------------------------------------------- power
-# The F50 has a battery; the V50 (same SoC) does not - a missing capacity file
-# simply means "no battery" and the page hides the tile. voltage_now is
-# microvolts on this PMIC; current_now microamps (negative = charging on some
-# firmwares, positive on others - the sign is reported raw and the page only
-# shows magnitude + charging state from `status`).
-P_CAP=$(rd /sys/class/power_supply/battery/capacity)
-P_STATUS=$(rd /sys/class/power_supply/battery/status)
-P_V=$(rd /sys/class/power_supply/battery/voltage_now)
-P_I=$(rd /sys/class/power_supply/battery/current_now)
-P_USB=$(rd /sys/class/power_supply/usb/online)
-case "$P_CAP" in ''|*[!0-9]*) P_PRESENT=0 ;; *) P_PRESENT=1 ;; esac
-P_V=$(n_or_null "$(awk -v v="$P_V" 'BEGIN{if(v+0>0)printf "%.2f",v/1000000}')")
-P_I=$(n_or_null "$(awk -v v="$P_I" 'BEGIN{if(v!="")printf "%d",v}')")
+# Only the U30 Air has a battery. Its fuel gauge is "battery" under 5.4 (the
+# vendor charger manager) and "sc27xx-fgu" under mainline (UMP9620, FINDINGS
+# 33d); any other supply of type Battery is taken after those. The F50 has
+# none, but the same PMIC: under mainline its fuel gauge appears with made-up
+# values, so an F50 reports no battery and the page hides the tile.
+# voltage_now is microvolts, current_now microamps: positive into the battery
+# under mainline (patch 0006 derives "Charging" from current > 20 mA); the
+# page goes by status first, the sign only for Unknown and the like. An install
+# whose ramdisk does not name the device reads as an F50 under mainline (no
+# charger_policy_service in that device tree): no tile, never a wrong one. The
+# charger (5.4: "usb"/"ac") says whether external power is on and, where it
+# exposes them, the input voltage and current; mainline has no charger driver.
+PSY=${MU300_POWER_SUPPLY_DIR:-/sys/class/power_supply}
+P_DIR=
+if [ "$(mu300-device 2>/dev/null)" != f50 ]; then
+    for d in "$PSY/battery" "$PSY/sc27xx-fgu" "$PSY"/*; do
+        [ -d "$d" ] || continue
+        [ "$(rd "$d/present")" = 0 ] && continue
+        case ${d##*/} in
+            battery|sc27xx-fgu) [ -r "$d/capacity" ] || [ "$(rd "$d/type")" = Battery ] || continue ;;
+            *) [ "$(rd "$d/type")" = Battery ] || continue ;;
+        esac
+        P_DIR=$d; break
+    done
+fi
+P_PRESENT=0 P_CAP= P_STATUS= P_V= P_I= P_USB= P_IN_V= P_IN_I=
+if [ -n "$P_DIR" ]; then
+    P_PRESENT=1
+    P_CAP=$(rd "$P_DIR/capacity")
+    P_STATUS=$(rd "$P_DIR/status")
+    P_V=$(rd "$P_DIR/voltage_now")
+    P_I=$(rd "$P_DIR/current_now")
+    # the first USB/Mains supply that is online, else whether any says 0
+    for d in "$PSY"/*; do
+        case $(rd "$d/type") in USB*|Mains) ;; *) continue ;; esac
+        o=$(rd "$d/online")
+        case $o in 1) ;; 0) P_USB=0; continue ;; *) continue ;; esac
+        P_USB=1
+        P_IN_V=$(rd "$d/voltage_now")
+        P_IN_I=$(rd "$d/current_now")
+        [ -n "$P_IN_I" ] || P_IN_I=$(rd "$d/input_current_now")
+        break
+    done
+fi
+case "$P_CAP" in ''|*[!0-9]*) P_CAP= ;; esac
+# volts with two decimals, microamps as an integer, watts = |V x I| with two
+power_v() { awk -v v="$1" 'BEGIN{if(v ~ /^-?[0-9]+$/ && v+0>0)printf "%.2f",v/1000000}'; }
+power_i() { awk -v v="$1" 'BEGIN{if(v ~ /^-?[0-9]+$/)printf "%d",v}'; }
+power_w() { awk -v v="$1" -v i="$2" 'BEGIN{if(v ~ /^-?[0-9]+$/ && i ~ /^-?[0-9]+$/ && v+0>0){w=v*i/1e12; if(w<0)w=-w; printf "%.2f",w}}'; }
+P_W=$(power_w "$P_V" "$P_I")
+P_IN_W=$(power_w "$P_IN_V" "$P_IN_I")
+P_V=$(power_v "$P_V"); P_I=$(power_i "$P_I")
+P_IN_V=$(power_v "$P_IN_V"); P_IN_I=$(power_i "$P_IN_I")
 
 # ------------------------------------------------------- interface counters
 net_obj() {  # net_obj IFACE -> {"rx":N,"tx":N,"up":0|1} or null
@@ -256,8 +296,9 @@ printf '"mem":{"total_kb":%s,"avail_kb":%s},' "$(n_or_null "$MEM_T")" "$(n_or_nu
 printf '"storage":{"total_kb":%s,"used_kb":%s,"avail_kb":%s},' "$(n_or_null "$DISK_T")" "$(n_or_null "$DISK_U")" "$(n_or_null "$DISK_A")"
 printf '"temps":{"soc":%s,"cpu":%s,"modem":%s,"board":%s,"hottest":%s},' \
     "$(f_or_null "$T_SOC")" "$(f_or_null "$T_CPU")" "$(f_or_null "$T_NR")" "$(f_or_null "$T_BRD")" "$(f_or_null "$T_HOT")"
-printf '"power":{"present":%d,"capacity":%s,"status":%s,"volt":%s,"ua":%s,"usb":%s},' \
-    "$P_PRESENT" "$(n_or_null "$P_CAP")" "$(qs "$P_STATUS")" "$P_V" "$P_I" "$(n_or_null "$P_USB")"
+printf '"power":{"present":%d,"capacity":%s,"status":%s,"volt":%s,"ua":%s,"w":%s,"usb":%s,"in_volt":%s,"in_ua":%s,"in_w":%s},' \
+    "$P_PRESENT" "$(n_or_null "$P_CAP")" "$(qs "$P_STATUS")" "$(n_or_null "$P_V")" "$(n_or_null "$P_I")" \
+    "$(n_or_null "$P_W")" "$(n_or_null "$P_USB")" "$(n_or_null "$P_IN_V")" "$(n_or_null "$P_IN_I")" "$(n_or_null "$P_IN_W")"
 printf '"net":{"mobile":%s,"sipa_eth0":%s,"brlan":%s,"wlan0":%s,"usb0":%s},' \
     "$(net_obj "$DATA_DEVICE")" "$(net_obj "$DATA_DEVICE")" "$(net_obj "$LAN_DEVICE")" "$(net_obj "$WIFI_DEVICE")" "$(net_obj "$USB_DEVICE")"
 printf '"wan":{"up":%d,"uptime":%s,"proto":%s,"apn":%s,"ip4":%s,"ip6":%s,"dns":%s},' \

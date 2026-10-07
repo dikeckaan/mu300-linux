@@ -11,7 +11,7 @@
 #   mu300-update clean            delete the kept <os>.old copies
 #   mu300-update notice           only look: a note for the login message and mu300-toolkit when a newer release is
 #                                 out (at boot and every 6 hours; nothing is installed without apply)
-# Installed extras (mu300-extra: the VPN engines) are updated with the release.
+# Installed extras (mu300-extra: the VPN engines, LuCI's languages) are updated with the release.
 #
 # How it works: the new filesystem is unpacked next to the old one as <os>.new on the Linux partition, your settings
 # and the vendor files are carried over, and only then are the directories swapped (<os> -> <os>.old, <os>.new ->
@@ -410,23 +410,24 @@ apply_one() {  # apply_one OS TAG
 
 # ---- extras -----------------------------------------------------------------------------------------------------
 # Optional parts that are not in the images: release assets mu300-extra-<name>.tar.gz (tools/make-extra.sh: ./name,
-# ./release, ./components, ./bin/...), installed on the Linux partition next to the systems, so both systems use
+# ./release, ./components, then ./bin/<programs>, or for lang ./languages and ./i18n/<catalogs>), installed on the Linux partition next to the systems, so both systems use
 # one copy and nothing that replaces a system touches it. mu300-extra is the command; the functions are here
 # because an update installs and refreshes them too, and the updater of the new release runs before the system
 # that has mu300-extra exists.
 EXTRA=$DISK/extra
-EXTRAS=vpn
+EXTRAS="vpn lang"
 VPN_ENGINES="xray hev-socks5-tunnel sing-box"
 extra_desc() {
     case $1 in
         vpn) echo "the VPN engines for mu300-vpn: Xray-core, hev-socks5-tunnel, sing-box (about 40 MB to download, 120 MB installed)" ;;
+        lang) echo "LuCI (the web interface) in 40 more languages, the MU300 panel in 29 of them; OpenWrt only (about 2 MB to download, 6 MB installed)" ;;
     esac
 }
 extra_asset() { echo "mu300-extra-$1.tar.gz"; }
 extra_known() { case " $EXTRAS " in *" $1 "*) return 0 ;; esac; return 1; }
 extra_installed() {
     for d in "$EXTRA"/*; do
-        [ -d "$d/bin" ] && printf '%s ' "${d##*/}"
+        { [ -d "$d/bin" ] || [ -d "$d/i18n" ]; } && printf '%s ' "${d##*/}"
     done
     return 0
 }
@@ -447,20 +448,131 @@ extra_put() {
     sync
 }
 
-# extra_unpack NAME TARBALL: install a downloaded (and verified) extra; the old one stays when anything is wrong
+# An extra holds plain files and directories only, under names of its own. It may come from a file someone uploaded
+# through the web page, not only from a verified release download, and tar implementations (GNU, busybox) list and
+# extract differently, so nothing rests on one check: the listing is checked before anything is unpacked (names,
+# and every entry's type), and the unpacked tree is checked again by what is really on disk (find: no link, device,
+# FIFO or socket, no file with a second name; for lang every path one of its own) before it is put in place.
+# extra_tar_ok TARBALL: the listing - each name relative, without a .. component; each entry a file or directory
+extra_tar_ok() {
+    _l=$(untar -tzf "$1") || return 1
+    [ -n "$_l" ] || return 1
+    ! printf '%s\n' "$_l" | LC_ALL=C grep -Eq -- '^/|(^|/)\.\.(/|$)' || return 1
+    _v=$(untar -tvzf "$1") || return 1
+    # one line per entry (a name with a newline makes a line that is not one), a file or directory each, and no
+    # link targets (GNU: "link to", "->"; busybox: "->")
+    [ "$(printf '%s\n' "$_v" | wc -l)" = "$(printf '%s\n' "$_l" | wc -l)" ] || return 1
+    ! printf '%s\n' "$_v" | cut -c1 | LC_ALL=C grep -vq '^[-d]$' || return 1
+    ! printf '%s\n' "$_v" | LC_ALL=C grep -Eq -- ' -> | link to ' || return 1
+}
+# extra_tree_ok NAME DIR: the unpacked tree, as it is on disk
+extra_tree_ok() {
+    # (find's own failure fails the check: its output is taken whole, not through a pipe)
+    _t=$(find "$2" ! -type f ! -type d) || return 1
+    [ -z "$_t" ] || return 1
+    _t=$(find "$2" -type f -exec ls -ld {} +) || return 1
+    [ -z "$(printf '%s\n' "$_t" | awk '$2 != 1')" ] || return 1
+    _t=$(cd "$2" && find .) || return 1
+    # the other extras: their four files and programs in bin/, nothing else (whatever a tar did to the names)
+    if [ "$1" != lang ]; then
+        ! printf '%s\n' "$_t" | LC_ALL=C grep -Evxq -- '\.|\./(name|release|components|manifest|bin|bin/[A-Za-z0-9._+-]+)'
+        return
+    fi
+    ! printf '%s\n' "$_t" | LC_ALL=C grep -Evxq -- "$LANG_ENTRY" || return 1
+    # the catalogs are files, never directories under a catalog's name
+    _t=$(find "$2/i18n" -mindepth 1 ! -type f) || return 1
+    [ -z "$_t" ]
+}
+# extra_manifest_ok NAME DIR: ./manifest (sha256sum lines, "HASH  ./path") lists every plain file of the tree but
+# itself, and each one has that hash. The lang extra must carry one; for the others it is checked when there is one
+# (extras from before it have none). With a download the manifest is covered by the release's SHA256SUMS, which
+# the whole tarball was checked against.
+extra_manifest_ok() {
+    _m=$2/manifest
+    [ -f "$_m" ] || { [ "$1" != lang ]; return; }
+    ! LC_ALL=C grep -Evxq -- '[0-9a-f]{64}  \./[A-Za-z0-9._+/-]+' "$_m" || return 1
+    _want=$(cut -c67- "$_m" | LC_ALL=C sort) || return 1
+    _have=$(cd "$2" && find . -type f ! -path ./manifest | LC_ALL=C sort) || return 1
+    [ -n "$_want" ] && [ "$_want" = "$_have" ] || return 1
+    (cd "$2" && sha256sum -c manifest >/dev/null 2>&1)
+}
+# extra_size_ok NAME TARBALL: unpacked, it fits (a small archive must not fill the Linux partition every system
+# lives on): at most 32 MB and 1000 entries for lang, 600 MB for the others. Counted by decompressing, which every
+# gzip does alike, not from a listing format.
+extra_size_ok() {
+    case $1 in lang) _max=$((32 << 20)) ;; *) _max=$((600 << 20)) ;; esac
+    _sz=$(gzip -dc < "$2" 2>/dev/null | head -c $((_max + 1)) | wc -c) || return 1
+    [ "$_sz" -le "$_max" ] || return 1
+    [ "$1" != lang ] || [ "$(untar -tzf "$2" | wc -l)" -le 1000 ]
+}
+# lang_tar_ok TARBALL: the lang extra holds only its four files and catalogs
+LANG_ENTRY='\.|\./|\./(name|release|components|languages|manifest|i18n/?|i18n/[a-z0-9-]+\.[a-z]{2,3}(-[a-z]{2})?\.lmo)'
+lang_tar_ok() {
+    _l=$(untar -tzf "$1") || return 1
+    [ -n "$_l" ] && ! printf '%s\n' "$_l" | LC_ALL=C grep -Evxq -- "$LANG_ENTRY"
+}
+# a language line of the lang extra: the uci key (LuCI's code, - as _), a tab, the name the list shows (no quote,
+# backslash, $, backquote, <, >, & or control character: it goes into /etc/config/luci, into JSON and into a page)
+# ./release: a tag
+EXTRA_RELEASE='[A-Za-z0-9._-]{1,40}'
+LANG_LINE='[a-z]{2,3}(_[a-z]{2})?	[^	"`$<>&\\'"'"'[:cntrl:]]{1,100}'
+
+# extra_unpack NAME TARBALL: install a downloaded (and verified) extra; the old one stays when anything is wrong.
+# The tarball is read once, into a directory only root can enter, and checked and unpacked from that copy: a file
+# swapped at TARBALL's path after the copy (a /tmp upload, a link planted there) changes nothing.
 extra_unpack() {
     case $1 in ''|*[!a-z0-9-]*) echo "extra: bad name '$1'" >&2; return 1 ;; esac
+    _in=$EXTRA/.$1.in
+    rm -rf "$_in"; mkdir -p "$EXTRA" && mkdir -m 700 "$_in" || return 1
+    if ! cat < "$2" > "$_in/x.tar.gz" 2>/dev/null; then
+        rm -rf "$_in"; echo "extra $1: $2 is not readable" >&2; return 1
+    fi
+    if ! extra_size_ok "$1" "$_in/x.tar.gz"; then
+        rm -rf "$_in"; echo "extra $1: $2 is too large unpacked" >&2; return 1
+    fi
+    if ! extra_tar_ok "$_in/x.tar.gz" || { [ "$1" = lang ] && ! lang_tar_ok "$_in/x.tar.gz"; }; then
+        rm -rf "$_in"; echo "extra $1: $2 is not a $1 extra (links, odd names or unexpected files in it)" >&2; return 1
+    fi
+    # unpacked into a new, empty directory only root can enter; it becomes the extra only after the checks
     _new=$EXTRA/.$1.new
-    rm -rf "$_new"; mkdir -p "$_new" || return 1
-    if ! untar -xzf "$2" -C "$_new" 2>/dev/null; then
+    rm -rf "$_new"; mkdir -m 700 "$_new" || { rm -rf "$_in"; return 1; }
+    # -o: owned by root (who unpacks), not by the ids in the archive
+    _ok=1; untar -xozf "$_in/x.tar.gz" -C "$_new" 2>/dev/null || _ok=
+    rm -rf "$_in"
+    if [ -z "$_ok" ]; then
         rm -rf "$_new"; echo "extra $1: $2 is not a readable tar.gz" >&2; return 1
+    fi
+    if ! extra_tree_ok "$1" "$_new"; then
+        rm -rf "$_new"; echo "extra $1: $2 unpacked to links or unexpected files; not installed" >&2; return 1
+    fi
+    if ! extra_manifest_ok "$1" "$_new"; then
+        rm -rf "$_new"; echo "extra $1: $2 does not match its manifest; not installed" >&2; return 1
+    fi
+    # modes are ours too: the disk is shared with Ubuntu's users and mounted without nosuid. Catalogs are plain
+    # read-only files; programs keep their execute bits, never set-id or writable by others.
+    chown -R 0:0 "$_new" 2>/dev/null
+    if [ "$1" = lang ]; then
+        find "$_new" -type d -exec chmod 755 {} + && find "$_new" -type f -exec chmod 644 {} +
+    else
+        chmod -R u-s,g-s,go-w "$_new"
+    fi || { rm -rf "$_new"; echo "extra $1: could not set its file modes" >&2; return 1; }
+    chmod 755 "$_new"
+    if ! LC_ALL=C grep -Eqx -- "$EXTRA_RELEASE" "$_new/release" 2>/dev/null || [ "$(wc -l < "$_new/release")" -ne 1 ]; then
+        rm -rf "$_new"; echo "extra $1: $2 has no valid release" >&2; return 1
     fi
     if [ "$(cat "$_new/name" 2>/dev/null)" != "$1" ]; then
         rm -rf "$_new"; echo "extra $1: $2 is not the $1 extra" >&2; return 1
     fi
     _n=0
-    for _f in "$_new"/bin/*; do [ -f "$_f" ] && [ -x "$_f" ] && _n=$((_n + 1)); done
-    if [ "$_n" = 0 ]; then rm -rf "$_new"; echo "extra $1: no programs in $2" >&2; return 1; fi
+    if [ "$1" = lang ]; then
+        for _f in "$_new"/i18n/*.lmo; do [ -f "$_f" ] && [ ! -L "$_f" ] && _n=$((_n + 1)); done
+        if [ "$_n" = 0 ] || ! [ -s "$_new/languages" ] || LC_ALL=C grep -Evxq -- "$LANG_LINE" "$_new/languages"; then
+            rm -rf "$_new"; echo "extra $1: no catalogs or no valid language list in $2" >&2; return 1
+        fi
+    else
+        for _f in "$_new"/bin/*; do [ -f "$_f" ] && [ -x "$_f" ] && _n=$((_n + 1)); done
+        if [ "$_n" = 0 ]; then rm -rf "$_new"; echo "extra $1: no programs in $2" >&2; return 1; fi
+    fi
     extra_put "$1" "$_new" || { rm -rf "$_new"; echo "extra $1: could not put it in place" >&2; return 1; }
 }
 
@@ -659,7 +771,10 @@ kernel_modules_into_systems() {  # kernel_modules_into_systems BUNDLE_DIR (unpac
     case $_krel in ''|*/*|.*) echo "boot: bad kernel release '$_krel' in the bundle" >&2; return 1 ;; esac
     for _os in $(installed_systems); do
         case $_os in ubuntu) _d=$DISK/$_os/lib/modules/$_krel/extra ;; *) _d=$DISK/$_os/lib/modules/$_krel ;; esac
-        mkdir -p "$_d" && cp "$1"/modules/*.ko "$_d/" || { echo "boot: installing the modules into $_os failed" >&2; return 1; }
+        # the set of the bundle replaces the one of an earlier bundle of this release: a module it no longer has
+        # would otherwise stay loadable (and the set is some 360 modules, 20 MiB, since FINDINGS 31o)
+        mkdir -p "$_d" && rm -f "$_d"/*.ko && cp "$1"/modules/*.ko "$_d/" ||
+            { echo "boot: installing the modules into $_os failed" >&2; return 1; }
         if [ "$_os" = ubuntu ]; then
             # what the kernel has built in (bundles from v2026.09.29 on): modprobe of a built-in driver then
             # succeeds, and depmod stops warning

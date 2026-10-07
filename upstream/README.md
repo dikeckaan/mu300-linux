@@ -37,6 +37,12 @@ The build stops on anything that drifts silently: a patch that neither applies n
 Kconfig does not take (unless listed in `config-ignored.txt`), a port edit whose anchor moved, or a module whose
 vermagic does not match the kernel. `tools/make-release.sh` packages the same bundle as `mu300-kernel-6.18.tar.gz`.
 
+The config is allnoconfig plus `mu300-mainline.config`: what the board and the boot need is built in, along with
+KVM (`/dev/kvm`; the CPUs start at EL2); what only matters once used - netfilter extras, tunnels, IPsec, tc,
+filesystems, USB modems/adapters/Wi-Fi sticks, device mapper - is a module. `build-modules.sh` installs the
+kernel's own modules (stripped) flat into `out/modules` next to the vendor ones, and the bundle ships them all;
+`mu300-update` indexes them on Ubuntu (depmod) and OpenWrt loads them by name (FINDINGS 31o).
+
 The bring-up path of old (hand-built image, `init-bringup`, `boot/flash-trial.sh`) still works for experiments:
 ```sh
 python3 upstream/wrap-image.py upstream/out/Image upstream/out/Image.lk

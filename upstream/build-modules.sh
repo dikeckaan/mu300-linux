@@ -1,5 +1,6 @@
 #!/bin/bash
-# Build the out-of-tree vendor modules (WCN) against the mainline tree built by build.sh.
+# Build the out-of-tree vendor modules (WCN, modem, Mali) against the mainline tree built by build.sh, and collect
+# the kernel's own modules next to them (upstream/out/modules, flat).
 # Run inside the mu300-mainline-build container: bash /work/build-modules.sh [module-dir...]
 set -eo pipefail
 KV=${KV:-6.18.55}
@@ -13,6 +14,19 @@ mkdir -p $OUT/modules
 [ $# -gt 0 ] || rm -f $OUT/modules/*.ko $OUT/modules/*.log
 # Module.symvers for the built-in exports (pcie-sprd etc.)
 make -C $K O=$O ARCH=arm64 -j"$(nproc)" modules > $O/modules.log 2>&1 || { tail -20 $O/modules.log; exit 1; }
+# the kernel's own modules (the =m options of mu300-mainline.config), stripped, flat next to the vendor ones: the
+# bundle and mu300-update keep one flat directory, which depmod (Ubuntu) and kmodloader (OpenWrt) both index
+rm -rf "$O/mod-install"
+make -C $K O=$O ARCH=arm64 INSTALL_MOD_PATH="$O/mod-install" INSTALL_MOD_STRIP=1 DEPMOD=true modules_install >> $O/modules.log 2>&1 ||
+    { tail -20 $O/modules.log; exit 1; }
+# the set of the previous run goes first: an option no longer =m leaves no module behind on a partial run
+if [ -f $O/modules.in-tree ]; then while read -r ko; do rm -f "$OUT/modules/$ko"; done < $O/modules.in-tree; fi
+find "$O/mod-install/lib/modules" -name '*.ko' -exec basename {} \; | sort > $O/modules.in-tree
+# one flat directory holds them all, and modprobe takes - and _ for the same: two modules of one name would shadow
+# each other
+tr - _ < $O/modules.in-tree | sort > $O/modules.in-tree.names
+[ -z "$(uniq -d $O/modules.in-tree.names)" ] || { echo "in-tree modules share a name: $(uniq -d $O/modules.in-tree.names)" >&2; exit 1; }
+find "$O/mod-install/lib/modules" -name '*.ko' -exec cp {} $OUT/modules/ \;
 extra=
 for m in $mods; do
     rm -rf /src/mod-build/$m && mkdir -p /src/mod-build && cp -r /work/modules/$m /src/mod-build/$m
@@ -30,6 +44,9 @@ for m in $mods; do
     [ "$m" = mali ] && margs="src=/src/mod-build/mali CONFIG_MALI_MIDGARD=m CONFIG_MALI_PLATFORM_NAME=qogirn6pro CONFIG_MALI_DEVFREQ=y CONFIG_DEVFREQ_THERMAL=y CONFIG_MALI_DEBUG=n CONFIG_MALI_FENCE_DEBUG=n BUILD=no"
     make -C $O ARCH=arm64 M=/src/mod-build/$m KBUILD_EXTRA_SYMBOLS="$extra" KCFLAGS="$kcflags" $margs -j"$(nproc)" modules 2>&1 | tee $OUT/modules/$m.log
     [ -f /src/mod-build/$m/Module.symvers ] && extra="$extra /src/mod-build/$m/Module.symvers"
-    find /src/mod-build/$m -name '*.ko' -exec cp {} $OUT/modules/ \;
+    for ko in $(find /src/mod-build/$m -name '*.ko'); do
+        ! echo "${ko##*/}" | tr - _ | grep -Fqx -f - $O/modules.in-tree.names || { echo "$m: ${ko##*/} has the name of an in-tree module" >&2; exit 1; }
+        cp "$ko" $OUT/modules/
+    done
 done
 ls -la $OUT/modules/*.ko

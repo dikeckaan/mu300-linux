@@ -1,0 +1,1276 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: kk\n"
+
+msgid "Status dashboard"
+msgstr "Күй тақтасы"
+
+msgid "Cellular"
+msgstr "Ұялы байланыс"
+
+msgid "Network locks"
+msgstr "Желіні бекіту"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "AT terminal"
+msgstr "AT терминалы"
+
+msgid "Adapter settings"
+msgstr "Адаптер параметрлері"
+
+msgid "Device management"
+msgstr "Құрылғыны басқару"
+
+msgid "Languages"
+msgstr "Тілдер"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
+msgstr "MU300 басқару орталығы: күй тақтасы, желіні бекіту, AT терминалы және SMS"
+
+msgid "China Mobile"
+msgstr "China Mobile"
+
+msgid "China Unicom"
+msgstr "China Unicom"
+
+msgid "China Telecom"
+msgstr "China Telecom"
+
+msgid "China Broadnet"
+msgstr "China Broadnet"
+
+msgid "China Tietong"
+msgstr "China Tietong"
+
+msgid "Excellent"
+msgstr "Өте жақсы"
+
+msgid "Good"
+msgstr "Жақсы"
+
+msgid "Fair"
+msgstr "Орташа"
+
+msgid "Poor"
+msgstr "Әлсіз"
+
+msgid "Unknown"
+msgstr "Белгісіз"
+
+msgid "%d d %d h"
+msgstr "%d к %d сағ"
+
+msgid "%d h %d min"
+msgstr "%d сағ %d мин"
+
+msgid "%d min"
+msgstr "%d мин"
+
+msgid "No neighbor-cell data"
+msgstr "Көрші ұяшықтар туралы дерек жоқ"
+
+msgid "Locked"
+msgstr "Бекітілген"
+
+msgid "Lock"
+msgstr "Бекіту"
+
+msgid "Unknown error"
+msgstr "Белгісіз қате"
+
+msgid "Confirm"
+msgstr "Растау"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Cancel"
+msgstr "Болдырмау"
+
+msgid "New SMS · %s"
+msgstr "Жаңа SMS · %s"
+
+msgid "Unknown number"
+msgstr "Белгісіз нөмір"
+
+msgid "Select"
+msgstr "Таңдау"
+
+msgid "Basic"
+msgstr "Негізгі"
+
+msgid "Registration/signal"
+msgstr "Тіркелу/сигнал"
+
+msgid "Bearer"
+msgstr "Тасымалдаушы арна"
+
+msgid "Engineering mode"
+msgstr "Инженерлік режим"
+
+msgid "AT command (↑↓ history, Enter to send)"
+msgstr "AT командасы (↑↓ тарих, Enter — жіберу)"
+
+msgid "Send"
+msgstr "Жіберу"
+
+msgid "Clear screen"
+msgstr "Экранды тазарту"
+
+msgid "Ready."
+msgstr "Дайын."
+
+msgid "Session history (click to reuse)"
+msgstr "Сеанс тарихы (қайта пайдалану үшін басыңыз)"
+
+msgid "(no output)"
+msgstr "(шығыс жоқ)"
+
+msgid "Request failed"
+msgstr "Сұрау сәтсіз"
+
+msgid "(empty)"
+msgstr "(бос)"
+
+msgid "USB role"
+msgstr "USB рөлі"
+
+msgid "Current role"
+msgstr "Ағымдағы рөл"
+
+msgid "Switch USB role"
+msgstr "USB рөлін ауыстыру"
+
+msgid "Device mode"
+msgstr "Құрылғы режимі"
+
+msgid "Host mode"
+msgstr "Хост режимі"
+
+msgid "Enable host mode at boot"
+msgstr "Жүктелу кезінде хост режимін қосу"
+
+msgid "Apply role"
+msgstr "Рөлді қолдану"
+
+msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
+msgstr "Хост режимі осы порттағы USB желісі мен сериялық портты ажыратады. F50-де батарея жоқ; басқару қолжетімсіз болуы мүмкін, ал USB адаптеріне әдетте қуат көзі бар хаб қажет."
+
+msgid "USB network mode"
+msgstr "USB желі режимі"
+
+msgid "Network protocol"
+msgstr "Желі протоколы"
+
+msgid "Apply duration"
+msgstr "Әрекет мерзімі"
+
+msgid "Next reboot only"
+msgstr "Тек келесі қайта жүктеуге дейін"
+
+msgid "Permanent"
+msgstr "Тұрақты"
+
+msgid "Enable selected protocol"
+msgstr "Таңдалған протоколды қосу"
+
+msgid "Save; apply after reboot"
+msgstr "Сақтау; қайта жүктелгеннен кейін қолдану"
+
+msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
+msgstr "Әдепкі бойынша NCM. Windows ECM-ді кірістірілген түрде қолдамайды; RNDIS құрылғының санақталуын өзгертеді. «Таңдалған протоколды қосу» өшірулі болса, тек таңдауыңыз сақталады. «Тек келесі қайта жүктеуге дейін» бір рет қолданылады, содан кейін NCM-ге оралады."
+
+msgid "USB adapters"
+msgstr "USB адаптерлері"
+
+msgid "Refresh"
+msgstr "Жаңарту"
+
+msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
+msgstr "Тек хост режимінде қолжетімді. «Жаңарту» табылған USB адаптерлерін іске қосады; LAN-ға қосу көпірді сақтап, желіні қайта жүктейді."
+
+msgid "Unavailable"
+msgstr "Қолжетімсіз"
+
+msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
+msgstr "USB желі режимі хост режимінде қолжетімсіз; хост режимін автоматты іске қосу USB желісін автоматты іске қосуды да өшіреді."
+
+msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
+msgstr "Хост режимі USB арқылы басқаруды бірден ажыратады. F50-де батарея жоқ, ал перифериялық құрылғыларға сыртқы қуат қажет болуы мүмкін; басқарудың басқа жолы бар екеніне көз жеткізіңіз."
+
+msgid "USB networking and serial will re-enumerate in device mode."
+msgstr "USB желісі мен сериялық порт құрылғы режимінде қайта санақталады."
+
+msgid "Switch USB role?"
+msgstr "USB рөлін ауыстыру керек пе?"
+
+msgid "Apply"
+msgstr "Қолдану"
+
+msgid "Switching USB role…"
+msgstr "USB рөлі ауыстырылуда…"
+
+msgid "Switch failed: %s"
+msgstr "Ауыстыру сәтсіз: %s"
+
+msgid "Management connection lost; reconnect to confirm the USB role."
+msgstr "Басқару байланысы үзілді; USB рөлін растау үшін қайта қосылыңыз."
+
+msgid "Switch request accepted; the USB connection may briefly disconnect."
+msgstr "Ауыстыру сұрауы қабылданды; USB байланысы қысқа уақытқа үзілуі мүмкін."
+
+msgid "USB role applied"
+msgstr "USB рөлі қолданылды"
+
+msgid "Save USB network mode?"
+msgstr "USB желі режимін сақтау керек пе?"
+
+msgid "The network mode applies on the next reboot; USB management may need to reconnect."
+msgstr "Желі режимі келесі қайта жүктеуде қолданылады; USB арқылы басқаруға қайта қосылу қажет болуы мүмкін."
+
+msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
+msgstr "Тек таңдау сақталады; таңдалған протокол өшірулі болса, келесі жүктелу бәрібір әдепкі NCM-ді пайдаланады."
+
+msgid "Save"
+msgstr "Сақтау"
+
+msgid "Saving USB network settings…"
+msgstr "USB желі параметрлері сақталуда…"
+
+msgid "Settings saved"
+msgstr "Параметрлер сақталды"
+
+msgid "Save failed: %s"
+msgstr "Сақтау сәтсіз: %s"
+
+msgid "Unable to confirm the role yet; reconnect and refresh the page."
+msgstr "Рөлді әзірге растау мүмкін емес; қайта қосылып, бетті жаңартыңыз."
+
+msgid "Switch to host mode to see USB adapters."
+msgstr "USB адаптерлерін көру үшін хост режиміне ауысыңыз."
+
+msgid "Scanning USB adapters…"
+msgstr "USB адаптерлері ізделуде…"
+
+msgid "No USB adapters found."
+msgstr "USB адаптерлері табылмады."
+
+msgid "Link connected"
+msgstr "Байланыс орнатылды"
+
+msgid "No link; enable attempted"
+msgstr "Байланыс жоқ; қосу әрекеті жасалды"
+
+msgid "Added to LAN"
+msgstr "LAN-ға қосылды"
+
+msgid "Add to LAN"
+msgstr "LAN-ға қосу"
+
+msgid "Add USB adapter to LAN?"
+msgstr "USB адаптерін LAN-ға қосу керек пе?"
+
+msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
+msgstr "Бұл көпір конфигурациясын сақтап, желіні қайта жүктейді; бар қосылымдар қысқа уақытқа үзілуі мүмкін."
+
+msgid "Add"
+msgstr "Қосу"
+
+msgid "Adding USB adapter…"
+msgstr "USB адаптері қосылуда…"
+
+msgid "Add failed: %s"
+msgstr "Қосу сәтсіз: %s"
+
+msgid "Modulation DL/UL"
+msgstr "Модуляция DL/UL"
+
+msgid "Estimated from current MCS"
+msgstr "Ағымдағы MCS бойынша бағаланған"
+
+msgid "MCS DL/UL"
+msgstr "MCS DL/UL"
+
+msgid "BLER DL/UL"
+msgstr "BLER DL/UL"
+
+msgid "Link & traffic"
+msgstr "Байланыс және трафик"
+
+msgid "Download rate"
+msgstr "Жүктеп алу жылдамдығы"
+
+msgid "Upload rate"
+msgstr "Жүктеп салу жылдамдығы"
+
+msgid "Total received"
+msgstr "Барлығы алынды"
+
+msgid "Total sent"
+msgstr "Барлығы жіберілді"
+
+msgid "Session duration"
+msgstr "Сеанс ұзақтығы"
+
+msgid "Registration"
+msgstr "Тіркелу"
+
+msgid "Bandwidth"
+msgstr "Өткізу жолағының ені"
+
+msgid "AMBR DL/UL"
+msgstr "AMBR DL/UL"
+
+msgid "Wi-Fi · LAN · Device · SIM"
+msgstr "Wi-Fi · LAN · Құрылғы · SIM"
+
+msgid "CPU usage"
+msgstr "CPU жүктемесі"
+
+msgid "Memory"
+msgstr "Жад"
+
+msgid "Storage"
+msgstr "Сақтау орны"
+
+msgid "Battery"
+msgstr "Батарея"
+
+msgid "Channel"
+msgstr "Арна"
+
+msgid "Encryption"
+msgstr "Шифрлау"
+
+msgid "Hidden SSID"
+msgstr "Жасырын SSID"
+
+msgid "Country"
+msgstr "Ел"
+
+msgid "AP status"
+msgstr "Кіру нүктесінің күйі"
+
+msgid "USB network"
+msgstr "USB желісі"
+
+msgid "Connection tracking"
+msgstr "Қосылымдарды бақылау"
+
+msgid "LAN address"
+msgstr "LAN мекенжайы"
+
+msgid "Wi-Fi clients"
+msgstr "Wi-Fi клиенттері"
+
+msgid "DHCP leases"
+msgstr "DHCP жалдаулары"
+
+msgid "Device model"
+msgstr "Құрылғы моделі"
+
+msgid "System"
+msgstr "Жүйе"
+
+msgid "Modem"
+msgstr "Модем"
+
+msgid "Carrier"
+msgstr "Оператор"
+
+msgid "Module"
+msgstr "Модуль"
+
+msgid "Firmware"
+msgstr "Микробағдарлама"
+
+msgid "Show SIM identifiers"
+msgstr "SIM идентификаторларын көрсету"
+
+msgid "Quick controls"
+msgstr "Жылдам әрекеттер"
+
+msgid "Data connection"
+msgstr "Деректер байланысы"
+
+msgid "Cellular radio"
+msgstr "Ұялы радиомодуль"
+
+msgid "Wi-Fi hotspot"
+msgstr "Wi-Fi кіру нүктесі"
+
+msgid "Restart modem"
+msgstr "Модемді қайта іске қосу"
+
+msgid "Restart device"
+msgstr "Құрылғыны қайта жүктеу"
+
+msgid "Switch to Android"
+msgstr "Android-ге ауысу"
+
+msgid "Neighbor cells"
+msgstr "Көрші ұяшықтар"
+
+msgid "RAT/Band"
+msgstr "RAT/жолақ"
+
+msgid "Frequency"
+msgstr "Жиілік"
+
+msgid "Running %s…"
+msgstr "%s орындалуда…"
+
+msgid "Started in background: %s"
+msgstr "Фонда іске қосылды: %s"
+
+msgid "Done: %s"
+msgstr "Дайын: %s"
+
+msgid "Failed: %s"
+msgstr "Сәтсіз: %s"
+
+msgid "Disconnecting data…"
+msgstr "Деректер байланысы ажыратылуда…"
+
+msgid "Connecting data…"
+msgstr "Деректер байланысы қосылуда…"
+
+msgid "Turn off cellular radio"
+msgstr "Ұялы радиомодульді өшіру"
+
+msgid "Cellular connectivity will be interrupted."
+msgstr "Ұялы байланыс үзіледі."
+
+msgid "Turn on cellular radio"
+msgstr "Ұялы радиомодульді қосу"
+
+msgid "The SFUN power-on sequence will run (up to about 1 minute)."
+msgstr "SFUN қосу реті орындалады (шамамен 1 минутқа дейін)."
+
+msgid "Cellular connectivity may stop for 1–2 minutes."
+msgstr "Ұялы байланыс 1–2 минутқа тоқтауы мүмкін."
+
+msgid "Restart the entire device"
+msgstr "Бүкіл құрылғыны қайта жүктеу"
+
+msgid "All connections will be interrupted."
+msgstr "Барлық қосылымдар үзіледі."
+
+msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
+msgstr "Келесі жүктелу Android-ге кіреді, құрылғы қазір қайта жүктеледі. Бұл басқару беті мен ұялы байланысты тарату ажыратылады."
+
+msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
+msgstr "OpenWrt-ге оралу үшін Android-де mu300-next-boot linux командасын орындап, қайта жүктеңіз."
+
+msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
+msgstr "Немесе ештеңе жасамаңыз: аяқталмаған бес жүктелуден кейін автоматты түрде қайтарылады."
+
+msgid "Switch and reboot"
+msgstr "Ауысу және қайта жүктеу"
+
+msgid "Preparing Android boot and rebooting…"
+msgstr "Android жүктелуі дайындалып, қайта жүктелуде…"
+
+msgid "Hide SIM identifiers"
+msgstr "SIM идентификаторларын жасыру"
+
+msgid "Lock cell %s?"
+msgstr "%s ұяшығын бекіту керек пе?"
+
+msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
+msgstr "Радиостек қайта іске қосылады (SFUN); ұялы байланыс шамамен 30 секундқа тоқтайды."
+
+msgid "Locking %s in the background, about 30 seconds"
+msgstr "%s фонда бекітілуде, шамамен 30 секунд"
+
+msgid "Locked %s in the background; the status will refresh shortly"
+msgstr "%s фонда бекітілді; күй жақында жаңартылады"
+
+msgid "Lock failed: %s"
+msgstr "Бекіту сәтсіз: %s"
+
+msgid "Uptime %s"
+msgstr "Жұмыс уақыты %s"
+
+msgid "Radio off"
+msgstr "Радио өшірулі"
+
+msgid "No response"
+msgstr "Жауап жоқ"
+
+msgid "%s · Signal %s %s/10"
+msgstr "%s · Сигнал %s %s/10"
+
+msgid "%s · Signal %s"
+msgstr "%s · Сигнал %s"
+
+msgid "Anchor B%s"
+msgstr "Тірек ұяшық B%s"
+
+msgid "No serving cell"
+msgstr "Қызмет көрсететін ұяшық жоқ"
+
+msgid "Not registered"
+msgstr "Тіркелмеген"
+
+msgid "Registered"
+msgstr "Тіркелген"
+
+msgid "Searching"
+msgstr "Іздеу"
+
+msgid "Registration denied"
+msgstr "Тіркеуден бас тартылды"
+
+msgid "Registered (roaming)"
+msgstr "Тіркелген (роуминг)"
+
+msgid "Emergency only"
+msgstr "Тек шұғыл қоңыраулар"
+
+msgid "Status %s"
+msgstr "Күйі %s"
+
+msgid "LTE anchor"
+msgstr "LTE тірек ұяшығы"
+
+msgid "LTE link"
+msgstr "LTE байланысы"
+
+msgid "Hidden"
+msgstr "Жасырын"
+
+msgid "No"
+msgstr "Жоқ"
+
+msgid "Running"
+msgstr "Жұмыс істеуде"
+
+msgid "Not running"
+msgstr "Жұмыс істемейді"
+
+msgid "Connected"
+msgstr "Қосылған"
+
+msgid "Disconnected"
+msgstr "Ажыратылған"
+
+msgid "%s entries"
+msgstr "Жазбалар: %s"
+
+msgid "%s clients"
+msgstr "Клиенттер: %s"
+
+msgid "Recent DHCP leases"
+msgstr "Соңғы DHCP жалдаулары"
+
+msgid "%d h"
+msgstr "%d сағ"
+
+msgid "Board"
+msgstr "Плата"
+
+msgid "No temperature readings"
+msgstr "Температура көрсеткіштері жоқ"
+
+msgid "Cluster %d"
+msgstr "Кластер %d"
+
+msgid "Total %s · free %s"
+msgstr "Барлығы %s · бос %s"
+
+msgid "charging %s W"
+msgstr "%s W қуатпен зарядталуда"
+
+msgid "charging"
+msgstr "зарядталуда"
+
+msgid "drawing %s W"
+msgstr "%s W тұтынуда"
+
+msgid "not charging"
+msgstr "зарядталмайды"
+
+msgid "on battery"
+msgstr "батареядан"
+
+msgid "full"
+msgstr "толы"
+
+msgid "USB in %s W"
+msgstr "USB кірісі %s W"
+
+msgid "Online"
+msgstr "Желіде"
+
+msgid "AT adapter unavailable"
+msgstr "AT адаптері қолжетімсіз"
+
+msgid "Saved"
+msgstr "Сақталды"
+
+msgid "Management connection lost"
+msgstr "Басқару байланысы үзілді"
+
+msgid "Installing the language pack…"
+msgstr "Тіл бумасы орнатылуда…"
+
+msgid "The language pack is installed"
+msgstr "Тіл бумасы орнатылды"
+
+msgid "The language pack could not be installed"
+msgstr "Тіл бумасын орнату мүмкін болмады"
+
+msgid "Upload failed: %s"
+msgstr "Жүктеп салу сәтсіз: %s"
+
+msgid "Language of the browser"
+msgstr "Браузер тілі"
+
+msgid "Language of the web interface"
+msgstr "Веб-интерфейс тілі"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "Ағылшын, түрік және қытай тілдері жүйемен бірге келеді; тіл бумасы қалғандарын қосады."
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "Дәл осы параметр Жүйе > Жүйе > Тіл және стиль бөлімінде бар."
+
+msgid "Language pack"
+msgstr "Тіл бумасы"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "Тіл бумасы (mu300-extra-lang.tar.gz, шамамен 2 МБ) LuCI-ді тағы шамамен 40 тілде, ал осы панельді олардың 29-ында қосады. Оны осы жүйенің релизінен жүктеп алыңыз немесе құрылғыда интернет болмаса, файлды релиз бетінен жүктеп салыңыз."
+
+msgid "Download from the release"
+msgstr "Релизден жүктеп алу"
+
+msgid "Upload the file…"
+msgstr "Файлды жүктеп салу…"
+
+msgid "Release"
+msgstr "Релиз"
+
+msgid "Enable all"
+msgstr "Барлығын қосу"
+
+msgid "Disable all"
+msgstr "Барлығын өшіру"
+
+msgid "Remove the language pack"
+msgstr "Тіл бумасын жою"
+
+msgid "Remove the language pack?"
+msgstr "Тіл бумасын жою керек пе?"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "Оның тілдері тізімнен жоғалады; солардың бірінде ашылған бет ағылшын тіліне ауысады."
+
+msgid "Remove"
+msgstr "Жою"
+
+msgid "Disable"
+msgstr "Өшіру"
+
+msgid "Enable"
+msgstr "Қосу"
+
+msgid "LuCI and this panel"
+msgstr "LuCI және осы панель"
+
+msgid "LuCI only"
+msgstr "Тек LuCI"
+
+msgid "Enabled"
+msgstr "Қосулы"
+
+msgid "Disabled"
+msgstr "Өшірулі"
+
+msgid "Language"
+msgstr "Тіл"
+
+msgid "Code"
+msgstr "Код"
+
+msgid "Translated"
+msgstr "Аударылған"
+
+msgid "State"
+msgstr "Күйі"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "LuCI-дің өз аудармалары OpenWrt-тен алынады. Бұл панельдің түрік және қытай тілдерінен басқа аудармалары машиналық (ЖИ) аударма; түзетулер қабылданады."
+
+msgid "Automatic"
+msgstr "Автоматты"
+
+msgid "4G only"
+msgstr "Тек 4G"
+
+msgid "Serving network"
+msgstr "Қызмет көрсететін желі"
+
+msgid "Network mode · EN-DC"
+msgstr "Желі режимі · EN-DC"
+
+msgid "Refresh lock status"
+msgstr "Бекіту күйін жаңарту"
+
+msgid "Apply at startup"
+msgstr "Іске қосылғанда қолдану"
+
+msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
+msgstr "Өшіру тек келесі жүктелуде қайта қолдануды тоқтатады; сақталған желі режимі, EN-DC, жолақ және ұяшық параметрлері қалады."
+
+msgid "Band locking"
+msgstr "Жолақтарды бекіту"
+
+msgid "NR bands"
+msgstr "NR жолақтары"
+
+msgid "LTE bands"
+msgstr "LTE жолақтары"
+
+msgid "Apply NR bands"
+msgstr "NR жолақтарын қолдану"
+
+msgid "Apply LTE bands"
+msgstr "LTE жолақтарын қолдану"
+
+msgid "Neighbor cells and cell locking"
+msgstr "Көрші ұяшықтар және ұяшықты бекіту"
+
+msgid "Lock current serving cell"
+msgstr "Ағымдағы қызмет көрсететін ұяшықты бекіту"
+
+msgid "Unlock cell"
+msgstr "Ұяшық бекітуін алу"
+
+msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
+msgstr "Қолдану радиостекті (SFUN) қайта іске қосып, ұялы байланысты қысқа уақытқа үзеді. Параметрлер сақталады және «Іске қосылғанда қолдану» қосулы болса, AT дайын болғаннан кейін плагин оларды қайта қолданады. Платформаның радио алдындағы ілгегі оларды қайта іске қосусыз қолдана алады. Автоматты режимге оралу үшін ешбір жолақ таңдамай қолданыңыз."
+
+msgid "Apply “%s”?"
+msgstr "«%s» қолдану керек пе?"
+
+msgid "Applying %s in the background…"
+msgstr "%s фонда қолданылуда…"
+
+msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
+msgstr "%s фонда қолданылуда… (SFUN қайта іске қосылуы және қайта тіркелу, шамамен 30 секунд)"
+
+msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
+msgstr "Кезекте: SFUN қайта іске қосылуы кезінде басқа бекіту қолданылуда; бұл одан кейін күшіне енеді"
+
+msgid "Confirming the EN-DC status…"
+msgstr "EN-DC күйі расталуда…"
+
+msgid "Confirming apply at startup…"
+msgstr "Іске қосылғанда қолдану расталуда…"
+
+msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Фонда іске қосылды: %s (SFUN қайта іске қосылуы, шамамен 30 секунд); күй қайта оқылуда…"
+
+msgid "Network mode: %s"
+msgstr "Желі режимі: %s"
+
+msgid "Disable EN-DC (NSA anchor)"
+msgstr "EN-DC өшіру (NSA тірек ұяшығы)"
+
+msgid "Enable EN-DC (NSA anchor)"
+msgstr "EN-DC қосу (NSA тірек ұяшығы)"
+
+msgid "Disable apply at startup"
+msgstr "Іске қосылғанда қолдануды өшіру"
+
+msgid "Enable apply at startup"
+msgstr "Іске қосылғанда қолдануды қосу"
+
+msgid "Reading the modem directly (a few seconds at most)…"
+msgstr "Модем тікелей оқылуда (ең көбі бірнеше секунд)…"
+
+msgid "Refreshed"
+msgstr "Жаңартылды"
+
+msgid "Refresh failed"
+msgstr "Жаңарту сәтсіз"
+
+msgid "NR bands: back to automatic"
+msgstr "NR жолақтары: қайтадан автоматты"
+
+msgid "NR band lock: %s"
+msgstr "NR жолағын бекіту: %s"
+
+msgid "LTE bands: back to automatic"
+msgstr "LTE жолақтары: қайтадан автоматты"
+
+msgid "LTE band lock: %s"
+msgstr "LTE жолағын бекіту: %s"
+
+msgid "Remove the %s cell lock"
+msgstr "%s ұяшық бекітуін алу"
+
+msgid "The radio stack will restart (SFUN), taking about 30 seconds."
+msgstr "Радиостек қайта іске қосылады (SFUN), шамамен 30 секунд алады."
+
+msgid "Removing the %s cell lock…"
+msgstr "%s ұяшық бекітуі алынуда…"
+
+msgid "Unlock failed: %s"
+msgstr "Бекітуді алу сәтсіз: %s"
+
+msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Бекітуді алу фонда іске қосылды (SFUN қайта іске қосылуы, шамамен 30 секунд); күй қайта оқылуда…"
+
+msgid "Locking %s in the background…"
+msgstr "%s фонда бекітілуде…"
+
+msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "%s фонда бекітілді (SFUN қайта іске қосылуы, шамамен 30 секунд); күй қайта оқылуда…"
+
+msgid "No serving-network data"
+msgstr "Қызмет көрсететін желі туралы дерек жоқ"
+
+msgid "NR serving cell"
+msgstr "NR қызмет көрсететін ұяшығы"
+
+msgid "Status confirmed"
+msgstr "Күй расталды"
+
+msgid "Readback timed out; select “Refresh lock status”"
+msgstr "Қайта оқу уақыты өтті; «Бекіту күйін жаңарту» таңдаңыз"
+
+msgid "Applied (EN-DC does not require a radio-stack restart)"
+msgstr "Қолданылды (EN-DC радиостекті қайта іске қосуды қажет етпейді)"
+
+msgid "Apply at startup is on"
+msgstr "Іске қосылғанда қолдану қосулы"
+
+msgid "Apply at startup is off"
+msgstr "Іске қосылғанда қолдану өшірулі"
+
+msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
+msgstr "EN-DC күйін қайта оқу уақыты өтті; растау үшін «Бекіту күйін жаңарту» пайдаланыңыз"
+
+msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Іске қосылғанда қолдану күйін қайта оқу уақыты өтті; растау үшін «Бекіту күйін жаңарту» пайдаланыңыз"
+
+msgid "Locked cells"
+msgstr "Бекітілген ұяшықтар"
+
+msgid "Unlock %s"
+msgstr "%s бекітуін алу"
+
+msgid "Automatic (%d supported)"
+msgstr "Автоматты (%d қолдау көрсетіледі)"
+
+msgid "%d locked: %s"
+msgstr "%d бекітілген: %s"
+
+msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
+msgstr "Бұл плагиннің ағымдағы Unisoc OpenWrt платформасына қалай қосылатынын баптаңыз. Өзгерістер тақта, AT, бекіту немесе SMS беттерін өңдеуді қажет етпейді."
+
+msgid "Platform adapter"
+msgstr "Платформа адаптері"
+
+msgid "AT backend"
+msgstr "AT бэкенді"
+
+msgid "Auto-detect"
+msgstr "Автоанықтау"
+
+msgid "atinout + serial port"
+msgstr "atinout + сериялық порт"
+
+msgid "Custom adapter"
+msgstr "Таңдамалы адаптер"
+
+msgid "AT serial port"
+msgstr "AT сериялық порты"
+
+msgid "Custom AT adapter"
+msgstr "Таңдамалы AT адаптері"
+
+msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
+msgstr "Орындалатын файл секундпен берілген күту уақытын және толық AT командасын осы ретпен алады. Ол сериялық порт құлпын платформаның теру қызметімен ортақ пайдалануы керек."
+
+msgid "SMS adapter"
+msgstr "SMS адаптері"
+
+msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
+msgstr "list, show, send, delete және sync ішкі командаларын іске асырады; mu300-sms автоматты түрде табылуы үшін бос қалдырыңыз."
+
+msgid "SMS pool directory"
+msgstr "SMS қоймасының каталогы"
+
+msgid "Cellular logical interface"
+msgstr "Ұялы байланыстың логикалық интерфейсі"
+
+msgid "Cellular IPv6 interface"
+msgstr "Ұялы байланыстың IPv6 интерфейсі"
+
+msgid "Cellular network device"
+msgstr "Ұялы байланыстың желі құрылғысы"
+
+msgid "Leave blank to detect from netifd"
+msgstr "netifd арқылы анықтау үшін бос қалдырыңыз"
+
+msgid "LAN bridge"
+msgstr "LAN көпірі"
+
+msgid "Wi-Fi device"
+msgstr "Wi-Fi құрылғысы"
+
+msgid "USB device"
+msgstr "USB құрылғысы"
+
+msgid "Maximum wait for AT readiness (seconds)"
+msgstr "AT дайындығын күтудің ең ұзақ уақыты (секунд)"
+
+msgid "Home dashboard refresh interval (seconds)"
+msgstr "Басты тақтаны жаңарту аралығы (секунд)"
+
+msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
+msgstr "Тек басты тақтаның жаңарту жиілігін басқарады; 0,5–60 секунд. Қолдану үшін сақтағаннан кейін басты бетті қайта ашыңыз."
+
+msgid "Persistent state directory"
+msgstr "Тұрақты күй каталогы"
+
+msgid "Recipient: number, e.g. 10086 or +86..."
+msgstr "Алушы: нөмір, мысалы 10086 немесе +86..."
+
+msgid "Sync from SIM"
+msgstr "SIM-нен синхрондау"
+
+msgid "Clear local pool"
+msgstr "Жергілікті қойманы тазарту"
+
+msgid "Loading…"
+msgstr "Жүктелуде…"
+
+msgid "Select a conversation on the left, or enter a number below to send."
+msgstr "Сол жақтан сұхбатты таңдаңыз немесе жіберу үшін төменде нөмір енгізіңіз."
+
+msgid "Message (Enter to send, Shift+Enter for newline)"
+msgstr "Хабар (Enter — жіберу, Shift+Enter — жаңа жол)"
+
+msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
+msgstr "Жіберу AT+CMGS (PDU режимі) арқылы жүреді; арна бос емес болса, қайталаңыз. Бір хабарды жою үшін оның көпіршігіндегі себет белгішесін басыңыз."
+
+msgid "Syncing from the SIM in the background (AT+CMGL)…"
+msgstr "SIM-нен фонда синхрондалуда (AT+CMGL)…"
+
+msgid "SIM sync started; the list refreshes in a few seconds."
+msgstr "SIM синхрондауы басталды; тізім бірнеше секундта жаңартылады."
+
+msgid "Clear local SMS pool"
+msgstr "Жергілікті SMS қоймасын тазарту"
+
+msgid "Only local files will be deleted; messages on the SIM remain."
+msgstr "Тек жергілікті файлдар жойылады; SIM-дегі хабарлар қалады."
+
+msgid "Clear"
+msgstr "Тазарту"
+
+msgid "Delete this SMS"
+msgstr "Бұл SMS-ті жою"
+
+msgid "Deletion cannot be undone."
+msgstr "Жоюды болдырмау мүмкін емес."
+
+msgid "Local only"
+msgstr "Тек жергілікті"
+
+msgid "Local + SIM"
+msgstr "Жергілікті + SIM"
+
+msgid "Delete failed"
+msgstr "Жою сәтсіз"
+
+msgid "Deleted (local + SIM)"
+msgstr "Жойылды (жергілікті + SIM)"
+
+msgid "Deleted (local only)"
+msgstr "Жойылды (тек жергілікті)"
+
+msgid "Enter both a number and a message."
+msgstr "Нөмірді де, хабарды да енгізіңіз."
+
+msgid "Sending…"
+msgstr "Жіберілуде…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Жіберілді; тізім жақында жаңартылады."
+
+msgid "Sending failed"
+msgstr "Жіберу сәтсіз"
+
+msgid "· %d messages, %d unread · %d conversations"
+msgstr "· %d хабар, %d оқылмаған · %d сұхбат"
+
+msgid "· %d messages · %d conversations"
+msgstr "· %d хабар · %d сұхбат"
+
+msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
+msgstr "Қойма бос. Кіріс және жіберілген хабарлар осында көрінеді немесе «SIM-нен синхрондау» таңдаңыз."
+
+msgid "Me: %s"
+msgstr "Мен: %s"
+
+msgid "Delete"
+msgstr "Жою"
+
+msgid "Dashboard info failed"
+msgstr "Тақта деректерін алу сәтсіз"
+
+msgid "Applying network locks: no live signal right now"
+msgstr "Желі бекітулері қолданылуда: қазір тірі сигнал жоқ"
+
+msgid "Live signal read failed"
+msgstr "Тірі сигналды оқу сәтсіз"
+
+msgid "Unknown op"
+msgstr "Белгісіз операция"
+
+msgid "Invalid argument for this op"
+msgstr "Бұл операция үшін жарамсыз аргумент"
+
+msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
+msgstr "Радио бос емес: оны теру қызметі немесе бақылаушы ауыстыруда, сәлден кейін қайталаңыз"
+
+msgid "The action gave no valid reply"
+msgstr "Әрекет жарамды жауап бермеді"
+
+msgid "An AT command is one line of printable ASCII, at most 512 characters"
+msgstr "AT командасы — ең көбі 512 таңбадан тұратын басылатын ASCII таңбаларының бір жолы"
+
+msgid "Must be an AT command"
+msgstr "AT командасы болуы керек"
+
+msgid "No \";\" command chaining"
+msgstr "\";\" арқылы командаларды тізбектеуге болмайды"
+
+msgid "Denied: this command wedges the AT port until a reboot"
+msgstr "Тыйым салынған: бұл команда AT портын қайта жүктелгенге дейін бұғаттайды"
+
+msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
+msgstr "Желі бекітулері қолданылуда: модем қайта іске қосылуда (шамамен жарты минут), сәлден кейін қайталаңыз"
+
+msgid "The AT channel is busy; the command was not sent, try again"
+msgstr "AT арнасы бос емес; команда жіберілмеді, қайталаңыз"
+
+msgid "The modem did not answer in time; the command may still run, check before sending it again"
+msgstr "Модем уақытында жауап бермеді; команда әлі орындалуы мүмкін, қайта жібермес бұрын тексеріңіз"
+
+msgid "The fresh parameter must be 0 or 1"
+msgstr "fresh параметрі 0 немесе 1 болуы керек"
+
+msgid "Lock read failed"
+msgstr "Бекітуді оқу сәтсіз"
+
+msgid "Unknown lock kind"
+msgstr "Белгісіз бекіту түрі"
+
+msgid "Invalid value for this lock kind"
+msgstr "Бұл бекіту түрі үшін жарамсыз мән"
+
+msgid "Invalid page"
+msgstr "Жарамсыз бет"
+
+msgid "mu300-sms is not available (the SMS service is not installed or not running)"
+msgstr "mu300-sms қолжетімсіз (SMS қызметі орнатылмаған немесе іске қосылмаған)"
+
+msgid "No output"
+msgstr "Шығыс жоқ"
+
+msgid "Bad ID"
+msgstr "Қате ID"
+
+msgid "Read failed"
+msgstr "Оқу сәтсіз"
+
+msgid "The number may only contain digits (and a leading +)"
+msgstr "Нөмір тек цифрлардан тұруы мүмкін (басында + болуы мүмкін)"
+
+msgid "The message is empty"
+msgstr "Хабар бос"
+
+msgid "The message is too long (over 480 characters)"
+msgstr "Хабар тым ұзын (480 таңбадан артық)"
+
+msgid "The message contains a control character"
+msgstr "Хабарда басқару таңбасы бар"
+
+msgid "The sim parameter must be 0 or 1"
+msgstr "sim параметрі 0 немесе 1 болуы керек"
+
+msgid "The USB adapter (device-usb) gave no valid reply"
+msgstr "USB адаптері (device-usb) жарамды жауап бермеді"
+
+msgid "The auto parameter must be 0 or 1"
+msgstr "auto параметрі 0 немесе 1 болуы керек"
+
+msgid "Invalid USB role"
+msgstr "Жарамсыз USB рөлі"
+
+msgid "A USB role takes no scope"
+msgstr "USB рөлі ауқым қабылдамайды"
+
+msgid "Invalid USB network mode"
+msgstr "Жарамсыз USB желі режимі"
+
+msgid "Invalid USB network scope"
+msgstr "Жарамсыз USB желі ауқымы"
+
+msgid "Unknown USB setting"
+msgstr "Белгісіз USB параметрі"
+
+msgid "Invalid interface name"
+msgstr "Жарамсыз интерфейс атауы"
+
+msgid "The languages adapter gave no valid reply"
+msgstr "Тіл адаптері жарамды жауап бермеді"
+
+msgid "Unknown language operation"
+msgstr "Белгісіз тіл операциясы"
+
+msgid "Invalid language code"
+msgstr "Жарамсыз тіл коды"
+
+msgid "Invalid language request"
+msgstr "Жарамсыз тіл сұрауы"
+
+msgid "Unknown source"
+msgstr "Белгісіз дереккөз"
+
+msgid "Request too large"
+msgstr "Сұрау тым үлкен"
+
+msgid "The runtime directory is not safe; nothing was run"
+msgstr "Орындау ортасының каталогы қауіпсіз емес; ештеңе орындалмады"
+
+msgid "No such method"
+msgstr "Мұндай әдіс жоқ"
+
+msgid "Radio did not come up"
+msgstr "Радио қосылмады"
+
+msgid "Expected on or off"
+msgstr "on немесе off күтіледі"
+
+msgid "VPN integration is not provided by this platform"
+msgstr "VPN интеграциясын бұл платформа қамтамасыз етпейді"
+
+msgid "Dual-boot integration is not provided by this platform"
+msgstr "Қос жүктелу интеграциясын бұл платформа қамтамасыз етпейді"
+
+msgid "mu300-next-boot failed"
+msgstr "mu300-next-boot сәтсіз аяқталды"
+
+msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
+msgstr "AT бэкенді жауап бермеді (радио өшірулі, модем қайта іске қосылуда немесе адаптер қолжетімсіз)"
+
+msgid "USB role adapter is not executable"
+msgstr "USB рөлі адаптері орындалатын емес"
+
+msgid "USB role adapter failed"
+msgstr "USB рөлі адаптері сәтсіз аяқталды"
+
+msgid "USB role switch is unavailable"
+msgstr "USB рөлін ауыстыру қолжетімсіз"
+
+msgid "USB role switch failed"
+msgstr "USB рөлін ауыстыру сәтсіз"
+
+msgid "USB role switch was refused by platform safety checks"
+msgstr "USB рөлін ауыстыруды платформаның қауіпсіздік тексерулері қабылдамады"
+
+msgid "Cannot create USB boot settings directory"
+msgstr "USB жүктелу параметрлерінің каталогын жасау мүмкін емес"
+
+msgid "Cannot write USB boot settings"
+msgstr "USB жүктелу параметрлерін жазу мүмкін емес"
+
+msgid "Cannot save USB boot settings"
+msgstr "USB жүктелу параметрлерін сақтау мүмкін емес"
+
+msgid "Invalid boot-auto value"
+msgstr "Жарамсыз boot-auto мәні"
+
+msgid "Device is the boot default; host auto-apply is the only persistent role"
+msgstr "Жүктелу кезінде әдепкі бойынша құрылғы режимі; тек хост рөлін автоматты қолдану тұрақты бола алады"
+
+msgid "Cannot save USB role policy"
+msgstr "USB рөлі саясатын сақтау мүмкін емес"
+
+msgid "Cannot disable USB network boot policy"
+msgstr "USB желісінің жүктелу саясатын өшіру мүмкін емес"
+
+msgid "Cannot commit USB role policy"
+msgstr "USB рөлі саясатын қолдану мүмкін емес"
+
+msgid "USB network mode is unavailable in host role"
+msgstr "USB желі режимі хост рөлінде қолжетімсіз"
+
+msgid "Disable host boot-auto before configuring USB network"
+msgstr "USB желісін баптамас бұрын хосттың boot-auto параметрін өшіріңіз"
+
+msgid "Cannot save USB network policy"
+msgstr "USB желі саясатын сақтау мүмкін емес"
+
+msgid "Cannot commit USB network policy"
+msgstr "USB желі саясатын қолдану мүмкін емес"
+
+msgid "USB host mode is required"
+msgstr "USB хост режимі қажет"
+
+msgid "Not a USB network interface"
+msgstr "USB желі интерфейсі емес"
+
+msgid "LAN bridge device section was not found"
+msgstr "LAN көпірі құрылғысының бөлімі табылмады"
+
+msgid "Cannot bring USB network interface up"
+msgstr "USB желі интерфейсін іске қосу мүмкін емес"
+
+msgid "Cannot add interface to LAN bridge"
+msgstr "Интерфейсті LAN көпіріне қосу мүмкін емес"
+
+msgid "Cannot save LAN bridge"
+msgstr "LAN көпірін сақтау мүмкін емес"
+
+msgid "Network reload failed"
+msgstr "Желіні қайта жүктеу сәтсіз"
+
+msgid "Cannot attach USB interface to LAN bridge"
+msgstr "USB интерфейсін LAN көпіріне қосу мүмкін емес"
+
+msgid "The language pack is not installed"
+msgstr "Тіл бумасы орнатылмаған"
+
+msgid "No language given"
+msgstr "Тіл берілмеген"
+
+msgid "The language could not be changed"
+msgstr "Тілді өзгерту мүмкін болмады"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI бұл тілді ұсынбайды"
+
+msgid "No uploaded language pack"
+msgstr "Жүктеп салынған тіл бумасы жоқ"
+
+msgid "An installation is already running"
+msgstr "Орнату әлдеқашан орындалуда"
+
+msgid "The language pack could not be removed"
+msgstr "Тіл бумасын жою мүмкін болмады"
+
+msgid "Lock cache unavailable"
+msgstr "Бекіту кэші қолжетімсіз"
+
+msgid "No serving cell to lock to"
+msgstr "Бекітетін қызмет көрсететін ұяшық жоқ"

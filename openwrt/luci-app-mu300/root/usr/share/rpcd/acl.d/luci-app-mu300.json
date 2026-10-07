@@ -3,7 +3,7 @@
   "description": "MU300 control center: status dashboard, network locks, AT terminal and SMS",
   "read": {
    "ubus": {
-    "mu300dash": [ "sysinfo", "status", "signal", "lock_get", "usb_get", "usb_net_list" ]
+    "mu300dash": [ "sysinfo", "status", "signal", "lock_get", "usb_get", "usb_net_list", "lang_get" ]
    },
    "uci": {
     "unisoc_modem": [ "*" ]
@@ -11,10 +11,14 @@
   },
   "write": {
    "ubus": {
-    "mu300dash": [ "act", "at", "at_history", "lock_set", "sms_list", "sms_show", "sms_send", "sms_delete", "sms_sync", "usb_set", "usb_net_add" ]
+    "mu300dash": [ "act", "at", "at_history", "lock_set", "sms_list", "sms_show", "sms_send", "sms_delete", "sms_sync", "usb_set", "usb_net_add", "lang_set" ]
    },
    "uci": {
     "unisoc_modem": [ "*" ]
+   },
+   "cgi-io": [ "upload" ],
+   "file": {
+    "/tmp/mu300-extra-lang.tar.gz": [ "write" ]
    }
   }
  }

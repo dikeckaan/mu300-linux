@@ -7,11 +7,17 @@
 #   mu300-extra remove NAME [--force]   (--force: the vpn extra even while the VPN is on)
 #   mu300-extra link              put the system's commands and the extras' on the PATH (run at every boot)
 #   mu300-extra adopt vpn         keep the VPN engines of the system an update replaced (<os>.old) as the vpn extra
+#   mu300-extra lang [list]       the languages of the lang extra, and which this system offers in LuCI
+#   mu300-extra lang enable CODE...|all    offer them in LuCI (System > System > Language and Style)
+#   mu300-extra lang disable CODE...|all   take them off that list again (the extra stays)
 #
 # Extras live on the Linux partition (/mnt/mu300-disk/extra/NAME), not in a system: Ubuntu and OpenWrt share one
 # copy, and an update or reinstall of a system keeps it. mu300-update apply brings them to the new release.
-# There is one so far:
+# There are two:
 #   vpn   Xray-core, hev-socks5-tunnel and sing-box, the engines of mu300-vpn
+#   lang  LuCI's own catalogs in every language of the OpenWrt feed, and the MU300 panel's (OpenWrt only: Ubuntu has
+#         no LuCI). install enables every language; which ones a system offers is its own (/etc/mu300/languages,
+#         kept by updates; no file: all of them).
 #
 # MU300_RELEASE=TAG takes another release, MU300_RELEASE_URL=URL another server with the same files and SHA256SUMS,
 # MU300_EXTRA_FILE=FILE a mu300-extra-NAME.tar.gz on this device (not checked: you chose it).
@@ -24,6 +30,12 @@ MU300_LIB=$_lib
 STAGE=$DISK/.mu300-extra
 OPT=${MU300_OPT:-/opt/mu300}
 SYSROOT=${MU300_SYSROOT:-}
+# LuCI's catalogs, and the languages of the lang extra this system offers (no file: all of them)
+I18N=${MU300_LUCI_I18N:-$SYSROOT/usr/lib/lua/luci/i18n}
+LANGS_ON=$SYSROOT/etc/mu300/languages
+NL='
+'
+TAB=$(printf '\t')
 
 # where commands go: a directory on everybody's PATH, sudo's secure_path included (Ubuntu keeps usr/local across
 # updates; OpenWrt's busybox PATH has no /usr/local)
@@ -59,7 +71,102 @@ do_link() {
         [ -L "$l" ] && [ ! -e "$l" ] || continue
         case $(readlink "$l") in "$EXTRA"/*) rm -f "$l" ;; esac
     done
+    lang_link
+}
+
+# ---- lang: LuCI's languages --------------------------------------------------------------------------------------
+is_openwrt() { [ -e "$SYSROOT/etc/openwrt_release" ]; }
+luci_uci() { uci -q ${SYSROOT:+-c "$SYSROOT/etc/config"} "$@"; }
+# the languages of the installed lang extra: KEY<tab>NAME lines (checked when it was installed, and again here)
+lang_lines() { LC_ALL=C grep -Ex -- "$LANG_LINE" "$EXTRA/lang/languages" 2>/dev/null; }
+lang_keys() { lang_lines | cut -f1; }
+lang_enabled() { [ ! -f "$LANGS_ON" ] || grep -qxF -- "$1" "$LANGS_ON"; }
+# luci_languages: the keys of luci.languages
+luci_languages() { luci_uci show luci.languages | sed -n "s/^luci\.languages\.\([a-z_]*\)=.*/\1/p"; }
+# does LuCI have a catalog of language KEY (any component)?
+lang_has_catalog() {
+    _c=$(printf '%s' "$1" | tr _ -)
+    for _f in "$I18N"/*."$_c".lmo; do [ -e "$_f" ] && return 0; done
+    return 1
+}
+# lang_link: the catalogs of the enabled languages into LuCI's directory (links into the extra; a file or a link of
+# somebody else's is never replaced), the links of disabled or vanished ones out, and luci.languages to match: an
+# enabled language of the extra is registered, a registered language without any catalog left is not, and LuCI goes
+# back to English when the language it was set to is gone. Nothing to do without LuCI.
+lang_link() {
+    is_openwrt && [ -d "$I18N" ] || return 0
+    for _l in "$I18N"/*.lmo; do
+        [ -L "$_l" ] || continue
+        case $(readlink "$_l") in "$EXTRA"/*) ;; *) continue ;; esac
+        _k=${_l%.lmo}; _k=$(printf '%s' "${_k##*.}" | tr - _)
+        { [ -e "$_l" ] && lang_enabled "$_k"; } || rm -f "$_l"
+    done
+    for _f in "$EXTRA"/lang/i18n/*.lmo; do
+        [ -f "$_f" ] || continue
+        _n=${_f##*/}; _k=${_n%.lmo}; _k=$(printf '%s' "${_k##*.}" | tr - _)
+        lang_enabled "$_k" || continue
+        if [ -L "$I18N/$_n" ]; then
+            case $(readlink "$I18N/$_n") in "$EXTRA"/*) ln -sfn "$_f" "$I18N/$_n" ;; esac
+        elif [ ! -e "$I18N/$_n" ]; then
+            ln -s "$_f" "$I18N/$_n" 2>/dev/null || true
+        fi
+    done
+    _ch=
+    luci_uci get luci.languages >/dev/null || { luci_uci set luci.languages=internal && _ch=1; }
+    while IFS="$TAB" read -r _k _name; do
+        [ -n "$_k" ] && lang_enabled "$_k" && lang_has_catalog "$_k" || continue
+        [ "$(luci_uci get "luci.languages.$_k")" = "$_name" ] && continue
+        luci_uci set "luci.languages.$_k=$_name" && _ch=1
+    done <<LANGS
+$(lang_lines)
+LANGS
+    for _k in $(luci_languages); do
+        lang_has_catalog "$_k" || { luci_uci delete "luci.languages.$_k" && _ch=1; }
+    done
+    _cur=$(luci_uci get luci.main.lang)
+    case $_cur in
+        ''|auto|en) ;;
+        *) luci_uci get "luci.languages.$_cur" >/dev/null || { luci_uci set luci.main.lang=en && _ch=1; } ;;
+    esac
+    [ -z "$_ch" ] || luci_uci commit luci
     return 0
+}
+
+# lang list | enable CODE...|all | disable CODE...|all
+do_lang() {
+    [ -d "$EXTRA/lang/i18n" ] || die "the lang extra is not installed (mu300-extra install lang)"
+    case ${1:-list} in
+        list)
+            lang_lines | while IFS="$TAB" read -r k name; do
+                if lang_enabled "$k"; then st=enabled; else st=disabled; fi
+                printf '%s\t%s\t%s\n' "$k" "$st" "$name"
+            done ;;
+        enable|disable)
+            op=$1; shift
+            [ $# -gt 0 ] || die "usage: mu300-extra lang $op CODE...|all"
+            need_root lang
+            is_openwrt || die "LuCI's languages are for OpenWrt; this system has no LuCI"
+            all=$(lang_keys)
+            if [ "$1" = all ]; then
+                [ $# = 1 ] || die "all goes alone"
+                mkdir -p "${LANGS_ON%/*}"
+                if [ "$op" = enable ]; then rm -f "$LANGS_ON"; else : > "$LANGS_ON"; fi
+            else
+                for k in "$@"; do
+                    printf '%s\n' "$all" | grep -qx -- "$k" || die "no language '$k' in the lang extra (mu300-extra lang list)"
+                done
+                on=$(for k in $all; do lang_enabled "$k" && echo "$k"; done)
+                for k in "$@"; do
+                    if [ "$op" = enable ]; then on="$on$NL$k"; else on=$(printf '%s\n' "$on" | grep -vx -- "$k"); fi
+                done
+                mkdir -p "${LANGS_ON%/*}"
+                printf '%s\n' "$on" | grep . | sort -u > "$LANGS_ON.new"
+                mv "$LANGS_ON.new" "$LANGS_ON"
+            fi
+            lang_link
+            echo "LuCI offers: en $(luci_languages | tr '\n' ' ')" ;;
+        *) die "usage: mu300-extra lang [list | enable CODE...|all | disable CODE...|all]" ;;
+    esac
 }
 
 need_root() { [ "$(id -u)" = 0 ] || die "run as root (sudo mu300-extra $*)"; }
@@ -74,6 +181,7 @@ system_release() {
 
 do_install() {
     name=$1
+    [ "$name" != lang ] || is_openwrt || die "the lang extra is LuCI's languages, for OpenWrt only: install it from an OpenWrt system"
     if [ -n "${MU300_EXTRA_FILE:-}" ]; then
         [ -s "$MU300_EXTRA_FILE" ] || die "$MU300_EXTRA_FILE not found"
         extra_unpack "$name" "$MU300_EXTRA_FILE" || die "$name was not installed"
@@ -97,6 +205,8 @@ do_install() {
         extra_unpack "$name" "$STAGE/$asset" || { rm -rf "$STAGE"; die "$name was not installed"; }
         rm -rf "$STAGE"
     fi
+    # a fresh install of the languages offers all of them
+    [ "$name" != lang ] || rm -f "$LANGS_ON"
     do_link
     printf '%s %s installed in %s\n' "$name" "$(extra_release "$name")" "$EXTRA/$name"
 }
@@ -109,6 +219,7 @@ do_remove() {
         return 1
     fi
     rm -rf "$EXTRA/$1" "$EXTRA/.$1.new" "$EXTRA/.$1.old"
+    [ "$1" != lang ] || rm -f "$LANGS_ON"
     sync
     do_link
     echo "$1 removed"
@@ -125,7 +236,8 @@ do_adopt() {
 
 do_list() {
     for x in $EXTRAS; do
-        if [ -d "$EXTRA/$x/bin" ]; then st="installed ($(extra_release "$x"))"; else st="not installed"; fi
+        if [ -d "$EXTRA/$x/bin" ] || [ -d "$EXTRA/$x/i18n" ]; then st="installed ($(extra_release "$x"))"; else st="not installed"; fi
+        [ "$x" != lang ] || is_openwrt || st="$st - for OpenWrt only: Ubuntu has no LuCI"
         printf '%-6s %s\n       %s\n' "$x" "$st" "$(extra_desc "$x")"
     done
 }
@@ -134,8 +246,14 @@ do_status() {
     any=
     for x in $(extra_installed); do
         any=1
-        printf '%s\n  release   %s\n  size      %s\n  commands ' "$x" "$(extra_release "$x")" "$(du -sh "$EXTRA/$x" 2>/dev/null | cut -f1)"
-        for f in "$EXTRA/$x"/bin/*; do printf ' %s' "${f##*/}"; done
+        printf '%s\n  release   %s\n  size      %s\n' "$x" "$(extra_release "$x")" "$(du -sh "$EXTRA/$x" 2>/dev/null | cut -f1)"
+        if [ "$x" = lang ]; then
+            if is_openwrt; then on=$(for k in $(lang_keys); do lang_enabled "$k" && printf '%s ' "$k"; done); else on="none (no LuCI)"; fi
+            printf '  languages %s, offered here: %s' "$(lang_keys | wc -l | tr -d ' ')" "${on:-none}"
+        else
+            printf '  commands '
+            for f in "$EXTRA/$x"/bin/*; do printf ' %s' "${f##*/}"; done
+        fi
         printf '\n  location  %s\n' "$EXTRA/$x"
         [ -s "$EXTRA/$x/components" ] && sed 's/^/  contains  /' "$EXTRA/$x/components"
     done
@@ -152,6 +270,7 @@ case ${1:-list} in
     remove) [ -n "${2:-}" ] || die "usage: mu300-extra remove NAME"; known "$2"; need_root remove; need_disk; do_remove "$2" "${3:-}" ;;
     link) need_root link; do_link ;;
     adopt) [ -n "${2:-}" ] || die "usage: mu300-extra adopt NAME"; known "$2"; need_root adopt; need_disk; do_adopt "$2" ;;
-    -h|--help|help) sed -n '2,18s/^# \{0,1\}//p' "$0" ;;
-    *) echo "usage: mu300-extra list|status|install NAME|remove NAME|link|adopt NAME" >&2; exit 2 ;;
+    lang) shift; do_lang "$@" ;;
+    -h|--help|help) sed -n '2,24s/^# \{0,1\}//p' "$0" ;;
+    *) echo "usage: mu300-extra list|status|install NAME|remove NAME|link|adopt NAME|lang ..." >&2; exit 2 ;;
 esac

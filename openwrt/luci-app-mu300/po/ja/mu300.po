@@ -1,0 +1,1276 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ja\n"
+
+msgid "Status dashboard"
+msgstr "ステータスダッシュボード"
+
+msgid "Cellular"
+msgstr "セルラー"
+
+msgid "Network locks"
+msgstr "ネットワークロック"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "AT terminal"
+msgstr "AT ターミナル"
+
+msgid "Adapter settings"
+msgstr "アダプタ設定"
+
+msgid "Device management"
+msgstr "デバイス管理"
+
+msgid "Languages"
+msgstr "言語"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
+msgstr "MU300 コントロールセンター: ステータスダッシュボード、ネットワークロック、AT ターミナル、SMS"
+
+msgid "China Mobile"
+msgstr "China Mobile"
+
+msgid "China Unicom"
+msgstr "China Unicom"
+
+msgid "China Telecom"
+msgstr "China Telecom"
+
+msgid "China Broadnet"
+msgstr "China Broadnet"
+
+msgid "China Tietong"
+msgstr "China Tietong"
+
+msgid "Excellent"
+msgstr "非常に良好"
+
+msgid "Good"
+msgstr "良好"
+
+msgid "Fair"
+msgstr "普通"
+
+msgid "Poor"
+msgstr "不良"
+
+msgid "Unknown"
+msgstr "不明"
+
+msgid "%d d %d h"
+msgstr "%d 日 %d 時間"
+
+msgid "%d h %d min"
+msgstr "%d 時間 %d 分"
+
+msgid "%d min"
+msgstr "%d 分"
+
+msgid "No neighbor-cell data"
+msgstr "隣接セルのデータなし"
+
+msgid "Locked"
+msgstr "ロック済み"
+
+msgid "Lock"
+msgstr "ロック"
+
+msgid "Unknown error"
+msgstr "不明なエラー"
+
+msgid "Confirm"
+msgstr "確認"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgid "New SMS · %s"
+msgstr "新着 SMS · %s"
+
+msgid "Unknown number"
+msgstr "不明な番号"
+
+msgid "Select"
+msgstr "選択"
+
+msgid "Basic"
+msgstr "基本"
+
+msgid "Registration/signal"
+msgstr "登録/信号"
+
+msgid "Bearer"
+msgstr "ベアラ"
+
+msgid "Engineering mode"
+msgstr "エンジニアリングモード"
+
+msgid "AT command (↑↓ history, Enter to send)"
+msgstr "AT コマンド (↑↓ で履歴、Enter で送信)"
+
+msgid "Send"
+msgstr "送信"
+
+msgid "Clear screen"
+msgstr "画面をクリア"
+
+msgid "Ready."
+msgstr "準備完了。"
+
+msgid "Session history (click to reuse)"
+msgstr "セッション履歴 (クリックで再利用)"
+
+msgid "(no output)"
+msgstr "(出力なし)"
+
+msgid "Request failed"
+msgstr "リクエスト失敗"
+
+msgid "(empty)"
+msgstr "(空)"
+
+msgid "USB role"
+msgstr "USB ロール"
+
+msgid "Current role"
+msgstr "現在のロール"
+
+msgid "Switch USB role"
+msgstr "USB ロールの切り替え"
+
+msgid "Device mode"
+msgstr "デバイスモード"
+
+msgid "Host mode"
+msgstr "ホストモード"
+
+msgid "Enable host mode at boot"
+msgstr "起動時にホストモードを有効化"
+
+msgid "Apply role"
+msgstr "ロールを適用"
+
+msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
+msgstr "ホストモードではこのポートの USB ネットワークとシリアルが切断されます。F50 にはバッテリーがないため、管理接続が失われる可能性があり、USB アダプタには通常セルフパワーのハブが必要です。"
+
+msgid "USB network mode"
+msgstr "USB ネットワークモード"
+
+msgid "Network protocol"
+msgstr "ネットワークプロトコル"
+
+msgid "Apply duration"
+msgstr "適用期間"
+
+msgid "Next reboot only"
+msgstr "次回の再起動のみ"
+
+msgid "Permanent"
+msgstr "恒久的"
+
+msgid "Enable selected protocol"
+msgstr "選択したプロトコルを有効化"
+
+msgid "Save; apply after reboot"
+msgstr "保存し、再起動後に適用"
+
+msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
+msgstr "既定は NCM です。Windows は ECM をネイティブにサポートしていません。RNDIS では列挙方法が変わります。「選択したプロトコルを有効化」がオフの場合は選択内容のみ保存されます。「次回の再起動のみ」は一度だけ適用され、その後 NCM に戻ります。"
+
+msgid "USB adapters"
+msgstr "USB アダプタ"
+
+msgid "Refresh"
+msgstr "更新"
+
+msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
+msgstr "ホストモードでのみ利用できます。更新すると検出された USB アダプタを起動します。LAN に追加するとブリッジ設定を保存し、ネットワークを再読み込みします。"
+
+msgid "Unavailable"
+msgstr "利用不可"
+
+msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
+msgstr "ホストモードでは USB ネットワークモードを使用できません。ホストモードの自動起動を有効にすると USB ネットワークの自動起動も無効になります。"
+
+msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
+msgstr "ホストモードにすると USB 管理接続がすぐに切断されます。F50 にはバッテリーがなく、周辺機器には外部電源が必要な場合があります。別の管理経路があることを確認してください。"
+
+msgid "USB networking and serial will re-enumerate in device mode."
+msgstr "デバイスモードでは USB ネットワークとシリアルが再列挙されます。"
+
+msgid "Switch USB role?"
+msgstr "USB ロールを切り替えますか?"
+
+msgid "Apply"
+msgstr "適用"
+
+msgid "Switching USB role…"
+msgstr "USB ロールを切り替えています…"
+
+msgid "Switch failed: %s"
+msgstr "切り替えに失敗しました: %s"
+
+msgid "Management connection lost; reconnect to confirm the USB role."
+msgstr "管理接続が切断されました。再接続して USB ロールを確認してください。"
+
+msgid "Switch request accepted; the USB connection may briefly disconnect."
+msgstr "切り替え要求を受け付けました。USB 接続が一時的に切断される場合があります。"
+
+msgid "USB role applied"
+msgstr "USB ロールを適用しました"
+
+msgid "Save USB network mode?"
+msgstr "USB ネットワークモードを保存しますか?"
+
+msgid "The network mode applies on the next reboot; USB management may need to reconnect."
+msgstr "ネットワークモードは次回の再起動時に適用されます。USB 管理接続の再接続が必要になる場合があります。"
+
+msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
+msgstr "選択内容のみ保存します。選択したプロトコルが無効のため、次回の起動でも既定の NCM が使われます。"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Saving USB network settings…"
+msgstr "USB ネットワーク設定を保存しています…"
+
+msgid "Settings saved"
+msgstr "設定を保存しました"
+
+msgid "Save failed: %s"
+msgstr "保存に失敗しました: %s"
+
+msgid "Unable to confirm the role yet; reconnect and refresh the page."
+msgstr "まだロールを確認できません。再接続してページを更新してください。"
+
+msgid "Switch to host mode to see USB adapters."
+msgstr "USB アダプタを表示するにはホストモードに切り替えてください。"
+
+msgid "Scanning USB adapters…"
+msgstr "USB アダプタをスキャンしています…"
+
+msgid "No USB adapters found."
+msgstr "USB アダプタが見つかりません。"
+
+msgid "Link connected"
+msgstr "リンク接続済み"
+
+msgid "No link; enable attempted"
+msgstr "リンクなし、有効化を試行済み"
+
+msgid "Added to LAN"
+msgstr "LAN に追加済み"
+
+msgid "Add to LAN"
+msgstr "LAN に追加"
+
+msgid "Add USB adapter to LAN?"
+msgstr "USB アダプタを LAN に追加しますか?"
+
+msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
+msgstr "ブリッジ設定を保存してネットワークを再読み込みします。既存の接続が一時的に切断される場合があります。"
+
+msgid "Add"
+msgstr "追加"
+
+msgid "Adding USB adapter…"
+msgstr "USB アダプタを追加しています…"
+
+msgid "Add failed: %s"
+msgstr "追加に失敗しました: %s"
+
+msgid "Modulation DL/UL"
+msgstr "変調方式 DL/UL"
+
+msgid "Estimated from current MCS"
+msgstr "現在の MCS から推定"
+
+msgid "MCS DL/UL"
+msgstr "MCS DL/UL"
+
+msgid "BLER DL/UL"
+msgstr "BLER DL/UL"
+
+msgid "Link & traffic"
+msgstr "リンクとトラフィック"
+
+msgid "Download rate"
+msgstr "ダウンロード速度"
+
+msgid "Upload rate"
+msgstr "アップロード速度"
+
+msgid "Total received"
+msgstr "受信合計"
+
+msgid "Total sent"
+msgstr "送信合計"
+
+msgid "Session duration"
+msgstr "セッション時間"
+
+msgid "Registration"
+msgstr "登録"
+
+msgid "Bandwidth"
+msgstr "帯域幅"
+
+msgid "AMBR DL/UL"
+msgstr "AMBR DL/UL"
+
+msgid "Wi-Fi · LAN · Device · SIM"
+msgstr "Wi-Fi · LAN · デバイス · SIM"
+
+msgid "CPU usage"
+msgstr "CPU 使用率"
+
+msgid "Memory"
+msgstr "メモリ"
+
+msgid "Storage"
+msgstr "ストレージ"
+
+msgid "Battery"
+msgstr "バッテリー"
+
+msgid "Channel"
+msgstr "チャネル"
+
+msgid "Encryption"
+msgstr "暗号化"
+
+msgid "Hidden SSID"
+msgstr "非表示 SSID"
+
+msgid "Country"
+msgstr "国"
+
+msgid "AP status"
+msgstr "AP ステータス"
+
+msgid "USB network"
+msgstr "USB ネットワーク"
+
+msgid "Connection tracking"
+msgstr "コネクショントラッキング"
+
+msgid "LAN address"
+msgstr "LAN アドレス"
+
+msgid "Wi-Fi clients"
+msgstr "Wi-Fi クライアント"
+
+msgid "DHCP leases"
+msgstr "DHCP リース"
+
+msgid "Device model"
+msgstr "デバイスモデル"
+
+msgid "System"
+msgstr "システム"
+
+msgid "Modem"
+msgstr "モデム"
+
+msgid "Carrier"
+msgstr "キャリア"
+
+msgid "Module"
+msgstr "モジュール"
+
+msgid "Firmware"
+msgstr "ファームウェア"
+
+msgid "Show SIM identifiers"
+msgstr "SIM 識別情報を表示"
+
+msgid "Quick controls"
+msgstr "クイックコントロール"
+
+msgid "Data connection"
+msgstr "データ接続"
+
+msgid "Cellular radio"
+msgstr "セルラー無線"
+
+msgid "Wi-Fi hotspot"
+msgstr "Wi-Fi ホットスポット"
+
+msgid "Restart modem"
+msgstr "モデムを再起動"
+
+msgid "Restart device"
+msgstr "デバイスを再起動"
+
+msgid "Switch to Android"
+msgstr "Android に切り替え"
+
+msgid "Neighbor cells"
+msgstr "隣接セル"
+
+msgid "RAT/Band"
+msgstr "RAT/バンド"
+
+msgid "Frequency"
+msgstr "周波数"
+
+msgid "Running %s…"
+msgstr "%s を実行中…"
+
+msgid "Started in background: %s"
+msgstr "バックグラウンドで開始: %s"
+
+msgid "Done: %s"
+msgstr "完了: %s"
+
+msgid "Failed: %s"
+msgstr "失敗: %s"
+
+msgid "Disconnecting data…"
+msgstr "データ接続を切断しています…"
+
+msgid "Connecting data…"
+msgstr "データ接続を確立しています…"
+
+msgid "Turn off cellular radio"
+msgstr "セルラー無線をオフにする"
+
+msgid "Cellular connectivity will be interrupted."
+msgstr "セルラー接続が中断されます。"
+
+msgid "Turn on cellular radio"
+msgstr "セルラー無線をオンにする"
+
+msgid "The SFUN power-on sequence will run (up to about 1 minute)."
+msgstr "SFUN の電源投入シーケンスを実行します (最大約 1 分)。"
+
+msgid "Cellular connectivity may stop for 1–2 minutes."
+msgstr "セルラー接続が 1～2 分間停止する場合があります。"
+
+msgid "Restart the entire device"
+msgstr "デバイス全体を再起動"
+
+msgid "All connections will be interrupted."
+msgstr "すべての接続が中断されます。"
+
+msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
+msgstr "次回の起動で Android に入るよう設定し、今すぐ再起動します。この管理ページとセルラー共有は切断されます。"
+
+msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
+msgstr "OpenWrt に戻るには、Android で mu300-next-boot linux を実行して再起動してください。"
+
+msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
+msgstr "または何もしなければ、起動が 5 回完了しなかった時点で自動的にフォールバックします。"
+
+msgid "Switch and reboot"
+msgstr "切り替えて再起動"
+
+msgid "Preparing Android boot and rebooting…"
+msgstr "Android 起動を準備して再起動しています…"
+
+msgid "Hide SIM identifiers"
+msgstr "SIM 識別情報を隠す"
+
+msgid "Lock cell %s?"
+msgstr "セル %s をロックしますか?"
+
+msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
+msgstr "無線スタックが再起動します (SFUN)。セルラーサービスは約 30 秒間停止します。"
+
+msgid "Locking %s in the background, about 30 seconds"
+msgstr "バックグラウンドで %s をロック中、約 30 秒"
+
+msgid "Locked %s in the background; the status will refresh shortly"
+msgstr "バックグラウンドで %s をロックしました。まもなくステータスが更新されます"
+
+msgid "Lock failed: %s"
+msgstr "ロックに失敗しました: %s"
+
+msgid "Uptime %s"
+msgstr "稼働時間 %s"
+
+msgid "Radio off"
+msgstr "無線オフ"
+
+msgid "No response"
+msgstr "応答なし"
+
+msgid "%s · Signal %s %s/10"
+msgstr "%s · 信号 %s %s/10"
+
+msgid "%s · Signal %s"
+msgstr "%s · 信号 %s"
+
+msgid "Anchor B%s"
+msgstr "アンカー B%s"
+
+msgid "No serving cell"
+msgstr "サービングセルなし"
+
+msgid "Not registered"
+msgstr "未登録"
+
+msgid "Registered"
+msgstr "登録済み"
+
+msgid "Searching"
+msgstr "検索中"
+
+msgid "Registration denied"
+msgstr "登録拒否"
+
+msgid "Registered (roaming)"
+msgstr "登録済み (ローミング)"
+
+msgid "Emergency only"
+msgstr "緊急通報のみ"
+
+msgid "Status %s"
+msgstr "ステータス %s"
+
+msgid "LTE anchor"
+msgstr "LTE アンカー"
+
+msgid "LTE link"
+msgstr "LTE リンク"
+
+msgid "Hidden"
+msgstr "非表示"
+
+msgid "No"
+msgstr "いいえ"
+
+msgid "Running"
+msgstr "実行中"
+
+msgid "Not running"
+msgstr "停止中"
+
+msgid "Connected"
+msgstr "接続済み"
+
+msgid "Disconnected"
+msgstr "切断"
+
+msgid "%s entries"
+msgstr "%s 件"
+
+msgid "%s clients"
+msgstr "%s 台"
+
+msgid "Recent DHCP leases"
+msgstr "最近の DHCP リース"
+
+msgid "%d h"
+msgstr "%d 時間"
+
+msgid "Board"
+msgstr "ボード"
+
+msgid "No temperature readings"
+msgstr "温度データなし"
+
+msgid "Cluster %d"
+msgstr "クラスタ %d"
+
+msgid "Total %s · free %s"
+msgstr "合計 %s · 空き %s"
+
+msgid "charging %s W"
+msgstr "%s W で充電中"
+
+msgid "charging"
+msgstr "充電中"
+
+msgid "drawing %s W"
+msgstr "%s W を消費中"
+
+msgid "not charging"
+msgstr "充電していません"
+
+msgid "on battery"
+msgstr "バッテリー駆動"
+
+msgid "full"
+msgstr "満充電"
+
+msgid "USB in %s W"
+msgstr "USB 入力 %s W"
+
+msgid "Online"
+msgstr "オンライン"
+
+msgid "AT adapter unavailable"
+msgstr "AT アダプタを利用できません"
+
+msgid "Saved"
+msgstr "保存しました"
+
+msgid "Management connection lost"
+msgstr "管理接続が切断されました"
+
+msgid "Installing the language pack…"
+msgstr "言語パックをインストールしています…"
+
+msgid "The language pack is installed"
+msgstr "言語パックをインストールしました"
+
+msgid "The language pack could not be installed"
+msgstr "言語パックをインストールできませんでした"
+
+msgid "Upload failed: %s"
+msgstr "アップロードに失敗しました: %s"
+
+msgid "Language of the browser"
+msgstr "ブラウザの言語"
+
+msgid "Language of the web interface"
+msgstr "Web インターフェースの言語"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "英語、トルコ語、中国語はシステムに含まれています。その他の言語は言語パックで追加されます。"
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "同じ設定は システム > システム > 言語とスタイル にもあります。"
+
+msgid "Language pack"
+msgstr "言語パック"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "言語パック (mu300-extra-lang.tar.gz、約 2 MB) は LuCI に約 40 の言語を追加し、そのうち 29 言語でこのパネルも利用できるようにします。このシステムのリリースからダウンロードするか、デバイスがインターネットに接続できない場合はリリースページのファイルをアップロードしてください。"
+
+msgid "Download from the release"
+msgstr "リリースからダウンロード"
+
+msgid "Upload the file…"
+msgstr "ファイルをアップロード…"
+
+msgid "Release"
+msgstr "リリース"
+
+msgid "Enable all"
+msgstr "すべて有効化"
+
+msgid "Disable all"
+msgstr "すべて無効化"
+
+msgid "Remove the language pack"
+msgstr "言語パックを削除"
+
+msgid "Remove the language pack?"
+msgstr "言語パックを削除しますか?"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "その言語は一覧から消えます。それらの言語で表示中のページは英語に切り替わります。"
+
+msgid "Remove"
+msgstr "削除"
+
+msgid "Disable"
+msgstr "無効化"
+
+msgid "Enable"
+msgstr "有効化"
+
+msgid "LuCI and this panel"
+msgstr "LuCI とこのパネル"
+
+msgid "LuCI only"
+msgstr "LuCI のみ"
+
+msgid "Enabled"
+msgstr "有効"
+
+msgid "Disabled"
+msgstr "無効"
+
+msgid "Language"
+msgstr "言語"
+
+msgid "Code"
+msgstr "コード"
+
+msgid "Translated"
+msgstr "翻訳範囲"
+
+msgid "State"
+msgstr "状態"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "LuCI 自体の翻訳は OpenWrt によるものです。このパネルのトルコ語と中国語以外の翻訳は機械 (AI) 翻訳です。修正を歓迎します。"
+
+msgid "Automatic"
+msgstr "自動"
+
+msgid "4G only"
+msgstr "4G のみ"
+
+msgid "Serving network"
+msgstr "サービングネットワーク"
+
+msgid "Network mode · EN-DC"
+msgstr "ネットワークモード · EN-DC"
+
+msgid "Refresh lock status"
+msgstr "ロック状態を更新"
+
+msgid "Apply at startup"
+msgstr "起動時に適用"
+
+msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
+msgstr "オフにしても次回起動時の再適用が止まるだけで、保存済みのネットワークモード、EN-DC、バンド、セルの設定は残ります。"
+
+msgid "Band locking"
+msgstr "バンドロック"
+
+msgid "NR bands"
+msgstr "NR バンド"
+
+msgid "LTE bands"
+msgstr "LTE バンド"
+
+msgid "Apply NR bands"
+msgstr "NR バンドを適用"
+
+msgid "Apply LTE bands"
+msgstr "LTE バンドを適用"
+
+msgid "Neighbor cells and cell locking"
+msgstr "隣接セルとセルロック"
+
+msgid "Lock current serving cell"
+msgstr "現在のサービングセルをロック"
+
+msgid "Unlock cell"
+msgstr "セルロックを解除"
+
+msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
+msgstr "適用すると無線スタックが再起動し (SFUN)、セルラーサービスが一時的に中断されます。設定は保存され、「起動時に適用」が有効な場合は AT の準備完了後にプラグインが再適用します。プラットフォームの無線起動前フックがあれば再起動なしで再適用できます。バンドを何も選択せずに適用すると自動モードに戻ります。"
+
+msgid "Apply “%s”?"
+msgstr "「%s」を適用しますか?"
+
+msgid "Applying %s in the background…"
+msgstr "バックグラウンドで %s を適用しています…"
+
+msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
+msgstr "バックグラウンドで %s を適用しています… (SFUN 再起動と再登録、約 30 秒)"
+
+msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
+msgstr "キュー登録: SFUN 再起動中に別のロックを適用中です。完了後に有効になります"
+
+msgid "Confirming the EN-DC status…"
+msgstr "EN-DC の状態を確認しています…"
+
+msgid "Confirming apply at startup…"
+msgstr "起動時の適用を確認しています…"
+
+msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "バックグラウンドで開始: %s (SFUN 再起動、約 30 秒)。ステータスを読み戻しています…"
+
+msgid "Network mode: %s"
+msgstr "ネットワークモード: %s"
+
+msgid "Disable EN-DC (NSA anchor)"
+msgstr "EN-DC を無効化 (NSA アンカー)"
+
+msgid "Enable EN-DC (NSA anchor)"
+msgstr "EN-DC を有効化 (NSA アンカー)"
+
+msgid "Disable apply at startup"
+msgstr "起動時の適用を無効化"
+
+msgid "Enable apply at startup"
+msgstr "起動時の適用を有効化"
+
+msgid "Reading the modem directly (a few seconds at most)…"
+msgstr "モデムから直接読み取っています (最大数秒)…"
+
+msgid "Refreshed"
+msgstr "更新しました"
+
+msgid "Refresh failed"
+msgstr "更新に失敗しました"
+
+msgid "NR bands: back to automatic"
+msgstr "NR バンド: 自動に戻しました"
+
+msgid "NR band lock: %s"
+msgstr "NR バンドロック: %s"
+
+msgid "LTE bands: back to automatic"
+msgstr "LTE バンド: 自動に戻しました"
+
+msgid "LTE band lock: %s"
+msgstr "LTE バンドロック: %s"
+
+msgid "Remove the %s cell lock"
+msgstr "%s のセルロックを解除"
+
+msgid "The radio stack will restart (SFUN), taking about 30 seconds."
+msgstr "無線スタックが再起動します (SFUN)。約 30 秒かかります。"
+
+msgid "Removing the %s cell lock…"
+msgstr "%s のセルロックを解除しています…"
+
+msgid "Unlock failed: %s"
+msgstr "ロック解除に失敗しました: %s"
+
+msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "バックグラウンドでロック解除を開始しました (SFUN 再起動、約 30 秒)。ステータスを読み戻しています…"
+
+msgid "Locking %s in the background…"
+msgstr "バックグラウンドで %s をロックしています…"
+
+msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "バックグラウンドで %s をロックしました (SFUN 再起動、約 30 秒)。ステータスを読み戻しています…"
+
+msgid "No serving-network data"
+msgstr "サービングネットワークのデータなし"
+
+msgid "NR serving cell"
+msgstr "NR サービングセル"
+
+msgid "Status confirmed"
+msgstr "ステータスを確認しました"
+
+msgid "Readback timed out; select “Refresh lock status”"
+msgstr "読み戻しがタイムアウトしました。「ロック状態を更新」を選択してください"
+
+msgid "Applied (EN-DC does not require a radio-stack restart)"
+msgstr "適用しました (EN-DC は無線スタックの再起動を必要としません)"
+
+msgid "Apply at startup is on"
+msgstr "起動時の適用はオンです"
+
+msgid "Apply at startup is off"
+msgstr "起動時の適用はオフです"
+
+msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
+msgstr "EN-DC 状態の読み戻しがタイムアウトしました。「ロック状態を更新」で確認してください"
+
+msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
+msgstr "起動時の適用状態の読み戻しがタイムアウトしました。「ロック状態を更新」で確認してください"
+
+msgid "Locked cells"
+msgstr "ロック中のセル"
+
+msgid "Unlock %s"
+msgstr "%s のロックを解除"
+
+msgid "Automatic (%d supported)"
+msgstr "自動 (%d 個対応)"
+
+msgid "%d locked: %s"
+msgstr "%d 件ロック中: %s"
+
+msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
+msgstr "このプラグインが現在の Unisoc OpenWrt プラットフォームに接続する方法を設定します。変更してもダッシュボード、AT、ロック、SMS の各ページを編集する必要はありません。"
+
+msgid "Platform adapter"
+msgstr "プラットフォームアダプタ"
+
+msgid "AT backend"
+msgstr "AT バックエンド"
+
+msgid "Auto-detect"
+msgstr "自動検出"
+
+msgid "atinout + serial port"
+msgstr "atinout + シリアルポート"
+
+msgid "Custom adapter"
+msgstr "カスタムアダプタ"
+
+msgid "AT serial port"
+msgstr "AT シリアルポート"
+
+msgid "Custom AT adapter"
+msgstr "カスタム AT アダプタ"
+
+msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
+msgstr "実行ファイルにはタイムアウト秒数と完全な AT コマンドがこの順で渡されます。プラットフォームのダイヤラーとシリアルロックを共有する必要があります。"
+
+msgid "SMS adapter"
+msgstr "SMS アダプタ"
+
+msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
+msgstr "list、show、send、delete、sync のサブコマンドを実装してください。空欄の場合は mu300-sms を自動で検出します。"
+
+msgid "SMS pool directory"
+msgstr "SMS プールディレクトリ"
+
+msgid "Cellular logical interface"
+msgstr "セルラー論理インターフェース"
+
+msgid "Cellular IPv6 interface"
+msgstr "セルラー IPv6 インターフェース"
+
+msgid "Cellular network device"
+msgstr "セルラーネットワークデバイス"
+
+msgid "Leave blank to detect from netifd"
+msgstr "空欄にすると netifd から検出します"
+
+msgid "LAN bridge"
+msgstr "LAN ブリッジ"
+
+msgid "Wi-Fi device"
+msgstr "Wi-Fi デバイス"
+
+msgid "USB device"
+msgstr "USB デバイス"
+
+msgid "Maximum wait for AT readiness (seconds)"
+msgstr "AT 準備完了の最大待機時間 (秒)"
+
+msgid "Home dashboard refresh interval (seconds)"
+msgstr "ホームダッシュボードの更新間隔 (秒)"
+
+msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
+msgstr "ホームダッシュボードの更新頻度のみを制御します。0.5～60 秒。保存後にホームを開き直すと反映されます。"
+
+msgid "Persistent state directory"
+msgstr "永続状態ディレクトリ"
+
+msgid "Recipient: number, e.g. 10086 or +86..."
+msgstr "宛先: 番号 (例: 10086 または +86...)"
+
+msgid "Sync from SIM"
+msgstr "SIM から同期"
+
+msgid "Clear local pool"
+msgstr "ローカルプールをクリア"
+
+msgid "Loading…"
+msgstr "読み込み中…"
+
+msgid "Select a conversation on the left, or enter a number below to send."
+msgstr "左側の会話を選択するか、下に番号を入力して送信してください。"
+
+msgid "Message (Enter to send, Shift+Enter for newline)"
+msgstr "メッセージ (Enter で送信、Shift+Enter で改行)"
+
+msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
+msgstr "送信には AT+CMGS (PDU モード) を使用します。チャネルがビジーの場合は再試行してください。1 件だけ削除するには、吹き出しのゴミ箱アイコンを使用します。"
+
+msgid "Syncing from the SIM in the background (AT+CMGL)…"
+msgstr "バックグラウンドで SIM から同期しています (AT+CMGL)…"
+
+msgid "SIM sync started; the list refreshes in a few seconds."
+msgstr "SIM の同期を開始しました。数秒後に一覧が更新されます。"
+
+msgid "Clear local SMS pool"
+msgstr "ローカル SMS プールをクリア"
+
+msgid "Only local files will be deleted; messages on the SIM remain."
+msgstr "ローカルファイルのみ削除されます。SIM 上のメッセージは残ります。"
+
+msgid "Clear"
+msgstr "クリア"
+
+msgid "Delete this SMS"
+msgstr "この SMS を削除"
+
+msgid "Deletion cannot be undone."
+msgstr "削除は元に戻せません。"
+
+msgid "Local only"
+msgstr "ローカルのみ"
+
+msgid "Local + SIM"
+msgstr "ローカル + SIM"
+
+msgid "Delete failed"
+msgstr "削除に失敗しました"
+
+msgid "Deleted (local + SIM)"
+msgstr "削除しました (ローカル + SIM)"
+
+msgid "Deleted (local only)"
+msgstr "削除しました (ローカルのみ)"
+
+msgid "Enter both a number and a message."
+msgstr "番号とメッセージの両方を入力してください。"
+
+msgid "Sending…"
+msgstr "送信中…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "送信しました。まもなく一覧が更新されます。"
+
+msgid "Sending failed"
+msgstr "送信に失敗しました"
+
+msgid "· %d messages, %d unread · %d conversations"
+msgstr "· %d 件、未読 %d 件 · 会話 %d 件"
+
+msgid "· %d messages · %d conversations"
+msgstr "· %d 件 · 会話 %d 件"
+
+msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
+msgstr "プールは空です。受信・送信したメッセージがここに表示されます。または「SIM から同期」を選択してください。"
+
+msgid "Me: %s"
+msgstr "自分: %s"
+
+msgid "Delete"
+msgstr "削除"
+
+msgid "Dashboard info failed"
+msgstr "ダッシュボード情報の取得に失敗しました"
+
+msgid "Applying network locks: no live signal right now"
+msgstr "ネットワークロックを適用中: 現在ライブ信号はありません"
+
+msgid "Live signal read failed"
+msgstr "ライブ信号の読み取りに失敗しました"
+
+msgid "Unknown op"
+msgstr "不明な操作"
+
+msgid "Invalid argument for this op"
+msgstr "この操作の引数が無効です"
+
+msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
+msgstr "無線がビジーです: ダイヤルまたはウォッチドッグが切り替え中です。しばらくしてから再試行してください"
+
+msgid "The action gave no valid reply"
+msgstr "操作から有効な応答がありませんでした"
+
+msgid "An AT command is one line of printable ASCII, at most 512 characters"
+msgstr "AT コマンドは印字可能な ASCII 文字の 1 行で、最大 512 文字です"
+
+msgid "Must be an AT command"
+msgstr "AT コマンドである必要があります"
+
+msgid "No \";\" command chaining"
+msgstr "\";\" によるコマンドの連結はできません"
+
+msgid "Denied: this command wedges the AT port until a reboot"
+msgstr "拒否: このコマンドは再起動するまで AT ポートを停止させます"
+
+msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
+msgstr "ネットワークロックを適用中: モデムが再起動しています (約 30 秒)。しばらくしてから再試行してください"
+
+msgid "The AT channel is busy; the command was not sent, try again"
+msgstr "AT チャネルがビジーです。コマンドは送信されませんでした。再試行してください"
+
+msgid "The modem did not answer in time; the command may still run, check before sending it again"
+msgstr "モデムが時間内に応答しませんでした。コマンドはまだ実行中の可能性があるため、再送信する前に確認してください"
+
+msgid "The fresh parameter must be 0 or 1"
+msgstr "fresh パラメータは 0 または 1 である必要があります"
+
+msgid "Lock read failed"
+msgstr "ロックの読み取りに失敗しました"
+
+msgid "Unknown lock kind"
+msgstr "不明なロック種別"
+
+msgid "Invalid value for this lock kind"
+msgstr "このロック種別に対して無効な値です"
+
+msgid "Invalid page"
+msgstr "無効なページ"
+
+msgid "mu300-sms is not available (the SMS service is not installed or not running)"
+msgstr "mu300-sms を利用できません (SMS サービスがインストールされていないか、実行されていません)"
+
+msgid "No output"
+msgstr "出力なし"
+
+msgid "Bad ID"
+msgstr "無効な ID"
+
+msgid "Read failed"
+msgstr "読み取りに失敗しました"
+
+msgid "The number may only contain digits (and a leading +)"
+msgstr "番号には数字 (と先頭の +) のみ使用できます"
+
+msgid "The message is empty"
+msgstr "メッセージが空です"
+
+msgid "The message is too long (over 480 characters)"
+msgstr "メッセージが長すぎます (480 文字超)"
+
+msgid "The message contains a control character"
+msgstr "メッセージに制御文字が含まれています"
+
+msgid "The sim parameter must be 0 or 1"
+msgstr "sim パラメータは 0 または 1 である必要があります"
+
+msgid "The USB adapter (device-usb) gave no valid reply"
+msgstr "USB アダプタ (device-usb) から有効な応答がありませんでした"
+
+msgid "The auto parameter must be 0 or 1"
+msgstr "auto パラメータは 0 または 1 である必要があります"
+
+msgid "Invalid USB role"
+msgstr "無効な USB ロール"
+
+msgid "A USB role takes no scope"
+msgstr "USB ロールには適用範囲を指定できません"
+
+msgid "Invalid USB network mode"
+msgstr "無効な USB ネットワークモード"
+
+msgid "Invalid USB network scope"
+msgstr "無効な USB ネットワークの適用範囲"
+
+msgid "Unknown USB setting"
+msgstr "不明な USB 設定"
+
+msgid "Invalid interface name"
+msgstr "無効なインターフェース名"
+
+msgid "The languages adapter gave no valid reply"
+msgstr "言語アダプタから有効な応答がありませんでした"
+
+msgid "Unknown language operation"
+msgstr "不明な言語操作"
+
+msgid "Invalid language code"
+msgstr "無効な言語コード"
+
+msgid "Invalid language request"
+msgstr "無効な言語リクエスト"
+
+msgid "Unknown source"
+msgstr "不明なソース"
+
+msgid "Request too large"
+msgstr "リクエストが大きすぎます"
+
+msgid "The runtime directory is not safe; nothing was run"
+msgstr "ランタイムディレクトリが安全ではありません。何も実行されませんでした"
+
+msgid "No such method"
+msgstr "該当するメソッドがありません"
+
+msgid "Radio did not come up"
+msgstr "無線を起動できませんでした"
+
+msgid "Expected on or off"
+msgstr "on または off を指定してください"
+
+msgid "VPN integration is not provided by this platform"
+msgstr "このプラットフォームは VPN 連携を提供していません"
+
+msgid "Dual-boot integration is not provided by this platform"
+msgstr "このプラットフォームはデュアルブート連携を提供していません"
+
+msgid "mu300-next-boot failed"
+msgstr "mu300-next-boot が失敗しました"
+
+msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
+msgstr "AT バックエンドが応答しませんでした (無線オフ、モデム再起動中、またはアダプタ利用不可)"
+
+msgid "USB role adapter is not executable"
+msgstr "USB ロールアダプタが実行可能ではありません"
+
+msgid "USB role adapter failed"
+msgstr "USB ロールアダプタが失敗しました"
+
+msgid "USB role switch is unavailable"
+msgstr "USB ロールの切り替えは利用できません"
+
+msgid "USB role switch failed"
+msgstr "USB ロールの切り替えに失敗しました"
+
+msgid "USB role switch was refused by platform safety checks"
+msgstr "USB ロールの切り替えがプラットフォームの安全チェックにより拒否されました"
+
+msgid "Cannot create USB boot settings directory"
+msgstr "USB 起動設定ディレクトリを作成できません"
+
+msgid "Cannot write USB boot settings"
+msgstr "USB 起動設定を書き込めません"
+
+msgid "Cannot save USB boot settings"
+msgstr "USB 起動設定を保存できません"
+
+msgid "Invalid boot-auto value"
+msgstr "無効な boot-auto 値"
+
+msgid "Device is the boot default; host auto-apply is the only persistent role"
+msgstr "起動時の既定はデバイスモードです。永続化できるのはホストモードの自動適用のみです"
+
+msgid "Cannot save USB role policy"
+msgstr "USB ロールポリシーを保存できません"
+
+msgid "Cannot disable USB network boot policy"
+msgstr "USB ネットワークの起動ポリシーを無効化できません"
+
+msgid "Cannot commit USB role policy"
+msgstr "USB ロールポリシーをコミットできません"
+
+msgid "USB network mode is unavailable in host role"
+msgstr "ホストモードでは USB ネットワークモードを使用できません"
+
+msgid "Disable host boot-auto before configuring USB network"
+msgstr "USB ネットワークを設定する前にホストモードの boot-auto を無効にしてください"
+
+msgid "Cannot save USB network policy"
+msgstr "USB ネットワークポリシーを保存できません"
+
+msgid "Cannot commit USB network policy"
+msgstr "USB ネットワークポリシーをコミットできません"
+
+msgid "USB host mode is required"
+msgstr "USB ホストモードが必要です"
+
+msgid "Not a USB network interface"
+msgstr "USB ネットワークインターフェースではありません"
+
+msgid "LAN bridge device section was not found"
+msgstr "LAN ブリッジのデバイスセクションが見つかりません"
+
+msgid "Cannot bring USB network interface up"
+msgstr "USB ネットワークインターフェースを起動できません"
+
+msgid "Cannot add interface to LAN bridge"
+msgstr "インターフェースを LAN ブリッジに追加できません"
+
+msgid "Cannot save LAN bridge"
+msgstr "LAN ブリッジを保存できません"
+
+msgid "Network reload failed"
+msgstr "ネットワークの再読み込みに失敗しました"
+
+msgid "Cannot attach USB interface to LAN bridge"
+msgstr "USB インターフェースを LAN ブリッジに接続できません"
+
+msgid "The language pack is not installed"
+msgstr "言語パックがインストールされていません"
+
+msgid "No language given"
+msgstr "言語が指定されていません"
+
+msgid "The language could not be changed"
+msgstr "言語を変更できませんでした"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI はこの言語を提供していません"
+
+msgid "No uploaded language pack"
+msgstr "アップロードされた言語パックがありません"
+
+msgid "An installation is already running"
+msgstr "インストールはすでに実行中です"
+
+msgid "The language pack could not be removed"
+msgstr "言語パックを削除できませんでした"
+
+msgid "Lock cache unavailable"
+msgstr "ロックキャッシュを利用できません"
+
+msgid "No serving cell to lock to"
+msgstr "ロックできるサービングセルがありません"

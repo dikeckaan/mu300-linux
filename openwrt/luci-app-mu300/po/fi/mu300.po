@@ -1,0 +1,1276 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fi\n"
+
+msgid "Status dashboard"
+msgstr "Tilan yleiskatsaus"
+
+msgid "Cellular"
+msgstr "Matkapuhelinverkko"
+
+msgid "Network locks"
+msgstr "Verkkolukitukset"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "AT terminal"
+msgstr "AT-pääte"
+
+msgid "Adapter settings"
+msgstr "Sovittimen asetukset"
+
+msgid "Device management"
+msgstr "Laitehallinta"
+
+msgid "Languages"
+msgstr "Kielet"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
+msgstr "MU300-ohjauskeskus: tilan yleiskatsaus, verkkolukitukset, AT-pääte ja SMS"
+
+msgid "China Mobile"
+msgstr "China Mobile"
+
+msgid "China Unicom"
+msgstr "China Unicom"
+
+msgid "China Telecom"
+msgstr "China Telecom"
+
+msgid "China Broadnet"
+msgstr "China Broadnet"
+
+msgid "China Tietong"
+msgstr "China Tietong"
+
+msgid "Excellent"
+msgstr "Erinomainen"
+
+msgid "Good"
+msgstr "Hyvä"
+
+msgid "Fair"
+msgstr "Kohtalainen"
+
+msgid "Poor"
+msgstr "Heikko"
+
+msgid "Unknown"
+msgstr "Tuntematon"
+
+msgid "%d d %d h"
+msgstr "%d vrk %d h"
+
+msgid "%d h %d min"
+msgstr "%d h %d min"
+
+msgid "%d min"
+msgstr "%d min"
+
+msgid "No neighbor-cell data"
+msgstr "Ei naapurisolutietoja"
+
+msgid "Locked"
+msgstr "Lukittu"
+
+msgid "Lock"
+msgstr "Lukitse"
+
+msgid "Unknown error"
+msgstr "Tuntematon virhe"
+
+msgid "Confirm"
+msgstr "Vahvista"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Cancel"
+msgstr "Peruuta"
+
+msgid "New SMS · %s"
+msgstr "Uusi SMS · %s"
+
+msgid "Unknown number"
+msgstr "Tuntematon numero"
+
+msgid "Select"
+msgstr "Valitse"
+
+msgid "Basic"
+msgstr "Perustiedot"
+
+msgid "Registration/signal"
+msgstr "Rekisteröinti/signaali"
+
+msgid "Bearer"
+msgstr "Siirtotie"
+
+msgid "Engineering mode"
+msgstr "Insinööritila"
+
+msgid "AT command (↑↓ history, Enter to send)"
+msgstr "AT-komento (↑↓ historia, Enter lähettää)"
+
+msgid "Send"
+msgstr "Lähetä"
+
+msgid "Clear screen"
+msgstr "Tyhjennä näyttö"
+
+msgid "Ready."
+msgstr "Valmis."
+
+msgid "Session history (click to reuse)"
+msgstr "Istuntohistoria (käytä uudelleen napsauttamalla)"
+
+msgid "(no output)"
+msgstr "(ei tulostetta)"
+
+msgid "Request failed"
+msgstr "Pyyntö epäonnistui"
+
+msgid "(empty)"
+msgstr "(tyhjä)"
+
+msgid "USB role"
+msgstr "USB-rooli"
+
+msgid "Current role"
+msgstr "Nykyinen rooli"
+
+msgid "Switch USB role"
+msgstr "Vaihda USB-roolia"
+
+msgid "Device mode"
+msgstr "Laitetila"
+
+msgid "Host mode"
+msgstr "Isäntätila"
+
+msgid "Enable host mode at boot"
+msgstr "Ota isäntätila käyttöön käynnistyksessä"
+
+msgid "Apply role"
+msgstr "Käytä roolia"
+
+msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
+msgstr "Isäntätila katkaisee tämän portin USB-verkon ja sarjayhteyden. F50:ssä ei ole akkua; hallintayhteys voi katketa, ja USB-sovitin tarvitsee yleensä keskittimen, jossa on oma virtalähde."
+
+msgid "USB network mode"
+msgstr "USB-verkkotila"
+
+msgid "Network protocol"
+msgstr "Verkkoprotokolla"
+
+msgid "Apply duration"
+msgstr "Voimassaolo"
+
+msgid "Next reboot only"
+msgstr "Vain seuraava uudelleenkäynnistys"
+
+msgid "Permanent"
+msgstr "Pysyvä"
+
+msgid "Enable selected protocol"
+msgstr "Ota valittu protokolla käyttöön"
+
+msgid "Save; apply after reboot"
+msgstr "Tallenna; käytä uudelleenkäynnistyksen jälkeen"
+
+msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
+msgstr "NCM on oletus. Windows ei tue ECM:ää natiivisti; RNDIS muuttaa laitteen tunnistusta. Kun Ota valittu protokolla käyttöön on pois päältä, vain valintasi tallennetaan. Vain seuraava uudelleenkäynnistys otetaan käyttöön kerran, minkä jälkeen palataan NCM:ään."
+
+msgid "USB adapters"
+msgstr "USB-sovittimet"
+
+msgid "Refresh"
+msgstr "Päivitä"
+
+msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
+msgstr "Käytettävissä vain isäntätilassa. Päivitä ottaa löydetyt USB-sovittimet käyttöön; LAN-verkkoon lisääminen tallentaa sillan ja lataa verkon uudelleen."
+
+msgid "Unavailable"
+msgstr "Ei käytettävissä"
+
+msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
+msgstr "USB-verkkotila ei ole käytettävissä isäntätilassa; isäntätilan automaattinen käynnistys poistaa käytöstä myös USB-verkon automaattisen käynnistyksen."
+
+msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
+msgstr "Isäntätila katkaisee USB-hallintayhteyden välittömästi. F50:ssä ei ole akkua, ja oheislaitteet voivat tarvita ulkoista virtaa; varmista, että käytettävissä on toinen hallintayhteys."
+
+msgid "USB networking and serial will re-enumerate in device mode."
+msgstr "USB-verkko ja sarjayhteys tunnistetaan uudelleen laitetilassa."
+
+msgid "Switch USB role?"
+msgstr "Vaihdetaanko USB-rooli?"
+
+msgid "Apply"
+msgstr "Käytä"
+
+msgid "Switching USB role…"
+msgstr "Vaihdetaan USB-roolia…"
+
+msgid "Switch failed: %s"
+msgstr "Vaihto epäonnistui: %s"
+
+msgid "Management connection lost; reconnect to confirm the USB role."
+msgstr "Hallintayhteys katkesi; vahvista USB-rooli yhdistämällä uudelleen."
+
+msgid "Switch request accepted; the USB connection may briefly disconnect."
+msgstr "Vaihtopyyntö hyväksytty; USB-yhteys voi katketa hetkeksi."
+
+msgid "USB role applied"
+msgstr "USB-rooli otettu käyttöön"
+
+msgid "Save USB network mode?"
+msgstr "Tallennetaanko USB-verkkotila?"
+
+msgid "The network mode applies on the next reboot; USB management may need to reconnect."
+msgstr "Verkkotila otetaan käyttöön seuraavassa uudelleenkäynnistyksessä; USB-hallintayhteys on ehkä muodostettava uudelleen."
+
+msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
+msgstr "Tallenna vain valinta; kun valittu protokolla ei ole käytössä, seuraava käynnistys käyttää edelleen oletusarvoista NCM:ää."
+
+msgid "Save"
+msgstr "Tallenna"
+
+msgid "Saving USB network settings…"
+msgstr "Tallennetaan USB-verkkoasetuksia…"
+
+msgid "Settings saved"
+msgstr "Asetukset tallennettu"
+
+msgid "Save failed: %s"
+msgstr "Tallennus epäonnistui: %s"
+
+msgid "Unable to confirm the role yet; reconnect and refresh the page."
+msgstr "Roolia ei voi vielä vahvistaa; yhdistä uudelleen ja päivitä sivu."
+
+msgid "Switch to host mode to see USB adapters."
+msgstr "Vaihda isäntätilaan nähdäksesi USB-sovittimet."
+
+msgid "Scanning USB adapters…"
+msgstr "Etsitään USB-sovittimia…"
+
+msgid "No USB adapters found."
+msgstr "USB-sovittimia ei löytynyt."
+
+msgid "Link connected"
+msgstr "Linkki yhdistetty"
+
+msgid "No link; enable attempted"
+msgstr "Ei linkkiä; käyttöönottoa yritetty"
+
+msgid "Added to LAN"
+msgstr "Lisätty LAN-verkkoon"
+
+msgid "Add to LAN"
+msgstr "Lisää LAN-verkkoon"
+
+msgid "Add USB adapter to LAN?"
+msgstr "Lisätäänkö USB-sovitin LAN-verkkoon?"
+
+msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
+msgstr "Tämä tallentaa siltamäärityksen ja lataa verkon uudelleen; nykyiset yhteydet voivat katketa hetkeksi."
+
+msgid "Add"
+msgstr "Lisää"
+
+msgid "Adding USB adapter…"
+msgstr "Lisätään USB-sovitinta…"
+
+msgid "Add failed: %s"
+msgstr "Lisäys epäonnistui: %s"
+
+msgid "Modulation DL/UL"
+msgstr "Modulaatio DL/UL"
+
+msgid "Estimated from current MCS"
+msgstr "Arvioitu nykyisestä MCS:stä"
+
+msgid "MCS DL/UL"
+msgstr "MCS DL/UL"
+
+msgid "BLER DL/UL"
+msgstr "BLER DL/UL"
+
+msgid "Link & traffic"
+msgstr "Linkki ja liikenne"
+
+msgid "Download rate"
+msgstr "Latausnopeus"
+
+msgid "Upload rate"
+msgstr "Lähetysnopeus"
+
+msgid "Total received"
+msgstr "Vastaanotettu yhteensä"
+
+msgid "Total sent"
+msgstr "Lähetetty yhteensä"
+
+msgid "Session duration"
+msgstr "Istunnon kesto"
+
+msgid "Registration"
+msgstr "Rekisteröinti"
+
+msgid "Bandwidth"
+msgstr "Kaistanleveys"
+
+msgid "AMBR DL/UL"
+msgstr "AMBR DL/UL"
+
+msgid "Wi-Fi · LAN · Device · SIM"
+msgstr "Wi-Fi · LAN · Laite · SIM"
+
+msgid "CPU usage"
+msgstr "CPU-käyttö"
+
+msgid "Memory"
+msgstr "Muisti"
+
+msgid "Storage"
+msgstr "Tallennustila"
+
+msgid "Battery"
+msgstr "Akku"
+
+msgid "Channel"
+msgstr "Kanava"
+
+msgid "Encryption"
+msgstr "Salaus"
+
+msgid "Hidden SSID"
+msgstr "Piilotettu SSID"
+
+msgid "Country"
+msgstr "Maa"
+
+msgid "AP status"
+msgstr "AP:n tila"
+
+msgid "USB network"
+msgstr "USB-verkko"
+
+msgid "Connection tracking"
+msgstr "Yhteyksien seuranta"
+
+msgid "LAN address"
+msgstr "LAN-osoite"
+
+msgid "Wi-Fi clients"
+msgstr "Wi-Fi-asiakkaat"
+
+msgid "DHCP leases"
+msgstr "DHCP-vuokrat"
+
+msgid "Device model"
+msgstr "Laitemalli"
+
+msgid "System"
+msgstr "Järjestelmä"
+
+msgid "Modem"
+msgstr "Modeemi"
+
+msgid "Carrier"
+msgstr "Operaattori"
+
+msgid "Module"
+msgstr "Moduuli"
+
+msgid "Firmware"
+msgstr "Laiteohjelmisto"
+
+msgid "Show SIM identifiers"
+msgstr "Näytä SIM-tunnisteet"
+
+msgid "Quick controls"
+msgstr "Pikasäätimet"
+
+msgid "Data connection"
+msgstr "Datayhteys"
+
+msgid "Cellular radio"
+msgstr "Matkapuhelinradio"
+
+msgid "Wi-Fi hotspot"
+msgstr "Wi-Fi-tukiasema"
+
+msgid "Restart modem"
+msgstr "Käynnistä modeemi uudelleen"
+
+msgid "Restart device"
+msgstr "Käynnistä laite uudelleen"
+
+msgid "Switch to Android"
+msgstr "Vaihda Androidiin"
+
+msgid "Neighbor cells"
+msgstr "Naapurisolut"
+
+msgid "RAT/Band"
+msgstr "RAT/kaista"
+
+msgid "Frequency"
+msgstr "Taajuus"
+
+msgid "Running %s…"
+msgstr "Suoritetaan %s…"
+
+msgid "Started in background: %s"
+msgstr "Käynnistetty taustalla: %s"
+
+msgid "Done: %s"
+msgstr "Valmis: %s"
+
+msgid "Failed: %s"
+msgstr "Epäonnistui: %s"
+
+msgid "Disconnecting data…"
+msgstr "Katkaistaan datayhteyttä…"
+
+msgid "Connecting data…"
+msgstr "Muodostetaan datayhteyttä…"
+
+msgid "Turn off cellular radio"
+msgstr "Sammuta matkapuhelinradio"
+
+msgid "Cellular connectivity will be interrupted."
+msgstr "Matkapuhelinyhteys katkeaa."
+
+msgid "Turn on cellular radio"
+msgstr "Kytke matkapuhelinradio päälle"
+
+msgid "The SFUN power-on sequence will run (up to about 1 minute)."
+msgstr "SFUN-käynnistysjakso suoritetaan (enintään noin 1 minuutti)."
+
+msgid "Cellular connectivity may stop for 1–2 minutes."
+msgstr "Matkapuhelinyhteys voi katketa 1–2 minuutiksi."
+
+msgid "Restart the entire device"
+msgstr "Käynnistä koko laite uudelleen"
+
+msgid "All connections will be interrupted."
+msgstr "Kaikki yhteydet katkeavat."
+
+msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
+msgstr "Seuraava käynnistys siirtyy Androidiin, ja laite käynnistyy uudelleen nyt. Tämä hallintasivu ja matkapuhelinyhteyden jakaminen katkeavat."
+
+msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
+msgstr "Palaa OpenWrt:hen suorittamalla Androidissa mu300-next-boot linux ja käynnistämällä uudelleen."
+
+msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
+msgstr "Tai älä tee mitään: viiden keskeytyneen käynnistyksen jälkeen palataan automaattisesti."
+
+msgid "Switch and reboot"
+msgstr "Vaihda ja käynnistä uudelleen"
+
+msgid "Preparing Android boot and rebooting…"
+msgstr "Valmistellaan Android-käynnistystä ja käynnistetään uudelleen…"
+
+msgid "Hide SIM identifiers"
+msgstr "Piilota SIM-tunnisteet"
+
+msgid "Lock cell %s?"
+msgstr "Lukitaanko solu %s?"
+
+msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
+msgstr "Radiopino käynnistyy uudelleen (SFUN); matkapuhelinpalvelu katkeaa noin 30 sekunniksi."
+
+msgid "Locking %s in the background, about 30 seconds"
+msgstr "Lukitaan %s taustalla, noin 30 sekuntia"
+
+msgid "Locked %s in the background; the status will refresh shortly"
+msgstr "%s lukittu taustalla; tila päivittyy pian"
+
+msgid "Lock failed: %s"
+msgstr "Lukitus epäonnistui: %s"
+
+msgid "Uptime %s"
+msgstr "Käynnissä %s"
+
+msgid "Radio off"
+msgstr "Radio pois päältä"
+
+msgid "No response"
+msgstr "Ei vastausta"
+
+msgid "%s · Signal %s %s/10"
+msgstr "%s · Signaali %s %s/10"
+
+msgid "%s · Signal %s"
+msgstr "%s · Signaali %s"
+
+msgid "Anchor B%s"
+msgstr "Ankkuri B%s"
+
+msgid "No serving cell"
+msgstr "Ei palvelevaa solua"
+
+msgid "Not registered"
+msgstr "Ei rekisteröity"
+
+msgid "Registered"
+msgstr "Rekisteröity"
+
+msgid "Searching"
+msgstr "Haetaan"
+
+msgid "Registration denied"
+msgstr "Rekisteröinti evätty"
+
+msgid "Registered (roaming)"
+msgstr "Rekisteröity (verkkovierailu)"
+
+msgid "Emergency only"
+msgstr "Vain hätäpuhelut"
+
+msgid "Status %s"
+msgstr "Tila %s"
+
+msgid "LTE anchor"
+msgstr "LTE-ankkuri"
+
+msgid "LTE link"
+msgstr "LTE-linkki"
+
+msgid "Hidden"
+msgstr "Piilotettu"
+
+msgid "No"
+msgstr "Ei"
+
+msgid "Running"
+msgstr "Käynnissä"
+
+msgid "Not running"
+msgstr "Ei käynnissä"
+
+msgid "Connected"
+msgstr "Yhdistetty"
+
+msgid "Disconnected"
+msgstr "Ei yhdistetty"
+
+msgid "%s entries"
+msgstr "%s merkintää"
+
+msgid "%s clients"
+msgstr "%s asiakasta"
+
+msgid "Recent DHCP leases"
+msgstr "Viimeisimmät DHCP-vuokrat"
+
+msgid "%d h"
+msgstr "%d h"
+
+msgid "Board"
+msgstr "Emolevy"
+
+msgid "No temperature readings"
+msgstr "Ei lämpötilalukemia"
+
+msgid "Cluster %d"
+msgstr "Klusteri %d"
+
+msgid "Total %s · free %s"
+msgstr "Yhteensä %s · vapaana %s"
+
+msgid "charging %s W"
+msgstr "latautuu %s W"
+
+msgid "charging"
+msgstr "latautuu"
+
+msgid "drawing %s W"
+msgstr "kuluttaa %s W"
+
+msgid "not charging"
+msgstr "ei lataudu"
+
+msgid "on battery"
+msgstr "akkukäytössä"
+
+msgid "full"
+msgstr "täynnä"
+
+msgid "USB in %s W"
+msgstr "USB-tulo %s W"
+
+msgid "Online"
+msgstr "Verkossa"
+
+msgid "AT adapter unavailable"
+msgstr "AT-sovitin ei käytettävissä"
+
+msgid "Saved"
+msgstr "Tallennettu"
+
+msgid "Management connection lost"
+msgstr "Hallintayhteys katkesi"
+
+msgid "Installing the language pack…"
+msgstr "Asennetaan kielipakettia…"
+
+msgid "The language pack is installed"
+msgstr "Kielipaketti on asennettu"
+
+msgid "The language pack could not be installed"
+msgstr "Kielipakettia ei voitu asentaa"
+
+msgid "Upload failed: %s"
+msgstr "Lähetys epäonnistui: %s"
+
+msgid "Language of the browser"
+msgstr "Selaimen kieli"
+
+msgid "Language of the web interface"
+msgstr "Verkkokäyttöliittymän kieli"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "Englanti, turkki ja kiina sisältyvät järjestelmään; kielipaketti lisää muut."
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "Sama asetus on kohdassa Järjestelmä > Järjestelmä > Kieli ja tyyli."
+
+msgid "Language pack"
+msgstr "Kielipaketti"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "Kielipaketti (mu300-extra-lang.tar.gz, noin 2 MB) lisää LuCIin noin 40 kieltä lisää ja tähän paneeliin niistä 29. Lataa se tämän järjestelmän julkaisusta tai lähetä julkaisusivulta ladattu tiedosto, jos laitteella ei ole internetyhteyttä."
+
+msgid "Download from the release"
+msgstr "Lataa julkaisusta"
+
+msgid "Upload the file…"
+msgstr "Lähetä tiedosto…"
+
+msgid "Release"
+msgstr "Julkaisu"
+
+msgid "Enable all"
+msgstr "Ota kaikki käyttöön"
+
+msgid "Disable all"
+msgstr "Poista kaikki käytöstä"
+
+msgid "Remove the language pack"
+msgstr "Poista kielipaketti"
+
+msgid "Remove the language pack?"
+msgstr "Poistetaanko kielipaketti?"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "Sen kielet katoavat luettelosta; jollakin niistä näytettävä sivu vaihtuu englanniksi."
+
+msgid "Remove"
+msgstr "Poista"
+
+msgid "Disable"
+msgstr "Poista käytöstä"
+
+msgid "Enable"
+msgstr "Ota käyttöön"
+
+msgid "LuCI and this panel"
+msgstr "LuCI ja tämä paneeli"
+
+msgid "LuCI only"
+msgstr "Vain LuCI"
+
+msgid "Enabled"
+msgstr "Käytössä"
+
+msgid "Disabled"
+msgstr "Ei käytössä"
+
+msgid "Language"
+msgstr "Kieli"
+
+msgid "Code"
+msgstr "Koodi"
+
+msgid "Translated"
+msgstr "Käännetty"
+
+msgid "State"
+msgstr "Tila"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "LuCIn omat käännökset tulevat OpenWrt:stä. Tämän paneelin käännökset turkkia ja kiinaa lukuun ottamatta ovat konekäännöksiä (tekoäly); korjaukset ovat tervetulleita."
+
+msgid "Automatic"
+msgstr "Automaattinen"
+
+msgid "4G only"
+msgstr "Vain 4G"
+
+msgid "Serving network"
+msgstr "Palveleva verkko"
+
+msgid "Network mode · EN-DC"
+msgstr "Verkkotila · EN-DC"
+
+msgid "Refresh lock status"
+msgstr "Päivitä lukitusten tila"
+
+msgid "Apply at startup"
+msgstr "Käytä käynnistyksessä"
+
+msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
+msgstr "Tämän poistaminen käytöstä lopettaa vain uudelleenkäytön seuraavassa käynnistyksessä; tallennetut verkkotila-, EN-DC-, kaista- ja soluasetukset säilyvät."
+
+msgid "Band locking"
+msgstr "Kaistalukitus"
+
+msgid "NR bands"
+msgstr "NR-kaistat"
+
+msgid "LTE bands"
+msgstr "LTE-kaistat"
+
+msgid "Apply NR bands"
+msgstr "Käytä NR-kaistoja"
+
+msgid "Apply LTE bands"
+msgstr "Käytä LTE-kaistoja"
+
+msgid "Neighbor cells and cell locking"
+msgstr "Naapurisolut ja solulukitus"
+
+msgid "Lock current serving cell"
+msgstr "Lukitse nykyinen palveleva solu"
+
+msgid "Unlock cell"
+msgstr "Poista solulukitus"
+
+msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
+msgstr "Käyttöönotto käynnistää radiopinon uudelleen (SFUN) ja katkaisee matkapuhelinpalvelun hetkeksi. Asetukset tallennetaan, ja laajennus ottaa ne uudelleen käyttöön AT:n ollessa valmis, kun Käytä käynnistyksessä on käytössä. Alustan radiota edeltävä koukku voi ottaa ne käyttöön ilman uudelleenkäynnistystä. Palauta automaattinen tila käyttämällä ilman valittuja kaistoja."
+
+msgid "Apply “%s”?"
+msgstr "Käytetäänkö ”%s”?"
+
+msgid "Applying %s in the background…"
+msgstr "Otetaan %s käyttöön taustalla…"
+
+msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
+msgstr "Otetaan %s käyttöön taustalla… (SFUN-uudelleenkäynnistys ja uudelleenrekisteröinti, noin 30 sekuntia)"
+
+msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
+msgstr "Jonossa: toista lukitusta otetaan käyttöön SFUN-uudelleenkäynnistyksen aikana; tämä tulee voimaan sen jälkeen"
+
+msgid "Confirming the EN-DC status…"
+msgstr "Vahvistetaan EN-DC-tilaa…"
+
+msgid "Confirming apply at startup…"
+msgstr "Vahvistetaan Käytä käynnistyksessä -asetusta…"
+
+msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Käynnistetty taustalla: %s (SFUN-uudelleenkäynnistys, noin 30 sekuntia); luetaan tila takaisin…"
+
+msgid "Network mode: %s"
+msgstr "Verkkotila: %s"
+
+msgid "Disable EN-DC (NSA anchor)"
+msgstr "Poista EN-DC käytöstä (NSA-ankkuri)"
+
+msgid "Enable EN-DC (NSA anchor)"
+msgstr "Ota EN-DC käyttöön (NSA-ankkuri)"
+
+msgid "Disable apply at startup"
+msgstr "Poista Käytä käynnistyksessä käytöstä"
+
+msgid "Enable apply at startup"
+msgstr "Ota Käytä käynnistyksessä käyttöön"
+
+msgid "Reading the modem directly (a few seconds at most)…"
+msgstr "Luetaan modeemia suoraan (enintään muutama sekunti)…"
+
+msgid "Refreshed"
+msgstr "Päivitetty"
+
+msgid "Refresh failed"
+msgstr "Päivitys epäonnistui"
+
+msgid "NR bands: back to automatic"
+msgstr "NR-kaistat: takaisin automaattiseen"
+
+msgid "NR band lock: %s"
+msgstr "NR-kaistalukitus: %s"
+
+msgid "LTE bands: back to automatic"
+msgstr "LTE-kaistat: takaisin automaattiseen"
+
+msgid "LTE band lock: %s"
+msgstr "LTE-kaistalukitus: %s"
+
+msgid "Remove the %s cell lock"
+msgstr "Poista %s-solulukitus"
+
+msgid "The radio stack will restart (SFUN), taking about 30 seconds."
+msgstr "Radiopino käynnistyy uudelleen (SFUN), mikä kestää noin 30 sekuntia."
+
+msgid "Removing the %s cell lock…"
+msgstr "Poistetaan %s-solulukitusta…"
+
+msgid "Unlock failed: %s"
+msgstr "Lukituksen poisto epäonnistui: %s"
+
+msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Lukituksen poisto käynnistetty taustalla (SFUN-uudelleenkäynnistys, noin 30 sekuntia); luetaan tila takaisin…"
+
+msgid "Locking %s in the background…"
+msgstr "Lukitaan %s taustalla…"
+
+msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "%s lukittu taustalla (SFUN-uudelleenkäynnistys, noin 30 sekuntia); luetaan tila takaisin…"
+
+msgid "No serving-network data"
+msgstr "Ei palvelevan verkon tietoja"
+
+msgid "NR serving cell"
+msgstr "Palveleva NR-solu"
+
+msgid "Status confirmed"
+msgstr "Tila vahvistettu"
+
+msgid "Readback timed out; select “Refresh lock status”"
+msgstr "Takaisinluku aikakatkaistiin; valitse ”Päivitä lukitusten tila”"
+
+msgid "Applied (EN-DC does not require a radio-stack restart)"
+msgstr "Otettu käyttöön (EN-DC ei vaadi radiopinon uudelleenkäynnistystä)"
+
+msgid "Apply at startup is on"
+msgstr "Käytä käynnistyksessä on päällä"
+
+msgid "Apply at startup is off"
+msgstr "Käytä käynnistyksessä on pois päältä"
+
+msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
+msgstr "EN-DC-tilan takaisinluku aikakatkaistiin; vahvista valitsemalla ”Päivitä lukitusten tila”"
+
+msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Käytä käynnistyksessä -tilan takaisinluku aikakatkaistiin; vahvista valitsemalla ”Päivitä lukitusten tila”"
+
+msgid "Locked cells"
+msgstr "Lukitut solut"
+
+msgid "Unlock %s"
+msgstr "Poista lukitus: %s"
+
+msgid "Automatic (%d supported)"
+msgstr "Automaattinen (%d tuettu)"
+
+msgid "%d locked: %s"
+msgstr "%d lukittu: %s"
+
+msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
+msgstr "Määritä, miten tämä laajennus liittyy nykyiseen Unisoc OpenWrt -alustaan. Muutokset eivät vaadi yleiskatsaus-, AT-, lukitus- tai SMS-sivujen muokkaamista."
+
+msgid "Platform adapter"
+msgstr "Alustasovitin"
+
+msgid "AT backend"
+msgstr "AT-taustaosa"
+
+msgid "Auto-detect"
+msgstr "Tunnista automaattisesti"
+
+msgid "atinout + serial port"
+msgstr "atinout + sarjaportti"
+
+msgid "Custom adapter"
+msgstr "Mukautettu sovitin"
+
+msgid "AT serial port"
+msgstr "AT-sarjaportti"
+
+msgid "Custom AT adapter"
+msgstr "Mukautettu AT-sovitin"
+
+msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
+msgstr "Suoritettava ohjelma saa aikakatkaisun sekunteina ja koko AT-komennon, tässä järjestyksessä. Sen on jaettava sarjaportin lukitus alustan yhteydenmuodostusohjelman kanssa."
+
+msgid "SMS adapter"
+msgstr "SMS-sovitin"
+
+msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
+msgstr "Toteuta alikomennot list, show, send, delete ja sync; jätä tyhjäksi, jotta mu300-sms löydetään automaattisesti."
+
+msgid "SMS pool directory"
+msgstr "SMS-varaston hakemisto"
+
+msgid "Cellular logical interface"
+msgstr "Matkapuhelinverkon looginen liitäntä"
+
+msgid "Cellular IPv6 interface"
+msgstr "Matkapuhelinverkon IPv6-liitäntä"
+
+msgid "Cellular network device"
+msgstr "Matkapuhelinverkon verkkolaite"
+
+msgid "Leave blank to detect from netifd"
+msgstr "Jätä tyhjäksi, jos haluat tunnistaa netifd:stä"
+
+msgid "LAN bridge"
+msgstr "LAN-silta"
+
+msgid "Wi-Fi device"
+msgstr "Wi-Fi-laite"
+
+msgid "USB device"
+msgstr "USB-laite"
+
+msgid "Maximum wait for AT readiness (seconds)"
+msgstr "AT-valmiuden enimmäisodotusaika (sekuntia)"
+
+msgid "Home dashboard refresh interval (seconds)"
+msgstr "Etusivun päivitysväli (sekuntia)"
+
+msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
+msgstr "Säätää vain etusivun päivitystiheyttä; 0,5–60 sekuntia. Avaa etusivu uudelleen tallennuksen jälkeen, jotta muutos tulee voimaan."
+
+msgid "Persistent state directory"
+msgstr "Pysyvän tilan hakemisto"
+
+msgid "Recipient: number, e.g. 10086 or +86..."
+msgstr "Vastaanottaja: numero, esim. 10086 tai +86..."
+
+msgid "Sync from SIM"
+msgstr "Synkronoi SIM-kortilta"
+
+msgid "Clear local pool"
+msgstr "Tyhjennä paikallinen varasto"
+
+msgid "Loading…"
+msgstr "Ladataan…"
+
+msgid "Select a conversation on the left, or enter a number below to send."
+msgstr "Valitse keskustelu vasemmalta tai lähetä kirjoittamalla numero alle."
+
+msgid "Message (Enter to send, Shift+Enter for newline)"
+msgstr "Viesti (Enter lähettää, Shift+Enter uusi rivi)"
+
+msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
+msgstr "Lähetys käyttää AT+CMGS-komentoa (PDU-tila); yritä uudelleen, jos kanava on varattu. Poista yksittäinen viesti sen kuplan roskakorikuvakkeella."
+
+msgid "Syncing from the SIM in the background (AT+CMGL)…"
+msgstr "Synkronoidaan SIM-kortilta taustalla (AT+CMGL)…"
+
+msgid "SIM sync started; the list refreshes in a few seconds."
+msgstr "SIM-synkronointi aloitettu; luettelo päivittyy muutamassa sekunnissa."
+
+msgid "Clear local SMS pool"
+msgstr "Tyhjennä paikallinen SMS-varasto"
+
+msgid "Only local files will be deleted; messages on the SIM remain."
+msgstr "Vain paikalliset tiedostot poistetaan; SIM-kortin viestit säilyvät."
+
+msgid "Clear"
+msgstr "Tyhjennä"
+
+msgid "Delete this SMS"
+msgstr "Poista tämä SMS"
+
+msgid "Deletion cannot be undone."
+msgstr "Poistoa ei voi kumota."
+
+msgid "Local only"
+msgstr "Vain paikallinen"
+
+msgid "Local + SIM"
+msgstr "Paikallinen + SIM"
+
+msgid "Delete failed"
+msgstr "Poisto epäonnistui"
+
+msgid "Deleted (local + SIM)"
+msgstr "Poistettu (paikallinen + SIM)"
+
+msgid "Deleted (local only)"
+msgstr "Poistettu (vain paikallinen)"
+
+msgid "Enter both a number and a message."
+msgstr "Anna sekä numero että viesti."
+
+msgid "Sending…"
+msgstr "Lähetetään…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Lähetetty; luettelo päivittyy pian."
+
+msgid "Sending failed"
+msgstr "Lähetys epäonnistui"
+
+msgid "· %d messages, %d unread · %d conversations"
+msgstr "· %d viestiä, %d lukematonta · %d keskustelua"
+
+msgid "· %d messages · %d conversations"
+msgstr "· %d viestiä · %d keskustelua"
+
+msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
+msgstr "Varasto on tyhjä. Saapuneet ja lähetetyt viestit näkyvät tässä, tai valitse ”Synkronoi SIM-kortilta”."
+
+msgid "Me: %s"
+msgstr "Minä: %s"
+
+msgid "Delete"
+msgstr "Poista"
+
+msgid "Dashboard info failed"
+msgstr "Yleiskatsauksen tietojen haku epäonnistui"
+
+msgid "Applying network locks: no live signal right now"
+msgstr "Otetaan verkkolukituksia käyttöön: reaaliaikaista signaalia ei juuri nyt ole"
+
+msgid "Live signal read failed"
+msgstr "Reaaliaikaisen signaalin luku epäonnistui"
+
+msgid "Unknown op"
+msgstr "Tuntematon toiminto"
+
+msgid "Invalid argument for this op"
+msgstr "Virheellinen argumentti tälle toiminnolle"
+
+msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
+msgstr "Radio on varattu: yhteydenmuodostus tai vahtikoira (watchdog) vaihtaa sen tilaa; yritä pian uudelleen"
+
+msgid "The action gave no valid reply"
+msgstr "Toiminto ei antanut kelvollista vastausta"
+
+msgid "An AT command is one line of printable ASCII, at most 512 characters"
+msgstr "AT-komento on yksi rivi tulostettavaa ASCII-tekstiä, enintään 512 merkkiä"
+
+msgid "Must be an AT command"
+msgstr "On oltava AT-komento"
+
+msgid "No \";\" command chaining"
+msgstr "Komentojen ketjutus \";\"-merkillä ei ole sallittu"
+
+msgid "Denied: this command wedges the AT port until a reboot"
+msgstr "Estetty: tämä komento jumittaa AT-portin uudelleenkäynnistykseen asti"
+
+msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
+msgstr "Otetaan verkkolukituksia käyttöön: modeemi käynnistyy uudelleen (noin puoli minuuttia); yritä pian uudelleen"
+
+msgid "The AT channel is busy; the command was not sent, try again"
+msgstr "AT-kanava on varattu; komentoa ei lähetetty, yritä uudelleen"
+
+msgid "The modem did not answer in time; the command may still run, check before sending it again"
+msgstr "Modeemi ei vastannut ajoissa; komento voi olla yhä käynnissä, tarkista ennen kuin lähetät sen uudelleen"
+
+msgid "The fresh parameter must be 0 or 1"
+msgstr "Parametrin fresh on oltava 0 tai 1"
+
+msgid "Lock read failed"
+msgstr "Lukitusten luku epäonnistui"
+
+msgid "Unknown lock kind"
+msgstr "Tuntematon lukitustyyppi"
+
+msgid "Invalid value for this lock kind"
+msgstr "Virheellinen arvo tälle lukitustyypille"
+
+msgid "Invalid page"
+msgstr "Virheellinen sivu"
+
+msgid "mu300-sms is not available (the SMS service is not installed or not running)"
+msgstr "mu300-sms ei ole käytettävissä (SMS-palvelua ei ole asennettu tai se ei ole käynnissä)"
+
+msgid "No output"
+msgstr "Ei tulostetta"
+
+msgid "Bad ID"
+msgstr "Virheellinen tunniste"
+
+msgid "Read failed"
+msgstr "Luku epäonnistui"
+
+msgid "The number may only contain digits (and a leading +)"
+msgstr "Numero voi sisältää vain numeroita (ja alussa +-merkin)"
+
+msgid "The message is empty"
+msgstr "Viesti on tyhjä"
+
+msgid "The message is too long (over 480 characters)"
+msgstr "Viesti on liian pitkä (yli 480 merkkiä)"
+
+msgid "The message contains a control character"
+msgstr "Viesti sisältää ohjausmerkin"
+
+msgid "The sim parameter must be 0 or 1"
+msgstr "Parametrin sim on oltava 0 tai 1"
+
+msgid "The USB adapter (device-usb) gave no valid reply"
+msgstr "USB-sovitin (device-usb) ei antanut kelvollista vastausta"
+
+msgid "The auto parameter must be 0 or 1"
+msgstr "Parametrin auto on oltava 0 tai 1"
+
+msgid "Invalid USB role"
+msgstr "Virheellinen USB-rooli"
+
+msgid "A USB role takes no scope"
+msgstr "USB-roolilla ei ole voimassaoloa"
+
+msgid "Invalid USB network mode"
+msgstr "Virheellinen USB-verkkotila"
+
+msgid "Invalid USB network scope"
+msgstr "Virheellinen USB-verkon voimassaolo"
+
+msgid "Unknown USB setting"
+msgstr "Tuntematon USB-asetus"
+
+msgid "Invalid interface name"
+msgstr "Virheellinen liitännän nimi"
+
+msgid "The languages adapter gave no valid reply"
+msgstr "Kielisovitin ei antanut kelvollista vastausta"
+
+msgid "Unknown language operation"
+msgstr "Tuntematon kielitoiminto"
+
+msgid "Invalid language code"
+msgstr "Virheellinen kielikoodi"
+
+msgid "Invalid language request"
+msgstr "Virheellinen kielipyyntö"
+
+msgid "Unknown source"
+msgstr "Tuntematon lähde"
+
+msgid "Request too large"
+msgstr "Pyyntö on liian suuri"
+
+msgid "The runtime directory is not safe; nothing was run"
+msgstr "Ajonaikainen hakemisto ei ole turvallinen; mitään ei suoritettu"
+
+msgid "No such method"
+msgstr "Menetelmää ei ole"
+
+msgid "Radio did not come up"
+msgstr "Radio ei käynnistynyt"
+
+msgid "Expected on or off"
+msgstr "Odotettiin on tai off"
+
+msgid "VPN integration is not provided by this platform"
+msgstr "Tämä alusta ei tarjoa VPN-integraatiota"
+
+msgid "Dual-boot integration is not provided by this platform"
+msgstr "Tämä alusta ei tarjoa kaksoiskäynnistyksen integraatiota"
+
+msgid "mu300-next-boot failed"
+msgstr "mu300-next-boot epäonnistui"
+
+msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
+msgstr "AT-taustaosa ei vastannut (radio pois päältä, modeemi käynnistyy uudelleen tai sovitin ei käytettävissä)"
+
+msgid "USB role adapter is not executable"
+msgstr "USB-roolisovitin ei ole suoritettava"
+
+msgid "USB role adapter failed"
+msgstr "USB-roolisovitin epäonnistui"
+
+msgid "USB role switch is unavailable"
+msgstr "USB-roolin vaihto ei ole käytettävissä"
+
+msgid "USB role switch failed"
+msgstr "USB-roolin vaihto epäonnistui"
+
+msgid "USB role switch was refused by platform safety checks"
+msgstr "Alustan turvatarkistukset estivät USB-roolin vaihdon"
+
+msgid "Cannot create USB boot settings directory"
+msgstr "USB-käynnistysasetusten hakemistoa ei voi luoda"
+
+msgid "Cannot write USB boot settings"
+msgstr "USB-käynnistysasetuksia ei voi kirjoittaa"
+
+msgid "Cannot save USB boot settings"
+msgstr "USB-käynnistysasetuksia ei voi tallentaa"
+
+msgid "Invalid boot-auto value"
+msgstr "Virheellinen boot-auto-arvo"
+
+msgid "Device is the boot default; host auto-apply is the only persistent role"
+msgstr "Laitetila on käynnistyksen oletus; isäntätilan automaattinen käyttöönotto on ainoa pysyvä rooli"
+
+msgid "Cannot save USB role policy"
+msgstr "USB-roolikäytäntöä ei voi tallentaa"
+
+msgid "Cannot disable USB network boot policy"
+msgstr "USB-verkon käynnistyskäytäntöä ei voi poistaa käytöstä"
+
+msgid "Cannot commit USB role policy"
+msgstr "USB-roolikäytäntöä ei voi ottaa käyttöön"
+
+msgid "USB network mode is unavailable in host role"
+msgstr "USB-verkkotila ei ole käytettävissä isäntäroolissa"
+
+msgid "Disable host boot-auto before configuring USB network"
+msgstr "Poista isäntätilan boot-auto käytöstä ennen USB-verkon määrittämistä"
+
+msgid "Cannot save USB network policy"
+msgstr "USB-verkkokäytäntöä ei voi tallentaa"
+
+msgid "Cannot commit USB network policy"
+msgstr "USB-verkkokäytäntöä ei voi ottaa käyttöön"
+
+msgid "USB host mode is required"
+msgstr "USB-isäntätila vaaditaan"
+
+msgid "Not a USB network interface"
+msgstr "Ei USB-verkkoliitäntä"
+
+msgid "LAN bridge device section was not found"
+msgstr "LAN-sillan laiteosiota ei löytynyt"
+
+msgid "Cannot bring USB network interface up"
+msgstr "USB-verkkoliitäntää ei voi ottaa käyttöön"
+
+msgid "Cannot add interface to LAN bridge"
+msgstr "Liitäntää ei voi lisätä LAN-siltaan"
+
+msgid "Cannot save LAN bridge"
+msgstr "LAN-siltaa ei voi tallentaa"
+
+msgid "Network reload failed"
+msgstr "Verkon uudelleenlataus epäonnistui"
+
+msgid "Cannot attach USB interface to LAN bridge"
+msgstr "USB-liitäntää ei voi liittää LAN-siltaan"
+
+msgid "The language pack is not installed"
+msgstr "Kielipakettia ei ole asennettu"
+
+msgid "No language given"
+msgstr "Kieltä ei annettu"
+
+msgid "The language could not be changed"
+msgstr "Kieltä ei voitu vaihtaa"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI ei tarjoa tätä kieltä"
+
+msgid "No uploaded language pack"
+msgstr "Ei lähetettyä kielipakettia"
+
+msgid "An installation is already running"
+msgstr "Asennus on jo käynnissä"
+
+msgid "The language pack could not be removed"
+msgstr "Kielipakettia ei voitu poistaa"
+
+msgid "Lock cache unavailable"
+msgstr "Lukitusvälimuisti ei käytettävissä"
+
+msgid "No serving cell to lock to"
+msgstr "Ei palvelevaa solua lukittavaksi"

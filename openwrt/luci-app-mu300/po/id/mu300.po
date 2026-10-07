@@ -1,0 +1,1276 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: id\n"
+
+msgid "Status dashboard"
+msgstr "Dasbor status"
+
+msgid "Cellular"
+msgstr "Seluler"
+
+msgid "Network locks"
+msgstr "Kunci jaringan"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "AT terminal"
+msgstr "Terminal AT"
+
+msgid "Adapter settings"
+msgstr "Pengaturan adaptor"
+
+msgid "Device management"
+msgstr "Manajemen perangkat"
+
+msgid "Languages"
+msgstr "Bahasa"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
+msgstr "Pusat kontrol MU300: dasbor status, kunci jaringan, terminal AT, dan SMS"
+
+msgid "China Mobile"
+msgstr "China Mobile"
+
+msgid "China Unicom"
+msgstr "China Unicom"
+
+msgid "China Telecom"
+msgstr "China Telecom"
+
+msgid "China Broadnet"
+msgstr "China Broadnet"
+
+msgid "China Tietong"
+msgstr "China Tietong"
+
+msgid "Excellent"
+msgstr "Sangat baik"
+
+msgid "Good"
+msgstr "Baik"
+
+msgid "Fair"
+msgstr "Cukup"
+
+msgid "Poor"
+msgstr "Buruk"
+
+msgid "Unknown"
+msgstr "Tidak diketahui"
+
+msgid "%d d %d h"
+msgstr "%d h %d j"
+
+msgid "%d h %d min"
+msgstr "%d j %d mnt"
+
+msgid "%d min"
+msgstr "%d mnt"
+
+msgid "No neighbor-cell data"
+msgstr "Tidak ada data sel tetangga"
+
+msgid "Locked"
+msgstr "Terkunci"
+
+msgid "Lock"
+msgstr "Kunci"
+
+msgid "Unknown error"
+msgstr "Kesalahan tidak diketahui"
+
+msgid "Confirm"
+msgstr "Konfirmasi"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Cancel"
+msgstr "Batal"
+
+msgid "New SMS · %s"
+msgstr "SMS baru · %s"
+
+msgid "Unknown number"
+msgstr "Nomor tidak diketahui"
+
+msgid "Select"
+msgstr "Pilih"
+
+msgid "Basic"
+msgstr "Dasar"
+
+msgid "Registration/signal"
+msgstr "Registrasi/sinyal"
+
+msgid "Bearer"
+msgstr "Bearer"
+
+msgid "Engineering mode"
+msgstr "Mode rekayasa"
+
+msgid "AT command (↑↓ history, Enter to send)"
+msgstr "Perintah AT (↑↓ riwayat, Enter untuk mengirim)"
+
+msgid "Send"
+msgstr "Kirim"
+
+msgid "Clear screen"
+msgstr "Bersihkan layar"
+
+msgid "Ready."
+msgstr "Siap."
+
+msgid "Session history (click to reuse)"
+msgstr "Riwayat sesi (klik untuk menggunakan lagi)"
+
+msgid "(no output)"
+msgstr "(tidak ada keluaran)"
+
+msgid "Request failed"
+msgstr "Permintaan gagal"
+
+msgid "(empty)"
+msgstr "(kosong)"
+
+msgid "USB role"
+msgstr "Peran USB"
+
+msgid "Current role"
+msgstr "Peran saat ini"
+
+msgid "Switch USB role"
+msgstr "Ganti peran USB"
+
+msgid "Device mode"
+msgstr "Mode perangkat"
+
+msgid "Host mode"
+msgstr "Mode host"
+
+msgid "Enable host mode at boot"
+msgstr "Aktifkan mode host saat boot"
+
+msgid "Apply role"
+msgstr "Terapkan peran"
+
+msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
+msgstr "Mode host memutus jaringan USB dan serial pada port ini. F50 tidak memiliki baterai; akses manajemen bisa hilang dan adaptor USB biasanya memerlukan hub berdaya."
+
+msgid "USB network mode"
+msgstr "Mode jaringan USB"
+
+msgid "Network protocol"
+msgstr "Protokol jaringan"
+
+msgid "Apply duration"
+msgstr "Durasi penerapan"
+
+msgid "Next reboot only"
+msgstr "Hanya boot ulang berikutnya"
+
+msgid "Permanent"
+msgstr "Permanen"
+
+msgid "Enable selected protocol"
+msgstr "Aktifkan protokol terpilih"
+
+msgid "Save; apply after reboot"
+msgstr "Simpan; terapkan setelah boot ulang"
+
+msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
+msgstr "NCM adalah bawaan. Windows tidak mendukung ECM secara native; RNDIS mengubah enumerasi. Jika Aktifkan protokol terpilih mati, hanya pilihan Anda yang disimpan. Hanya boot ulang berikutnya diterapkan sekali, lalu kembali ke NCM."
+
+msgid "USB adapters"
+msgstr "Adaptor USB"
+
+msgid "Refresh"
+msgstr "Segarkan"
+
+msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
+msgstr "Hanya tersedia dalam mode host. Segarkan menyalakan adaptor USB yang ditemukan; menambahkan ke LAN menyimpan bridge dan memuat ulang jaringan."
+
+msgid "Unavailable"
+msgstr "Tidak tersedia"
+
+msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
+msgstr "Mode jaringan USB tidak tersedia dalam mode host; mulai otomatis host juga menonaktifkan mulai otomatis jaringan USB."
+
+msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
+msgstr "Mode host langsung memutus manajemen USB. F50 tidak memiliki baterai dan periferal mungkin memerlukan daya eksternal; pastikan ada jalur manajemen lain."
+
+msgid "USB networking and serial will re-enumerate in device mode."
+msgstr "Jaringan USB dan serial akan dienumerasi ulang dalam mode perangkat."
+
+msgid "Switch USB role?"
+msgstr "Ganti peran USB?"
+
+msgid "Apply"
+msgstr "Terapkan"
+
+msgid "Switching USB role…"
+msgstr "Mengganti peran USB…"
+
+msgid "Switch failed: %s"
+msgstr "Gagal mengganti: %s"
+
+msgid "Management connection lost; reconnect to confirm the USB role."
+msgstr "Koneksi manajemen terputus; sambungkan ulang untuk memastikan peran USB."
+
+msgid "Switch request accepted; the USB connection may briefly disconnect."
+msgstr "Permintaan penggantian diterima; koneksi USB mungkin terputus sebentar."
+
+msgid "USB role applied"
+msgstr "Peran USB diterapkan"
+
+msgid "Save USB network mode?"
+msgstr "Simpan mode jaringan USB?"
+
+msgid "The network mode applies on the next reboot; USB management may need to reconnect."
+msgstr "Mode jaringan diterapkan pada boot ulang berikutnya; manajemen USB mungkin perlu tersambung ulang."
+
+msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
+msgstr "Hanya simpan pilihan; dengan protokol terpilih nonaktif, boot berikutnya tetap menggunakan NCM bawaan."
+
+msgid "Save"
+msgstr "Simpan"
+
+msgid "Saving USB network settings…"
+msgstr "Menyimpan pengaturan jaringan USB…"
+
+msgid "Settings saved"
+msgstr "Pengaturan disimpan"
+
+msgid "Save failed: %s"
+msgstr "Gagal menyimpan: %s"
+
+msgid "Unable to confirm the role yet; reconnect and refresh the page."
+msgstr "Peran belum dapat dipastikan; sambungkan ulang dan segarkan halaman."
+
+msgid "Switch to host mode to see USB adapters."
+msgstr "Beralih ke mode host untuk melihat adaptor USB."
+
+msgid "Scanning USB adapters…"
+msgstr "Memindai adaptor USB…"
+
+msgid "No USB adapters found."
+msgstr "Tidak ada adaptor USB yang ditemukan."
+
+msgid "Link connected"
+msgstr "Link tersambung"
+
+msgid "No link; enable attempted"
+msgstr "Tidak ada link; sudah dicoba diaktifkan"
+
+msgid "Added to LAN"
+msgstr "Ditambahkan ke LAN"
+
+msgid "Add to LAN"
+msgstr "Tambahkan ke LAN"
+
+msgid "Add USB adapter to LAN?"
+msgstr "Tambahkan adaptor USB ke LAN?"
+
+msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
+msgstr "Ini menyimpan konfigurasi bridge dan memuat ulang jaringan; koneksi yang ada mungkin terputus sebentar."
+
+msgid "Add"
+msgstr "Tambah"
+
+msgid "Adding USB adapter…"
+msgstr "Menambahkan adaptor USB…"
+
+msgid "Add failed: %s"
+msgstr "Gagal menambahkan: %s"
+
+msgid "Modulation DL/UL"
+msgstr "Modulasi DL/UL"
+
+msgid "Estimated from current MCS"
+msgstr "Diperkirakan dari MCS saat ini"
+
+msgid "MCS DL/UL"
+msgstr "MCS DL/UL"
+
+msgid "BLER DL/UL"
+msgstr "BLER DL/UL"
+
+msgid "Link & traffic"
+msgstr "Link & lalu lintas"
+
+msgid "Download rate"
+msgstr "Laju unduh"
+
+msgid "Upload rate"
+msgstr "Laju unggah"
+
+msgid "Total received"
+msgstr "Total diterima"
+
+msgid "Total sent"
+msgstr "Total dikirim"
+
+msgid "Session duration"
+msgstr "Durasi sesi"
+
+msgid "Registration"
+msgstr "Registrasi"
+
+msgid "Bandwidth"
+msgstr "Lebar pita"
+
+msgid "AMBR DL/UL"
+msgstr "AMBR DL/UL"
+
+msgid "Wi-Fi · LAN · Device · SIM"
+msgstr "Wi-Fi · LAN · Perangkat · SIM"
+
+msgid "CPU usage"
+msgstr "Penggunaan CPU"
+
+msgid "Memory"
+msgstr "Memori"
+
+msgid "Storage"
+msgstr "Penyimpanan"
+
+msgid "Battery"
+msgstr "Baterai"
+
+msgid "Channel"
+msgstr "Kanal"
+
+msgid "Encryption"
+msgstr "Enkripsi"
+
+msgid "Hidden SSID"
+msgstr "SSID tersembunyi"
+
+msgid "Country"
+msgstr "Negara"
+
+msgid "AP status"
+msgstr "Status AP"
+
+msgid "USB network"
+msgstr "Jaringan USB"
+
+msgid "Connection tracking"
+msgstr "Pelacakan koneksi"
+
+msgid "LAN address"
+msgstr "Alamat LAN"
+
+msgid "Wi-Fi clients"
+msgstr "Klien Wi-Fi"
+
+msgid "DHCP leases"
+msgstr "Sewa DHCP"
+
+msgid "Device model"
+msgstr "Model perangkat"
+
+msgid "System"
+msgstr "Sistem"
+
+msgid "Modem"
+msgstr "Modem"
+
+msgid "Carrier"
+msgstr "Operator"
+
+msgid "Module"
+msgstr "Modul"
+
+msgid "Firmware"
+msgstr "Firmware"
+
+msgid "Show SIM identifiers"
+msgstr "Tampilkan pengenal SIM"
+
+msgid "Quick controls"
+msgstr "Kontrol cepat"
+
+msgid "Data connection"
+msgstr "Koneksi data"
+
+msgid "Cellular radio"
+msgstr "Radio seluler"
+
+msgid "Wi-Fi hotspot"
+msgstr "Hotspot Wi-Fi"
+
+msgid "Restart modem"
+msgstr "Mulai ulang modem"
+
+msgid "Restart device"
+msgstr "Mulai ulang perangkat"
+
+msgid "Switch to Android"
+msgstr "Beralih ke Android"
+
+msgid "Neighbor cells"
+msgstr "Sel tetangga"
+
+msgid "RAT/Band"
+msgstr "RAT/Band"
+
+msgid "Frequency"
+msgstr "Frekuensi"
+
+msgid "Running %s…"
+msgstr "Menjalankan %s…"
+
+msgid "Started in background: %s"
+msgstr "Dimulai di latar belakang: %s"
+
+msgid "Done: %s"
+msgstr "Selesai: %s"
+
+msgid "Failed: %s"
+msgstr "Gagal: %s"
+
+msgid "Disconnecting data…"
+msgstr "Memutus data…"
+
+msgid "Connecting data…"
+msgstr "Menyambungkan data…"
+
+msgid "Turn off cellular radio"
+msgstr "Matikan radio seluler"
+
+msgid "Cellular connectivity will be interrupted."
+msgstr "Konektivitas seluler akan terputus."
+
+msgid "Turn on cellular radio"
+msgstr "Nyalakan radio seluler"
+
+msgid "The SFUN power-on sequence will run (up to about 1 minute)."
+msgstr "Urutan penyalaan SFUN akan dijalankan (hingga sekitar 1 menit)."
+
+msgid "Cellular connectivity may stop for 1–2 minutes."
+msgstr "Konektivitas seluler mungkin berhenti selama 1–2 menit."
+
+msgid "Restart the entire device"
+msgstr "Mulai ulang seluruh perangkat"
+
+msgid "All connections will be interrupted."
+msgstr "Semua koneksi akan terputus."
+
+msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
+msgstr "Boot berikutnya akan masuk ke Android dan perangkat dimulai ulang sekarang. Halaman manajemen ini dan berbagi seluler akan terputus."
+
+msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
+msgstr "Untuk kembali ke OpenWrt, jalankan mu300-next-boot linux di Android lalu mulai ulang."
+
+msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
+msgstr "Atau biarkan saja: setelah lima boot yang tidak selesai, sistem kembali secara otomatis."
+
+msgid "Switch and reboot"
+msgstr "Beralih dan mulai ulang"
+
+msgid "Preparing Android boot and rebooting…"
+msgstr "Menyiapkan boot Android dan memulai ulang…"
+
+msgid "Hide SIM identifiers"
+msgstr "Sembunyikan pengenal SIM"
+
+msgid "Lock cell %s?"
+msgstr "Kunci sel %s?"
+
+msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
+msgstr "Stack radio akan dimulai ulang (SFUN); layanan seluler akan berhenti sekitar 30 detik."
+
+msgid "Locking %s in the background, about 30 seconds"
+msgstr "Mengunci %s di latar belakang, sekitar 30 detik"
+
+msgid "Locked %s in the background; the status will refresh shortly"
+msgstr "%s dikunci di latar belakang; status akan segera disegarkan"
+
+msgid "Lock failed: %s"
+msgstr "Gagal mengunci: %s"
+
+msgid "Uptime %s"
+msgstr "Waktu aktif %s"
+
+msgid "Radio off"
+msgstr "Radio mati"
+
+msgid "No response"
+msgstr "Tidak ada respons"
+
+msgid "%s · Signal %s %s/10"
+msgstr "%s · Sinyal %s %s/10"
+
+msgid "%s · Signal %s"
+msgstr "%s · Sinyal %s"
+
+msgid "Anchor B%s"
+msgstr "Anchor B%s"
+
+msgid "No serving cell"
+msgstr "Tidak ada sel layanan"
+
+msgid "Not registered"
+msgstr "Tidak terdaftar"
+
+msgid "Registered"
+msgstr "Terdaftar"
+
+msgid "Searching"
+msgstr "Mencari"
+
+msgid "Registration denied"
+msgstr "Registrasi ditolak"
+
+msgid "Registered (roaming)"
+msgstr "Terdaftar (roaming)"
+
+msgid "Emergency only"
+msgstr "Hanya darurat"
+
+msgid "Status %s"
+msgstr "Status %s"
+
+msgid "LTE anchor"
+msgstr "Anchor LTE"
+
+msgid "LTE link"
+msgstr "Link LTE"
+
+msgid "Hidden"
+msgstr "Tersembunyi"
+
+msgid "No"
+msgstr "Tidak"
+
+msgid "Running"
+msgstr "Berjalan"
+
+msgid "Not running"
+msgstr "Tidak berjalan"
+
+msgid "Connected"
+msgstr "Tersambung"
+
+msgid "Disconnected"
+msgstr "Terputus"
+
+msgid "%s entries"
+msgstr "%s entri"
+
+msgid "%s clients"
+msgstr "%s klien"
+
+msgid "Recent DHCP leases"
+msgstr "Sewa DHCP terbaru"
+
+msgid "%d h"
+msgstr "%d j"
+
+msgid "Board"
+msgstr "Papan"
+
+msgid "No temperature readings"
+msgstr "Tidak ada pembacaan suhu"
+
+msgid "Cluster %d"
+msgstr "Kluster %d"
+
+msgid "Total %s · free %s"
+msgstr "Total %s · bebas %s"
+
+msgid "charging %s W"
+msgstr "mengisi daya %s W"
+
+msgid "charging"
+msgstr "mengisi daya"
+
+msgid "drawing %s W"
+msgstr "memakai %s W"
+
+msgid "not charging"
+msgstr "tidak mengisi daya"
+
+msgid "on battery"
+msgstr "dengan baterai"
+
+msgid "full"
+msgstr "penuh"
+
+msgid "USB in %s W"
+msgstr "masukan USB %s W"
+
+msgid "Online"
+msgstr "Daring"
+
+msgid "AT adapter unavailable"
+msgstr "Adaptor AT tidak tersedia"
+
+msgid "Saved"
+msgstr "Disimpan"
+
+msgid "Management connection lost"
+msgstr "Koneksi manajemen terputus"
+
+msgid "Installing the language pack…"
+msgstr "Memasang paket bahasa…"
+
+msgid "The language pack is installed"
+msgstr "Paket bahasa sudah terpasang"
+
+msgid "The language pack could not be installed"
+msgstr "Paket bahasa tidak dapat dipasang"
+
+msgid "Upload failed: %s"
+msgstr "Gagal mengunggah: %s"
+
+msgid "Language of the browser"
+msgstr "Bahasa peramban"
+
+msgid "Language of the web interface"
+msgstr "Bahasa antarmuka web"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "Bahasa Inggris, Turki, dan Mandarin tersedia bersama sistem; paket bahasa menambahkan yang lain."
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "Pengaturan yang sama ada di Sistem > Sistem > Bahasa dan Gaya."
+
+msgid "Language pack"
+msgstr "Paket bahasa"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "Paket bahasa (mu300-extra-lang.tar.gz, sekitar 2 MB) menambahkan LuCI dalam sekitar 40 bahasa lagi dan panel ini dalam 29 di antaranya. Unduh dari rilis sistem ini, atau unggah berkas dari halaman rilis bila perangkat tidak memiliki internet."
+
+msgid "Download from the release"
+msgstr "Unduh dari rilis"
+
+msgid "Upload the file…"
+msgstr "Unggah berkas…"
+
+msgid "Release"
+msgstr "Rilis"
+
+msgid "Enable all"
+msgstr "Aktifkan semua"
+
+msgid "Disable all"
+msgstr "Nonaktifkan semua"
+
+msgid "Remove the language pack"
+msgstr "Hapus paket bahasa"
+
+msgid "Remove the language pack?"
+msgstr "Hapus paket bahasa?"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "Bahasanya hilang dari daftar; halaman dalam salah satu bahasa tersebut beralih ke bahasa Inggris."
+
+msgid "Remove"
+msgstr "Hapus"
+
+msgid "Disable"
+msgstr "Nonaktifkan"
+
+msgid "Enable"
+msgstr "Aktifkan"
+
+msgid "LuCI and this panel"
+msgstr "LuCI dan panel ini"
+
+msgid "LuCI only"
+msgstr "Hanya LuCI"
+
+msgid "Enabled"
+msgstr "Aktif"
+
+msgid "Disabled"
+msgstr "Nonaktif"
+
+msgid "Language"
+msgstr "Bahasa"
+
+msgid "Code"
+msgstr "Kode"
+
+msgid "Translated"
+msgstr "Diterjemahkan"
+
+msgid "State"
+msgstr "Keadaan"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "Terjemahan LuCI sendiri berasal dari OpenWrt. Terjemahan panel ini selain bahasa Turki dan Mandarin adalah terjemahan mesin (AI); koreksi dipersilakan."
+
+msgid "Automatic"
+msgstr "Otomatis"
+
+msgid "4G only"
+msgstr "Hanya 4G"
+
+msgid "Serving network"
+msgstr "Jaringan layanan"
+
+msgid "Network mode · EN-DC"
+msgstr "Mode jaringan · EN-DC"
+
+msgid "Refresh lock status"
+msgstr "Segarkan status kunci"
+
+msgid "Apply at startup"
+msgstr "Terapkan saat startup"
+
+msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
+msgstr "Menonaktifkan ini hanya menghentikan penerapan ulang pada boot berikutnya; pengaturan mode jaringan, EN-DC, band, dan sel yang tersimpan tetap ada."
+
+msgid "Band locking"
+msgstr "Penguncian band"
+
+msgid "NR bands"
+msgstr "Band NR"
+
+msgid "LTE bands"
+msgstr "Band LTE"
+
+msgid "Apply NR bands"
+msgstr "Terapkan band NR"
+
+msgid "Apply LTE bands"
+msgstr "Terapkan band LTE"
+
+msgid "Neighbor cells and cell locking"
+msgstr "Sel tetangga dan penguncian sel"
+
+msgid "Lock current serving cell"
+msgstr "Kunci sel layanan saat ini"
+
+msgid "Unlock cell"
+msgstr "Buka kunci sel"
+
+msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
+msgstr "Menerapkan akan memulai ulang stack radio (SFUN) dan memutus layanan seluler sebentar. Pengaturan disimpan dan diterapkan ulang oleh plugin setelah AT siap jika Terapkan saat startup diaktifkan. Hook pra-radio platform dapat menerapkan ulang tanpa memulai ulang. Terapkan tanpa band terpilih untuk mengembalikan mode otomatis."
+
+msgid "Apply “%s”?"
+msgstr "Terapkan “%s”?"
+
+msgid "Applying %s in the background…"
+msgstr "Menerapkan %s di latar belakang…"
+
+msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
+msgstr "Menerapkan %s di latar belakang… (mulai ulang SFUN dan registrasi ulang, sekitar 30 detik)"
+
+msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
+msgstr "Antre: kunci lain sedang diterapkan selama mulai ulang SFUN; ini akan berlaku setelahnya"
+
+msgid "Confirming the EN-DC status…"
+msgstr "Memastikan status EN-DC…"
+
+msgid "Confirming apply at startup…"
+msgstr "Memastikan penerapan saat startup…"
+
+msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Dimulai di latar belakang: %s (mulai ulang SFUN, sekitar 30 detik); membaca kembali status…"
+
+msgid "Network mode: %s"
+msgstr "Mode jaringan: %s"
+
+msgid "Disable EN-DC (NSA anchor)"
+msgstr "Nonaktifkan EN-DC (anchor NSA)"
+
+msgid "Enable EN-DC (NSA anchor)"
+msgstr "Aktifkan EN-DC (anchor NSA)"
+
+msgid "Disable apply at startup"
+msgstr "Nonaktifkan penerapan saat startup"
+
+msgid "Enable apply at startup"
+msgstr "Aktifkan penerapan saat startup"
+
+msgid "Reading the modem directly (a few seconds at most)…"
+msgstr "Membaca modem secara langsung (paling lama beberapa detik)…"
+
+msgid "Refreshed"
+msgstr "Disegarkan"
+
+msgid "Refresh failed"
+msgstr "Gagal menyegarkan"
+
+msgid "NR bands: back to automatic"
+msgstr "Band NR: kembali ke otomatis"
+
+msgid "NR band lock: %s"
+msgstr "Kunci band NR: %s"
+
+msgid "LTE bands: back to automatic"
+msgstr "Band LTE: kembali ke otomatis"
+
+msgid "LTE band lock: %s"
+msgstr "Kunci band LTE: %s"
+
+msgid "Remove the %s cell lock"
+msgstr "Hapus kunci sel %s"
+
+msgid "The radio stack will restart (SFUN), taking about 30 seconds."
+msgstr "Stack radio akan dimulai ulang (SFUN), memakan waktu sekitar 30 detik."
+
+msgid "Removing the %s cell lock…"
+msgstr "Menghapus kunci sel %s…"
+
+msgid "Unlock failed: %s"
+msgstr "Gagal membuka kunci: %s"
+
+msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Buka kunci dimulai di latar belakang (mulai ulang SFUN, sekitar 30 detik); membaca kembali status…"
+
+msgid "Locking %s in the background…"
+msgstr "Mengunci %s di latar belakang…"
+
+msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "%s dikunci di latar belakang (mulai ulang SFUN, sekitar 30 detik); membaca kembali status…"
+
+msgid "No serving-network data"
+msgstr "Tidak ada data jaringan layanan"
+
+msgid "NR serving cell"
+msgstr "Sel layanan NR"
+
+msgid "Status confirmed"
+msgstr "Status dipastikan"
+
+msgid "Readback timed out; select “Refresh lock status”"
+msgstr "Waktu pembacaan habis; pilih “Segarkan status kunci”"
+
+msgid "Applied (EN-DC does not require a radio-stack restart)"
+msgstr "Diterapkan (EN-DC tidak memerlukan mulai ulang stack radio)"
+
+msgid "Apply at startup is on"
+msgstr "Terapkan saat startup aktif"
+
+msgid "Apply at startup is off"
+msgstr "Terapkan saat startup nonaktif"
+
+msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Waktu pembacaan status EN-DC habis; gunakan “Segarkan status kunci” untuk memastikan"
+
+msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Waktu pembacaan status penerapan saat startup habis; gunakan “Segarkan status kunci” untuk memastikan"
+
+msgid "Locked cells"
+msgstr "Sel terkunci"
+
+msgid "Unlock %s"
+msgstr "Buka kunci %s"
+
+msgid "Automatic (%d supported)"
+msgstr "Otomatis (%d didukung)"
+
+msgid "%d locked: %s"
+msgstr "%d terkunci: %s"
+
+msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
+msgstr "Atur cara plugin ini terhubung ke platform OpenWrt Unisoc saat ini. Perubahan tidak memerlukan pengeditan halaman dasbor, AT, kunci, atau SMS."
+
+msgid "Platform adapter"
+msgstr "Adaptor platform"
+
+msgid "AT backend"
+msgstr "Backend AT"
+
+msgid "Auto-detect"
+msgstr "Deteksi otomatis"
+
+msgid "atinout + serial port"
+msgstr "atinout + port serial"
+
+msgid "Custom adapter"
+msgstr "Adaptor kustom"
+
+msgid "AT serial port"
+msgstr "Port serial AT"
+
+msgid "Custom AT adapter"
+msgstr "Adaptor AT kustom"
+
+msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
+msgstr "Program menerima batas waktu dalam detik dan perintah AT lengkap, dengan urutan tersebut. Program harus berbagi kunci serial dengan dialer platform."
+
+msgid "SMS adapter"
+msgstr "Adaptor SMS"
+
+msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
+msgstr "Implementasikan subperintah list, show, send, delete, dan sync; biarkan kosong untuk mencari mu300-sms secara otomatis."
+
+msgid "SMS pool directory"
+msgstr "Direktori pool SMS"
+
+msgid "Cellular logical interface"
+msgstr "Antarmuka logis seluler"
+
+msgid "Cellular IPv6 interface"
+msgstr "Antarmuka IPv6 seluler"
+
+msgid "Cellular network device"
+msgstr "Perangkat jaringan seluler"
+
+msgid "Leave blank to detect from netifd"
+msgstr "Biarkan kosong untuk mendeteksi dari netifd"
+
+msgid "LAN bridge"
+msgstr "Bridge LAN"
+
+msgid "Wi-Fi device"
+msgstr "Perangkat Wi-Fi"
+
+msgid "USB device"
+msgstr "Perangkat USB"
+
+msgid "Maximum wait for AT readiness (seconds)"
+msgstr "Waktu tunggu maksimum hingga AT siap (detik)"
+
+msgid "Home dashboard refresh interval (seconds)"
+msgstr "Interval penyegaran dasbor beranda (detik)"
+
+msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
+msgstr "Hanya mengatur laju penyegaran dasbor beranda; 0,5–60 detik. Buka kembali Beranda setelah menyimpan untuk menerapkan."
+
+msgid "Persistent state directory"
+msgstr "Direktori status persisten"
+
+msgid "Recipient: number, e.g. 10086 or +86..."
+msgstr "Penerima: nomor, mis. 10086 atau +86..."
+
+msgid "Sync from SIM"
+msgstr "Sinkronkan dari SIM"
+
+msgid "Clear local pool"
+msgstr "Kosongkan pool lokal"
+
+msgid "Loading…"
+msgstr "Memuat…"
+
+msgid "Select a conversation on the left, or enter a number below to send."
+msgstr "Pilih percakapan di sebelah kiri, atau masukkan nomor di bawah untuk mengirim."
+
+msgid "Message (Enter to send, Shift+Enter for newline)"
+msgstr "Pesan (Enter untuk mengirim, Shift+Enter untuk baris baru)"
+
+msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
+msgstr "Pengiriman menggunakan AT+CMGS (mode PDU); coba lagi jika kanal sibuk. Untuk menghapus satu pesan, gunakan ikon tempat sampah pada gelembungnya."
+
+msgid "Syncing from the SIM in the background (AT+CMGL)…"
+msgstr "Menyinkronkan dari SIM di latar belakang (AT+CMGL)…"
+
+msgid "SIM sync started; the list refreshes in a few seconds."
+msgstr "Sinkronisasi SIM dimulai; daftar akan disegarkan dalam beberapa detik."
+
+msgid "Clear local SMS pool"
+msgstr "Kosongkan pool SMS lokal"
+
+msgid "Only local files will be deleted; messages on the SIM remain."
+msgstr "Hanya berkas lokal yang akan dihapus; pesan di SIM tetap ada."
+
+msgid "Clear"
+msgstr "Kosongkan"
+
+msgid "Delete this SMS"
+msgstr "Hapus SMS ini"
+
+msgid "Deletion cannot be undone."
+msgstr "Penghapusan tidak dapat dibatalkan."
+
+msgid "Local only"
+msgstr "Hanya lokal"
+
+msgid "Local + SIM"
+msgstr "Lokal + SIM"
+
+msgid "Delete failed"
+msgstr "Gagal menghapus"
+
+msgid "Deleted (local + SIM)"
+msgstr "Dihapus (lokal + SIM)"
+
+msgid "Deleted (local only)"
+msgstr "Dihapus (hanya lokal)"
+
+msgid "Enter both a number and a message."
+msgstr "Masukkan nomor dan pesan."
+
+msgid "Sending…"
+msgstr "Mengirim…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Terkirim; daftar akan segera disegarkan."
+
+msgid "Sending failed"
+msgstr "Gagal mengirim"
+
+msgid "· %d messages, %d unread · %d conversations"
+msgstr "· %d pesan, %d belum dibaca · %d percakapan"
+
+msgid "· %d messages · %d conversations"
+msgstr "· %d pesan · %d percakapan"
+
+msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
+msgstr "Pool kosong. Pesan masuk dan terkirim muncul di sini, atau pilih “Sinkronkan dari SIM”."
+
+msgid "Me: %s"
+msgstr "Saya: %s"
+
+msgid "Delete"
+msgstr "Hapus"
+
+msgid "Dashboard info failed"
+msgstr "Gagal memuat info dasbor"
+
+msgid "Applying network locks: no live signal right now"
+msgstr "Menerapkan kunci jaringan: saat ini tidak ada sinyal langsung"
+
+msgid "Live signal read failed"
+msgstr "Gagal membaca sinyal langsung"
+
+msgid "Unknown op"
+msgstr "Operasi tidak diketahui"
+
+msgid "Invalid argument for this op"
+msgstr "Argumen tidak valid untuk operasi ini"
+
+msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
+msgstr "Radio sedang sibuk: dial atau watchdog sedang mengalihkannya, coba lagi sebentar lagi"
+
+msgid "The action gave no valid reply"
+msgstr "Tindakan tidak memberikan balasan yang valid"
+
+msgid "An AT command is one line of printable ASCII, at most 512 characters"
+msgstr "Perintah AT adalah satu baris ASCII yang dapat dicetak, paling banyak 512 karakter"
+
+msgid "Must be an AT command"
+msgstr "Harus berupa perintah AT"
+
+msgid "No \";\" command chaining"
+msgstr "Tidak boleh merangkai perintah dengan \";\""
+
+msgid "Denied: this command wedges the AT port until a reboot"
+msgstr "Ditolak: perintah ini membuat port AT macet hingga boot ulang"
+
+msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
+msgstr "Menerapkan kunci jaringan: modem sedang dimulai ulang (sekitar setengah menit), coba lagi sebentar lagi"
+
+msgid "The AT channel is busy; the command was not sent, try again"
+msgstr "Kanal AT sedang sibuk; perintah tidak dikirim, coba lagi"
+
+msgid "The modem did not answer in time; the command may still run, check before sending it again"
+msgstr "Modem tidak menjawab tepat waktu; perintah mungkin masih berjalan, periksa sebelum mengirimnya lagi"
+
+msgid "The fresh parameter must be 0 or 1"
+msgstr "Parameter fresh harus 0 atau 1"
+
+msgid "Lock read failed"
+msgstr "Gagal membaca kunci"
+
+msgid "Unknown lock kind"
+msgstr "Jenis kunci tidak diketahui"
+
+msgid "Invalid value for this lock kind"
+msgstr "Nilai tidak valid untuk jenis kunci ini"
+
+msgid "Invalid page"
+msgstr "Halaman tidak valid"
+
+msgid "mu300-sms is not available (the SMS service is not installed or not running)"
+msgstr "mu300-sms tidak tersedia (layanan SMS tidak terpasang atau tidak berjalan)"
+
+msgid "No output"
+msgstr "Tidak ada keluaran"
+
+msgid "Bad ID"
+msgstr "ID tidak valid"
+
+msgid "Read failed"
+msgstr "Gagal membaca"
+
+msgid "The number may only contain digits (and a leading +)"
+msgstr "Nomor hanya boleh berisi angka (dan + di awal)"
+
+msgid "The message is empty"
+msgstr "Pesan kosong"
+
+msgid "The message is too long (over 480 characters)"
+msgstr "Pesan terlalu panjang (lebih dari 480 karakter)"
+
+msgid "The message contains a control character"
+msgstr "Pesan berisi karakter kontrol"
+
+msgid "The sim parameter must be 0 or 1"
+msgstr "Parameter sim harus 0 atau 1"
+
+msgid "The USB adapter (device-usb) gave no valid reply"
+msgstr "Adaptor USB (device-usb) tidak memberikan balasan yang valid"
+
+msgid "The auto parameter must be 0 or 1"
+msgstr "Parameter auto harus 0 atau 1"
+
+msgid "Invalid USB role"
+msgstr "Peran USB tidak valid"
+
+msgid "A USB role takes no scope"
+msgstr "Peran USB tidak menerima cakupan"
+
+msgid "Invalid USB network mode"
+msgstr "Mode jaringan USB tidak valid"
+
+msgid "Invalid USB network scope"
+msgstr "Cakupan jaringan USB tidak valid"
+
+msgid "Unknown USB setting"
+msgstr "Pengaturan USB tidak diketahui"
+
+msgid "Invalid interface name"
+msgstr "Nama antarmuka tidak valid"
+
+msgid "The languages adapter gave no valid reply"
+msgstr "Adaptor bahasa tidak memberikan balasan yang valid"
+
+msgid "Unknown language operation"
+msgstr "Operasi bahasa tidak diketahui"
+
+msgid "Invalid language code"
+msgstr "Kode bahasa tidak valid"
+
+msgid "Invalid language request"
+msgstr "Permintaan bahasa tidak valid"
+
+msgid "Unknown source"
+msgstr "Sumber tidak diketahui"
+
+msgid "Request too large"
+msgstr "Permintaan terlalu besar"
+
+msgid "The runtime directory is not safe; nothing was run"
+msgstr "Direktori runtime tidak aman; tidak ada yang dijalankan"
+
+msgid "No such method"
+msgstr "Metode tidak ada"
+
+msgid "Radio did not come up"
+msgstr "Radio tidak menyala"
+
+msgid "Expected on or off"
+msgstr "Diharapkan on atau off"
+
+msgid "VPN integration is not provided by this platform"
+msgstr "Integrasi VPN tidak disediakan oleh platform ini"
+
+msgid "Dual-boot integration is not provided by this platform"
+msgstr "Integrasi dual-boot tidak disediakan oleh platform ini"
+
+msgid "mu300-next-boot failed"
+msgstr "mu300-next-boot gagal"
+
+msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
+msgstr "Backend AT tidak menjawab (radio mati, modem sedang dimulai ulang, atau adaptor tidak tersedia)"
+
+msgid "USB role adapter is not executable"
+msgstr "Adaptor peran USB tidak dapat dieksekusi"
+
+msgid "USB role adapter failed"
+msgstr "Adaptor peran USB gagal"
+
+msgid "USB role switch is unavailable"
+msgstr "Penggantian peran USB tidak tersedia"
+
+msgid "USB role switch failed"
+msgstr "Penggantian peran USB gagal"
+
+msgid "USB role switch was refused by platform safety checks"
+msgstr "Penggantian peran USB ditolak oleh pemeriksaan keamanan platform"
+
+msgid "Cannot create USB boot settings directory"
+msgstr "Tidak dapat membuat direktori pengaturan boot USB"
+
+msgid "Cannot write USB boot settings"
+msgstr "Tidak dapat menulis pengaturan boot USB"
+
+msgid "Cannot save USB boot settings"
+msgstr "Tidak dapat menyimpan pengaturan boot USB"
+
+msgid "Invalid boot-auto value"
+msgstr "Nilai boot-auto tidak valid"
+
+msgid "Device is the boot default; host auto-apply is the only persistent role"
+msgstr "Perangkat adalah bawaan saat boot; penerapan otomatis host adalah satu-satunya peran persisten"
+
+msgid "Cannot save USB role policy"
+msgstr "Tidak dapat menyimpan kebijakan peran USB"
+
+msgid "Cannot disable USB network boot policy"
+msgstr "Tidak dapat menonaktifkan kebijakan boot jaringan USB"
+
+msgid "Cannot commit USB role policy"
+msgstr "Tidak dapat meng-commit kebijakan peran USB"
+
+msgid "USB network mode is unavailable in host role"
+msgstr "Mode jaringan USB tidak tersedia dalam peran host"
+
+msgid "Disable host boot-auto before configuring USB network"
+msgstr "Nonaktifkan boot-auto host sebelum mengonfigurasi jaringan USB"
+
+msgid "Cannot save USB network policy"
+msgstr "Tidak dapat menyimpan kebijakan jaringan USB"
+
+msgid "Cannot commit USB network policy"
+msgstr "Tidak dapat meng-commit kebijakan jaringan USB"
+
+msgid "USB host mode is required"
+msgstr "Mode host USB diperlukan"
+
+msgid "Not a USB network interface"
+msgstr "Bukan antarmuka jaringan USB"
+
+msgid "LAN bridge device section was not found"
+msgstr "Bagian perangkat bridge LAN tidak ditemukan"
+
+msgid "Cannot bring USB network interface up"
+msgstr "Tidak dapat menyalakan antarmuka jaringan USB"
+
+msgid "Cannot add interface to LAN bridge"
+msgstr "Tidak dapat menambahkan antarmuka ke bridge LAN"
+
+msgid "Cannot save LAN bridge"
+msgstr "Tidak dapat menyimpan bridge LAN"
+
+msgid "Network reload failed"
+msgstr "Gagal memuat ulang jaringan"
+
+msgid "Cannot attach USB interface to LAN bridge"
+msgstr "Tidak dapat memasang antarmuka USB ke bridge LAN"
+
+msgid "The language pack is not installed"
+msgstr "Paket bahasa tidak terpasang"
+
+msgid "No language given"
+msgstr "Tidak ada bahasa yang diberikan"
+
+msgid "The language could not be changed"
+msgstr "Bahasa tidak dapat diubah"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI tidak menyediakan bahasa ini"
+
+msgid "No uploaded language pack"
+msgstr "Tidak ada paket bahasa yang diunggah"
+
+msgid "An installation is already running"
+msgstr "Instalasi sudah berjalan"
+
+msgid "The language pack could not be removed"
+msgstr "Paket bahasa tidak dapat dihapus"
+
+msgid "Lock cache unavailable"
+msgstr "Cache kunci tidak tersedia"
+
+msgid "No serving cell to lock to"
+msgstr "Tidak ada sel layanan untuk dikunci"

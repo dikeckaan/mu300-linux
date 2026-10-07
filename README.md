@@ -245,7 +245,8 @@ eamonxg. The app's own notes are in [`openwrt/luci-app-mu300/README.md`](openwrt
 | Go back to Android | `sudo mu300-next-boot android`, then `sudo reboot` |
 | Return to Linux from Android | `su -c mu300-linux` on the device (see below), or `boot/android-boot-linux.sh boot-linux-slotb.img` from a computer |
 | Send all traffic through a VPN | see below (`sudo mu300-extra install vpn` first) |
-| Add or remove optional parts (the VPN engines) | `mu300-extra list`, `sudo mu300-extra install vpn`, `sudo mu300-extra remove vpn` |
+| Add or remove optional parts (the VPN engines, more web interface languages) | `mu300-extra list`, `sudo mu300-extra install vpn`, `sudo mu300-extra remove vpn` (`lang` for the languages) |
+| Language of the web interface (OpenWrt) | System -> System -> Language and Style; more languages: see Languages below |
 
 ### Installing from Android with a Magisk zip
 
@@ -420,6 +421,46 @@ copy and an update or reinstall of a system keeps it; `mu300-update apply` bring
 `mu300-extra list` shows what there is, `mu300-extra status` what is installed, `sudo mu300-extra remove vpn` takes it
 off again (turn the VPN off first; it refuses while the VPN is on). A device that used the VPN before the engines became an extra keeps it working: the update installs the
 vpn extra by itself (or keeps the engines of the old system), and `mu300-vpn` fetches it when it finds none.
+
+**Tailscale through the VPN.** Tailscale marks its own connections (WireGuard to peers, DERP relays, the control
+server) and gives them a routing rule of their own (`fwmark 0x80000/0xff0000 lookup main`, pref 5210) that would send
+them past the tunnel straight to the carrier - on a network where only the VPN gets out, Tailscale then never
+connects. When the tunnel comes up, with either engine, `mu300-vpn` puts a rule before it (pref 5200, into the
+tunnel's table 2022). Private addresses (the device's LAN, RFC 1918) stay outside the tunnel (pref 5199), so peers on
+the same network are reached directly. The engine's own connection keeps going to the carrier even with a Tailscale
+exit node (pref 5198). The tailnet itself (`100.64.0.0/10`, Tailscale's table 52) works as before. The kill switch
+still drops every Tailscale packet on the cellular interface, so with it on they only leave through the tunnel. With
+the VPN off, or with an engine stopped, the rules have nothing to send packets into and Tailscale goes out directly
+as usual; `mu300-vpn off` and the next start clear them. IPv4 only. `TAILSCALE=0` in vpn.conf turns this off.
+
+### Languages
+
+Both OpenWrt systems speak **English, Turkish and Simplified Chinese** out of the box: LuCI's own pages (from
+OpenWrt's translations of LuCI, its firewall and its package manager) and, on `openwrt-luci`, the MU300 control
+panel. The web interface starts in **English**; switch it under System -> System -> Language and Style, or on
+`openwrt-luci` under System -> Languages. An update keeps the language you picked.
+
+Every other language is the **lang extra** (about 2 MB, OpenWrt only - Ubuntu has no web interface): LuCI in the 40
+further languages OpenWrt 25.12.5 translates it to, and the control panel in 29 of them (ar, az, bg, cs, da, de, el,
+es, fa, fi, fr, he, hi, hu, id, it, ja, kk, ko, nl, pl, pt-BR, ro, ru, sk, sv, uk, vi, zh-TW; az, kk and id have no
+LuCI translation, only the panel's). Install it from the panel (System -> Languages: download it, or upload
+`mu300-extra-lang.tar.gz` from the release page when the device has no internet) or on the device:
+
+```sh
+mu300-extra install lang                                 # from the release of this system
+MU300_EXTRA_FILE=/tmp/mu300-extra-lang.tar.gz mu300-extra install lang   # from a file, offline
+mu300-extra lang                                         # the languages, and which are offered
+mu300-extra lang disable all; mu300-extra lang enable de ja   # offer only some of them
+mu300-extra remove lang
+```
+
+The languages appear in the language list at once (no reboot); the extra stays across updates and is updated with
+them. Which of its languages a system offers is that system's own setting (`/etc/mu300/languages`).
+
+The control panel's translations other than Turkish and Chinese are **machine (AI) translations** from the English
+original. Corrections are very welcome: edit `openwrt/luci-app-mu300/po/<language>/mu300.po` and open a pull request
+(`python3 tools/luci-i18n.py check` must stay clean; a new language also needs a row in
+`openwrt/luci-languages.tsv`).
 
 ### Wi-Fi client
 

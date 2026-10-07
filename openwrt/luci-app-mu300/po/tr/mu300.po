@@ -24,6 +24,9 @@ msgstr "Bağdaştırıcı ayarları"
 msgid "Device management"
 msgstr "Cihaz yönetimi"
 
+msgid "Languages"
+msgstr "Diller"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 kontrol merkezi: durum paneli, ağ kilitleri, AT terminali ve SMS"
 
@@ -333,8 +336,8 @@ msgstr "Bellek"
 msgid "Storage"
 msgstr "Depolama"
 
-msgid "Power"
-msgstr "Güç"
+msgid "Battery"
+msgstr "Pil"
 
 msgid "Channel"
 msgstr "Kanal"
@@ -579,11 +582,128 @@ msgstr "Küme %d"
 msgid "Total %s · free %s"
 msgstr "Toplam %s · boş %s"
 
+msgid "charging %s W"
+msgstr "%s W ile şarj oluyor"
+
+msgid "charging"
+msgstr "şarj oluyor"
+
+msgid "drawing %s W"
+msgstr "%s W çekiyor"
+
+msgid "not charging"
+msgstr "şarj edilmiyor"
+
+msgid "on battery"
+msgstr "pille çalışıyor"
+
+msgid "full"
+msgstr "dolu"
+
+msgid "USB in %s W"
+msgstr "USB girişi %s W"
+
 msgid "Online"
 msgstr "Çevrimiçi"
 
 msgid "AT adapter unavailable"
 msgstr "AT bağdaştırıcısı kullanılamıyor"
+
+msgid "Saved"
+msgstr "Kaydedildi"
+
+msgid "Management connection lost"
+msgstr "Yönetim bağlantısı kesildi"
+
+msgid "Installing the language pack…"
+msgstr "Dil paketi kuruluyor…"
+
+msgid "The language pack is installed"
+msgstr "Dil paketi kuruldu"
+
+msgid "The language pack could not be installed"
+msgstr "Dil paketi kurulamadı"
+
+msgid "Upload failed: %s"
+msgstr "Yükleme başarısız: %s"
+
+msgid "Language of the browser"
+msgstr "Tarayıcının dili"
+
+msgid "Language of the web interface"
+msgstr "Web arayüzünün dili"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "İngilizce, Türkçe ve Çince sistemle birlikte gelir; diğerlerini dil paketi ekler."
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "Aynı ayar Sistem > Sistem > Dil ve Stil altında da bulunur."
+
+msgid "Language pack"
+msgstr "Dil paketi"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "Dil paketi (mu300-extra-lang.tar.gz, yaklaşık 2 MB) LuCI’ye yaklaşık 40 dil daha, bu panele de bunlardan 29’unu ekler. Paketi bu sistemin sürümünden indirin veya cihazın internet bağlantısı yoksa dosyayı sürüm sayfasından alıp yükleyin."
+
+msgid "Download from the release"
+msgstr "Sürümden indir"
+
+msgid "Upload the file…"
+msgstr "Dosyayı yükle…"
+
+msgid "Release"
+msgstr "Sürüm"
+
+msgid "Enable all"
+msgstr "Tümünü etkinleştir"
+
+msgid "Disable all"
+msgstr "Tümünü devre dışı bırak"
+
+msgid "Remove the language pack"
+msgstr "Dil paketini kaldır"
+
+msgid "Remove the language pack?"
+msgstr "Dil paketi kaldırılsın mı?"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "Paketteki diller listeden kaybolur; bu dillerden birindeki sayfa İngilizceye geçer."
+
+msgid "Remove"
+msgstr "Kaldır"
+
+msgid "Disable"
+msgstr "Devre dışı bırak"
+
+msgid "Enable"
+msgstr "Etkinleştir"
+
+msgid "LuCI and this panel"
+msgstr "LuCI ve bu panel"
+
+msgid "LuCI only"
+msgstr "Yalnızca LuCI"
+
+msgid "Enabled"
+msgstr "Etkin"
+
+msgid "Disabled"
+msgstr "Devre dışı"
+
+msgid "Language"
+msgstr "Dil"
+
+msgid "Code"
+msgstr "Kod"
+
+msgid "Translated"
+msgstr "Çeviri"
+
+msgid "State"
+msgstr "Durum"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "LuCI’nin kendi çevirileri OpenWrt’den gelir. Bu panelin Türkçe ve Çince dışındaki çevirileri makine (yapay zekâ) çevirisidir; düzeltmeler memnuniyetle karşılanır."
 
 msgid "Automatic"
 msgstr "Otomatik"
@@ -1011,6 +1131,21 @@ msgstr "Bilinmeyen USB ayarı"
 msgid "Invalid interface name"
 msgstr "Geçersiz arayüz adı"
 
+msgid "The languages adapter gave no valid reply"
+msgstr "Dil bağdaştırıcısı geçerli bir yanıt vermedi"
+
+msgid "Unknown language operation"
+msgstr "Bilinmeyen dil işlemi"
+
+msgid "Invalid language code"
+msgstr "Geçersiz dil kodu"
+
+msgid "Invalid language request"
+msgstr "Geçersiz dil isteği"
+
+msgid "Unknown source"
+msgstr "Bilinmeyen kaynak"
+
 msgid "Request too large"
 msgstr "İstek çok büyük"
 
@@ -1112,6 +1247,27 @@ msgstr "Ağ yeniden yüklenemedi"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "USB arayüzü LAN köprüsüne bağlanamıyor"
+
+msgid "The language pack is not installed"
+msgstr "Dil paketi kurulu değil"
+
+msgid "No language given"
+msgstr "Dil belirtilmedi"
+
+msgid "The language could not be changed"
+msgstr "Dil değiştirilemedi"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI bu dili sunmuyor"
+
+msgid "No uploaded language pack"
+msgstr "Yüklenmiş dil paketi yok"
+
+msgid "An installation is already running"
+msgstr "Zaten bir kurulum sürüyor"
+
+msgid "The language pack could not be removed"
+msgstr "Dil paketi kaldırılamadı"
 
 msgid "Lock cache unavailable"
 msgstr "Kilit önbelleği kullanılamıyor"

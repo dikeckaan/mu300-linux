@@ -1,0 +1,1276 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: uk\n"
+
+msgid "Status dashboard"
+msgstr "Панель стану"
+
+msgid "Cellular"
+msgstr "Мобільний зв'язок"
+
+msgid "Network locks"
+msgstr "Фіксація мережі"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "AT terminal"
+msgstr "AT-термінал"
+
+msgid "Adapter settings"
+msgstr "Налаштування адаптера"
+
+msgid "Device management"
+msgstr "Керування пристроєм"
+
+msgid "Languages"
+msgstr "Мови"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
+msgstr "Центр керування MU300: панель стану, фіксація мережі, AT-термінал і SMS"
+
+msgid "China Mobile"
+msgstr "China Mobile"
+
+msgid "China Unicom"
+msgstr "China Unicom"
+
+msgid "China Telecom"
+msgstr "China Telecom"
+
+msgid "China Broadnet"
+msgstr "China Broadnet"
+
+msgid "China Tietong"
+msgstr "China Tietong"
+
+msgid "Excellent"
+msgstr "Відмінний"
+
+msgid "Good"
+msgstr "Добрий"
+
+msgid "Fair"
+msgstr "Середній"
+
+msgid "Poor"
+msgstr "Слабкий"
+
+msgid "Unknown"
+msgstr "Невідомо"
+
+msgid "%d d %d h"
+msgstr "%d д %d год"
+
+msgid "%d h %d min"
+msgstr "%d год %d хв"
+
+msgid "%d min"
+msgstr "%d хв"
+
+msgid "No neighbor-cell data"
+msgstr "Немає даних про сусідні соти"
+
+msgid "Locked"
+msgstr "Зафіксовано"
+
+msgid "Lock"
+msgstr "Зафіксувати"
+
+msgid "Unknown error"
+msgstr "Невідома помилка"
+
+msgid "Confirm"
+msgstr "Підтвердити"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Cancel"
+msgstr "Скасувати"
+
+msgid "New SMS · %s"
+msgstr "Нове SMS · %s"
+
+msgid "Unknown number"
+msgstr "Невідомий номер"
+
+msgid "Select"
+msgstr "Вибрати"
+
+msgid "Basic"
+msgstr "Основне"
+
+msgid "Registration/signal"
+msgstr "Реєстрація/сигнал"
+
+msgid "Bearer"
+msgstr "Несучий канал"
+
+msgid "Engineering mode"
+msgstr "Інженерний режим"
+
+msgid "AT command (↑↓ history, Enter to send)"
+msgstr "AT-команда (↑↓ історія, Enter — надіслати)"
+
+msgid "Send"
+msgstr "Надіслати"
+
+msgid "Clear screen"
+msgstr "Очистити екран"
+
+msgid "Ready."
+msgstr "Готово."
+
+msgid "Session history (click to reuse)"
+msgstr "Історія сеансу (натисніть, щоб повторити)"
+
+msgid "(no output)"
+msgstr "(немає виводу)"
+
+msgid "Request failed"
+msgstr "Помилка запиту"
+
+msgid "(empty)"
+msgstr "(порожньо)"
+
+msgid "USB role"
+msgstr "Роль USB"
+
+msgid "Current role"
+msgstr "Поточна роль"
+
+msgid "Switch USB role"
+msgstr "Змінити роль USB"
+
+msgid "Device mode"
+msgstr "Режим пристрою"
+
+msgid "Host mode"
+msgstr "Режим хоста"
+
+msgid "Enable host mode at boot"
+msgstr "Вмикати режим хоста під час завантаження"
+
+msgid "Apply role"
+msgstr "Застосувати роль"
+
+msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
+msgstr "Режим хоста вимикає USB-мережу та послідовний порт на цьому роз'ємі. F50 не має батареї; доступ до керування може бути втрачено, а USB-адаптеру зазвичай потрібен хаб із живленням."
+
+msgid "USB network mode"
+msgstr "Режим USB-мережі"
+
+msgid "Network protocol"
+msgstr "Мережевий протокол"
+
+msgid "Apply duration"
+msgstr "Тривалість дії"
+
+msgid "Next reboot only"
+msgstr "Лише до наступного перезавантаження"
+
+msgid "Permanent"
+msgstr "Постійно"
+
+msgid "Enable selected protocol"
+msgstr "Увімкнути вибраний протокол"
+
+msgid "Save; apply after reboot"
+msgstr "Зберегти; застосувати після перезавантаження"
+
+msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
+msgstr "Типово використовується NCM. Windows не підтримує ECM штатно; RNDIS змінює перелічення пристрою. Якщо «Увімкнути вибраний протокол» вимкнено, зберігається лише ваш вибір. «Лише до наступного перезавантаження» застосовується один раз, потім знову використовується NCM."
+
+msgid "USB adapters"
+msgstr "USB-адаптери"
+
+msgid "Refresh"
+msgstr "Оновити"
+
+msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
+msgstr "Доступно лише в режимі хоста. «Оновити» піднімає знайдені USB-адаптери; додавання до LAN зберігає міст і перезавантажує мережу."
+
+msgid "Unavailable"
+msgstr "Недоступно"
+
+msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
+msgstr "Режим USB-мережі недоступний у режимі хоста; автозапуск режиму хоста також вимикає автозапуск USB-мережі."
+
+msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
+msgstr "Режим хоста одразу вимикає керування через USB. F50 не має батареї, а периферії може знадобитися зовнішнє живлення; переконайтеся, що є інший шлях керування."
+
+msgid "USB networking and serial will re-enumerate in device mode."
+msgstr "USB-мережа та послідовний порт будуть повторно перелічені в режимі пристрою."
+
+msgid "Switch USB role?"
+msgstr "Змінити роль USB?"
+
+msgid "Apply"
+msgstr "Застосувати"
+
+msgid "Switching USB role…"
+msgstr "Зміна ролі USB…"
+
+msgid "Switch failed: %s"
+msgstr "Помилка зміни: %s"
+
+msgid "Management connection lost; reconnect to confirm the USB role."
+msgstr "З'єднання керування втрачено; перепідключіться, щоб підтвердити роль USB."
+
+msgid "Switch request accepted; the USB connection may briefly disconnect."
+msgstr "Запит на зміну прийнято; USB-з'єднання може ненадовго перерватися."
+
+msgid "USB role applied"
+msgstr "Роль USB застосовано"
+
+msgid "Save USB network mode?"
+msgstr "Зберегти режим USB-мережі?"
+
+msgid "The network mode applies on the next reboot; USB management may need to reconnect."
+msgstr "Мережевий режим застосується після наступного перезавантаження; може знадобитися перепідключення керування через USB."
+
+msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
+msgstr "Зберігається лише вибір; якщо вибраний протокол вимкнено, наступне завантаження все одно використає типовий NCM."
+
+msgid "Save"
+msgstr "Зберегти"
+
+msgid "Saving USB network settings…"
+msgstr "Збереження налаштувань USB-мережі…"
+
+msgid "Settings saved"
+msgstr "Налаштування збережено"
+
+msgid "Save failed: %s"
+msgstr "Помилка збереження: %s"
+
+msgid "Unable to confirm the role yet; reconnect and refresh the page."
+msgstr "Поки не вдається підтвердити роль; перепідключіться та оновіть сторінку."
+
+msgid "Switch to host mode to see USB adapters."
+msgstr "Перейдіть у режим хоста, щоб побачити USB-адаптери."
+
+msgid "Scanning USB adapters…"
+msgstr "Пошук USB-адаптерів…"
+
+msgid "No USB adapters found."
+msgstr "USB-адаптерів не знайдено."
+
+msgid "Link connected"
+msgstr "Канал підключено"
+
+msgid "No link; enable attempted"
+msgstr "Немає каналу; спробу ввімкнення виконано"
+
+msgid "Added to LAN"
+msgstr "Додано до LAN"
+
+msgid "Add to LAN"
+msgstr "Додати до LAN"
+
+msgid "Add USB adapter to LAN?"
+msgstr "Додати USB-адаптер до LAN?"
+
+msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
+msgstr "Конфігурацію мосту буде збережено, а мережу перезавантажено; наявні з'єднання можуть ненадовго перерватися."
+
+msgid "Add"
+msgstr "Додати"
+
+msgid "Adding USB adapter…"
+msgstr "Додавання USB-адаптера…"
+
+msgid "Add failed: %s"
+msgstr "Помилка додавання: %s"
+
+msgid "Modulation DL/UL"
+msgstr "Модуляція DL/UL"
+
+msgid "Estimated from current MCS"
+msgstr "Оцінка за поточним MCS"
+
+msgid "MCS DL/UL"
+msgstr "MCS DL/UL"
+
+msgid "BLER DL/UL"
+msgstr "BLER DL/UL"
+
+msgid "Link & traffic"
+msgstr "Канал і трафік"
+
+msgid "Download rate"
+msgstr "Швидкість завантаження"
+
+msgid "Upload rate"
+msgstr "Швидкість вивантаження"
+
+msgid "Total received"
+msgstr "Усього отримано"
+
+msgid "Total sent"
+msgstr "Усього надіслано"
+
+msgid "Session duration"
+msgstr "Тривалість сеансу"
+
+msgid "Registration"
+msgstr "Реєстрація"
+
+msgid "Bandwidth"
+msgstr "Ширина смуги"
+
+msgid "AMBR DL/UL"
+msgstr "AMBR DL/UL"
+
+msgid "Wi-Fi · LAN · Device · SIM"
+msgstr "Wi-Fi · LAN · Пристрій · SIM"
+
+msgid "CPU usage"
+msgstr "Завантаження ЦП"
+
+msgid "Memory"
+msgstr "Пам'ять"
+
+msgid "Storage"
+msgstr "Сховище"
+
+msgid "Battery"
+msgstr "Батарея"
+
+msgid "Channel"
+msgstr "Канал"
+
+msgid "Encryption"
+msgstr "Шифрування"
+
+msgid "Hidden SSID"
+msgstr "Прихований SSID"
+
+msgid "Country"
+msgstr "Країна"
+
+msgid "AP status"
+msgstr "Стан точки доступу"
+
+msgid "USB network"
+msgstr "USB-мережа"
+
+msgid "Connection tracking"
+msgstr "Відстеження з'єднань"
+
+msgid "LAN address"
+msgstr "Адреса LAN"
+
+msgid "Wi-Fi clients"
+msgstr "Клієнти Wi-Fi"
+
+msgid "DHCP leases"
+msgstr "Оренди DHCP"
+
+msgid "Device model"
+msgstr "Модель пристрою"
+
+msgid "System"
+msgstr "Система"
+
+msgid "Modem"
+msgstr "Модем"
+
+msgid "Carrier"
+msgstr "Оператор"
+
+msgid "Module"
+msgstr "Модуль"
+
+msgid "Firmware"
+msgstr "Мікропрограма"
+
+msgid "Show SIM identifiers"
+msgstr "Показати ідентифікатори SIM"
+
+msgid "Quick controls"
+msgstr "Швидкі дії"
+
+msgid "Data connection"
+msgstr "Передавання даних"
+
+msgid "Cellular radio"
+msgstr "Мобільний радіомодуль"
+
+msgid "Wi-Fi hotspot"
+msgstr "Точка доступу Wi-Fi"
+
+msgid "Restart modem"
+msgstr "Перезапустити модем"
+
+msgid "Restart device"
+msgstr "Перезавантажити пристрій"
+
+msgid "Switch to Android"
+msgstr "Перейти до Android"
+
+msgid "Neighbor cells"
+msgstr "Сусідні соти"
+
+msgid "RAT/Band"
+msgstr "RAT/діапазон"
+
+msgid "Frequency"
+msgstr "Частота"
+
+msgid "Running %s…"
+msgstr "Виконується %s…"
+
+msgid "Started in background: %s"
+msgstr "Запущено у фоні: %s"
+
+msgid "Done: %s"
+msgstr "Готово: %s"
+
+msgid "Failed: %s"
+msgstr "Помилка: %s"
+
+msgid "Disconnecting data…"
+msgstr "Вимкнення передавання даних…"
+
+msgid "Connecting data…"
+msgstr "Підключення передавання даних…"
+
+msgid "Turn off cellular radio"
+msgstr "Вимкнути мобільний радіомодуль"
+
+msgid "Cellular connectivity will be interrupted."
+msgstr "Мобільний зв'язок буде перервано."
+
+msgid "Turn on cellular radio"
+msgstr "Увімкнути мобільний радіомодуль"
+
+msgid "The SFUN power-on sequence will run (up to about 1 minute)."
+msgstr "Буде виконано послідовність увімкнення SFUN (до 1 хвилини)."
+
+msgid "Cellular connectivity may stop for 1–2 minutes."
+msgstr "Мобільний зв'язок може перерватися на 1–2 хвилини."
+
+msgid "Restart the entire device"
+msgstr "Перезавантажити весь пристрій"
+
+msgid "All connections will be interrupted."
+msgstr "Усі з'єднання буде перервано."
+
+msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
+msgstr "Наступне завантаження буде в Android, перезавантаження відбудеться зараз. Ця сторінка керування та роздача мобільного зв'язку від'єднаються."
+
+msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
+msgstr "Щоб повернутися до OpenWrt, виконайте mu300-next-boot linux в Android і перезавантажте пристрій."
+
+msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
+msgstr "Або нічого не робіть: після п'яти незавершених завантажень відбудеться автоматичне повернення."
+
+msgid "Switch and reboot"
+msgstr "Перейти й перезавантажити"
+
+msgid "Preparing Android boot and rebooting…"
+msgstr "Підготовка завантаження Android і перезавантаження…"
+
+msgid "Hide SIM identifiers"
+msgstr "Приховати ідентифікатори SIM"
+
+msgid "Lock cell %s?"
+msgstr "Зафіксувати соту %s?"
+
+msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
+msgstr "Радіостек буде перезапущено (SFUN); мобільний зв'язок перерветься приблизно на 30 секунд."
+
+msgid "Locking %s in the background, about 30 seconds"
+msgstr "Фіксація %s у фоні, близько 30 секунд"
+
+msgid "Locked %s in the background; the status will refresh shortly"
+msgstr "%s зафіксовано у фоні; стан незабаром оновиться"
+
+msgid "Lock failed: %s"
+msgstr "Помилка фіксації: %s"
+
+msgid "Uptime %s"
+msgstr "Час роботи %s"
+
+msgid "Radio off"
+msgstr "Радіо вимкнено"
+
+msgid "No response"
+msgstr "Немає відповіді"
+
+msgid "%s · Signal %s %s/10"
+msgstr "%s · Сигнал %s %s/10"
+
+msgid "%s · Signal %s"
+msgstr "%s · Сигнал %s"
+
+msgid "Anchor B%s"
+msgstr "Опорна сота B%s"
+
+msgid "No serving cell"
+msgstr "Немає обслуговуючої соти"
+
+msgid "Not registered"
+msgstr "Не зареєстровано"
+
+msgid "Registered"
+msgstr "Зареєстровано"
+
+msgid "Searching"
+msgstr "Пошук"
+
+msgid "Registration denied"
+msgstr "У реєстрації відмовлено"
+
+msgid "Registered (roaming)"
+msgstr "Зареєстровано (роумінг)"
+
+msgid "Emergency only"
+msgstr "Лише екстрені виклики"
+
+msgid "Status %s"
+msgstr "Стан %s"
+
+msgid "LTE anchor"
+msgstr "Опорна сота LTE"
+
+msgid "LTE link"
+msgstr "Канал LTE"
+
+msgid "Hidden"
+msgstr "Прихований"
+
+msgid "No"
+msgstr "Ні"
+
+msgid "Running"
+msgstr "Працює"
+
+msgid "Not running"
+msgstr "Не працює"
+
+msgid "Connected"
+msgstr "Підключено"
+
+msgid "Disconnected"
+msgstr "Від'єднано"
+
+msgid "%s entries"
+msgstr "Записів: %s"
+
+msgid "%s clients"
+msgstr "Клієнтів: %s"
+
+msgid "Recent DHCP leases"
+msgstr "Останні оренди DHCP"
+
+msgid "%d h"
+msgstr "%d год"
+
+msgid "Board"
+msgstr "Плата"
+
+msgid "No temperature readings"
+msgstr "Немає даних про температуру"
+
+msgid "Cluster %d"
+msgstr "Кластер %d"
+
+msgid "Total %s · free %s"
+msgstr "Усього %s · вільно %s"
+
+msgid "charging %s W"
+msgstr "заряджається, %s Вт"
+
+msgid "charging"
+msgstr "заряджається"
+
+msgid "drawing %s W"
+msgstr "споживає %s Вт"
+
+msgid "not charging"
+msgstr "не заряджається"
+
+msgid "on battery"
+msgstr "від батареї"
+
+msgid "full"
+msgstr "заряджена"
+
+msgid "USB in %s W"
+msgstr "вхід USB %s Вт"
+
+msgid "Online"
+msgstr "У мережі"
+
+msgid "AT adapter unavailable"
+msgstr "AT-адаптер недоступний"
+
+msgid "Saved"
+msgstr "Збережено"
+
+msgid "Management connection lost"
+msgstr "З'єднання керування втрачено"
+
+msgid "Installing the language pack…"
+msgstr "Встановлення мовного пакета…"
+
+msgid "The language pack is installed"
+msgstr "Мовний пакет встановлено"
+
+msgid "The language pack could not be installed"
+msgstr "Не вдалося встановити мовний пакет"
+
+msgid "Upload failed: %s"
+msgstr "Помилка вивантаження: %s"
+
+msgid "Language of the browser"
+msgstr "Мова браузера"
+
+msgid "Language of the web interface"
+msgstr "Мова вебінтерфейсу"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "Англійська, турецька та китайська входять до системи; мовний пакет додає решту."
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "Те саме налаштування є в Система > Система > Мова та стиль."
+
+msgid "Language pack"
+msgstr "Мовний пакет"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "Мовний пакет (mu300-extra-lang.tar.gz, близько 2 МБ) додає LuCI приблизно 40 мовами, а цю панель — 29 з них. Завантажте його з релізу цієї системи або вивантажте файл зі сторінки релізу, якщо пристрій не має інтернету."
+
+msgid "Download from the release"
+msgstr "Завантажити з релізу"
+
+msgid "Upload the file…"
+msgstr "Вивантажити файл…"
+
+msgid "Release"
+msgstr "Реліз"
+
+msgid "Enable all"
+msgstr "Увімкнути всі"
+
+msgid "Disable all"
+msgstr "Вимкнути всі"
+
+msgid "Remove the language pack"
+msgstr "Видалити мовний пакет"
+
+msgid "Remove the language pack?"
+msgstr "Видалити мовний пакет?"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "Його мови зникнуть зі списку; сторінка однією з них перемкнеться на англійську."
+
+msgid "Remove"
+msgstr "Видалити"
+
+msgid "Disable"
+msgstr "Вимкнути"
+
+msgid "Enable"
+msgstr "Увімкнути"
+
+msgid "LuCI and this panel"
+msgstr "LuCI і ця панель"
+
+msgid "LuCI only"
+msgstr "Лише LuCI"
+
+msgid "Enabled"
+msgstr "Увімкнено"
+
+msgid "Disabled"
+msgstr "Вимкнено"
+
+msgid "Language"
+msgstr "Мова"
+
+msgid "Code"
+msgstr "Код"
+
+msgid "Translated"
+msgstr "Перекладено"
+
+msgid "State"
+msgstr "Стан"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "Власні переклади LuCI взято з OpenWrt. Переклади цієї панелі, окрім турецького та китайського, машинні (ШІ); виправлення вітаються."
+
+msgid "Automatic"
+msgstr "Автоматично"
+
+msgid "4G only"
+msgstr "Лише 4G"
+
+msgid "Serving network"
+msgstr "Обслуговуюча мережа"
+
+msgid "Network mode · EN-DC"
+msgstr "Мережевий режим · EN-DC"
+
+msgid "Refresh lock status"
+msgstr "Оновити стан фіксації"
+
+msgid "Apply at startup"
+msgstr "Застосовувати під час запуску"
+
+msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
+msgstr "Вимкнення лише скасовує повторне застосування під час наступного завантаження; збережені мережевий режим, EN-DC, діапазони та соти залишаються."
+
+msgid "Band locking"
+msgstr "Фіксація діапазонів"
+
+msgid "NR bands"
+msgstr "Діапазони NR"
+
+msgid "LTE bands"
+msgstr "Діапазони LTE"
+
+msgid "Apply NR bands"
+msgstr "Застосувати діапазони NR"
+
+msgid "Apply LTE bands"
+msgstr "Застосувати діапазони LTE"
+
+msgid "Neighbor cells and cell locking"
+msgstr "Сусідні соти та фіксація соти"
+
+msgid "Lock current serving cell"
+msgstr "Зафіксувати поточну обслуговуючу соту"
+
+msgid "Unlock cell"
+msgstr "Зняти фіксацію соти"
+
+msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
+msgstr "Застосування перезапускає радіостек (SFUN) і ненадовго перериває мобільний зв'язок. Налаштування зберігаються і, якщо ввімкнено «Застосовувати під час запуску», повторно застосовуються плагіном після готовності AT. Хук платформи перед запуском радіо може застосувати їх без перезапуску. Щоб повернути автоматичний режим, застосуйте без вибраних діапазонів."
+
+msgid "Apply “%s”?"
+msgstr "Застосувати «%s»?"
+
+msgid "Applying %s in the background…"
+msgstr "Застосування %s у фоні…"
+
+msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
+msgstr "Застосування %s у фоні… (перезапуск SFUN і повторна реєстрація, близько 30 секунд)"
+
+msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
+msgstr "У черзі: під час перезапуску SFUN застосовується інша фіксація; ця набуде чинності після неї"
+
+msgid "Confirming the EN-DC status…"
+msgstr "Підтвердження стану EN-DC…"
+
+msgid "Confirming apply at startup…"
+msgstr "Підтвердження застосування під час запуску…"
+
+msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Запущено у фоні: %s (перезапуск SFUN, близько 30 секунд); зчитування стану…"
+
+msgid "Network mode: %s"
+msgstr "Мережевий режим: %s"
+
+msgid "Disable EN-DC (NSA anchor)"
+msgstr "Вимкнути EN-DC (опорна сота NSA)"
+
+msgid "Enable EN-DC (NSA anchor)"
+msgstr "Увімкнути EN-DC (опорна сота NSA)"
+
+msgid "Disable apply at startup"
+msgstr "Вимкнути застосування під час запуску"
+
+msgid "Enable apply at startup"
+msgstr "Увімкнути застосування під час запуску"
+
+msgid "Reading the modem directly (a few seconds at most)…"
+msgstr "Пряме зчитування модема (щонайбільше кілька секунд)…"
+
+msgid "Refreshed"
+msgstr "Оновлено"
+
+msgid "Refresh failed"
+msgstr "Помилка оновлення"
+
+msgid "NR bands: back to automatic"
+msgstr "Діапазони NR: знову автоматично"
+
+msgid "NR band lock: %s"
+msgstr "Фіксація діапазонів NR: %s"
+
+msgid "LTE bands: back to automatic"
+msgstr "Діапазони LTE: знову автоматично"
+
+msgid "LTE band lock: %s"
+msgstr "Фіксація діапазонів LTE: %s"
+
+msgid "Remove the %s cell lock"
+msgstr "Зняти фіксацію соти %s"
+
+msgid "The radio stack will restart (SFUN), taking about 30 seconds."
+msgstr "Радіостек буде перезапущено (SFUN), це займе близько 30 секунд."
+
+msgid "Removing the %s cell lock…"
+msgstr "Зняття фіксації соти %s…"
+
+msgid "Unlock failed: %s"
+msgstr "Помилка зняття фіксації: %s"
+
+msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Зняття фіксації запущено у фоні (перезапуск SFUN, близько 30 секунд); зчитування стану…"
+
+msgid "Locking %s in the background…"
+msgstr "Фіксація %s у фоні…"
+
+msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "%s зафіксовано у фоні (перезапуск SFUN, близько 30 секунд); зчитування стану…"
+
+msgid "No serving-network data"
+msgstr "Немає даних про обслуговуючу мережу"
+
+msgid "NR serving cell"
+msgstr "Обслуговуюча сота NR"
+
+msgid "Status confirmed"
+msgstr "Стан підтверджено"
+
+msgid "Readback timed out; select “Refresh lock status”"
+msgstr "Час зчитування минув; натисніть «Оновити стан фіксації»"
+
+msgid "Applied (EN-DC does not require a radio-stack restart)"
+msgstr "Застосовано (EN-DC не потребує перезапуску радіостека)"
+
+msgid "Apply at startup is on"
+msgstr "Застосування під час запуску ввімкнено"
+
+msgid "Apply at startup is off"
+msgstr "Застосування під час запуску вимкнено"
+
+msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Час зчитування стану EN-DC минув; для перевірки натисніть «Оновити стан фіксації»"
+
+msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Час зчитування застосування під час запуску минув; для перевірки натисніть «Оновити стан фіксації»"
+
+msgid "Locked cells"
+msgstr "Зафіксовані соти"
+
+msgid "Unlock %s"
+msgstr "Зняти фіксацію %s"
+
+msgid "Automatic (%d supported)"
+msgstr "Автоматично (підтримується: %d)"
+
+msgid "%d locked: %s"
+msgstr "Зафіксовано %d: %s"
+
+msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
+msgstr "Налаштування підключення цього плагіна до поточної платформи Unisoc OpenWrt. Зміни не потребують редагування сторінок панелі, AT, фіксації чи SMS."
+
+msgid "Platform adapter"
+msgstr "Адаптер платформи"
+
+msgid "AT backend"
+msgstr "Бекенд AT"
+
+msgid "Auto-detect"
+msgstr "Автовизначення"
+
+msgid "atinout + serial port"
+msgstr "atinout + послідовний порт"
+
+msgid "Custom adapter"
+msgstr "Власний адаптер"
+
+msgid "AT serial port"
+msgstr "Послідовний порт AT"
+
+msgid "Custom AT adapter"
+msgstr "Власний AT-адаптер"
+
+msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
+msgstr "Виконуваний файл отримує тайм-аут у секундах і повну AT-команду саме в такому порядку. Він має використовувати спільне блокування послідовного порту з дозвонювачем платформи."
+
+msgid "SMS adapter"
+msgstr "SMS-адаптер"
+
+msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
+msgstr "Реалізує підкоманди list, show, send, delete і sync; залиште порожнім, щоб mu300-sms було знайдено автоматично."
+
+msgid "SMS pool directory"
+msgstr "Каталог сховища SMS"
+
+msgid "Cellular logical interface"
+msgstr "Логічний інтерфейс мобільного зв'язку"
+
+msgid "Cellular IPv6 interface"
+msgstr "Інтерфейс IPv6 мобільного зв'язку"
+
+msgid "Cellular network device"
+msgstr "Мережевий пристрій мобільного зв'язку"
+
+msgid "Leave blank to detect from netifd"
+msgstr "Залиште порожнім для визначення через netifd"
+
+msgid "LAN bridge"
+msgstr "Міст LAN"
+
+msgid "Wi-Fi device"
+msgstr "Пристрій Wi-Fi"
+
+msgid "USB device"
+msgstr "Пристрій USB"
+
+msgid "Maximum wait for AT readiness (seconds)"
+msgstr "Максимальне очікування готовності AT (секунди)"
+
+msgid "Home dashboard refresh interval (seconds)"
+msgstr "Інтервал оновлення головної панелі (секунди)"
+
+msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
+msgstr "Впливає лише на частоту оновлення головної панелі; 0,5–60 секунд. Щоб застосувати, після збереження знову відкрийте головну сторінку."
+
+msgid "Persistent state directory"
+msgstr "Каталог постійного стану"
+
+msgid "Recipient: number, e.g. 10086 or +86..."
+msgstr "Одержувач: номер, наприклад 10086 або +86..."
+
+msgid "Sync from SIM"
+msgstr "Синхронізувати із SIM"
+
+msgid "Clear local pool"
+msgstr "Очистити локальне сховище"
+
+msgid "Loading…"
+msgstr "Завантаження…"
+
+msgid "Select a conversation on the left, or enter a number below to send."
+msgstr "Виберіть розмову ліворуч або введіть номер нижче, щоб надіслати."
+
+msgid "Message (Enter to send, Shift+Enter for newline)"
+msgstr "Повідомлення (Enter — надіслати, Shift+Enter — новий рядок)"
+
+msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
+msgstr "Надсилання використовує AT+CMGS (режим PDU); якщо канал зайнятий, повторіть. Щоб видалити одне повідомлення, натисніть значок кошика на його бульбашці."
+
+msgid "Syncing from the SIM in the background (AT+CMGL)…"
+msgstr "Синхронізація із SIM у фоні (AT+CMGL)…"
+
+msgid "SIM sync started; the list refreshes in a few seconds."
+msgstr "Синхронізацію із SIM запущено; список оновиться за кілька секунд."
+
+msgid "Clear local SMS pool"
+msgstr "Очистити локальне сховище SMS"
+
+msgid "Only local files will be deleted; messages on the SIM remain."
+msgstr "Буде видалено лише локальні файли; повідомлення на SIM залишаться."
+
+msgid "Clear"
+msgstr "Очистити"
+
+msgid "Delete this SMS"
+msgstr "Видалити це SMS"
+
+msgid "Deletion cannot be undone."
+msgstr "Видалення не можна скасувати."
+
+msgid "Local only"
+msgstr "Лише локально"
+
+msgid "Local + SIM"
+msgstr "Локально + SIM"
+
+msgid "Delete failed"
+msgstr "Помилка видалення"
+
+msgid "Deleted (local + SIM)"
+msgstr "Видалено (локально + SIM)"
+
+msgid "Deleted (local only)"
+msgstr "Видалено (лише локально)"
+
+msgid "Enter both a number and a message."
+msgstr "Введіть номер і повідомлення."
+
+msgid "Sending…"
+msgstr "Надсилання…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Надіслано; список незабаром оновиться."
+
+msgid "Sending failed"
+msgstr "Помилка надсилання"
+
+msgid "· %d messages, %d unread · %d conversations"
+msgstr "· повідомлень: %d, непрочитаних: %d · розмов: %d"
+
+msgid "· %d messages · %d conversations"
+msgstr "· повідомлень: %d · розмов: %d"
+
+msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
+msgstr "Сховище порожнє. Тут з'являться вхідні та надіслані повідомлення, або натисніть «Синхронізувати із SIM»."
+
+msgid "Me: %s"
+msgstr "Я: %s"
+
+msgid "Delete"
+msgstr "Видалити"
+
+msgid "Dashboard info failed"
+msgstr "Помилка отримання даних панелі"
+
+msgid "Applying network locks: no live signal right now"
+msgstr "Застосовується фіксація мережі: зараз немає даних про сигнал"
+
+msgid "Live signal read failed"
+msgstr "Помилка зчитування поточного сигналу"
+
+msgid "Unknown op"
+msgstr "Невідома операція"
+
+msgid "Invalid argument for this op"
+msgstr "Неприпустимий аргумент для цієї операції"
+
+msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
+msgstr "Радіомодуль зайнятий: його перемикає дозвон або сторожовий процес, повторіть трохи згодом"
+
+msgid "The action gave no valid reply"
+msgstr "Дія не повернула коректної відповіді"
+
+msgid "An AT command is one line of printable ASCII, at most 512 characters"
+msgstr "AT-команда — це один рядок друкованих символів ASCII довжиною не більше 512 символів"
+
+msgid "Must be an AT command"
+msgstr "Має бути AT-командою"
+
+msgid "No \";\" command chaining"
+msgstr "Об'єднання команд через \";\" заборонено"
+
+msgid "Denied: this command wedges the AT port until a reboot"
+msgstr "Заборонено: ця команда блокує AT-порт до перезавантаження"
+
+msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
+msgstr "Застосовується фіксація мережі: модем перезапускається (близько пів хвилини), повторіть трохи згодом"
+
+msgid "The AT channel is busy; the command was not sent, try again"
+msgstr "AT-канал зайнятий; команду не надіслано, повторіть"
+
+msgid "The modem did not answer in time; the command may still run, check before sending it again"
+msgstr "Модем не відповів вчасно; команда може ще виконуватися, перевірте перед повторним надсиланням"
+
+msgid "The fresh parameter must be 0 or 1"
+msgstr "Параметр fresh має бути 0 або 1"
+
+msgid "Lock read failed"
+msgstr "Помилка зчитування фіксації"
+
+msgid "Unknown lock kind"
+msgstr "Невідомий тип фіксації"
+
+msgid "Invalid value for this lock kind"
+msgstr "Неприпустиме значення для цього типу фіксації"
+
+msgid "Invalid page"
+msgstr "Неприпустима сторінка"
+
+msgid "mu300-sms is not available (the SMS service is not installed or not running)"
+msgstr "mu300-sms недоступний (службу SMS не встановлено або не запущено)"
+
+msgid "No output"
+msgstr "Немає виводу"
+
+msgid "Bad ID"
+msgstr "Неправильний ID"
+
+msgid "Read failed"
+msgstr "Помилка зчитування"
+
+msgid "The number may only contain digits (and a leading +)"
+msgstr "Номер може містити лише цифри (і + на початку)"
+
+msgid "The message is empty"
+msgstr "Повідомлення порожнє"
+
+msgid "The message is too long (over 480 characters)"
+msgstr "Повідомлення задовге (понад 480 символів)"
+
+msgid "The message contains a control character"
+msgstr "Повідомлення містить керівний символ"
+
+msgid "The sim parameter must be 0 or 1"
+msgstr "Параметр sim має бути 0 або 1"
+
+msgid "The USB adapter (device-usb) gave no valid reply"
+msgstr "USB-адаптер (device-usb) не повернув коректної відповіді"
+
+msgid "The auto parameter must be 0 or 1"
+msgstr "Параметр auto має бути 0 або 1"
+
+msgid "Invalid USB role"
+msgstr "Неприпустима роль USB"
+
+msgid "A USB role takes no scope"
+msgstr "Роль USB не приймає область дії"
+
+msgid "Invalid USB network mode"
+msgstr "Неприпустимий режим USB-мережі"
+
+msgid "Invalid USB network scope"
+msgstr "Неприпустима область дії USB-мережі"
+
+msgid "Unknown USB setting"
+msgstr "Невідоме налаштування USB"
+
+msgid "Invalid interface name"
+msgstr "Неприпустиме ім'я інтерфейсу"
+
+msgid "The languages adapter gave no valid reply"
+msgstr "Мовний адаптер не повернув коректної відповіді"
+
+msgid "Unknown language operation"
+msgstr "Невідома мовна операція"
+
+msgid "Invalid language code"
+msgstr "Неприпустимий код мови"
+
+msgid "Invalid language request"
+msgstr "Неприпустимий мовний запит"
+
+msgid "Unknown source"
+msgstr "Невідоме джерело"
+
+msgid "Request too large"
+msgstr "Запит завеликий"
+
+msgid "The runtime directory is not safe; nothing was run"
+msgstr "Каталог середовища виконання небезпечний; нічого не виконано"
+
+msgid "No such method"
+msgstr "Немає такого методу"
+
+msgid "Radio did not come up"
+msgstr "Радіомодуль не ввімкнувся"
+
+msgid "Expected on or off"
+msgstr "Очікується on або off"
+
+msgid "VPN integration is not provided by this platform"
+msgstr "Інтеграція VPN не надається цією платформою"
+
+msgid "Dual-boot integration is not provided by this platform"
+msgstr "Інтеграція подвійного завантаження не надається цією платформою"
+
+msgid "mu300-next-boot failed"
+msgstr "Помилка mu300-next-boot"
+
+msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
+msgstr "AT-бекенд не відповів (радіо вимкнено, модем перезапускається або адаптер недоступний)"
+
+msgid "USB role adapter is not executable"
+msgstr "Адаптер ролі USB не є виконуваним"
+
+msgid "USB role adapter failed"
+msgstr "Помилка адаптера ролі USB"
+
+msgid "USB role switch is unavailable"
+msgstr "Зміна ролі USB недоступна"
+
+msgid "USB role switch failed"
+msgstr "Помилка зміни ролі USB"
+
+msgid "USB role switch was refused by platform safety checks"
+msgstr "Зміну ролі USB відхилено перевірками безпеки платформи"
+
+msgid "Cannot create USB boot settings directory"
+msgstr "Не вдається створити каталог налаштувань завантаження USB"
+
+msgid "Cannot write USB boot settings"
+msgstr "Не вдається записати налаштування завантаження USB"
+
+msgid "Cannot save USB boot settings"
+msgstr "Не вдається зберегти налаштування завантаження USB"
+
+msgid "Invalid boot-auto value"
+msgstr "Неприпустиме значення boot-auto"
+
+msgid "Device is the boot default; host auto-apply is the only persistent role"
+msgstr "Режим пристрою використовується типово під час завантаження; постійною може бути лише автоматична роль хоста"
+
+msgid "Cannot save USB role policy"
+msgstr "Не вдається зберегти політику ролі USB"
+
+msgid "Cannot disable USB network boot policy"
+msgstr "Не вдається вимкнути політику завантаження USB-мережі"
+
+msgid "Cannot commit USB role policy"
+msgstr "Не вдається застосувати політику ролі USB"
+
+msgid "USB network mode is unavailable in host role"
+msgstr "Режим USB-мережі недоступний у ролі хоста"
+
+msgid "Disable host boot-auto before configuring USB network"
+msgstr "Вимкніть boot-auto хоста перед налаштуванням USB-мережі"
+
+msgid "Cannot save USB network policy"
+msgstr "Не вдається зберегти політику USB-мережі"
+
+msgid "Cannot commit USB network policy"
+msgstr "Не вдається застосувати політику USB-мережі"
+
+msgid "USB host mode is required"
+msgstr "Потрібен режим хоста USB"
+
+msgid "Not a USB network interface"
+msgstr "Не є мережевим інтерфейсом USB"
+
+msgid "LAN bridge device section was not found"
+msgstr "Секцію пристрою мосту LAN не знайдено"
+
+msgid "Cannot bring USB network interface up"
+msgstr "Не вдається підняти мережевий інтерфейс USB"
+
+msgid "Cannot add interface to LAN bridge"
+msgstr "Не вдається додати інтерфейс до мосту LAN"
+
+msgid "Cannot save LAN bridge"
+msgstr "Не вдається зберегти міст LAN"
+
+msgid "Network reload failed"
+msgstr "Помилка перезавантаження мережі"
+
+msgid "Cannot attach USB interface to LAN bridge"
+msgstr "Не вдається приєднати інтерфейс USB до мосту LAN"
+
+msgid "The language pack is not installed"
+msgstr "Мовний пакет не встановлено"
+
+msgid "No language given"
+msgstr "Мову не вказано"
+
+msgid "The language could not be changed"
+msgstr "Не вдалося змінити мову"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI не пропонує цю мову"
+
+msgid "No uploaded language pack"
+msgstr "Немає вивантаженого мовного пакета"
+
+msgid "An installation is already running"
+msgstr "Встановлення вже виконується"
+
+msgid "The language pack could not be removed"
+msgstr "Не вдалося видалити мовний пакет"
+
+msgid "Lock cache unavailable"
+msgstr "Кеш фіксації недоступний"
+
+msgid "No serving cell to lock to"
+msgstr "Немає обслуговуючої соти для фіксації"

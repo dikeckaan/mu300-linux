@@ -3,6 +3,7 @@
 mu300-extra is the command, and both systems' boot runs `mu300-extra link`."""
 import hashlib
 import io
+import json
 import os
 import shutil
 import tarfile
@@ -28,7 +29,7 @@ def extra_tarball(path, name='vpn', release='v2026.10.10', bins=ENGINES, compone
     return path
 
 
-class Extras(ShellTest):
+class ExtrasBase(ShellTest):
     def setUp(self):
         super().setUp()
         self.disk = self.tmp / 'disk'
@@ -64,6 +65,8 @@ class Extras(ShellTest):
     def vpn(self):
         return self.disk / 'extra' / 'vpn'
 
+
+class Extras(ExtrasBase):
     # ---- mu300-update: the core -----------------------------------------------------------------------------
     def test_unpack_installs_and_replaces(self):
         for shell in self.each_shell():
@@ -319,6 +322,376 @@ class Extras(ShellTest):
             import shutil
             shutil.rmtree(self.disk / 'ubuntu')
             (self.disk / 'ubuntu/etc/mu300').mkdir(parents=True)
+
+
+
+LANGS = {'de': 'Deutsch (German)', 'pt_br': 'Português do Brasil (Brazilian Portuguese)', 'ja': '日本語 (Japanese)'}
+LMOS = ('base.de.lmo', 'firewall.de.lmo', 'mu300.de.lmo', 'base.pt-br.lmo', 'base.ja.lmo', 'mu300.ja.lmo')
+
+
+def lang_tarball(path, release='v2026.10.10', langs=None, lmos=LMOS, extra=(), lines=None, manifest=True,
+                 tamper=None):
+    """the lang extra: ./name ./release ./components ./languages ./manifest ./i18n/*.lmo; EXTRA: (name, data, type)
+    more; TAMPER: a file whose bytes differ from what the manifest says"""
+    langs = LANGS if langs is None else langs
+    text = lines if lines is not None else ''.join(f'{k}\t{v}\n' for k, v in langs.items())
+    files = {'./name': b'lang\n', './release': (release + '\n').encode(), './components': b'luci-i18n-base-de 26.275\n',
+             './languages': text.encode()}
+    files.update({f'./i18n/{n}': f'lmo {n} {release}'.encode() for n in lmos})
+    man = ''.join(f'{hashlib.sha256(d).hexdigest()}  {n}\n' for n, d in sorted(files.items()))
+    if tamper:
+        files[tamper] = b'other bytes'
+    with tarfile.open(path, 'w:gz') as t:
+        def add(fn, data=b'', typ=tarfile.REGTYPE, link=''):
+            ti = tarfile.TarInfo(fn)
+            ti.type, ti.linkname = typ, link
+            ti.size = len(data) if typ == tarfile.REGTYPE else 0
+            ti.mode = 0o755 if typ == tarfile.DIRTYPE else 0o644
+            t.addfile(ti, io.BytesIO(data) if typ == tarfile.REGTYPE else None)
+        for n in ('./name', './release', './components', './languages'):
+            add(n, files[n])
+        if manifest:
+            add('./manifest', man.encode())
+        add('./i18n', typ=tarfile.DIRTYPE)
+        for n in lmos:
+            add(f'./i18n/{n}', files[f'./i18n/{n}'])
+        for e in extra:
+            add(*e)
+    return path
+
+
+# uci as far as mu300-extra uses it, on a JSON file of "config.section[.option]" -> value
+UCI = r"""
+import json, os, sys
+db = os.environ['UCI_DB']
+d = json.load(open(db)) if os.path.exists(db) else {}
+a = [x for x in sys.argv[1:] if x != '-q']
+if a[:1] == ['-c']:
+    a = a[2:]
+with open(os.environ['STUBLOG'] + '/uci.log', 'a') as log:
+    log.write(' '.join(a) + '\n')
+cmd, rest = a[0], a[1:]
+if cmd == 'get':
+    if rest[0] not in d:
+        sys.exit(1)
+    print(d[rest[0]])
+elif cmd == 'set':
+    k, v = rest[0].split('=', 1)
+    if k.count('.') == 2 and k.rsplit('.', 1)[0] not in d:
+        sys.exit(1)
+    d[k] = v
+elif cmd == 'delete':
+    d = {k: v for k, v in d.items() if k != rest[0] and not k.startswith(rest[0] + '.')}
+elif cmd == 'show':
+    for k, v in sorted(d.items()):
+        if k == rest[0] or k.startswith(rest[0] + '.'):
+            print(f"{k}='{v}'" if k.count('.') == 2 else f'{k}={v}')
+elif cmd == 'commit':
+    open(os.environ['STUBLOG'] + '/commits', 'a').write(rest[0] + '\n')
+json.dump(d, open(db, 'w'))
+"""
+
+
+class LangExtra(ExtrasBase):
+    """the lang extra: LuCI's and the panel's catalogs in many languages, linked into LuCI and registered in
+    luci.languages by mu300-extra (install, link at boot, lang enable/disable, remove)"""
+
+    def setUp(self):
+        super().setUp()
+        (self.root / 'etc/openwrt_release').parent.mkdir(parents=True, exist_ok=True)
+        (self.root / 'etc/openwrt_release').write_text("DISTRIB_ID='OpenWrt'\n")
+        self.i18n = self.root / 'usr/lib/lua/luci/i18n'
+        self.i18n.mkdir(parents=True)
+        for n in ('base.tr.lmo', 'mu300.tr.lmo', 'base.zh-cn.lmo'):
+            (self.i18n / n).write_text('image')
+        (self.stubs / 'uci.py').write_text(UCI)
+        self.stub('uci', f'exec python3 "{self.stubs}/uci.py" "$@"')
+        self.reset_uci()
+        self.file = lang_tarball(self.tmp / 'mu300-extra-lang.tar.gz')
+        self.secret = self.tmp / 'secret'
+        self.secret.write_text('root:x:0')
+
+    def reset_uci(self, lang='en'):
+        (self.tmp / 'uci.json').write_text(json.dumps({
+            'luci.main': 'core', 'luci.main.lang': lang, 'luci.languages': 'internal',
+            'luci.languages.tr': 'Türkçe (Turkish)', 'luci.languages.zh_cn': 'Chinese'}))
+
+    def ex(self, shell, *args, **env):
+        return super().ex(shell, *args, UCI_DB=self.tmp / 'uci.json', **env)
+
+    def uci(self):
+        d = json.loads((self.tmp / 'uci.json').read_text())
+        return {k.split('.')[-1]: v for k, v in d.items() if k.startswith('luci.languages.')}, d.get('luci.main.lang')
+
+    def lang(self):
+        return self.disk / 'extra' / 'lang'
+
+    def clean(self, shell):
+        self.up(shell, f'rm -rf "{self.disk}/extra"')
+        (self.root / 'etc/mu300/languages').unlink(missing_ok=True)
+        for p in self.i18n.iterdir():
+            if p.is_symlink():
+                p.unlink()
+        self.reset_uci()
+
+    def test_unpack_takes_a_lang_extra_and_nothing_else(self):
+        bad = [
+            ('link', dict(extra=[('./i18n/base.fr.lmo', b'', tarfile.SYMTYPE, '/etc/shadow')])),
+            ('outside', dict(extra=[('./i18n/../../x.lmo', b'x')])),
+            ('program', dict(extra=[('./bin/sh', b'#!/bin/sh\n')])),
+            ('odd name', dict(extra=[('./i18n/base.de.lmo.sh', b'x')])),
+            ('no catalogs', dict(lmos=())),
+            ('quote in a name', dict(lines="de\tDeutsch' (German)\n")),
+            ('bad code', dict(lines='de;rm\tDeutsch (German)\n')),
+            ('no list', dict(lines='')),
+            ('absolute', dict(extra=[('/etc/cron.d/x', b'x')])),
+            ('hard link', dict(extra=[('./i18n/base.fr.lmo', b'', tarfile.LNKTYPE, './name')])),
+            ('device', dict(extra=[('./i18n/base.fr.lmo', b'', tarfile.CHRTYPE)])),
+            ('dir link', dict(extra=[('./i18n/x', b'', tarfile.SYMTYPE, '/etc')])),
+            ('hard link outside', dict(extra=[('./i18n/base.fr.lmo', b'', tarfile.LNKTYPE, str(self.secret))])),
+            ('newline name', dict(extra=[('./i18n/base.fr.lmo\n./i18n/base.it.lmo', b'x')])),
+            ('dotdot inside', dict(extra=[('./i18n/../../escaped.lmo', b'x')])),
+            ('fifo', dict(extra=[('./i18n/base.fr.lmo', b'', tarfile.FIFOTYPE)])),
+            ('markup in a name', dict(lines='de\t<img src=x onerror=alert(1)>\n')),
+            ('ampersand in a name', dict(lines='de\tA &amp; B\n')),
+            ('markup as the release', dict(release='<img src=x onerror=alert(1)>')),
+            ('a catalog that is a directory', dict(extra=[('./i18n/base.fr.lmo', b'', tarfile.DIRTYPE)])),
+            ('a catalog the manifest does not list', dict(extra=[('./i18n/base.fr.lmo', b'x')])),
+            ('a catalog with other bytes than the manifest says', dict(tamper='./i18n/mu300.de.lmo')),
+            ('no manifest', dict(manifest=False)),
+        ]
+        for shell in self.each_shell():
+            self.clean(shell)
+            (self.tmp / 'outside').mkdir(exist_ok=True)
+            r = self.up(shell, f'extra_unpack lang "{self.file}" && extra_release lang && extra_installed')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(r.stdout.split(), ['v2026.10.10', 'lang'])
+            for what, kw in bad:
+                f = lang_tarball(self.tmp / 'bad.tar.gz', **dict(dict(release='v9'), **kw))
+                r = self.up(shell, f'extra_unpack lang "{f}"; echo "rc=$?"')
+                self.assertIn('rc=1', r.stdout, (shell, what))
+                self.assertEqual((self.lang() / 'release').read_text().strip(), 'v2026.10.10', (shell, what))
+            self.assertEqual(sorted(p.name for p in (self.disk / 'extra').iterdir()), ['lang'])
+            # nothing was written outside the extra, and the secret has one name
+            self.assertEqual(list((self.tmp / 'outside').iterdir()), [], shell)
+            self.assertEqual(os.stat(self.secret).st_nlink, 1, shell)
+            self.assertFalse((self.disk / 'escaped.lmo').exists())
+
+    def test_a_directory_swapped_for_a_link_writes_nothing_outside(self):
+        # ./i18n as a link to a directory outside, then a catalog written "into" it: refused before unpacking, and
+        # nothing lands outside (a link and a file in the vpn extra, the same)
+        for shell in self.each_shell():
+            self.clean(shell)
+            out = self.tmp / 'outside'
+            out.mkdir(exist_ok=True)
+            for name in ('lang', 'vpn'):
+                f = self.tmp / f'swap-{name}.tar.gz'
+                with tarfile.open(f, 'w:gz') as t:
+                    for fn, data, typ, link in (('./name', name.encode() + b'\n', tarfile.REGTYPE, ''),
+                                                ('./release', b'v9\n', tarfile.REGTYPE, ''),
+                                                ('./i18n' if name == 'lang' else './bin', b'', tarfile.SYMTYPE, str(out)),
+                                                ('./i18n/base.de.lmo' if name == 'lang' else './bin/xray', b'x',
+                                                 tarfile.REGTYPE, '')):
+                        ti = tarfile.TarInfo(fn)
+                        ti.type, ti.linkname, ti.size, ti.mode = typ, link, len(data) if typ == tarfile.REGTYPE else 0, 0o755
+                        t.addfile(ti, io.BytesIO(data) if typ == tarfile.REGTYPE else None)
+                r = self.up(shell, f'extra_unpack {name} "{f}"; echo "rc=$?"')
+                self.assertIn('rc=1', r.stdout, (shell, name))
+                self.assertEqual(list(out.iterdir()), [], (shell, name))
+                self.assertFalse((self.disk / 'extra' / name).exists(), (shell, name))
+
+    def test_a_vpn_extra_with_a_manifest_is_held_to_it(self):
+        # the vpn extra's manifest (tools/make-extra.sh writes one) is checked as well; one without (older releases)
+        # is still taken
+        for shell in self.each_shell():
+            self.clean(shell)
+            for manifest, ok in (('good', True), ('bad', False), (None, True)):
+                f = self.tmp / 'vpn.tar.gz'
+                files = {'./name': b'vpn\n', './release': b'v1\n', './bin/xray': b'#!/bin/sh\n'}
+                with tarfile.open(f, 'w:gz') as t:
+                    for n, d in list(files.items()) + ([('./manifest', ''.join(
+                            f'{hashlib.sha256(d if manifest == "good" else b"x").hexdigest()}  {n}\n'
+                            for n, d in sorted(files.items())).encode())] if manifest else []):
+                        ti = tarfile.TarInfo(n)
+                        ti.size, ti.mode = len(d), 0o755
+                        t.addfile(ti, io.BytesIO(d))
+                self.up(shell, f'rm -rf "{self.disk}/extra/vpn"')
+                r = self.up(shell, f'extra_unpack vpn "{f}"; echo "rc=$?"')
+                self.assertIn('rc=0' if ok else 'rc=1', r.stdout, (shell, manifest, r.stderr))
+                self.assertEqual((self.disk / 'extra' / 'vpn').exists(), ok, (shell, manifest))
+
+    def test_a_pack_that_unpacks_too_large_is_refused(self):
+        # 40 MB of zeros compress to about 40 kB: refused before anything is unpacked
+        for shell in self.each_shell():
+            self.clean(shell)
+            f = lang_tarball(self.tmp / 'bomb.tar.gz', extra=[('./i18n/base.xx.lmo', bytes(40 << 20))])
+            self.assertLess(f.stat().st_size, 1 << 20)
+            r = self.up(shell, f'extra_unpack lang "{f}"; echo "rc=$?"')
+            self.assertIn('rc=1', r.stdout, shell)
+            self.assertIn('too large', r.stderr)
+            self.assertFalse((self.disk / 'extra' / '.lang.new').exists())
+
+    def test_modes_from_the_archive_are_not_kept(self):
+        # a set-id bit or a file anyone may write would be one on a disk Ubuntu's users share: catalogs come out
+        # 644, directories 755, whatever the archive says
+        for shell in self.each_shell():
+            self.clean(shell)
+            f = self.tmp / 'modes.tar.gz'
+            with tarfile.open(f, 'w:gz') as t:
+                members = [('./name', b'lang\n', 0o666), ('./release', b'v1\n', 0o644),
+                           ('./languages', b'de\tDeutsch (German)\n', 0o666), ('./i18n', None, 0o777),
+                           ('./i18n/base.de.lmo', b'x', 0o4777)]
+                man = ''.join(f'{hashlib.sha256(d).hexdigest()}  {n}\n' for n, d, _ in members if d is not None)
+                for fn, data, mode in members + [('./manifest', man.encode(), 0o666)]:
+                    ti = tarfile.TarInfo(fn)
+                    ti.mode = mode
+                    if data is None:
+                        ti.type = tarfile.DIRTYPE
+                    else:
+                        ti.size = len(data)
+                    t.addfile(ti, io.BytesIO(data) if data is not None else None)
+            r = self.up(shell, f'extra_unpack lang "{f}"; echo "rc=$?"')
+            self.assertIn('rc=0', r.stdout, (shell, r.stderr))
+            for rel, want in (('name', 0o644), ('languages', 0o644), ('manifest', 0o644), ('i18n', 0o755),
+                              ('i18n/base.de.lmo', 0o644)):
+                self.assertEqual(oct((self.lang() / rel).stat().st_mode & 0o7777), oct(want), (shell, rel))
+
+    def test_the_tarball_is_read_once(self):
+        # checked and unpacked from one private copy: a tarball that can be read only once (a FIFO: what a file
+        # swapped between the check and the unpacking would look like to a second read) still installs
+        import threading
+        for shell in self.each_shell():
+            self.clean(shell)
+            fifo = self.tmp / 'once.tar.gz'
+            fifo.unlink(missing_ok=True)
+            os.mkfifo(fifo)
+            data = self.file.read_bytes()
+
+            def feed():
+                with open(fifo, 'wb') as f:
+                    f.write(data)
+            t = threading.Thread(target=feed, daemon=True)
+            t.start()
+            r = self.up(shell, f'extra_unpack lang "{fifo}"; echo "rc=$?"')
+            t.join(5)
+            self.assertIn('rc=0', r.stdout, (shell, r.stderr))
+            self.assertEqual((self.lang() / 'release').read_text().strip(), 'v2026.10.10')
+            # and nothing of the copy is left
+            self.assertEqual(sorted(p.name for p in (self.disk / 'extra').iterdir()), ['lang'])
+
+    def test_install_links_and_registers_every_language(self):
+        for shell in self.each_shell():
+            self.clean(shell)
+            # a catalog of the user's own (an apk-installed luci-i18n-base-ja) is never replaced
+            (self.i18n / 'base.ja.lmo').write_text('mine')
+            r = self.ex(shell, 'install', 'lang', MU300_EXTRA_FILE=self.file)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            for n in LMOS:
+                if n != 'base.ja.lmo':
+                    self.assertEqual(os.readlink(self.i18n / n), str(self.lang() / 'i18n' / n), (shell, n))
+            self.assertEqual((self.i18n / 'base.ja.lmo').read_text(), 'mine')
+            langs, cur = self.uci()
+            self.assertEqual(langs, {'tr': 'Türkçe (Turkish)', 'zh_cn': 'Chinese', **LANGS}, shell)
+            self.assertEqual(cur, 'en')
+            self.assertIn('luci', (self.tmp / 'commits').read_text())
+            r = self.ex(shell, 'lang')
+            self.assertEqual(r.stdout.splitlines(), [f'{k}\tenabled\t{v}' for k, v in LANGS.items()], shell)
+            st = self.ex(shell, 'status')
+            self.assertIn('languages 3, offered here: de pt_br ja', st.stdout, shell)
+            (self.i18n / 'base.ja.lmo').unlink()
+
+    def test_enable_and_disable(self):
+        for shell in self.each_shell():
+            self.clean(shell)
+            self.ex(shell, 'install', 'lang', MU300_EXTRA_FILE=self.file)
+            self.reset_uci('de')                                      # LuCI set to German
+            self.ex(shell, 'link')
+            r = self.ex(shell, 'lang', 'disable', 'de', 'ja')
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertEqual((self.root / 'etc/mu300/languages').read_text(), 'pt_br\n')
+            self.assertFalse(os.path.lexists(self.i18n / 'base.de.lmo'))
+            self.assertFalse(os.path.lexists(self.i18n / 'mu300.ja.lmo'))
+            self.assertTrue(os.path.islink(self.i18n / 'base.pt-br.lmo'))
+            langs, cur = self.uci()
+            self.assertEqual(sorted(langs), ['pt_br', 'tr', 'zh_cn'], shell)
+            self.assertEqual(cur, 'en', 'the language LuCI was set to is gone: back to English')
+            r = self.ex(shell, 'lang', 'enable', 'ja')
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertEqual(sorted(self.uci()[0]), ['ja', 'pt_br', 'tr', 'zh_cn'])
+            r = self.ex(shell, 'lang', 'disable', 'all')
+            self.assertEqual(sorted(self.uci()[0]), ['tr', 'zh_cn'], shell)
+            self.assertEqual([p.name for p in self.i18n.iterdir() if p.is_symlink()], [])
+            r = self.ex(shell, 'lang', 'enable', 'all')
+            self.assertFalse((self.root / 'etc/mu300/languages').exists())
+            self.assertEqual(sorted(self.uci()[0]), ['de', 'ja', 'pt_br', 'tr', 'zh_cn'], shell)
+            # only codes of the extra, one argument each
+            for bad in ('fr', 'de;reboot', '../de', '-x', 'all de'):
+                r = self.ex(shell, 'lang', 'enable', *bad.split(' '))
+                self.assertNotEqual(r.returncode, 0, (shell, bad))
+            self.assertFalse((self.root / 'etc/mu300/languages').exists())
+
+    def test_link_at_boot_after_an_update(self):
+        # a new system image has none of the links; its first boot (mu300-post: mu300-extra link) brings back the
+        # languages this system offered, from the kept /etc/mu300/languages
+        for shell in self.each_shell():
+            self.clean(shell)
+            self.ex(shell, 'install', 'lang', MU300_EXTRA_FILE=self.file)
+            self.ex(shell, 'lang', 'disable', 'pt_br')
+            for p in self.i18n.iterdir():
+                if p.is_symlink():
+                    p.unlink()
+            self.reset_uci()
+            r = self.ex(shell, 'link')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(sorted(self.uci()[0]), ['de', 'ja', 'tr', 'zh_cn'], shell)
+            self.assertTrue(os.path.islink(self.i18n / 'mu300.de.lmo'))
+            self.assertFalse(os.path.lexists(self.i18n / 'base.pt-br.lmo'))
+            # nothing changed: nothing committed
+            (self.tmp / 'commits').unlink()
+            self.ex(shell, 'link')
+            self.assertFalse((self.tmp / 'commits').exists(), shell)
+
+    def test_remove_takes_every_language_of_the_extra_away(self):
+        for shell in self.each_shell():
+            self.clean(shell)
+            (self.i18n / 'base.de.lmo').write_text('mine')            # German stays: a catalog of its own
+            self.ex(shell, 'install', 'lang', MU300_EXTRA_FILE=self.file)
+            self.ex(shell, 'lang', 'disable', 'ja')
+            r = self.ex(shell, 'remove', 'lang')
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertFalse(self.lang().exists())
+            self.assertFalse((self.root / 'etc/mu300/languages').exists())
+            self.assertEqual([p.name for p in self.i18n.iterdir() if p.is_symlink()], [], shell)
+            self.assertEqual(sorted(self.uci()[0]), ['de', 'tr', 'zh_cn'], shell)
+            (self.i18n / 'base.de.lmo').unlink()
+            r = self.ex(shell, 'lang')
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('install lang', r.stderr)
+
+    def test_ubuntu_has_no_luci(self):
+        (self.root / 'etc/openwrt_release').unlink()
+        for shell in self.each_shell():
+            self.clean(shell)
+            r = self.ex(shell, 'install', 'lang', MU300_EXTRA_FILE=self.file)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('OpenWrt only', r.stderr)
+            self.assertFalse(self.lang().exists())
+            r = self.ex(shell, 'list')
+            self.assertRegex(r.stdout, r'lang +not installed - for OpenWrt only')
+            # installed from OpenWrt, the shared copy is left alone by Ubuntu's link
+            self.up(shell, f'extra_unpack lang "{self.file}"')
+            r = self.ex(shell, 'link')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertFalse((self.tmp / 'uci.log').exists() and 'set' in (self.tmp / 'uci.log').read_text())
+
+    def test_an_update_brings_the_lang_extra_along(self):
+        for shell in self.each_shell():
+            self.clean(shell)
+            self.up(shell, f'extra_unpack lang "{lang_tarball(self.tmp / "old.tar.gz", release="v2026.10.01")}"')
+            r = self.up(shell, 'extras_to_fetch v2026.10.10 "openwrt"')
+            self.assertEqual(r.stdout.split(), ['lang'], shell)
+            r = self.up(shell, 'extras_to_fetch v2026.10.01 "openwrt"')
+            self.assertEqual(r.stdout.split(), [], shell)
 
 
 if __name__ == '__main__':

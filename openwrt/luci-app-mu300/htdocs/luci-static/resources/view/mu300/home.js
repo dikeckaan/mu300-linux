@@ -164,7 +164,7 @@ return view.extend({
     <div class="mud-kpi"><b id="mud-cpu">--</b><span>${_('CPU usage')}</span><div class="mud-meter"><i id="mud-cpu-bar" style="background:var(--brand,var(--primary,#3b82f6))"></i></div></div>
     <div class="mud-kpi"><b id="mud-ram">--</b><span>${_('Memory')} · <span class="mud-sub" id="mud-ram-sub">--</span></span><div class="mud-meter"><i id="mud-ram-bar" style="background:var(--info,#0ea5e9)"></i></div></div>
     <div class="mud-kpi"><b id="mud-disk">--</b><span>${_('Storage')}</span><div class="mud-meter"><i id="mud-disk-bar" style="background:var(--warning,#f59e0b)"></i></div></div>
-    <div class="mud-kpi"><b id="mud-batt">--</b><span id="mud-batt-l">${_('Power')}</span></div>
+    <div class="mud-kpi" id="mud-batt-kpi" style="display:none"><b id="mud-batt">--</b><span id="mud-batt-l">${_('Battery')}</span></div>
   </div>
   <div id="mud-freqs" class="mud-freqs"></div>
   <div class="mud-cols">
@@ -546,13 +546,27 @@ return view.extend({
 			var pct2 = Math.round(i.storage.used_kb * 100 / i.storage.total_kb);
 			M.set('disk', pct2 + '%'); M.v('disk-bar').style.width = pct2 + '%';
 		}
-		var p = i.power || {};
-		if (p.present && p.capacity != null) {
-			M.set('batt', p.capacity + '%');
-			M.set('batt-l', _('Power') + ' · ' + (p.status || '') + (p.volt != null ? ' · ' + p.volt + ' V' : '') + (p.usb ? ' · USB' : ''));
-		} else {
-			M.set('batt', p.usb ? 'USB' : '--');
-			M.set('batt-l', _('Power') + (p.volt != null ? ' · ' + p.volt + ' V' : ''));
+		/* Battery (U30 Air): capacity, then what it is doing and how many watts, the
+		 * voltage, and the USB input where the charger reports it. No battery (F50):
+		 * no tile. */
+		var p = i.power || {}, bk = M.v('batt-kpi');
+		if (bk) bk.style.display = p.present ? '' : 'none';
+		if (p.present) {
+			/* direction from status; for Unknown and the like from the sign of the current (positive into the
+			 * battery), with the gauge's own 20 mA dead band. The 5.4 SQC charger says Unknown once full. */
+			var pst = p.status, pcur = p.ua || 0, parts = [ _('Battery') ];
+			var pdir = pst === 'Charging' ? 1 : pst === 'Discharging' ? -1 :
+				(pst === 'Full' || pst === 'Not charging') ? 0 : (pcur >= 20000 ? 1 : pcur <= -20000 ? -1 : 0);
+			var pw = p.w != null ? Number(p.w).toFixed(1) : null;
+			if (pdir > 0) parts.push(pw != null ? _('charging %s W').format(pw) : _('charging'));
+			else if (pdir < 0) parts.push(pw != null ? _('drawing %s W').format(pw) : p.usb ? _('not charging') : _('on battery'));
+			else if (pst === 'Full' || (p.usb && p.capacity >= 100)) parts.push(_('full'));
+			else if (pst === 'Not charging') parts.push(_('not charging'));
+			if (p.volt != null && p.capacity != null) parts.push(p.volt + ' V');
+			if (p.usb) parts.push(p.in_w != null ? _('USB in %s W').format(Number(p.in_w).toFixed(1)) +
+				(p.in_volt != null ? ' (' + p.in_volt + ' V)' : '') : 'USB');
+			M.set('batt', p.capacity != null ? p.capacity + '%' : (p.volt != null ? p.volt + ' V' : '--'));
+			M.set('batt-l', parts.join(' · '));
 		}
 		M.set('model', i.model || '--');
 		M.set('fwos', i.fw || '--');

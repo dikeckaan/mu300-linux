@@ -8,11 +8,14 @@ guarded AT terminal and an SMS UI.
 The Device Management page controls USB role and gadget network policy, and
 lists host-side USB network adapters for optional attachment to the LAN bridge.
 
-The dashboard follows LuCI's selected language (English, Turkish, or Simplified
-Chinese) without an extra language package. Its colors follow Aurora's existing
+The dashboard follows LuCI's selected language. Its colors follow Aurora's existing
 tokens when present, or the official Bootstrap theme's light/dark tokens.
 The translations are standard LuCI catalogs: English message ids in the
-JavaScript, `po/tr/mu300.po` and `po/zh_Hans/mu300.po` as the editable source.
+JavaScript, `po/<language>/mu300.po` as the editable source. Turkish and
+Simplified Chinese are in the image; the other languages (`po/*` besides those
+two: machine/AI translations, corrections welcome) are in the lang extra
+(`mu300-extra install lang`, or the Languages page under System), named by
+`openwrt/luci-languages.tsv`.
 `lmo/` is not kept in the tree; the image build compiles the catalogs with
 `tools/po2lmo.py`, so the top-level menu and submenu stay translated on
 unrelated LuCI pages where the dashboard JavaScript is not loaded.

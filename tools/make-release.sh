@@ -99,6 +99,10 @@ echo "==> OpenWrt with the MU300 control panel"
 MU300_SYSTEM=openwrt-luci MU300_INPUTS="$IN" MU300_VERSION="$TAG" sh "$TOP/openwrt/build-rootfs.sh" mu300-openwrt-luci-release.tar.gz >/dev/null
 mv "$TOP/openwrt/mu300-openwrt-luci-release.tar.gz" "$D/mu300-openwrt-luci-rootfs.tar.gz"
 
+echo "==> lang extra"
+# after the OpenWrt builds: it is built in the OpenWrt base image they import, from the same feed
+sh "$TOP/tools/make-extra.sh" lang "$D/mu300-extra-lang.tar.gz" "$TAG"
+
 echo "==> audit"
 fail=0
 for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.2 mu300-ubuntu-rootfs mu300-ubuntu-26.04-rootfs mu300-openwrt-rootfs \
@@ -119,14 +123,24 @@ list_of() { tar -tzf "$D/$1.tar.gz" | sed 's|^\./||'; }
 panel=$(list_of mu300-openwrt-luci-rootfs)
 for f in usr/share/luci/menu.d/luci-app-mu300.json www/luci-static/resources/view/mu300/home.js \
          usr/libexec/rpcd/mu300dash usr/lib/lua/luci/i18n/mu300.tr.lmo usr/lib/lua/luci/i18n/mu300.zh-cn.lmo \
-         www/luci-static/aurora/main.css etc/mu300/packages.txt; do
+         www/luci-static/aurora/main.css etc/mu300/packages.txt usr/lib/lua/luci/i18n/base.tr.lmo \
+         usr/lib/lua/luci/i18n/base.zh-cn.lmo; do
     printf '%s\n' "$panel" | grep -qx "$f" || { echo "mu300-openwrt-luci-rootfs lacks $f"; fail=1; }
 done
 plain=$(list_of mu300-openwrt-rootfs)
 for f in usr/libexec/rpcd/mu300dash www/luci-static/aurora/main.css; do
     ! printf '%s\n' "$plain" | grep -qx "$f" || { echo "mu300-openwrt-rootfs has $f, which is only for openwrt-luci"; fail=1; }
 done
-printf '%s\n' "$plain" | grep -qx etc/mu300/packages.txt || { echo "mu300-openwrt-rootfs lacks etc/mu300/packages.txt"; fail=1; }
+for f in etc/mu300/packages.txt usr/lib/lua/luci/i18n/base.tr.lmo usr/lib/lua/luci/i18n/base.zh-cn.lmo; do
+    printf '%s\n' "$plain" | grep -qx "$f" || { echo "mu300-openwrt-rootfs lacks $f"; fail=1; }
+done
+# the lang extra: catalogs only (and its manifest), and the panel's in the languages it was translated to
+lx=$(tar -tzf "$D/mu300-extra-lang.tar.gz" | sed 's|^\./||')
+! printf '%s\n' "$lx" | grep . | grep -Evx 'name|release|components|languages|manifest|i18n/?|i18n/[a-z0-9-]+\.[a-z]{2,3}(-[a-z]{2})?\.lmo' ||
+    { echo "mu300-extra-lang.tar.gz has files that are not catalogs"; fail=1; }
+for f in i18n/base.de.lmo i18n/mu300.de.lmo i18n/mu300.ja.lmo; do
+    printf '%s\n' "$lx" | grep -qx "$f" || { echo "mu300-extra-lang.tar.gz lacks $f"; fail=1; }
+done
 # what the package list changed since the last release (MU300_PREV_RELEASE: its directory, with the assets)
 if [ -n "${MU300_PREV_RELEASE:-}" ]; then
     for a in mu300-openwrt-rootfs mu300-openwrt-luci-rootfs; do
@@ -139,7 +153,7 @@ if [ -n "${MU300_PREV_RELEASE:-}" ]; then
     done
 fi
 # an extra holds what its name says, for the release it is published with (mu300-update compares ./release)
-for x in vpn; do
+for x in vpn lang; do
     [ "$(tar -xzOf "$D/mu300-extra-$x.tar.gz" ./name)" = $x ] && [ "$(tar -xzOf "$D/mu300-extra-$x.tar.gz" ./release)" = "$TAG" ] ||
         { echo "mu300-extra-$x.tar.gz is not the $x extra of $TAG"; fail=1; }
 done
@@ -148,6 +162,14 @@ done
 for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.2; do
     tar -xzOf "$D/$a.tar.gz" ./features 2>/dev/null | grep -qx sdcard || { echo "$a does not list sdcard in ./features"; fail=1; }
     tar -xzOf "$D/$a.tar.gz" ./features 2>/dev/null | grep -qx linux-slot || { echo "$a does not list linux-slot in ./features"; fail=1; }
+done
+# a mainline bundle carries the kernel's own modules next to the vendor ones (upstream/build-modules.sh): one of each
+# kind - qdisc, filesystem, device mapper, USB modem, vhost - and the vendor Wi-Fi
+for a in mu300-kernel-6.18 mu300-kernel-7.2; do
+    l=$(tar -tzf "$D/$a.tar.gz")
+    for m in sch_htb.ko ntfs3.ko dm-crypt.ko cdc_mbim.ko vhost_net.ko sprd_wlan_combo.ko; do
+        printf '%s\n' "$l" | grep -qx "./modules/$m" || { echo "$a lacks modules/$m"; fail=1; }
+    done
 done
 [ $fail = 0 ] || { echo "audit failed, nothing published" >&2; exit 1; }
 rm -rf "$IN"
@@ -175,6 +197,7 @@ first with \`./install.sh --check\`.
 | mu300-openwrt-rootfs.tar.gz | OpenWrt 25.12.5 root filesystem |
 | mu300-openwrt-luci-rootfs.tar.gz | OpenWrt 25.12.5 with the MU300 control panel (luci-app-mu300 by kanoqwq, Aurora theme by eamonxg) |
 | mu300-extra-vpn.tar.gz | the VPN engines, not part of the images: \`mu300-extra install vpn\` on the device (or the installer's question) puts them on the Linux partition; Xray-core $(sed -n 's/^XRAY_VER=//p' "$TOP/tools/fetch-xray.sh"), hev-socks5-tunnel $(sed -n 's/^HEV_VER=//p' "$TOP/tools/fetch-xray.sh"), sing-box $(sed -n 's/^VER=//p' "$TOP/tools/fetch-sing-box.sh") |
+| mu300-extra-lang.tar.gz | LuCI and the MU300 panel in more languages (OpenWrt only; English, Turkish and Chinese are in the images): \`mu300-extra install lang\` on the device, or System > Languages in the panel; LuCI's catalogs from the OpenWrt 25.12.5 feed, the panel's AI-translated |
 | mu300-update | the on-device updater of this release (\`mu300-update apply\` switches to it before it changes anything) |
 
 The images contain **no proprietary files**: the installer pulls the Wi-Fi/Bluetooth firmware and the Android

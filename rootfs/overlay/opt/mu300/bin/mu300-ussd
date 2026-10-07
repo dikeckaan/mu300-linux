@@ -60,7 +60,7 @@ case "$reply" in
 esac
 
 # Now wait on the files. Nothing here touches the modem.
-end=$(( $(date +%s) + T ))
+end=$(( $(date +%s) + T + 1 ))   # at least T whole seconds (see collect in mu300-atd)
 while [ "$(date +%s)" -lt "$end" ]; do
     line=$( { tail -n +$((m_urc + 1)) "$URCLOG" 2>/dev/null
               tail -n +$((m_cmd + 1)) "$CMDLOG" 2>/dev/null; } | grep -m1 '^+CUSD:')

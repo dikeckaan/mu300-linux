@@ -1,0 +1,1276 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: da\n"
+
+msgid "Status dashboard"
+msgstr "Statusoversigt"
+
+msgid "Cellular"
+msgstr "Mobilnet"
+
+msgid "Network locks"
+msgstr "Netværkslåse"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "AT terminal"
+msgstr "AT-terminal"
+
+msgid "Adapter settings"
+msgstr "Adapterindstillinger"
+
+msgid "Device management"
+msgstr "Enhedsstyring"
+
+msgid "Languages"
+msgstr "Sprog"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
+msgstr "MU300-kontrolcenter: statusoversigt, netværkslåse, AT-terminal og SMS"
+
+msgid "China Mobile"
+msgstr "China Mobile"
+
+msgid "China Unicom"
+msgstr "China Unicom"
+
+msgid "China Telecom"
+msgstr "China Telecom"
+
+msgid "China Broadnet"
+msgstr "China Broadnet"
+
+msgid "China Tietong"
+msgstr "China Tietong"
+
+msgid "Excellent"
+msgstr "Fremragende"
+
+msgid "Good"
+msgstr "God"
+
+msgid "Fair"
+msgstr "Middel"
+
+msgid "Poor"
+msgstr "Dårlig"
+
+msgid "Unknown"
+msgstr "Ukendt"
+
+msgid "%d d %d h"
+msgstr "%d d %d t"
+
+msgid "%d h %d min"
+msgstr "%d t %d min"
+
+msgid "%d min"
+msgstr "%d min"
+
+msgid "No neighbor-cell data"
+msgstr "Ingen data om naboceller"
+
+msgid "Locked"
+msgstr "Låst"
+
+msgid "Lock"
+msgstr "Lås"
+
+msgid "Unknown error"
+msgstr "Ukendt fejl"
+
+msgid "Confirm"
+msgstr "Bekræft"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Cancel"
+msgstr "Annuller"
+
+msgid "New SMS · %s"
+msgstr "Ny SMS · %s"
+
+msgid "Unknown number"
+msgstr "Ukendt nummer"
+
+msgid "Select"
+msgstr "Vælg"
+
+msgid "Basic"
+msgstr "Grundlæggende"
+
+msgid "Registration/signal"
+msgstr "Registrering/signal"
+
+msgid "Bearer"
+msgstr "Bærer"
+
+msgid "Engineering mode"
+msgstr "Ingeniørtilstand"
+
+msgid "AT command (↑↓ history, Enter to send)"
+msgstr "AT-kommando (↑↓ historik, Enter for at sende)"
+
+msgid "Send"
+msgstr "Send"
+
+msgid "Clear screen"
+msgstr "Ryd skærm"
+
+msgid "Ready."
+msgstr "Klar."
+
+msgid "Session history (click to reuse)"
+msgstr "Sessionshistorik (klik for at genbruge)"
+
+msgid "(no output)"
+msgstr "(intet output)"
+
+msgid "Request failed"
+msgstr "Anmodning mislykkedes"
+
+msgid "(empty)"
+msgstr "(tom)"
+
+msgid "USB role"
+msgstr "USB-rolle"
+
+msgid "Current role"
+msgstr "Aktuel rolle"
+
+msgid "Switch USB role"
+msgstr "Skift USB-rolle"
+
+msgid "Device mode"
+msgstr "Enhedstilstand"
+
+msgid "Host mode"
+msgstr "Værtstilstand"
+
+msgid "Enable host mode at boot"
+msgstr "Aktivér værtstilstand ved opstart"
+
+msgid "Apply role"
+msgstr "Anvend rolle"
+
+msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
+msgstr "Værtstilstand afbryder USB-netværk og seriel forbindelse på denne port. F50 har intet batteri; administrationsadgangen kan gå tabt, og en USB-adapter kræver normalt en hub med egen strømforsyning."
+
+msgid "USB network mode"
+msgstr "USB-netværkstilstand"
+
+msgid "Network protocol"
+msgstr "Netværksprotokol"
+
+msgid "Apply duration"
+msgstr "Varighed"
+
+msgid "Next reboot only"
+msgstr "Kun næste genstart"
+
+msgid "Permanent"
+msgstr "Permanent"
+
+msgid "Enable selected protocol"
+msgstr "Aktivér valgt protokol"
+
+msgid "Save; apply after reboot"
+msgstr "Gem; anvend efter genstart"
+
+msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
+msgstr "NCM er standard. Windows understøtter ikke ECM indbygget; RNDIS ændrer enumereringen. Når Aktivér valgt protokol er slået fra, gemmes kun dit valg. Kun næste genstart anvendes én gang og vender derefter tilbage til NCM."
+
+msgid "USB adapters"
+msgstr "USB-adaptere"
+
+msgid "Refresh"
+msgstr "Opdater"
+
+msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
+msgstr "Kun tilgængelig i værtstilstand. Opdater aktiverer fundne USB-adaptere; tilføjelse til LAN gemmer broen og genindlæser netværket."
+
+msgid "Unavailable"
+msgstr "Utilgængelig"
+
+msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
+msgstr "USB-netværkstilstand er ikke tilgængelig i værtstilstand; automatisk start af værtstilstand deaktiverer også automatisk start af USB-netværk."
+
+msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
+msgstr "Værtstilstand afbryder straks USB-administrationen. F50 har intet batteri, og eksterne enheder kan kræve ekstern strøm; sørg for, at der findes en anden administrationsadgang."
+
+msgid "USB networking and serial will re-enumerate in device mode."
+msgstr "USB-netværk og seriel forbindelse enumereres igen i enhedstilstand."
+
+msgid "Switch USB role?"
+msgstr "Skift USB-rolle?"
+
+msgid "Apply"
+msgstr "Anvend"
+
+msgid "Switching USB role…"
+msgstr "Skifter USB-rolle…"
+
+msgid "Switch failed: %s"
+msgstr "Skift mislykkedes: %s"
+
+msgid "Management connection lost; reconnect to confirm the USB role."
+msgstr "Administrationsforbindelsen blev afbrudt; genopret forbindelsen for at bekræfte USB-rollen."
+
+msgid "Switch request accepted; the USB connection may briefly disconnect."
+msgstr "Anmodningen om skift er modtaget; USB-forbindelsen kan blive afbrudt kortvarigt."
+
+msgid "USB role applied"
+msgstr "USB-rolle anvendt"
+
+msgid "Save USB network mode?"
+msgstr "Gem USB-netværkstilstand?"
+
+msgid "The network mode applies on the next reboot; USB management may need to reconnect."
+msgstr "Netværkstilstanden anvendes ved næste genstart; USB-administrationen skal muligvis genoprette forbindelsen."
+
+msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
+msgstr "Gem kun valget; når den valgte protokol er deaktiveret, bruger næste opstart stadig standard-NCM."
+
+msgid "Save"
+msgstr "Gem"
+
+msgid "Saving USB network settings…"
+msgstr "Gemmer USB-netværksindstillinger…"
+
+msgid "Settings saved"
+msgstr "Indstillinger gemt"
+
+msgid "Save failed: %s"
+msgstr "Gem mislykkedes: %s"
+
+msgid "Unable to confirm the role yet; reconnect and refresh the page."
+msgstr "Rollen kan ikke bekræftes endnu; genopret forbindelsen, og opdater siden."
+
+msgid "Switch to host mode to see USB adapters."
+msgstr "Skift til værtstilstand for at se USB-adaptere."
+
+msgid "Scanning USB adapters…"
+msgstr "Søger efter USB-adaptere…"
+
+msgid "No USB adapters found."
+msgstr "Ingen USB-adaptere fundet."
+
+msgid "Link connected"
+msgstr "Link forbundet"
+
+msgid "No link; enable attempted"
+msgstr "Intet link; aktivering forsøgt"
+
+msgid "Added to LAN"
+msgstr "Tilføjet til LAN"
+
+msgid "Add to LAN"
+msgstr "Tilføj til LAN"
+
+msgid "Add USB adapter to LAN?"
+msgstr "Tilføj USB-adapter til LAN?"
+
+msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
+msgstr "Dette gemmer brokonfigurationen og genindlæser netværket; eksisterende forbindelser kan blive afbrudt kortvarigt."
+
+msgid "Add"
+msgstr "Tilføj"
+
+msgid "Adding USB adapter…"
+msgstr "Tilføjer USB-adapter…"
+
+msgid "Add failed: %s"
+msgstr "Tilføjelse mislykkedes: %s"
+
+msgid "Modulation DL/UL"
+msgstr "Modulation DL/UL"
+
+msgid "Estimated from current MCS"
+msgstr "Anslået ud fra aktuel MCS"
+
+msgid "MCS DL/UL"
+msgstr "MCS DL/UL"
+
+msgid "BLER DL/UL"
+msgstr "BLER DL/UL"
+
+msgid "Link & traffic"
+msgstr "Link og trafik"
+
+msgid "Download rate"
+msgstr "Downloadhastighed"
+
+msgid "Upload rate"
+msgstr "Uploadhastighed"
+
+msgid "Total received"
+msgstr "Modtaget i alt"
+
+msgid "Total sent"
+msgstr "Sendt i alt"
+
+msgid "Session duration"
+msgstr "Sessionsvarighed"
+
+msgid "Registration"
+msgstr "Registrering"
+
+msgid "Bandwidth"
+msgstr "Båndbredde"
+
+msgid "AMBR DL/UL"
+msgstr "AMBR DL/UL"
+
+msgid "Wi-Fi · LAN · Device · SIM"
+msgstr "Wi-Fi · LAN · Enhed · SIM"
+
+msgid "CPU usage"
+msgstr "CPU-forbrug"
+
+msgid "Memory"
+msgstr "Hukommelse"
+
+msgid "Storage"
+msgstr "Lager"
+
+msgid "Battery"
+msgstr "Batteri"
+
+msgid "Channel"
+msgstr "Kanal"
+
+msgid "Encryption"
+msgstr "Kryptering"
+
+msgid "Hidden SSID"
+msgstr "Skjult SSID"
+
+msgid "Country"
+msgstr "Land"
+
+msgid "AP status"
+msgstr "AP-status"
+
+msgid "USB network"
+msgstr "USB-netværk"
+
+msgid "Connection tracking"
+msgstr "Forbindelsessporing"
+
+msgid "LAN address"
+msgstr "LAN-adresse"
+
+msgid "Wi-Fi clients"
+msgstr "Wi-Fi-klienter"
+
+msgid "DHCP leases"
+msgstr "DHCP-lejemål"
+
+msgid "Device model"
+msgstr "Enhedsmodel"
+
+msgid "System"
+msgstr "System"
+
+msgid "Modem"
+msgstr "Modem"
+
+msgid "Carrier"
+msgstr "Operatør"
+
+msgid "Module"
+msgstr "Modul"
+
+msgid "Firmware"
+msgstr "Firmware"
+
+msgid "Show SIM identifiers"
+msgstr "Vis SIM-identifikatorer"
+
+msgid "Quick controls"
+msgstr "Hurtigkontroller"
+
+msgid "Data connection"
+msgstr "Dataforbindelse"
+
+msgid "Cellular radio"
+msgstr "Mobilradio"
+
+msgid "Wi-Fi hotspot"
+msgstr "Wi-Fi-hotspot"
+
+msgid "Restart modem"
+msgstr "Genstart modem"
+
+msgid "Restart device"
+msgstr "Genstart enhed"
+
+msgid "Switch to Android"
+msgstr "Skift til Android"
+
+msgid "Neighbor cells"
+msgstr "Naboceller"
+
+msgid "RAT/Band"
+msgstr "RAT/bånd"
+
+msgid "Frequency"
+msgstr "Frekvens"
+
+msgid "Running %s…"
+msgstr "Kører %s…"
+
+msgid "Started in background: %s"
+msgstr "Startet i baggrunden: %s"
+
+msgid "Done: %s"
+msgstr "Udført: %s"
+
+msgid "Failed: %s"
+msgstr "Mislykkedes: %s"
+
+msgid "Disconnecting data…"
+msgstr "Afbryder dataforbindelse…"
+
+msgid "Connecting data…"
+msgstr "Opretter dataforbindelse…"
+
+msgid "Turn off cellular radio"
+msgstr "Slå mobilradio fra"
+
+msgid "Cellular connectivity will be interrupted."
+msgstr "Mobilforbindelsen vil blive afbrudt."
+
+msgid "Turn on cellular radio"
+msgstr "Slå mobilradio til"
+
+msgid "The SFUN power-on sequence will run (up to about 1 minute)."
+msgstr "SFUN-opstartssekvensen køres (op til ca. 1 minut)."
+
+msgid "Cellular connectivity may stop for 1–2 minutes."
+msgstr "Mobilforbindelsen kan stoppe i 1–2 minutter."
+
+msgid "Restart the entire device"
+msgstr "Genstart hele enheden"
+
+msgid "All connections will be interrupted."
+msgstr "Alle forbindelser vil blive afbrudt."
+
+msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
+msgstr "Næste opstart går til Android, og enheden genstarter nu. Denne administrationsside og mobildelingen afbrydes."
+
+msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
+msgstr "For at vende tilbage til OpenWrt skal du køre mu300-next-boot linux i Android og genstarte."
+
+msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
+msgstr "Eller gør ingenting: efter fem opstarter, der ikke fuldføres, skiftes der automatisk tilbage."
+
+msgid "Switch and reboot"
+msgstr "Skift og genstart"
+
+msgid "Preparing Android boot and rebooting…"
+msgstr "Forbereder Android-opstart og genstarter…"
+
+msgid "Hide SIM identifiers"
+msgstr "Skjul SIM-identifikatorer"
+
+msgid "Lock cell %s?"
+msgstr "Lås celle %s?"
+
+msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
+msgstr "Radiostakken genstartes (SFUN); mobiltjenesten stopper i ca. 30 sekunder."
+
+msgid "Locking %s in the background, about 30 seconds"
+msgstr "Låser %s i baggrunden, ca. 30 sekunder"
+
+msgid "Locked %s in the background; the status will refresh shortly"
+msgstr "%s låst i baggrunden; status opdateres om lidt"
+
+msgid "Lock failed: %s"
+msgstr "Låsning mislykkedes: %s"
+
+msgid "Uptime %s"
+msgstr "Oppetid %s"
+
+msgid "Radio off"
+msgstr "Radio slukket"
+
+msgid "No response"
+msgstr "Intet svar"
+
+msgid "%s · Signal %s %s/10"
+msgstr "%s · Signal %s %s/10"
+
+msgid "%s · Signal %s"
+msgstr "%s · Signal %s"
+
+msgid "Anchor B%s"
+msgstr "Anker B%s"
+
+msgid "No serving cell"
+msgstr "Ingen betjenende celle"
+
+msgid "Not registered"
+msgstr "Ikke registreret"
+
+msgid "Registered"
+msgstr "Registreret"
+
+msgid "Searching"
+msgstr "Søger"
+
+msgid "Registration denied"
+msgstr "Registrering afvist"
+
+msgid "Registered (roaming)"
+msgstr "Registreret (roaming)"
+
+msgid "Emergency only"
+msgstr "Kun nødopkald"
+
+msgid "Status %s"
+msgstr "Status %s"
+
+msgid "LTE anchor"
+msgstr "LTE-anker"
+
+msgid "LTE link"
+msgstr "LTE-link"
+
+msgid "Hidden"
+msgstr "Skjult"
+
+msgid "No"
+msgstr "Nej"
+
+msgid "Running"
+msgstr "Kører"
+
+msgid "Not running"
+msgstr "Kører ikke"
+
+msgid "Connected"
+msgstr "Forbundet"
+
+msgid "Disconnected"
+msgstr "Afbrudt"
+
+msgid "%s entries"
+msgstr "%s poster"
+
+msgid "%s clients"
+msgstr "%s klienter"
+
+msgid "Recent DHCP leases"
+msgstr "Seneste DHCP-lejemål"
+
+msgid "%d h"
+msgstr "%d t"
+
+msgid "Board"
+msgstr "Bundkort"
+
+msgid "No temperature readings"
+msgstr "Ingen temperaturmålinger"
+
+msgid "Cluster %d"
+msgstr "Klynge %d"
+
+msgid "Total %s · free %s"
+msgstr "I alt %s · ledigt %s"
+
+msgid "charging %s W"
+msgstr "oplader med %s W"
+
+msgid "charging"
+msgstr "oplader"
+
+msgid "drawing %s W"
+msgstr "bruger %s W"
+
+msgid "not charging"
+msgstr "oplader ikke"
+
+msgid "on battery"
+msgstr "kører på batteri"
+
+msgid "full"
+msgstr "fuld"
+
+msgid "USB in %s W"
+msgstr "USB-indgang %s W"
+
+msgid "Online"
+msgstr "Online"
+
+msgid "AT adapter unavailable"
+msgstr "AT-adapter utilgængelig"
+
+msgid "Saved"
+msgstr "Gemt"
+
+msgid "Management connection lost"
+msgstr "Administrationsforbindelsen blev afbrudt"
+
+msgid "Installing the language pack…"
+msgstr "Installerer sprogpakken…"
+
+msgid "The language pack is installed"
+msgstr "Sprogpakken er installeret"
+
+msgid "The language pack could not be installed"
+msgstr "Sprogpakken kunne ikke installeres"
+
+msgid "Upload failed: %s"
+msgstr "Upload mislykkedes: %s"
+
+msgid "Language of the browser"
+msgstr "Browserens sprog"
+
+msgid "Language of the web interface"
+msgstr "Webgrænsefladens sprog"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "Engelsk, tyrkisk og kinesisk følger med systemet; sprogpakken tilføjer de øvrige."
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "Den samme indstilling findes under System > System > Sprog og stil."
+
+msgid "Language pack"
+msgstr "Sprogpakke"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "Sprogpakken (mu300-extra-lang.tar.gz, ca. 2 MB) tilføjer LuCI på ca. 40 flere sprog og dette panel på 29 af dem. Download den fra dette systems udgivelse, eller upload filen fra udgivelsessiden, hvis enheden ikke har internet."
+
+msgid "Download from the release"
+msgstr "Download fra udgivelsen"
+
+msgid "Upload the file…"
+msgstr "Upload filen…"
+
+msgid "Release"
+msgstr "Udgivelse"
+
+msgid "Enable all"
+msgstr "Aktivér alle"
+
+msgid "Disable all"
+msgstr "Deaktiver alle"
+
+msgid "Remove the language pack"
+msgstr "Fjern sprogpakken"
+
+msgid "Remove the language pack?"
+msgstr "Fjern sprogpakken?"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "Dens sprog forsvinder fra listen; en side på et af dem skifter til engelsk."
+
+msgid "Remove"
+msgstr "Fjern"
+
+msgid "Disable"
+msgstr "Deaktiver"
+
+msgid "Enable"
+msgstr "Aktivér"
+
+msgid "LuCI and this panel"
+msgstr "LuCI og dette panel"
+
+msgid "LuCI only"
+msgstr "Kun LuCI"
+
+msgid "Enabled"
+msgstr "Aktiveret"
+
+msgid "Disabled"
+msgstr "Deaktiveret"
+
+msgid "Language"
+msgstr "Sprog"
+
+msgid "Code"
+msgstr "Kode"
+
+msgid "Translated"
+msgstr "Oversat"
+
+msgid "State"
+msgstr "Tilstand"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "LuCI's egne oversættelser kommer fra OpenWrt. Dette panels oversættelser ud over tyrkisk og kinesisk er maskinoversættelser (AI); rettelser er velkomne."
+
+msgid "Automatic"
+msgstr "Automatisk"
+
+msgid "4G only"
+msgstr "Kun 4G"
+
+msgid "Serving network"
+msgstr "Betjenende netværk"
+
+msgid "Network mode · EN-DC"
+msgstr "Netværkstilstand · EN-DC"
+
+msgid "Refresh lock status"
+msgstr "Opdater låsestatus"
+
+msgid "Apply at startup"
+msgstr "Anvend ved opstart"
+
+msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
+msgstr "Slås dette fra, stopper det kun genanvendelsen ved næste opstart; gemte indstillinger for netværkstilstand, EN-DC, bånd og celler bevares."
+
+msgid "Band locking"
+msgstr "Båndlåsning"
+
+msgid "NR bands"
+msgstr "NR-bånd"
+
+msgid "LTE bands"
+msgstr "LTE-bånd"
+
+msgid "Apply NR bands"
+msgstr "Anvend NR-bånd"
+
+msgid "Apply LTE bands"
+msgstr "Anvend LTE-bånd"
+
+msgid "Neighbor cells and cell locking"
+msgstr "Naboceller og cellelåsning"
+
+msgid "Lock current serving cell"
+msgstr "Lås aktuel betjenende celle"
+
+msgid "Unlock cell"
+msgstr "Lås celle op"
+
+msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
+msgstr "Anvendelse genstarter radiostakken (SFUN) og afbryder mobiltjenesten kortvarigt. Indstillingerne gemmes og genanvendes af pluginet, når AT er klar, hvis Anvend ved opstart er aktiveret. En platform-hook før radioen kan genanvende uden genstart. Anvend uden valgte bånd for at gendanne automatisk tilstand."
+
+msgid "Apply “%s”?"
+msgstr "Anvend “%s”?"
+
+msgid "Applying %s in the background…"
+msgstr "Anvender %s i baggrunden…"
+
+msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
+msgstr "Anvender %s i baggrunden… (SFUN-genstart og ny registrering, ca. 30 sekunder)"
+
+msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
+msgstr "I kø: en anden lås anvendes under SFUN-genstarten; denne træder i kraft bagefter"
+
+msgid "Confirming the EN-DC status…"
+msgstr "Bekræfter EN-DC-status…"
+
+msgid "Confirming apply at startup…"
+msgstr "Bekræfter Anvend ved opstart…"
+
+msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Startet i baggrunden: %s (SFUN-genstart, ca. 30 sekunder); læser status tilbage…"
+
+msgid "Network mode: %s"
+msgstr "Netværkstilstand: %s"
+
+msgid "Disable EN-DC (NSA anchor)"
+msgstr "Deaktiver EN-DC (NSA-anker)"
+
+msgid "Enable EN-DC (NSA anchor)"
+msgstr "Aktivér EN-DC (NSA-anker)"
+
+msgid "Disable apply at startup"
+msgstr "Deaktiver Anvend ved opstart"
+
+msgid "Enable apply at startup"
+msgstr "Aktivér Anvend ved opstart"
+
+msgid "Reading the modem directly (a few seconds at most)…"
+msgstr "Læser modemmet direkte (højst et par sekunder)…"
+
+msgid "Refreshed"
+msgstr "Opdateret"
+
+msgid "Refresh failed"
+msgstr "Opdatering mislykkedes"
+
+msgid "NR bands: back to automatic"
+msgstr "NR-bånd: tilbage til automatisk"
+
+msgid "NR band lock: %s"
+msgstr "NR-båndlås: %s"
+
+msgid "LTE bands: back to automatic"
+msgstr "LTE-bånd: tilbage til automatisk"
+
+msgid "LTE band lock: %s"
+msgstr "LTE-båndlås: %s"
+
+msgid "Remove the %s cell lock"
+msgstr "Fjern %s-cellelåsen"
+
+msgid "The radio stack will restart (SFUN), taking about 30 seconds."
+msgstr "Radiostakken genstartes (SFUN), hvilket tager ca. 30 sekunder."
+
+msgid "Removing the %s cell lock…"
+msgstr "Fjerner %s-cellelåsen…"
+
+msgid "Unlock failed: %s"
+msgstr "Oplåsning mislykkedes: %s"
+
+msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Oplåsning startet i baggrunden (SFUN-genstart, ca. 30 sekunder); læser status tilbage…"
+
+msgid "Locking %s in the background…"
+msgstr "Låser %s i baggrunden…"
+
+msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "%s låst i baggrunden (SFUN-genstart, ca. 30 sekunder); læser status tilbage…"
+
+msgid "No serving-network data"
+msgstr "Ingen data om betjenende netværk"
+
+msgid "NR serving cell"
+msgstr "Betjenende NR-celle"
+
+msgid "Status confirmed"
+msgstr "Status bekræftet"
+
+msgid "Readback timed out; select “Refresh lock status”"
+msgstr "Tilbagelæsning fik timeout; vælg “Opdater låsestatus”"
+
+msgid "Applied (EN-DC does not require a radio-stack restart)"
+msgstr "Anvendt (EN-DC kræver ikke genstart af radiostakken)"
+
+msgid "Apply at startup is on"
+msgstr "Anvend ved opstart er slået til"
+
+msgid "Apply at startup is off"
+msgstr "Anvend ved opstart er slået fra"
+
+msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Tilbagelæsning af EN-DC-status fik timeout; brug “Opdater låsestatus” for at bekræfte"
+
+msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Tilbagelæsning af status for Anvend ved opstart fik timeout; brug “Opdater låsestatus” for at bekræfte"
+
+msgid "Locked cells"
+msgstr "Låste celler"
+
+msgid "Unlock %s"
+msgstr "Lås %s op"
+
+msgid "Automatic (%d supported)"
+msgstr "Automatisk (%d understøttet)"
+
+msgid "%d locked: %s"
+msgstr "%d låst: %s"
+
+msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
+msgstr "Konfigurer, hvordan dette plugin forbindes til den aktuelle Unisoc OpenWrt-platform. Ændringer kræver ikke redigering af siderne for oversigt, AT, låse eller SMS."
+
+msgid "Platform adapter"
+msgstr "Platformadapter"
+
+msgid "AT backend"
+msgstr "AT-backend"
+
+msgid "Auto-detect"
+msgstr "Automatisk registrering"
+
+msgid "atinout + serial port"
+msgstr "atinout + seriel port"
+
+msgid "Custom adapter"
+msgstr "Brugerdefineret adapter"
+
+msgid "AT serial port"
+msgstr "AT-seriel port"
+
+msgid "Custom AT adapter"
+msgstr "Brugerdefineret AT-adapter"
+
+msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
+msgstr "Programmet modtager en timeout i sekunder og den komplette AT-kommando, i den rækkefølge. Det skal dele den serielle lås med platformens opkaldsprogram."
+
+msgid "SMS adapter"
+msgstr "SMS-adapter"
+
+msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
+msgstr "Implementer underkommandoerne list, show, send, delete og sync; lad feltet stå tomt for at finde mu300-sms automatisk."
+
+msgid "SMS pool directory"
+msgstr "Mappe til SMS-pulje"
+
+msgid "Cellular logical interface"
+msgstr "Logisk mobilgrænseflade"
+
+msgid "Cellular IPv6 interface"
+msgstr "IPv6-mobilgrænseflade"
+
+msgid "Cellular network device"
+msgstr "Mobilnetværksenhed"
+
+msgid "Leave blank to detect from netifd"
+msgstr "Lad stå tomt for at registrere fra netifd"
+
+msgid "LAN bridge"
+msgstr "LAN-bro"
+
+msgid "Wi-Fi device"
+msgstr "Wi-Fi-enhed"
+
+msgid "USB device"
+msgstr "USB-enhed"
+
+msgid "Maximum wait for AT readiness (seconds)"
+msgstr "Maks. ventetid på, at AT er klar (sekunder)"
+
+msgid "Home dashboard refresh interval (seconds)"
+msgstr "Opdateringsinterval for startsiden (sekunder)"
+
+msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
+msgstr "Styrer kun startsidens opdateringshastighed; 0,5–60 sekunder. Åbn startsiden igen efter at have gemt for at anvende ændringen."
+
+msgid "Persistent state directory"
+msgstr "Mappe til vedvarende tilstand"
+
+msgid "Recipient: number, e.g. 10086 or +86..."
+msgstr "Modtager: nummer, f.eks. 10086 eller +86..."
+
+msgid "Sync from SIM"
+msgstr "Synkroniser fra SIM"
+
+msgid "Clear local pool"
+msgstr "Ryd lokal pulje"
+
+msgid "Loading…"
+msgstr "Indlæser…"
+
+msgid "Select a conversation on the left, or enter a number below to send."
+msgstr "Vælg en samtale til venstre, eller indtast et nummer nedenfor for at sende."
+
+msgid "Message (Enter to send, Shift+Enter for newline)"
+msgstr "Besked (Enter for at sende, Shift+Enter for ny linje)"
+
+msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
+msgstr "Afsendelse bruger AT+CMGS (PDU-tilstand); prøv igen, hvis kanalen er optaget. Brug skraldespandsikonet på en beskedboble for at slette beskeden."
+
+msgid "Syncing from the SIM in the background (AT+CMGL)…"
+msgstr "Synkroniserer fra SIM i baggrunden (AT+CMGL)…"
+
+msgid "SIM sync started; the list refreshes in a few seconds."
+msgstr "SIM-synkronisering startet; listen opdateres om få sekunder."
+
+msgid "Clear local SMS pool"
+msgstr "Ryd lokal SMS-pulje"
+
+msgid "Only local files will be deleted; messages on the SIM remain."
+msgstr "Kun lokale filer slettes; beskeder på SIM-kortet bevares."
+
+msgid "Clear"
+msgstr "Ryd"
+
+msgid "Delete this SMS"
+msgstr "Slet denne SMS"
+
+msgid "Deletion cannot be undone."
+msgstr "Sletning kan ikke fortrydes."
+
+msgid "Local only"
+msgstr "Kun lokalt"
+
+msgid "Local + SIM"
+msgstr "Lokalt + SIM"
+
+msgid "Delete failed"
+msgstr "Sletning mislykkedes"
+
+msgid "Deleted (local + SIM)"
+msgstr "Slettet (lokalt + SIM)"
+
+msgid "Deleted (local only)"
+msgstr "Slettet (kun lokalt)"
+
+msgid "Enter both a number and a message."
+msgstr "Indtast både et nummer og en besked."
+
+msgid "Sending…"
+msgstr "Sender…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Sendt; listen opdateres om lidt."
+
+msgid "Sending failed"
+msgstr "Afsendelse mislykkedes"
+
+msgid "· %d messages, %d unread · %d conversations"
+msgstr "· %d beskeder, %d ulæste · %d samtaler"
+
+msgid "· %d messages · %d conversations"
+msgstr "· %d beskeder · %d samtaler"
+
+msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
+msgstr "Puljen er tom. Modtagne og sendte beskeder vises her, eller vælg “Synkroniser fra SIM”."
+
+msgid "Me: %s"
+msgstr "Mig: %s"
+
+msgid "Delete"
+msgstr "Slet"
+
+msgid "Dashboard info failed"
+msgstr "Kunne ikke hente oversigtsdata"
+
+msgid "Applying network locks: no live signal right now"
+msgstr "Anvender netværkslåse: intet live-signal lige nu"
+
+msgid "Live signal read failed"
+msgstr "Læsning af live-signal mislykkedes"
+
+msgid "Unknown op"
+msgstr "Ukendt handling"
+
+msgid "Invalid argument for this op"
+msgstr "Ugyldigt argument for denne handling"
+
+msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
+msgstr "Radioen er optaget: opkaldet eller watchdog skifter den; prøv igen om lidt"
+
+msgid "The action gave no valid reply"
+msgstr "Handlingen gav intet gyldigt svar"
+
+msgid "An AT command is one line of printable ASCII, at most 512 characters"
+msgstr "En AT-kommando er én linje udskrivbar ASCII på højst 512 tegn"
+
+msgid "Must be an AT command"
+msgstr "Skal være en AT-kommando"
+
+msgid "No \";\" command chaining"
+msgstr "Ingen kædning af kommandoer med \";\""
+
+msgid "Denied: this command wedges the AT port until a reboot"
+msgstr "Afvist: denne kommando låser AT-porten fast indtil genstart"
+
+msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
+msgstr "Anvender netværkslåse: modemmet genstarter (ca. et halvt minut); prøv igen om lidt"
+
+msgid "The AT channel is busy; the command was not sent, try again"
+msgstr "AT-kanalen er optaget; kommandoen blev ikke sendt, prøv igen"
+
+msgid "The modem did not answer in time; the command may still run, check before sending it again"
+msgstr "Modemmet svarede ikke i tide; kommandoen kører muligvis stadig, kontrollér, før du sender den igen"
+
+msgid "The fresh parameter must be 0 or 1"
+msgstr "Parameteren fresh skal være 0 eller 1"
+
+msgid "Lock read failed"
+msgstr "Læsning af låse mislykkedes"
+
+msgid "Unknown lock kind"
+msgstr "Ukendt låsetype"
+
+msgid "Invalid value for this lock kind"
+msgstr "Ugyldig værdi for denne låsetype"
+
+msgid "Invalid page"
+msgstr "Ugyldig side"
+
+msgid "mu300-sms is not available (the SMS service is not installed or not running)"
+msgstr "mu300-sms er ikke tilgængelig (SMS-tjenesten er ikke installeret eller kører ikke)"
+
+msgid "No output"
+msgstr "Intet output"
+
+msgid "Bad ID"
+msgstr "Ugyldigt ID"
+
+msgid "Read failed"
+msgstr "Læsning mislykkedes"
+
+msgid "The number may only contain digits (and a leading +)"
+msgstr "Nummeret må kun indeholde cifre (og et indledende +)"
+
+msgid "The message is empty"
+msgstr "Beskeden er tom"
+
+msgid "The message is too long (over 480 characters)"
+msgstr "Beskeden er for lang (over 480 tegn)"
+
+msgid "The message contains a control character"
+msgstr "Beskeden indeholder et kontroltegn"
+
+msgid "The sim parameter must be 0 or 1"
+msgstr "Parameteren sim skal være 0 eller 1"
+
+msgid "The USB adapter (device-usb) gave no valid reply"
+msgstr "USB-adapteren (device-usb) gav intet gyldigt svar"
+
+msgid "The auto parameter must be 0 or 1"
+msgstr "Parameteren auto skal være 0 eller 1"
+
+msgid "Invalid USB role"
+msgstr "Ugyldig USB-rolle"
+
+msgid "A USB role takes no scope"
+msgstr "En USB-rolle har ingen varighed"
+
+msgid "Invalid USB network mode"
+msgstr "Ugyldig USB-netværkstilstand"
+
+msgid "Invalid USB network scope"
+msgstr "Ugyldig varighed for USB-netværk"
+
+msgid "Unknown USB setting"
+msgstr "Ukendt USB-indstilling"
+
+msgid "Invalid interface name"
+msgstr "Ugyldigt grænsefladenavn"
+
+msgid "The languages adapter gave no valid reply"
+msgstr "Sprogadapteren gav intet gyldigt svar"
+
+msgid "Unknown language operation"
+msgstr "Ukendt sproghandling"
+
+msgid "Invalid language code"
+msgstr "Ugyldig sprogkode"
+
+msgid "Invalid language request"
+msgstr "Ugyldig sproganmodning"
+
+msgid "Unknown source"
+msgstr "Ukendt kilde"
+
+msgid "Request too large"
+msgstr "Anmodningen er for stor"
+
+msgid "The runtime directory is not safe; nothing was run"
+msgstr "Kørselsmappen er ikke sikker; intet blev kørt"
+
+msgid "No such method"
+msgstr "Metoden findes ikke"
+
+msgid "Radio did not come up"
+msgstr "Radioen startede ikke"
+
+msgid "Expected on or off"
+msgstr "Forventede on eller off"
+
+msgid "VPN integration is not provided by this platform"
+msgstr "VPN-integration leveres ikke af denne platform"
+
+msgid "Dual-boot integration is not provided by this platform"
+msgstr "Dual boot-integration leveres ikke af denne platform"
+
+msgid "mu300-next-boot failed"
+msgstr "mu300-next-boot mislykkedes"
+
+msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
+msgstr "AT-backend svarede ikke (radio slukket, modem genstarter eller adapter utilgængelig)"
+
+msgid "USB role adapter is not executable"
+msgstr "USB-rolleadapteren er ikke eksekverbar"
+
+msgid "USB role adapter failed"
+msgstr "USB-rolleadapteren mislykkedes"
+
+msgid "USB role switch is unavailable"
+msgstr "Skift af USB-rolle er ikke tilgængeligt"
+
+msgid "USB role switch failed"
+msgstr "Skift af USB-rolle mislykkedes"
+
+msgid "USB role switch was refused by platform safety checks"
+msgstr "Skift af USB-rolle blev afvist af platformens sikkerhedskontroller"
+
+msgid "Cannot create USB boot settings directory"
+msgstr "Kan ikke oprette mappe til USB-opstartsindstillinger"
+
+msgid "Cannot write USB boot settings"
+msgstr "Kan ikke skrive USB-opstartsindstillinger"
+
+msgid "Cannot save USB boot settings"
+msgstr "Kan ikke gemme USB-opstartsindstillinger"
+
+msgid "Invalid boot-auto value"
+msgstr "Ugyldig værdi for boot-auto"
+
+msgid "Device is the boot default; host auto-apply is the only persistent role"
+msgstr "Enhedstilstand er standard ved opstart; automatisk anvendelse af værtstilstand er den eneste vedvarende rolle"
+
+msgid "Cannot save USB role policy"
+msgstr "Kan ikke gemme USB-rollepolitik"
+
+msgid "Cannot disable USB network boot policy"
+msgstr "Kan ikke deaktivere opstartspolitik for USB-netværk"
+
+msgid "Cannot commit USB role policy"
+msgstr "Kan ikke anvende USB-rollepolitik"
+
+msgid "USB network mode is unavailable in host role"
+msgstr "USB-netværkstilstand er ikke tilgængelig i værtsrollen"
+
+msgid "Disable host boot-auto before configuring USB network"
+msgstr "Deaktiver boot-auto for værtstilstand, før USB-netværket konfigureres"
+
+msgid "Cannot save USB network policy"
+msgstr "Kan ikke gemme USB-netværkspolitik"
+
+msgid "Cannot commit USB network policy"
+msgstr "Kan ikke anvende USB-netværkspolitik"
+
+msgid "USB host mode is required"
+msgstr "USB-værtstilstand er påkrævet"
+
+msgid "Not a USB network interface"
+msgstr "Ikke en USB-netværksgrænseflade"
+
+msgid "LAN bridge device section was not found"
+msgstr "Enhedssektionen for LAN-broen blev ikke fundet"
+
+msgid "Cannot bring USB network interface up"
+msgstr "Kan ikke aktivere USB-netværksgrænsefladen"
+
+msgid "Cannot add interface to LAN bridge"
+msgstr "Kan ikke tilføje grænsefladen til LAN-broen"
+
+msgid "Cannot save LAN bridge"
+msgstr "Kan ikke gemme LAN-broen"
+
+msgid "Network reload failed"
+msgstr "Genindlæsning af netværket mislykkedes"
+
+msgid "Cannot attach USB interface to LAN bridge"
+msgstr "Kan ikke tilknytte USB-grænsefladen til LAN-broen"
+
+msgid "The language pack is not installed"
+msgstr "Sprogpakken er ikke installeret"
+
+msgid "No language given"
+msgstr "Intet sprog angivet"
+
+msgid "The language could not be changed"
+msgstr "Sproget kunne ikke ændres"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI tilbyder ikke dette sprog"
+
+msgid "No uploaded language pack"
+msgstr "Ingen uploadet sprogpakke"
+
+msgid "An installation is already running"
+msgstr "En installation kører allerede"
+
+msgid "The language pack could not be removed"
+msgstr "Sprogpakken kunne ikke fjernes"
+
+msgid "Lock cache unavailable"
+msgstr "Låsecache utilgængelig"
+
+msgid "No serving cell to lock to"
+msgstr "Ingen betjenende celle at låse til"

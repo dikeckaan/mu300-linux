@@ -543,7 +543,13 @@ class FromStock(UpdateBase):
         (b / 'modules.builtin').write_text('kernel/x.ko\n')
         (self.disk / 'openwrt').mkdir()
         for shell in self.each_shell():
+            # a module of an earlier bundle of this release that this one no longer has goes
+            for d in ('ubuntu/lib/modules/6.18.55-mu300/extra', 'openwrt/lib/modules/6.18.55-mu300'):
+                (self.disk / d).mkdir(parents=True, exist_ok=True)
+                (self.disk / d / 'gone.ko').write_bytes(b'old')
             r = self.up(shell, f'kernel_modules_into_systems "{b}"', MU300_NO_DEPMOD=1)
+            self.assertFalse((self.disk / 'ubuntu/lib/modules/6.18.55-mu300/extra/gone.ko').exists())
+            self.assertFalse((self.disk / 'openwrt/lib/modules/6.18.55-mu300/gone.ko').exists())
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual((self.disk / 'ubuntu/lib/modules/6.18.55-mu300/extra/a.ko').read_bytes(), b'a')
             self.assertTrue((self.disk / 'ubuntu/lib/modules/6.18.55-mu300/modules.builtin').exists())

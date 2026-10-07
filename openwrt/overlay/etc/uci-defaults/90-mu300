@@ -99,6 +99,30 @@ if ! uci -q show firewall | grep -q "^firewall\.@zone\[[0-9]*\]\.name='earlyusb'
 	uci set firewall.$early.output='ACCEPT'
 	uci set firewall.$early.forward='REJECT'
 fi
+# LuCI's language (both systems) is English, not "auto" (which follows the browser): once, with its own marker
+# luci.mu300.lang, so a language the user picks later stays through every update. A system from before the marker
+# that still says "auto" (or nothing) gets English too: auto was nobody's choice there (luci-base's default, and
+# 91-mu300-luci's until it set English), and with the Turkish and Chinese catalogs now in the image it would switch
+# the language under the user. A language set on purpose stays.
+# The languages the image has catalogs for (Turkish and Chinese) are offered on every run: their own uci-defaults ran
+# when the image was built, and an update keeps the old /etc/config/luci, which may not know them (plain OpenWrt
+# before v2026.10.11 had none). One the user's configuration has stays as it is.
+if uci -q get luci.main >/dev/null; then
+	uci -q get luci.languages >/dev/null || uci -q set luci.languages=internal
+	[ ! -e /usr/lib/lua/luci/i18n/base.tr.lmo ] || uci -q get luci.languages.tr >/dev/null ||
+		uci -q set luci.languages.tr='Türkçe (Turkish)'
+	[ ! -e /usr/lib/lua/luci/i18n/base.zh-cn.lmo ] || uci -q get luci.languages.zh_cn >/dev/null ||
+		uci -q set luci.languages.zh_cn="$(printf '\347\256\200\344\275\223\344\270\255\346\226\207 (Simplified Chinese)')"
+	uci commit luci
+fi
+if uci -q get luci.main >/dev/null && [ "$(uci -q get luci.mu300.lang)" != 1 ]; then
+	case $(uci -q get luci.main.lang) in ''|auto) uci -q set luci.main.lang='en' ;; esac
+	uci -q batch <<UCI
+set luci.mu300=mu300
+set luci.mu300.lang='1'
+UCI
+	uci commit luci
+fi
 # network last: a first run cut short before its commit has no wan proto mu300cell yet, and runs again as a first
 # install, in full
 uci commit system

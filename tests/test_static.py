@@ -147,7 +147,7 @@ class Rules(unittest.TestCase):
         # and Aurora pinned by hash (D3, D5); ImmortalWrt with the panel was never tested by anyone, so refused
         text = (TOP / 'openwrt' / 'build-rootfs.sh').read_text()
         for s in ('MU300_SYSTEM', '05f9015e0a4e2859f6a153f69e472f2984481490d4ce6db19b8a41bba7264f1e', 'po2lmo.py',
-                  'luci-overlay', 'packages.txt', 'luci-i18n-base-zh-cn', 'luci-i18n-firewall-tr'):
+                  'luci-overlay', 'packages.txt', 'luci-i18n-$c-$l', 'for l in tr zh-cn', 'base.$l.lmo'):
             self.assertIn(s, text)
         arm = re.search(r'^\s*openwrt-luci\)(.*?);;', text, re.M | re.S)
         self.assertIsNotNone(arm, 'no openwrt-luci arm in the MU300_SYSTEM case')
@@ -186,6 +186,16 @@ class Rules(unittest.TestCase):
         self.assertEqual(len(lst), len(set(lst)))
         for c in lst:
             self.assertTrue((BIN / c).is_file(), c)
+
+    def test_reply_deadlines_are_at_least_t_whole_seconds(self):
+        # date +%s counts whole seconds: "now + T" ends between T - 1 and T seconds away, so a command written late in
+        # a second had almost none of its budget (mu300-atd lost replies with T=1). Every file-clock deadline is now + T + 1.
+        for name, pat in (('mu300-at', r'\$\(date \+%s\) \+ T \+ 1'),
+                          ('mu300-ussd', r'\$\(date \+%s\) \+ T \+ 1'),
+                          ('mu300-atd', r'\$\(now\) \+ \$1 \+ 1')):
+            src = (BIN / name).read_text()
+            self.assertRegex(src, pat, name)
+            self.assertNotRegex(src, r'date \+%s\) \+ T \)', name)
 
     def test_images_carry_no_vpn_engine(self):
         # the engines are the vpn extra (mu300-extra): ~120 MB that a system without a VPN does not carry
@@ -248,6 +258,25 @@ class Rules(unittest.TestCase):
         self.assertIn('\\t\\tWRITE_ONCE(sdhci_sprd_emmc_added, true);', port)
         # and the build stops when the edit did not apply
         self.assertIn("'MU300: the eMMC is mmc0', 'WRITE_ONCE(sdhci_sprd_emmc_added, true);'", port)
+
+    def test_mainline_config_has_kvm_and_the_module_set(self):
+        # /dev/kvm (the CPUs start at EL2) and the router/container modules; the kernel's own modules reach the bundle
+        cfg = (TOP / 'upstream' / 'mu300-mainline.config').read_text()
+        opts = {}
+        for line in cfg.splitlines():
+            if line.startswith('CONFIG_'):
+                k, v = line.split('=', 1)
+                # an option given twice must say the same thing both times: merge_config takes the last one silently
+                self.assertEqual(opts.setdefault(k, v), v, k)
+        for k in ('CONFIG_VIRTUALIZATION', 'CONFIG_KVM', 'CONFIG_MODULES', 'CONFIG_WIREGUARD', 'CONFIG_NET_SCH_CAKE',
+                  'CONFIG_TUN', 'CONFIG_NF_FLOW_TABLE', 'CONFIG_IKCONFIG_PROC'):
+            self.assertEqual(opts.get(k), 'y', k)
+        for k in ('CONFIG_VHOST_NET', 'CONFIG_NTFS3_FS', 'CONFIG_DM_CRYPT', 'CONFIG_NET_SCH_HTB', 'CONFIG_USB_NET_CDC_MBIM',
+                  'CONFIG_XFRM_USER', 'CONFIG_BRIDGE_NETFILTER', 'CONFIG_BINFMT_MISC', 'CONFIG_SND_USB_AUDIO'):
+            self.assertEqual(opts.get(k), 'm', k)
+        mods = (TOP / 'upstream' / 'build-modules.sh').read_text()
+        self.assertIn('INSTALL_MOD_STRIP=1 DEPMOD=true modules_install', mods)
+        self.assertIn('has the name of an in-tree module', mods)
 
     def test_every_release_kernel_bundle_has_the_sd_host(self):
         # 5.4 reads the card as well (FINDINGS 31j): its bundle says so, and the release audit fails when any of the
@@ -347,7 +376,7 @@ class Rules(unittest.TestCase):
         # the patch tool is installed after the copy into $R: the build container has it, the image does not
         self.assertLess(text.index('for e in /*; do'), text.index('apk add patch'))
         self.assertLess(text.index(apply), text.index('apk del patch'))
-        self.assertLess(text.index('apk del patch'), text.index('apk list --installed'))
+        self.assertLess(text.index('apk del patch'), text.index('apk list --installed | sort'))
         # software offloading on, hardware off: the SIPA and SC2355 drivers have no nftables hardware offload
         uci = (OPENWRT / 'etc' / 'uci-defaults' / '90-mu300').read_text()
         self.assertIn("uci -q set firewall.@defaults[0].flow_offloading='1'", uci)
@@ -421,7 +450,7 @@ class Rules(unittest.TestCase):
         # K37: init.d/mu300-ndp is enabled in openwrt-luci's image (it does nothing unless wan is in relay mode) and
         # is executable there, beside the SMS service
         text = (TOP / 'openwrt' / 'build-rootfs.sh').read_text()
-        block = text[text.index('ln -sf ../init.d/unisoc-modem-ui $R/etc/rc.d/'):text.index('apk list --installed')]
+        block = text[text.index('ln -sf ../init.d/unisoc-modem-ui $R/etc/rc.d/'):text.index('apk list --installed | sort')]
         self.assertIn('$R/etc/init.d/mu300-ndp', block)
         self.assertIn('ln -sf ../init.d/mu300-ndp $R/etc/rc.d/S${n}mu300-ndp', block)
         for f in ('etc/init.d/mu300-ndp', 'opt/mu300/bin/ndp-learn', 'lib/netifd/proto/mu300cell-v6.sh'):

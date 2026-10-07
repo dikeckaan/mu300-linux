@@ -471,7 +471,7 @@ exit 0''')
             "network.globals.ula_prefix": 'fd12:3456:789a::/48', "dhcp.wan": 'dhcp', "dhcp.wan.interface": 'wan',
             "dhcp.wan.master": '1', "dhcp.wan.ra": 'relay', "dhcp.wan.dhcpv6": 'relay',
             "dhcp.lan.ra": 'relay', "dhcp.lan.dhcpv6": 'relay',
-            "firewall.@zone[1].masq6": '1', "luci.main.mediaurlbase": '/luci-static/aurora', "luci.main.lang": 'auto'}
+            "firewall.@zone[1].masq6": '1', "luci.main.mediaurlbase": '/luci-static/aurora', "luci.main.lang": 'en'}
         before = ("firewall.@zone[0].name='lan'\nfirewall.@zone[1].name='wan'\n"
                   "network.globals.ula_prefix='fd12:3456:789a::/48'\n"     # OpenWrt's own random ULA
                   "dhcp.lan.ndp='relay'\ndhcp.wan.ndp='hybrid'\n"           # an earlier run's or a user's value

@@ -24,6 +24,9 @@ msgstr "适配设置"
 msgid "Device management"
 msgstr "设备管理"
 
+msgid "Languages"
+msgstr "语言"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 控制中心：状态看板、网络锁定、AT 终端与短信"
 
@@ -333,8 +336,8 @@ msgstr "内存"
 msgid "Storage"
 msgstr "存储"
 
-msgid "Power"
-msgstr "电源"
+msgid "Battery"
+msgstr "电池"
 
 msgid "Channel"
 msgstr "信道"
@@ -579,11 +582,128 @@ msgstr "簇%d"
 msgid "Total %s · free %s"
 msgstr "共 %s · 余 %s"
 
+msgid "charging %s W"
+msgstr "充电中 %s W"
+
+msgid "charging"
+msgstr "充电中"
+
+msgid "drawing %s W"
+msgstr "耗电 %s W"
+
+msgid "not charging"
+msgstr "未充电"
+
+msgid "on battery"
+msgstr "电池供电"
+
+msgid "full"
+msgstr "已充满"
+
+msgid "USB in %s W"
+msgstr "USB 输入 %s W"
+
 msgid "Online"
 msgstr "在线"
 
 msgid "AT adapter unavailable"
 msgstr "AT 适配器不可用"
+
+msgid "Saved"
+msgstr "已保存"
+
+msgid "Management connection lost"
+msgstr "管理连接已中断"
+
+msgid "Installing the language pack…"
+msgstr "正在安装语言包…"
+
+msgid "The language pack is installed"
+msgstr "语言包已安装"
+
+msgid "The language pack could not be installed"
+msgstr "语言包安装失败"
+
+msgid "Upload failed: %s"
+msgstr "上传失败：%s"
+
+msgid "Language of the browser"
+msgstr "浏览器语言"
+
+msgid "Language of the web interface"
+msgstr "Web 界面语言"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "系统自带英语、土耳其语和中文；其他语言由语言包提供。"
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "同样的设置也在「系统 > 系统 > 语言和界面」中。"
+
+msgid "Language pack"
+msgstr "语言包"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "语言包（mu300-extra-lang.tar.gz，约 2 MB）可为 LuCI 增加约 40 种语言，并为本面板增加其中 29 种。可从本系统的发布版本下载；设备无法联网时，也可从发布页面下载文件后上传。"
+
+msgid "Download from the release"
+msgstr "从发布版本下载"
+
+msgid "Upload the file…"
+msgstr "上传文件…"
+
+msgid "Release"
+msgstr "发布版本"
+
+msgid "Enable all"
+msgstr "全部启用"
+
+msgid "Disable all"
+msgstr "全部禁用"
+
+msgid "Remove the language pack"
+msgstr "移除语言包"
+
+msgid "Remove the language pack?"
+msgstr "移除语言包？"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "其中的语言将从列表中消失；正在使用这些语言的页面会切换为英语。"
+
+msgid "Remove"
+msgstr "移除"
+
+msgid "Disable"
+msgstr "禁用"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "LuCI and this panel"
+msgstr "LuCI 和本面板"
+
+msgid "LuCI only"
+msgstr "仅 LuCI"
+
+msgid "Enabled"
+msgstr "已启用"
+
+msgid "Disabled"
+msgstr "已禁用"
+
+msgid "Language"
+msgstr "语言"
+
+msgid "Code"
+msgstr "代码"
+
+msgid "Translated"
+msgstr "翻译范围"
+
+msgid "State"
+msgstr "状态"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "LuCI 自身的翻译来自 OpenWrt。本面板除土耳其语和中文以外的翻译均为机器（AI）翻译，欢迎指正。"
 
 msgid "Automatic"
 msgstr "自动"
@@ -1011,6 +1131,21 @@ msgstr "未知的 USB 设置"
 msgid "Invalid interface name"
 msgstr "接口名称无效"
 
+msgid "The languages adapter gave no valid reply"
+msgstr "语言适配程序没有返回有效结果"
+
+msgid "Unknown language operation"
+msgstr "未知的语言操作"
+
+msgid "Invalid language code"
+msgstr "语言代码无效"
+
+msgid "Invalid language request"
+msgstr "语言请求无效"
+
+msgid "Unknown source"
+msgstr "未知的来源"
+
 msgid "Request too large"
 msgstr "请求过大"
 
@@ -1112,6 +1247,27 @@ msgstr "网络重新加载失败"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "无法把 USB 接口接入 LAN 网桥"
+
+msgid "The language pack is not installed"
+msgstr "语言包未安装"
+
+msgid "No language given"
+msgstr "未指定语言"
+
+msgid "The language could not be changed"
+msgstr "无法更改语言"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI 不提供此语言"
+
+msgid "No uploaded language pack"
+msgstr "没有已上传的语言包"
+
+msgid "An installation is already running"
+msgstr "已有安装任务正在进行"
+
+msgid "The language pack could not be removed"
+msgstr "无法移除语言包"
 
 msgid "Lock cache unavailable"
 msgstr "锁定缓存不可用"

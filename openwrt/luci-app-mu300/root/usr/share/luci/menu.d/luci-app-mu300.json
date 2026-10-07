@@ -74,5 +74,11 @@
 		"order": 4,
 		"action": { "type": "view", "path": "mu300/device" },
 		"depends": { "acl": [ "luci-app-mu300" ] }
+	},
+	"admin/system/mu300-languages": {
+		"title": "Languages",
+		"order": 15,
+		"action": { "type": "view", "path": "mu300/languages" },
+		"depends": { "acl": [ "luci-app-mu300" ] }
 	}
 }

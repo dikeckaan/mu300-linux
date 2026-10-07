@@ -1,0 +1,1276 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ko\n"
+
+msgid "Status dashboard"
+msgstr "상태 대시보드"
+
+msgid "Cellular"
+msgstr "셀룰러"
+
+msgid "Network locks"
+msgstr "네트워크 잠금"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "AT terminal"
+msgstr "AT 터미널"
+
+msgid "Adapter settings"
+msgstr "어댑터 설정"
+
+msgid "Device management"
+msgstr "장치 관리"
+
+msgid "Languages"
+msgstr "언어"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
+msgstr "MU300 제어 센터: 상태 대시보드, 네트워크 잠금, AT 터미널 및 SMS"
+
+msgid "China Mobile"
+msgstr "China Mobile"
+
+msgid "China Unicom"
+msgstr "China Unicom"
+
+msgid "China Telecom"
+msgstr "China Telecom"
+
+msgid "China Broadnet"
+msgstr "China Broadnet"
+
+msgid "China Tietong"
+msgstr "China Tietong"
+
+msgid "Excellent"
+msgstr "매우 좋음"
+
+msgid "Good"
+msgstr "좋음"
+
+msgid "Fair"
+msgstr "보통"
+
+msgid "Poor"
+msgstr "나쁨"
+
+msgid "Unknown"
+msgstr "알 수 없음"
+
+msgid "%d d %d h"
+msgstr "%d일 %d시간"
+
+msgid "%d h %d min"
+msgstr "%d시간 %d분"
+
+msgid "%d min"
+msgstr "%d분"
+
+msgid "No neighbor-cell data"
+msgstr "인접 셀 데이터 없음"
+
+msgid "Locked"
+msgstr "잠김"
+
+msgid "Lock"
+msgstr "잠금"
+
+msgid "Unknown error"
+msgstr "알 수 없는 오류"
+
+msgid "Confirm"
+msgstr "확인"
+
+msgid "OK"
+msgstr "확인"
+
+msgid "Cancel"
+msgstr "취소"
+
+msgid "New SMS · %s"
+msgstr "새 SMS · %s"
+
+msgid "Unknown number"
+msgstr "알 수 없는 번호"
+
+msgid "Select"
+msgstr "선택"
+
+msgid "Basic"
+msgstr "기본"
+
+msgid "Registration/signal"
+msgstr "등록/신호"
+
+msgid "Bearer"
+msgstr "베어러"
+
+msgid "Engineering mode"
+msgstr "엔지니어링 모드"
+
+msgid "AT command (↑↓ history, Enter to send)"
+msgstr "AT 명령 (↑↓ 기록, Enter로 전송)"
+
+msgid "Send"
+msgstr "전송"
+
+msgid "Clear screen"
+msgstr "화면 지우기"
+
+msgid "Ready."
+msgstr "준비됨."
+
+msgid "Session history (click to reuse)"
+msgstr "세션 기록 (클릭하여 재사용)"
+
+msgid "(no output)"
+msgstr "(출력 없음)"
+
+msgid "Request failed"
+msgstr "요청 실패"
+
+msgid "(empty)"
+msgstr "(비어 있음)"
+
+msgid "USB role"
+msgstr "USB 역할"
+
+msgid "Current role"
+msgstr "현재 역할"
+
+msgid "Switch USB role"
+msgstr "USB 역할 전환"
+
+msgid "Device mode"
+msgstr "장치 모드"
+
+msgid "Host mode"
+msgstr "호스트 모드"
+
+msgid "Enable host mode at boot"
+msgstr "부팅 시 호스트 모드 사용"
+
+msgid "Apply role"
+msgstr "역할 적용"
+
+msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
+msgstr "호스트 모드에서는 이 포트의 USB 네트워킹과 시리얼 연결이 끊어집니다. F50에는 배터리가 없으므로 관리 연결이 끊길 수 있으며, USB 어댑터에는 보통 전원 공급형 허브가 필요합니다."
+
+msgid "USB network mode"
+msgstr "USB 네트워크 모드"
+
+msgid "Network protocol"
+msgstr "네트워크 프로토콜"
+
+msgid "Apply duration"
+msgstr "적용 기간"
+
+msgid "Next reboot only"
+msgstr "다음 재부팅에만"
+
+msgid "Permanent"
+msgstr "영구"
+
+msgid "Enable selected protocol"
+msgstr "선택한 프로토콜 사용"
+
+msgid "Save; apply after reboot"
+msgstr "저장 후 재부팅 시 적용"
+
+msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
+msgstr "기본값은 NCM입니다. Windows는 ECM을 기본적으로 지원하지 않으며, RNDIS는 열거 방식을 바꿉니다. '선택한 프로토콜 사용'이 꺼져 있으면 선택 내용만 저장됩니다. '다음 재부팅에만'은 한 번만 적용된 후 NCM으로 돌아갑니다."
+
+msgid "USB adapters"
+msgstr "USB 어댑터"
+
+msgid "Refresh"
+msgstr "새로 고침"
+
+msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
+msgstr "호스트 모드에서만 사용할 수 있습니다. 새로 고침하면 발견된 USB 어댑터를 활성화하고, LAN에 추가하면 브리지 설정을 저장하고 네트워크를 다시 불러옵니다."
+
+msgid "Unavailable"
+msgstr "사용 불가"
+
+msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
+msgstr "호스트 모드에서는 USB 네트워크 모드를 사용할 수 없습니다. 호스트 자동 시작을 켜면 USB 네트워크 자동 시작도 꺼집니다."
+
+msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
+msgstr "호스트 모드로 전환하면 USB 관리 연결이 즉시 끊어집니다. F50에는 배터리가 없고 주변 장치에 외부 전원이 필요할 수 있으니, 다른 관리 경로가 있는지 확인하십시오."
+
+msgid "USB networking and serial will re-enumerate in device mode."
+msgstr "장치 모드에서는 USB 네트워킹과 시리얼이 다시 열거됩니다."
+
+msgid "Switch USB role?"
+msgstr "USB 역할을 전환하시겠습니까?"
+
+msgid "Apply"
+msgstr "적용"
+
+msgid "Switching USB role…"
+msgstr "USB 역할 전환 중…"
+
+msgid "Switch failed: %s"
+msgstr "전환 실패: %s"
+
+msgid "Management connection lost; reconnect to confirm the USB role."
+msgstr "관리 연결이 끊어졌습니다. 다시 연결하여 USB 역할을 확인하십시오."
+
+msgid "Switch request accepted; the USB connection may briefly disconnect."
+msgstr "전환 요청이 접수되었습니다. USB 연결이 잠시 끊어질 수 있습니다."
+
+msgid "USB role applied"
+msgstr "USB 역할 적용됨"
+
+msgid "Save USB network mode?"
+msgstr "USB 네트워크 모드를 저장하시겠습니까?"
+
+msgid "The network mode applies on the next reboot; USB management may need to reconnect."
+msgstr "네트워크 모드는 다음 재부팅 시 적용됩니다. USB 관리 연결을 다시 연결해야 할 수 있습니다."
+
+msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
+msgstr "선택 내용만 저장합니다. 선택한 프로토콜이 꺼져 있으므로 다음 부팅에서도 기본 NCM을 사용합니다."
+
+msgid "Save"
+msgstr "저장"
+
+msgid "Saving USB network settings…"
+msgstr "USB 네트워크 설정 저장 중…"
+
+msgid "Settings saved"
+msgstr "설정 저장됨"
+
+msgid "Save failed: %s"
+msgstr "저장 실패: %s"
+
+msgid "Unable to confirm the role yet; reconnect and refresh the page."
+msgstr "아직 역할을 확인할 수 없습니다. 다시 연결한 후 페이지를 새로 고치십시오."
+
+msgid "Switch to host mode to see USB adapters."
+msgstr "USB 어댑터를 보려면 호스트 모드로 전환하십시오."
+
+msgid "Scanning USB adapters…"
+msgstr "USB 어댑터 검색 중…"
+
+msgid "No USB adapters found."
+msgstr "USB 어댑터를 찾을 수 없습니다."
+
+msgid "Link connected"
+msgstr "링크 연결됨"
+
+msgid "No link; enable attempted"
+msgstr "링크 없음, 활성화 시도함"
+
+msgid "Added to LAN"
+msgstr "LAN에 추가됨"
+
+msgid "Add to LAN"
+msgstr "LAN에 추가"
+
+msgid "Add USB adapter to LAN?"
+msgstr "USB 어댑터를 LAN에 추가하시겠습니까?"
+
+msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
+msgstr "브리지 설정을 저장하고 네트워크를 다시 불러옵니다. 기존 연결이 잠시 끊어질 수 있습니다."
+
+msgid "Add"
+msgstr "추가"
+
+msgid "Adding USB adapter…"
+msgstr "USB 어댑터 추가 중…"
+
+msgid "Add failed: %s"
+msgstr "추가 실패: %s"
+
+msgid "Modulation DL/UL"
+msgstr "변조 방식 DL/UL"
+
+msgid "Estimated from current MCS"
+msgstr "현재 MCS 기준 추정"
+
+msgid "MCS DL/UL"
+msgstr "MCS DL/UL"
+
+msgid "BLER DL/UL"
+msgstr "BLER DL/UL"
+
+msgid "Link & traffic"
+msgstr "링크 및 트래픽"
+
+msgid "Download rate"
+msgstr "다운로드 속도"
+
+msgid "Upload rate"
+msgstr "업로드 속도"
+
+msgid "Total received"
+msgstr "총 수신량"
+
+msgid "Total sent"
+msgstr "총 송신량"
+
+msgid "Session duration"
+msgstr "세션 시간"
+
+msgid "Registration"
+msgstr "등록"
+
+msgid "Bandwidth"
+msgstr "대역폭"
+
+msgid "AMBR DL/UL"
+msgstr "AMBR DL/UL"
+
+msgid "Wi-Fi · LAN · Device · SIM"
+msgstr "Wi-Fi · LAN · 장치 · SIM"
+
+msgid "CPU usage"
+msgstr "CPU 사용률"
+
+msgid "Memory"
+msgstr "메모리"
+
+msgid "Storage"
+msgstr "저장소"
+
+msgid "Battery"
+msgstr "배터리"
+
+msgid "Channel"
+msgstr "채널"
+
+msgid "Encryption"
+msgstr "암호화"
+
+msgid "Hidden SSID"
+msgstr "숨김 SSID"
+
+msgid "Country"
+msgstr "국가"
+
+msgid "AP status"
+msgstr "AP 상태"
+
+msgid "USB network"
+msgstr "USB 네트워크"
+
+msgid "Connection tracking"
+msgstr "연결 추적"
+
+msgid "LAN address"
+msgstr "LAN 주소"
+
+msgid "Wi-Fi clients"
+msgstr "Wi-Fi 클라이언트"
+
+msgid "DHCP leases"
+msgstr "DHCP 임대"
+
+msgid "Device model"
+msgstr "장치 모델"
+
+msgid "System"
+msgstr "시스템"
+
+msgid "Modem"
+msgstr "모뎀"
+
+msgid "Carrier"
+msgstr "통신사"
+
+msgid "Module"
+msgstr "모듈"
+
+msgid "Firmware"
+msgstr "펌웨어"
+
+msgid "Show SIM identifiers"
+msgstr "SIM 식별 정보 표시"
+
+msgid "Quick controls"
+msgstr "빠른 제어"
+
+msgid "Data connection"
+msgstr "데이터 연결"
+
+msgid "Cellular radio"
+msgstr "셀룰러 무선"
+
+msgid "Wi-Fi hotspot"
+msgstr "Wi-Fi 핫스팟"
+
+msgid "Restart modem"
+msgstr "모뎀 재시작"
+
+msgid "Restart device"
+msgstr "장치 재시작"
+
+msgid "Switch to Android"
+msgstr "Android로 전환"
+
+msgid "Neighbor cells"
+msgstr "인접 셀"
+
+msgid "RAT/Band"
+msgstr "RAT/밴드"
+
+msgid "Frequency"
+msgstr "주파수"
+
+msgid "Running %s…"
+msgstr "%s 실행 중…"
+
+msgid "Started in background: %s"
+msgstr "백그라운드에서 시작됨: %s"
+
+msgid "Done: %s"
+msgstr "완료: %s"
+
+msgid "Failed: %s"
+msgstr "실패: %s"
+
+msgid "Disconnecting data…"
+msgstr "데이터 연결 끊는 중…"
+
+msgid "Connecting data…"
+msgstr "데이터 연결 중…"
+
+msgid "Turn off cellular radio"
+msgstr "셀룰러 무선 끄기"
+
+msgid "Cellular connectivity will be interrupted."
+msgstr "셀룰러 연결이 중단됩니다."
+
+msgid "Turn on cellular radio"
+msgstr "셀룰러 무선 켜기"
+
+msgid "The SFUN power-on sequence will run (up to about 1 minute)."
+msgstr "SFUN 전원 켜기 절차가 실행됩니다 (최대 약 1분)."
+
+msgid "Cellular connectivity may stop for 1–2 minutes."
+msgstr "셀룰러 연결이 1–2분 동안 중단될 수 있습니다."
+
+msgid "Restart the entire device"
+msgstr "장치 전체 재시작"
+
+msgid "All connections will be interrupted."
+msgstr "모든 연결이 중단됩니다."
+
+msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
+msgstr "다음 부팅 시 Android로 진입하도록 설정하고 지금 재부팅합니다. 이 관리 페이지와 셀룰러 공유가 끊어집니다."
+
+msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
+msgstr "OpenWrt로 돌아가려면 Android에서 mu300-next-boot linux를 실행한 후 재부팅하십시오."
+
+msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
+msgstr "또는 아무것도 하지 않아도 부팅이 다섯 번 완료되지 않으면 자동으로 되돌아옵니다."
+
+msgid "Switch and reboot"
+msgstr "전환 후 재부팅"
+
+msgid "Preparing Android boot and rebooting…"
+msgstr "Android 부팅 준비 및 재부팅 중…"
+
+msgid "Hide SIM identifiers"
+msgstr "SIM 식별 정보 숨기기"
+
+msgid "Lock cell %s?"
+msgstr "셀 %s을(를) 잠그시겠습니까?"
+
+msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
+msgstr "무선 스택이 재시작되며 (SFUN), 셀룰러 서비스가 약 30초 동안 중단됩니다."
+
+msgid "Locking %s in the background, about 30 seconds"
+msgstr "백그라운드에서 %s 잠금 중, 약 30초"
+
+msgid "Locked %s in the background; the status will refresh shortly"
+msgstr "백그라운드에서 %s을(를) 잠갔습니다. 곧 상태가 새로 고쳐집니다"
+
+msgid "Lock failed: %s"
+msgstr "잠금 실패: %s"
+
+msgid "Uptime %s"
+msgstr "가동 시간 %s"
+
+msgid "Radio off"
+msgstr "무선 꺼짐"
+
+msgid "No response"
+msgstr "응답 없음"
+
+msgid "%s · Signal %s %s/10"
+msgstr "%s · 신호 %s %s/10"
+
+msgid "%s · Signal %s"
+msgstr "%s · 신호 %s"
+
+msgid "Anchor B%s"
+msgstr "앵커 B%s"
+
+msgid "No serving cell"
+msgstr "서빙 셀 없음"
+
+msgid "Not registered"
+msgstr "등록 안 됨"
+
+msgid "Registered"
+msgstr "등록됨"
+
+msgid "Searching"
+msgstr "검색 중"
+
+msgid "Registration denied"
+msgstr "등록 거부됨"
+
+msgid "Registered (roaming)"
+msgstr "등록됨 (로밍)"
+
+msgid "Emergency only"
+msgstr "긴급 통화만"
+
+msgid "Status %s"
+msgstr "상태 %s"
+
+msgid "LTE anchor"
+msgstr "LTE 앵커"
+
+msgid "LTE link"
+msgstr "LTE 링크"
+
+msgid "Hidden"
+msgstr "숨김"
+
+msgid "No"
+msgstr "아니요"
+
+msgid "Running"
+msgstr "실행 중"
+
+msgid "Not running"
+msgstr "실행 안 됨"
+
+msgid "Connected"
+msgstr "연결됨"
+
+msgid "Disconnected"
+msgstr "연결 끊김"
+
+msgid "%s entries"
+msgstr "%s개 항목"
+
+msgid "%s clients"
+msgstr "클라이언트 %s대"
+
+msgid "Recent DHCP leases"
+msgstr "최근 DHCP 임대"
+
+msgid "%d h"
+msgstr "%d시간"
+
+msgid "Board"
+msgstr "보드"
+
+msgid "No temperature readings"
+msgstr "온도 정보 없음"
+
+msgid "Cluster %d"
+msgstr "클러스터 %d"
+
+msgid "Total %s · free %s"
+msgstr "전체 %s · 여유 %s"
+
+msgid "charging %s W"
+msgstr "%s W로 충전 중"
+
+msgid "charging"
+msgstr "충전 중"
+
+msgid "drawing %s W"
+msgstr "%s W 소비 중"
+
+msgid "not charging"
+msgstr "충전 안 됨"
+
+msgid "on battery"
+msgstr "배터리 사용 중"
+
+msgid "full"
+msgstr "완충"
+
+msgid "USB in %s W"
+msgstr "USB 입력 %s W"
+
+msgid "Online"
+msgstr "온라인"
+
+msgid "AT adapter unavailable"
+msgstr "AT 어댑터를 사용할 수 없음"
+
+msgid "Saved"
+msgstr "저장됨"
+
+msgid "Management connection lost"
+msgstr "관리 연결이 끊어졌습니다"
+
+msgid "Installing the language pack…"
+msgstr "언어 팩 설치 중…"
+
+msgid "The language pack is installed"
+msgstr "언어 팩이 설치되었습니다"
+
+msgid "The language pack could not be installed"
+msgstr "언어 팩을 설치할 수 없습니다"
+
+msgid "Upload failed: %s"
+msgstr "업로드 실패: %s"
+
+msgid "Language of the browser"
+msgstr "브라우저 언어"
+
+msgid "Language of the web interface"
+msgstr "웹 인터페이스 언어"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "영어, 튀르키예어, 중국어는 시스템에 포함되어 있으며, 나머지 언어는 언어 팩으로 추가됩니다."
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "같은 설정이 시스템 > 시스템 > 언어 및 스타일에도 있습니다."
+
+msgid "Language pack"
+msgstr "언어 팩"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "언어 팩(mu300-extra-lang.tar.gz, 약 2 MB)은 LuCI에 약 40개 언어를 추가하며, 그중 29개 언어로 이 패널도 제공합니다. 이 시스템의 릴리스에서 다운로드하거나, 장치가 인터넷에 연결되지 않은 경우 릴리스 페이지에서 받은 파일을 업로드하십시오."
+
+msgid "Download from the release"
+msgstr "릴리스에서 다운로드"
+
+msgid "Upload the file…"
+msgstr "파일 업로드…"
+
+msgid "Release"
+msgstr "릴리스"
+
+msgid "Enable all"
+msgstr "모두 사용"
+
+msgid "Disable all"
+msgstr "모두 사용 안 함"
+
+msgid "Remove the language pack"
+msgstr "언어 팩 제거"
+
+msgid "Remove the language pack?"
+msgstr "언어 팩을 제거하시겠습니까?"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "해당 언어가 목록에서 사라지며, 그 언어로 표시되던 페이지는 영어로 전환됩니다."
+
+msgid "Remove"
+msgstr "제거"
+
+msgid "Disable"
+msgstr "사용 안 함"
+
+msgid "Enable"
+msgstr "사용"
+
+msgid "LuCI and this panel"
+msgstr "LuCI 및 이 패널"
+
+msgid "LuCI only"
+msgstr "LuCI만"
+
+msgid "Enabled"
+msgstr "사용 중"
+
+msgid "Disabled"
+msgstr "사용 안 함"
+
+msgid "Language"
+msgstr "언어"
+
+msgid "Code"
+msgstr "코드"
+
+msgid "Translated"
+msgstr "번역 범위"
+
+msgid "State"
+msgstr "상태"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "LuCI 자체 번역은 OpenWrt에서 제공됩니다. 튀르키예어와 중국어를 제외한 이 패널의 번역은 기계(AI) 번역이며, 수정 제안을 환영합니다."
+
+msgid "Automatic"
+msgstr "자동"
+
+msgid "4G only"
+msgstr "4G만"
+
+msgid "Serving network"
+msgstr "서빙 네트워크"
+
+msgid "Network mode · EN-DC"
+msgstr "네트워크 모드 · EN-DC"
+
+msgid "Refresh lock status"
+msgstr "잠금 상태 새로 고침"
+
+msgid "Apply at startup"
+msgstr "시작 시 적용"
+
+msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
+msgstr "끄면 다음 부팅 시 재적용만 중지되며, 저장된 네트워크 모드, EN-DC, 밴드 및 셀 설정은 유지됩니다."
+
+msgid "Band locking"
+msgstr "밴드 잠금"
+
+msgid "NR bands"
+msgstr "NR 밴드"
+
+msgid "LTE bands"
+msgstr "LTE 밴드"
+
+msgid "Apply NR bands"
+msgstr "NR 밴드 적용"
+
+msgid "Apply LTE bands"
+msgstr "LTE 밴드 적용"
+
+msgid "Neighbor cells and cell locking"
+msgstr "인접 셀 및 셀 잠금"
+
+msgid "Lock current serving cell"
+msgstr "현재 서빙 셀 잠금"
+
+msgid "Unlock cell"
+msgstr "셀 잠금 해제"
+
+msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
+msgstr "적용하면 무선 스택이 재시작되어 (SFUN) 셀룰러 서비스가 잠시 중단됩니다. 설정은 저장되며, '시작 시 적용'이 켜져 있으면 AT가 준비된 후 플러그인이 다시 적용합니다. 플랫폼의 무선 시작 전 훅이 있으면 재시작 없이 다시 적용할 수 있습니다. 밴드를 하나도 선택하지 않고 적용하면 자동 모드로 돌아갑니다."
+
+msgid "Apply “%s”?"
+msgstr "“%s”을(를) 적용하시겠습니까?"
+
+msgid "Applying %s in the background…"
+msgstr "백그라운드에서 %s 적용 중…"
+
+msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
+msgstr "백그라운드에서 %s 적용 중… (SFUN 재시작 및 재등록, 약 30초)"
+
+msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
+msgstr "대기열에 추가됨: SFUN 재시작 중 다른 잠금이 적용되고 있으며, 그 후에 적용됩니다"
+
+msgid "Confirming the EN-DC status…"
+msgstr "EN-DC 상태 확인 중…"
+
+msgid "Confirming apply at startup…"
+msgstr "시작 시 적용 확인 중…"
+
+msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "백그라운드에서 시작됨: %s (SFUN 재시작, 약 30초). 상태를 다시 읽는 중…"
+
+msgid "Network mode: %s"
+msgstr "네트워크 모드: %s"
+
+msgid "Disable EN-DC (NSA anchor)"
+msgstr "EN-DC 끄기 (NSA 앵커)"
+
+msgid "Enable EN-DC (NSA anchor)"
+msgstr "EN-DC 켜기 (NSA 앵커)"
+
+msgid "Disable apply at startup"
+msgstr "시작 시 적용 끄기"
+
+msgid "Enable apply at startup"
+msgstr "시작 시 적용 켜기"
+
+msgid "Reading the modem directly (a few seconds at most)…"
+msgstr "모뎀에서 직접 읽는 중 (최대 몇 초)…"
+
+msgid "Refreshed"
+msgstr "새로 고쳐짐"
+
+msgid "Refresh failed"
+msgstr "새로 고침 실패"
+
+msgid "NR bands: back to automatic"
+msgstr "NR 밴드: 자동으로 복원"
+
+msgid "NR band lock: %s"
+msgstr "NR 밴드 잠금: %s"
+
+msgid "LTE bands: back to automatic"
+msgstr "LTE 밴드: 자동으로 복원"
+
+msgid "LTE band lock: %s"
+msgstr "LTE 밴드 잠금: %s"
+
+msgid "Remove the %s cell lock"
+msgstr "%s 셀 잠금 해제"
+
+msgid "The radio stack will restart (SFUN), taking about 30 seconds."
+msgstr "무선 스택이 재시작되며 (SFUN), 약 30초가 걸립니다."
+
+msgid "Removing the %s cell lock…"
+msgstr "%s 셀 잠금 해제 중…"
+
+msgid "Unlock failed: %s"
+msgstr "잠금 해제 실패: %s"
+
+msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "백그라운드에서 잠금 해제 시작됨 (SFUN 재시작, 약 30초). 상태를 다시 읽는 중…"
+
+msgid "Locking %s in the background…"
+msgstr "백그라운드에서 %s 잠금 중…"
+
+msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "백그라운드에서 %s 잠금 완료 (SFUN 재시작, 약 30초). 상태를 다시 읽는 중…"
+
+msgid "No serving-network data"
+msgstr "서빙 네트워크 데이터 없음"
+
+msgid "NR serving cell"
+msgstr "NR 서빙 셀"
+
+msgid "Status confirmed"
+msgstr "상태 확인됨"
+
+msgid "Readback timed out; select “Refresh lock status”"
+msgstr "다시 읽기 시간 초과. “잠금 상태 새로 고침”을 선택하십시오"
+
+msgid "Applied (EN-DC does not require a radio-stack restart)"
+msgstr "적용됨 (EN-DC는 무선 스택 재시작이 필요하지 않음)"
+
+msgid "Apply at startup is on"
+msgstr "시작 시 적용 켜짐"
+
+msgid "Apply at startup is off"
+msgstr "시작 시 적용 꺼짐"
+
+msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
+msgstr "EN-DC 상태 다시 읽기 시간 초과. “잠금 상태 새로 고침”으로 확인하십시오"
+
+msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
+msgstr "시작 시 적용 상태 다시 읽기 시간 초과. “잠금 상태 새로 고침”으로 확인하십시오"
+
+msgid "Locked cells"
+msgstr "잠긴 셀"
+
+msgid "Unlock %s"
+msgstr "%s 잠금 해제"
+
+msgid "Automatic (%d supported)"
+msgstr "자동 (%d개 지원)"
+
+msgid "%d locked: %s"
+msgstr "%d개 잠김: %s"
+
+msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
+msgstr "이 플러그인이 현재 Unisoc OpenWrt 플랫폼에 연결되는 방식을 설정합니다. 변경해도 대시보드, AT, 잠금, SMS 페이지를 수정할 필요는 없습니다."
+
+msgid "Platform adapter"
+msgstr "플랫폼 어댑터"
+
+msgid "AT backend"
+msgstr "AT 백엔드"
+
+msgid "Auto-detect"
+msgstr "자동 감지"
+
+msgid "atinout + serial port"
+msgstr "atinout + 시리얼 포트"
+
+msgid "Custom adapter"
+msgstr "사용자 지정 어댑터"
+
+msgid "AT serial port"
+msgstr "AT 시리얼 포트"
+
+msgid "Custom AT adapter"
+msgstr "사용자 지정 AT 어댑터"
+
+msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
+msgstr "실행 파일은 시간 제한(초)과 전체 AT 명령을 이 순서대로 받습니다. 플랫폼 다이얼러와 시리얼 잠금을 공유해야 합니다."
+
+msgid "SMS adapter"
+msgstr "SMS 어댑터"
+
+msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
+msgstr "list, show, send, delete, sync 하위 명령을 구현하십시오. 비워 두면 mu300-sms를 자동으로 찾습니다."
+
+msgid "SMS pool directory"
+msgstr "SMS 풀 디렉터리"
+
+msgid "Cellular logical interface"
+msgstr "셀룰러 논리 인터페이스"
+
+msgid "Cellular IPv6 interface"
+msgstr "셀룰러 IPv6 인터페이스"
+
+msgid "Cellular network device"
+msgstr "셀룰러 네트워크 장치"
+
+msgid "Leave blank to detect from netifd"
+msgstr "비워 두면 netifd에서 감지"
+
+msgid "LAN bridge"
+msgstr "LAN 브리지"
+
+msgid "Wi-Fi device"
+msgstr "Wi-Fi 장치"
+
+msgid "USB device"
+msgstr "USB 장치"
+
+msgid "Maximum wait for AT readiness (seconds)"
+msgstr "AT 준비 최대 대기 시간 (초)"
+
+msgid "Home dashboard refresh interval (seconds)"
+msgstr "홈 대시보드 새로 고침 간격 (초)"
+
+msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
+msgstr "홈 대시보드의 새로 고침 빈도만 제어합니다. 0.5–60초. 저장 후 홈을 다시 열면 적용됩니다."
+
+msgid "Persistent state directory"
+msgstr "영구 상태 디렉터리"
+
+msgid "Recipient: number, e.g. 10086 or +86..."
+msgstr "수신자: 번호 (예: 10086 또는 +86...)"
+
+msgid "Sync from SIM"
+msgstr "SIM에서 동기화"
+
+msgid "Clear local pool"
+msgstr "로컬 풀 비우기"
+
+msgid "Loading…"
+msgstr "불러오는 중…"
+
+msgid "Select a conversation on the left, or enter a number below to send."
+msgstr "왼쪽에서 대화를 선택하거나 아래에 번호를 입력하여 보내십시오."
+
+msgid "Message (Enter to send, Shift+Enter for newline)"
+msgstr "메시지 (Enter로 전송, Shift+Enter로 줄바꿈)"
+
+msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
+msgstr "전송에는 AT+CMGS(PDU 모드)를 사용합니다. 채널이 사용 중이면 다시 시도하십시오. 메시지 하나를 삭제하려면 말풍선의 휴지통 아이콘을 사용하십시오."
+
+msgid "Syncing from the SIM in the background (AT+CMGL)…"
+msgstr "백그라운드에서 SIM 동기화 중 (AT+CMGL)…"
+
+msgid "SIM sync started; the list refreshes in a few seconds."
+msgstr "SIM 동기화가 시작되었습니다. 몇 초 후 목록이 새로 고쳐집니다."
+
+msgid "Clear local SMS pool"
+msgstr "로컬 SMS 풀 비우기"
+
+msgid "Only local files will be deleted; messages on the SIM remain."
+msgstr "로컬 파일만 삭제되며, SIM의 메시지는 유지됩니다."
+
+msgid "Clear"
+msgstr "비우기"
+
+msgid "Delete this SMS"
+msgstr "이 SMS 삭제"
+
+msgid "Deletion cannot be undone."
+msgstr "삭제한 내용은 되돌릴 수 없습니다."
+
+msgid "Local only"
+msgstr "로컬만"
+
+msgid "Local + SIM"
+msgstr "로컬 + SIM"
+
+msgid "Delete failed"
+msgstr "삭제 실패"
+
+msgid "Deleted (local + SIM)"
+msgstr "삭제됨 (로컬 + SIM)"
+
+msgid "Deleted (local only)"
+msgstr "삭제됨 (로컬만)"
+
+msgid "Enter both a number and a message."
+msgstr "번호와 메시지를 모두 입력하십시오."
+
+msgid "Sending…"
+msgstr "전송 중…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "전송됨. 곧 목록이 새로 고쳐집니다."
+
+msgid "Sending failed"
+msgstr "전송 실패"
+
+msgid "· %d messages, %d unread · %d conversations"
+msgstr "· 메시지 %d개, 읽지 않음 %d개 · 대화 %d개"
+
+msgid "· %d messages · %d conversations"
+msgstr "· 메시지 %d개 · 대화 %d개"
+
+msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
+msgstr "풀이 비어 있습니다. 받은 메시지와 보낸 메시지가 여기에 표시됩니다. 또는 “SIM에서 동기화”를 선택하십시오."
+
+msgid "Me: %s"
+msgstr "나: %s"
+
+msgid "Delete"
+msgstr "삭제"
+
+msgid "Dashboard info failed"
+msgstr "대시보드 정보를 가져오지 못함"
+
+msgid "Applying network locks: no live signal right now"
+msgstr "네트워크 잠금 적용 중: 현재 실시간 신호 없음"
+
+msgid "Live signal read failed"
+msgstr "실시간 신호를 읽지 못함"
+
+msgid "Unknown op"
+msgstr "알 수 없는 작업"
+
+msgid "Invalid argument for this op"
+msgstr "이 작업의 인수가 잘못되었습니다"
+
+msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
+msgstr "무선이 사용 중입니다. 다이얼 또는 워치독이 전환하는 중이니 잠시 후 다시 시도하십시오"
+
+msgid "The action gave no valid reply"
+msgstr "작업에서 유효한 응답이 없습니다"
+
+msgid "An AT command is one line of printable ASCII, at most 512 characters"
+msgstr "AT 명령은 출력 가능한 ASCII 한 줄이며, 최대 512자입니다"
+
+msgid "Must be an AT command"
+msgstr "AT 명령이어야 합니다"
+
+msgid "No \";\" command chaining"
+msgstr "\";\"로 명령을 연결할 수 없습니다"
+
+msgid "Denied: this command wedges the AT port until a reboot"
+msgstr "거부됨: 이 명령은 재부팅할 때까지 AT 포트를 멈추게 합니다"
+
+msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
+msgstr "네트워크 잠금 적용 중: 모뎀이 재시작 중입니다 (약 30초). 잠시 후 다시 시도하십시오"
+
+msgid "The AT channel is busy; the command was not sent, try again"
+msgstr "AT 채널이 사용 중입니다. 명령이 전송되지 않았으니 다시 시도하십시오"
+
+msgid "The modem did not answer in time; the command may still run, check before sending it again"
+msgstr "모뎀이 제시간에 응답하지 않았습니다. 명령이 아직 실행 중일 수 있으니 다시 보내기 전에 확인하십시오"
+
+msgid "The fresh parameter must be 0 or 1"
+msgstr "fresh 매개변수는 0 또는 1이어야 합니다"
+
+msgid "Lock read failed"
+msgstr "잠금 상태를 읽지 못함"
+
+msgid "Unknown lock kind"
+msgstr "알 수 없는 잠금 종류"
+
+msgid "Invalid value for this lock kind"
+msgstr "이 잠금 종류에 대해 잘못된 값입니다"
+
+msgid "Invalid page"
+msgstr "잘못된 페이지"
+
+msgid "mu300-sms is not available (the SMS service is not installed or not running)"
+msgstr "mu300-sms를 사용할 수 없습니다 (SMS 서비스가 설치되지 않았거나 실행 중이 아님)"
+
+msgid "No output"
+msgstr "출력 없음"
+
+msgid "Bad ID"
+msgstr "잘못된 ID"
+
+msgid "Read failed"
+msgstr "읽기 실패"
+
+msgid "The number may only contain digits (and a leading +)"
+msgstr "번호에는 숫자(와 맨 앞의 +)만 사용할 수 있습니다"
+
+msgid "The message is empty"
+msgstr "메시지가 비어 있습니다"
+
+msgid "The message is too long (over 480 characters)"
+msgstr "메시지가 너무 깁니다 (480자 초과)"
+
+msgid "The message contains a control character"
+msgstr "메시지에 제어 문자가 포함되어 있습니다"
+
+msgid "The sim parameter must be 0 or 1"
+msgstr "sim 매개변수는 0 또는 1이어야 합니다"
+
+msgid "The USB adapter (device-usb) gave no valid reply"
+msgstr "USB 어댑터(device-usb)에서 유효한 응답이 없습니다"
+
+msgid "The auto parameter must be 0 or 1"
+msgstr "auto 매개변수는 0 또는 1이어야 합니다"
+
+msgid "Invalid USB role"
+msgstr "잘못된 USB 역할"
+
+msgid "A USB role takes no scope"
+msgstr "USB 역할에는 적용 범위를 지정할 수 없습니다"
+
+msgid "Invalid USB network mode"
+msgstr "잘못된 USB 네트워크 모드"
+
+msgid "Invalid USB network scope"
+msgstr "잘못된 USB 네트워크 적용 범위"
+
+msgid "Unknown USB setting"
+msgstr "알 수 없는 USB 설정"
+
+msgid "Invalid interface name"
+msgstr "잘못된 인터페이스 이름"
+
+msgid "The languages adapter gave no valid reply"
+msgstr "언어 어댑터에서 유효한 응답이 없습니다"
+
+msgid "Unknown language operation"
+msgstr "알 수 없는 언어 작업"
+
+msgid "Invalid language code"
+msgstr "잘못된 언어 코드"
+
+msgid "Invalid language request"
+msgstr "잘못된 언어 요청"
+
+msgid "Unknown source"
+msgstr "알 수 없는 소스"
+
+msgid "Request too large"
+msgstr "요청이 너무 큽니다"
+
+msgid "The runtime directory is not safe; nothing was run"
+msgstr "런타임 디렉터리가 안전하지 않아 아무것도 실행하지 않았습니다"
+
+msgid "No such method"
+msgstr "해당 메서드가 없습니다"
+
+msgid "Radio did not come up"
+msgstr "무선을 켜지 못했습니다"
+
+msgid "Expected on or off"
+msgstr "on 또는 off여야 합니다"
+
+msgid "VPN integration is not provided by this platform"
+msgstr "이 플랫폼은 VPN 통합을 제공하지 않습니다"
+
+msgid "Dual-boot integration is not provided by this platform"
+msgstr "이 플랫폼은 듀얼 부팅 통합을 제공하지 않습니다"
+
+msgid "mu300-next-boot failed"
+msgstr "mu300-next-boot 실패"
+
+msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
+msgstr "AT 백엔드가 응답하지 않았습니다 (무선 꺼짐, 모뎀 재시작 중 또는 어댑터 사용 불가)"
+
+msgid "USB role adapter is not executable"
+msgstr "USB 역할 어댑터를 실행할 수 없습니다"
+
+msgid "USB role adapter failed"
+msgstr "USB 역할 어댑터 실패"
+
+msgid "USB role switch is unavailable"
+msgstr "USB 역할 전환을 사용할 수 없습니다"
+
+msgid "USB role switch failed"
+msgstr "USB 역할 전환 실패"
+
+msgid "USB role switch was refused by platform safety checks"
+msgstr "플랫폼 안전 검사에 의해 USB 역할 전환이 거부되었습니다"
+
+msgid "Cannot create USB boot settings directory"
+msgstr "USB 부팅 설정 디렉터리를 만들 수 없습니다"
+
+msgid "Cannot write USB boot settings"
+msgstr "USB 부팅 설정을 쓸 수 없습니다"
+
+msgid "Cannot save USB boot settings"
+msgstr "USB 부팅 설정을 저장할 수 없습니다"
+
+msgid "Invalid boot-auto value"
+msgstr "잘못된 boot-auto 값"
+
+msgid "Device is the boot default; host auto-apply is the only persistent role"
+msgstr "부팅 기본값은 장치 모드이며, 영구 적용되는 역할은 호스트 자동 적용뿐입니다"
+
+msgid "Cannot save USB role policy"
+msgstr "USB 역할 정책을 저장할 수 없습니다"
+
+msgid "Cannot disable USB network boot policy"
+msgstr "USB 네트워크 부팅 정책을 끌 수 없습니다"
+
+msgid "Cannot commit USB role policy"
+msgstr "USB 역할 정책을 커밋할 수 없습니다"
+
+msgid "USB network mode is unavailable in host role"
+msgstr "호스트 역할에서는 USB 네트워크 모드를 사용할 수 없습니다"
+
+msgid "Disable host boot-auto before configuring USB network"
+msgstr "USB 네트워크를 설정하기 전에 호스트 boot-auto를 끄십시오"
+
+msgid "Cannot save USB network policy"
+msgstr "USB 네트워크 정책을 저장할 수 없습니다"
+
+msgid "Cannot commit USB network policy"
+msgstr "USB 네트워크 정책을 커밋할 수 없습니다"
+
+msgid "USB host mode is required"
+msgstr "USB 호스트 모드가 필요합니다"
+
+msgid "Not a USB network interface"
+msgstr "USB 네트워크 인터페이스가 아닙니다"
+
+msgid "LAN bridge device section was not found"
+msgstr "LAN 브리지 장치 섹션을 찾을 수 없습니다"
+
+msgid "Cannot bring USB network interface up"
+msgstr "USB 네트워크 인터페이스를 활성화할 수 없습니다"
+
+msgid "Cannot add interface to LAN bridge"
+msgstr "인터페이스를 LAN 브리지에 추가할 수 없습니다"
+
+msgid "Cannot save LAN bridge"
+msgstr "LAN 브리지를 저장할 수 없습니다"
+
+msgid "Network reload failed"
+msgstr "네트워크 다시 불러오기 실패"
+
+msgid "Cannot attach USB interface to LAN bridge"
+msgstr "USB 인터페이스를 LAN 브리지에 연결할 수 없습니다"
+
+msgid "The language pack is not installed"
+msgstr "언어 팩이 설치되어 있지 않습니다"
+
+msgid "No language given"
+msgstr "언어가 지정되지 않았습니다"
+
+msgid "The language could not be changed"
+msgstr "언어를 변경할 수 없습니다"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI에서 이 언어를 제공하지 않습니다"
+
+msgid "No uploaded language pack"
+msgstr "업로드된 언어 팩이 없습니다"
+
+msgid "An installation is already running"
+msgstr "이미 설치가 진행 중입니다"
+
+msgid "The language pack could not be removed"
+msgstr "언어 팩을 제거할 수 없습니다"
+
+msgid "Lock cache unavailable"
+msgstr "잠금 캐시를 사용할 수 없습니다"
+
+msgid "No serving cell to lock to"
+msgstr "잠글 서빙 셀이 없습니다"

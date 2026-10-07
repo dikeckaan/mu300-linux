@@ -21,7 +21,8 @@ class Vpn(ShellTest):
         (self.root / 'run/mu300').mkdir(parents=True)
         self.brlan = None
         self.stub('ip', 'if [ "$*" = "-4 -o addr show br-lan" ] && [ -s "$STUBLOG/br-lan" ]; then '
-                        'echo "5: br-lan    inet $(cat "$STUBLOG/br-lan") brd x scope global br-lan"; fi')
+                        'echo "5: br-lan    inet $(cat "$STUBLOG/br-lan") brd x scope global br-lan"; fi; '
+                        '[ "$1 $2" != "rule del" ]')
 
     def vpn(self, shell, code, conf='', device='f50', brlan=None):
         self.conf.write_text(conf)
@@ -135,7 +136,7 @@ class Engines(ShellTest):
         self.opt = self.tmp / 'opt'
         (self.opt / 'bin').mkdir(parents=True)
         self.extra = self.disk / 'extra/vpn/bin'
-        self.stub('ip', 'exit 0')
+        self.stub('ip', '[ "$1 $2" = "rule del" ] && exit 2; exit 0')
         self.stub('nft', '[ "$1" = -f ] && cat >> "$STUBLOG/nft"; echo "--- $*" >> "$STUBLOG/nft"')
 
     def put(self, d, names):
@@ -248,7 +249,7 @@ class KillSwitch(ShellTest):
         self.extra = self.disk / 'extra/vpn/bin'
         self.ev = self.tmp / 'events'
         self.state = self.tmp / 'nft.state'
-        self.stub('ip', 'exit 0')
+        self.stub('ip', '[ "$1 $2" = "rule del" ] && exit 2; exit 0')
         # the ruleset in force: an nft -f transaction replaces it whole; a lone delete of the table empties it
         self.stub('nft', 'case "$1" in\n'
                          '  -f) r=$(cat); printf "%s\\n" "$r" > "$STUBLOG/nft.state.new"; mv "$STUBLOG/nft.state.new" "$STUBLOG/nft.state"\n'
@@ -606,6 +607,202 @@ class KillSwitch(ShellTest):
             if time.monotonic() > end:
                 self.fail(f'{path.name} did not appear: {self.events()}')
             time.sleep(0.05)
+
+
+class Tailscale(ShellTest):
+    """Tailscale's own packets (fwmark 0x80000/0xff0000, its rule 5210 sends them to main) go into the tunnel's
+    table while it is up: rule 5200, with 5199 keeping the LAN direct; with both engines, never doubled, gone with
+    the routes, and not at all with TAILSCALE=0. The ip stub keeps the rules in force, as the kernel lists them."""
+
+    URI = 'vless://11111111-2222-3333-4444-555555555555@vpn.example.com:443?security=tls&type=tcp'
+    TS = 'fwmark 0x80000/0xff0000'
+
+    def setUp(self):
+        super().setUp()
+        self.conf = self.tmp / 'vpn.conf'
+        self.disk = self.tmp / 'disk'
+        self.rules = self.tmp / 'rules'
+        # ip rule add pref N ...: kept; ip rule del pref N: one of them, or fails; ip rule show: sorted by pref
+        self.stub('ip', 'r="$STUBLOG/rules"; touch "$r"\n'
+                        'case "$1 $2" in\n'
+                        '  "rule add") shift 2; [ "$1" = pref ] || exit 2; grep -qxF "$*" "$r" && exit 2\n'
+                        '      [ -e "$STUBLOG/fail-$2" ] && exit 2; echo "$*" >> "$r" ;;\n'
+                        '  "rule del") [ "$3" = pref ] || exit 2\n'
+                        '      awk -v p="$4" \'!d && $2 == p {d = 1; next} {print} END {exit !d}\' "$r" > "$r.new" || { rm -f "$r.new"; exit 2; }\n'
+                        '      mv "$r.new" "$r" ;;\n'
+                        '  "rule show") sort -s -n -k2,2 "$r" | sed "s/^pref \\([0-9]*\\) /\\1: /" ;;\n'
+                        '  "link show") [ -e "$STUBLOG/tun" ]; exit ;;\n'
+                        'esac\nexit 0')
+        self.stub('nft', '[ "$1" = -f ] && cat > /dev/null; exit 0')
+        self.stub('pgrep', 'exit 1')
+        (self.tmp / 'engine').write_text('#!/bin/sh\n[ "$1" = run ] && ip rule show > "$STUBLOG/at-exec"\nexit 0\n')
+
+    def engines(self):
+        d = self.disk / 'extra/vpn/bin'
+        d.mkdir(parents=True, exist_ok=True)
+        for n in ('xray', 'hev-socks5-tunnel', 'sing-box'):
+            shutil.copy(self.tmp / 'engine', d / n)
+            (d / n).chmod(0o755)
+
+    def envs(self, **extra):
+        e = dict(MU300_VPN_CONF=self.conf, MU300_VPN_RUN=self.tmp / 'run-vpn', MU300_BIN=BIN,
+                 MU300_LAN_CONF=self.tmp / 'no-lan.conf', MU300_OPT=self.tmp / 'opt', MU300_DISK=self.disk,
+                 MU300_EXTRA_CMD=self.stubs / 'extra')
+        e.update(extra)
+        return e
+
+    def conf_text(self, engine, extra=''):
+        return f"ENABLE=1\nENGINE={engine}\nKILL_SWITCH=0\nLAN_CIDRS=10.9.0.0/16\nVLESS_URI='{self.URI}'\n{extra}"
+
+    def lib(self, shell, code, conf):
+        self.conf.write_text(conf)
+        (self.tmp / 'run-vpn').mkdir(exist_ok=True)
+        (self.tmp / 'run-vpn' / 'server-ip').write_text('203.0.113.9\n')
+        return self.sh(shell, f'. "{BIN}/mu300-vpn"; {code}', **self.envs(MU300_LIB=1))
+
+    def shown(self):
+        return (self.rules.read_text() if self.rules.exists() else '').splitlines()
+
+    def tailscaled(self):
+        """the rules tailscaled itself has in place (they are not ours to touch)"""
+        self.rules.write_text(self.TAILSCALED)
+
+    TAILSCALED = ('pref 5210 fwmark 0x80000/0xff0000 lookup main\n'
+                  'pref 5230 fwmark 0x80000/0xff0000 lookup default\n'
+                  'pref 5250 fwmark 0x80000/0xff0000 unreachable\n'
+                  'pref 5270 lookup 52\n')
+
+    def ours(self, lines=None):
+        return [l for l in (self.shown() if lines is None else lines) if l.split()[1] in ('5198', '5199', '5200')]
+
+    def assertThrough(self, lines, table='2022'):
+        ordered = sorted(lines, key=lambda l: int(l.split()[1]))
+        self.assertEqual(self.ours(ordered), [
+            'pref 5198 fwmark 0x2d0 lookup main',
+            # LAN_CIDRS, the device's own LAN (an F50's default here) and the private ranges, each once
+            f'pref 5199 {self.TS} to 10.9.0.0/16 lookup main',
+            f'pref 5199 {self.TS} to 192.168.77.0/24 lookup main',
+            f'pref 5199 {self.TS} to 10.0.0.0/8 lookup main',
+            f'pref 5199 {self.TS} to 172.16.0.0/12 lookup main',
+            f'pref 5199 {self.TS} to 192.168.0.0/16 lookup main',
+            f'pref 5200 {self.TS} lookup {table}'], lines)
+        # all before tailscaled's own, which are still there
+        self.assertEqual(ordered[len(self.ours(lines)):len(self.ours(lines)) + 4], self.TAILSCALED.splitlines())
+
+    def assertGone(self):
+        self.assertEqual(self.ours(), [])
+        self.assertEqual([l for l in self.shown() if l.split()[1] < '9000'], self.TAILSCALED.splitlines())
+
+    def test_xray_routes_up_and_down(self):
+        for shell in self.each_shell():
+            self.tailscaled()
+            r = self.lib(shell, 'xray_routes_up', self.conf_text('xray'))
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertThrough(self.shown())
+            self.assertIn('pref 9010 lookup 2022', self.shown())
+            # a restart (run_xray: down, then up), and up again: never doubled, never refused
+            r = self.lib(shell, 'xray_routes_down; xray_routes_up; tailscale_up', self.conf_text('xray'))
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertNotIn('could not', r.stderr)
+            self.assertThrough(self.shown())
+            r = self.lib(shell, 'xray_routes_down', self.conf_text('xray'))
+            self.assertEqual(r.returncode, 0, r.stderr)
+            # gone with the routes; tailscaled's own rules stay
+            self.assertGone()
+            self.assertNotIn('pref 9010 lookup 2022', self.shown())
+
+    def test_sing_box_has_it_when_it_starts(self):
+        for shell in self.each_shell():
+            for ks in ('0', '1'):
+                self.tailscaled()
+                self.engines()
+                for _ in range(3):
+                    self.conf.write_text(self.conf_text('sing-box').replace('KILL_SWITCH=0', f'KILL_SWITCH={ks}'))
+                    r = self.script(shell, BIN / 'mu300-vpn', 'run', **self.envs())
+                    self.assertEqual(r.returncode, 0, r.stderr)
+                    # in place when sing-box is exec'd, once, whatever ran before
+                    at = (self.tmp / 'at-exec').read_text()
+                    self.assertThrough([re.sub(r'^(\d+): ', r'pref \1 ', l) for l in at.splitlines()])
+                    self.assertLess(at.index('5200:'), at.index('5210:'))
+                # mu300-vpn off (nothing running, no tun): taken away with sing-box's leftovers
+                r = self.script(shell, BIN / 'mu300-vpn', 'off', **self.envs())
+                self.assertEqual(r.returncode, 0, r.stderr)
+                self.assertGone()
+
+    def test_each_network_once(self):
+        for shell in self.each_shell():
+            self.tailscaled()
+            conf = self.conf_text('xray').replace('LAN_CIDRS=10.9.0.0/16',
+                                                  'LAN_CIDRS=10.9.0.0/16,192.168.0.0/16,10.9.0.0/16,fd00::/8')
+            r = self.lib(shell, 'tailscale_up', conf)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertNotIn('could not', r.stderr)
+            got = self.ours()
+            self.assertEqual(len(got), len(set(got)))
+            self.assertEqual(sorted(got), sorted(['pref 5198 fwmark 0x2d0 lookup main'] + [
+                f'pref 5199 {self.TS} to {n} lookup main' for n in
+                ('10.9.0.0/16', '192.168.0.0/16', '192.168.77.0/24', '10.0.0.0/8', '172.16.0.0/12')] + [
+                f'pref 5200 {self.TS} lookup 2022']))
+
+    def test_tailscale_0_leaves_it_alone(self):
+        for shell in self.each_shell():
+            self.tailscaled()
+            r = self.lib(shell, 'xray_routes_up', self.conf_text('xray', 'TAILSCALE=0\n'))
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertGone()
+            self.assertIn('pref 9010 lookup 2022', self.shown())
+            # rules left by a start before TAILSCALE=0 was set go with the next start (sing-box too)
+            self.lib(shell, 'tailscale_up', self.conf_text('xray'))
+            self.assertEqual(len(self.ours()), 7)
+            self.engines()
+            self.conf.write_text(self.conf_text('sing-box', 'TAILSCALE=0\n'))
+            r = self.script(shell, BIN / 'mu300-vpn', 'run', **self.envs())
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertNotIn('520', (self.tmp / 'at-exec').read_text().replace('5210', '').replace('5250', ''))
+            self.assertGone()
+            # anything else is on
+            for v in ('1', 'yes', ''):
+                self.tailscaled()
+                self.lib(shell, 'xray_routes_up', self.conf_text('xray', f'TAILSCALE={v}\n'))
+                self.assertThrough(self.shown())
+
+    def test_a_disabled_vpn_takes_it_away(self):
+        for shell in self.each_shell():
+            self.tailscaled()
+            self.lib(shell, 'tailscale_up', self.conf_text('xray'))
+            self.conf.write_text(self.conf_text('xray').replace('ENABLE=1', 'ENABLE=0'))
+            r = self.script(shell, BIN / 'mu300-vpn', 'run', **self.envs())
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertGone()
+
+    def test_an_ip_that_cannot_does_not_stop_the_vpn(self):
+        for shell in self.each_shell():
+            for fail in ('5198', '5199', '5200'):
+                self.tailscaled()
+                (self.tmp / f'fail-{fail}').write_text('')
+                r = self.lib(shell, 'tailscale_up; echo still-here', self.conf_text('xray'))
+                (self.tmp / f'fail-{fail}').unlink()
+                self.assertIn('still-here', r.stdout)
+                self.assertIn('could not route Tailscale', r.stderr)
+                # nothing half done
+                self.assertGone()
+
+    def test_the_kill_switch_opens_nothing_for_it(self):
+        # its packets on an uplink are dropped like any other unmarked ones: only the engine's mark is let out
+        for shell in self.each_shell():
+            self.stub('nft', '[ "$1" = -f ] && cat >> "$STUBLOG/nft"; exit 0')
+            (self.tmp / 'nft').unlink(missing_ok=True)
+            self.tailscaled()
+            r = self.lib(shell, 'killswitch_on; killswitch_fetch; xray_routes_up', self.conf_text('xray'))
+            self.assertEqual(r.returncode, 0, r.stderr)
+            ruleset = (self.tmp / 'nft').read_text()
+            self.assertNotIn('0x80000', ruleset)
+            self.assertEqual(set(re.findall(r'meta mark (\S+) accept', ruleset)), {'0x2d0'})
+            # and sing-box's "direct" (which leaves with that mark) never sees its private destinations: those go
+            # to main before the tunnel's table, and are dropped there on an uplink
+            r = self.lib(shell, 'tailscale_up', self.conf_text('sing-box'))
+            for net in ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'):
+                self.assertIn(f'pref 5199 {self.TS} to {net} lookup main', self.shown())
 
 
 if __name__ == '__main__':

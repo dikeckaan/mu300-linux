@@ -11,6 +11,9 @@ ENGINE=xray
 # It needs sing-box: with ENGINE=xray, sing-box runs instead (and without sing-box the kill switch stays up and
 # nothing goes out). Missing engines are downloaded through it: only the device, only to the release hosts.
 KILL_SWITCH=0
+# 1: Tailscale on the device connects through the tunnel too (its own WireGuard/DERP traffic, which it otherwise
+# sends straight to the carrier); 0: it goes out directly, as without the VPN (and the kill switch then drops it)
+TAILSCALE=1
 # DNS for the device and its clients, resolved through the tunnel
 REMOTE_DNS=1.1.1.1
 # sing-box only: used to look up the VPN server's own name (sent directly, outside the tunnel)

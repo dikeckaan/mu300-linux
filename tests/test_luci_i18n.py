@@ -99,6 +99,7 @@ class Catalogs(unittest.TestCase):
         # installers' i18n data is not (a copy of the tool, the app and two such files in a scratch repository)
         repo = self.tmp / 'repo'
         shutil.copytree(APP, repo / 'openwrt' / 'luci-app-mu300')
+        shutil.copy(TOP / 'openwrt' / 'luci-languages.tsv', repo / 'openwrt' / 'luci-languages.tsv')
         (repo / 'tools').mkdir()
         for name in ('luci-i18n.py', 'po2lmo.py'):
             shutil.copy(TOP / 'tools' / name, repo / 'tools' / name)
@@ -120,6 +121,42 @@ class Catalogs(unittest.TestCase):
     def test_minimal_app_is_clean(self):
         r = run('check', '--root', str(self.mini()))
         self.assertEqual((r.returncode, r.stdout), (0, ''), r.stderr)
+
+    def test_every_catalog_is_checked(self):
+        # a third language is held to the same rules as tr and zh_Hans; CJK is fine in any catalog; a catalog
+        # directory the language table does not know is an error (the build could not name its .lmo)
+        root = self.mini()
+        (root / 'po' / 'ja').mkdir()
+        (root / 'po' / 'ja' / 'mu300.po').write_text(
+            po('ja', [(po_str(m), po_str(m.replace('messages', 'x') + ' ' + CJK)) for m in MESSAGES[1:]]),
+            encoding='utf-8')
+        (root / 'po' / 'xx').mkdir()
+        (root / 'po' / 'xx' / 'mu300.po').write_text(
+            po('xx', [(po_str(m), po_str(m.replace('messages', 'x') + ' X')) for m in MESSAGES]), encoding='utf-8')
+        r = run('check', '--root', str(root))
+        self.assertEqual(r.returncode, 1)
+        lines = r.stdout.splitlines()
+        self.assertEqual(len(lines), 2, lines)
+        self.assertTrue(lines[0].startswith('missing: po/ja/mu300.po:0: "Dashboard" (used at '), lines)
+        self.assertEqual(lines[1], 'language: po/xx/mu300.po:0: po/xx has no row in openwrt/luci-languages.tsv')
+        # update keeps every catalog, the third one included
+        run('update', '--root', str(root))
+        self.assertIn('msgid "Dashboard"', (root / 'po' / 'ja' / 'mu300.po').read_text(encoding='utf-8'))
+
+    def test_language_table(self):
+        # one row per catalog of the app; codes as LuCI names its .lmo files; no row for English (the source)
+        rows = [l.split('\t') for l in (TOP / 'openwrt' / 'luci-languages.tsv').read_text(encoding='utf-8')
+                .splitlines() if l and not l.startswith('#')]
+        self.assertTrue(all(len(r) == 3 for r in rows), rows)
+        dirs = [r[0] for r in rows]
+        self.assertEqual(len(dirs), len(set(dirs)))
+        self.assertNotIn('en', dirs)
+        for d, code, name in rows:
+            self.assertRegex(code, r'^[a-z]{2,3}(-[a-z]{2})?$', d)
+            self.assertRegex(name, r'^[^\t"\'\\$`]+ \([A-Z][A-Za-z ]+\)$', d)
+        cats = sorted(p.parent.name for p in (APP / 'po').glob('*/mu300.po'))
+        self.assertTrue(set(cats) <= set(dirs), set(cats) - set(dirs))
+        self.assertGreaterEqual(len(cats), 25, 'the panel speaks at least the 23 languages asked for, tr and zh')
 
     def test_update_adds_missing_and_removes_stale_in_order_of_first_use(self):
         root = self.mini()
@@ -366,15 +403,15 @@ if (selected !== true) throw Error('the Bootstrap token bridge must survive the 
         self.assertFalse((APP / 'po' / 'en').exists(), 'English is the source: no po/en catalog')
 
     def test_build_requires_the_chinese_catalog(self):
-        # once po/zh_Hans exists, the build stops when mu300.zh_Hans.lmo (installed as LuCI's mu300.zh-cn.lmo) was
+        # once po/zh_Hans exists, the build stops when mu300.zh-cn.lmo (LuCI's code for zh_Hans) was
         # not compiled from it: without it the panel is in English in a Chinese browser
         self.assertTrue((APP / 'po' / 'zh_Hans' / 'mu300.po').is_file())
-        self.assertTrue('[ -s "$CAT/mu300.zh_Hans.lmo" ] ||' in BUILD.read_text(encoding='utf-8'),
+        self.assertTrue('[ -s "$CAT/mu300.zh-cn.lmo" ] ||' in BUILD.read_text(encoding='utf-8'),
                         'build-rootfs.sh does not stop without the Chinese panel catalog')
 
 
 VIEWS = APP / 'htdocs/luci-static/resources/view/mu300'
-VIEW_NAMES = ('home', 'locks', 'sms', 'at', 'settings', 'device')
+VIEW_NAMES = ('home', 'locks', 'sms', 'at', 'settings', 'device', 'languages')
 CJK_RE = re.compile('[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]')
 
 
@@ -418,7 +455,8 @@ const setTimeout = (fn) => { timers.push(fn); return timers.length; };
 const clearTimeout = () => {};
 let rpcReply = {};
 const rpc = { declare: () => () => Promise.resolve(rpcReply) };
-const L = { resolveDefault: (p, d) => Promise.resolve(p).catch(() => d), env: {}, bind: (f, self) => f.bind(self) };
+const L = { resolveDefault: (p, d) => Promise.resolve(p).catch(() => d), env: {}, bind: (f, self) => f.bind(self),
+    url: (p) => '/cgi-bin/luci/' + p };
 const M = new Function('rpc', 'baseclass', '_', 'document', 'getComputedStyle', 'window', 'setTimeout', 'clearTimeout',
     fs.readFileSync(process.argv[2], 'utf8'))(rpc, { extend: (o) => o }, _, document, getComputedStyle, window,
     setTimeout, clearTimeout);
@@ -458,6 +496,13 @@ const notes = () => toasts.map((t) => t.lastChild.textContent);
             with self.subTest(view=name):
                 r = self.run_view(name, None, "return [ typeof V, typeof V.render ];")['result']
                 self.assertEqual(r, ['object', 'function'])
+
+    def test_the_languages_page_puts_backend_text_in_as_text(self):
+        # LuCI's E(tag, attrs, 'string') sets innerHTML; names, the release and the job's log come from the language
+        # pack (perhaps an uploaded one), so every value that is not a literal or a _() message goes in as [ value ]
+        src = (VIEWS / 'languages.js').read_text(encoding='utf-8')
+        self.assertEqual(re.findall(r"E\('\w+', \{[^}]*\}, (?!_\(|\[|')[A-Za-z][^\n]*", src), [])
+        self.assertNotIn('innerHTML', src)
 
     def test_the_translate_shims_are_gone(self):
         # translate/localize/localizeMenu did the fork's partial matching; the pages have only _() now, and
@@ -668,6 +713,19 @@ return { html: root.innerHTML, role: text('usb-role-now'), note: text('usb-net-n
 
     SETTINGS = '''
 return V.render();'''
+
+    # the Languages page without the pack (a failed install), with it (one running), and the replies of lang_set
+    LANGUAGES = '''
+V.render({ ok: 1, current: 'en', luci: [ { code: 'tr', name: 'T' } ], extra: { installed: 0 },
+           job: { state: 'failed', log: 'no verified file' } });
+V.paint({ ok: 1, current: 'de', luci: [], job: { state: 'running' }, extra: { installed: 1, release: 'v1',
+          languages: [ { code: 'de', name: 'Deutsch (German)', enabled: 1, panel: 1 },
+                       { code: 'ja', name: 'J', enabled: 0, panel: 0 } ] } });
+rpcReply = { ok: 0, error: 'Invalid language code' }; await V.set(null, 'enable', 'de'); await flush();
+rpcReply = { ok: 1, started: 1 }; await V.set(null, 'install', '', 'release'); await flush();
+rpcReply = { ok: 1, job: { state: 'done' }, extra: {} }; timers.splice(0).forEach((f) => f()); await flush(); await flush();
+rpcReply = { ok: 1 }; await V.set(null, 'disable', 'ja'); await flush();
+return notes();'''
 
     # a backend error on each page: (view, body returning what was shown, [(template, error, detail)]); the
     # page shows the error through the catalog, inside its template if any, and the detail after it as data

@@ -4,7 +4,8 @@
 #   upstream/make-bundle.sh OUT.tar.gz [KERNEL_BUNDLE_5.4]
 #     ./Image                LK-loadable kernel (wrap-image.py: LK copies it to 0x80080000)
 #     ./ramdisk-generic.lz4  boot/init, busybox, logdw and the modules of upstream/module-order.txt
-#     ./modules/*.ko         every module, for /lib/modules/<release> on the root filesystem
+#     ./modules/*.ko         every module - the kernel's own (=m) and the vendor ones - flat, for /lib/modules/<release>
+#                            on the root filesystem (Ubuntu: extra/, indexed by depmod; OpenWrt: flat, for kmodloader)
 #     ./kernel.release       the kernel's release string (uname -r)
 #     ./devices              the devices it runs on (f50 u30air)
 #     ./features             what it can do that older bundles could not (sdcard, linux-slot)
@@ -50,4 +51,4 @@ echo "f50 u30air" > "$W/b/devices"
 # from slot a as well, when Android is on b)
 printf 'sdcard\nlinux-slot\n' > "$W/b/features"
 tar -C "$W/b" -czf "$OUT" .
-echo "$OUT: kernel $krel, $(ls "$W/b/modules" | wc -l | tr -d ' ') modules, ramdisk segment $(wc -c < "$W/b/ramdisk-generic.lz4" | tr -d ' ') bytes"
+echo "$OUT: kernel $krel, $(ls "$W/b/modules" | wc -l | tr -d ' ') modules ($(du -sk "$W/b/modules" | cut -f1) KiB), ramdisk segment $(wc -c < "$W/b/ramdisk-generic.lz4" | tr -d ' ') bytes"

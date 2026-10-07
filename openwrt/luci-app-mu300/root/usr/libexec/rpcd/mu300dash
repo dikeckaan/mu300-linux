@@ -21,6 +21,7 @@
 #                     Reply includes the raw modem output; last 40 commands are kept
 #                     in the package runtime directory.
 #   at_history        that history, raw text.
+#   lang_get, lang_set  LuCI's languages and the lang extra (unisoc-modem/languages, mu300-extra)
 #
 # The AT terminal's whole wait is capped below the 30 s endpoint limit (AT_LOCK_WAIT
 # for the channel lock plus AT_BUDGET for the answer, mu300-at's MU300_AT_BUDGET),
@@ -473,6 +474,44 @@ m_usb_net_add() {
     reply_obj "$("$DASH/device-usb" net-add "$iface" 2>/dev/null)" 'The USB adapter (device-usb) gave no valid reply'
 }
 
+# ---------------------------------------------------------------- languages
+# LuCI's languages and the lang extra (the Languages page): the adapter does the work through mu300-extra
+LANGS=${MU300_LANGS_BIN:-$DASH/languages}
+m_lang_get() { reply_obj "$("$LANGS" get 2>/dev/null)" 'The languages adapter gave no valid reply'; }
+
+# op: enable|disable (codes: up to 64 language codes, or all), use (one code, en or auto), install (source: release
+# or file - never a path: the upload goes to the one path the ACL allows), remove
+m_lang_set() {
+    local op codes source c n out
+    inp '@.op'; op=$V
+    inp '@.codes'; codes=$V
+    inp '@.source'; source=$V
+    allowed "$op" '(enable|disable|use|install|remove)' || { refuse 'Unknown language operation'; return; }
+    case $op in
+        enable|disable|use)
+            allowed "$codes" '(all|en|auto|[a-z]{2,3}(_[a-z]{2})?( [a-z]{2,3}(_[a-z]{2})?){0,63})' ||
+                { refuse 'Invalid language code'; return; }
+            n=0; for c in $codes; do n=$((n + 1)); done
+            case $op:$codes in
+                use:all|enable:en|enable:auto|disable:en|disable:auto) refuse 'Invalid language code'; return ;;
+            esac
+            [ "$op" != use ] || [ "$n" = 1 ] || { refuse 'Invalid language code'; return; }
+            # all, en and auto go alone
+            case " $codes " in *" all "*|*" en "*|*" auto "*) [ "$n" = 1 ] || { refuse 'Invalid language code'; return; } ;; esac
+            [ -z "$source" ] || { refuse 'Invalid language request'; return; }
+            # shellcheck disable=SC2086 -- checked above: words of [a-z_] only
+            out=$("$LANGS" "$op" $codes 2>/dev/null) ;;
+        install)
+            allowed "$source" '(release|file)' || { refuse 'Unknown source'; return; }
+            [ -z "$codes" ] || { refuse 'Invalid language request'; return; }
+            out=$("$LANGS" install "$source" 2>/dev/null) ;;
+        remove)
+            [ -z "$codes$source" ] || { refuse 'Invalid language request'; return; }
+            out=$("$LANGS" remove 2>/dev/null) ;;
+    esac
+    reply_obj "$out" 'The languages adapter gave no valid reply'
+}
+
 do_list() {
     cat <<EOF
 {
@@ -492,7 +531,9 @@ do_list() {
 	"usb_get": { },
 	"usb_set": { "kind": "String", "value": "String", "scope": "String", "auto": "String" },
 	"usb_net_list": { },
-	"usb_net_add": { "iface": "String" }
+	"usb_net_add": { "iface": "String" },
+	"lang_get": { },
+	"lang_set": { "op": "String", "codes": "String", "source": "String" }
 }
 EOF
 }
@@ -542,6 +583,8 @@ call)
         usb_set)      run_m usb_set      m_usb_set ;;
         usb_net_list) run_m usb_net_list m_usb_net_list ;;
         usb_net_add)  run_m usb_net_add  m_usb_net_add ;;
+        lang_get)     run_m lang_get     m_lang_get ;;
+        lang_set)     run_m lang_set     m_lang_set ;;
         *)            refuse 'No such method' ;;
     esac
     ;;

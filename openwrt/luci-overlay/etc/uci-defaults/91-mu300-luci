@@ -24,12 +24,13 @@ uci commit dhcp
 # 'extend', which a user can pick by clearing it.
 [ "$(uci -q get luci.mu300.defaults)" = 1 ] && exit 0
 
-# Aurora is the LuCI theme (Bootstrap stays installed and selectable), and LuCI and the MU300 panel follow the
-# browser's language (English, Turkish or Chinese; any other language gets English). Runs after 90-mu300 and after
-# the themes' own uci-defaults, which would otherwise pick their own default.
+# Aurora is the LuCI theme (Bootstrap stays installed and selectable), and LuCI and the MU300 panel start in English
+# (90-mu300 set it already; System > System > Language and Style switches to Turkish, Chinese or a language of the
+# lang extra). Runs after 90-mu300 and after the themes' own uci-defaults, which would otherwise pick their own
+# default.
 uci -q batch <<UCI
 set luci.main.mediaurlbase='/luci-static/aurora'
-set luci.main.lang='auto'
+set luci.main.lang='en'
 UCI
 # IPv6 by RA relay with NAT66 (K30, spec D9; kanoqwq/clean-tf-7.2 cd4fb28): mu300cell's ipv6 'relay' on a
 # dual-stack context. Measured in the fork on China Telecom IoT, whose +CGCONTRDP only ever shows a placeholder v6

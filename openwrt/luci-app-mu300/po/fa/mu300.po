@@ -1,0 +1,1276 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fa\n"
+
+msgid "Status dashboard"
+msgstr "داشبورد وضعیت"
+
+msgid "Cellular"
+msgstr "سلولی"
+
+msgid "Network locks"
+msgstr "قفل‌های شبکه"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "AT terminal"
+msgstr "ترمینال AT"
+
+msgid "Adapter settings"
+msgstr "تنظیمات آداپتور"
+
+msgid "Device management"
+msgstr "مدیریت دستگاه"
+
+msgid "Languages"
+msgstr "زبان‌ها"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
+msgstr "مرکز کنترل MU300: داشبورد وضعیت، قفل‌های شبکه، ترمینال AT و SMS"
+
+msgid "China Mobile"
+msgstr "China Mobile"
+
+msgid "China Unicom"
+msgstr "China Unicom"
+
+msgid "China Telecom"
+msgstr "China Telecom"
+
+msgid "China Broadnet"
+msgstr "China Broadnet"
+
+msgid "China Tietong"
+msgstr "China Tietong"
+
+msgid "Excellent"
+msgstr "عالی"
+
+msgid "Good"
+msgstr "خوب"
+
+msgid "Fair"
+msgstr "متوسط"
+
+msgid "Poor"
+msgstr "ضعیف"
+
+msgid "Unknown"
+msgstr "نامشخص"
+
+msgid "%d d %d h"
+msgstr "%d روز %d ساعت"
+
+msgid "%d h %d min"
+msgstr "%d ساعت %d دقیقه"
+
+msgid "%d min"
+msgstr "%d دقیقه"
+
+msgid "No neighbor-cell data"
+msgstr "داده‌ای از سلول‌های همسایه نیست"
+
+msgid "Locked"
+msgstr "قفل‌شده"
+
+msgid "Lock"
+msgstr "قفل"
+
+msgid "Unknown error"
+msgstr "خطای نامشخص"
+
+msgid "Confirm"
+msgstr "تأیید"
+
+msgid "OK"
+msgstr "باشه"
+
+msgid "Cancel"
+msgstr "لغو"
+
+msgid "New SMS · %s"
+msgstr "SMS جدید · %s"
+
+msgid "Unknown number"
+msgstr "شمارهٔ نامشخص"
+
+msgid "Select"
+msgstr "انتخاب"
+
+msgid "Basic"
+msgstr "پایه"
+
+msgid "Registration/signal"
+msgstr "ثبت/سیگنال"
+
+msgid "Bearer"
+msgstr "حامل"
+
+msgid "Engineering mode"
+msgstr "حالت مهندسی"
+
+msgid "AT command (↑↓ history, Enter to send)"
+msgstr "دستور AT (↑↓ تاریخچه، Enter برای ارسال)"
+
+msgid "Send"
+msgstr "ارسال"
+
+msgid "Clear screen"
+msgstr "پاک کردن صفحه"
+
+msgid "Ready."
+msgstr "آماده."
+
+msgid "Session history (click to reuse)"
+msgstr "تاریخچهٔ نشست (برای استفادهٔ دوباره کلیک کنید)"
+
+msgid "(no output)"
+msgstr "(بدون خروجی)"
+
+msgid "Request failed"
+msgstr "درخواست ناموفق بود"
+
+msgid "(empty)"
+msgstr "(خالی)"
+
+msgid "USB role"
+msgstr "نقش USB"
+
+msgid "Current role"
+msgstr "نقش فعلی"
+
+msgid "Switch USB role"
+msgstr "تغییر نقش USB"
+
+msgid "Device mode"
+msgstr "حالت دستگاه"
+
+msgid "Host mode"
+msgstr "حالت میزبان"
+
+msgid "Enable host mode at boot"
+msgstr "فعال‌سازی حالت میزبان هنگام راه‌اندازی"
+
+msgid "Apply role"
+msgstr "اعمال نقش"
+
+msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
+msgstr "حالت میزبان، شبکهٔ USB و پورت سریال این درگاه را قطع می‌کند. F50 باتری ندارد؛ ممکن است دسترسی مدیریت از دست برود و آداپتور USB معمولاً به هاب برق‌دار نیاز دارد."
+
+msgid "USB network mode"
+msgstr "حالت شبکهٔ USB"
+
+msgid "Network protocol"
+msgstr "پروتکل شبکه"
+
+msgid "Apply duration"
+msgstr "مدت اعمال"
+
+msgid "Next reboot only"
+msgstr "فقط راه‌اندازی مجدد بعدی"
+
+msgid "Permanent"
+msgstr "دائمی"
+
+msgid "Enable selected protocol"
+msgstr "فعال‌سازی پروتکل انتخاب‌شده"
+
+msgid "Save; apply after reboot"
+msgstr "ذخیره؛ اعمال پس از راه‌اندازی مجدد"
+
+msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
+msgstr "NCM پیش‌فرض است. Windows به‌طور بومی از ECM پشتیبانی نمی‌کند؛ RNDIS نحوهٔ شناسایی دستگاه را تغییر می‌دهد. اگر «فعال‌سازی پروتکل انتخاب‌شده» خاموش باشد، فقط انتخاب شما ذخیره می‌شود. «فقط راه‌اندازی مجدد بعدی» یک بار اعمال می‌شود و سپس به NCM بازمی‌گردد."
+
+msgid "USB adapters"
+msgstr "آداپتورهای USB"
+
+msgid "Refresh"
+msgstr "تازه‌سازی"
+
+msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
+msgstr "فقط در حالت میزبان در دسترس است. «تازه‌سازی» آداپتورهای USB شناسایی‌شده را فعال می‌کند؛ افزودن به LAN پل را ذخیره و شبکه را دوباره بارگذاری می‌کند."
+
+msgid "Unavailable"
+msgstr "در دسترس نیست"
+
+msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
+msgstr "حالت شبکهٔ USB در حالت میزبان در دسترس نیست؛ راه‌اندازی خودکار میزبان، راه‌اندازی خودکار شبکهٔ USB را هم غیرفعال می‌کند."
+
+msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
+msgstr "حالت میزبان مدیریت از طریق USB را فوراً قطع می‌کند. F50 باتری ندارد و ممکن است دستگاه‌های جانبی به برق خارجی نیاز داشته باشند؛ مطمئن شوید راه مدیریتی دیگری وجود دارد."
+
+msgid "USB networking and serial will re-enumerate in device mode."
+msgstr "شبکهٔ USB و پورت سریال در حالت دستگاه دوباره شناسایی می‌شوند."
+
+msgid "Switch USB role?"
+msgstr "نقش USB تغییر کند؟"
+
+msgid "Apply"
+msgstr "اعمال"
+
+msgid "Switching USB role…"
+msgstr "در حال تغییر نقش USB…"
+
+msgid "Switch failed: %s"
+msgstr "تغییر ناموفق بود: %s"
+
+msgid "Management connection lost; reconnect to confirm the USB role."
+msgstr "اتصال مدیریت قطع شد؛ برای تأیید نقش USB دوباره وصل شوید."
+
+msgid "Switch request accepted; the USB connection may briefly disconnect."
+msgstr "درخواست تغییر پذیرفته شد؛ ممکن است اتصال USB برای مدت کوتاهی قطع شود."
+
+msgid "USB role applied"
+msgstr "نقش USB اعمال شد"
+
+msgid "Save USB network mode?"
+msgstr "حالت شبکهٔ USB ذخیره شود؟"
+
+msgid "The network mode applies on the next reboot; USB management may need to reconnect."
+msgstr "حالت شبکه در راه‌اندازی مجدد بعدی اعمال می‌شود؛ ممکن است لازم باشد مدیریت USB دوباره وصل شود."
+
+msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
+msgstr "فقط انتخاب ذخیره می‌شود؛ با غیرفعال بودن پروتکل انتخاب‌شده، راه‌اندازی بعدی همچنان از NCM پیش‌فرض استفاده می‌کند."
+
+msgid "Save"
+msgstr "ذخیره"
+
+msgid "Saving USB network settings…"
+msgstr "در حال ذخیرهٔ تنظیمات شبکهٔ USB…"
+
+msgid "Settings saved"
+msgstr "تنظیمات ذخیره شد"
+
+msgid "Save failed: %s"
+msgstr "ذخیره ناموفق بود: %s"
+
+msgid "Unable to confirm the role yet; reconnect and refresh the page."
+msgstr "هنوز امکان تأیید نقش نیست؛ دوباره وصل شوید و صفحه را تازه کنید."
+
+msgid "Switch to host mode to see USB adapters."
+msgstr "برای دیدن آداپتورهای USB به حالت میزبان بروید."
+
+msgid "Scanning USB adapters…"
+msgstr "در حال جست‌وجوی آداپتورهای USB…"
+
+msgid "No USB adapters found."
+msgstr "هیچ آداپتور USB یافت نشد."
+
+msgid "Link connected"
+msgstr "لینک وصل است"
+
+msgid "No link; enable attempted"
+msgstr "لینک نیست؛ تلاش برای فعال‌سازی انجام شد"
+
+msgid "Added to LAN"
+msgstr "به LAN افزوده شد"
+
+msgid "Add to LAN"
+msgstr "افزودن به LAN"
+
+msgid "Add USB adapter to LAN?"
+msgstr "آداپتور USB به LAN افزوده شود؟"
+
+msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
+msgstr "این کار پیکربندی پل را ذخیره و شبکه را دوباره بارگذاری می‌کند؛ ممکن است اتصال‌های موجود برای مدت کوتاهی قطع شوند."
+
+msgid "Add"
+msgstr "افزودن"
+
+msgid "Adding USB adapter…"
+msgstr "در حال افزودن آداپتور USB…"
+
+msgid "Add failed: %s"
+msgstr "افزودن ناموفق بود: %s"
+
+msgid "Modulation DL/UL"
+msgstr "مدولاسیون DL/UL"
+
+msgid "Estimated from current MCS"
+msgstr "برآورد از MCS فعلی"
+
+msgid "MCS DL/UL"
+msgstr "MCS DL/UL"
+
+msgid "BLER DL/UL"
+msgstr "BLER DL/UL"
+
+msgid "Link & traffic"
+msgstr "لینک و ترافیک"
+
+msgid "Download rate"
+msgstr "سرعت دانلود"
+
+msgid "Upload rate"
+msgstr "سرعت آپلود"
+
+msgid "Total received"
+msgstr "کل دریافتی"
+
+msgid "Total sent"
+msgstr "کل ارسالی"
+
+msgid "Session duration"
+msgstr "مدت نشست"
+
+msgid "Registration"
+msgstr "ثبت"
+
+msgid "Bandwidth"
+msgstr "پهنای باند"
+
+msgid "AMBR DL/UL"
+msgstr "AMBR DL/UL"
+
+msgid "Wi-Fi · LAN · Device · SIM"
+msgstr "Wi-Fi · LAN · دستگاه · SIM"
+
+msgid "CPU usage"
+msgstr "مصرف CPU"
+
+msgid "Memory"
+msgstr "حافظه"
+
+msgid "Storage"
+msgstr "فضای ذخیره‌سازی"
+
+msgid "Battery"
+msgstr "باتری"
+
+msgid "Channel"
+msgstr "کانال"
+
+msgid "Encryption"
+msgstr "رمزگذاری"
+
+msgid "Hidden SSID"
+msgstr "SSID پنهان"
+
+msgid "Country"
+msgstr "کشور"
+
+msgid "AP status"
+msgstr "وضعیت AP"
+
+msgid "USB network"
+msgstr "شبکهٔ USB"
+
+msgid "Connection tracking"
+msgstr "ردیابی اتصال‌ها"
+
+msgid "LAN address"
+msgstr "نشانی LAN"
+
+msgid "Wi-Fi clients"
+msgstr "کلاینت‌های Wi-Fi"
+
+msgid "DHCP leases"
+msgstr "اجاره‌های DHCP"
+
+msgid "Device model"
+msgstr "مدل دستگاه"
+
+msgid "System"
+msgstr "سیستم"
+
+msgid "Modem"
+msgstr "مودم"
+
+msgid "Carrier"
+msgstr "اپراتور"
+
+msgid "Module"
+msgstr "ماژول"
+
+msgid "Firmware"
+msgstr "فرم‌ویر"
+
+msgid "Show SIM identifiers"
+msgstr "نمایش شناسه‌های SIM"
+
+msgid "Quick controls"
+msgstr "کنترل‌های سریع"
+
+msgid "Data connection"
+msgstr "اتصال داده"
+
+msgid "Cellular radio"
+msgstr "رادیوی سلولی"
+
+msgid "Wi-Fi hotspot"
+msgstr "هات‌اسپات Wi-Fi"
+
+msgid "Restart modem"
+msgstr "راه‌اندازی مجدد مودم"
+
+msgid "Restart device"
+msgstr "راه‌اندازی مجدد دستگاه"
+
+msgid "Switch to Android"
+msgstr "رفتن به Android"
+
+msgid "Neighbor cells"
+msgstr "سلول‌های همسایه"
+
+msgid "RAT/Band"
+msgstr "RAT/باند"
+
+msgid "Frequency"
+msgstr "فرکانس"
+
+msgid "Running %s…"
+msgstr "در حال اجرای %s…"
+
+msgid "Started in background: %s"
+msgstr "در پس‌زمینه آغاز شد: %s"
+
+msgid "Done: %s"
+msgstr "انجام شد: %s"
+
+msgid "Failed: %s"
+msgstr "ناموفق: %s"
+
+msgid "Disconnecting data…"
+msgstr "در حال قطع داده…"
+
+msgid "Connecting data…"
+msgstr "در حال اتصال داده…"
+
+msgid "Turn off cellular radio"
+msgstr "خاموش کردن رادیوی سلولی"
+
+msgid "Cellular connectivity will be interrupted."
+msgstr "اتصال سلولی قطع خواهد شد."
+
+msgid "Turn on cellular radio"
+msgstr "روشن کردن رادیوی سلولی"
+
+msgid "The SFUN power-on sequence will run (up to about 1 minute)."
+msgstr "توالی روشن‌سازی SFUN اجرا می‌شود (تا حدود 1 دقیقه)."
+
+msgid "Cellular connectivity may stop for 1–2 minutes."
+msgstr "ممکن است اتصال سلولی 1–2 دقیقه متوقف شود."
+
+msgid "Restart the entire device"
+msgstr "راه‌اندازی مجدد کل دستگاه"
+
+msgid "All connections will be interrupted."
+msgstr "همهٔ اتصال‌ها قطع خواهند شد."
+
+msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
+msgstr "راه‌اندازی بعدی وارد Android می‌شود و دستگاه اکنون راه‌اندازی مجدد می‌شود. این صفحهٔ مدیریت و اشتراک‌گذاری اینترنت سلولی قطع می‌شوند."
+
+msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
+msgstr "برای بازگشت به OpenWrt، در Android دستور mu300-next-boot linux را اجرا و دستگاه را راه‌اندازی مجدد کنید."
+
+msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
+msgstr "یا کاری نکنید: پس از پنج راه‌اندازی ناتمام، به‌طور خودکار بازمی‌گردد."
+
+msgid "Switch and reboot"
+msgstr "تغییر و راه‌اندازی مجدد"
+
+msgid "Preparing Android boot and rebooting…"
+msgstr "در حال آماده‌سازی راه‌اندازی Android و راه‌اندازی مجدد…"
+
+msgid "Hide SIM identifiers"
+msgstr "پنهان کردن شناسه‌های SIM"
+
+msgid "Lock cell %s?"
+msgstr "سلول %s قفل شود؟"
+
+msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
+msgstr "پشتهٔ رادیو دوباره راه‌اندازی می‌شود (SFUN)؛ سرویس سلولی حدود 30 ثانیه متوقف می‌شود."
+
+msgid "Locking %s in the background, about 30 seconds"
+msgstr "در حال قفل کردن %s در پس‌زمینه، حدود 30 ثانیه"
+
+msgid "Locked %s in the background; the status will refresh shortly"
+msgstr "%s در پس‌زمینه قفل شد؛ وضعیت به‌زودی تازه می‌شود"
+
+msgid "Lock failed: %s"
+msgstr "قفل ناموفق بود: %s"
+
+msgid "Uptime %s"
+msgstr "زمان کارکرد %s"
+
+msgid "Radio off"
+msgstr "رادیو خاموش"
+
+msgid "No response"
+msgstr "بدون پاسخ"
+
+msgid "%s · Signal %s %s/10"
+msgstr "%s · سیگنال %s %s/10"
+
+msgid "%s · Signal %s"
+msgstr "%s · سیگنال %s"
+
+msgid "Anchor B%s"
+msgstr "لنگر B%s"
+
+msgid "No serving cell"
+msgstr "سلول سرویس‌دهنده‌ای نیست"
+
+msgid "Not registered"
+msgstr "ثبت نشده"
+
+msgid "Registered"
+msgstr "ثبت شده"
+
+msgid "Searching"
+msgstr "در حال جست‌وجو"
+
+msgid "Registration denied"
+msgstr "ثبت رد شد"
+
+msgid "Registered (roaming)"
+msgstr "ثبت شده (رومینگ)"
+
+msgid "Emergency only"
+msgstr "فقط اضطراری"
+
+msgid "Status %s"
+msgstr "وضعیت %s"
+
+msgid "LTE anchor"
+msgstr "لنگر LTE"
+
+msgid "LTE link"
+msgstr "لینک LTE"
+
+msgid "Hidden"
+msgstr "پنهان"
+
+msgid "No"
+msgstr "خیر"
+
+msgid "Running"
+msgstr "در حال اجرا"
+
+msgid "Not running"
+msgstr "در حال اجرا نیست"
+
+msgid "Connected"
+msgstr "متصل"
+
+msgid "Disconnected"
+msgstr "قطع"
+
+msgid "%s entries"
+msgstr "%s مورد"
+
+msgid "%s clients"
+msgstr "%s کلاینت"
+
+msgid "Recent DHCP leases"
+msgstr "اجاره‌های اخیر DHCP"
+
+msgid "%d h"
+msgstr "%d ساعت"
+
+msgid "Board"
+msgstr "برد"
+
+msgid "No temperature readings"
+msgstr "دمایی خوانده نشد"
+
+msgid "Cluster %d"
+msgstr "خوشهٔ %d"
+
+msgid "Total %s · free %s"
+msgstr "کل %s · آزاد %s"
+
+msgid "charging %s W"
+msgstr "در حال شارژ با %s وات"
+
+msgid "charging"
+msgstr "در حال شارژ"
+
+msgid "drawing %s W"
+msgstr "مصرف %s وات"
+
+msgid "not charging"
+msgstr "شارژ نمی‌شود"
+
+msgid "on battery"
+msgstr "با باتری"
+
+msgid "full"
+msgstr "پر"
+
+msgid "USB in %s W"
+msgstr "ورودی USB %s وات"
+
+msgid "Online"
+msgstr "آنلاین"
+
+msgid "AT adapter unavailable"
+msgstr "آداپتور AT در دسترس نیست"
+
+msgid "Saved"
+msgstr "ذخیره شد"
+
+msgid "Management connection lost"
+msgstr "اتصال مدیریت قطع شد"
+
+msgid "Installing the language pack…"
+msgstr "در حال نصب بستهٔ زبان…"
+
+msgid "The language pack is installed"
+msgstr "بستهٔ زبان نصب شد"
+
+msgid "The language pack could not be installed"
+msgstr "نصب بستهٔ زبان ممکن نشد"
+
+msgid "Upload failed: %s"
+msgstr "بارگذاری ناموفق بود: %s"
+
+msgid "Language of the browser"
+msgstr "زبان مرورگر"
+
+msgid "Language of the web interface"
+msgstr "زبان رابط وب"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "انگلیسی، ترکی و چینی همراه سیستم هستند؛ بستهٔ زبان بقیه را اضافه می‌کند."
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "همین تنظیم در سامانه > سامانه > زبان و سبک نیز وجود دارد."
+
+msgid "Language pack"
+msgstr "بستهٔ زبان"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "بستهٔ زبان (mu300-extra-lang.tar.gz، حدود 2 MB) حدود 40 زبان دیگر به LuCI و 29 زبان از آن‌ها را به این پنل اضافه می‌کند. آن را از نسخهٔ انتشار این سیستم دانلود کنید، یا اگر دستگاه اینترنت ندارد، فایل را از صفحهٔ انتشار بارگذاری کنید."
+
+msgid "Download from the release"
+msgstr "دانلود از نسخهٔ انتشار"
+
+msgid "Upload the file…"
+msgstr "بارگذاری فایل…"
+
+msgid "Release"
+msgstr "نسخهٔ انتشار"
+
+msgid "Enable all"
+msgstr "فعال‌سازی همه"
+
+msgid "Disable all"
+msgstr "غیرفعال‌سازی همه"
+
+msgid "Remove the language pack"
+msgstr "حذف بستهٔ زبان"
+
+msgid "Remove the language pack?"
+msgstr "بستهٔ زبان حذف شود؟"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "زبان‌های آن از فهرست حذف می‌شوند؛ صفحه‌ای که به یکی از آن‌ها باشد به انگلیسی تغییر می‌کند."
+
+msgid "Remove"
+msgstr "حذف"
+
+msgid "Disable"
+msgstr "غیرفعال‌سازی"
+
+msgid "Enable"
+msgstr "فعال‌سازی"
+
+msgid "LuCI and this panel"
+msgstr "LuCI و این پنل"
+
+msgid "LuCI only"
+msgstr "فقط LuCI"
+
+msgid "Enabled"
+msgstr "فعال"
+
+msgid "Disabled"
+msgstr "غیرفعال"
+
+msgid "Language"
+msgstr "زبان"
+
+msgid "Code"
+msgstr "کد"
+
+msgid "Translated"
+msgstr "ترجمه‌شده"
+
+msgid "State"
+msgstr "وضعیت"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "ترجمه‌های خود LuCI از OpenWrt می‌آیند. ترجمه‌های این پنل به‌جز ترکی و چینی، ترجمهٔ ماشینی (هوش مصنوعی) هستند؛ از اصلاحات استقبال می‌شود."
+
+msgid "Automatic"
+msgstr "خودکار"
+
+msgid "4G only"
+msgstr "فقط 4G"
+
+msgid "Serving network"
+msgstr "شبکهٔ سرویس‌دهنده"
+
+msgid "Network mode · EN-DC"
+msgstr "حالت شبکه · EN-DC"
+
+msgid "Refresh lock status"
+msgstr "تازه‌سازی وضعیت قفل"
+
+msgid "Apply at startup"
+msgstr "اعمال هنگام راه‌اندازی"
+
+msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
+msgstr "خاموش کردن این گزینه فقط اعمال دوباره در راه‌اندازی بعدی را متوقف می‌کند؛ تنظیمات ذخیره‌شدهٔ حالت شبکه، EN-DC، باند و سلول باقی می‌مانند."
+
+msgid "Band locking"
+msgstr "قفل باند"
+
+msgid "NR bands"
+msgstr "باندهای NR"
+
+msgid "LTE bands"
+msgstr "باندهای LTE"
+
+msgid "Apply NR bands"
+msgstr "اعمال باندهای NR"
+
+msgid "Apply LTE bands"
+msgstr "اعمال باندهای LTE"
+
+msgid "Neighbor cells and cell locking"
+msgstr "سلول‌های همسایه و قفل سلول"
+
+msgid "Lock current serving cell"
+msgstr "قفل سلول سرویس‌دهندهٔ فعلی"
+
+msgid "Unlock cell"
+msgstr "باز کردن قفل سلول"
+
+msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
+msgstr "اعمال، پشتهٔ رادیو را دوباره راه‌اندازی می‌کند (SFUN) و سرویس سلولی را برای مدت کوتاهی قطع می‌کند. وقتی «اعمال هنگام راه‌اندازی» فعال باشد، تنظیمات ذخیره می‌شوند و افزونه پس از آماده شدن AT آن‌ها را دوباره اعمال می‌کند. یک هوک پیش از رادیوی پلتفرم می‌تواند بدون راه‌اندازی مجدد آن‌ها را اعمال کند. برای بازگشت به حالت خودکار، بدون انتخاب هیچ باندی اعمال کنید."
+
+msgid "Apply “%s”?"
+msgstr "«%s» اعمال شود؟"
+
+msgid "Applying %s in the background…"
+msgstr "در حال اعمال %s در پس‌زمینه…"
+
+msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
+msgstr "در حال اعمال %s در پس‌زمینه… (راه‌اندازی مجدد SFUN و ثبت دوباره، حدود 30 ثانیه)"
+
+msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
+msgstr "در صف: قفل دیگری در حین راه‌اندازی مجدد SFUN در حال اعمال است؛ این مورد پس از آن اعمال می‌شود"
+
+msgid "Confirming the EN-DC status…"
+msgstr "در حال تأیید وضعیت EN-DC…"
+
+msgid "Confirming apply at startup…"
+msgstr "در حال تأیید اعمال هنگام راه‌اندازی…"
+
+msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "در پس‌زمینه آغاز شد: %s (راه‌اندازی مجدد SFUN، حدود 30 ثانیه)؛ در حال خواندن دوبارهٔ وضعیت…"
+
+msgid "Network mode: %s"
+msgstr "حالت شبکه: %s"
+
+msgid "Disable EN-DC (NSA anchor)"
+msgstr "غیرفعال‌سازی EN-DC (لنگر NSA)"
+
+msgid "Enable EN-DC (NSA anchor)"
+msgstr "فعال‌سازی EN-DC (لنگر NSA)"
+
+msgid "Disable apply at startup"
+msgstr "غیرفعال‌سازی اعمال هنگام راه‌اندازی"
+
+msgid "Enable apply at startup"
+msgstr "فعال‌سازی اعمال هنگام راه‌اندازی"
+
+msgid "Reading the modem directly (a few seconds at most)…"
+msgstr "در حال خواندن مستقیم از مودم (حداکثر چند ثانیه)…"
+
+msgid "Refreshed"
+msgstr "تازه شد"
+
+msgid "Refresh failed"
+msgstr "تازه‌سازی ناموفق بود"
+
+msgid "NR bands: back to automatic"
+msgstr "باندهای NR: بازگشت به خودکار"
+
+msgid "NR band lock: %s"
+msgstr "قفل باند NR: %s"
+
+msgid "LTE bands: back to automatic"
+msgstr "باندهای LTE: بازگشت به خودکار"
+
+msgid "LTE band lock: %s"
+msgstr "قفل باند LTE: %s"
+
+msgid "Remove the %s cell lock"
+msgstr "حذف قفل سلول %s"
+
+msgid "The radio stack will restart (SFUN), taking about 30 seconds."
+msgstr "پشتهٔ رادیو دوباره راه‌اندازی می‌شود (SFUN) و حدود 30 ثانیه طول می‌کشد."
+
+msgid "Removing the %s cell lock…"
+msgstr "در حال حذف قفل سلول %s…"
+
+msgid "Unlock failed: %s"
+msgstr "باز کردن قفل ناموفق بود: %s"
+
+msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "باز کردن قفل در پس‌زمینه آغاز شد (راه‌اندازی مجدد SFUN، حدود 30 ثانیه)؛ در حال خواندن دوبارهٔ وضعیت…"
+
+msgid "Locking %s in the background…"
+msgstr "در حال قفل کردن %s در پس‌زمینه…"
+
+msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "%s در پس‌زمینه قفل شد (راه‌اندازی مجدد SFUN، حدود 30 ثانیه)؛ در حال خواندن دوبارهٔ وضعیت…"
+
+msgid "No serving-network data"
+msgstr "داده‌ای از شبکهٔ سرویس‌دهنده نیست"
+
+msgid "NR serving cell"
+msgstr "سلول سرویس‌دهندهٔ NR"
+
+msgid "Status confirmed"
+msgstr "وضعیت تأیید شد"
+
+msgid "Readback timed out; select “Refresh lock status”"
+msgstr "مهلت خواندن دوباره تمام شد؛ «تازه‌سازی وضعیت قفل» را انتخاب کنید"
+
+msgid "Applied (EN-DC does not require a radio-stack restart)"
+msgstr "اعمال شد (EN-DC نیازی به راه‌اندازی مجدد پشتهٔ رادیو ندارد)"
+
+msgid "Apply at startup is on"
+msgstr "اعمال هنگام راه‌اندازی روشن است"
+
+msgid "Apply at startup is off"
+msgstr "اعمال هنگام راه‌اندازی خاموش است"
+
+msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
+msgstr "مهلت خواندن وضعیت EN-DC تمام شد؛ برای تأیید از «تازه‌سازی وضعیت قفل» استفاده کنید"
+
+msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
+msgstr "مهلت خواندن وضعیت اعمال هنگام راه‌اندازی تمام شد؛ برای تأیید از «تازه‌سازی وضعیت قفل» استفاده کنید"
+
+msgid "Locked cells"
+msgstr "سلول‌های قفل‌شده"
+
+msgid "Unlock %s"
+msgstr "باز کردن قفل %s"
+
+msgid "Automatic (%d supported)"
+msgstr "خودکار (%d پشتیبانی‌شده)"
+
+msgid "%d locked: %s"
+msgstr "%d قفل‌شده: %s"
+
+msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
+msgstr "نحوهٔ اتصال این افزونه به پلتفرم Unisoc OpenWrt فعلی را پیکربندی کنید. تغییرات نیازی به ویرایش صفحه‌های داشبورد، AT، قفل‌ها یا SMS ندارند."
+
+msgid "Platform adapter"
+msgstr "آداپتور پلتفرم"
+
+msgid "AT backend"
+msgstr "بک‌اند AT"
+
+msgid "Auto-detect"
+msgstr "تشخیص خودکار"
+
+msgid "atinout + serial port"
+msgstr "atinout + پورت سریال"
+
+msgid "Custom adapter"
+msgstr "آداپتور سفارشی"
+
+msgid "AT serial port"
+msgstr "پورت سریال AT"
+
+msgid "Custom AT adapter"
+msgstr "آداپتور AT سفارشی"
+
+msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
+msgstr "فایل اجرایی یک مهلت زمانی به ثانیه و دستور کامل AT را به همین ترتیب دریافت می‌کند. باید قفل پورت سریال را با شماره‌گیر پلتفرم به اشتراک بگذارد."
+
+msgid "SMS adapter"
+msgstr "آداپتور SMS"
+
+msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
+msgstr "زیرفرمان‌های list، show، send، delete و sync را پیاده‌سازی کنید؛ برای یافتن خودکار mu300-sms خالی بگذارید."
+
+msgid "SMS pool directory"
+msgstr "پوشهٔ مخزن SMS"
+
+msgid "Cellular logical interface"
+msgstr "رابط منطقی سلولی"
+
+msgid "Cellular IPv6 interface"
+msgstr "رابط IPv6 سلولی"
+
+msgid "Cellular network device"
+msgstr "دستگاه شبکهٔ سلولی"
+
+msgid "Leave blank to detect from netifd"
+msgstr "برای تشخیص از netifd خالی بگذارید"
+
+msgid "LAN bridge"
+msgstr "پل LAN"
+
+msgid "Wi-Fi device"
+msgstr "دستگاه Wi-Fi"
+
+msgid "USB device"
+msgstr "دستگاه USB"
+
+msgid "Maximum wait for AT readiness (seconds)"
+msgstr "حداکثر انتظار برای آمادگی AT (ثانیه)"
+
+msgid "Home dashboard refresh interval (seconds)"
+msgstr "فاصلهٔ تازه‌سازی داشبورد خانه (ثانیه)"
+
+msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
+msgstr "فقط سرعت تازه‌سازی داشبورد خانه را کنترل می‌کند؛ 0.5–60 ثانیه. برای اعمال، پس از ذخیره صفحهٔ خانه را دوباره باز کنید."
+
+msgid "Persistent state directory"
+msgstr "پوشهٔ وضعیت ماندگار"
+
+msgid "Recipient: number, e.g. 10086 or +86..."
+msgstr "گیرنده: شماره، مثلاً 10086 یا +86..."
+
+msgid "Sync from SIM"
+msgstr "همگام‌سازی از SIM"
+
+msgid "Clear local pool"
+msgstr "پاک کردن مخزن محلی"
+
+msgid "Loading…"
+msgstr "در حال بارگذاری…"
+
+msgid "Select a conversation on the left, or enter a number below to send."
+msgstr "گفت‌وگویی را از فهرست انتخاب کنید یا برای ارسال، شماره‌ای را در پایین وارد کنید."
+
+msgid "Message (Enter to send, Shift+Enter for newline)"
+msgstr "پیام (Enter برای ارسال، Shift+Enter برای خط جدید)"
+
+msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
+msgstr "ارسال از AT+CMGS (حالت PDU) استفاده می‌کند؛ اگر کانال مشغول است دوباره تلاش کنید. برای حذف یک پیام، از نماد سطل زباله روی حباب آن استفاده کنید."
+
+msgid "Syncing from the SIM in the background (AT+CMGL)…"
+msgstr "در حال همگام‌سازی از SIM در پس‌زمینه (AT+CMGL)…"
+
+msgid "SIM sync started; the list refreshes in a few seconds."
+msgstr "همگام‌سازی SIM آغاز شد؛ فهرست تا چند ثانیهٔ دیگر تازه می‌شود."
+
+msgid "Clear local SMS pool"
+msgstr "پاک کردن مخزن محلی SMS"
+
+msgid "Only local files will be deleted; messages on the SIM remain."
+msgstr "فقط فایل‌های محلی حذف می‌شوند؛ پیام‌های روی SIM باقی می‌مانند."
+
+msgid "Clear"
+msgstr "پاک کردن"
+
+msgid "Delete this SMS"
+msgstr "حذف این SMS"
+
+msgid "Deletion cannot be undone."
+msgstr "حذف قابل بازگشت نیست."
+
+msgid "Local only"
+msgstr "فقط محلی"
+
+msgid "Local + SIM"
+msgstr "محلی + SIM"
+
+msgid "Delete failed"
+msgstr "حذف ناموفق بود"
+
+msgid "Deleted (local + SIM)"
+msgstr "حذف شد (محلی + SIM)"
+
+msgid "Deleted (local only)"
+msgstr "حذف شد (فقط محلی)"
+
+msgid "Enter both a number and a message."
+msgstr "هم شماره و هم پیام را وارد کنید."
+
+msgid "Sending…"
+msgstr "در حال ارسال…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "ارسال شد؛ فهرست به‌زودی تازه می‌شود."
+
+msgid "Sending failed"
+msgstr "ارسال ناموفق بود"
+
+msgid "· %d messages, %d unread · %d conversations"
+msgstr "· %d پیام، %d خوانده‌نشده · %d گفت‌وگو"
+
+msgid "· %d messages · %d conversations"
+msgstr "· %d پیام · %d گفت‌وگو"
+
+msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
+msgstr "مخزن خالی است. پیام‌های دریافتی و ارسالی اینجا نمایش داده می‌شوند، یا «همگام‌سازی از SIM» را انتخاب کنید."
+
+msgid "Me: %s"
+msgstr "من: %s"
+
+msgid "Delete"
+msgstr "حذف"
+
+msgid "Dashboard info failed"
+msgstr "دریافت اطلاعات داشبورد ناموفق بود"
+
+msgid "Applying network locks: no live signal right now"
+msgstr "در حال اعمال قفل‌های شبکه: اکنون سیگنال زنده‌ای نیست"
+
+msgid "Live signal read failed"
+msgstr "خواندن سیگنال زنده ناموفق بود"
+
+msgid "Unknown op"
+msgstr "عملیات نامشخص"
+
+msgid "Invalid argument for this op"
+msgstr "آرگومان نامعتبر برای این عملیات"
+
+msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
+msgstr "رادیو مشغول است: شماره‌گیر یا watchdog در حال تغییر وضعیت آن است، کمی بعد دوباره تلاش کنید"
+
+msgid "The action gave no valid reply"
+msgstr "عملیات پاسخ معتبری نداد"
+
+msgid "An AT command is one line of printable ASCII, at most 512 characters"
+msgstr "دستور AT یک خط از نویسه‌های چاپی ASCII است، حداکثر 512 نویسه"
+
+msgid "Must be an AT command"
+msgstr "باید دستور AT باشد"
+
+msgid "No \";\" command chaining"
+msgstr "زنجیره کردن دستورها با \";\" مجاز نیست"
+
+msgid "Denied: this command wedges the AT port until a reboot"
+msgstr "رد شد: این دستور پورت AT را تا راه‌اندازی مجدد قفل می‌کند"
+
+msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
+msgstr "در حال اعمال قفل‌های شبکه: مودم در حال راه‌اندازی مجدد است (حدود نیم دقیقه)، کمی بعد دوباره تلاش کنید"
+
+msgid "The AT channel is busy; the command was not sent, try again"
+msgstr "کانال AT مشغول است؛ دستور ارسال نشد، دوباره تلاش کنید"
+
+msgid "The modem did not answer in time; the command may still run, check before sending it again"
+msgstr "مودم به‌موقع پاسخ نداد؛ ممکن است دستور هنوز در حال اجرا باشد، پیش از ارسال دوباره بررسی کنید"
+
+msgid "The fresh parameter must be 0 or 1"
+msgstr "پارامتر fresh باید 0 یا 1 باشد"
+
+msgid "Lock read failed"
+msgstr "خواندن قفل ناموفق بود"
+
+msgid "Unknown lock kind"
+msgstr "نوع قفل نامشخص"
+
+msgid "Invalid value for this lock kind"
+msgstr "مقدار نامعتبر برای این نوع قفل"
+
+msgid "Invalid page"
+msgstr "صفحهٔ نامعتبر"
+
+msgid "mu300-sms is not available (the SMS service is not installed or not running)"
+msgstr "mu300-sms در دسترس نیست (سرویس SMS نصب نشده یا در حال اجرا نیست)"
+
+msgid "No output"
+msgstr "بدون خروجی"
+
+msgid "Bad ID"
+msgstr "شناسهٔ نامعتبر"
+
+msgid "Read failed"
+msgstr "خواندن ناموفق بود"
+
+msgid "The number may only contain digits (and a leading +)"
+msgstr "شماره فقط می‌تواند شامل رقم باشد (و یک + در ابتدا)"
+
+msgid "The message is empty"
+msgstr "پیام خالی است"
+
+msgid "The message is too long (over 480 characters)"
+msgstr "پیام بیش از حد طولانی است (بیش از 480 نویسه)"
+
+msgid "The message contains a control character"
+msgstr "پیام شامل یک نویسهٔ کنترلی است"
+
+msgid "The sim parameter must be 0 or 1"
+msgstr "پارامتر sim باید 0 یا 1 باشد"
+
+msgid "The USB adapter (device-usb) gave no valid reply"
+msgstr "آداپتور USB (device-usb) پاسخ معتبری نداد"
+
+msgid "The auto parameter must be 0 or 1"
+msgstr "پارامتر auto باید 0 یا 1 باشد"
+
+msgid "Invalid USB role"
+msgstr "نقش USB نامعتبر"
+
+msgid "A USB role takes no scope"
+msgstr "نقش USB دامنهٔ اعمال نمی‌پذیرد"
+
+msgid "Invalid USB network mode"
+msgstr "حالت شبکهٔ USB نامعتبر"
+
+msgid "Invalid USB network scope"
+msgstr "دامنهٔ اعمال شبکهٔ USB نامعتبر"
+
+msgid "Unknown USB setting"
+msgstr "تنظیم USB نامشخص"
+
+msgid "Invalid interface name"
+msgstr "نام رابط نامعتبر"
+
+msgid "The languages adapter gave no valid reply"
+msgstr "آداپتور زبان‌ها پاسخ معتبری نداد"
+
+msgid "Unknown language operation"
+msgstr "عملیات زبان نامشخص"
+
+msgid "Invalid language code"
+msgstr "کد زبان نامعتبر"
+
+msgid "Invalid language request"
+msgstr "درخواست زبان نامعتبر"
+
+msgid "Unknown source"
+msgstr "منبع نامشخص"
+
+msgid "Request too large"
+msgstr "درخواست بیش از حد بزرگ است"
+
+msgid "The runtime directory is not safe; nothing was run"
+msgstr "پوشهٔ زمان اجرا امن نیست؛ چیزی اجرا نشد"
+
+msgid "No such method"
+msgstr "چنین متدی وجود ندارد"
+
+msgid "Radio did not come up"
+msgstr "رادیو روشن نشد"
+
+msgid "Expected on or off"
+msgstr "on یا off مورد انتظار است"
+
+msgid "VPN integration is not provided by this platform"
+msgstr "یکپارچه‌سازی VPN در این پلتفرم ارائه نشده است"
+
+msgid "Dual-boot integration is not provided by this platform"
+msgstr "یکپارچه‌سازی راه‌اندازی دوگانه در این پلتفرم ارائه نشده است"
+
+msgid "mu300-next-boot failed"
+msgstr "mu300-next-boot ناموفق بود"
+
+msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
+msgstr "بک‌اند AT پاسخ نداد (رادیو خاموش است، مودم در حال راه‌اندازی مجدد است یا آداپتور در دسترس نیست)"
+
+msgid "USB role adapter is not executable"
+msgstr "آداپتور نقش USB قابل اجرا نیست"
+
+msgid "USB role adapter failed"
+msgstr "آداپتور نقش USB ناموفق بود"
+
+msgid "USB role switch is unavailable"
+msgstr "تغییر نقش USB در دسترس نیست"
+
+msgid "USB role switch failed"
+msgstr "تغییر نقش USB ناموفق بود"
+
+msgid "USB role switch was refused by platform safety checks"
+msgstr "تغییر نقش USB توسط بررسی‌های ایمنی پلتفرم رد شد"
+
+msgid "Cannot create USB boot settings directory"
+msgstr "ایجاد پوشهٔ تنظیمات راه‌اندازی USB ممکن نیست"
+
+msgid "Cannot write USB boot settings"
+msgstr "نوشتن تنظیمات راه‌اندازی USB ممکن نیست"
+
+msgid "Cannot save USB boot settings"
+msgstr "ذخیرهٔ تنظیمات راه‌اندازی USB ممکن نیست"
+
+msgid "Invalid boot-auto value"
+msgstr "مقدار boot-auto نامعتبر"
+
+msgid "Device is the boot default; host auto-apply is the only persistent role"
+msgstr "حالت دستگاه پیش‌فرض راه‌اندازی است؛ اعمال خودکار میزبان تنها نقش ماندگار است"
+
+msgid "Cannot save USB role policy"
+msgstr "ذخیرهٔ سیاست نقش USB ممکن نیست"
+
+msgid "Cannot disable USB network boot policy"
+msgstr "غیرفعال‌سازی سیاست راه‌اندازی شبکهٔ USB ممکن نیست"
+
+msgid "Cannot commit USB role policy"
+msgstr "ثبت سیاست نقش USB ممکن نیست"
+
+msgid "USB network mode is unavailable in host role"
+msgstr "حالت شبکهٔ USB در نقش میزبان در دسترس نیست"
+
+msgid "Disable host boot-auto before configuring USB network"
+msgstr "پیش از پیکربندی شبکهٔ USB، boot-auto میزبان را غیرفعال کنید"
+
+msgid "Cannot save USB network policy"
+msgstr "ذخیرهٔ سیاست شبکهٔ USB ممکن نیست"
+
+msgid "Cannot commit USB network policy"
+msgstr "ثبت سیاست شبکهٔ USB ممکن نیست"
+
+msgid "USB host mode is required"
+msgstr "حالت میزبان USB لازم است"
+
+msgid "Not a USB network interface"
+msgstr "رابط شبکهٔ USB نیست"
+
+msgid "LAN bridge device section was not found"
+msgstr "بخش دستگاه پل LAN یافت نشد"
+
+msgid "Cannot bring USB network interface up"
+msgstr "فعال کردن رابط شبکهٔ USB ممکن نیست"
+
+msgid "Cannot add interface to LAN bridge"
+msgstr "افزودن رابط به پل LAN ممکن نیست"
+
+msgid "Cannot save LAN bridge"
+msgstr "ذخیرهٔ پل LAN ممکن نیست"
+
+msgid "Network reload failed"
+msgstr "بارگذاری دوبارهٔ شبکه ناموفق بود"
+
+msgid "Cannot attach USB interface to LAN bridge"
+msgstr "اتصال رابط USB به پل LAN ممکن نیست"
+
+msgid "The language pack is not installed"
+msgstr "بستهٔ زبان نصب نشده است"
+
+msgid "No language given"
+msgstr "زبانی مشخص نشده است"
+
+msgid "The language could not be changed"
+msgstr "تغییر زبان ممکن نشد"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI این زبان را ارائه نمی‌کند"
+
+msgid "No uploaded language pack"
+msgstr "بستهٔ زبانی بارگذاری نشده است"
+
+msgid "An installation is already running"
+msgstr "یک نصب از قبل در حال اجراست"
+
+msgid "The language pack could not be removed"
+msgstr "حذف بستهٔ زبان ممکن نشد"
+
+msgid "Lock cache unavailable"
+msgstr "حافظهٔ نهان قفل در دسترس نیست"
+
+msgid "No serving cell to lock to"
+msgstr "سلول سرویس‌دهنده‌ای برای قفل کردن نیست"

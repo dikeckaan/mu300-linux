@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""The control panel's (openwrt/luci-app-mu300) translation catalogs, po/tr/mu300.po and po/zh_Hans/mu300.po.
+"""The control panel's (openwrt/luci-app-mu300) translation catalogs, po/<lang>/mu300.po (tr and zh_Hans required).
 
     python3 tools/luci-i18n.py check   [--root DIR]   list the problems; exit 1 if there is any
     python3 tools/luci-i18n.py extract [--root DIR]   print every message once, in order of first use
-    python3 tools/luci-i18n.py update  [--root DIR]   add the missing msgids (empty msgstr) to both .po files,
+    python3 tools/luci-i18n.py update  [--root DIR]   add the missing msgids (empty msgstr) to every .po file,
                                                        drop the stale ones, order the entries by first use
 
 --root DIR checks another copy of the app (the tests use it); the shared scripts are then not scanned for CJK.
@@ -24,8 +24,10 @@ Messages are English and come from:
   * N_() is an error: the app has no plural messages (tools/po2lmo.py refuses msgid_plural).
 
 The problems `check` prints, one per line as RULE: PATH:LINE: WHAT (spec, Translations):
-  cjk          a CJK character outside po/zh_Hans/ and the installers' i18n data
-  missing      a message without an entry, or with an empty msgstr, in po/tr or po/zh_Hans (or no such .po)
+  cjk          a CJK character outside the catalogs (po/) and the installers' i18n data
+  missing      a message without an entry, or with an empty msgstr, in any po/<lang>/mu300.po (or no po/tr,
+               po/zh_Hans: the images need both)
+  language     a po/<lang> directory without a row in openwrt/luci-languages.tsv (its LuCI code and name)
   placeholder  a msgstr whose %s/%d/%% placeholders are not its msgid's, in the same order
   stale        a msgid that no source uses
   dynamic      a _(), a reply helper or an "error"/"message" key with a non-literal message, not allowed above
@@ -45,7 +47,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import po2lmo  # noqa: E402
 
 APP = TOP / 'openwrt' / 'luci-app-mu300'
-LANGS = ('tr', 'zh_Hans')
+REQUIRED = ('tr', 'zh_Hans')
+# po directory -> (LuCI code, name): the build, the lang extra and this check read the same table
+TABLE = TOP / 'openwrt' / 'luci-languages.tsv'
+
+
+def table():
+    rows = {}
+    for line in TABLE.read_text(encoding='utf-8').splitlines():
+        if line and not line.startswith('#'):
+            d, code, name = line.split('\t')
+            rows[d] = (code, name)
+    return rows
+
+
+def langs(root):
+    """every catalog directory of the app (po/<lang>/), the required ones included even when missing"""
+    have = {p.name for p in (root / 'po').iterdir() if p.is_dir()} if (root / 'po').is_dir() else set()
+    return sorted(have | set(REQUIRED))
 DOMAIN = 'mu300'
 
 # _() arguments that are not literals: backend replies and carrier names, extracted from the backend and common.js
@@ -55,10 +74,10 @@ HELPERS = {'refuse': 1, 'reply_obj': 2, 'fail': 2, 'error': 1}
 # helper calls whose message is a variable on purpose: (file name, helper, argument)
 BACKEND_DYNAMIC_OK = {('mu300dash', 'refuse', '"$2"')}   # reply_obj passing its MESSAGE on
 
-# CJK: only these files may contain it (repository paths; with --root, only po/zh_Hans of that copy)
+# CJK: only these files may contain it (repository paths; with --root, only po/ of that copy)
 CJK = re.compile('[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]')
 CJK_SCOPE = ['openwrt', 'rootfs/overlay', 'boot', 'tools', 'install.sh', 'uninstall.sh']
-CJK_ALLOWED = re.compile(r'^(tools/i18n\.sh|i18n/[^/]+\.tsv|openwrt/luci-app-mu300/po/zh_Hans/.*|tests/fixtures/.*)$')
+CJK_ALLOWED = re.compile(r'^(tools/i18n\.sh|i18n/[^/]+\.tsv|openwrt/luci-app-mu300/po/.*|openwrt/luci-languages\.tsv|tests/fixtures/.*)$')
 
 PLACEHOLDER = re.compile(r'%(?:%|[-+#0]*\d*(?:\.\d+)?[a-zA-Z])')
 
@@ -419,7 +438,7 @@ def check(root, scan_shared):
                              capture_output=True, check=True).stdout.decode('utf-8')
         files = [(TOP / f, f, CJK_ALLOWED.match(f)) for f in out.split('\0') if f]
     else:
-        files = [(p, rel(p), rel(p).startswith('po/zh_Hans/')) for p in sorted(root.rglob('*'))]
+        files = [(p, rel(p), rel(p).startswith('po/')) for p in sorted(root.rglob('*'))]
     for p, f, allowed in files:
         if allowed or not p.is_file():
             continue
@@ -428,8 +447,11 @@ def check(root, scan_shared):
                 problems.append(('cjk', f, no, line.strip()[:100]))
 
     # 2-4. the catalogs
-    for lang in LANGS:
+    rows = table()
+    for lang in langs(root):
         p = po_path(root, lang)
+        if lang not in rows:
+            problems.append(('language', rel(p), 0, f'po/{lang} has no row in {TABLE.relative_to(TOP).as_posix()}'))
         if not p.is_file():
             problems.append(('missing', rel(p), 0, 'no such catalog'))
             continue
@@ -457,7 +479,7 @@ def check(root, scan_shared):
 
 def update(root):
     m = extract(root)
-    for lang in LANGS:
+    for lang in langs(root):
         p = po_path(root, lang)
         if p.is_file():
             header, entries = read_po(p)

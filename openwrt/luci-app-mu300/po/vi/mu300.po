@@ -1,0 +1,1276 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: vi\n"
+
+msgid "Status dashboard"
+msgstr "Bảng trạng thái"
+
+msgid "Cellular"
+msgstr "Di động"
+
+msgid "Network locks"
+msgstr "Khóa mạng"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "AT terminal"
+msgstr "Terminal AT"
+
+msgid "Adapter settings"
+msgstr "Cài đặt bộ điều hợp"
+
+msgid "Device management"
+msgstr "Quản lý thiết bị"
+
+msgid "Languages"
+msgstr "Ngôn ngữ"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
+msgstr "Trung tâm điều khiển MU300: bảng trạng thái, khóa mạng, terminal AT và SMS"
+
+msgid "China Mobile"
+msgstr "China Mobile"
+
+msgid "China Unicom"
+msgstr "China Unicom"
+
+msgid "China Telecom"
+msgstr "China Telecom"
+
+msgid "China Broadnet"
+msgstr "China Broadnet"
+
+msgid "China Tietong"
+msgstr "China Tietong"
+
+msgid "Excellent"
+msgstr "Rất tốt"
+
+msgid "Good"
+msgstr "Tốt"
+
+msgid "Fair"
+msgstr "Trung bình"
+
+msgid "Poor"
+msgstr "Yếu"
+
+msgid "Unknown"
+msgstr "Không xác định"
+
+msgid "%d d %d h"
+msgstr "%d ngày %d giờ"
+
+msgid "%d h %d min"
+msgstr "%d giờ %d phút"
+
+msgid "%d min"
+msgstr "%d phút"
+
+msgid "No neighbor-cell data"
+msgstr "Không có dữ liệu cell lân cận"
+
+msgid "Locked"
+msgstr "Đã khóa"
+
+msgid "Lock"
+msgstr "Khóa"
+
+msgid "Unknown error"
+msgstr "Lỗi không xác định"
+
+msgid "Confirm"
+msgstr "Xác nhận"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Cancel"
+msgstr "Hủy"
+
+msgid "New SMS · %s"
+msgstr "SMS mới · %s"
+
+msgid "Unknown number"
+msgstr "Số không xác định"
+
+msgid "Select"
+msgstr "Chọn"
+
+msgid "Basic"
+msgstr "Cơ bản"
+
+msgid "Registration/signal"
+msgstr "Đăng ký/tín hiệu"
+
+msgid "Bearer"
+msgstr "Bearer"
+
+msgid "Engineering mode"
+msgstr "Chế độ kỹ thuật"
+
+msgid "AT command (↑↓ history, Enter to send)"
+msgstr "Lệnh AT (↑↓ lịch sử, Enter để gửi)"
+
+msgid "Send"
+msgstr "Gửi"
+
+msgid "Clear screen"
+msgstr "Xóa màn hình"
+
+msgid "Ready."
+msgstr "Sẵn sàng."
+
+msgid "Session history (click to reuse)"
+msgstr "Lịch sử phiên (nhấp để dùng lại)"
+
+msgid "(no output)"
+msgstr "(không có đầu ra)"
+
+msgid "Request failed"
+msgstr "Yêu cầu thất bại"
+
+msgid "(empty)"
+msgstr "(trống)"
+
+msgid "USB role"
+msgstr "Vai trò USB"
+
+msgid "Current role"
+msgstr "Vai trò hiện tại"
+
+msgid "Switch USB role"
+msgstr "Chuyển vai trò USB"
+
+msgid "Device mode"
+msgstr "Chế độ thiết bị"
+
+msgid "Host mode"
+msgstr "Chế độ host"
+
+msgid "Enable host mode at boot"
+msgstr "Bật chế độ host khi khởi động"
+
+msgid "Apply role"
+msgstr "Áp dụng vai trò"
+
+msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
+msgstr "Chế độ host ngắt mạng USB và cổng nối tiếp trên cổng này. F50 không có pin; có thể mất kết nối quản lý và bộ điều hợp USB thường cần hub có nguồn riêng."
+
+msgid "USB network mode"
+msgstr "Chế độ mạng USB"
+
+msgid "Network protocol"
+msgstr "Giao thức mạng"
+
+msgid "Apply duration"
+msgstr "Thời hạn áp dụng"
+
+msgid "Next reboot only"
+msgstr "Chỉ lần khởi động lại tới"
+
+msgid "Permanent"
+msgstr "Vĩnh viễn"
+
+msgid "Enable selected protocol"
+msgstr "Bật giao thức đã chọn"
+
+msgid "Save; apply after reboot"
+msgstr "Lưu; áp dụng sau khi khởi động lại"
+
+msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
+msgstr "NCM là mặc định. Windows không hỗ trợ sẵn ECM; RNDIS thay đổi cách nhận diện thiết bị. Khi tắt “Bật giao thức đã chọn”, chỉ lựa chọn của bạn được lưu. “Chỉ lần khởi động lại tới” áp dụng một lần, sau đó trở về NCM."
+
+msgid "USB adapters"
+msgstr "Bộ điều hợp USB"
+
+msgid "Refresh"
+msgstr "Làm mới"
+
+msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
+msgstr "Chỉ khả dụng ở chế độ host. Làm mới sẽ bật các bộ điều hợp USB tìm thấy; thêm vào LAN sẽ lưu cầu nối và tải lại mạng."
+
+msgid "Unavailable"
+msgstr "Không khả dụng"
+
+msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
+msgstr "Chế độ mạng USB không khả dụng ở chế độ host; tự khởi động host cũng tắt tự khởi động mạng USB."
+
+msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
+msgstr "Chế độ host ngắt ngay kết nối quản lý qua USB. F50 không có pin và thiết bị ngoại vi có thể cần nguồn ngoài; hãy đảm bảo có đường quản lý khác."
+
+msgid "USB networking and serial will re-enumerate in device mode."
+msgstr "Mạng USB và cổng nối tiếp sẽ được nhận diện lại ở chế độ thiết bị."
+
+msgid "Switch USB role?"
+msgstr "Chuyển vai trò USB?"
+
+msgid "Apply"
+msgstr "Áp dụng"
+
+msgid "Switching USB role…"
+msgstr "Đang chuyển vai trò USB…"
+
+msgid "Switch failed: %s"
+msgstr "Chuyển thất bại: %s"
+
+msgid "Management connection lost; reconnect to confirm the USB role."
+msgstr "Mất kết nối quản lý; hãy kết nối lại để xác nhận vai trò USB."
+
+msgid "Switch request accepted; the USB connection may briefly disconnect."
+msgstr "Đã nhận yêu cầu chuyển; kết nối USB có thể bị ngắt trong giây lát."
+
+msgid "USB role applied"
+msgstr "Đã áp dụng vai trò USB"
+
+msgid "Save USB network mode?"
+msgstr "Lưu chế độ mạng USB?"
+
+msgid "The network mode applies on the next reboot; USB management may need to reconnect."
+msgstr "Chế độ mạng sẽ áp dụng ở lần khởi động lại tới; có thể cần kết nối lại quản lý qua USB."
+
+msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
+msgstr "Chỉ lưu lựa chọn; khi giao thức đã chọn bị tắt, lần khởi động tới vẫn dùng NCM mặc định."
+
+msgid "Save"
+msgstr "Lưu"
+
+msgid "Saving USB network settings…"
+msgstr "Đang lưu cài đặt mạng USB…"
+
+msgid "Settings saved"
+msgstr "Đã lưu cài đặt"
+
+msgid "Save failed: %s"
+msgstr "Lưu thất bại: %s"
+
+msgid "Unable to confirm the role yet; reconnect and refresh the page."
+msgstr "Chưa thể xác nhận vai trò; hãy kết nối lại và làm mới trang."
+
+msgid "Switch to host mode to see USB adapters."
+msgstr "Chuyển sang chế độ host để xem bộ điều hợp USB."
+
+msgid "Scanning USB adapters…"
+msgstr "Đang quét bộ điều hợp USB…"
+
+msgid "No USB adapters found."
+msgstr "Không tìm thấy bộ điều hợp USB."
+
+msgid "Link connected"
+msgstr "Đã có liên kết"
+
+msgid "No link; enable attempted"
+msgstr "Không có liên kết; đã thử bật"
+
+msgid "Added to LAN"
+msgstr "Đã thêm vào LAN"
+
+msgid "Add to LAN"
+msgstr "Thêm vào LAN"
+
+msgid "Add USB adapter to LAN?"
+msgstr "Thêm bộ điều hợp USB vào LAN?"
+
+msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
+msgstr "Thao tác này lưu cấu hình cầu nối và tải lại mạng; các kết nối hiện có có thể bị ngắt trong giây lát."
+
+msgid "Add"
+msgstr "Thêm"
+
+msgid "Adding USB adapter…"
+msgstr "Đang thêm bộ điều hợp USB…"
+
+msgid "Add failed: %s"
+msgstr "Thêm thất bại: %s"
+
+msgid "Modulation DL/UL"
+msgstr "Điều chế DL/UL"
+
+msgid "Estimated from current MCS"
+msgstr "Ước tính từ MCS hiện tại"
+
+msgid "MCS DL/UL"
+msgstr "MCS DL/UL"
+
+msgid "BLER DL/UL"
+msgstr "BLER DL/UL"
+
+msgid "Link & traffic"
+msgstr "Liên kết & lưu lượng"
+
+msgid "Download rate"
+msgstr "Tốc độ tải xuống"
+
+msgid "Upload rate"
+msgstr "Tốc độ tải lên"
+
+msgid "Total received"
+msgstr "Tổng đã nhận"
+
+msgid "Total sent"
+msgstr "Tổng đã gửi"
+
+msgid "Session duration"
+msgstr "Thời lượng phiên"
+
+msgid "Registration"
+msgstr "Đăng ký"
+
+msgid "Bandwidth"
+msgstr "Băng thông"
+
+msgid "AMBR DL/UL"
+msgstr "AMBR DL/UL"
+
+msgid "Wi-Fi · LAN · Device · SIM"
+msgstr "Wi-Fi · LAN · Thiết bị · SIM"
+
+msgid "CPU usage"
+msgstr "Mức dùng CPU"
+
+msgid "Memory"
+msgstr "Bộ nhớ"
+
+msgid "Storage"
+msgstr "Lưu trữ"
+
+msgid "Battery"
+msgstr "Pin"
+
+msgid "Channel"
+msgstr "Kênh"
+
+msgid "Encryption"
+msgstr "Mã hóa"
+
+msgid "Hidden SSID"
+msgstr "SSID ẩn"
+
+msgid "Country"
+msgstr "Quốc gia"
+
+msgid "AP status"
+msgstr "Trạng thái AP"
+
+msgid "USB network"
+msgstr "Mạng USB"
+
+msgid "Connection tracking"
+msgstr "Theo dõi kết nối"
+
+msgid "LAN address"
+msgstr "Địa chỉ LAN"
+
+msgid "Wi-Fi clients"
+msgstr "Thiết bị Wi-Fi"
+
+msgid "DHCP leases"
+msgstr "Cấp phát DHCP"
+
+msgid "Device model"
+msgstr "Kiểu thiết bị"
+
+msgid "System"
+msgstr "Hệ thống"
+
+msgid "Modem"
+msgstr "Modem"
+
+msgid "Carrier"
+msgstr "Nhà mạng"
+
+msgid "Module"
+msgstr "Mô-đun"
+
+msgid "Firmware"
+msgstr "Firmware"
+
+msgid "Show SIM identifiers"
+msgstr "Hiện mã định danh SIM"
+
+msgid "Quick controls"
+msgstr "Điều khiển nhanh"
+
+msgid "Data connection"
+msgstr "Kết nối dữ liệu"
+
+msgid "Cellular radio"
+msgstr "Radio di động"
+
+msgid "Wi-Fi hotspot"
+msgstr "Điểm phát Wi-Fi"
+
+msgid "Restart modem"
+msgstr "Khởi động lại modem"
+
+msgid "Restart device"
+msgstr "Khởi động lại thiết bị"
+
+msgid "Switch to Android"
+msgstr "Chuyển sang Android"
+
+msgid "Neighbor cells"
+msgstr "Cell lân cận"
+
+msgid "RAT/Band"
+msgstr "RAT/Băng tần"
+
+msgid "Frequency"
+msgstr "Tần số"
+
+msgid "Running %s…"
+msgstr "Đang chạy %s…"
+
+msgid "Started in background: %s"
+msgstr "Đã bắt đầu chạy nền: %s"
+
+msgid "Done: %s"
+msgstr "Hoàn tất: %s"
+
+msgid "Failed: %s"
+msgstr "Thất bại: %s"
+
+msgid "Disconnecting data…"
+msgstr "Đang ngắt kết nối dữ liệu…"
+
+msgid "Connecting data…"
+msgstr "Đang kết nối dữ liệu…"
+
+msgid "Turn off cellular radio"
+msgstr "Tắt radio di động"
+
+msgid "Cellular connectivity will be interrupted."
+msgstr "Kết nối di động sẽ bị gián đoạn."
+
+msgid "Turn on cellular radio"
+msgstr "Bật radio di động"
+
+msgid "The SFUN power-on sequence will run (up to about 1 minute)."
+msgstr "Trình tự bật nguồn SFUN sẽ chạy (tối đa khoảng 1 phút)."
+
+msgid "Cellular connectivity may stop for 1–2 minutes."
+msgstr "Kết nối di động có thể dừng trong 1–2 phút."
+
+msgid "Restart the entire device"
+msgstr "Khởi động lại toàn bộ thiết bị"
+
+msgid "All connections will be interrupted."
+msgstr "Mọi kết nối sẽ bị gián đoạn."
+
+msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
+msgstr "Lần khởi động tới sẽ vào Android và thiết bị khởi động lại ngay. Trang quản lý này và chia sẻ mạng di động sẽ bị ngắt."
+
+msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
+msgstr "Để trở lại OpenWrt, chạy mu300-next-boot linux trong Android rồi khởi động lại."
+
+msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
+msgstr "Hoặc không làm gì: sau năm lần khởi động không hoàn tất, hệ thống tự động quay lại."
+
+msgid "Switch and reboot"
+msgstr "Chuyển và khởi động lại"
+
+msgid "Preparing Android boot and rebooting…"
+msgstr "Đang chuẩn bị khởi động Android và khởi động lại…"
+
+msgid "Hide SIM identifiers"
+msgstr "Ẩn mã định danh SIM"
+
+msgid "Lock cell %s?"
+msgstr "Khóa cell %s?"
+
+msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
+msgstr "Ngăn xếp radio sẽ khởi động lại (SFUN); dịch vụ di động sẽ dừng khoảng 30 giây."
+
+msgid "Locking %s in the background, about 30 seconds"
+msgstr "Đang khóa %s trong nền, khoảng 30 giây"
+
+msgid "Locked %s in the background; the status will refresh shortly"
+msgstr "Đã khóa %s trong nền; trạng thái sẽ sớm được làm mới"
+
+msgid "Lock failed: %s"
+msgstr "Khóa thất bại: %s"
+
+msgid "Uptime %s"
+msgstr "Thời gian hoạt động %s"
+
+msgid "Radio off"
+msgstr "Radio tắt"
+
+msgid "No response"
+msgstr "Không phản hồi"
+
+msgid "%s · Signal %s %s/10"
+msgstr "%s · Tín hiệu %s %s/10"
+
+msgid "%s · Signal %s"
+msgstr "%s · Tín hiệu %s"
+
+msgid "Anchor B%s"
+msgstr "Neo B%s"
+
+msgid "No serving cell"
+msgstr "Không có cell phục vụ"
+
+msgid "Not registered"
+msgstr "Chưa đăng ký"
+
+msgid "Registered"
+msgstr "Đã đăng ký"
+
+msgid "Searching"
+msgstr "Đang tìm"
+
+msgid "Registration denied"
+msgstr "Đăng ký bị từ chối"
+
+msgid "Registered (roaming)"
+msgstr "Đã đăng ký (chuyển vùng)"
+
+msgid "Emergency only"
+msgstr "Chỉ cuộc gọi khẩn cấp"
+
+msgid "Status %s"
+msgstr "Trạng thái %s"
+
+msgid "LTE anchor"
+msgstr "Neo LTE"
+
+msgid "LTE link"
+msgstr "Liên kết LTE"
+
+msgid "Hidden"
+msgstr "Ẩn"
+
+msgid "No"
+msgstr "Không"
+
+msgid "Running"
+msgstr "Đang chạy"
+
+msgid "Not running"
+msgstr "Không chạy"
+
+msgid "Connected"
+msgstr "Đã kết nối"
+
+msgid "Disconnected"
+msgstr "Đã ngắt kết nối"
+
+msgid "%s entries"
+msgstr "%s mục"
+
+msgid "%s clients"
+msgstr "%s thiết bị"
+
+msgid "Recent DHCP leases"
+msgstr "Cấp phát DHCP gần đây"
+
+msgid "%d h"
+msgstr "%d giờ"
+
+msgid "Board"
+msgstr "Bo mạch"
+
+msgid "No temperature readings"
+msgstr "Không có số đo nhiệt độ"
+
+msgid "Cluster %d"
+msgstr "Cụm %d"
+
+msgid "Total %s · free %s"
+msgstr "Tổng %s · trống %s"
+
+msgid "charging %s W"
+msgstr "đang sạc %s W"
+
+msgid "charging"
+msgstr "đang sạc"
+
+msgid "drawing %s W"
+msgstr "đang tiêu thụ %s W"
+
+msgid "not charging"
+msgstr "không sạc"
+
+msgid "on battery"
+msgstr "dùng pin"
+
+msgid "full"
+msgstr "đầy"
+
+msgid "USB in %s W"
+msgstr "đầu vào USB %s W"
+
+msgid "Online"
+msgstr "Trực tuyến"
+
+msgid "AT adapter unavailable"
+msgstr "Bộ điều hợp AT không khả dụng"
+
+msgid "Saved"
+msgstr "Đã lưu"
+
+msgid "Management connection lost"
+msgstr "Mất kết nối quản lý"
+
+msgid "Installing the language pack…"
+msgstr "Đang cài đặt gói ngôn ngữ…"
+
+msgid "The language pack is installed"
+msgstr "Gói ngôn ngữ đã được cài đặt"
+
+msgid "The language pack could not be installed"
+msgstr "Không thể cài đặt gói ngôn ngữ"
+
+msgid "Upload failed: %s"
+msgstr "Tải lên thất bại: %s"
+
+msgid "Language of the browser"
+msgstr "Ngôn ngữ của trình duyệt"
+
+msgid "Language of the web interface"
+msgstr "Ngôn ngữ của giao diện web"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "Tiếng Anh, tiếng Thổ Nhĩ Kỳ và tiếng Trung có sẵn trong hệ thống; gói ngôn ngữ bổ sung các ngôn ngữ còn lại."
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "Cài đặt tương tự nằm ở Hệ thống > Hệ thống > Ngôn ngữ và phong cách."
+
+msgid "Language pack"
+msgstr "Gói ngôn ngữ"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "Gói ngôn ngữ (mu300-extra-lang.tar.gz, khoảng 2 MB) bổ sung LuCI bằng khoảng 40 ngôn ngữ nữa và bảng điều khiển này bằng 29 trong số đó. Hãy tải xuống từ bản phát hành của hệ thống này, hoặc tải tệp lên từ trang phát hành khi thiết bị không có internet."
+
+msgid "Download from the release"
+msgstr "Tải xuống từ bản phát hành"
+
+msgid "Upload the file…"
+msgstr "Tải tệp lên…"
+
+msgid "Release"
+msgstr "Bản phát hành"
+
+msgid "Enable all"
+msgstr "Bật tất cả"
+
+msgid "Disable all"
+msgstr "Tắt tất cả"
+
+msgid "Remove the language pack"
+msgstr "Gỡ gói ngôn ngữ"
+
+msgid "Remove the language pack?"
+msgstr "Gỡ gói ngôn ngữ?"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "Các ngôn ngữ của gói sẽ biến mất khỏi danh sách; trang đang dùng một trong số đó sẽ chuyển sang tiếng Anh."
+
+msgid "Remove"
+msgstr "Gỡ"
+
+msgid "Disable"
+msgstr "Tắt"
+
+msgid "Enable"
+msgstr "Bật"
+
+msgid "LuCI and this panel"
+msgstr "LuCI và bảng điều khiển này"
+
+msgid "LuCI only"
+msgstr "Chỉ LuCI"
+
+msgid "Enabled"
+msgstr "Đã bật"
+
+msgid "Disabled"
+msgstr "Đã tắt"
+
+msgid "Language"
+msgstr "Ngôn ngữ"
+
+msgid "Code"
+msgstr "Mã"
+
+msgid "Translated"
+msgstr "Đã dịch"
+
+msgid "State"
+msgstr "Trạng thái"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "Bản dịch riêng của LuCI đến từ OpenWrt. Các bản dịch của bảng điều khiển này, trừ tiếng Thổ Nhĩ Kỳ và tiếng Trung, là bản dịch máy (AI); rất hoan nghênh các góp ý sửa lỗi."
+
+msgid "Automatic"
+msgstr "Tự động"
+
+msgid "4G only"
+msgstr "Chỉ 4G"
+
+msgid "Serving network"
+msgstr "Mạng phục vụ"
+
+msgid "Network mode · EN-DC"
+msgstr "Chế độ mạng · EN-DC"
+
+msgid "Refresh lock status"
+msgstr "Làm mới trạng thái khóa"
+
+msgid "Apply at startup"
+msgstr "Áp dụng khi khởi động"
+
+msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
+msgstr "Tắt mục này chỉ ngừng áp dụng lại ở lần khởi động tới; chế độ mạng, EN-DC, cài đặt băng tần và cell đã lưu vẫn được giữ."
+
+msgid "Band locking"
+msgstr "Khóa băng tần"
+
+msgid "NR bands"
+msgstr "Băng tần NR"
+
+msgid "LTE bands"
+msgstr "Băng tần LTE"
+
+msgid "Apply NR bands"
+msgstr "Áp dụng băng tần NR"
+
+msgid "Apply LTE bands"
+msgstr "Áp dụng băng tần LTE"
+
+msgid "Neighbor cells and cell locking"
+msgstr "Cell lân cận và khóa cell"
+
+msgid "Lock current serving cell"
+msgstr "Khóa cell phục vụ hiện tại"
+
+msgid "Unlock cell"
+msgstr "Mở khóa cell"
+
+msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
+msgstr "Áp dụng sẽ khởi động lại ngăn xếp radio (SFUN) và làm gián đoạn dịch vụ di động trong giây lát. Cài đặt được lưu và plugin sẽ áp dụng lại sau khi AT sẵn sàng nếu bật “Áp dụng khi khởi động”. Hook trước radio của nền tảng có thể áp dụng lại mà không cần khởi động lại. Áp dụng khi không chọn băng tần nào để trở về chế độ tự động."
+
+msgid "Apply “%s”?"
+msgstr "Áp dụng “%s”?"
+
+msgid "Applying %s in the background…"
+msgstr "Đang áp dụng %s trong nền…"
+
+msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
+msgstr "Đang áp dụng %s trong nền… (khởi động lại SFUN và đăng ký lại, khoảng 30 giây)"
+
+msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
+msgstr "Đã xếp hàng: một khóa khác đang được áp dụng trong lúc khởi động lại SFUN; thao tác này sẽ có hiệu lực sau đó"
+
+msgid "Confirming the EN-DC status…"
+msgstr "Đang xác nhận trạng thái EN-DC…"
+
+msgid "Confirming apply at startup…"
+msgstr "Đang xác nhận áp dụng khi khởi động…"
+
+msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Đã bắt đầu chạy nền: %s (khởi động lại SFUN, khoảng 30 giây); đang đọc lại trạng thái…"
+
+msgid "Network mode: %s"
+msgstr "Chế độ mạng: %s"
+
+msgid "Disable EN-DC (NSA anchor)"
+msgstr "Tắt EN-DC (neo NSA)"
+
+msgid "Enable EN-DC (NSA anchor)"
+msgstr "Bật EN-DC (neo NSA)"
+
+msgid "Disable apply at startup"
+msgstr "Tắt áp dụng khi khởi động"
+
+msgid "Enable apply at startup"
+msgstr "Bật áp dụng khi khởi động"
+
+msgid "Reading the modem directly (a few seconds at most)…"
+msgstr "Đang đọc trực tiếp từ modem (tối đa vài giây)…"
+
+msgid "Refreshed"
+msgstr "Đã làm mới"
+
+msgid "Refresh failed"
+msgstr "Làm mới thất bại"
+
+msgid "NR bands: back to automatic"
+msgstr "Băng tần NR: trở về tự động"
+
+msgid "NR band lock: %s"
+msgstr "Khóa băng tần NR: %s"
+
+msgid "LTE bands: back to automatic"
+msgstr "Băng tần LTE: trở về tự động"
+
+msgid "LTE band lock: %s"
+msgstr "Khóa băng tần LTE: %s"
+
+msgid "Remove the %s cell lock"
+msgstr "Gỡ khóa cell %s"
+
+msgid "The radio stack will restart (SFUN), taking about 30 seconds."
+msgstr "Ngăn xếp radio sẽ khởi động lại (SFUN), mất khoảng 30 giây."
+
+msgid "Removing the %s cell lock…"
+msgstr "Đang gỡ khóa cell %s…"
+
+msgid "Unlock failed: %s"
+msgstr "Mở khóa thất bại: %s"
+
+msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Đã bắt đầu mở khóa trong nền (khởi động lại SFUN, khoảng 30 giây); đang đọc lại trạng thái…"
+
+msgid "Locking %s in the background…"
+msgstr "Đang khóa %s trong nền…"
+
+msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "Đã khóa %s trong nền (khởi động lại SFUN, khoảng 30 giây); đang đọc lại trạng thái…"
+
+msgid "No serving-network data"
+msgstr "Không có dữ liệu mạng phục vụ"
+
+msgid "NR serving cell"
+msgstr "Cell phục vụ NR"
+
+msgid "Status confirmed"
+msgstr "Đã xác nhận trạng thái"
+
+msgid "Readback timed out; select “Refresh lock status”"
+msgstr "Hết thời gian đọc lại; hãy chọn “Làm mới trạng thái khóa”"
+
+msgid "Applied (EN-DC does not require a radio-stack restart)"
+msgstr "Đã áp dụng (EN-DC không cần khởi động lại ngăn xếp radio)"
+
+msgid "Apply at startup is on"
+msgstr "Áp dụng khi khởi động đang bật"
+
+msgid "Apply at startup is off"
+msgstr "Áp dụng khi khởi động đang tắt"
+
+msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Hết thời gian đọc lại trạng thái EN-DC; dùng “Làm mới trạng thái khóa” để xác nhận"
+
+msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
+msgstr "Hết thời gian đọc lại trạng thái áp dụng khi khởi động; dùng “Làm mới trạng thái khóa” để xác nhận"
+
+msgid "Locked cells"
+msgstr "Cell đã khóa"
+
+msgid "Unlock %s"
+msgstr "Mở khóa %s"
+
+msgid "Automatic (%d supported)"
+msgstr "Tự động (hỗ trợ %d)"
+
+msgid "%d locked: %s"
+msgstr "%d đã khóa: %s"
+
+msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
+msgstr "Cấu hình cách plugin này kết nối với nền tảng Unisoc OpenWrt hiện tại. Thay đổi không cần sửa các trang bảng trạng thái, AT, khóa hay SMS."
+
+msgid "Platform adapter"
+msgstr "Bộ điều hợp nền tảng"
+
+msgid "AT backend"
+msgstr "Backend AT"
+
+msgid "Auto-detect"
+msgstr "Tự động phát hiện"
+
+msgid "atinout + serial port"
+msgstr "atinout + cổng nối tiếp"
+
+msgid "Custom adapter"
+msgstr "Bộ điều hợp tùy chỉnh"
+
+msgid "AT serial port"
+msgstr "Cổng nối tiếp AT"
+
+msgid "Custom AT adapter"
+msgstr "Bộ điều hợp AT tùy chỉnh"
+
+msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
+msgstr "Tệp thực thi nhận lần lượt thời gian chờ tính bằng giây và lệnh AT đầy đủ. Nó phải dùng chung khóa cổng nối tiếp với trình quay số của nền tảng."
+
+msgid "SMS adapter"
+msgstr "Bộ điều hợp SMS"
+
+msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
+msgstr "Cần hiện thực các lệnh con list, show, send, delete và sync; để trống để tự động tìm mu300-sms."
+
+msgid "SMS pool directory"
+msgstr "Thư mục kho SMS"
+
+msgid "Cellular logical interface"
+msgstr "Giao diện logic di động"
+
+msgid "Cellular IPv6 interface"
+msgstr "Giao diện IPv6 di động"
+
+msgid "Cellular network device"
+msgstr "Thiết bị mạng di động"
+
+msgid "Leave blank to detect from netifd"
+msgstr "Để trống để phát hiện từ netifd"
+
+msgid "LAN bridge"
+msgstr "Cầu nối LAN"
+
+msgid "Wi-Fi device"
+msgstr "Thiết bị Wi-Fi"
+
+msgid "USB device"
+msgstr "Thiết bị USB"
+
+msgid "Maximum wait for AT readiness (seconds)"
+msgstr "Thời gian chờ AT sẵn sàng tối đa (giây)"
+
+msgid "Home dashboard refresh interval (seconds)"
+msgstr "Chu kỳ làm mới bảng trạng thái chính (giây)"
+
+msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
+msgstr "Chỉ điều khiển tốc độ làm mới của bảng trạng thái chính; 0,5–60 giây. Mở lại Trang chủ sau khi lưu để áp dụng."
+
+msgid "Persistent state directory"
+msgstr "Thư mục trạng thái lâu dài"
+
+msgid "Recipient: number, e.g. 10086 or +86..."
+msgstr "Người nhận: số, ví dụ 10086 hoặc +86..."
+
+msgid "Sync from SIM"
+msgstr "Đồng bộ từ SIM"
+
+msgid "Clear local pool"
+msgstr "Xóa kho cục bộ"
+
+msgid "Loading…"
+msgstr "Đang tải…"
+
+msgid "Select a conversation on the left, or enter a number below to send."
+msgstr "Chọn một cuộc hội thoại bên trái, hoặc nhập số bên dưới để gửi."
+
+msgid "Message (Enter to send, Shift+Enter for newline)"
+msgstr "Tin nhắn (Enter để gửi, Shift+Enter để xuống dòng)"
+
+msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
+msgstr "Gửi dùng AT+CMGS (chế độ PDU); thử lại nếu kênh bận. Để xóa một tin nhắn, dùng biểu tượng thùng rác trên bong bóng của tin đó."
+
+msgid "Syncing from the SIM in the background (AT+CMGL)…"
+msgstr "Đang đồng bộ từ SIM trong nền (AT+CMGL)…"
+
+msgid "SIM sync started; the list refreshes in a few seconds."
+msgstr "Đã bắt đầu đồng bộ SIM; danh sách sẽ làm mới sau vài giây."
+
+msgid "Clear local SMS pool"
+msgstr "Xóa kho SMS cục bộ"
+
+msgid "Only local files will be deleted; messages on the SIM remain."
+msgstr "Chỉ xóa các tệp cục bộ; tin nhắn trên SIM vẫn được giữ."
+
+msgid "Clear"
+msgstr "Xóa sạch"
+
+msgid "Delete this SMS"
+msgstr "Xóa SMS này"
+
+msgid "Deletion cannot be undone."
+msgstr "Không thể hoàn tác việc xóa."
+
+msgid "Local only"
+msgstr "Chỉ cục bộ"
+
+msgid "Local + SIM"
+msgstr "Cục bộ + SIM"
+
+msgid "Delete failed"
+msgstr "Xóa thất bại"
+
+msgid "Deleted (local + SIM)"
+msgstr "Đã xóa (cục bộ + SIM)"
+
+msgid "Deleted (local only)"
+msgstr "Đã xóa (chỉ cục bộ)"
+
+msgid "Enter both a number and a message."
+msgstr "Hãy nhập cả số và tin nhắn."
+
+msgid "Sending…"
+msgstr "Đang gửi…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Đã gửi; danh sách sẽ sớm làm mới."
+
+msgid "Sending failed"
+msgstr "Gửi thất bại"
+
+msgid "· %d messages, %d unread · %d conversations"
+msgstr "· %d tin nhắn, %d chưa đọc · %d hội thoại"
+
+msgid "· %d messages · %d conversations"
+msgstr "· %d tin nhắn · %d hội thoại"
+
+msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
+msgstr "Kho trống. Tin nhắn đến và đã gửi sẽ hiện ở đây, hoặc chọn “Đồng bộ từ SIM”."
+
+msgid "Me: %s"
+msgstr "Tôi: %s"
+
+msgid "Delete"
+msgstr "Xóa"
+
+msgid "Dashboard info failed"
+msgstr "Không lấy được thông tin bảng trạng thái"
+
+msgid "Applying network locks: no live signal right now"
+msgstr "Đang áp dụng khóa mạng: hiện chưa có tín hiệu trực tiếp"
+
+msgid "Live signal read failed"
+msgstr "Đọc tín hiệu trực tiếp thất bại"
+
+msgid "Unknown op"
+msgstr "Thao tác không xác định"
+
+msgid "Invalid argument for this op"
+msgstr "Đối số không hợp lệ cho thao tác này"
+
+msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
+msgstr "Radio đang bận: trình quay số hoặc watchdog đang chuyển trạng thái, hãy thử lại sau ít phút"
+
+msgid "The action gave no valid reply"
+msgstr "Thao tác không trả về phản hồi hợp lệ"
+
+msgid "An AT command is one line of printable ASCII, at most 512 characters"
+msgstr "Lệnh AT phải là một dòng ASCII in được, tối đa 512 ký tự"
+
+msgid "Must be an AT command"
+msgstr "Phải là lệnh AT"
+
+msgid "No \";\" command chaining"
+msgstr "Không được nối lệnh bằng \";\""
+
+msgid "Denied: this command wedges the AT port until a reboot"
+msgstr "Bị từ chối: lệnh này làm treo cổng AT cho đến khi khởi động lại"
+
+msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
+msgstr "Đang áp dụng khóa mạng: modem đang khởi động lại (khoảng nửa phút), hãy thử lại sau ít phút"
+
+msgid "The AT channel is busy; the command was not sent, try again"
+msgstr "Kênh AT đang bận; lệnh chưa được gửi, hãy thử lại"
+
+msgid "The modem did not answer in time; the command may still run, check before sending it again"
+msgstr "Modem không trả lời kịp thời; lệnh có thể vẫn đang chạy, hãy kiểm tra trước khi gửi lại"
+
+msgid "The fresh parameter must be 0 or 1"
+msgstr "Tham số fresh phải là 0 hoặc 1"
+
+msgid "Lock read failed"
+msgstr "Đọc trạng thái khóa thất bại"
+
+msgid "Unknown lock kind"
+msgstr "Loại khóa không xác định"
+
+msgid "Invalid value for this lock kind"
+msgstr "Giá trị không hợp lệ cho loại khóa này"
+
+msgid "Invalid page"
+msgstr "Trang không hợp lệ"
+
+msgid "mu300-sms is not available (the SMS service is not installed or not running)"
+msgstr "mu300-sms không khả dụng (dịch vụ SMS chưa được cài đặt hoặc không chạy)"
+
+msgid "No output"
+msgstr "Không có đầu ra"
+
+msgid "Bad ID"
+msgstr "ID không hợp lệ"
+
+msgid "Read failed"
+msgstr "Đọc thất bại"
+
+msgid "The number may only contain digits (and a leading +)"
+msgstr "Số chỉ được chứa chữ số (và dấu + ở đầu)"
+
+msgid "The message is empty"
+msgstr "Tin nhắn trống"
+
+msgid "The message is too long (over 480 characters)"
+msgstr "Tin nhắn quá dài (hơn 480 ký tự)"
+
+msgid "The message contains a control character"
+msgstr "Tin nhắn chứa ký tự điều khiển"
+
+msgid "The sim parameter must be 0 or 1"
+msgstr "Tham số sim phải là 0 hoặc 1"
+
+msgid "The USB adapter (device-usb) gave no valid reply"
+msgstr "Bộ điều hợp USB (device-usb) không trả về phản hồi hợp lệ"
+
+msgid "The auto parameter must be 0 or 1"
+msgstr "Tham số auto phải là 0 hoặc 1"
+
+msgid "Invalid USB role"
+msgstr "Vai trò USB không hợp lệ"
+
+msgid "A USB role takes no scope"
+msgstr "Vai trò USB không nhận phạm vi áp dụng"
+
+msgid "Invalid USB network mode"
+msgstr "Chế độ mạng USB không hợp lệ"
+
+msgid "Invalid USB network scope"
+msgstr "Phạm vi áp dụng mạng USB không hợp lệ"
+
+msgid "Unknown USB setting"
+msgstr "Cài đặt USB không xác định"
+
+msgid "Invalid interface name"
+msgstr "Tên giao diện không hợp lệ"
+
+msgid "The languages adapter gave no valid reply"
+msgstr "Bộ điều hợp ngôn ngữ không trả về phản hồi hợp lệ"
+
+msgid "Unknown language operation"
+msgstr "Thao tác ngôn ngữ không xác định"
+
+msgid "Invalid language code"
+msgstr "Mã ngôn ngữ không hợp lệ"
+
+msgid "Invalid language request"
+msgstr "Yêu cầu ngôn ngữ không hợp lệ"
+
+msgid "Unknown source"
+msgstr "Nguồn không xác định"
+
+msgid "Request too large"
+msgstr "Yêu cầu quá lớn"
+
+msgid "The runtime directory is not safe; nothing was run"
+msgstr "Thư mục runtime không an toàn; không có gì được chạy"
+
+msgid "No such method"
+msgstr "Không có phương thức này"
+
+msgid "Radio did not come up"
+msgstr "Radio không bật lên được"
+
+msgid "Expected on or off"
+msgstr "Cần giá trị on hoặc off"
+
+msgid "VPN integration is not provided by this platform"
+msgstr "Nền tảng này không cung cấp tích hợp VPN"
+
+msgid "Dual-boot integration is not provided by this platform"
+msgstr "Nền tảng này không cung cấp tích hợp khởi động kép"
+
+msgid "mu300-next-boot failed"
+msgstr "mu300-next-boot thất bại"
+
+msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
+msgstr "Backend AT không trả lời (radio tắt, modem đang khởi động lại hoặc bộ điều hợp không khả dụng)"
+
+msgid "USB role adapter is not executable"
+msgstr "Bộ điều hợp vai trò USB không thực thi được"
+
+msgid "USB role adapter failed"
+msgstr "Bộ điều hợp vai trò USB thất bại"
+
+msgid "USB role switch is unavailable"
+msgstr "Không thể chuyển vai trò USB"
+
+msgid "USB role switch failed"
+msgstr "Chuyển vai trò USB thất bại"
+
+msgid "USB role switch was refused by platform safety checks"
+msgstr "Việc chuyển vai trò USB bị kiểm tra an toàn của nền tảng từ chối"
+
+msgid "Cannot create USB boot settings directory"
+msgstr "Không thể tạo thư mục cài đặt khởi động USB"
+
+msgid "Cannot write USB boot settings"
+msgstr "Không thể ghi cài đặt khởi động USB"
+
+msgid "Cannot save USB boot settings"
+msgstr "Không thể lưu cài đặt khởi động USB"
+
+msgid "Invalid boot-auto value"
+msgstr "Giá trị boot-auto không hợp lệ"
+
+msgid "Device is the boot default; host auto-apply is the only persistent role"
+msgstr "Chế độ thiết bị là mặc định khi khởi động; tự động áp dụng host là vai trò lâu dài duy nhất"
+
+msgid "Cannot save USB role policy"
+msgstr "Không thể lưu chính sách vai trò USB"
+
+msgid "Cannot disable USB network boot policy"
+msgstr "Không thể tắt chính sách khởi động mạng USB"
+
+msgid "Cannot commit USB role policy"
+msgstr "Không thể commit chính sách vai trò USB"
+
+msgid "USB network mode is unavailable in host role"
+msgstr "Chế độ mạng USB không khả dụng ở vai trò host"
+
+msgid "Disable host boot-auto before configuring USB network"
+msgstr "Tắt boot-auto của host trước khi cấu hình mạng USB"
+
+msgid "Cannot save USB network policy"
+msgstr "Không thể lưu chính sách mạng USB"
+
+msgid "Cannot commit USB network policy"
+msgstr "Không thể commit chính sách mạng USB"
+
+msgid "USB host mode is required"
+msgstr "Cần chế độ host USB"
+
+msgid "Not a USB network interface"
+msgstr "Không phải giao diện mạng USB"
+
+msgid "LAN bridge device section was not found"
+msgstr "Không tìm thấy mục thiết bị cầu nối LAN"
+
+msgid "Cannot bring USB network interface up"
+msgstr "Không thể bật giao diện mạng USB"
+
+msgid "Cannot add interface to LAN bridge"
+msgstr "Không thể thêm giao diện vào cầu nối LAN"
+
+msgid "Cannot save LAN bridge"
+msgstr "Không thể lưu cầu nối LAN"
+
+msgid "Network reload failed"
+msgstr "Tải lại mạng thất bại"
+
+msgid "Cannot attach USB interface to LAN bridge"
+msgstr "Không thể gắn giao diện USB vào cầu nối LAN"
+
+msgid "The language pack is not installed"
+msgstr "Gói ngôn ngữ chưa được cài đặt"
+
+msgid "No language given"
+msgstr "Chưa chỉ định ngôn ngữ"
+
+msgid "The language could not be changed"
+msgstr "Không thể thay đổi ngôn ngữ"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI không hỗ trợ ngôn ngữ này"
+
+msgid "No uploaded language pack"
+msgstr "Không có gói ngôn ngữ đã tải lên"
+
+msgid "An installation is already running"
+msgstr "Đang có một quá trình cài đặt khác chạy"
+
+msgid "The language pack could not be removed"
+msgstr "Không thể gỡ gói ngôn ngữ"
+
+msgid "Lock cache unavailable"
+msgstr "Bộ đệm khóa không khả dụng"
+
+msgid "No serving cell to lock to"
+msgstr "Không có cell phục vụ để khóa"

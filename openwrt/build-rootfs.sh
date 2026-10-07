@@ -67,15 +67,18 @@ if [ "$SYSTEM" = openwrt-luci ]; then
     [ "${theme_hash%% *}" = "$THEME_SHA" ] || {
         echo "Aurora APK checksum mismatch: $THEME_APK" >&2; exit 1;
     }
-    # The panel's catalogs, from every po/<lang>/mu300.po there is. A catalog without translations (English: the
-    # msgids are the English text) is no file at all; Turkish and Chinese must be one each.
+    # The panel's catalogs in the image: Turkish and Simplified Chinese (the others are the lang extra,
+    # tools/make-extra.sh). A catalog without translations (English: the msgids are the English text) is no file at
+    # all. Named by LuCI's code for the language (openwrt/luci-languages.tsv: zh_Hans is zh-cn), or LuCI does not
+    # load them.
     CAT=$(mktemp -d)
-    for po in "$TOP"/openwrt/luci-app-mu300/po/*/mu300.po; do
-        l=${po%/mu300.po}; l=${l##*/}
-        python3 "$TOP/tools/po2lmo.py" "$po" "$CAT/mu300.$l.lmo"
+    for l in tr zh_Hans; do
+        code=$(awk -F '\t' -v d="$l" '$1 == d {print $2}' "$TOP/openwrt/luci-languages.tsv")
+        [ -n "$code" ] || { echo "no row for $l in openwrt/luci-languages.tsv" >&2; exit 1; }
+        python3 "$TOP/tools/po2lmo.py" "$TOP/openwrt/luci-app-mu300/po/$l/mu300.po" "$CAT/mu300.$code.lmo"
     done
     [ -s "$CAT/mu300.tr.lmo" ] || { echo "no Turkish catalog built from openwrt/luci-app-mu300/po/tr" >&2; exit 1; }
-    [ -s "$CAT/mu300.zh_Hans.lmo" ] || { echo "no Chinese catalog built from openwrt/luci-app-mu300/po/zh_Hans" >&2; exit 1; }
+    [ -s "$CAT/mu300.zh-cn.lmo" ] || { echo "no Chinese catalog built from openwrt/luci-app-mu300/po/zh_Hans" >&2; exit 1; }
     set -- -v "$THEME_APK:/in/luci-theme-aurora.apk:ro" -v "$TOP/openwrt/luci-app-mu300:/in/luci-plugin:ro" \
         -v "$TOP/openwrt/luci-overlay:/in/luci-overlay:ro" -v "$CAT:/in/catalogs:ro"
 fi
@@ -124,15 +127,33 @@ apk update >/dev/null
 # i2c-tools, gpiod-tools: mu300-usb (the charger of the U30 Air) and mu300-nfc (its NFC tag)
 apk add wpad-basic-mbedtls wifi-scripts iwinfo wireless-regdb iw bash ip-full coreutils-stty openssl-util \
     i2c-tools gpiod-tools >/dev/null
-if [ -d /in/luci-plugin ]; then
-    # LuCI itself in the languages of the panel, and the pinned Aurora theme
-    apk add luci-i18n-base-tr luci-i18n-base-zh-cn luci-i18n-firewall-tr luci-i18n-firewall-zh-cn >/dev/null
-    apk add --allow-untrusted /in/luci-theme-aurora.apk >/dev/null
-fi
+# the router protocols LuCI offers, with their tools: WireGuard, PPTP/L2TP (PPPoE is in the base), 6in4/6rd/DS-Lite,
+# GRE and VXLAN, ipset, and SQM (cake). Their kmod-* dependencies install the 6.12 modules of the feed, removed below like
+# every other kmod: the mainline kernels have them built in or as modules of their own (mu300-mainline.config), 5.4
+# has some of them only
+apk add wireguard-tools luci-proto-wireguard ppp-mod-pptp xl2tpd 6in4 6rd ds-lite gre luci-proto-gre vxlan \
+    luci-proto-vxlan ipset sqm-scripts luci-app-sqm >/dev/null
+# the pinned Aurora theme
+[ -d /in/luci-plugin ] && apk add --allow-untrusted /in/luci-theme-aurora.apk >/dev/null
 # ujail drops CAP_PERFMON (38), which this 5.4 kernel does not know: jailed services (dnsmasq, ntpd) crash-loop
 apk del procd-ujail procd-seccomp >/dev/null 2>&1 || true
 # online firmware upgrades flash whole-disk armsr images: that would overwrite the eMMC, so remove them
 apk del luci-app-attendedsysupgrade attendedsysupgrade-common owut >/dev/null 2>&1 || true
+# LuCI in Turkish and Simplified Chinese besides English, in both systems: the translation of luci-base and of
+# every LuCI app the image has that the feed translates (apk checks each package against the signed index). Their
+# own uci-defaults, run by apk here, register the languages in luci.languages; the other languages are the lang
+# extra (mu300-extra install lang).
+i18n=
+for c in base $(apk list --installed "luci-app-*" | sed -n "s/^luci-app-\([^ ]*\)-[0-9][^ -]* .*/\1/p"); do
+    for l in tr zh-cn; do
+        apk search "luci-i18n-$c-$l" | grep -q "^luci-i18n-$c-$l-[0-9]" && i18n="$i18n luci-i18n-$c-$l"
+    done
+done
+echo "LuCI translations:$i18n"
+for l in tr zh-cn; do
+    case " $i18n " in *" luci-i18n-base-$l "*) ;; *) echo "no LuCI base translation $l in the feed" >&2; exit 1 ;; esac
+done
+apk add $i18n >/dev/null
 R=/build/root; mkdir -p $R
 # copy the live filesystem of this container (the OpenWrt rootfs plus packages), without runtime mounts
 for e in /*; do
@@ -161,29 +182,25 @@ if [ -d /in/luci-plugin ]; then
     cp -a /in/luci-plugin/root/. $R/
     cp -a /in/luci-plugin/htdocs/. $R/www/
     chmod 0755 $R/etc/init.d/unisoc-modem-ui $R/etc/hotplug.d/net/90-unisoc-usb-host $R/etc/hotplug.d/iface/90-unisoc-usb-host $R/usr/libexec/rpcd/mu300dash $R/usr/libexec/unisoc-modem/*
-    L=$R/usr/lib/lua/luci/i18n
-    # LuCI names its Chinese catalog after its own language code (base.zh-cn.lmo), not after the po directory
-    # (zh_Hans): the panel catalog must carry the same name to be loaded
-    zh=$(ls $L/base.zh*.lmo 2>/dev/null | head -1); zh=${zh##*/base.}; zh=${zh%.lmo}
-    [ -n "$zh" ] || { echo "no Chinese LuCI catalog (base.zh*.lmo) in the image" >&2; exit 1; }
-    for f in /in/catalogs/mu300.*.lmo; do
-        [ -e "$f" ] || continue
-        l=${f#/in/catalogs/mu300.}; l=${l%.lmo}
-        [ "$l" = zh_Hans ] && l=$zh
-        cp "$f" $L/mu300.$l.lmo
-    done
-    # the languages LuCI offers; the base catalogs normally register their own, this covers one that did not
-    uci -c $R/etc/config -q get luci.languages.tr >/dev/null || uci -c $R/etc/config set luci.languages.tr="Türkçe"
-    uci -c $R/etc/config -q get luci.languages.zh_cn >/dev/null ||
-        uci -c $R/etc/config set luci.languages.zh_cn="$(printf "\344\270\255\346\226\207 (Chinese)")"
-    uci -c $R/etc/config commit luci
-    uci -c $R/etc/config show luci.languages
+    # the panel catalogs, named as LuCI names the language (base.zh-cn.lmo: mu300.zh-cn.lmo)
+    for f in /in/catalogs/mu300.*.lmo; do cp "$f" $R/usr/lib/lua/luci/i18n/; done
     [ -s $R/www/luci-static/aurora/main.css ] || { echo "Aurora theme assets missing" >&2; exit 1; }
     # the default theme is set on first boot (etc/uci-defaults/91-mu300-luci), after the themes pick their own
     grep -q "mediaurlbase=.*/luci-static/aurora" $R/etc/uci-defaults/91-mu300-luci || {
         echo "Aurora theme is not the LuCI default" >&2; exit 1;
     }
 fi
+# the languages LuCI offers (System > System > Language and Style lists English and these); the base catalogs register
+# their own, this covers one that did not
+L=$R/usr/lib/lua/luci/i18n
+for l in tr zh-cn; do
+    [ -s $L/base.$l.lmo ] || { echo "LuCI catalog base.$l.lmo missing" >&2; exit 1; }
+done
+uci -c $R/etc/config -q get luci.languages.tr >/dev/null || uci -c $R/etc/config set luci.languages.tr="Türkçe (Turkish)"
+uci -c $R/etc/config -q get luci.languages.zh_cn >/dev/null ||
+    uci -c $R/etc/config set luci.languages.zh_cn="$(printf "\347\256\200\344\275\223\344\270\255\346\226\207 (Simplified Chinese)")"
+uci -c $R/etc/config commit luci
+uci -c $R/etc/config show luci.languages
 mv $R/sbin/sysupgrade $R/sbin/sysupgrade.openwrt && mv $R/usr/libexec/mu300-sysupgrade $R/sbin/sysupgrade
 M=$R/lib/modules/$KREL; mkdir -p $M
 cp /in/modules/*.ko $M/          # ubox kmodloader expects the modules flat in /lib/modules/<release>/
@@ -246,7 +263,8 @@ apk list --installed | sort > $R/etc/mu300/packages.txt
 for c in $(cat /in/opt-mu300/lib/path-commands); do ln -sf /opt/mu300/bin/$c $R/usr/bin/$c; done
 # no kernel of its own: OpenWrt kmods (6.12) and grub are unused on this device
 rm -rf $R/lib/modules/6.* $R/boot
-# out-of-tree modules for the experimental mainline kernel (upstream/)
+# the modules of the mainline kernel (upstream/out: the vendor ones and those of the kernel itself, about 20 MiB), so that
+# a switch to it needs nothing more; mu300-update installs those of the bundle it boots over them
 if ls /in/mainline-modules/*.ko >/dev/null 2>&1; then
     # the release the modules were built for (their vermagic), not a version written down here
     krel=$(for f in /in/mainline-modules/*.ko; do tr "\0" "\n" < $f | sed -n "s/^vermagic=\([^ ]*\) .*/\1/p"; break; done)

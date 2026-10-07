@@ -91,6 +91,7 @@ exit 0
 DEFAULTS = {
     'dashboard-info': '{"ok":1,"host":"f50"}', 'cell': '{"ok":1}', 'action': '{"ok":1,"op":"x"}',
     'lock': '{"ok":1,"mode":{"label":"auto"}}', 'device-usb': '{"ok":1}', 'at': 'OK', 'sms': 'sent (12)',
+    'languages': '{"ok":1}',
 }
 
 # The methods that start something with setsid (in the background of mu300dash)
@@ -210,7 +211,8 @@ class Mu300Dash(ShellTest):
 
 class Inventory(Mu300Dash):
     METHODS = {'sysinfo', 'status', 'signal', 'act', 'at', 'at_history', 'lock_get', 'lock_set', 'sms_list',
-               'sms_show', 'sms_send', 'sms_delete', 'sms_sync', 'usb_get', 'usb_set', 'usb_net_list', 'usb_net_add'}
+               'sms_show', 'sms_send', 'sms_delete', 'sms_sync', 'usb_get', 'usb_set', 'usb_net_list', 'usb_net_add',
+               'lang_get', 'lang_set'}
 
     def test_list_declares_every_method(self):
         for shell in self.each_shell():
@@ -232,7 +234,7 @@ class Inventory(Mu300Dash):
     def test_the_changed_scripts_parse(self):
         for shell in self.each_shell():
             for p in [DASH, LIB] + [ADAPTERS / n for n in ('action', 'at', 'boot-replay', 'cell', 'dashboard-info',
-                                                         'device-usb', 'lock')]:
+                                                         'device-usb', 'lock', 'languages')]:
                 with self.subTest(p=p.name):
                     r = subprocess.run(shell + ['-n', str(p)], capture_output=True, text=True)
                     self.assertEqual(r.returncode, 0, r.stderr)
@@ -266,6 +268,11 @@ class Refusals(Mu300Dash):
         ('sms_delete', {'id': '3'}, 'id', '3'),
         ('sms_delete', {'id': '3'}, 'sim', '1'),
         ('usb_set', {'kind': 'role', 'value': 'host', 'scope': '', 'auto': '0'}, 'kind', 'role'),
+        ('lang_set', {'op': 'enable', 'codes': 'de'}, 'op', 'enable'),
+        ('lang_set', {'op': 'enable', 'codes': 'de'}, 'codes', 'de'),
+        ('lang_set', {'op': 'disable', 'codes': 'de pt_br'}, 'codes', 'de pt_br'),
+        ('lang_set', {'op': 'use', 'codes': 'en'}, 'codes', 'en'),
+        ('lang_set', {'op': 'install', 'source': 'file'}, 'source', 'file'),
         ('usb_set', {'kind': 'role', 'value': 'host', 'scope': '', 'auto': '0'}, 'value', 'host'),
         ('usb_set', {'kind': 'role', 'value': 'host', 'scope': '', 'auto': '0'}, 'auto', '0'),
         ('usb_set', {'kind': 'role', 'value': 'host', 'scope': '', 'auto': '0'}, 'scope', ''),
@@ -311,6 +318,22 @@ class Refusals(Mu300Dash):
             ('usb iface slash', 'usb_net_add', {'iface': 'eth1/../x'}),
             ('usb iface 16', 'usb_net_add', {'iface': 'e' * 16}),
             ('usb iface empty', 'usb_net_add', {'iface': ''}),
+            ('lang op', 'lang_set', {'op': 'shell', 'codes': 'de'}),
+            ('lang no codes', 'lang_set', {'op': 'enable', 'codes': ''}),
+            ('lang code long', 'lang_set', {'op': 'enable', 'codes': 'deutsch'}),
+            ('lang code upper', 'lang_set', {'op': 'enable', 'codes': 'DE'}),
+            ('lang code region', 'lang_set', {'op': 'enable', 'codes': 'pt-br'}),
+            ('lang two spaces', 'lang_set', {'op': 'enable', 'codes': 'de  fr'}),
+            ('lang 65 codes', 'lang_set', {'op': 'enable', 'codes': ' '.join(['de'] * 65)}),
+            ('lang all and more', 'lang_set', {'op': 'enable', 'codes': 'all de'}),
+            ('lang enable en', 'lang_set', {'op': 'enable', 'codes': 'en'}),
+            ('lang use two', 'lang_set', {'op': 'use', 'codes': 'de fr'}),
+            ('lang use all', 'lang_set', {'op': 'use', 'codes': 'all'}),
+            ('lang source path', 'lang_set', {'op': 'install', 'source': '/etc/shadow'}),
+            ('lang source url', 'lang_set', {'op': 'install', 'source': 'http://x/y.tar.gz'}),
+            ('lang install codes', 'lang_set', {'op': 'install', 'source': 'file', 'codes': 'de'}),
+            ('lang enable source', 'lang_set', {'op': 'enable', 'codes': 'de', 'source': 'file'}),
+            ('lang remove codes', 'lang_set', {'op': 'remove', 'codes': 'de'}),
         ]
         for shell in self.each_shell():
             self.assert_refused(shell, jobs)
@@ -348,6 +371,14 @@ class Passthrough(Mu300Dash):
         ('usb_net_list', {}, [['device-usb', 'net-list']]),
         ('usb_net_add', {'iface': 'eth1'}, [['device-usb', 'net-add', 'eth1']]),
         ('usb_net_add', {'iface': 'enx00e04c680001'}, [['device-usb', 'net-add', 'enx00e04c680001']]),
+        ('lang_get', {}, [['languages', 'get']]),
+        ('lang_set', {'op': 'enable', 'codes': 'de pt_br'}, [['languages', 'enable', 'de', 'pt_br']]),
+        ('lang_set', {'op': 'disable', 'codes': 'all'}, [['languages', 'disable', 'all']]),
+        ('lang_set', {'op': 'use', 'codes': 'auto'}, [['languages', 'use', 'auto']]),
+        ('lang_set', {'op': 'use', 'codes': 'zh_cn'}, [['languages', 'use', 'zh_cn']]),
+        ('lang_set', {'op': 'install', 'source': 'release'}, [['languages', 'install', 'release']]),
+        ('lang_set', {'op': 'install', 'source': 'file'}, [['languages', 'install', 'file']]),
+        ('lang_set', {'op': 'remove'}, [['languages', 'remove']]),
     ]
 
     def test_valid_values_reach_the_adapter(self):
@@ -544,11 +575,115 @@ class Adapters(Mu300Dash):
                 self.assertEqual(r.returncode, 2, r.stderr)
 
 
+class LanguagesAdapter(ShellTest):
+    """unisoc-modem/languages: what the Languages page gets and starts, through a stub mu300-extra and uci"""
+
+    def setUp(self):
+        super().setUp()
+        self.disk = self.tmp / 'disk'
+        self.job = self.tmp / 'job'
+        self.job.mkdir(mode=0o700)
+        self.upload = self.tmp / 'upload.tar.gz'
+        # mu300-extra: records its arguments and MU300_EXTRA_FILE (and what that file holds), prints a list
+        self.stub('mu300-extra', 'printf "%s|" "$@" >> "$STUBLOG/extra.log"; '
+                                 'printf "file=%s\\n" "${MU300_EXTRA_FILE:-}" >> "$STUBLOG/extra.log"; '
+                                 '[ -z "${MU300_EXTRA_FILE:-}" ] || cat "$MU300_EXTRA_FILE" >> "$STUBLOG/extra.log"; '
+                                 'case "$1 ${2:-}" in "lang list"|"lang ") '
+                                 'printf "de\\tenabled\\tDeutsch (German)\\nja\\tdisabled\\tA \\"q\\" \\\\\\\\ b\\n" ;; esac')
+        self.stub('setsid', '"$@"')
+        self.uci = {'luci.main.lang': 'en', 'luci.languages.tr': 'T\u00fcrk\u00e7e (Turkish)', 'luci.languages.de': 'Deutsch (German)'}
+        lines = ''.join(f"{k}) printf '%s\\n' '{v}' ;; " for k, v in self.uci.items())
+        show = ''.join(f"printf \"%s='%s'\\n\" '{k}' '{v}'; " for k, v in self.uci.items() if k.startswith('luci.languages.'))
+        self.stub('uci', 'echo "$*" >> "$STUBLOG/uci.log"; a=; for x; do [ "$x" = -q ] || a="$a $x"; done; set -- $a; '
+                         f'case $1 in get) case $2 in {lines} *) exit 1 ;; esac ;; '
+                         f'show) printf "luci.languages=internal\\n"; {show} ;; esac; exit 0')
+
+    def run_ad(self, shell, *args):
+        r = self.script(shell, ADAPTERS / 'languages', *args, MU300_EXTRA_CMD=self.stubs / 'mu300-extra',
+                        MU300_DISK=self.disk, MU300_LANG_UPLOAD=self.upload, MU300_LANG_JOB_DIR=self.job)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return json.loads(r.stdout)
+
+    def wait_job(self):
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline and (self.job / 'lang-job.state').read_text().strip() == 'running':
+            time.sleep(0.05)
+        time.sleep(0.1)
+
+    def log(self):
+        p = self.tmp / 'extra.log'
+        t = p.read_text() if p.exists() else ''
+        p.unlink(missing_ok=True)
+        return t
+
+    def test_get_reports_and_escapes(self):
+        for shell in self.each_shell():
+            r = self.run_ad(shell, 'get')
+            self.assertEqual(r['extra']['installed'], 0)
+            self.assertEqual(r['current'], 'en')
+            self.assertEqual(sorted(l['code'] for l in r['luci']), ['de', 'tr'])
+            (self.disk / 'extra/lang/i18n').mkdir(parents=True, exist_ok=True)
+            (self.disk / 'extra/lang/i18n/mu300.de.lmo').write_text('x')
+            (self.disk / 'extra/lang/release').write_text('v1\n')
+            r = self.run_ad(shell, 'get')
+            self.assertEqual(r['extra'], {'installed': 1, 'release': 'v1', 'languages': [
+                {'code': 'de', 'name': 'Deutsch (German)', 'enabled': 1, 'panel': 1},
+                {'code': 'ja', 'name': 'A "q" \\ b', 'enabled': 0, 'panel': 0}]}, shell)
+            shutil.rmtree(self.disk)
+
+    def test_switch_and_use_check_again(self):
+        (self.disk / 'extra/lang/i18n').mkdir(parents=True)
+        for shell in self.each_shell():
+            self.assertEqual(self.run_ad(shell, 'enable', 'de', 'ja'), {'ok': 1})
+            self.assertEqual(self.log(), 'lang|enable|de|ja|file=\n')
+            for bad in (('enable', 'de;x'), ('disable', '-rf'), ('enable',)):
+                self.assertEqual(self.run_ad(shell, *bad)['ok'], 0, bad)
+            self.assertEqual(self.log(), '')
+            self.assertEqual(self.run_ad(shell, 'use', 'de'), {'ok': 1})
+            self.assertEqual(self.run_ad(shell, 'use', 'auto'), {'ok': 1})
+            # only a language LuCI offers
+            self.assertEqual(self.run_ad(shell, 'use', 'fr')['ok'], 0)
+            self.assertEqual(self.run_ad(shell, 'use', 'de;x')['ok'], 0)
+            self.assertIn('set luci.main.lang=de', (self.tmp / 'uci.log').read_text())
+            self.assertNotIn('lang=fr', (self.tmp / 'uci.log').read_text())
+
+    def test_an_upload_is_moved_out_of_tmp_before_anything_reads_it(self):
+        for shell in self.each_shell():
+            self.upload.write_bytes(b'PACK')
+            r = self.run_ad(shell, 'install', 'file')
+            self.assertEqual(r, {'ok': 1, 'started': 1})
+            self.assertFalse(self.upload.exists(), 'the upload is moved away')
+            self.wait_job()
+            # mu300-extra got the private copy, which is gone after the job
+            log = self.log()
+            self.assertEqual(log, f'install|lang|file={self.job}/lang-upload.tar.gz\nPACK', shell)
+            self.assertFalse((self.job / 'lang-upload.tar.gz').exists())
+            self.assertEqual(self.run_ad(shell, 'get')['job']['state'], 'done')
+            # a link planted at the upload path is not followed
+            secret = self.tmp / 'secret'
+            secret.write_text('root:x')
+            os.symlink(secret, self.upload)
+            r = self.run_ad(shell, 'install', 'file')
+            self.assertEqual(r['ok'], 0)
+            self.assertEqual(self.log(), '')
+            self.upload.unlink()
+            self.assertEqual(self.run_ad(shell, 'install', 'file')['ok'], 0)   # nothing uploaded
+            self.assertEqual(self.run_ad(shell, 'install', '/etc/shadow')['ok'], 0)
+            self.assertEqual(self.run_ad(shell, 'install', 'release'), {'ok': 1, 'started': 1})
+            self.wait_job()
+            self.assertEqual(self.log(), 'install|lang|file=\n')
+            # a job that died without saying how it ended (killed, a reboot) is a failed one, not one running forever
+            (self.job / 'lang-job.state').write_text('running\n')
+            (self.job / 'lang-job.pid').write_text('999999\n')
+            self.assertEqual(self.run_ad(shell, 'get')['job']['state'], 'failed')
+            (self.job / 'lang-job.pid').unlink()
+
+
 class Acl(unittest.TestCase):
     # SMS bodies (one-time codes) and the AT history (AT+CPIN PINs) are not for read-only users (ruling R14)
-    READ = {'sysinfo', 'status', 'signal', 'lock_get', 'usb_get', 'usb_net_list'}
+    READ = {'sysinfo', 'status', 'signal', 'lock_get', 'usb_get', 'usb_net_list', 'lang_get'}
     WRITE = {'act', 'at', 'at_history', 'lock_set', 'sms_list', 'sms_show', 'sms_send', 'sms_delete', 'sms_sync',
-             'usb_set', 'usb_net_add'}
+             'usb_set', 'usb_net_add', 'lang_set'}
 
     def test_actions_need_write_access(self):
         acl = json.loads(ACL.read_text())['luci-app-mu300']
@@ -557,6 +692,11 @@ class Acl(unittest.TestCase):
         self.assertEqual(read, self.READ)
         self.assertEqual(write, self.WRITE)
         self.assertEqual(read | write, Inventory.METHODS)
+        # the Languages page uploads to one fixed path, and only with write access
+        self.assertEqual(acl['write'].get('cgi-io'), ['upload'])
+        self.assertEqual(acl['write'].get('file'), {'/tmp/mu300-extra-lang.tar.gz': ['write']})
+        self.assertNotIn('cgi-io', acl['read'])
+        self.assertNotIn('file', acl['read'])
 
 
 LIB = APP / 'usr' / 'share' / 'unisoc-modem' / 'lib.sh'

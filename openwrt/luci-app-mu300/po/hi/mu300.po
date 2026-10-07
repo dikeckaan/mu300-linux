@@ -1,0 +1,1276 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: hi\n"
+
+msgid "Status dashboard"
+msgstr "स्थिति डैशबोर्ड"
+
+msgid "Cellular"
+msgstr "सेल्युलर"
+
+msgid "Network locks"
+msgstr "नेटवर्क लॉक"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "AT terminal"
+msgstr "AT टर्मिनल"
+
+msgid "Adapter settings"
+msgstr "एडेप्टर सेटिंग्स"
+
+msgid "Device management"
+msgstr "डिवाइस प्रबंधन"
+
+msgid "Languages"
+msgstr "भाषाएँ"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
+msgstr "MU300 नियंत्रण केंद्र: स्थिति डैशबोर्ड, नेटवर्क लॉक, AT टर्मिनल और SMS"
+
+msgid "China Mobile"
+msgstr "China Mobile"
+
+msgid "China Unicom"
+msgstr "China Unicom"
+
+msgid "China Telecom"
+msgstr "China Telecom"
+
+msgid "China Broadnet"
+msgstr "China Broadnet"
+
+msgid "China Tietong"
+msgstr "China Tietong"
+
+msgid "Excellent"
+msgstr "उत्कृष्ट"
+
+msgid "Good"
+msgstr "अच्छा"
+
+msgid "Fair"
+msgstr "औसत"
+
+msgid "Poor"
+msgstr "कमज़ोर"
+
+msgid "Unknown"
+msgstr "अज्ञात"
+
+msgid "%d d %d h"
+msgstr "%d दिन %d घं"
+
+msgid "%d h %d min"
+msgstr "%d घं %d मि"
+
+msgid "%d min"
+msgstr "%d मि"
+
+msgid "No neighbor-cell data"
+msgstr "पड़ोसी सेल का कोई डेटा नहीं"
+
+msgid "Locked"
+msgstr "लॉक है"
+
+msgid "Lock"
+msgstr "लॉक करें"
+
+msgid "Unknown error"
+msgstr "अज्ञात त्रुटि"
+
+msgid "Confirm"
+msgstr "पुष्टि करें"
+
+msgid "OK"
+msgstr "ठीक है"
+
+msgid "Cancel"
+msgstr "रद्द करें"
+
+msgid "New SMS · %s"
+msgstr "नया SMS · %s"
+
+msgid "Unknown number"
+msgstr "अज्ञात नंबर"
+
+msgid "Select"
+msgstr "चुनें"
+
+msgid "Basic"
+msgstr "मूल"
+
+msgid "Registration/signal"
+msgstr "पंजीकरण/सिग्नल"
+
+msgid "Bearer"
+msgstr "बेयरर"
+
+msgid "Engineering mode"
+msgstr "इंजीनियरिंग मोड"
+
+msgid "AT command (↑↓ history, Enter to send)"
+msgstr "AT कमांड (↑↓ इतिहास, भेजने के लिए Enter)"
+
+msgid "Send"
+msgstr "भेजें"
+
+msgid "Clear screen"
+msgstr "स्क्रीन साफ़ करें"
+
+msgid "Ready."
+msgstr "तैयार।"
+
+msgid "Session history (click to reuse)"
+msgstr "सत्र इतिहास (फिर से उपयोग के लिए क्लिक करें)"
+
+msgid "(no output)"
+msgstr "(कोई आउटपुट नहीं)"
+
+msgid "Request failed"
+msgstr "अनुरोध विफल"
+
+msgid "(empty)"
+msgstr "(खाली)"
+
+msgid "USB role"
+msgstr "USB भूमिका"
+
+msgid "Current role"
+msgstr "वर्तमान भूमिका"
+
+msgid "Switch USB role"
+msgstr "USB भूमिका बदलें"
+
+msgid "Device mode"
+msgstr "डिवाइस मोड"
+
+msgid "Host mode"
+msgstr "होस्ट मोड"
+
+msgid "Enable host mode at boot"
+msgstr "बूट पर होस्ट मोड सक्षम करें"
+
+msgid "Apply role"
+msgstr "भूमिका लागू करें"
+
+msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
+msgstr "होस्ट मोड इस पोर्ट पर USB नेटवर्किंग और सीरियल को डिस्कनेक्ट कर देता है। F50 में बैटरी नहीं है; प्रबंधन कनेक्शन टूट सकता है और USB एडेप्टर को आमतौर पर बाहरी पावर वाले हब की ज़रूरत होती है।"
+
+msgid "USB network mode"
+msgstr "USB नेटवर्क मोड"
+
+msgid "Network protocol"
+msgstr "नेटवर्क प्रोटोकॉल"
+
+msgid "Apply duration"
+msgstr "लागू रहने की अवधि"
+
+msgid "Next reboot only"
+msgstr "केवल अगला रीबूट"
+
+msgid "Permanent"
+msgstr "स्थायी"
+
+msgid "Enable selected protocol"
+msgstr "चयनित प्रोटोकॉल सक्षम करें"
+
+msgid "Save; apply after reboot"
+msgstr "सहेजें; रीबूट के बाद लागू करें"
+
+msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
+msgstr "NCM डिफ़ॉल्ट है। Windows में ECM का मूल समर्थन नहीं है; RNDIS एन्यूमरेशन बदल देता है। “चयनित प्रोटोकॉल सक्षम करें” बंद होने पर केवल आपका चयन सहेजा जाता है। “केवल अगला रीबूट” एक बार लागू होता है, फिर NCM पर लौट आता है।"
+
+msgid "USB adapters"
+msgstr "USB एडेप्टर"
+
+msgid "Refresh"
+msgstr "रीफ़्रेश करें"
+
+msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
+msgstr "केवल होस्ट मोड में उपलब्ध। रीफ़्रेश करने पर मिले हुए USB एडेप्टर चालू हो जाते हैं; LAN में जोड़ने से ब्रिज सहेजा जाता है और नेटवर्किंग पुनः लोड होती है।"
+
+msgid "Unavailable"
+msgstr "अनुपलब्ध"
+
+msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
+msgstr "होस्ट मोड में USB नेटवर्क मोड उपलब्ध नहीं है; होस्ट ऑटो-स्टार्ट USB नेटवर्क का ऑटो-स्टार्ट भी बंद कर देता है।"
+
+msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
+msgstr "होस्ट मोड USB प्रबंधन को तुरंत डिस्कनेक्ट कर देता है। F50 में बैटरी नहीं है और पेरिफ़ेरल्स को बाहरी पावर की ज़रूरत हो सकती है; सुनिश्चित करें कि प्रबंधन का कोई अन्य रास्ता मौजूद है।"
+
+msgid "USB networking and serial will re-enumerate in device mode."
+msgstr "डिवाइस मोड में USB नेटवर्किंग और सीरियल फिर से एन्यूमरेट होंगे।"
+
+msgid "Switch USB role?"
+msgstr "USB भूमिका बदलें?"
+
+msgid "Apply"
+msgstr "लागू करें"
+
+msgid "Switching USB role…"
+msgstr "USB भूमिका बदली जा रही है…"
+
+msgid "Switch failed: %s"
+msgstr "बदलना विफल: %s"
+
+msgid "Management connection lost; reconnect to confirm the USB role."
+msgstr "प्रबंधन कनेक्शन टूट गया; USB भूमिका की पुष्टि के लिए फिर से कनेक्ट करें।"
+
+msgid "Switch request accepted; the USB connection may briefly disconnect."
+msgstr "बदलने का अनुरोध स्वीकार हुआ; USB कनेक्शन कुछ देर के लिए टूट सकता है।"
+
+msgid "USB role applied"
+msgstr "USB भूमिका लागू की गई"
+
+msgid "Save USB network mode?"
+msgstr "USB नेटवर्क मोड सहेजें?"
+
+msgid "The network mode applies on the next reboot; USB management may need to reconnect."
+msgstr "नेटवर्क मोड अगले रीबूट पर लागू होगा; USB प्रबंधन को फिर से कनेक्ट करना पड़ सकता है।"
+
+msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
+msgstr "केवल चयन सहेजा जाएगा; चयनित प्रोटोकॉल अक्षम होने पर अगला बूट डिफ़ॉल्ट NCM का ही उपयोग करेगा।"
+
+msgid "Save"
+msgstr "सहेजें"
+
+msgid "Saving USB network settings…"
+msgstr "USB नेटवर्क सेटिंग्स सहेजी जा रही हैं…"
+
+msgid "Settings saved"
+msgstr "सेटिंग्स सहेजी गईं"
+
+msgid "Save failed: %s"
+msgstr "सहेजना विफल: %s"
+
+msgid "Unable to confirm the role yet; reconnect and refresh the page."
+msgstr "भूमिका की अभी पुष्टि नहीं हो सकी; फिर से कनेक्ट करें और पेज रीफ़्रेश करें।"
+
+msgid "Switch to host mode to see USB adapters."
+msgstr "USB एडेप्टर देखने के लिए होस्ट मोड पर जाएँ।"
+
+msgid "Scanning USB adapters…"
+msgstr "USB एडेप्टर स्कैन किए जा रहे हैं…"
+
+msgid "No USB adapters found."
+msgstr "कोई USB एडेप्टर नहीं मिला।"
+
+msgid "Link connected"
+msgstr "लिंक जुड़ा है"
+
+msgid "No link; enable attempted"
+msgstr "लिंक नहीं; सक्षम करने का प्रयास किया गया"
+
+msgid "Added to LAN"
+msgstr "LAN में जोड़ा गया"
+
+msgid "Add to LAN"
+msgstr "LAN में जोड़ें"
+
+msgid "Add USB adapter to LAN?"
+msgstr "USB एडेप्टर को LAN में जोड़ें?"
+
+msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
+msgstr "इससे ब्रिज कॉन्फ़िगरेशन सहेजा जाएगा और नेटवर्किंग पुनः लोड होगी; मौजूदा कनेक्शन कुछ देर के लिए टूट सकते हैं।"
+
+msgid "Add"
+msgstr "जोड़ें"
+
+msgid "Adding USB adapter…"
+msgstr "USB एडेप्टर जोड़ा जा रहा है…"
+
+msgid "Add failed: %s"
+msgstr "जोड़ना विफल: %s"
+
+msgid "Modulation DL/UL"
+msgstr "मॉड्यूलेशन DL/UL"
+
+msgid "Estimated from current MCS"
+msgstr "वर्तमान MCS से अनुमानित"
+
+msgid "MCS DL/UL"
+msgstr "MCS DL/UL"
+
+msgid "BLER DL/UL"
+msgstr "BLER DL/UL"
+
+msgid "Link & traffic"
+msgstr "लिंक और ट्रैफ़िक"
+
+msgid "Download rate"
+msgstr "डाउनलोड गति"
+
+msgid "Upload rate"
+msgstr "अपलोड गति"
+
+msgid "Total received"
+msgstr "कुल प्राप्त"
+
+msgid "Total sent"
+msgstr "कुल भेजा गया"
+
+msgid "Session duration"
+msgstr "सत्र अवधि"
+
+msgid "Registration"
+msgstr "पंजीकरण"
+
+msgid "Bandwidth"
+msgstr "बैंडविड्थ"
+
+msgid "AMBR DL/UL"
+msgstr "AMBR DL/UL"
+
+msgid "Wi-Fi · LAN · Device · SIM"
+msgstr "Wi-Fi · LAN · डिवाइस · SIM"
+
+msgid "CPU usage"
+msgstr "CPU उपयोग"
+
+msgid "Memory"
+msgstr "मेमोरी"
+
+msgid "Storage"
+msgstr "स्टोरेज"
+
+msgid "Battery"
+msgstr "बैटरी"
+
+msgid "Channel"
+msgstr "चैनल"
+
+msgid "Encryption"
+msgstr "एन्क्रिप्शन"
+
+msgid "Hidden SSID"
+msgstr "छिपा SSID"
+
+msgid "Country"
+msgstr "देश"
+
+msgid "AP status"
+msgstr "AP स्थिति"
+
+msgid "USB network"
+msgstr "USB नेटवर्क"
+
+msgid "Connection tracking"
+msgstr "कनेक्शन ट्रैकिंग"
+
+msgid "LAN address"
+msgstr "LAN पता"
+
+msgid "Wi-Fi clients"
+msgstr "Wi-Fi क्लाइंट"
+
+msgid "DHCP leases"
+msgstr "DHCP लीज़"
+
+msgid "Device model"
+msgstr "डिवाइस मॉडल"
+
+msgid "System"
+msgstr "सिस्टम"
+
+msgid "Modem"
+msgstr "मॉडेम"
+
+msgid "Carrier"
+msgstr "ऑपरेटर"
+
+msgid "Module"
+msgstr "मॉड्यूल"
+
+msgid "Firmware"
+msgstr "फ़र्मवेयर"
+
+msgid "Show SIM identifiers"
+msgstr "SIM पहचानकर्ता दिखाएँ"
+
+msgid "Quick controls"
+msgstr "त्वरित नियंत्रण"
+
+msgid "Data connection"
+msgstr "डेटा कनेक्शन"
+
+msgid "Cellular radio"
+msgstr "सेल्युलर रेडियो"
+
+msgid "Wi-Fi hotspot"
+msgstr "Wi-Fi हॉटस्पॉट"
+
+msgid "Restart modem"
+msgstr "मॉडेम पुनः आरंभ करें"
+
+msgid "Restart device"
+msgstr "डिवाइस पुनः आरंभ करें"
+
+msgid "Switch to Android"
+msgstr "Android पर जाएँ"
+
+msgid "Neighbor cells"
+msgstr "पड़ोसी सेल"
+
+msgid "RAT/Band"
+msgstr "RAT/बैंड"
+
+msgid "Frequency"
+msgstr "आवृत्ति"
+
+msgid "Running %s…"
+msgstr "%s चल रहा है…"
+
+msgid "Started in background: %s"
+msgstr "पृष्ठभूमि में शुरू किया गया: %s"
+
+msgid "Done: %s"
+msgstr "पूर्ण: %s"
+
+msgid "Failed: %s"
+msgstr "विफल: %s"
+
+msgid "Disconnecting data…"
+msgstr "डेटा डिस्कनेक्ट किया जा रहा है…"
+
+msgid "Connecting data…"
+msgstr "डेटा कनेक्ट किया जा रहा है…"
+
+msgid "Turn off cellular radio"
+msgstr "सेल्युलर रेडियो बंद करें"
+
+msgid "Cellular connectivity will be interrupted."
+msgstr "सेल्युलर कनेक्टिविटी बाधित होगी।"
+
+msgid "Turn on cellular radio"
+msgstr "सेल्युलर रेडियो चालू करें"
+
+msgid "The SFUN power-on sequence will run (up to about 1 minute)."
+msgstr "SFUN पावर-ऑन क्रम चलेगा (लगभग 1 मिनट तक)।"
+
+msgid "Cellular connectivity may stop for 1–2 minutes."
+msgstr "सेल्युलर कनेक्टिविटी 1–2 मिनट के लिए रुक सकती है।"
+
+msgid "Restart the entire device"
+msgstr "पूरा डिवाइस पुनः आरंभ करें"
+
+msgid "All connections will be interrupted."
+msgstr "सभी कनेक्शन बाधित होंगे।"
+
+msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
+msgstr "अगला बूट Android में होगा और डिवाइस अभी रीबूट होगा। यह प्रबंधन पेज और सेल्युलर शेयरिंग डिस्कनेक्ट हो जाएँगे।"
+
+msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
+msgstr "OpenWrt पर लौटने के लिए Android में mu300-next-boot linux चलाएँ और रीबूट करें।"
+
+msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
+msgstr "या कुछ न करें: पाँच अधूरे बूट के बाद यह अपने आप वापस लौट आता है।"
+
+msgid "Switch and reboot"
+msgstr "बदलें और रीबूट करें"
+
+msgid "Preparing Android boot and rebooting…"
+msgstr "Android बूट तैयार किया जा रहा है और रीबूट हो रहा है…"
+
+msgid "Hide SIM identifiers"
+msgstr "SIM पहचानकर्ता छिपाएँ"
+
+msgid "Lock cell %s?"
+msgstr "सेल %s लॉक करें?"
+
+msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
+msgstr "रेडियो स्टैक पुनः आरंभ होगा (SFUN); सेल्युलर सेवा लगभग 30 सेकंड के लिए रुकेगी।"
+
+msgid "Locking %s in the background, about 30 seconds"
+msgstr "%s को पृष्ठभूमि में लॉक किया जा रहा है, लगभग 30 सेकंड"
+
+msgid "Locked %s in the background; the status will refresh shortly"
+msgstr "%s पृष्ठभूमि में लॉक किया गया; स्थिति जल्द ही रीफ़्रेश होगी"
+
+msgid "Lock failed: %s"
+msgstr "लॉक विफल: %s"
+
+msgid "Uptime %s"
+msgstr "अपटाइम %s"
+
+msgid "Radio off"
+msgstr "रेडियो बंद"
+
+msgid "No response"
+msgstr "कोई प्रतिक्रिया नहीं"
+
+msgid "%s · Signal %s %s/10"
+msgstr "%s · सिग्नल %s %s/10"
+
+msgid "%s · Signal %s"
+msgstr "%s · सिग्नल %s"
+
+msgid "Anchor B%s"
+msgstr "एंकर B%s"
+
+msgid "No serving cell"
+msgstr "कोई सर्विंग सेल नहीं"
+
+msgid "Not registered"
+msgstr "पंजीकृत नहीं"
+
+msgid "Registered"
+msgstr "पंजीकृत"
+
+msgid "Searching"
+msgstr "खोज रहा है"
+
+msgid "Registration denied"
+msgstr "पंजीकरण अस्वीकृत"
+
+msgid "Registered (roaming)"
+msgstr "पंजीकृत (रोमिंग)"
+
+msgid "Emergency only"
+msgstr "केवल आपातकालीन"
+
+msgid "Status %s"
+msgstr "स्थिति %s"
+
+msgid "LTE anchor"
+msgstr "LTE एंकर"
+
+msgid "LTE link"
+msgstr "LTE लिंक"
+
+msgid "Hidden"
+msgstr "छिपा"
+
+msgid "No"
+msgstr "नहीं"
+
+msgid "Running"
+msgstr "चल रहा है"
+
+msgid "Not running"
+msgstr "नहीं चल रहा"
+
+msgid "Connected"
+msgstr "कनेक्टेड"
+
+msgid "Disconnected"
+msgstr "डिस्कनेक्टेड"
+
+msgid "%s entries"
+msgstr "%s प्रविष्टियाँ"
+
+msgid "%s clients"
+msgstr "%s क्लाइंट"
+
+msgid "Recent DHCP leases"
+msgstr "हाल की DHCP लीज़"
+
+msgid "%d h"
+msgstr "%d घं"
+
+msgid "Board"
+msgstr "बोर्ड"
+
+msgid "No temperature readings"
+msgstr "तापमान का कोई डेटा नहीं"
+
+msgid "Cluster %d"
+msgstr "क्लस्टर %d"
+
+msgid "Total %s · free %s"
+msgstr "कुल %s · खाली %s"
+
+msgid "charging %s W"
+msgstr "%s W पर चार्ज हो रही है"
+
+msgid "charging"
+msgstr "चार्ज हो रही है"
+
+msgid "drawing %s W"
+msgstr "%s W खर्च कर रही है"
+
+msgid "not charging"
+msgstr "चार्ज नहीं हो रही"
+
+msgid "on battery"
+msgstr "बैटरी पर"
+
+msgid "full"
+msgstr "पूरी भरी"
+
+msgid "USB in %s W"
+msgstr "USB इनपुट %s W"
+
+msgid "Online"
+msgstr "ऑनलाइन"
+
+msgid "AT adapter unavailable"
+msgstr "AT एडेप्टर उपलब्ध नहीं"
+
+msgid "Saved"
+msgstr "सहेजा गया"
+
+msgid "Management connection lost"
+msgstr "प्रबंधन कनेक्शन टूट गया"
+
+msgid "Installing the language pack…"
+msgstr "भाषा पैक इंस्टॉल किया जा रहा है…"
+
+msgid "The language pack is installed"
+msgstr "भाषा पैक इंस्टॉल हो गया है"
+
+msgid "The language pack could not be installed"
+msgstr "भाषा पैक इंस्टॉल नहीं हो सका"
+
+msgid "Upload failed: %s"
+msgstr "अपलोड विफल: %s"
+
+msgid "Language of the browser"
+msgstr "ब्राउज़र की भाषा"
+
+msgid "Language of the web interface"
+msgstr "वेब इंटरफ़ेस की भाषा"
+
+msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
+msgstr "अंग्रेज़ी, तुर्की और चीनी सिस्टम के साथ आती हैं; भाषा पैक बाकी भाषाएँ जोड़ता है।"
+
+msgid "The same setting is in System > System > Language and Style."
+msgstr "यही सेटिंग System > System > Language and Style में भी है।"
+
+msgid "Language pack"
+msgstr "भाषा पैक"
+
+msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
+msgstr "भाषा पैक (mu300-extra-lang.tar.gz, लगभग 2 MB) LuCI को लगभग 40 और भाषाओं में और इस पैनल को उनमें से 29 भाषाओं में जोड़ता है। इसे इस सिस्टम की रिलीज़ से डाउनलोड करें, या डिवाइस पर इंटरनेट न होने पर रिलीज़ पेज से फ़ाइल अपलोड करें।"
+
+msgid "Download from the release"
+msgstr "रिलीज़ से डाउनलोड करें"
+
+msgid "Upload the file…"
+msgstr "फ़ाइल अपलोड करें…"
+
+msgid "Release"
+msgstr "रिलीज़"
+
+msgid "Enable all"
+msgstr "सभी सक्षम करें"
+
+msgid "Disable all"
+msgstr "सभी अक्षम करें"
+
+msgid "Remove the language pack"
+msgstr "भाषा पैक हटाएँ"
+
+msgid "Remove the language pack?"
+msgstr "भाषा पैक हटाएँ?"
+
+msgid "Its languages disappear from the list; a page in one of them switches to English."
+msgstr "इसकी भाषाएँ सूची से हट जाएँगी; उनमें से किसी भाषा में खुला पेज अंग्रेज़ी में बदल जाएगा।"
+
+msgid "Remove"
+msgstr "हटाएँ"
+
+msgid "Disable"
+msgstr "अक्षम करें"
+
+msgid "Enable"
+msgstr "सक्षम करें"
+
+msgid "LuCI and this panel"
+msgstr "LuCI और यह पैनल"
+
+msgid "LuCI only"
+msgstr "केवल LuCI"
+
+msgid "Enabled"
+msgstr "सक्षम"
+
+msgid "Disabled"
+msgstr "अक्षम"
+
+msgid "Language"
+msgstr "भाषा"
+
+msgid "Code"
+msgstr "कोड"
+
+msgid "Translated"
+msgstr "अनुवादित"
+
+msgid "State"
+msgstr "स्थिति"
+
+msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
+msgstr "LuCI के अपने अनुवाद OpenWrt से आते हैं। तुर्की और चीनी के अलावा इस पैनल के अनुवाद मशीनी (AI) अनुवाद हैं; सुधारों का स्वागत है।"
+
+msgid "Automatic"
+msgstr "स्वचालित"
+
+msgid "4G only"
+msgstr "केवल 4G"
+
+msgid "Serving network"
+msgstr "सर्विंग नेटवर्क"
+
+msgid "Network mode · EN-DC"
+msgstr "नेटवर्क मोड · EN-DC"
+
+msgid "Refresh lock status"
+msgstr "लॉक स्थिति रीफ़्रेश करें"
+
+msgid "Apply at startup"
+msgstr "स्टार्टअप पर लागू करें"
+
+msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
+msgstr "इसे बंद करने से केवल अगले बूट पर दोबारा लागू होना रुकता है; सहेजे गए नेटवर्क मोड, EN-DC, बैंड और सेल सेटिंग्स बनी रहती हैं।"
+
+msgid "Band locking"
+msgstr "बैंड लॉकिंग"
+
+msgid "NR bands"
+msgstr "NR बैंड"
+
+msgid "LTE bands"
+msgstr "LTE बैंड"
+
+msgid "Apply NR bands"
+msgstr "NR बैंड लागू करें"
+
+msgid "Apply LTE bands"
+msgstr "LTE बैंड लागू करें"
+
+msgid "Neighbor cells and cell locking"
+msgstr "पड़ोसी सेल और सेल लॉकिंग"
+
+msgid "Lock current serving cell"
+msgstr "वर्तमान सर्विंग सेल लॉक करें"
+
+msgid "Unlock cell"
+msgstr "सेल अनलॉक करें"
+
+msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
+msgstr "लागू करने से रेडियो स्टैक (SFUN) पुनः आरंभ होता है और सेल्युलर सेवा कुछ देर बाधित होती है। सेटिंग्स सहेजी जाती हैं और “स्टार्टअप पर लागू करें” सक्षम होने पर AT तैयार होने के बाद प्लगइन उन्हें दोबारा लागू करता है। प्लेटफ़ॉर्म का प्री-रेडियो हुक बिना पुनः आरंभ के उन्हें लागू कर सकता है। स्वचालित मोड पर लौटने के लिए बिना कोई बैंड चुने लागू करें।"
+
+msgid "Apply “%s”?"
+msgstr "“%s” लागू करें?"
+
+msgid "Applying %s in the background…"
+msgstr "%s पृष्ठभूमि में लागू किया जा रहा है…"
+
+msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
+msgstr "%s पृष्ठभूमि में लागू किया जा रहा है… (SFUN पुनः आरंभ और पुनः पंजीकरण, लगभग 30 सेकंड)"
+
+msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
+msgstr "कतार में: SFUN पुनः आरंभ के दौरान एक अन्य लॉक लागू हो रहा है; यह उसके बाद प्रभावी होगा"
+
+msgid "Confirming the EN-DC status…"
+msgstr "EN-DC स्थिति की पुष्टि की जा रही है…"
+
+msgid "Confirming apply at startup…"
+msgstr "स्टार्टअप पर लागू करने की पुष्टि की जा रही है…"
+
+msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "पृष्ठभूमि में शुरू किया गया: %s (SFUN पुनः आरंभ, लगभग 30 सेकंड); स्थिति वापस पढ़ी जा रही है…"
+
+msgid "Network mode: %s"
+msgstr "नेटवर्क मोड: %s"
+
+msgid "Disable EN-DC (NSA anchor)"
+msgstr "EN-DC अक्षम करें (NSA एंकर)"
+
+msgid "Enable EN-DC (NSA anchor)"
+msgstr "EN-DC सक्षम करें (NSA एंकर)"
+
+msgid "Disable apply at startup"
+msgstr "स्टार्टअप पर लागू करना अक्षम करें"
+
+msgid "Enable apply at startup"
+msgstr "स्टार्टअप पर लागू करना सक्षम करें"
+
+msgid "Reading the modem directly (a few seconds at most)…"
+msgstr "मॉडेम को सीधे पढ़ा जा रहा है (अधिकतम कुछ सेकंड)…"
+
+msgid "Refreshed"
+msgstr "रीफ़्रेश किया गया"
+
+msgid "Refresh failed"
+msgstr "रीफ़्रेश विफल"
+
+msgid "NR bands: back to automatic"
+msgstr "NR बैंड: स्वचालित पर वापस"
+
+msgid "NR band lock: %s"
+msgstr "NR बैंड लॉक: %s"
+
+msgid "LTE bands: back to automatic"
+msgstr "LTE बैंड: स्वचालित पर वापस"
+
+msgid "LTE band lock: %s"
+msgstr "LTE बैंड लॉक: %s"
+
+msgid "Remove the %s cell lock"
+msgstr "%s सेल लॉक हटाएँ"
+
+msgid "The radio stack will restart (SFUN), taking about 30 seconds."
+msgstr "रेडियो स्टैक पुनः आरंभ होगा (SFUN), जिसमें लगभग 30 सेकंड लगेंगे।"
+
+msgid "Removing the %s cell lock…"
+msgstr "%s सेल लॉक हटाया जा रहा है…"
+
+msgid "Unlock failed: %s"
+msgstr "अनलॉक विफल: %s"
+
+msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "अनलॉक पृष्ठभूमि में शुरू हुआ (SFUN पुनः आरंभ, लगभग 30 सेकंड); स्थिति वापस पढ़ी जा रही है…"
+
+msgid "Locking %s in the background…"
+msgstr "%s को पृष्ठभूमि में लॉक किया जा रहा है…"
+
+msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
+msgstr "%s पृष्ठभूमि में लॉक किया गया (SFUN पुनः आरंभ, लगभग 30 सेकंड); स्थिति वापस पढ़ी जा रही है…"
+
+msgid "No serving-network data"
+msgstr "सर्विंग नेटवर्क का कोई डेटा नहीं"
+
+msgid "NR serving cell"
+msgstr "NR सर्विंग सेल"
+
+msgid "Status confirmed"
+msgstr "स्थिति की पुष्टि हुई"
+
+msgid "Readback timed out; select “Refresh lock status”"
+msgstr "वापस पढ़ने का समय समाप्त; “लॉक स्थिति रीफ़्रेश करें” चुनें"
+
+msgid "Applied (EN-DC does not require a radio-stack restart)"
+msgstr "लागू किया गया (EN-DC के लिए रेडियो स्टैक पुनः आरंभ की ज़रूरत नहीं)"
+
+msgid "Apply at startup is on"
+msgstr "स्टार्टअप पर लागू करना चालू है"
+
+msgid "Apply at startup is off"
+msgstr "स्टार्टअप पर लागू करना बंद है"
+
+msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
+msgstr "EN-DC स्थिति वापस पढ़ने का समय समाप्त; पुष्टि के लिए “लॉक स्थिति रीफ़्रेश करें” का उपयोग करें"
+
+msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
+msgstr "स्टार्टअप पर लागू करने की स्थिति वापस पढ़ने का समय समाप्त; पुष्टि के लिए “लॉक स्थिति रीफ़्रेश करें” का उपयोग करें"
+
+msgid "Locked cells"
+msgstr "लॉक किए गए सेल"
+
+msgid "Unlock %s"
+msgstr "%s अनलॉक करें"
+
+msgid "Automatic (%d supported)"
+msgstr "स्वचालित (%d समर्थित)"
+
+msgid "%d locked: %s"
+msgstr "%d लॉक: %s"
+
+msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
+msgstr "कॉन्फ़िगर करें कि यह प्लगइन वर्तमान Unisoc OpenWrt प्लेटफ़ॉर्म से कैसे जुड़ता है। बदलावों के लिए डैशबोर्ड, AT, लॉक या SMS पेजों को संपादित करने की ज़रूरत नहीं है।"
+
+msgid "Platform adapter"
+msgstr "प्लेटफ़ॉर्म एडेप्टर"
+
+msgid "AT backend"
+msgstr "AT बैकएंड"
+
+msgid "Auto-detect"
+msgstr "स्वतः पहचानें"
+
+msgid "atinout + serial port"
+msgstr "atinout + सीरियल पोर्ट"
+
+msgid "Custom adapter"
+msgstr "कस्टम एडेप्टर"
+
+msgid "AT serial port"
+msgstr "AT सीरियल पोर्ट"
+
+msgid "Custom AT adapter"
+msgstr "कस्टम AT एडेप्टर"
+
+msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
+msgstr "एक्ज़ीक्यूटेबल को इसी क्रम में सेकंड में टाइमआउट और पूरा AT कमांड मिलता है। इसे प्लेटफ़ॉर्म डायलर के साथ सीरियल लॉक साझा करना होगा।"
+
+msgid "SMS adapter"
+msgstr "SMS एडेप्टर"
+
+msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
+msgstr "list, show, send, delete और sync सबकमांड लागू करें; mu300-sms को अपने आप खोजने के लिए खाली छोड़ें।"
+
+msgid "SMS pool directory"
+msgstr "SMS पूल डायरेक्टरी"
+
+msgid "Cellular logical interface"
+msgstr "सेल्युलर लॉजिकल इंटरफ़ेस"
+
+msgid "Cellular IPv6 interface"
+msgstr "सेल्युलर IPv6 इंटरफ़ेस"
+
+msgid "Cellular network device"
+msgstr "सेल्युलर नेटवर्क डिवाइस"
+
+msgid "Leave blank to detect from netifd"
+msgstr "netifd से पहचानने के लिए खाली छोड़ें"
+
+msgid "LAN bridge"
+msgstr "LAN ब्रिज"
+
+msgid "Wi-Fi device"
+msgstr "Wi-Fi डिवाइस"
+
+msgid "USB device"
+msgstr "USB डिवाइस"
+
+msgid "Maximum wait for AT readiness (seconds)"
+msgstr "AT तैयार होने की अधिकतम प्रतीक्षा (सेकंड)"
+
+msgid "Home dashboard refresh interval (seconds)"
+msgstr "होम डैशबोर्ड रीफ़्रेश अंतराल (सेकंड)"
+
+msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
+msgstr "केवल होम डैशबोर्ड की रीफ़्रेश दर नियंत्रित करता है; 0.5–60 सेकंड। लागू करने के लिए सहेजने के बाद होम फिर से खोलें।"
+
+msgid "Persistent state directory"
+msgstr "स्थायी स्थिति डायरेक्टरी"
+
+msgid "Recipient: number, e.g. 10086 or +86..."
+msgstr "प्राप्तकर्ता: नंबर, जैसे 10086 या +86..."
+
+msgid "Sync from SIM"
+msgstr "SIM से सिंक करें"
+
+msgid "Clear local pool"
+msgstr "स्थानीय पूल साफ़ करें"
+
+msgid "Loading…"
+msgstr "लोड हो रहा है…"
+
+msgid "Select a conversation on the left, or enter a number below to send."
+msgstr "बाईं ओर कोई बातचीत चुनें, या भेजने के लिए नीचे नंबर दर्ज करें।"
+
+msgid "Message (Enter to send, Shift+Enter for newline)"
+msgstr "संदेश (भेजने के लिए Enter, नई पंक्ति के लिए Shift+Enter)"
+
+msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
+msgstr "भेजने के लिए AT+CMGS (PDU मोड) का उपयोग होता है; चैनल व्यस्त होने पर फिर से प्रयास करें। किसी एक संदेश को हटाने के लिए उसके बबल पर बने कूड़ेदान आइकन का उपयोग करें।"
+
+msgid "Syncing from the SIM in the background (AT+CMGL)…"
+msgstr "पृष्ठभूमि में SIM से सिंक किया जा रहा है (AT+CMGL)…"
+
+msgid "SIM sync started; the list refreshes in a few seconds."
+msgstr "SIM सिंक शुरू हुआ; सूची कुछ सेकंड में रीफ़्रेश होगी।"
+
+msgid "Clear local SMS pool"
+msgstr "स्थानीय SMS पूल साफ़ करें"
+
+msgid "Only local files will be deleted; messages on the SIM remain."
+msgstr "केवल स्थानीय फ़ाइलें हटाई जाएँगी; SIM पर संदेश बने रहेंगे।"
+
+msgid "Clear"
+msgstr "साफ़ करें"
+
+msgid "Delete this SMS"
+msgstr "यह SMS हटाएँ"
+
+msgid "Deletion cannot be undone."
+msgstr "हटाने को पूर्ववत नहीं किया जा सकता।"
+
+msgid "Local only"
+msgstr "केवल स्थानीय"
+
+msgid "Local + SIM"
+msgstr "स्थानीय + SIM"
+
+msgid "Delete failed"
+msgstr "हटाना विफल"
+
+msgid "Deleted (local + SIM)"
+msgstr "हटाया गया (स्थानीय + SIM)"
+
+msgid "Deleted (local only)"
+msgstr "हटाया गया (केवल स्थानीय)"
+
+msgid "Enter both a number and a message."
+msgstr "नंबर और संदेश दोनों दर्ज करें।"
+
+msgid "Sending…"
+msgstr "भेजा जा रहा है…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "भेजा गया; सूची जल्द ही रीफ़्रेश होगी।"
+
+msgid "Sending failed"
+msgstr "भेजना विफल"
+
+msgid "· %d messages, %d unread · %d conversations"
+msgstr "· %d संदेश, %d अपठित · %d बातचीत"
+
+msgid "· %d messages · %d conversations"
+msgstr "· %d संदेश · %d बातचीत"
+
+msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
+msgstr "पूल खाली है। आने वाले और भेजे गए संदेश यहाँ दिखते हैं, या “SIM से सिंक करें” चुनें।"
+
+msgid "Me: %s"
+msgstr "मैं: %s"
+
+msgid "Delete"
+msgstr "हटाएँ"
+
+msgid "Dashboard info failed"
+msgstr "डैशबोर्ड जानकारी प्राप्त नहीं हो सकी"
+
+msgid "Applying network locks: no live signal right now"
+msgstr "नेटवर्क लॉक लागू हो रहे हैं: अभी कोई लाइव सिग्नल नहीं"
+
+msgid "Live signal read failed"
+msgstr "लाइव सिग्नल पढ़ना विफल"
+
+msgid "Unknown op"
+msgstr "अज्ञात ऑपरेशन"
+
+msgid "Invalid argument for this op"
+msgstr "इस ऑपरेशन के लिए अमान्य आर्ग्युमेंट"
+
+msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
+msgstr "रेडियो व्यस्त है: डायल या वॉचडॉग इसे बदल रहा है, थोड़ी देर में फिर से प्रयास करें"
+
+msgid "The action gave no valid reply"
+msgstr "कार्रवाई से कोई मान्य उत्तर नहीं मिला"
+
+msgid "An AT command is one line of printable ASCII, at most 512 characters"
+msgstr "AT कमांड प्रिंट करने योग्य ASCII की एक पंक्ति होती है, अधिकतम 512 अक्षर"
+
+msgid "Must be an AT command"
+msgstr "AT कमांड होना चाहिए"
+
+msgid "No \";\" command chaining"
+msgstr "\";\" से कमांड जोड़ने की अनुमति नहीं"
+
+msgid "Denied: this command wedges the AT port until a reboot"
+msgstr "अस्वीकृत: यह कमांड रीबूट होने तक AT पोर्ट को अटका देता है"
+
+msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
+msgstr "नेटवर्क लॉक लागू हो रहे हैं: मॉडेम पुनः आरंभ हो रहा है (लगभग आधा मिनट), थोड़ी देर में फिर से प्रयास करें"
+
+msgid "The AT channel is busy; the command was not sent, try again"
+msgstr "AT चैनल व्यस्त है; कमांड नहीं भेजा गया, फिर से प्रयास करें"
+
+msgid "The modem did not answer in time; the command may still run, check before sending it again"
+msgstr "मॉडेम ने समय पर उत्तर नहीं दिया; कमांड अभी भी चल सकता है, दोबारा भेजने से पहले जाँच लें"
+
+msgid "The fresh parameter must be 0 or 1"
+msgstr "fresh पैरामीटर 0 या 1 होना चाहिए"
+
+msgid "Lock read failed"
+msgstr "लॉक स्थिति पढ़ना विफल"
+
+msgid "Unknown lock kind"
+msgstr "अज्ञात लॉक प्रकार"
+
+msgid "Invalid value for this lock kind"
+msgstr "इस लॉक प्रकार के लिए अमान्य मान"
+
+msgid "Invalid page"
+msgstr "अमान्य पेज"
+
+msgid "mu300-sms is not available (the SMS service is not installed or not running)"
+msgstr "mu300-sms उपलब्ध नहीं है (SMS सेवा इंस्टॉल नहीं है या नहीं चल रही)"
+
+msgid "No output"
+msgstr "कोई आउटपुट नहीं"
+
+msgid "Bad ID"
+msgstr "अमान्य ID"
+
+msgid "Read failed"
+msgstr "पढ़ना विफल"
+
+msgid "The number may only contain digits (and a leading +)"
+msgstr "नंबर में केवल अंक हो सकते हैं (और शुरुआत में +)"
+
+msgid "The message is empty"
+msgstr "संदेश खाली है"
+
+msgid "The message is too long (over 480 characters)"
+msgstr "संदेश बहुत लंबा है (480 अक्षरों से अधिक)"
+
+msgid "The message contains a control character"
+msgstr "संदेश में एक नियंत्रण वर्ण है"
+
+msgid "The sim parameter must be 0 or 1"
+msgstr "sim पैरामीटर 0 या 1 होना चाहिए"
+
+msgid "The USB adapter (device-usb) gave no valid reply"
+msgstr "USB एडेप्टर (device-usb) से कोई मान्य उत्तर नहीं मिला"
+
+msgid "The auto parameter must be 0 or 1"
+msgstr "auto पैरामीटर 0 या 1 होना चाहिए"
+
+msgid "Invalid USB role"
+msgstr "अमान्य USB भूमिका"
+
+msgid "A USB role takes no scope"
+msgstr "USB भूमिका के साथ अवधि नहीं दी जाती"
+
+msgid "Invalid USB network mode"
+msgstr "अमान्य USB नेटवर्क मोड"
+
+msgid "Invalid USB network scope"
+msgstr "अमान्य USB नेटवर्क अवधि"
+
+msgid "Unknown USB setting"
+msgstr "अज्ञात USB सेटिंग"
+
+msgid "Invalid interface name"
+msgstr "अमान्य इंटरफ़ेस नाम"
+
+msgid "The languages adapter gave no valid reply"
+msgstr "भाषा एडेप्टर से कोई मान्य उत्तर नहीं मिला"
+
+msgid "Unknown language operation"
+msgstr "अज्ञात भाषा ऑपरेशन"
+
+msgid "Invalid language code"
+msgstr "अमान्य भाषा कोड"
+
+msgid "Invalid language request"
+msgstr "अमान्य भाषा अनुरोध"
+
+msgid "Unknown source"
+msgstr "अज्ञात स्रोत"
+
+msgid "Request too large"
+msgstr "अनुरोध बहुत बड़ा है"
+
+msgid "The runtime directory is not safe; nothing was run"
+msgstr "रनटाइम डायरेक्टरी सुरक्षित नहीं है; कुछ भी नहीं चलाया गया"
+
+msgid "No such method"
+msgstr "ऐसा कोई मेथड नहीं"
+
+msgid "Radio did not come up"
+msgstr "रेडियो चालू नहीं हुआ"
+
+msgid "Expected on or off"
+msgstr "on या off अपेक्षित है"
+
+msgid "VPN integration is not provided by this platform"
+msgstr "यह प्लेटफ़ॉर्म VPN एकीकरण प्रदान नहीं करता"
+
+msgid "Dual-boot integration is not provided by this platform"
+msgstr "यह प्लेटफ़ॉर्म ड्यूल-बूट एकीकरण प्रदान नहीं करता"
+
+msgid "mu300-next-boot failed"
+msgstr "mu300-next-boot विफल"
+
+msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
+msgstr "AT बैकएंड ने उत्तर नहीं दिया (रेडियो बंद, मॉडेम पुनः आरंभ हो रहा है, या एडेप्टर उपलब्ध नहीं)"
+
+msgid "USB role adapter is not executable"
+msgstr "USB भूमिका एडेप्टर निष्पादन योग्य नहीं है"
+
+msgid "USB role adapter failed"
+msgstr "USB भूमिका एडेप्टर विफल"
+
+msgid "USB role switch is unavailable"
+msgstr "USB भूमिका स्विच उपलब्ध नहीं है"
+
+msgid "USB role switch failed"
+msgstr "USB भूमिका बदलना विफल"
+
+msgid "USB role switch was refused by platform safety checks"
+msgstr "प्लेटफ़ॉर्म सुरक्षा जाँचों ने USB भूमिका बदलने से मना कर दिया"
+
+msgid "Cannot create USB boot settings directory"
+msgstr "USB बूट सेटिंग्स डायरेक्टरी नहीं बनाई जा सकती"
+
+msgid "Cannot write USB boot settings"
+msgstr "USB बूट सेटिंग्स नहीं लिखी जा सकतीं"
+
+msgid "Cannot save USB boot settings"
+msgstr "USB बूट सेटिंग्स सहेजी नहीं जा सकतीं"
+
+msgid "Invalid boot-auto value"
+msgstr "अमान्य boot-auto मान"
+
+msgid "Device is the boot default; host auto-apply is the only persistent role"
+msgstr "बूट पर डिफ़ॉल्ट डिवाइस मोड है; केवल होस्ट का स्वतः लागू होना ही स्थायी भूमिका है"
+
+msgid "Cannot save USB role policy"
+msgstr "USB भूमिका नीति सहेजी नहीं जा सकती"
+
+msgid "Cannot disable USB network boot policy"
+msgstr "USB नेटवर्क बूट नीति अक्षम नहीं की जा सकती"
+
+msgid "Cannot commit USB role policy"
+msgstr "USB भूमिका नीति कमिट नहीं की जा सकती"
+
+msgid "USB network mode is unavailable in host role"
+msgstr "होस्ट भूमिका में USB नेटवर्क मोड उपलब्ध नहीं है"
+
+msgid "Disable host boot-auto before configuring USB network"
+msgstr "USB नेटवर्क कॉन्फ़िगर करने से पहले होस्ट boot-auto अक्षम करें"
+
+msgid "Cannot save USB network policy"
+msgstr "USB नेटवर्क नीति सहेजी नहीं जा सकती"
+
+msgid "Cannot commit USB network policy"
+msgstr "USB नेटवर्क नीति कमिट नहीं की जा सकती"
+
+msgid "USB host mode is required"
+msgstr "USB होस्ट मोड आवश्यक है"
+
+msgid "Not a USB network interface"
+msgstr "यह USB नेटवर्क इंटरफ़ेस नहीं है"
+
+msgid "LAN bridge device section was not found"
+msgstr "LAN ब्रिज डिवाइस सेक्शन नहीं मिला"
+
+msgid "Cannot bring USB network interface up"
+msgstr "USB नेटवर्क इंटरफ़ेस चालू नहीं किया जा सकता"
+
+msgid "Cannot add interface to LAN bridge"
+msgstr "इंटरफ़ेस को LAN ब्रिज में नहीं जोड़ा जा सकता"
+
+msgid "Cannot save LAN bridge"
+msgstr "LAN ब्रिज सहेजा नहीं जा सकता"
+
+msgid "Network reload failed"
+msgstr "नेटवर्क पुनः लोड करना विफल"
+
+msgid "Cannot attach USB interface to LAN bridge"
+msgstr "USB इंटरफ़ेस को LAN ब्रिज से नहीं जोड़ा जा सकता"
+
+msgid "The language pack is not installed"
+msgstr "भाषा पैक इंस्टॉल नहीं है"
+
+msgid "No language given"
+msgstr "कोई भाषा नहीं दी गई"
+
+msgid "The language could not be changed"
+msgstr "भाषा नहीं बदली जा सकी"
+
+msgid "LuCI does not offer this language"
+msgstr "LuCI यह भाषा उपलब्ध नहीं कराता"
+
+msgid "No uploaded language pack"
+msgstr "कोई अपलोड किया गया भाषा पैक नहीं"
+
+msgid "An installation is already running"
+msgstr "एक इंस्टॉलेशन पहले से चल रहा है"
+
+msgid "The language pack could not be removed"
+msgstr "भाषा पैक हटाया नहीं जा सका"
+
+msgid "Lock cache unavailable"
+msgstr "लॉक कैश उपलब्ध नहीं"
+
+msgid "No serving cell to lock to"
+msgstr "लॉक करने के लिए कोई सर्विंग सेल नहीं"

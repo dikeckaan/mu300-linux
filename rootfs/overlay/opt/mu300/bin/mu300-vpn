@@ -16,6 +16,9 @@ set -e
 CONF=${MU300_VPN_CONF:-/etc/mu300/vpn.conf}
 RUN=${MU300_VPN_RUN:-/run/mu300-vpn}   # (MU300_VPN_RUN, MU300_LAN_CONF, MU300_BIN, MU300_LIB: for tests/)
 MARK=0x2d0           # routing mark on the engine's own connections: they bypass the tunnel and the kill switch
+TABLE=2022           # the tunnel's routing table: sing-box's auto_route default, and what xray_routes_up fills
+TS_MARK=0x80000/0xff0000   # Tailscale's mark on its own WireGuard, DERP and control connections (see tailscale_up)
+TS_PREFS='5198 5199 5200'  # the rule prefs that send them through the tunnel, before tailscaled's own 5210
 # The uplinks the kill switch closes: the modem's bearer (sipa_eth*) and the Wi-Fi client (wifi-client), which is
 # shared with the LAN as mobile data is. As the hotspot, wlan0 is a port of br-lan and never an output interface.
 WIFI_IF=${MU300_WIFI_IFACE:-wlan0}
@@ -23,6 +26,8 @@ WIFI_IF=${MU300_WIFI_IFACE:-wlan0}
 ENABLE=${ENABLE:-0}; KILL_SWITCH=${KILL_SWITCH:-1}; REMOTE_DNS=${REMOTE_DNS:-1.1.1.1}
 # only 0 turns the kill switch off: a value that is not understood (yes, true, a typo) leaves it on
 [ "$KILL_SWITCH" = 0 ] || KILL_SWITCH=1
+# Tailscale's own packets through the tunnel too (tailscale_up); only 0 turns that off
+[ "${TAILSCALE:-1}" = 0 ] || TAILSCALE=1
 BOOTSTRAP_DNS=${BOOTSTRAP_DNS:-1.1.1.1}; IPV6=${IPV6:-0}
 # The device's own LAN always stays local, whatever LAN_CIDRS says: a vpn.conf copied from another device, or one
 # written before the LAN address changed (the U30 Air is on 192.168.78.0/24), would send the replies to its USB
@@ -435,8 +440,9 @@ xray_routes_up() {
     ip rule add pref 9000 fwmark "$MARK" lookup main
     for c in $(printf '%s' "$LAN_CIDRS" | tr ',' ' '); do ip rule add pref 9001 to "$c" lookup main; done
     ip rule add pref 9002 to "$(cat "$RUN/server-ip")" lookup main
-    ip route replace default dev "$TUN" table 2022
-    ip rule add pref 9010 lookup 2022
+    ip route replace default dev "$TUN" table "$TABLE"
+    ip rule add pref 9010 lookup "$TABLE"
+    tailscale_up
     # the device's own lookups: dnsmasq forwards to whatever the bearer handed out, and the carrier's resolver
     # does not answer from the far end of the tunnel. Send them to REMOTE_DNS instead, which the routing above
     # then carries through the tunnel. Clients that use their own DNS are already going through it.
@@ -457,11 +463,49 @@ NFT
 
 xray_routes_down() {
     nft delete table ip mu300_vpn_dns 2>/dev/null || true
-    for pref in 9000 9001 9002 9003 9010; do
+    for pref in $TS_PREFS 9000 9001 9002 9003 9010; do
         while ip rule del pref "$pref" 2>/dev/null; do :; done
     done
-    ip route flush table 2022 2>/dev/null || true
+    ip route flush table "$TABLE" 2>/dev/null || true
 }
+
+# Tailscale through the tunnel. tailscaled marks its own sockets (WireGuard to peers, DERP, the control server)
+# with 0x80000/0xff0000 and sends them to main at pref 5210 (then 5230 default, 5250 unreachable; 5270 is its
+# table 52, the tailnet's routes): ahead of 9010, so they would leave on the bearer beside the tunnel, where only
+# the tunnel gets out on some networks (and the kill switch drops them), and Tailscale never connects.
+#   5200  its packets into the tunnel's table first
+#   5199  except to private addresses: the device's LAN (LAN_CIDRS and RFC 1918), so peers there are reached
+#         directly. Through the tunnel they would not be: sing-box sends private addresses "direct" with the
+#         engine's mark, which the kill switch lets out - Tailscale's probes to the endpoints peers report would
+#         then reach the uplink past it. Through main they go to the LAN, or are dropped on an uplink as before.
+#   5198  the engine's own connections to main, before tailscaled's 5270: with an exit node (or a route covering
+#         the VPN server) table 52 would take them into tailscale0, whose packets now go into the tunnel - a loop.
+#         It is what 9000 does, only earlier.
+# The tailnet itself is untouched: 100.64.0.0/10 still goes via 5270 and table 52 into tailscale0.
+#
+# Only routing, and nothing new gets past the kill switch: it lets out only $MARK, which is not Tailscale's mark
+# (and $MARK does not match $TS_MARK: the engine's own sockets never loop back into the tunnel). While no tunnel is
+# up its table is empty: a lookup there matches nothing and the kernel goes on to the next rule, so the rules can
+# go in before sing-box builds the table, and stay inert after it exits until the next start or mu300-vpn off. They
+# carry no TUN name, so they serve both engines, and are deleted before they are added: a restart never doubles
+# them. IPv4 only (Tailscale's IPv6 goes on as before). An "ip" that cannot add them does not stop the VPN.
+tailscale_down() {
+    for pref in $TS_PREFS; do
+        while ip rule del pref "$pref" 2>/dev/null; do :; done
+    done
+}
+tailscale_up() {
+    tailscale_down
+    [ "$TAILSCALE" = 1 ] || return 0
+    ip rule add pref 5198 fwmark "$MARK" lookup main || { tailscale_failed; return 0; }
+    # each IPv4 network once (the kernel refuses a rule it already has)
+    for c in $(printf '%s,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16' "$LAN_CIDRS" | tr ',' '\n' |
+               awk '/^[0-9.]+(\/[0-9]+)?$/ && !seen[$0]++'); do
+        ip rule add pref 5199 fwmark "$TS_MARK" to "$c" lookup main || { tailscale_failed; return 0; }
+    done
+    ip rule add pref 5200 fwmark "$TS_MARK" lookup "$TABLE" || tailscale_failed
+}
+tailscale_failed() { tailscale_down; echo "could not route Tailscale through the tunnel (ip rule)" >&2; }
 
 # Two processes and the routing between them, torn down together: if either dies the service exits, the routes
 # go with it and procd starts the whole thing again. Leaving rules behind with nothing at the other end is what
@@ -628,7 +672,8 @@ routing_cleanup() {
     for pref in 9000 9001 9002 9003 9010; do
         while ip rule del pref "$pref" 2>/dev/null; do n=$((n + 1)); done
     done
-    ip route flush table 2022 2>/dev/null || true
+    tailscale_down
+    ip route flush table "$TABLE" 2>/dev/null || true
     nft delete table ip mu300_vpn_dns 2>/dev/null || true
     [ "$n" -gt 0 ] && echo "removed $n stale routing rule(s) left by a VPN engine"
     return 0
@@ -640,7 +685,7 @@ routing_cleanup() {
 case "${1:-status}" in
     gen) gen ;;
     run)
-        [ "$ENABLE" = 1 ] || { echo "VPN disabled (ENABLE=0 in $CONF)"; killswitch_off; exit 0; }
+        [ "$ENABLE" = 1 ] || { echo "VPN disabled (ENABLE=0 in $CONF)"; killswitch_off; tailscale_down; exit 0; }
         # The kill switch goes up before anything that can fail: no engines, a failed or corrupt download, a config
         # that does not check, an engine that will not start or dies later - every one of them leaves it up. It is
         # replaced in one nft transaction, so a restart never has a moment without it. Only ENABLE=0 and mu300-vpn
@@ -667,6 +712,9 @@ case "${1:-status}" in
         ensure_firewall_zone
         [ "$KILL_SWITCH" = 1 ] || killswitch_off
         [ "$ENGINE" = xray ] && run_xray
+        # sing-box builds its routes itself; the Tailscale rules are inert until it has (see tailscale_up), and
+        # after it exits they are again: table $TABLE is empty then. mu300-vpn off and the next start clear them.
+        tailscale_up
         exec "$BIN" run -c "$RUN/config.json" ;;
     # guard: before the modem's bearer comes up (mobile-data calls it), so a VPN with the kill switch is never
     # without it at boot, before the service has started
