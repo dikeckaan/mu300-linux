@@ -25,6 +25,10 @@ audit = load('audit')
 
 
 class Archives(unittest.TestCase):
+    def test_linux_uninstaller_recognizes_v50(self):
+        source = (TOP / 'uninstall.sh').read_text(encoding='utf-8')
+        self.assertIn('*MU3351*|*V50*', source)
+
     def test_restore_excludes_old_executables_libraries_database_and_links(self):
         with tempfile.TemporaryDirectory() as temp:
             backup = Path(temp) / 'backup.tar.gz'

@@ -21,11 +21,17 @@ if apk info -e dnsmasq >/dev/null 2>&1; then
 fi
 apk info -e dnsmasq-full >/dev/null 2>&1 || { echo 'Install compatible dnsmasq-full first' >&2; exit 1; }
 # OpenWrt feed kmods must match uname -r. Do not spoof missing kernel features.
+running=$(uname -r)
 for name in kmod-tun kmod-nf-conntrack-netlink; do
     apk info -e "$name" >/dev/null 2>&1 || {
         echo "Prepare $name for kernel $(uname -r); see docs/v50/OPENCLASH.zh-CN.md" >&2
         exit 1
     }
+    version=$(apk list --installed "$name" | awk -v p="$name" 'index($1, p "-") == 1 { print substr($1, length(p) + 2) }')
+    case $version in "$running"-r[0-9]*) ;; *)
+        echo "$name version $version does not match running kernel $running" >&2
+        exit 1 ;;
+    esac
 done
 apk add curl ruby ruby-yaml unzip luci-compat
 apk add --allow-untrusted "$1"

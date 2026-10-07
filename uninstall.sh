@@ -33,7 +33,7 @@ require_android
 [ "$(su_do 'id -u')" = 0 ] || die "su does not work on the device"
 model="$(su_do 'getprop ro.product.model') / $(su_do 'getprop ro.product.device')"
 echo "device: $model"
-case "$model" in *MU300*|*F50*|*mu300*|*U30Air*|*U30_Air*) ;; *) die "this does not look like a ZTE F50/MU300 or U30 Air" ;; esac
+case "$model" in *MU300*|*F50*|*mu300*|*U30Air*|*U30_Air*|*MU3351*|*V50*) ;; *) die "this does not look like a ZTE F50/MU300 or U30 Air" ;; esac
 [ "$(su_do 'getprop ro.boot.slot_suffix')" = _a ] || die "Android must be running from slot a (boot Android first: mu300-next-boot android)"
 
 say "Looking for the Linux installation"
