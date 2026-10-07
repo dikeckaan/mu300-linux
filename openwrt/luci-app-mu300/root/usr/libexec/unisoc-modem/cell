@@ -30,6 +30,11 @@
 # SIM/module identity (IMEI/IMSI/ICCID/model/firmware) changes only when the SIM
 # or the firmware changes, so it lives in the configured state directory and is re-read
 # at most every 6 hours - not on every round, and never inside a page request.
+# Because it is cached for hours, a reply has to be validated before it is written:
+# a modem reply can fail as well as be empty, and "tr -cd 0-9" turns the digits of
+# a refusal such as "+CME ERROR: 10" into a plausible-looking value, which the TTL
+# then keeps for hours (field case: imsi and iccid both "10"). See the identity
+# tier below; a reading that does not pass is discarded, never cached.
 
 # Two rounds share this script:
 #   mu300-dash-cell          full: everything below, ~11 commands, neighbours included
@@ -132,6 +137,26 @@ trap 'rm -rf "$LOCK" "$SLOT" 2>/dev/null' EXIT INT TERM
 
 # ------------------------------------------------------------------- identity
 IDENT_JSON=null
+
+# ident_digits REPLY MIN MAX: the digits of a "+CCID: ..." reply, or nothing.
+# A reply that failed is rejected on its text, before any digit is taken from
+# it: "+CME ERROR: 10", "+CMS ERROR: 10" and a bare "ERROR" all carry digits,
+# and filtering those out leaves "10" - a value that passes any "is it non-empty"
+# test and then sits in sim.json for the whole TTL. The length is the second
+# guard: an IMSI is 14-15 digits and an ICCID 18-20, so a truncated or otherwise
+# mangled reply is discarded with the error one, and the next round - 5 s later -
+# reads the SIM again instead of publishing the broken value for six hours.
+# (Not "case": this reads like a string, and the values are small and fixed.)
+ident_digits() {
+    local reply digits
+    reply=$(printf '%s\n' "$1" | tr -d '\r')
+    case "$reply" in
+        *'+CME ERROR'*|*'+CMS ERROR'*|*'ERROR'*) return ;;
+    esac
+    digits=$(printf '%s\n' "$reply" | tr -cd '0-9')
+    [ ${#digits} -ge "$2" ] && [ ${#digits} -le "$3" ] || return
+    printf '%s\n' "$digits"
+}
 
 # ------------------------------------------------------------- SPENGMD decode
 # Unisoc separates fields with "-" and writes negatives as "+<abs>":
@@ -345,10 +370,15 @@ if [ "$MODE" = full ]; then
         i_mfg=$(at 'AT+CGMI' 2 | grep -v '^OK' | head -n1)
         i_model=$(at 'AT+CGMM' 2 | grep -v '^OK' | head -n1)
         i_fw=$(at 'AT+CGMR' 2 | grep -v '^OK' | head -n1)
-        i_imei=$(at 'AT+CGSN' 2 | tr -cd '0-9' | cut -c1-15)
-        i_imsi=$(at 'AT+CIMI' 2 | tr -cd '0-9' | cut -c1-15)
-        i_iccid=$(at 'AT+CCID' 2 | tr -cd '0-9' | cut -c1-20)
-        if [ -n "$i_imei$i_imsi$i_iccid" ]; then
+        i_imei=$(ident_digits "$(at 'AT+CGSN' 2)" 15 15)
+        i_imsi=$(ident_digits "$(at 'AT+CIMI' 2)" 14 15)
+        i_iccid=$(ident_digits "$(at 'AT+CCID' 2)" 18 20)
+        # An identity that came back wrong is worth no cache entry at all: the
+        # next round retries in 5 s, five AT commands that cost about one second
+        # on a modem that has a SIM to read. What must never happen is a partial
+        # or refused reading replacing a good sim.json and then holding the page
+        # for the six hours of the TTL.
+        if [ -n "$i_imei" ] && [ -n "$i_imsi" ] && [ -n "$i_iccid" ]; then
             IDENT_JSON=$(printf '{"ts":%d,"mfg":%s,"model":%s,"fw":%s,"imei":%s,"imsi":%s,"iccid":%s}' \
                 "$(now)" "$(qs "$i_mfg")" "$(qs "$i_model")" "$(qs "$i_fw")" "$(qs "$i_imei")" "$(qs "$i_imsi")" "$(qs "$i_iccid")")
             printf '%s\n' "$IDENT_JSON" > "$IDENT.part" 2>/dev/null && mv "$IDENT.part" "$IDENT"
