@@ -238,7 +238,8 @@ class EarlyUsbOpenWrt(ShellTest):
             self.tearDown(); self.setUp()
 
     # --- hotplug iface/10-mu300-usb (K9; K10 rejected: the re-enumeration stays)
-    def hotplug(self, shell, stamp_age=None, bridge='10.1.2.1/24', port='10.1.2.1/24'):
+    def hotplug(self, shell, stamp_age=None, bridge='10.1.2.1/24', port='10.1.2.1/24', rndis_port='yes',
+                rndis_addr=''):
         (self.tmp / 'run' / 'mu300-early-udhcpd.pid').write_text('4242\n')
         (self.tmp / 'uptime').write_text('100.50 90.00\n')
         (self.tmp / 'mounts').write_text(f'configfs {self.tmp}/cfg configfs rw 0 0\n')
@@ -247,13 +248,19 @@ class EarlyUsbOpenWrt(ShellTest):
         (g / 'UDC').write_text('25100000.dwc3\n')
         if stamp_age is not None:
             (self.tmp / 'stamp').write_text(f'{100 - stamp_age}\n')
-        # usb0 kept the bridge's address; rndis0 is in the bridge without it
+        # usb0 kept the bridge's address; rndis0 is in the bridge without it - unless the test says otherwise:
+        # RNDIS_PORT=no is a rndis0 that is not a bridge port until the hook makes it one (the stub remembers the
+        # enslavement), RNDIS_ADDR an address preinit left on it (issue #45)
         self.stub('ip', 'echo "ip $*" >> "$STUBLOG/ip.log"\n'
+                        f'rp={rndis_port}; grep -q "^ip link set rndis0 master br-lan$" "$STUBLOG/ip.log" && rp=yes\n'
                         'case "$*" in\n'
                         f'"-4 -o addr show dev br-lan") echo "9: br-lan    inet {bridge} scope global br-lan" ;;\n'
-                        '"-o link show dev usb0"|"-o link show dev rndis0") echo "7: $5: <UP> mtu 1500 master br-lan state UP" ;;\n'
+                        '"-o link show dev usb0") echo "7: usb0: <UP> mtu 1500 master br-lan state UP" ;;\n'
+                        '"-o link show dev rndis0") [ "$rp" = yes ] && echo "8: rndis0: <UP> mtu 1500 master br-lan state UP" ||'
+                        ' echo "8: rndis0: <UP> mtu 1500 state UP" ;;\n'
                         f'"-4 -o addr show dev usb0") echo "7: usb0    inet {port} scope global usb0" ;;\n'
-                        'esac')
+                        f'"-4 -o addr show dev rndis0") [ -n "{rndis_addr}" ] && echo "8: rndis0    inet {rndis_addr} scope global rndis0" ;;\n'
+                        'esac\nexit 0')
         body = self.text('etc/hotplug.d/iface/10-mu300-usb', **{
             '/run/': f'{self.tmp}/run/', '/sys/class/net/': f'{self.tmp}/net/', '/tmp/mu300-usb-rebound': f'{self.tmp}/stamp',
             '/sys/kernel/config': f'{self.tmp}/cfg', '/proc/uptime': f'{self.tmp}/uptime', '/proc/mounts': f'{self.tmp}/mounts'})
@@ -277,6 +284,23 @@ class EarlyUsbOpenWrt(ShellTest):
             # the macOS re-enumeration still runs (K10 rejected until its gate)
             self.assertEqual('100', (self.tmp / 'stamp').read_text().strip())
             self.assertEqual('25100000.dwc3', (g / 'UDC').read_text().strip())
+            self.tearDown(); self.setUp()
+
+    def test_rndis_joins_the_bridge_before_its_address_comes_off(self):
+        """Issue #45: a device whose bridge section predates the switch to RNDIS. Preinit's early server (K11)
+        left the LAN address on rndis0, and rndis0 is not a bridge port when this hook runs. It used to be enslaved
+        after the removal loop, so the address stayed while br-lan held the same one, and neither the Wi-Fi clients
+        nor the USB host could use the LAN. Join first, then take the address off - and once only."""
+        for shell in self.each_shell():
+            self.netdevs('rndis0')                     # a RNDIS boot has no usb0
+            self.hotplug(shell, port='', rndis_port='no', rndis_addr='10.1.2.1/24')   # no usb0 address
+            ip = (self.tmp / 'ip.log').read_text()
+            self.assertIn('ip link set rndis0 master br-lan\n', ip)
+            self.assertIn('ip addr del 10.1.2.1/24 dev rndis0\n', ip)
+            self.assertLess(ip.index('ip link set rndis0 master br-lan\n'), ip.index('ip addr del 10.1.2.1/24 dev rndis0\n'))
+            self.assertEqual(1, ip.count('ip addr del'))
+            # after the re-enumeration the new netdev is a port again (the second half of the issue)
+            self.assertEqual(2, ip.count('ip link set rndis0 master br-lan\n'))
             self.tearDown(); self.setUp()
 
     def test_port_prefix_other_than_the_bridge(self):
@@ -384,6 +408,46 @@ class EarlyUsbOpenWrt(ShellTest):
                          'uci set firewall.cfg0e1.forward=REJECT', 'uci commit firewall'):
                 self.assertIn(line + '\n', log)
             self.tearDown(); self.setUp()
+
+    def test_defaults_name_the_lan_and_wan_zone_devices_once(self):
+        """Issue #67: the zones carry their devices, so the S19 ruleset has the LAN's input rules and the wan's
+        masquerade before netifd has made br-lan and sipa_eth0; added once, and not to a zone that has it."""
+        for shell in self.each_shell():
+            log = self.defaults(shell, runs=2)
+            self.assertEqual(1, log.count('uci add_list firewall.@zone[0].device=br-lan\n'))
+            self.assertEqual(1, log.count('uci add_list firewall.@zone[1].device=sipa_eth0\n'))
+            self.assertEqual(self.uci('get', 'firewall.@zone[0].device'), 'br-lan')
+            self.assertEqual(self.uci('get', 'firewall.@zone[1].device'), 'sipa_eth0')
+            self.tearDown(); self.setUp()
+
+    # --- hotplug.d/iface/19-mu300-fw4 (issue #67): the 5.4 kernel's stale flowtable before 20-firewall's reload
+    def fw4_hook(self, shell, kernel='5.4.254', action='ifup', iface='lan', flowtable=True, in_zone=True):
+        self.stub('uname', f'echo {kernel}')
+        self.stub('fw4', 'echo "fw4 $*" >> "$STUBLOG/fw4.log"; ' + ('exit 0' if in_zone else 'exit 1'))
+        self.stub('nft', 'echo "nft $*" >> "$STUBLOG/nft.log"\n'
+                         'case "$*" in "list flowtables inet fw4") '
+                         + ('printf "table inet fw4 {\\n\\tflowtable ft {\\n\\t}\\n}\\n"' if flowtable else ':')
+                         + ' ;; esac')
+        self.stub('logger', ':')
+        body = self.text('etc/hotplug.d/iface/19-mu300-fw4', **{'/etc/init.d/firewall enabled': 'true'})
+        r = self.sh(shell, f'ACTION={action} INTERFACE={iface}\n' + body)
+        self.assertEqual(0, r.returncode, r.stderr)
+        self.assertEqual('', r.stderr)
+        nft = self.tmp / 'nft.log'
+        return nft.read_text() if nft.exists() else ''
+
+    def test_fw4_hook_deletes_the_flowtable_on_5_4_before_the_reload(self):
+        for shell in self.each_shell():
+            self.assertIn('nft delete flowtable inet fw4 ft\n', self.fw4_hook(shell))
+            self.tearDown(); self.setUp()
+
+    def test_fw4_hook_leaves_the_flowtable_alone_when_no_reload_follows_or_the_kernel_updates_it(self):
+        for shell in self.each_shell():
+            for kw in ({'kernel': '6.18.55'}, {'kernel': '7.2.9'}, {'action': 'ifdown'}, {'in_zone': False},
+                       {'flowtable': False}):
+                with self.subTest(shell=' '.join(shell), **kw):
+                    self.assertNotIn('delete', self.fw4_hook(shell, **kw))
+                    self.tearDown(); self.setUp()
 
     def test_defaults_bridge_rndis0_only_when_it_exists(self):
         for shell in self.each_shell():

@@ -134,14 +134,25 @@ region_probe() {
     last_end=$1; disk=$2
     start=$(( (last_end / 4096 + 1) * 4096 ))
     end=$(( ((disk - 34) / 4096 - 1) * 4096 ))
+    # A partition table that ends at the end of the eMMC (one alignment block or less behind the last partition,
+    # issue #65): the two boundaries cross, and a negative size is not a region. It is an empty one - the callers
+    # then offer the card or make room - and its start is not read (region_find_existing).
+    [ $end -gt $start ] || end=$start
     OFF=$((start * 512)); SIZE=$(( (end - start) * 512 ))
 }
+
+# region_on_disk BYTES: whether the ext4 superblock of a region at BYTES (its second KiB) lies on the eMMC. A read
+# past the end of the disk never returns on this device: the dd spins on one core, survives kill -9 and heats the
+# SoC until a reboot (issues #43, #52, #65 - a 32 GB eMMC whose table ends at its end puts the region's start at the
+# disk's end, and the fixed offset of the first releases lies beyond a 32 GB eMMC altogether).
+region_on_disk() { [ $(( ($1 + 2048) / 512 )) -le "${disk:?region_probe first}" ]; }
 
 # an existing installation defines the region (it may have been created with a slightly different size, or at the
 # fixed offset of the first releases)
 region_find_existing() {
     existing=no
     for cand in $OFF 27762098176; do
+        region_on_disk "$cand" || continue
         m=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1080)) count=2 2>/dev/null | od -An -tx1" | tr -d ' ')
         l=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1144)) count=16 2>/dev/null" | LC_ALL=C tr -d '\000')
         if [ "$m" = 53ef ] && [ "$l" = mu300root ]; then

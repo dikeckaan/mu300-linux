@@ -95,6 +95,11 @@ what replaced it. The table below gives each section's state.
 | 33k | Vendor driver fixes from the U30 Air test, measured | current |
 | 34 | LEDs, and the defects from a second board's test | current |
 | 35 | kanoqwq's fixes, measured | current (panel languages: PR #48) |
+| 37 | System suspend | current |
+| 38 | Three defects from users' reports, 2026-10-07 | current |
+| 38a | A read past the end of the eMMC never returns | current (fixed) |
+| 38b | RNDIS: the port kept the bridge's address | current (fixed) |
+| 38c | fw4 on 5.4: the boot ruleset without the LAN, and a reload that always fails | current (fixed at boot; a reload by hand still needs the flowtable deleted first) |
 
 ## Hardware and firmware facts
 
@@ -2786,3 +2791,108 @@ Logs of every run stayed on F50-B under `/root/susp/` (the spike: `*.log`, dmesg
 the two panic records) and `/root/susp2/` (the follow-up, with the scripts that ran them). F50-B was left on the
 6.18.55 build of branch `suspend-drivers` (radio on, Wi-Fi client, one more 20 s `mem` checked). The 7.2.9
 build of the branch compiles, kernel and all modules; it has not been booted yet.
+
+## Users' reports
+
+### 38. Three defects from users' reports, 2026-10-07
+
+Three issues came in with their own measurements, two of them with the fix; what follows is what was taken from
+them, checked against the code, and what the release carries.
+
+#### 38a. A read past the end of the eMMC never returns (#43, #52, #65)
+
+Every installer probes the free region for an existing `mu300root` with three tiny reads of its superblock:
+`dd if=/dev/block/mmcblk0 bs=1 skip=$((OFF + 1080)) count=2`, where `OFF` is the first 2 MiB boundary behind
+the last partition, and once more at the fixed offset of the first releases, 27762098176. On the F50 of #65 the
+partition table ends 2 MiB before the end of the eMMC (61079552 sectors, the last partition ends at 61075456), so
+the first boundary behind it *is* the end of the disk, the last boundary before the backup GPT lies before it,
+and `region_probe`'s arithmetic gave a region of -4 MiB (the same number issue #32 had seen) whose superblock
+starts 2 bytes past the last sector. The eMMC driver of this device never completes a read past its end: the
+`dd` stays runnable at 100 % of one core, survives `kill -9`, and every retry adds another one - four of them
+held the SoC at 97 °C in #65 until a reboot. #52 (the Magisk installer, OpenWrt to the card) showed the same
+`dd` at byte 31272731704, which is that very offset; #43 had pinned the installer's silence to
+`region_find_existing` without seeing why. The legacy offset is the same trap on the 32 GB variant: it lies
+beyond that eMMC altogether and was read all the same.
+
+Fixed in `tools/storage.sh` (which `install.sh`, `uninstall.sh`, `tools/reset-password.sh` and the Magisk
+installer share) and in `install.ps1`: a region whose boundaries cross is an empty one (`SIZE=0`; the installers
+then offer the card or the repartitioning, as they do for any region that is too small), and a candidate
+superblock is read only when it lies on the disk (`region_on_disk`, `RegionOnDisk`). The SD-card installation of
+#52 and #65 goes through without a single read past the end. `tests/test_installer.py` (`Region`) runs the
+layout of #65 against the functions and checks that no `dd` crosses the disk's last byte.
+
+Not taken from #65: a wall-clock limit around every device command in `install.ps1`, and a port of
+`sd_release` to the host side. The card is released on the device, by `tools/android-install.sh`, before
+anything is written to it (both installers run that script); the reads before it only look at the card. The
+limit is worth having for the day another request is lost, but it is the larger change and is not needed once
+nothing is read past the end.
+
+#### 38b. RNDIS: the port kept the bridge's address (#45)
+
+An OpenWrt system installed with NCM (the default) and switched to RNDIS later has `usb0` in its bridge section
+and not `rndis0`; the LAN hook (`hotplug.d/iface/10-mu300-usb`, K9/K27) puts `rndis0` into `br-lan` on every LAN
+ifup. It did that *after* the loop that takes the early server's address off the bridge's ports, and that loop
+only looks at ports: `rndis0` was not one yet, kept `192.168.77.1/24`, and then became a port - the bridge and
+one of its ports with the same address, two equal routes, and the device could not reach its own Wi-Fi client
+nor the USB host, with the serial console the only way in. MRWOODEN measured it on an F50 (6.18, `openwrt-luci`,
+Windows without `UsbNcm.sys`) and sent the fix: join first, then take the address off; and after the hook's own
+re-enumeration of the gadget (K10), which destroys the function's netdev and binds a new one, put the gadget
+netdevs back into the bridge, since netifd re-adds a port it has in its configuration (`usb0`) and never one it
+never had. Applied as sent, with the regression test (`test_early_dhcp`: the RNDIS netdev that is not a port
+yet). Verified on the reporter's device: `br-lan` the only holder of the address, both the Wi-Fi client and the
+USB host served by the one `dnsmasq`, `rndis0` still a port after the rebind.
+
+#### 38c. fw4 on 5.4: the boot ruleset without the LAN, and a reload that always fails (#67, #61)
+
+AgentFan0315 took a fresh `openwrt-luci` on 5.4 (v2026.10.11) apart layer by layer: Wi-Fi and USB clients
+associate, their DHCP requests enter the kernel (an ingress counter on `wlan0` climbs), and die before any rule:
+the live `inet fw4` table has no `iifname "br-lan" jump input_lan` and no `srcnat_wan` jump, while `fw4 print`
+renders both. Two things stack:
+
+1. fw4 renders a zone's rules from the devices its networks have *at the time*. S19 `firewall` runs before S20
+   `network`, so at boot neither `br-lan` nor the modem's `sipa_eth0` exists, and the LAN's input rules and
+   the wan's masquerade are left out of the first ruleset - to be filled in by the reload that every ifup
+   triggers (`hotplug.d/iface/20-firewall`). That is how plain OpenWrt works too.
+2. On 5.4 that reload fails. fw4 replaces its ruleset in one transaction (`flush table inet fw4`, or `delete
+   flowtable inet fw4 ft`, then the table again with its flowtable `ft`). The 5.4 kernel refuses a flowtable that
+   names a device another flowtable of the same table has, and it counts the one the same transaction has just
+   deleted: that one leaves the table's list only at the commit, and 5.4's `nf_tables_newflowtable` walks the
+   list without regard to the pending deletion (the check skips inactive entries from 5.13 on). `flowtable ft {
+   ... } Error: Resource busy`, the whole transaction is rejected, and the S19 ruleset stays. The flowtable exists
+   from S19 on because the `earlyusb` zone names `usb0`, which init has made by then, and fw4 puts every zone
+   device into `ft`. The first ruleset is therefore the one with the flowtable and without the LAN, and nothing
+   after it can replace it. Deleting the flowtable on its own (`nft delete flowtable inet fw4 ft`), in a
+   transaction that is committed before the reload, is enough: the reload then creates it afresh.
+
+So the LAN had no DHCP, no LuCI and no NAT on every boot of a 5.4 `openwrt-luci`, which is also what #61 reports
+(installed with 5.4 and the panel: detected as a USB network, "no ssh and no webui", Wi-Fi visible but nothing
+connects; the serial console at `ttyGS0` is the way to `mu300-next-boot android` in that state). The mainline
+kernels update a flowtable in place and were never affected, which is why the maintainer's own tests (31, 35,
+on 6.18 and 7.2) did not see it.
+
+Two fixes, both in `openwrt/overlay`:
+
+* `uci-defaults/90-mu300` names the devices of the `lan` and `wan` zones (`br-lan`, `sipa_eth0`) next to their
+  networks, once, on every system (the reporter's workaround, the pattern of the `earlyusb` zone): the S19
+  ruleset is complete whatever the reloads do. Verified by the reporter across reboots.
+* `hotplug.d/iface/19-mu300-fw4`, on a 5.4 kernel only, deletes the stale flowtable right before 20-firewall's
+  reload, under the same conditions 20-firewall reloads on: an ifup of an interface that is in a zone. The reload
+  succeeds; the offloaded flows of the moment take the ordinary path until the flowtable is back.
+
+Not covered on 5.4: a reload that is not an ifup's - the firewall saved in LuCI, `fw4 reload` by hand - still
+fails while the flowtable is there. Until a cleaner hook is found (the flowtable deleted from fw4's own reload
+path), the way to apply a firewall change on 5.4 is `nft delete flowtable inet fw4 ft; fw4 reload`, or a reboot.
+Turning software flow offloading off would end that, at the cost of the fast path on the one kernel that has
+none other.
+
+#### 38d. Reports that were already fixed, or are not defects
+
+* #20 (soft lockup in `sipa_dele`, `get pd fail ret = 1` at 149 lines a second, 6.18.54 of 2026-09-28): the
+  vendor loop that retried `pm_runtime_get_sync()` every millisecond and took its `1` (already active) for a
+  failure - §31f, fixed on 2026-10-05 and in v2026.10.11's 6.18 bundle.
+* #64 (IPv6: relay or NAT66?): both, on purpose. The `openwrt-luci` system relays the carrier's RA and DHCPv6 to
+  the LAN (clients get public addresses from the bearer's /64) *and* masquerades v6 egress through the device's
+  own address (`masq6`, `91-mu300-luci`, K30), because the carrier routes one address per bearer and replies to a
+  client's public address would otherwise not come back; `ndp-learn` routes the /64 to `br-lan` for the same
+  reason. The `masq '1'` of the wan zone is IPv4 only (fw4's `masq6` is the v6 one). Plain OpenWrt keeps `extend`
+  and neither.

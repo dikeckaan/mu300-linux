@@ -99,6 +99,17 @@ if ! uci -q show firewall | grep -q "^firewall\.@zone\[[0-9]*\]\.name='earlyusb'
 	uci set firewall.$early.output='ACCEPT'
 	uci set firewall.$early.forward='REJECT'
 fi
+# Issue #67: the lan and wan zones name their devices, not only their networks. fw4 renders a zone's rules from
+# the devices its networks have at the time, and S19 firewall runs before S20 network: on the boot ruleset neither
+# br-lan nor the modem's sipa_eth0 exists yet, so the LAN's input rules and the wan's masquerade are left out, for
+# the reload every ifup triggers to fill in. On the 5.4 kernel that reload failed (hotplug.d/iface/19-mu300-fw4),
+# and the device came up with no DHCP, no LuCI and no NAT on every boot (#67; #61 looks the same). With the devices
+# named, the boot ruleset is complete whatever the reloads do. Added to a zone that lacks its device; once.
+for zd in lan:br-lan wan:sipa_eth0; do
+	zone=$(uci -q show firewall | sed -n "s/^\(firewall\.@zone\[[0-9]*\]\)\.name='${zd%:*}'$/\1/p" | head -1)
+	[ -n "$zone" ] || continue
+	case " $(uci -q get $zone.device) " in *" ${zd#*:} "*) ;; *) uci add_list $zone.device="${zd#*:}" ;; esac
+done
 # LuCI's language (both systems) is English, not "auto" (which follows the browser): once, with its own marker
 # luci.mu300.lang, so a language the user picks later stays through every update. A system from before the marker
 # that still says "auto" (or nothing) gets English too: auto was nobody's choice there (luci-base's default, and

@@ -40,9 +40,11 @@ fi
 OFF=; SIZE=
 if [ -z "$MOUNTENV" ]; then
     # the same search install.sh does; all byte arithmetic happens here, not in Android's 32-bit shell
-    set -- $(su_do 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; done; echo $e')
-    [ -n "${1:-}" ] || die "could not read the partition table from the device"
+    set -- $(su_do 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; done; echo $e $(cat /sys/block/mmcblk0/size)')
+    [ $# -eq 2 ] || die "could not read the partition table from the device"
+    disk=$2
     for cand in $(( ($1 / 4096 + 1) * 4096 * 512 )) 27762098176; do
+        region_on_disk "$cand" || continue    # never read past the end of the eMMC (storage.sh)
         m=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1080)) count=2 2>/dev/null | od -An -tx1" | tr -d ' ')
         l=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1144)) count=16 2>/dev/null" | tr -d '\000')
         if [ "$m" = 53ef ] && [ "$l" = mu300root ]; then

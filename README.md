@@ -695,6 +695,17 @@ tell them apart.
 **No internet.** Check that the SIM has a data plan, then run `sudo mobile-data status`. A missing plan looks like a
 connection that keeps dropping.
 
+**OpenWrt on kernel 5.4: no address, no web interface, nothing connects to the hotspot** (releases up to
+v2026.10.11). The firewall's boot ruleset had no rules for the LAN, and on 5.4 the reload that should have added them
+always failed ([FINDINGS 38c](docs/FINDINGS.md)). Fixed from the next release; until then the USB serial console
+(`ttyGS0`, a root shell) is the way in, and `nft delete flowtable inet fw4 ft; fw4 reload` brings the LAN up. On
+5.4 a firewall change saved in LuCI still needs those two commands (or a reboot) to take effect.
+
+**The installer prints nothing for minutes and the device gets hot.** A read past the end of the eMMC never
+returned on devices whose partition table ends at the end of the disk (the 32 GB variant and an F50 with no gap
+behind `userdata`; [FINDINGS 38a](docs/FINDINGS.md)). Fixed from the next release; reboot the device to end the
+stuck reads, then install with the new installer.
+
 **Kernel warnings are not in `journalctl -k`.** On Ubuntu they are in `journalctl -t kernel` (warnings and errors
 only, from the start of each boot, with the kernel's own timestamps; repeating vendor chatter is left out, see
 `/etc/mu300/kmsg-ignore`). Everything else is in `dmesg`.
