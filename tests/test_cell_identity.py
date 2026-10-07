@@ -23,29 +23,36 @@ MFG = 'Spreadtrum Communication CO.'
 MODEL = 'V1.0.1-B7'
 FW = 'Platform Version: MOCORTM_V2_22C_W25.39.4_Debug'
 
+# The names the adapter stub reads, so these keys are the stub's interface, not a label of our own: an entry
+# exported under any other name answers nothing, and every test that expects a round to write nothing then
+# passes for the wrong reason. test_the_stub_reads_every_reply_this_file_exports holds the two together.
 REPLIES = {
-    'CGMI': f'{MFG}\r\nOK\r\n',
-    'CGMM': f'{MODEL}\r\nOK\r\n',
-    'CGMR': f'{FW}\r\nOK\r\n',
-    'CGSN': f'{IMEI}\r\nOK\r\n',
-    'CIMI': f'{IMSI}\r\nOK\r\n',
-    'CCID': f'+CCID: "{ICCID}"\r\nOK\r\n',
+    'CGMI_REPLY': f'{MFG}\r\nOK\r\n',
+    'CGMM_REPLY': f'{MODEL}\r\nOK\r\n',
+    'CGMR_REPLY': f'{FW}\r\nOK\r\n',
+    'CGSN_REPLY': f'{IMEI}\r\nOK\r\n',
+    'CIMI_REPLY': f'{IMSI}\r\nOK\r\n',
+    'CCID_REPLY': f'+CCID: "{ICCID}"\r\nOK\r\n',
 }
 
 # The adapter stub: it answers from REPLY_* and records the commands it was asked (ATLOG), because the tier's
-# contract is also how many of them it sends.
+# contract is also how many of them it sends. A command it has no reply for is logged as unanswered, so a
+# round that "read nothing" can be told apart from a round that was never given anything to read.
 STUB_AT = r'''#!/bin/sh
 cmd=$1
 [ "$cmd" = "-t" ] && { shift 2; cmd=$1; }
 printf '%s\n' "$cmd" >> "$ATLOG"
 case $cmd in
-    AT+CGSN) printf '%s' "$CGSN_REPLY" ;;
-    AT+CGMI) printf '%s' "$CGMI_REPLY" ;;
-    AT+CGMM) printf '%s' "$CGMM_REPLY" ;;
-    AT+CGMR) printf '%s' "$CGMR_REPLY" ;;
-    AT+CIMI) printf '%s' "$CIMI_REPLY" ;;
-    AT+CCID) printf '%s' "$CCID_REPLY" ;;
+    AT+CGSN) reply=$CGSN_REPLY ;;
+    AT+CGMI) reply=$CGMI_REPLY ;;
+    AT+CGMM) reply=$CGMM_REPLY ;;
+    AT+CGMR) reply=$CGMR_REPLY ;;
+    AT+CIMI) reply=$CIMI_REPLY ;;
+    AT+CCID) reply=$CCID_REPLY ;;
+    *)       reply= ;;
 esac
+[ -n "$reply" ] || printf '%s\n' "$cmd" >> "$ATLOG.unanswered"
+printf '%s' "$reply"
 exit 0
 '''
 
@@ -212,6 +219,23 @@ class IdentityTier(ShellTest):
     def asked(self):
         return self.log.read_text().split() if self.log.exists() else []
 
+    def unanswered(self):
+        """The commands the stub had no reply for: a round must never "read nothing" silently."""
+        missing = self.log.with_name(self.log.name + '.unanswered')
+        return missing.read_text().split() if missing.exists() else []
+
+    def test_the_stub_reads_every_reply_this_file_exports(self):
+        """A reply exported under a name the stub does not read answers nothing.
+
+        Every test that expects a round to write nothing then passes for the wrong reason - which is how a
+        wrong key in REPLIES hid behind three green tests until a reviewer ran them.
+        """
+        for name in REPLIES:
+            with self.subTest(reply=name):
+                self.assertIn(f'${name}', STUB_AT, 'the stub never reads this reply')
+        self.assertEqual(sorted(REPLIES), ['CCID_REPLY', 'CGMI_REPLY', 'CGMM_REPLY', 'CGMR_REPLY',
+                                           'CGSN_REPLY', 'CIMI_REPLY'])
+
     def test_a_good_reading_is_cached(self):
         for shell in self.each_shell():
             with self.subTest(shell=' '.join(shell)):
@@ -223,13 +247,19 @@ class IdentityTier(ShellTest):
                 self.assertEqual(self.cached()['imsi'], IMSI, 'the reading is written to sim.json')
                 self.assertIn('AT+CIMI', self.asked())
                 self.assertIn('AT+CCID', self.asked())
+                self.assertEqual(self.unanswered(), [], 'the stub answered every command')
 
     def test_a_refused_reading_is_not_cached(self):
-        """The regression: sim.json must never hold the digits of an error."""
+        """The regression: sim.json must never hold the digits of an error.
+
+        The IMEI still answers here, so the round reaches the write and is stopped by the two refusals - not
+        by having read nothing at all (which would pass this test without proving anything).
+        """
         for shell in self.each_shell():
             with self.subTest(shell=' '.join(shell)):
                 published, _ = self.run_tier(shell, dict(REPLIES, CIMI_REPLY='\r\n+CME ERROR: 10\r\n',
                                                          CCID_REPLY='\r\n+CME ERROR: 10\r\n'), old=None)
+                self.assertEqual(self.unanswered(), [], 'the stub answered every command')
                 self.assertIsNone(self.cached(), 'a refused read must leave no sim.json behind')
                 self.assertNotIn('10', (published or {}).get('imsi', ''), 'no error digits are published')
 
@@ -240,6 +270,7 @@ class IdentityTier(ShellTest):
         for shell in self.each_shell():
             with self.subTest(shell=' '.join(shell)):
                 published, _ = self.run_tier(shell, dict(REPLIES, CIMI_REPLY='+CME ERROR: 10'), old=old)
+                self.assertEqual(self.unanswered(), [], 'the stub answered every command')
                 self.assertEqual(published['imsi'], IMSI, 'the cached identity is the answer')
                 self.assertEqual(self.identity.read_text().strip(), old, 'the cache is not rewritten')
 
