@@ -78,11 +78,15 @@ jobs:
       MU300_REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
+      # The build scripts run as root: on a Linux docker the containers write their outputs as root, and the
+      # scripts' own cleanups (rm -rf of a directory a container filled) fail for anyone else. The maintainer's
+      # Docker Desktop hands the files to the user, which is why the scripts never needed to care.
       - name: Tools
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq lz4 cpio zip unzip >/dev/null
-          python3 -m pip install -q lz4 || python3 -m pip install -q --break-system-packages lz4
+          sudo python3 -m pip install -q lz4 || sudo python3 -m pip install -q --break-system-packages lz4
+          sudo git config --system --add safe.directory "$GITHUB_WORKSPACE"
           docker version --format 'docker {{.Server.Version}} {{.Server.Arch}}'
           df -h / | tail -1
       - name: Kernel versions
@@ -103,7 +107,7 @@ jobs:
               print(name + "=" + v)
           ' | tee -a "$GITHUB_OUTPUT"
       - name: Vendor 5.4 kernel and modules
-        run: sh kernel/build-all.sh
+        run: sudo -E sh kernel/build-all.sh
       - name: Mainline build environment
         run: docker build -t mu300-mainline-build upstream/
       - name: Mainline 6.18
@@ -129,7 +133,7 @@ jobs:
           PRERELEASE: ${{ needs.plan.outputs.prerelease }}
         run: |
           # the build outputs are ignored by git, so the tree is still the commit the release says it is
-          git status --porcelain
-          sh tools/make-release.sh "$TAG" --publish $PRERELEASE
+          sudo -E git status --porcelain
+          sudo -E sh tools/make-release.sh "$TAG" --publish $PRERELEASE
       - name: Magisk installers
         run: gh workflow run magisk.yml -R "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f tag="$TAG"
