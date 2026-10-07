@@ -6,11 +6,13 @@ name: Release
 # tag (and whether it is a prerelease: the default, which the installers and mu300-update do not offer until it is
 # promoted on GitHub). The release's commit is the ref the workflow ran on; the Magisk zips follow by the Magisk
 # installers workflow, started at the end (a release made with the workflow's own token does not start it by itself).
-# A pushed tag v* does the same for its commit, always as a prerelease (and from any branch: a push runs the workflow
-# of the pushed commit, where a dispatch needs the workflow on the default branch).
+# A push that writes a tag name into .github/release-request does the same for its commit, always as a prerelease,
+# from any branch: a push runs the workflow of the pushed commit, where a dispatch needs the workflow on the default
+# branch. (Not a tag push: tools/make-release.sh run by hand creates the tag itself, and the workflow would then
+# start building over a release being published.) An empty file asks for nothing.
 on:
   push:
-    tags: ['v[0-9]*']
+    paths: ['.github/release-request']
   workflow_dispatch:
     inputs:
       tag:
@@ -32,24 +34,49 @@ permissions:
   actions: write
 
 concurrency:
-  group: release-${{ inputs.tag || github.ref_name }}
+  group: release-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
+  # the tag: the input of a dispatch, or the one line of .github/release-request on a push (empty: nothing to do)
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      prerelease: ${{ steps.tag.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_PRERELEASE: ${{ inputs.prerelease }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" = push ]; then
+            tag=$(sed -n '1{s/[[:space:]]*#.*//;s/[[:space:]]*$//;p;}' .github/release-request 2>/dev/null || true)
+            pre=--prerelease
+          else
+            tag=$INPUT_TAG; pre=; [ "$INPUT_PRERELEASE" != true ] || pre=--prerelease
+          fi
+          [ -n "$tag" ] || { echo "no release asked for"; exit 0; }
+          tag_ok=1
+          case "$tag" in v[0-9]*) ;; *) tag_ok= ;; esac
+          case "$tag" in *[!0-9A-Za-z._-]*|*..*) tag_ok= ;; esac
+          [ -n "$tag_ok" ] || { echo "not a release tag: $tag"; exit 1; }
+          echo "release $tag $pre"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$pre" >> "$GITHUB_OUTPUT"
+
   release:
+    needs: plan
+    if: needs.plan.outputs.tag != ''
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 340
     env:
-      TAG: ${{ inputs.tag || github.ref_name }}
+      TAG: ${{ needs.plan.outputs.tag }}
       GH_TOKEN: ${{ github.token }}
       MU300_REPO: ${{ github.repository }}
     steps:
-      - name: Tag
-        run: |
-          tag_ok=1
-          case "$TAG" in v[0-9]*) ;; *) tag_ok= ;; esac
-          case "$TAG" in *[!0-9A-Za-z._-]*|*..*) tag_ok= ;; esac
-          [ -n "$tag_ok" ] || { echo "not a release tag: $TAG"; exit 1; }
       - uses: actions/checkout@v4
       - name: Tools
         run: |
@@ -99,7 +126,7 @@ jobs:
         run: tail -n 60 upstream/out/modules/*.log upstream/out-7.2/modules/*.log 2>/dev/null || true
       - name: Root filesystems, extras, audit, publish
         env:
-          PRERELEASE: ${{ (github.event_name == 'push' || inputs.prerelease) && '--prerelease' || '' }}
+          PRERELEASE: ${{ needs.plan.outputs.prerelease }}
         run: |
           # the build outputs are ignored by git, so the tree is still the commit the release says it is
           git status --porcelain
