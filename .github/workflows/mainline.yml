@@ -6,8 +6,6 @@ name: Mainline kernel build
 # an API a module uses that is gone - so a red run is the early warning for the next kernel jump.
 
 on:
-  schedule:
-    - cron: '30 4 * * 1'
   push:
     branches: [main]
     paths: ['upstream/**', '.github/workflows/mainline.yml']

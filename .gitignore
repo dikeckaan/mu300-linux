@@ -45,3 +45,18 @@ upstream/out-*/
 .mu300-keep
 # a test run with TMPDIR inside the tree
 tests/mu300-test-*/
+
+# Local maintenance inputs, credentials, device archives and generated reports.
+private/
+packages/
+*.local.json
+*.local.conf
+.env
+.env.*
+*.pem
+*.key
+/v50-backup/
+/v50-openclash/
+/v50-proxy/
+/AGENTS.local.md
+/tools/v50/known_hosts

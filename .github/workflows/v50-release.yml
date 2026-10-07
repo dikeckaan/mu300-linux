@@ -1,0 +1,49 @@
+name: Prepare V50 release assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_tag:
+        description: 'Verified upstream release tag (vYYYY.MM.DD)'
+        required: true
+      tag:
+        description: 'V50 output tag (vYYYY.MM.DD-v50.N)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Dependencies
+        run: python -m pip install lz4
+      - name: Download upstream inputs
+        env:
+          BASE_TAG: ${{ inputs.base_tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [[ "$BASE_TAG" =~ ^v[0-9]{4}\.[0-9]{2}\.[0-9]{2}$ ]] || exit 1
+          mkdir -p work/v50-base
+          gh release download "$BASE_TAG" -R dikeckaan/mu300-linux -D work/v50-base \
+            -p SHA256SUMS -p mu300-kernel.tar.gz -p mu300-kernel-6.18.tar.gz -p mu300-openwrt-luci-rootfs.tar.gz
+      - name: Prepare and verify
+        env:
+          OUTPUT_TAG: ${{ inputs.tag }}
+          REPOSITORY: ${{ github.repository }}
+          BASE_TAG: ${{ inputs.base_tag }}
+        run: |
+          python tools/v50/audit.py
+          python tools/v50/release.py --base work/v50-base --base-tag "$BASE_TAG" \
+            --output release/v50 --tag "$OUTPUT_TAG" --repo "$REPOSITORY"
+          python tools/v50/verify-release.py --base work/v50-base --output release/v50
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v50-release-candidate
+          path: release/v50/
+          if-no-files-found: error

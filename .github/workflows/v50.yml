@@ -1,0 +1,31 @@
+name: V50 maintenance
+
+on:
+  push:
+    branches: [main, 'codex/v50']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dash busybox lz4 cpio zip unzip
+          python -m pip install lz4
+      - name: Public source audit
+        run: python tools/v50/audit.py
+      - name: Regression tests
+        run: python -m unittest discover -s tests
