@@ -1,1 +1,1 @@
-v2026.10.12
+v2026.10.12  # second run: the first built the 5.4 kernel and fell over its cleanup
