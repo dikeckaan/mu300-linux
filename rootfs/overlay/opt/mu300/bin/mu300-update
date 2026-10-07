@@ -23,6 +23,10 @@
 # a reboot (the running system is still the old one until then), "mu300-update apply" updates the boot image too.
 export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/sbin:/sbin"
 REPO=${MU300_REPO:-dikeckaan/mu300-linux}
+if [ -r "${MU300_UPDATE_CONF:-/etc/mu300/update.conf}" ] && [ -z "${MU300_REPO:-}" ]; then
+    _repo=$(sed -n 's/^REPO=\([A-Za-z0-9_.-]*\/[A-Za-z0-9_.-]*\)$/\1/p' "${MU300_UPDATE_CONF:-/etc/mu300/update.conf}" | tail -n1)
+    [ -z "$_repo" ] || REPO=$_repo
+fi
 DISK=${MU300_DISK:-/mnt/mu300-disk}
 CONF=/etc/mu300
 VERSION_FILE=$CONF/image-version
@@ -33,6 +37,16 @@ os_kind() { case $1 in ubuntu) echo ubuntu ;; openwrt|openwrt-*) echo openwrt ;;
 say() { printf '\n==> %s\n' "$*"; }
 die() { printf '\nERROR: %s\n' "$*" >&2; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
+
+v50_update_preflight() {
+    [ "$(cat "${MU300_SYSROOT:-}/etc/mu300/profile" 2>/dev/null)" = v50 ] || return 0
+    # An official upstream rootfs cannot carry this fork's migration and LED support.
+    [ "$REPO" != dikeckaan/mu300-linux ] || die 'V50: set REPO=owner/repository in /etc/mu300/update.conf to your V50 release repository first'
+    case $REPO in */*) ;; *) die 'V50: invalid release repository' ;; esac
+    if [ -e "${MU300_SYSROOT:-}/etc/init.d/openclash" ] && [ "${MU300_V50_MIGRATION_READY:-}" != 1 ]; then
+        die 'V50: back up OpenClash, prepare compatible packages and disable its service; then use MU300_V50_MIGRATION_READY=1 for the update (docs/v50/UPDATE.zh-CN.md)'
+    fi
+}
 
 # A transfer that stalls is cut off and retried rather than waited for: with older boot images the IPA's downlink
 # can die in the middle of one (docs/FINDINGS.md 32), and without a timeout the update hung for good.
@@ -324,6 +338,13 @@ apply_one() {  # apply_one OS TAG
     # etc/mu300 is kept as a whole (hotspot.conf, vpn.conf, ...), but the version of the image belongs to the new
     # filesystem: copying the old directory over it would make every update report the version it replaced
     newver=$(cat "$new$VERSION_FILE" 2>/dev/null || true)
+    newprofile=$(cat "$new$CONF/profile" 2>/dev/null || true)
+    newrepo=$(cat "$new$CONF/update.conf" 2>/dev/null || true)
+    newled=$(cat "$new$CONF/led.conf" 2>/dev/null || true)
+    if [ "$(cat "$old$CONF/profile" 2>/dev/null)" = v50 ] && [ "$newprofile" != v50 ]; then
+        rm -rf "$new"
+        die 'V50: target rootfs has no V50 profile; current system was not replaced'
+    fi
     for k in $(keep_list "$os"); do
         [ -e "$old/$k" ] || continue
         mkdir -p "$new/$(dirname "$k")"
@@ -331,6 +352,13 @@ apply_one() {  # apply_one OS TAG
         cp -a "$old/$k" "$new/$k"
     done
     merge_accounts "$old" "$new" || echo "$os: could not carry the accounts over; the image's default password applies" >&2
+    # Adopting the V50 profile from a generic installation must not lose image identity.
+    if [ "$newprofile" = v50 ]; then
+        mkdir -p "$new$CONF"
+        echo v50 > "$new$CONF/profile"
+        [ -f "$new$CONF/update.conf" ] || printf '%s\n' "$newrepo" > "$new$CONF/update.conf"
+        [ -f "$new$CONF/led.conf" ] || printf '%s\n' "$newled" > "$new$CONF/led.conf"
+    fi
     if [ -n "$newver" ]; then
         mkdir -p "$new$CONF"
         printf '%s\n' "$newver" > "$new$VERSION_FILE"
@@ -830,6 +858,7 @@ resume_data() {
 }
 
 apply() {
+    v50_update_preflight
     mounted_disk
     tag=${MU300_RELEASE:-$(latest_release)}
     [ -n "$tag" ] || { offline_hint; die "could not reach GitHub (is the device online?)"; }
@@ -972,7 +1001,7 @@ clean() {
 [ -z "${MU300_LIB:-}" ] || return 0
 
 [ "$(id -u)" = 0 ] || { echo "run as root" >&2; exit 1; }
-case ${1:-check} in apply|boot|kernel) keepalive_start; trap 'keepalive_stop; resume_data' EXIT; trap 'exit 130' INT TERM HUP ;; esac
+case ${1:-check} in apply|boot|kernel) v50_update_preflight; keepalive_start; trap 'keepalive_stop; resume_data' EXIT; trap 'exit 130' INT TERM HUP ;; esac
 case ${1:-check} in
     check) check ;;
     apply) shift; apply "$@" ;;

@@ -178,7 +178,7 @@ detect_device() {
     say "$(t 'device: {1}' "$_m")"
     case $_m in
         *U30Air*|*U30_Air*|*"U30 Air"*) DEVICE=u30air ;;
-        *MU300*|*F50*|*mu300*) DEVICE=f50 ;;
+        *MU300*|*F50*|*mu300*|*MU3351*|*V50*) DEVICE=f50 ;;
         *) DEVICE= ;;
     esac
     [ -z "${MU300_DEVICE:-}" ] || DEVICE=$MU300_DEVICE

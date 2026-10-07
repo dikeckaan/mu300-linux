@@ -128,6 +128,8 @@ function FindAdb {
 # for install.sh): a git clone is fast-forwarded to GitHub's main, a downloaded zip gets the files that differ,
 # with the commit checked kept in .mu300-source. Without GitHub the local copy runs; nothing here stops an install.
 function SelfUpdate {
+    # Fork maintenance is explicit: never replace V50 sources with upstream zip files.
+    if (Test-Path (Join-Path $Top 'profiles/v50/profile.json')) { return $false }
     if ($NoSelfUpdate -or $env:MU300_NO_SELF_UPDATE -or $env:MU300_SELF_UPDATED) { return $false }
     $ProgressPreference = 'SilentlyContinue'   # Windows PowerShell 5.1 downloads many times slower with the bar
     try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch { }

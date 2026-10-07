@@ -267,6 +267,14 @@ for os in $OSES; do
     say "installing $os"
     rm -rf $M/$os.new && mkdir $M/$os.new
     tar -xzpf $tarball -C $M/$os.new
+    newprofile=$(cat "$M/$os.new/etc/mu300/profile" 2>/dev/null || true)
+    newrepo=$(cat "$M/$os.new/etc/mu300/update.conf" 2>/dev/null || true)
+    newled=$(cat "$M/$os.new/etc/mu300/led.conf" 2>/dev/null || true)
+    if [ "${UPDATE:-0}" = 1 ] && [ "$(cat "$M/$os/etc/mu300/profile" 2>/dev/null)" = v50 ] && [ "$newprofile" != v50 ]; then
+        rm -rf "$M/$os.new"
+        say 'V50: target rootfs has no V50 profile; current system was not replaced'
+        exit 1
+    fi
     # the account the installer gives a password (ubuntu, OpenWrt's root) and its hash in the image
     case $os in ubuntu) pwu=ubuntu ;; *) pwu=root ;; esac
     carried=0
@@ -325,6 +333,12 @@ for os in $OSES; do
         fi
         extra_keep_vpn $M $M/$os
         [ -n "$extra" ] && say "kept enabled services:$extra"
+    fi
+    if [ "$newprofile" = v50 ]; then
+        mkdir -p "$M/$os.new/etc/mu300"
+        echo v50 > "$M/$os.new/etc/mu300/profile"
+        [ -f "$M/$os.new/etc/mu300/update.conf" ] || printf '%s\n' "$newrepo" > "$M/$os.new/etc/mu300/update.conf"
+        [ -f "$M/$os.new/etc/mu300/led.conf" ] || printf '%s\n' "$newled" > "$M/$os.new/etc/mu300/led.conf"
     fi
     # The password, before the new system replaces the old one: the hash just chosen, or (an update without one) the
     # one carried over. Fail closed: a system whose account would be left with no hash, an empty one, the image's

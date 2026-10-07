@@ -1,0 +1,15 @@
+#!/bin/sh
+# The autonomous AW9523B effect is outside /sys/class/leds.
+set -eu
+R=${MU300_SYSROOT:-}
+grep -qx 'LED_DISABLED=1' "${MU300_LED_CONF:-$R/etc/mu300/led.conf}" 2>/dev/null || exit 0
+node=$R/sys/bus/i2c/devices/3-005b
+[ -r "$node/of_node/compatible" ] || exit 0
+tr '\000' '\n' < "$node/of_node/compatible" | grep -qx 'awinic,aw9523b' || exit 0
+# A future kernel driver owns the chip; never use forced I2C access.
+[ ! -e "$node/driver" ] && [ ! -L "$node/driver" ] || exit 0
+command -v i2cget >/dev/null && command -v i2cset >/dev/null || exit 1
+[ "$(i2cget -y 3 0x5b 0x10)" = 0x23 ] || exit 1
+i2cset -y 3 0x5b 0x7f 0x00
+sleep 1
+[ "$(i2cget -y 3 0x5b 0x31)" = 0x00 ]

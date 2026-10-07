@@ -12,6 +12,7 @@
 # self_update SCRIPT ARGS...: returns when this copy is current; otherwise updates it and restarts SCRIPT
 self_update() {
     _su_script=$1; shift
+    [ ! -f "$TOP/profiles/v50/profile.json" ] || return 0
     [ -z "${MU300_NO_SELF_UPDATE:-}" ] && [ -z "${MU300_SELF_UPDATED:-}" ] || return 0
     command -v curl >/dev/null || return 0
     _su_remote=$(curl -fsSL --connect-timeout 5 --max-time 15 "https://api.github.com/repos/$REPO/commits/main" 2>/dev/null |

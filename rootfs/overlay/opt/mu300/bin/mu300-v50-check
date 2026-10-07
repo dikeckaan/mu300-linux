@@ -1,0 +1,24 @@
+#!/bin/sh
+# Read-only preflight. Does not print subscriptions, account hashes or SIM data.
+set -u
+R=${MU300_SYSROOT:-}
+bad=0
+check() {
+    label=$1; shift
+    if "$@"; then printf 'OK   %s\n' "$label"; else printf 'FAIL %s\n' "$label"; bad=1; fi
+}
+printf 'V50 maintenance preflight\n'
+check 'OpenWrt root filesystem' test -f "$R/etc/openwrt_release"
+check 'V50 profile' grep -qx v50 "$R/etc/mu300/profile"
+check 'TUN device' test -c "$R/dev/net/tun"
+check 'LED disable setting' grep -qx LED_DISABLED=1 "$R/etc/mu300/led.conf"
+check 'LED shutdown helper' test -x "$R/opt/mu300/bin/mu300-v50-led-off"
+check 'LED boot service' test -L "$R/etc/rc.d/S19v50-led-off"
+check 'USB or LAN bridge' test -d "$R/sys/class/net/br-lan"
+check 'cellular interface' test -d "$R/sys/class/net/sipa_eth0"
+if [ -f "$R/etc/init.d/openclash" ]; then
+    printf 'NOTE OpenClash installed: back up configuration and reinstall compatible packages before reboot.\n'
+    check 'Mihomo core' test -x "$R/etc/openclash/core/clash_meta"
+fi
+printf 'NOTE Interface presence does not prove DNS, Internet access or battery health.\n'
+exit "$bad"

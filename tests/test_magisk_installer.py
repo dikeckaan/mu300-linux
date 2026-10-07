@@ -460,6 +460,12 @@ class InstallerCase(ShellTest):
 
 
 class Plan(InstallerCase):
+    def test_v50_model_uses_f50_dry_run(self):
+        self.device(model='MU3351')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertTrue(self.nothing_written())
+
     def test_defaults_internal_region(self):
         r = self.run_installer(conf='MU300_DRY_RUN=1\n')
         self.assertEqual(r.returncode, 3, r.stdout + r.stderr)

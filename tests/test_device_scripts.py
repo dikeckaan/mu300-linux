@@ -1221,6 +1221,15 @@ class Led(ShellTest):
             self.assertEqual(self.state()['net_blue'], '0')
             self.assertEqual(self.state()['sc27xx:blue'], '0')  # the F50's LED is not touched
 
+    def test_disabled_keeps_normal_states_and_button_wake_dark(self):
+        for shell in self.each_shell():
+            self.reset()
+            self.conf.write_text('LED_DISABLED=1\nLED_TIMEOUT=0\n')
+            for args in (('data', 'on'), ('data', '5g'), ('data', 'error'), ('wifi', 'on'), ('wake',)):
+                r = self.led(shell, 'f50', *args)
+                self.assertEqual(r.returncode, 0, r.stderr)
+                self.assertTrue(all(v == '0' for v in self.state().values()), args)
+
     def test_wifi_colour_follows_the_band(self):
         for shell in self.each_shell():
             self.reset()

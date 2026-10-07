@@ -1,0 +1,11 @@
+{
+  "name": "v50",
+  "models": ["MU3351", "V50"],
+  "board": "ums9620_2h10_feimao",
+  "kernel_device": "f50",
+  "system": "openwrt-luci",
+  "kernel_series": "6.18",
+  "led_disabled": true,
+  "optional_components": ["openclash"],
+  "unverified_drivers": ["aw9523b", "fm11tag", "stk501xx"]
+}
