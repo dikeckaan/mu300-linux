@@ -118,7 +118,7 @@ echo "$(t 'device: {1}' "$model")"
 # loads them; the boot image says which device it is for)
 case "$model" in
     *U30Air*|*U30_Air*|*"U30 Air"*) DEVICE=u30air ;;
-    *MU300*|*F50*|*mu300*) DEVICE=f50 ;;
+    *MU300*|*F50*|*mu300*|*MU3351*|*V50*) DEVICE=f50 ;;
     *) ask go "$(t 'This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)')" no; [ "$go" = yes ] || exit 1
        DEVICE=f50 ;;
 esac

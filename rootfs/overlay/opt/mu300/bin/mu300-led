@@ -25,6 +25,7 @@
 # Timeout: /etc/mu300/led.conf, LED_TIMEOUT=SECONDS (0: always on). Default 60 on the U30 Air, which has a power
 # button to wake them, and 0 on the F50. What each LED should show is kept in /run/mu300/led, so a change while
 # the LEDs are dark shows up on the next wake.
+# LED_DISABLED=1 keeps status LEDs dark even on wake; thermal alarms and explicit tests still work.
 # Every write is best effort: the PMIC rejects a brightness write now and then (mobile-data), and a cosmetic
 # LED must never make a service fail.
 # (MU300_SYSROOT, MU300_BIN and MU300_LED_CONF are for tests/: a fake /, this directory, a led.conf)
@@ -45,9 +46,11 @@ SIREN="sc27xx:red sc27xx:green sc27xx:blue"
 SIREN_PID=$R/run/mu300/led-siren.pid
 TIMEOUT=$(sed -n 's/^LED_TIMEOUT=\([0-9][0-9]*\)$/\1/p' "${MU300_LED_CONF:-/etc/mu300/led.conf}" 2>/dev/null | tail -n1)
 TIMEOUT=${TIMEOUT:-$DEFAULT_TIMEOUT}
+DISABLED=$(sed -n 's/^LED_DISABLED=\([01]\)$/\1/p' "${MU300_LED_CONF:-/etc/mu300/led.conf}" 2>/dev/null | tail -n1)
 
 uptime_s() { cut -d. -f1 "$R/proc/uptime" 2>/dev/null || echo 0; }
 awake() {
+    [ "$DISABLED" = 1 ] && return 1
     [ "$TIMEOUT" = 0 ] && return 0
     until=$(cat "$STATE/.awake-until" 2>/dev/null) || return 1
     [ "$(uptime_s)" -lt "${until:-0}" ]
@@ -112,12 +115,13 @@ case "$1 ${2:-}" in
             nap 2; n=$((n - 2))
         done ;;
     "wake "*)
+        [ "$DISABLED" = 1 ] && exec "$0" sleep
         [ "$TIMEOUT" = 0 ] && exit 0
         mkdir -p "$STATE" 2>/dev/null
         echo $(( $(uptime_s) + TIMEOUT )) > "$STATE/.awake-until"
         show_all ;;
     "sleep "*)
-        [ "$TIMEOUT" = 0 ] && exit 0
+        [ "$TIMEOUT" = 0 ] && [ "$DISABLED" != 1 ] && exit 0
         if [ "${2:-}" = --if-due ] && awake; then exit 0; fi
         [ -e "$STATE/.awake-until" ] || [ "${2:-}" != --if-due ] || exit 0   # dark already
         rm -f "$STATE/.awake-until"
