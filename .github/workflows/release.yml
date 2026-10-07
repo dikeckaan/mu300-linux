@@ -6,7 +6,11 @@ name: Release
 # tag (and whether it is a prerelease: the default, which the installers and mu300-update do not offer until it is
 # promoted on GitHub). The release's commit is the ref the workflow ran on; the Magisk zips follow by the Magisk
 # installers workflow, started at the end (a release made with the workflow's own token does not start it by itself).
+# A pushed tag v* does the same for its commit, always as a prerelease (and from any branch: a push runs the workflow
+# of the pushed commit, where a dispatch needs the workflow on the default branch).
 on:
+  push:
+    tags: ['v[0-9]*']
   workflow_dispatch:
     inputs:
       tag:
@@ -28,7 +32,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: release-${{ inputs.tag }}
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -36,7 +40,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 340
     env:
-      TAG: ${{ inputs.tag }}
+      TAG: ${{ inputs.tag || github.ref_name }}
       GH_TOKEN: ${{ github.token }}
       MU300_REPO: ${{ github.repository }}
     steps:
@@ -95,7 +99,7 @@ jobs:
         run: tail -n 60 upstream/out/modules/*.log upstream/out-7.2/modules/*.log 2>/dev/null || true
       - name: Root filesystems, extras, audit, publish
         env:
-          PRERELEASE: ${{ inputs.prerelease && '--prerelease' || '' }}
+          PRERELEASE: ${{ (github.event_name == 'push' || inputs.prerelease) && '--prerelease' || '' }}
         run: |
           # the build outputs are ignored by git, so the tree is still the commit the release says it is
           git status --porcelain
