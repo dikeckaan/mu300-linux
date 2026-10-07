@@ -1,8 +1,10 @@
-# Linux on the ZTE F50 / MU300 and U30 Air
+# Linux on the ZTE V50 / MU3351
 
 > V50 / MU3351 maintenance branch: [中文说明](docs/v50/README.zh-CN.md),
 > [update](docs/v50/UPDATE.zh-CN.md), [build and publish](docs/v50/BUILD.zh-CN.md).
 > V50 retains the f50 kernel layout. Upstream release badges below refer to the original project.
+> Source repository: [tri-dev3/mu300-linux](https://github.com/tri-dev3/mu300-linux).
+> This fork has no device-validated V50 release yet; locally generated preview assets are not installation releases.
 
 [![Latest Release](https://img.shields.io/github/v/release/dikeckaan/mu300-linux?logo=github)](https://github.com/dikeckaan/mu300-linux/releases/latest)
 [![Total Downloads](https://img.shields.io/github/downloads/dikeckaan/mu300-linux/total?color=blue&logo=github)](https://github.com/dikeckaan/mu300-linux/releases)

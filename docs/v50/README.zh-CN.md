@@ -4,6 +4,9 @@
 为 ZTE V50（MU3351、ums9620_2h10_feimao）整理安装识别、熄灯和维护功能。
 保留上游目录、许可证及其他机型的代码。
 
+源码仓库：[tri-dev3/mu300-linux](https://github.com/tri-dev3/mu300-linux)。
+当前发布的是维护源码，尚无经过实机验证的 V50 Release。不要直接刷写本机预览产物。
+
 ## 支持范围
 
 | 项目 | 状态 |
@@ -26,7 +29,7 @@
 ```powershell
 .\install.ps1 -Check -Lang en -NoSelfUpdate
 $env:MU300_OPENWRT='luci'
-.\install.ps1 -Repo YOUR_ACCOUNT/YOUR_REPOSITORY -Release YOUR_V50_TAG -Lang en -NoSelfUpdate
+.\install.ps1 -Repo tri-dev3/mu300-linux -Release YOUR_VALIDATED_V50_TAG -Lang en -NoSelfUpdate
 ```
 
 选择 OpenWrt LuCI、6.18 内核；已有 Linux 时选 update。安装仍需要从你自己的
