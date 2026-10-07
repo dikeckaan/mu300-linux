@@ -180,9 +180,9 @@ def build(base, output, tag, repo, base_tag=None):
                 'kernel_recompiled': False, 'packages_rebuilt': False,
                 'device_tested': False, 'optional_components': [],
                 'build_method': 'verified generic assets + source overlays + rebuilt generic ramdisks'}
-    (output / 'BUILD-MANIFEST.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    (output / 'BUILD-MANIFEST.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8', newline='\n')
     names = (*ASSETS, 'mu300-update', 'BUILD-MANIFEST.json')
-    (output / 'SHA256SUMS').write_text(''.join(f'{sha256(output / n)}  {n}\n' for n in names), encoding='ascii')
+    (output / 'SHA256SUMS').write_text(''.join(f'{sha256(output / n)}  {n}\n' for n in names), encoding='ascii', newline='\n')
     print(f'Prepared {output}; kernel reused: {krel}; device testing still required.')
 
 

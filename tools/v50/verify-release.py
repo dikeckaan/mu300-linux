@@ -53,6 +53,8 @@ def ramdisk_init(data):
 def verify(base, output):
     release.verified_inputs(base)
     manifest = json.loads((output / 'BUILD-MANIFEST.json').read_text(encoding='utf-8'))
+    if b'\r' in (output / 'SHA256SUMS').read_bytes():
+        raise ValueError('SHA256SUMS must use LF line endings for Linux sha256sum')
     for line in (output / 'SHA256SUMS').read_text(encoding='ascii').splitlines():
         digest, name = line.split()
         if '/' in name or '\\' in name or release.sha256(output / name) != digest:
