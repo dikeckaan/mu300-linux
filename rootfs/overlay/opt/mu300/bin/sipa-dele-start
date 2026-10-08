@@ -54,8 +54,12 @@ grep -q '^sipa_dele ' /proc/modules && { log "already loaded"; exit 0; }
 # existed. The caller now asks only after the modem has registered, over that same channel, so it proves nothing
 # more; and a first dial hours into the boot (no SIM or no signal until then) could find the line gone from the
 # kernel's ring buffer and refuse for the rest of the boot.
+SIM_SLOT=0
+if [ -x /opt/mu300/bin/mu300-sim ]; then
+    SIM_SLOT=$(/opt/mu300/bin/mu300-sim active) || exit 1
+fi
 modem_up() {
-    [ -c /dev/stty_nr1 ] || return 1
+    [ -c /dev/stty_nr$((SIM_SLOT * 3 + 1)) ] || return 1
     mu300-at -t 8 'AT+CGATT?' 2>/dev/null | grep '+CGATT: *1' >/dev/null
 }
 

@@ -23,11 +23,19 @@
 	init_proto "$@"
 }
 
+mu300cell_slot() {
+    if [ -x /opt/mu300/bin/mu300-sim ]; then /opt/mu300/bin/mu300-sim active
+    else echo 0; fi
+}
+
 proto_mu300cell_init_config() {
 	available=1
 	no_device=1
 	# renew (K35): SIGUSR1 to the protocol task, which is the relay monitor; with no monitor running it does nothing
 	renew_handler=1
+	proto_config_add_string "sim_slot"
+	proto_config_add_string "apn_internal"
+	proto_config_add_string "pdptype_internal"
 	proto_config_add_string "apn"
 	proto_config_add_string "pdptype"
 	proto_config_add_string "ipv6"
@@ -38,11 +46,18 @@ proto_mu300cell_init_config() {
 proto_mu300cell_setup() {
 	local config="$1"
 	local apn pdptype peerdns ipv6 out ifname ip prefix dns1 dns2 iid zone a relay=0
-	json_get_vars apn pdptype peerdns ipv6
+    local slot apn_internal pdptype_internal
+    json_get_vars apn pdptype peerdns ipv6 apn_internal pdptype_internal
+    slot=$(mu300cell_slot) || { proto_notify_error "$config" INVALID_SIM_SLOT; return 1; }
+    # Selection is frozen for the boot, so Apply never mixes old AT channels with new IP settings.
+    if [ "$slot" = 1 ]; then
+        apn=$apn_internal
+        pdptype=${pdptype_internal:-IPV4V6}
+    fi
 	[ "$ipv6" = relay ] && [ "${pdptype:-IP}" != IP ] && relay=1
 
 	out=$(MU300_NETIFD=1 MU300_PDP_TYPE="${pdptype:-IP}" MU300_IPV6="$ipv6" \
-		/opt/mu300/bin/mobile-data up $apn 2>/tmp/mu300cell.err)
+		/opt/mu300/bin/mobile-data up "$apn" 2>/tmp/mu300cell.err)
 	if [ $? = 3 ]; then
 		logger -t mu300cell "$(cat /tmp/mu300cell.err)"
 		proto_notify_error "$config" NO_MODEM
@@ -148,16 +163,18 @@ proto_mu300cell_renew() {
 }
 
 proto_mu300cell_teardown() {
-	local config="$1"
+	local config="$1" slot ifname
+	slot=$(mu300cell_slot) || return 1
+	ifname=sipa_eth$((slot * 8))
 	proto_kill_command "$config"
 	/opt/mu300/bin/mobile-data down >/dev/null 2>&1
 	# External state is not removed by netifd on ifdown, so clean the bearer ourselves, both families:
 	# an unflushed SLAAC address (infinite RA lifetimes) would survive every redial and stack up.
-	# sipa_eth0 is the one bearer this hardware has (mobile-data assumes it too).
-	ip -4 addr flush dev sipa_eth0 scope global 2>/dev/null
-	ip -4 route del default dev sipa_eth0 2>/dev/null
-	ip -6 addr flush dev sipa_eth0 scope global 2>/dev/null
-	ip -6 route flush dev sipa_eth0 2>/dev/null
+	# Tear down the active boot slot even if the next-boot selection has changed.
+	ip -4 addr flush dev "$ifname" scope global 2>/dev/null
+	ip -4 route del default dev "$ifname" 2>/dev/null
+	ip -6 addr flush dev "$ifname" scope global 2>/dev/null
+	ip -6 route flush dev "$ifname" 2>/dev/null
 }
 
 [ -n "$INCLUDE_ONLY" ] || add_protocol mu300cell

@@ -1,0 +1,60 @@
+#!/bin/sh
+# Select one SIM for the whole boot. Reopening SIPC channels is not a hot switch.
+# OpenWrt: network.wan.sim_slot; other systems: /etc/mu300/sim-slot.
+# No modem, SIM-profile or identity writes are made here.
+set -eu
+root=${MU300_SIM_ROOT:-}
+state=$root/run/mu300/sim-slot
+conf=$root/etc/mu300/sim-slot
+valid() { case "$1" in 0|1) return 0 ;; *) echo 'SIM slot must be 0 (external) or 1 (internal)' >&2; return 1 ;; esac; }
+configured() {
+    local slot
+    if command -v uci >/dev/null 2>&1; then
+        slot=$(uci -q get network.wan.sim_slot || true)
+    else
+        slot=$(cat "$conf" 2>/dev/null || true)
+    fi
+    slot=${slot:-0}
+    valid "$slot" || return 1
+    printf '%s\n' "$slot"
+}
+active() {
+    local slot tmp
+    if [ ! -e "$state" ]; then
+        slot=$(configured) || return 1
+        mkdir -p "${state%/*}"
+        # Publish once, atomically. Concurrent daemon starts keep the same boot slot.
+        tmp=$(mktemp "${state}.XXXXXX") || return 1
+        printf '%s\n' "$slot" > "$tmp"
+        ln "$tmp" "$state" 2>/dev/null || { [ -f "$state" ] || { rm -f "$tmp"; return 1; }; }
+        rm -f "$tmp"
+    fi
+    slot=$(cat "$state")
+    valid "$slot" || return 1
+    printf '%s\n' "$slot"
+}
+case ${1:-status} in
+    active) active ;;
+    configured) configured ;;
+    status)
+        old=$(active) || exit 1
+        next=$(configured) || exit 1
+        printf 'active slot: %s\nnext boot slot: %s\n' "$old" "$next"
+        ;;
+    select)
+        case ${2:-} in external|0) next=0 ;; internal|1) next=1 ;; *) valid invalid; exit 2 ;; esac
+        # Pin the current slot before changing the next-boot setting.
+        old=$(active) || exit 1
+        if command -v uci >/dev/null 2>&1; then
+            uci set "network.wan.sim_slot=$next"
+            uci commit network
+        else
+            mkdir -p "${conf%/*}"
+            tmp=$(mktemp "${conf}.XXXXXX")
+            printf '%s\n' "$next" > "$tmp"
+            mv "$tmp" "$conf"
+        fi
+        echo "SIM slot $next saved. Active slot remains $old until reboot."
+        ;;
+    *) echo 'usage: mu300-sim status|active|configured|select external|internal' >&2; exit 2 ;;
+esac

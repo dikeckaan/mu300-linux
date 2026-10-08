@@ -41,8 +41,12 @@ esac
 code=$1
 
 # the unsolicited channel, which is where the answer will surface; nr1 is where the command goes
-CMDLOG=$URCDIR/$(basename "${MU300_AT_DEV:-/dev/stty_nr1}").log
-URCLOG=$URCDIR/$(basename "${MU300_AT_DEV:-/dev/stty_nr1}" | sed 's/[0-9]*$/0/').log
+SIM_SLOT=0
+if [ -x /opt/mu300/bin/mu300-sim ]; then
+    SIM_SLOT=$(/opt/mu300/bin/mu300-sim active) || exit 1
+fi
+CMDLOG=$URCDIR/$(basename "${MU300_AT_DEV:-/dev/stty_nr$((SIM_SLOT * 3 + 1))}").log
+URCLOG=$URCDIR/stty_nr$((SIM_SLOT * 3)).log
 
 # Remember how far each log had got, so a +CUSD from an earlier code is not read as this one's answer.
 mark() { [ -f "$1" ] && wc -l < "$1" || echo 0; }

@@ -38,13 +38,18 @@
 # ndp-learn --once: one round (no router solicitation, no sleep) and exit.
 
 # fixed-width hex, one line per address: address, ifindex, prefix length, scope, flags, name
+SIM_SLOT=0
+if [ -x /opt/mu300/bin/mu300-sim ]; then
+    SIM_SLOT=$(/opt/mu300/bin/mu300-sim active) || exit 1
+fi
+IFACE=sipa_eth$((SIM_SLOT * 8))
 IF_INET6=${MU300_IF_INET6:-/proc/net/if_inet6}
 
 # The bearer's global /64, from $IF_INET6 (the kernel's own address, never the LAN's). That file uses fixed-width
 # hex, so this also handles prefixes whose first four hextets are compressed by `ip -6 addr`. Global unicast only
 # (2000::/3): never link-local, multicast or anything else a misconfigured scope could let through.
 bearer_prefix() {
-    awk '$6=="sipa_eth0" && $4=="00" && $1 ~ /^[23][0-9a-f]{31}$/ {
+    awk -v iface="$IFACE" '$6==iface && $4=="00" && $1 ~ /^[23][0-9a-f]{31}$/ {
         for (i=1; i<=4; i++) {
             h=substr($1,(i-1)*4+1,4); sub(/^0+/,"",h);
             if (h=="") h="0";
@@ -104,8 +109,8 @@ learn_once() {
     # prefix; the LAN /64 resolves the client by NDP even before it appears in
     # the neighbour table.
     stem=${prefix%::/64}
-    for r in $(ip -6 route show dev sipa_eth0 2>/dev/null | awk '$1 !~ /\// {print $1}'); do
-        in_prefix "$r" "$stem" && ip -6 route del "$r/128" dev sipa_eth0 2>/dev/null
+    for r in $(ip -6 route show dev "$IFACE" 2>/dev/null | awk '$1 !~ /\// {print $1}'); do
+        in_prefix "$r" "$stem" && ip -6 route del "$r/128" dev "$IFACE" 2>/dev/null
     done
     return 0
 }
@@ -120,10 +125,10 @@ while :; do
     # Self-heal the bearer's own public address: the carrier's RA can be missed while the
     # bearer settles after boot, and nothing else ever re-solicits - flip accept_ra to send
     # a fresh router solicitation whenever the bearer has no global address.
-    if ! ip -6 addr show sipa_eth0 2>/dev/null | grep -q 'scope global'; then
-        echo 0 > /proc/sys/net/ipv6/conf/sipa_eth0/accept_ra 2>/dev/null
+    if ! ip -6 addr show "$IFACE" 2>/dev/null | grep -q 'scope global'; then
+        echo 0 > "/proc/sys/net/ipv6/conf/$IFACE/accept_ra" 2>/dev/null
         sleep 1
-        echo 2 > /proc/sys/net/ipv6/conf/sipa_eth0/accept_ra 2>/dev/null
+        echo 2 > "/proc/sys/net/ipv6/conf/$IFACE/accept_ra" 2>/dev/null
     fi
     sleep 10
 done

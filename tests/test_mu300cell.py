@@ -39,7 +39,7 @@ proto_notify_error() { rec proto_notify_error "$@"; }
 proto_block_restart() { rec proto_block_restart "$@"; }
 proto_setup_failed() { rec proto_setup_failed "$@"; }
 proto_add_dynamic_defaults() { rec proto_add_dynamic_defaults; }
-json_get_vars() { apn=$T_APN; pdptype=$T_PDPTYPE; peerdns=$T_PEERDNS; ipv6=$T_IPV6; }
+json_get_vars() { apn=$T_APN; pdptype=$T_PDPTYPE; peerdns=$T_PEERDNS; ipv6=$T_IPV6; apn_internal=${T_APN_INTERNAL:-}; pdptype_internal=${T_PDPTYPE_INTERNAL:-}; }
 json_init() { rec json_init; }
 json_add_string() { rec json_add_string "$@"; }
 json_add_boolean() { rec json_add_boolean "$@"; }
@@ -110,6 +110,24 @@ exit 0''')
             self.assertIn('proto_add_ipv4_address 10.20.30.40 30', calls)
             self.assertIn('proto_send_update wan', calls)
             self.assertIn('mobile-data up internet env:1:IP:', calls)
+
+    def test_internal_profile_and_teardown_use_boot_slot(self):
+        helper = self.mobile.parent / 'mu300-sim'
+        helper.write_text('#!/bin/sh\necho 1\n')
+        helper.chmod(0o755)
+        self.conf = self.conf.parent / 'sipa_eth8'
+        self.conf.mkdir()
+        for shell in self.each_shell():
+            calls = self.run_proto(shell, 'proto_mu300cell_setup',
+                                   out=UP_V4.replace('sipa_eth0', 'sipa_eth8'),
+                                   T_APN='ctnet', T_APN_INTERNAL='cmnet')
+            self.assertIn('mobile-data up cmnet env:1:IPV4V6:', calls)
+            self.assertIn('proto_init_update sipa_eth8 1 1', calls)
+            self.assertIn('ip -4 route replace default dev sipa_eth8', calls)
+            calls = self.run_proto(shell, 'proto_mu300cell_teardown')
+            self.assertIn('ip -4 addr flush dev sipa_eth8 scope global', calls)
+            self.assertIn('ip -6 route flush dev sipa_eth8', calls)
+            self.assertFalse(any('sipa_eth0' in c for c in calls))
 
     def test_setup_installs_v4_address_and_route_itself(self):
         for shell in self.each_shell():

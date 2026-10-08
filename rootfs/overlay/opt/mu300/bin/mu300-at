@@ -17,7 +17,11 @@ if [ -n "$(read -t 1 _probe </dev/null 2>&1)" ]; then
     echo "mu300-at: need bash or busybox ash (this shell has no 'read -t')" >&2; exit 1
 fi
 DIR=${MU300_AT_DIR:-/run/mu300-at}
-DEV=${MU300_AT_DEV:-/dev/stty_nr1}
+SIM_SLOT=0
+if [ -x /opt/mu300/bin/mu300-sim ]; then
+    SIM_SLOT=$(/opt/mu300/bin/mu300-sim active) || exit 1
+fi
+DEV=${MU300_AT_DEV:-/dev/stty_nr$((SIM_SLOT * 3 + 1))}
 CR=$(printf '\r')
 T=6
 [ "${1:-}" = -t ] && { T=$2; shift 2; }
