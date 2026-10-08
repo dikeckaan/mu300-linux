@@ -512,6 +512,15 @@ m_lang_set() {
     reply_obj "$out" 'The languages adapter gave no valid reply'
 }
 
+m_forward_get() { "$DASH/sms-forward" get; }
+m_forward_status() { "$DASH/sms-forward" status; }
+m_forward_set() { inp '@.payload'; printf '%s' "$V" | "$DASH/sms-forward" set; }
+# Delivery can take 25 s and must not tie up the LuCI RPC request (rpcd kills a call at 30 s): run detached.
+m_forward_test() { setsid "$DASH/sms-forward" test-run >/dev/null 2>&1 & printf '{"ok":1,"started":1}\n'; }
+
+m_traffic_get() { ubus -t 3 call unisoc.traffic get 2>/dev/null || printf '{"error":"traffic_unavailable"}\n'; }
+m_traffic_set() { ubus -t 5 call unisoc.traffic set "$INPUT" 2>/dev/null || printf '{"ok":0,"error":"traffic_unavailable"}\n'; }
+
 do_list() {
     cat <<EOF
 {
@@ -528,6 +537,12 @@ do_list() {
 	"sms_send": { "num": "String", "text": "String" },
 	"sms_delete": { "id": "String", "sim": "String" },
 	"sms_sync": { },
+	"forward_get": { },
+	"forward_status": { },
+	"forward_set": { "payload": "String" },
+	"forward_test": { },
+	"traffic_get": { },
+	"traffic_set": { "payload": "String" },
 	"usb_get": { },
 	"usb_set": { "kind": "String", "value": "String", "scope": "String", "auto": "String" },
 	"usb_net_list": { },
@@ -579,6 +594,12 @@ call)
         sms_send)     run_m sms_send     m_sms_send ;;
         sms_delete)   run_m sms_delete   m_sms_delete ;;
         sms_sync)     run_m sms_sync     m_sms_sync ;;
+        forward_get)    run_m forward_get    m_forward_get ;;
+        forward_status) run_m forward_status m_forward_status ;;
+        forward_set)    run_m forward_set    m_forward_set ;;
+        forward_test)   run_m forward_test   m_forward_test ;;
+        traffic_get)  run_m traffic_get  m_traffic_get ;;
+        traffic_set)  run_m traffic_set  m_traffic_set ;;
         usb_get)      run_m usb_get      m_usb_get ;;
         usb_set)      run_m usb_set      m_usb_set ;;
         usb_net_list) run_m usb_net_list m_usb_net_list ;;

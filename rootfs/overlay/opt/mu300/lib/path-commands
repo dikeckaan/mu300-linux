@@ -13,6 +13,7 @@ wifi-client
 mu300-ttl
 mu300-wifi-band
 mu300-led
+led-status
 mu300-usb
 mu300-nfc
 mu300-device

@@ -1,0 +1,767 @@
+#!/bin/sh
+# Standalone, opt-in SMS forwarding. Never polls the modem: the platform SMS
+# adapter owns AT and writes complete, atomically-renamed files to the pool.
+umask 077
+export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/sbin:/sbin"
+. /usr/share/libubox/jshn.sh
+
+BASE=${MU300_FORWARD_DIR:-/etc/unisoc-modem/forward}
+# The pool is the panel's (mu300-sms; uci unisoc_modem.main.sms_pool is the same source mu300-smsd reads), else
+# /etc/mu300/sms-pool, which is mu300-sms's own default.
+POOL=${MU300_SMS_POOL:-$(uci -q get unisoc_modem.main.sms_pool 2>/dev/null)}
+POOL=${POOL:-/etc/mu300/sms-pool}
+CONFIG=$BASE/config.json
+STATE=$BASE/state
+RESULT=${MU300_FORWARD_RESULT:-/run/unisoc-modem-forward-result}
+SMS=${MU300_SMS_BIN:-$(uci -q get unisoc_modem.main.sms_command 2>/dev/null)}
+[ -n "$SMS" ] || SMS=$(command -v mu300-sms 2>/dev/null || true)
+case "$SMS" in */*) ;; *) SMS=$(command -v "$SMS" 2>/dev/null || true) ;; esac
+BATTERY=${MU300_FORWARD_BATTERY:-/sys/class/power_supply/battery}
+# The Telegram channel reuses the nanobot bot credentials when no token is saved here.
+NANOBOT=${MU300_NANOBOT_CONFIG:-/root/.nanobot/config.json}
+NL='
+'
+CR=$(printf '\r')
+
+reply_error() {
+    json_init
+    json_add_int ok 0
+    json_add_string error "$1"
+    json_dump
+}
+reply_ok() { printf '{"ok":1}\n'; }
+number() { case "$1" in ''|*[!0-9]*) return 1 ;; *) return 0 ;; esac; }
+bool() { [ "$1" = 0 ] || [ "$1" = 1 ]; }
+one_line() {
+    case "$1" in *"$NL"*|*"$CR"*) return 1 ;; esac
+    [ -z "$(printf '%s' "$1" | LC_ALL=C tr -d '\040-\176\200-\377')" ]
+}
+phone() {
+    _digits=${1#+}
+    number "$_digits" && [ ${#_digits} -ge 3 ] && [ ${#_digits} -le 32 ]
+}
+host_name() {
+    case "$1" in ''|*[!a-zA-Z0-9.-]*|.*|*.|*..*|-*|*-|*.-*|*-.*|localhost|*.localhost|*.local|*.internal) return 1 ;; esac
+    case "$1" in *.*) ;; *) return 1 ;; esac
+    # Literal IPv4 addresses and numeric pseudo-hostnames are not destinations.
+    case "$1" in *[a-zA-Z]*) return 0 ;; *) return 1 ;; esac
+}
+mailbox() {
+    case "$1" in *'@'*) ;; *) return 1 ;; esac
+    _local=${1%%@*}; _domain=${1#*@}
+    case "$_local" in ''|.*|*.|*..*|*[!a-zA-Z0-9._%+-]*) return 1 ;; esac
+    [ ${#1} -le 254 ] && host_name "$_domain"
+}
+public_ip() {
+    case "$1" in
+        *:*)
+            _ip_lc=$(printf '%s' "$1" | tr 'A-F' 'a-f')
+            case "$_ip_lc" in 2001:db8:*|2001:0db8:*) return 1 ;; esac
+            case "$_ip_lc" in [23]*) return 0 ;; *) return 1 ;; esac ;;
+        *)
+            _oldifs=$IFS; IFS=.; set -- $1; IFS=$_oldifs
+            [ "$#" -eq 4 ] || return 1
+            for _octet in "$@"; do
+                number "$_octet" && [ "$_octet" -le 255 ] || return 1
+            done
+            case "$1" in 0|10|127|224|225|226|227|228|229|230|231|232|233|234|235|236|237|238|239|24[0-9]|25[0-5]) return 1 ;; esac
+            [ "$1" = 169 ] && [ "$2" = 254 ] && return 1
+            [ "$1" = 192 ] && { [ "$2" = 168 ] || [ "$2" = 0 ]; } && return 1
+            [ "$1" = 172 ] && [ "$2" -ge 16 ] && [ "$2" -le 31 ] && return 1
+            [ "$1" = 100 ] && [ "$2" -ge 64 ] && [ "$2" -le 127 ] && return 1
+            [ "$1" = 198 ] && { [ "$2" = 18 ] || [ "$2" = 19 ]; } && return 1
+            [ "$1" = 198 ] && [ "$2" = 51 ] && [ "$3" = 100 ] && return 1
+            [ "$1" = 192 ] && [ "$2" = 0 ] && [ "$3" = 2 ] && return 1
+            [ "$1" = 203 ] && [ "$2" = 0 ] && [ "$3" = 113 ] && return 1
+            return 0 ;;
+    esac
+}
+is_fake_ip() { # a transparent proxy's fake-ip (OpenClash: 198.18.0.0/15) is not a real destination
+    case "$1" in 198.18.*|198.19.*|fc00:*|fe80:*) return 0 ;; *) return 1 ;; esac
+}
+resolve_public() { # hostname, port -> a pinned curl --resolve argument, best effort (see below)
+    RESOLVE= RESOLVE_OPT=
+    _resolved=$(nslookup "$1" 2>/dev/null | awk '/^Name:/ {answer=1} answer && /^Address:/ {print $2}')
+    [ -n "$_resolved" ] || return 1
+    _picked= _fake=0
+    while IFS= read -r _ip || [ -n "$_ip" ]; do
+        if public_ip "$_ip"; then
+            case "$_ip" in *:*) [ -n "$_picked" ] || { _picked="[$_ip]"; PICKED_IP=$_ip; } ;;
+                *) _picked=$_ip; PICKED_IP=$_ip ;;
+            esac
+        elif is_fake_ip "$_ip"; then
+            _fake=1
+        else
+            return 1
+        fi
+    done <<EOF_RESOLVED
+$_resolved
+EOF_RESOLVED
+    if [ -n "$_picked" ]; then
+        RESOLVE="$1:$2:$_picked"
+        RESOLVE_OPT="--resolve $RESOLVE"
+        return 0
+    fi
+    # A transparent proxy (OpenClash fake-ip) answers with a reserved 198.18/15 address. Do not pin that: leave the
+    # host to curl, which the proxy routes; TLS still verifies the certificate against the real hostname.
+    [ "$_fake" = 1 ]
+}
+https_url() {
+    case "$1" in https://*) ;; *) return 1 ;; esac
+    case "$1" in *'#'*) return 1 ;; esac
+    _authority=${1#https://}; _authority=${_authority%%/*}; _authority=${_authority%%\?*}
+    case "$_authority" in *'@'*|'') return 1 ;; esac
+    _url_host=${_authority%%:*}
+    _url_port=443
+    if [ "$_authority" != "$_url_host" ]; then
+        _url_port=${_authority#*:}
+        number "$_url_port" && [ "$_url_port" -gt 0 ] && [ "$_url_port" -le 65535 ] || return 1
+    fi
+    host_name "$_url_host" && [ ${#1} -le 2048 ] && one_line "$1"
+}
+list_valid() { # newline-delimited list, max count, kind
+    [ -z "$1" ] && return 0
+    _count=0; _seen=$NL
+    while IFS= read -r _entry || [ -n "$_entry" ]; do
+        [ -n "$_entry" ] || return 1
+        _count=$((_count + 1)); [ "$_count" -le "$2" ] || return 1
+        case "$3" in
+            phone) phone "$_entry" || return 1; _key=${_entry#+} ;;
+            keyword)
+                [ ${#_entry} -le 128 ] && one_line "$_entry" || return 1
+                _key=$_entry ;;
+        esac
+        case "$_seen" in *"$NL$_key$NL"*) return 1 ;; esac
+        _seen="$_seen$_key$NL"
+    done <<EOF_LIST
+$1
+EOF_LIST
+}
+load_config() {
+    enabled=0 method=webhook webhook_url= dingtalk_webhook= dingtalk_secret=
+    sms_to_phone= smtp_host= smtp_port=465 smtp_username= smtp_to= smtp_password=
+    power_forward_enabled=0 blacklist_phone= blacklist_keywords= nickname= template_language=
+    smtp_forward_device_info=0 dingtalk_forward_device_info=0 sms_forward_device_info=0
+    telegram_token= telegram_chat_id= telegram_forward_device_info=0
+    [ -s "$CONFIG" ] || return 0
+    json_load_file "$CONFIG" 2>/dev/null || return 1
+    json_get_vars enabled method webhook_url dingtalk_webhook dingtalk_secret sms_to_phone
+    json_get_vars smtp_host smtp_port smtp_username smtp_to smtp_password
+    json_get_vars power_forward_enabled blacklist_phone blacklist_keywords nickname
+    json_get_vars smtp_forward_device_info dingtalk_forward_device_info sms_forward_device_info
+    json_get_vars telegram_token telegram_chat_id telegram_forward_device_info
+    json_get_var template_language template_language ''
+}
+load_state() {
+    last_id=0 since=0 power_percent=-1 power_status=none
+    [ -s "$STATE" ] || return 0
+    # Ignore the trailing quota fields from older releases.
+    IFS='|' read -r last_id since power_percent power_status _legacy < "$STATE" || :
+    number "$last_id" || last_id=0
+    number "$since" || since=0
+}
+ensure_base() { mkdir -p "$BASE" && chmod 700 "$BASE"; }
+save_state() {
+    ensure_base || return 1
+    printf '%s|%s|%s|%s\n' "$last_id" "$since" "$power_percent" "$power_status" > "$STATE.tmp.$$" || return 1
+    mv -f "$STATE.tmp.$$" "$STATE"
+}
+save_config() {
+    ensure_base || return 1
+    json_init
+    json_add_boolean enabled "$enabled"
+    json_add_string method "$method"
+    json_add_string template_language "$template_language"
+    json_add_string webhook_url "$webhook_url"
+    json_add_string dingtalk_webhook "$dingtalk_webhook"
+    json_add_string dingtalk_secret "$dingtalk_secret"
+    json_add_string sms_to_phone "$sms_to_phone"
+    json_add_string smtp_host "$smtp_host"
+    json_add_int smtp_port "$smtp_port"
+    json_add_string smtp_username "$smtp_username"
+    json_add_string smtp_to "$smtp_to"
+    json_add_string smtp_password "$smtp_password"
+    json_add_boolean power_forward_enabled "$power_forward_enabled"
+    json_add_string blacklist_phone "$blacklist_phone"
+    json_add_string blacklist_keywords "$blacklist_keywords"
+    json_add_string nickname "$nickname"
+    json_add_boolean smtp_forward_device_info "$smtp_forward_device_info"
+    json_add_boolean dingtalk_forward_device_info "$dingtalk_forward_device_info"
+    json_add_boolean sms_forward_device_info "$sms_forward_device_info"
+    json_add_string telegram_token "$telegram_token"
+    json_add_string telegram_chat_id "$telegram_chat_id"
+    json_add_boolean telegram_forward_device_info "$telegram_forward_device_info"
+    json_dump > "$CONFIG.tmp.$$" || return 1
+    mv -f "$CONFIG.tmp.$$" "$CONFIG"
+}
+write_result() { printf '%s|%s\n' "$1" "$2" > "$RESULT.tmp.$$" && mv -f "$RESULT.tmp.$$" "$RESULT"; }
+read_result() {
+    last_result=idle power_last_result=idle
+    [ -r "$RESULT" ] && IFS='|' read -r last_result power_last_result < "$RESULT" || :
+}
+power_read() {
+    power_ok=0 current_percent=-1 current_status=none
+    [ -r "$BATTERY/present" ] && [ "$(cat "$BATTERY/present" 2>/dev/null)" = 1 ] || return 0
+    current_percent=$(cat "$BATTERY/capacity" 2>/dev/null)
+    current_status=$(cat "$BATTERY/status" 2>/dev/null)
+    number "$current_percent" && [ "$current_percent" -le 100 ] || return 0
+    case "$current_status" in Charging|Discharging|Not\ charging|Full) power_ok=1 ;; esac
+}
+add_status() {
+    power_read; read_result
+    json_add_object status
+    json_add_boolean supported 1
+    json_add_boolean enabled "$enabled"
+    json_add_string method "$method"
+    json_add_boolean power_supported "$power_ok"
+    json_add_boolean power_forward_enabled "$power_forward_enabled"
+    json_add_string last_result "$last_result"
+    json_add_string power_last_result "$power_last_result"
+    json_close_object
+}
+get_view() {
+    load_config || { reply_error invalid_config; return; }
+    load_state
+    json_init
+    json_add_object config
+    json_add_boolean enabled "$enabled"
+    json_add_string method "$method"
+    json_add_string template_language "$template_language"
+    json_add_string webhook_url "$webhook_url"
+    json_add_string dingtalk_webhook "$dingtalk_webhook"
+    json_add_boolean dingtalk_secret_configured "$([ -n "$dingtalk_secret" ] && echo 1 || echo 0)"
+    json_add_string sms_to_phone "$sms_to_phone"
+    json_add_object smtp
+    json_add_string host "$smtp_host"
+    json_add_int port "$smtp_port"
+    json_add_string username "$smtp_username"
+    json_add_string to "$smtp_to"
+    json_add_boolean password_configured "$([ -n "$smtp_password" ] && echo 1 || echo 0)"
+    json_close_object
+    json_add_boolean power_forward_enabled "$power_forward_enabled"
+    json_add_string blacklist_phone "$blacklist_phone"
+    json_add_string blacklist_keywords "$blacklist_keywords"
+    json_add_string nickname "$nickname"
+    json_add_boolean smtp_forward_device_info "$smtp_forward_device_info"
+    json_add_boolean dingtalk_forward_device_info "$dingtalk_forward_device_info"
+    json_add_boolean sms_forward_device_info "$sms_forward_device_info"
+    json_add_string telegram_chat_id "$telegram_chat_id"
+    json_add_boolean telegram_token_configured "$([ -n "$telegram_token" ] && echo 1 || echo 0)"
+    json_add_boolean telegram_forward_device_info "$telegram_forward_device_info"
+    json_close_object
+    add_status
+    json_dump
+}
+status_only() {
+    load_config || { reply_error invalid_config; return; }
+    load_state
+    json_init
+    add_status
+    json_dump
+}
+set_config() {
+    ensure_base || { reply_error forward_storage_failed; return; }
+    exec 8> "$BASE/state.lock"
+    flock -x 8 || { reply_error forward_storage_failed; return; }
+    _payload=$(cat)
+    [ ${#_payload} -le 12288 ] && json_load "$_payload" 2>/dev/null ||
+        { reply_error invalid_config; return; }
+    json_get_var new_enabled enabled
+    json_get_var new_method method
+    json_get_var new_template_language template_language
+    json_get_var new_webhook_url webhook_url
+    json_get_var new_dingtalk_webhook dingtalk_webhook
+    json_get_var new_dingtalk_secret dingtalk_secret
+    json_get_var new_sms_to_phone sms_to_phone
+    json_get_var new_smtp_host smtp_host
+    json_get_var new_smtp_port smtp_port
+    json_get_var new_smtp_username smtp_username
+    json_get_var new_smtp_to smtp_to
+    json_get_var new_smtp_password smtp_password
+    json_get_var new_power_forward_enabled power_forward_enabled
+    json_get_var new_blacklist_phone blacklist_phone
+    json_get_var new_blacklist_keywords blacklist_keywords
+    json_get_var new_nickname nickname
+    json_get_var new_smtp_forward_device_info smtp_forward_device_info
+    json_get_var new_dingtalk_forward_device_info dingtalk_forward_device_info
+    json_get_var new_sms_forward_device_info sms_forward_device_info
+    json_get_var new_telegram_token telegram_token
+    json_get_var new_telegram_chat_id telegram_chat_id
+    json_get_var new_telegram_forward_device_info telegram_forward_device_info
+    json_get_vars clear_smtp_password clear_dingtalk_secret clear_telegram_token
+    load_config || { reply_error invalid_config; return; }
+    old_enabled=$enabled old_method=$method
+    enabled=${new_enabled:-0}; method=${new_method:-webhook}
+    # Older clients omit this field; retain the saved language in that case.
+    template_language=${new_template_language:-${template_language:-zh}}
+    webhook_url=${new_webhook_url:-}; dingtalk_webhook=${new_dingtalk_webhook:-}
+    sms_to_phone=${new_sms_to_phone:-}; smtp_host=${new_smtp_host:-}
+    smtp_port=${new_smtp_port:-465}; smtp_username=${new_smtp_username:-}; smtp_to=${new_smtp_to:-}
+    power_forward_enabled=${new_power_forward_enabled:-0}
+    blacklist_phone=${new_blacklist_phone:-}; blacklist_keywords=${new_blacklist_keywords:-}
+    nickname=${new_nickname:-}
+    smtp_forward_device_info=${new_smtp_forward_device_info:-0}
+    dingtalk_forward_device_info=${new_dingtalk_forward_device_info:-0}
+    sms_forward_device_info=${new_sms_forward_device_info:-0}
+    telegram_chat_id=${new_telegram_chat_id:-}
+    telegram_forward_device_info=${new_telegram_forward_device_info:-0}
+    if [ "${clear_smtp_password:-0}" = 1 ]; then
+        smtp_host= smtp_username= smtp_to= smtp_password=
+        smtp_port=465
+    fi
+    [ -n "${new_smtp_password:-}" ] && smtp_password=$new_smtp_password
+    [ "${clear_dingtalk_secret:-0}" = 1 ] && dingtalk_secret=
+    [ -n "${new_dingtalk_secret:-}" ] && dingtalk_secret=$new_dingtalk_secret
+    [ "${clear_telegram_token:-0}" = 1 ] && telegram_token=
+    [ -n "${new_telegram_token:-}" ] && telegram_token=$new_telegram_token
+    for _bit in "$enabled" "$power_forward_enabled" "$smtp_forward_device_info" \
+        "$dingtalk_forward_device_info" "$sms_forward_device_info" "$telegram_forward_device_info"; do
+        bool "$_bit" || { reply_error invalid_config; return; }
+    done
+    case "$method" in webhook|dingtalk|smtp|sms|telegram) ;; *) reply_error invalid_config; return ;; esac
+    case "$template_language" in zh|en|tr) ;; *) reply_error invalid_config; return ;; esac
+    [ -z "$webhook_url" ] || https_url "$webhook_url" || { reply_error invalid_destination; return; }
+    [ -z "$dingtalk_webhook" ] || {
+        https_url "$dingtalk_webhook" &&
+        case "$dingtalk_webhook" in https://oapi.dingtalk.com/robot/send*) true ;; *) false ;; esac
+    } || { reply_error invalid_destination; return; }
+    list_valid "$sms_to_phone" 3 phone &&
+    list_valid "$blacklist_phone" 64 phone &&
+    list_valid "$blacklist_keywords" 32 keyword ||
+        { reply_error invalid_forward_config; return; }
+    [ ${#nickname} -le 255 ] && one_line "$nickname" &&
+    [ ${#dingtalk_secret} -le 256 ] && one_line "$dingtalk_secret" &&
+    [ ${#telegram_token} -le 256 ] && one_line "$telegram_token" &&
+    [ ${#smtp_password} -le 512 ] && one_line "$smtp_password" ||
+        { reply_error invalid_forward_config; return; }
+    [ -z "$telegram_chat_id" ] || { number "${telegram_chat_id#-}" && [ -n "${telegram_chat_id#-}" ]; } ||
+        { reply_error invalid_forward_config; return; }
+    case "$smtp_port" in 465|587) ;; *) reply_error invalid_forward_config; return ;; esac
+    if [ -n "$smtp_host$smtp_username$smtp_to$smtp_password" ]; then
+        host_name "$smtp_host" && mailbox "$smtp_username" && mailbox "$smtp_to" &&
+        [ -n "$smtp_password" ] ||
+            { reply_error invalid_forward_config; return; }
+    fi
+    if [ "$enabled" = 1 ]; then
+        case "$method" in
+            webhook) [ -n "$webhook_url" ] ;;
+            dingtalk) [ -n "$dingtalk_webhook" ] ;;
+            smtp) [ -n "$smtp_host$smtp_username$smtp_to$smtp_password" ] ;;
+            sms) [ -n "$sms_to_phone" ] ;;
+            telegram) [ -n "$telegram_chat_id" ] ;;
+        esac || { reply_error invalid_forward_config; return; }
+        [ -r "$POOL/next_id" ] || { reply_error sms_list_unavailable; return; }
+    fi
+    power_read
+    [ "$power_forward_enabled" = 0 ] || [ "$power_ok" = 1 ] ||
+        { reply_error power_unavailable; return; }
+    load_state
+    if [ "$enabled" = 1 ] && { [ "$old_enabled" != 1 ] || [ "$old_method" != "$method" ]; }; then
+        _max=$(cat "$POOL/next_id" 2>/dev/null)
+        number "$_max" || { reply_error sms_list_unavailable; return; }
+        last_id=$_max
+        since=$(date +%s)
+    fi
+    if [ "$power_forward_enabled" = 1 ] && [ "$power_ok" = 1 ]; then
+        power_percent=$current_percent; power_status=$current_status
+    fi
+    # Save the replay barrier before making the new enabled configuration visible.
+    save_state && save_config || { reply_error forward_storage_failed; return; }
+    write_result idle idle || :
+    reply_ok
+}
+message_file() { printf '%s/msg/%06d' "$POOL" "$1"; }
+msg_field() { sed -n "1,/^$/s/^$2: //p" "$1" | head -n1; }
+msg_body() { sed -n '1,/^$/!p' "$1"; }
+blocked() {
+    _peer=${1#+}
+    while IFS= read -r _item || [ -n "$_item" ]; do
+        [ -n "$_item" ] || continue
+        [ "${_item#+}" = "$_peer" ] && return 0
+    done <<EOF_PHONE
+$blacklist_phone
+EOF_PHONE
+    while IFS= read -r _item || [ -n "$_item" ]; do
+        [ -n "$_item" ] || continue
+        case "$2" in *"$_item"*) return 0 ;; esac
+    done <<EOF_KEYWORD
+$blacklist_keywords
+EOF_KEYWORD
+    return 1
+}
+template_strings() {
+    # Missing language in an existing config preserves the Chinese templates.
+    case "${template_language:-zh}" in
+        en)
+            T_SUBJECT_TEST='MU300 forwarding test'; T_TEST='MU300 SMS forwarding test'
+            T_SUBJECT_SMS='MU300 SMS notification'; T_FROM='SMS from'
+            T_SUBJECT_POWER='MU300 power notification'; T_POWER='Power status notification'
+            T_DEVICE='Device'; T_FIRMWARE='Firmware'; T_UPTIME='Uptime'; T_SECONDS='seconds'
+            T_CHARGE_STATUS='Charging status'; T_LEVEL='Battery level'; T_THRESHOLD='Battery alert'
+            T_CHARGING='Charging'; T_DISCHARGING='Discharging'; T_NOT_CHARGING='Not charging'; T_FULL='Full'
+            ;;
+        tr)
+            T_SUBJECT_TEST='MU300 yönlendirme testi'; T_TEST='MU300 SMS yönlendirme testi'
+            T_SUBJECT_SMS='MU300 SMS bildirimi'; T_FROM='SMS gönderen:'
+            T_SUBJECT_POWER='MU300 güç bildirimi'; T_POWER='Güç durumu bildirimi'
+            T_DEVICE='Cihaz'; T_FIRMWARE='Yazılım'; T_UPTIME='Çalışma süresi'; T_SECONDS='saniye'
+            T_CHARGE_STATUS='Şarj durumu'; T_LEVEL='Pil seviyesi'; T_THRESHOLD='Pil uyarısı'
+            T_CHARGING='Şarj oluyor'; T_DISCHARGING='Pil kullanılıyor'; T_NOT_CHARGING='Şarj olmuyor'; T_FULL='Dolu'
+            ;;
+        *)
+            T_SUBJECT_TEST='MU300 转发测试'; T_TEST='MU300 短信转发测试'
+            T_SUBJECT_SMS='MU300 短信通知'; T_FROM='短信来自'
+            T_SUBJECT_POWER='MU300 电源通知'; T_POWER='电源状态通知'
+            T_DEVICE='设备'; T_FIRMWARE='固件'; T_UPTIME='运行时间'; T_SECONDS='秒'
+            T_CHARGE_STATUS='充电状态'; T_LEVEL='当前电量'; T_THRESHOLD='电量提醒'
+            T_CHARGING='充电中'; T_DISCHARGING='放电中'; T_NOT_CHARGING='未充电'; T_FULL='已充满'
+            ;;
+    esac
+}
+format_message() { # kind, sender, original body (never translate user content)
+    template_strings
+    case "$1" in
+        test) _subject=$T_SUBJECT_TEST; _content=$T_TEST ;;
+        power) _subject=$T_SUBJECT_POWER; _content="$T_POWER$NL$3" ;;
+        *) _subject=$T_SUBJECT_SMS; _content="$T_FROM $2$NL$3" ;;
+    esac
+}
+power_message() { # current status, percent, crossed threshold, previous status
+    template_strings
+    case "$1" in
+        Charging) _charge=$T_CHARGING ;;
+        Discharging) _charge=$T_DISCHARGING ;;
+        'Not charging') _charge=$T_NOT_CHARGING ;;
+        Full) _charge=$T_FULL ;;
+        *) return 1 ;;
+    esac
+    if [ "$1" != "$4" ]; then
+        printf '%s: %s\n%s: %s%%' "$T_CHARGE_STATUS" "$_charge" "$T_LEVEL" "$2"
+    else
+        printf '%s: %s%%\n%s: %s%%\n%s: %s' "$T_THRESHOLD" "$3" "$T_LEVEL" "$2" "$T_CHARGE_STATUS" "$_charge"
+    fi
+}
+mime_subject() {
+    # RFC 2047 protects both Chinese and Turkish subjects on non-SMTPUTF8 servers.
+    printf '=?UTF-8?B?%s?=' "$(printf '%s' "$1" | openssl base64 -A)"
+}
+device_info() {
+    _model=$(cat /tmp/sysinfo/model 2>/dev/null)
+    _uptime=$(cut -d. -f1 /proc/uptime 2>/dev/null)
+    printf '%s: %s%s\n%s: %s\n%s: %s %s' "$T_DEVICE" "$_model" "${nickname:+ ($nickname)}" \
+        "$T_FIRMWARE" "$(sed -n "s/^DISTRIB_DESCRIPTION='\(.*\)'$/\1/p" /etc/openwrt_release 2>/dev/null)" \
+        "$T_UPTIME" "$_uptime" "$T_SECONDS"
+}
+device_info_sms() {
+    _model=$(cat /tmp/sysinfo/model 2>/dev/null)
+    printf '%s%s' "$_model" "${nickname:+ ($nickname)}"
+}
+sms_units() {
+    printf '%s' "$1" | LC_ALL=C awk '
+        BEGIN { for (i=1; i<256; i++) ord[sprintf("%c",i)]=i; count=0 }
+        NR>1 { count++ }
+        {
+            for (i=1; i<=length($0); ) {
+                b=ord[substr($0,i,1)]
+                if (b<128) { i++; count++ }
+                else if (b<224) { i+=2; count++ }
+                else if (b<240) { i+=3; count++ }
+                else if (b<245) { i+=4; count+=2 }
+                else { i++; count++ }
+            }
+        }
+        END { print count }'
+}
+deliver() { # kind, sender, body, date. Returns a finite result code in DELIVER_RESULT.
+    _kind=$1 _from=$2 _text=$3 _date=${4:-}; DELIVER_RESULT=delivery_failed
+    [ "$enabled" = 1 ] || { DELIVER_RESULT=disabled; return 1; }
+    format_message "$_kind" "$_from" "$_text"
+    # Webhooks keep raw SMS bodies and stable JSON keys; only generated test
+    # and power text is localized, just like the human-readable channels.
+    [ "$_kind" != test ] || _text=$_content
+    _include=0
+    case "$method" in
+        smtp) _include=$smtp_forward_device_info ;;
+        dingtalk) _include=$dingtalk_forward_device_info ;;
+        sms) _include=$sms_forward_device_info ;;
+        telegram) _include=$telegram_forward_device_info ;;
+    esac
+    if [ "$_include" = 1 ]; then
+        if [ "$method" = sms ]; then _content="$_content$NL$(device_info_sms)"
+        else _content="$_content
+
+$(device_info)"; fi
+    fi
+    if [ "$method" = sms ]; then
+        [ -n "$SMS" ] && [ -x "$SMS" ] || { DELIVER_RESULT=source_unavailable; return 1; }
+        # The local SMS adapter only supports one 70-unit UCS-2 part. Do not
+        # submit a message longer than that adapter supports.
+        [ "$(sms_units "$_content")" -le 70 ] ||
+            { DELIVER_RESULT=message_too_long; return 1; }
+        _delivered=0
+        while IFS= read -r _to || [ -n "$_to" ]; do
+            [ -n "$_to" ] || continue
+            [ "${_to#+}" = "${_from#+}" ] && continue
+            "$SMS" send "$_to" "$_content" >/dev/null 2>&1 ||
+                { DELIVER_RESULT=delivery_failed; return 1; }
+            _delivered=1
+        done <<EOF_TARGET
+$sms_to_phone
+EOF_TARGET
+        [ "$_delivered" = 1 ] || { DELIVER_RESULT=self_forward_blocked; return 1; }
+        DELIVER_RESULT=sent; return 0
+    fi
+    _tmp=/run/unisoc-modem-forward.$$
+    if [ "$method" = telegram ]; then
+        command -v curl >/dev/null 2>&1 || { DELIVER_RESULT=delivery_failed; return 1; }
+        # The bot token and default chat come from the nanobot config when nothing is saved here (one source for the
+        # device's bot); the token is never put in argv or a log.
+        _token=$telegram_token
+        [ -n "$_token" ] || _token=$(jsonfilter -i "$NANOBOT" -e '@.channels.telegram.token' 2>/dev/null)
+        _chat=$telegram_chat_id
+        [ -n "$_chat" ] || _chat=$(jsonfilter -i "$NANOBOT" -e '@.channels.telegram.allowFrom[0]' 2>/dev/null)
+        [ -n "$_token" ] && [ -n "$_chat" ] || { DELIVER_RESULT=invalid_destination; return 1; }
+        resolve_public api.telegram.org 443 ||
+            { DELIVER_RESULT=invalid_destination; return 1; }
+        json_init
+        json_add_string chat_id "$_chat"
+        json_add_string text "$_content"
+        json_dump > "$_tmp.body"
+        curl -q --noproxy '*' --proto '=https' $RESOLVE_OPT --max-redirs 0 --connect-timeout 4 \
+            --max-time 12 --max-filesize 4096 --fail -sS -H 'Content-Type: application/json; charset=utf-8' \
+            --data-binary "@$_tmp.body" -o "$_tmp.reply" \
+            "https://api.telegram.org/bot$_token/sendMessage" >/dev/null 2>&1
+        _rc=$?
+        if [ "$_rc" -eq 0 ]; then
+            [ "$(jsonfilter -i "$_tmp.reply" -e '@.ok' 2>/dev/null)" = true ] || _rc=1
+        fi
+        rm -f "$_tmp.body" "$_tmp.reply"
+        [ "$_rc" -eq 0 ] && { DELIVER_RESULT=sent; return 0; }
+        return 1
+    fi
+    if [ "$method" = smtp ]; then
+        command -v msmtp >/dev/null 2>&1 || { DELIVER_RESULT=delivery_failed; return 1; }
+        resolve_public "$smtp_host" "$smtp_port" ||
+            { DELIVER_RESULT=invalid_destination; return 1; }
+        # msmtp pins the public DNS answer as the connection host, while
+        # tls_host_override verifies the original DNS name against the cert.
+        # Password lives only in a mode-0600 tmpfs file, never argv or logs.
+        printf '%s\n' "$smtp_password" > "$_tmp.pass"
+        {
+            printf 'defaults\nauth on\ntls on\ntls_certcheck on\n'
+            printf 'tls_trust_file /etc/ssl/certs/ca-certificates.crt\n'
+            printf 'timeout 20\naccount mu300_forward\n'
+            printf 'host %s\nport %s\ntls_host_override %s\n' "$PICKED_IP" "$smtp_port" "$smtp_host"
+            [ "$smtp_port" = 465 ] && printf 'tls_starttls off\n' || printf 'tls_starttls on\n'
+            printf 'from %s\nuser %s\npasswordeval cat %s\n' "$smtp_username" "$smtp_username" "$_tmp.pass"
+        } > "$_tmp.config"
+        {
+            printf 'From: <%s>\r\nTo: <%s>\r\nSubject: %s\r\n' "$smtp_username" "$smtp_to" "$(mime_subject "$_subject")"
+            printf 'MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n'
+            printf '%s' "$_content" | openssl base64
+        } > "$_tmp.body"
+        _err=$(msmtp -C "$_tmp.config" -a mu300_forward "$smtp_to" < "$_tmp.body" 2>&1)
+        _rc=$?
+        rm -f "$_tmp.config" "$_tmp.pass" "$_tmp.body"
+        case "$_err" in *'authentication failed'*|*'535 '*)
+            DELIVER_RESULT=smtp_auth_failed ;;
+        esac
+    else
+        command -v curl >/dev/null 2>&1 || { DELIVER_RESULT=delivery_failed; return 1; }
+        if [ "$method" = dingtalk ]; then _host=oapi.dingtalk.com; _port=443
+        else
+            _authority=${webhook_url#https://}; _authority=${_authority%%/*}; _authority=${_authority%%\?*}
+            _host=${_authority%%:*}; _port=443
+            [ "$_authority" = "$_host" ] || _port=${_authority#*:}
+        fi
+        resolve_public "$_host" "$_port" ||
+            { DELIVER_RESULT=invalid_destination; return 1; }
+        json_init
+        if [ "$method" = dingtalk ]; then
+            json_add_string msgtype text
+            json_add_object text; json_add_string content "$_content"; json_close_object
+            _url=$dingtalk_webhook
+            if [ -n "$dingtalk_secret" ]; then
+                _stamp="$(date +%s)000"
+                _sig=$(printf '%s\n%s' "$_stamp" "$dingtalk_secret" |
+                    openssl dgst -sha256 -hmac "$dingtalk_secret" -binary 2>/dev/null |
+                    openssl base64 -A 2>/dev/null |
+                    sed -e 's/+/%2B/g' -e 's|/|%2F|g' -e 's/=/%3D/g')
+                [ -n "$_sig" ] || { DELIVER_RESULT=delivery_failed; return 1; }
+                case "$_url" in *\?*) _url="$_url&timestamp=$_stamp&sign=$_sig" ;;
+                    *) _url="$_url?timestamp=$_stamp&sign=$_sig" ;; esac
+            fi
+        else
+            [ "$_kind" = power ] && json_add_string kind power
+            json_add_string from "$_from"
+            json_add_string text "$_text"
+            json_add_string date "$_date"
+            [ "$_include" = 1 ] && json_add_string device_info "$(device_info)"
+            _url=$webhook_url
+        fi
+        json_dump > "$_tmp.body"
+        curl -q --noproxy '*' --proto '=https' $RESOLVE_OPT --max-redirs 0 --connect-timeout 4 \
+            --max-time 12 --max-filesize 4096 --fail -sS -H 'Content-Type: application/json; charset=utf-8' \
+            --data-binary "@$_tmp.body" -o "$_tmp.reply" "$_url" >/dev/null 2>&1
+        _rc=$?
+        if [ "$_rc" -eq 0 ] && [ "$method" = dingtalk ]; then
+            [ "$(jsonfilter -i "$_tmp.reply" -e '@.errcode' 2>/dev/null)" = 0 ] || _rc=1
+        fi
+        rm -f "$_tmp.body" "$_tmp.reply"
+    fi
+    [ "$_rc" -eq 0 ] && { DELIVER_RESULT=sent; return 0; }
+    return 1
+}
+scts_epoch() {
+    # Text-mode AT timestamps use signed quarter-hours; the PDU adapter emits
+    # ISO timestamps with an explicit UTC offset. Pure POSIX awk avoids GNU
+    # date/mktime dependencies and the router's unrelated local timezone.
+    printf '%s\n' "$1" | LC_ALL=C awk '
+        function leap(y) { return y % 4 == 0 && (y % 100 != 0 || y % 400 == 0) }
+        {
+            if ($0 ~ /^[0-9][0-9]\/[0-9][0-9]\/[0-9][0-9],[0-9][0-9]:[0-9][0-9]:[0-9][0-9][+-][0-9][0-9]$/) {
+                y=2000+substr($0,1,2); mo=substr($0,4,2)+0; d=substr($0,7,2)+0
+                h=substr($0,10,2)+0; mi=substr($0,13,2)+0; s=substr($0,16,2)+0
+                sign=substr($0,18,1); offset=substr($0,19,2)*15
+            } else if ($0 ~ /^20[0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9][0-9]:[0-9][0-9]:[0-9][0-9][+-][0-9][0-9]:[0-9][0-9]$/) {
+                y=substr($0,1,4)+0; mo=substr($0,6,2)+0; d=substr($0,9,2)+0
+                h=substr($0,12,2)+0; mi=substr($0,15,2)+0; s=substr($0,18,2)+0
+                sign=substr($0,20,1); om=substr($0,24,2)+0
+                if (om > 59) exit 1
+                offset=substr($0,21,2)*60+om
+            } else exit 1
+            split("31 28 31 30 31 30 31 31 30 31 30 31", days, " ")
+            days[2]+=leap(y)
+            if (mo<1 || mo>12 || d<1 || d>days[mo] || h>23 || mi>59 || s>59 || offset>840) exit 1
+            n=10957 # days from 1970-01-01 to 2000-01-01
+            for (i=2000; i<y; i++) n+=365+leap(i)
+            for (i=1; i<mo; i++) n+=days[i]
+            printf "%.0f\n", ((n+d-1)*24+h)*3600+mi*60+s-(sign=="-" ? -offset : offset)*60
+        }
+    '
+}
+sms_is_new() { # source, original timestamp, local import time
+    number "$3" && [ "$3" -ge "$since" ] || return 1
+    # Explicit direct delivery is a live event, even if the SMSC timestamp is
+    # old (delayed delivery). SIM/legacy imports must prove their original age.
+    [ "$1" = direct ] && return 0
+    _sent=$(scts_epoch "$2") || return 1
+    number "$_sent" && [ "$_sent" -ge "$since" ]
+}
+process_sms() {
+    [ "$enabled" = 1 ] || return 0
+    _max=$(cat "$POOL/next_id" 2>/dev/null)
+    number "$_max" || return 0
+    _processed=0 _start_id=$last_id
+    while [ "$last_id" -lt "$_max" ] && [ "$_processed" -lt 1 ]; do
+        _id=$((last_id + 1))
+        _file=$(message_file "$_id")
+        # next_id is written before the message rename. Keep the newest
+        # missing ID pending until the next poll; older missing IDs were
+        # deleted, so those may be skipped.
+        if [ ! -f "$_file" ]; then
+            if [ "$_id" -eq "$_max" ]; then
+                [ "$last_id" = "$_start_id" ] || save_state
+                return 0
+            fi
+            last_id=$_id
+            continue
+        fi
+        _dir=$(msg_field "$_file" dir)
+        _from=$(msg_field "$_file" from)
+        _received=$(msg_field "$_file" received)
+        _scts=$(msg_field "$_file" scts)
+        _source=$(msg_field "$_file" source)
+        _coding=$(msg_field "$_file" coding)
+        _body=$(msg_body "$_file")
+        last_id=$_id
+        save_state || { write_result storage_failed "$power_last_result"; return 1; }
+        _processed=$((_processed + 1))
+        [ "$_dir" = mt ] || continue
+        # A raw SIM PDU has no trustworthy original timestamp; the importer
+        # uses local time only as a display fallback. Keep it local, not mail.
+        [ "$_source" = direct ] || [ "$_coding" != raw-pdu ] || continue
+        sms_is_new "$_source" "$_scts" "$_received" || continue
+        blocked "$_from" "$_body" && continue
+        deliver sms "$_from" "$_body" "$_scts" || :
+        write_result "$DELIVER_RESULT" "$power_last_result" || :
+    done
+    [ "$_processed" -gt 0 ] || [ "$last_id" = "$_start_id" ] || save_state
+}
+process_power() {
+    power_read
+    [ "$power_ok" = 1 ] || return 0
+    [ "$power_percent" = "$current_percent" ] && [ "$power_status" = "$current_status" ] && return 0
+    _old_percent=$power_percent; _old_status=$power_status
+    power_percent=$current_percent; power_status=$current_status
+    save_state || return 1
+    [ "$enabled" = 1 ] && [ "$power_forward_enabled" = 1 ] || return 0
+    # Match the ZWRT power policy: a status transition, or one notification
+    # when crossing any threshold (including a jump over several points).
+    _point=
+    if number "$_old_percent" && [ "$_old_percent" -le 100 ]; then
+        for _threshold in 5 20 40 60 80 100; do
+            if [ "$current_percent" -gt "$_old_percent" ] &&
+                [ "$_old_percent" -lt "$_threshold" ] &&
+                [ "$current_percent" -ge "$_threshold" ]; then
+                _point=$_threshold
+            elif [ "$current_percent" -lt "$_old_percent" ] &&
+                [ "$_old_percent" -gt "$_threshold" ] &&
+                [ "$current_percent" -le "$_threshold" ] && [ -z "$_point" ]; then
+                _point=$_threshold
+            fi
+        done
+    fi
+    [ "$_old_status" != "$current_status" ] || [ -n "$_point" ] || return 0
+    _detail=$(power_message "$current_status" "$current_percent" "$_point" "$_old_status")
+    deliver power PowerMonitor "$_detail" || :
+    write_result "$last_result" "$DELIVER_RESULT" || :
+}
+test_send() {
+    ensure_base || exit 1
+    exec 8> "$BASE/state.lock"
+    flock -x 8 || exit 1
+    load_config || exit 1
+    load_state; read_result
+    deliver test NMS '' || :
+    write_result "$DELIVER_RESULT" "$power_last_result" || :
+}
+run_daemon() {
+    ensure_base || exit 1
+    # procd owns the process. A second manual start exits without stealing work.
+    exec 9> "$BASE/daemon.lock"
+    flock -n 9 || exit 0
+    while :; do
+        exec 8> "$BASE/state.lock"
+        flock -x 8 || exit 1
+        if load_config; then
+            if [ "$enabled" = 1 ] && [ ! -s "$STATE" ]; then
+                # A manually restored config without replay state is not a
+                # license to forward the whole historical local pool.
+                last_id=$(cat "$POOL/next_id" 2>/dev/null)
+                if ! number "$last_id"; then
+                    flock -u 8
+                    sleep "${MU300_FORWARD_POLL:-5}"
+                    continue
+                fi
+                since=$(date +%s)
+                power_read
+                power_percent=$current_percent; power_status=$current_status
+                save_state || exit 1
+            fi
+            load_state; read_result
+            process_sms || :
+            process_power || :
+        fi
+        flock -u 8
+        sleep "${MU300_FORWARD_POLL:-5}"
+    done
+}
+case "${1:-}" in
+    get) get_view ;;
+    status) status_only ;;
+    set) set_config ;;
+    test-run) test_send ;;
+    run) run_daemon ;;
+    *) echo 'usage: sms-forward {get|status|set|test-run|run}' >&2; exit 2 ;;
+esac

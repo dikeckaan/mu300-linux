@@ -170,6 +170,9 @@ printf "127.0.0.1\tlocalhost\n\n::1\tlocalhost ip6-localhost ip6-loopback\nff02:
 printf "mu300\n" > $R/etc/hostname   # the real one comes from uci (etc/uci-defaults/90-mu300)
 cp -a /in/opt-mu300 $R/opt/mu300
 cp -a /in/overlay/. $R/
+# the status-LED controller and its OpenWrt event reconciler: keep them executable (git does not track the bit on a
+# Windows checkout)
+chmod 0755 $R/opt/mu300/bin/led-status $R/opt/mu300/bin/mu300-led-events
 # mu300cell reports sipa_eth0 as l3_device only, so fw4 leaves it out of its software flowtable and the cellular
 # downlink takes the slow forwarding path. --fuzz=0: a changed fw4 that no longer matches fails the build.
 # (patch goes into the build container only: the image was copied above)

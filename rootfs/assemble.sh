@@ -30,6 +30,8 @@ done
 rm -rf $R && mkdir -p $R
 tar -xf /w/base.tar -C $R
 cp -a /w/overlay/. $R/
+# keep the status-LED controller executable (git does not track the bit on a Windows checkout)
+chmod 0755 $R/opt/mu300/bin/led-status
 # /lib is a symlink to usr/lib on Ubuntu; always write through usr/lib
 mkdir -p $R/usr/lib/modules/$KREL/extra
 cp /kmods/*.ko $R/usr/lib/modules/$KREL/extra/

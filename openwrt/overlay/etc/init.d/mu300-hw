@@ -13,6 +13,8 @@ boot() {
 }
 
 hw_bringup() {
+	# switch_root terminates initramfs background jobs: resume the tracked chase until the steady state (mu300-post)
+	/opt/mu300/bin/led-status boot 2>/dev/null
 	/opt/mu300/bin/extra-modules >/tmp/mu300-extra-modules.log 2>&1
 	/opt/mu300/bin/zram-start >/dev/null 2>&1
 	/opt/mu300/bin/wifi-start >/tmp/mu300-wifi-start.log 2>&1

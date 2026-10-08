@@ -11,6 +11,8 @@
 # Fixed against the fork, which hard-codes 192.168.77.x (the F50's subnet: wrong on a U30 Air and with a custom LAN
 # address), and serves rndis0 as well as usb0 (RNDIS has no usb0).
 mu300_early_usb() {
+	# start the tracked boot chase in the initramfs (a no-op while the lamps are disabled, see LED_DISABLED)
+	/opt/mu300/bin/led-status boot 2>/dev/null
 	bb=/opt/mu300/bin/busybox
 	[ -x $bb ] && [ -r /lib/mu300/usb-host.sh ] || return 0
 	dev=

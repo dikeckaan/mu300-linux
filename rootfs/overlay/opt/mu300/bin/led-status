@@ -1,0 +1,212 @@
+#!/bin/sh
+# MU300/V50 status LED controller.
+#
+# The F50 has three LED channels under sc27xx:*, where "green" is physically WHITE
+# (verified: the vendor's own userspace treats it as white). The V50 has separate
+# /sys/class/leds/{red,white,blue}/ paths. This script auto-detects both.
+#
+# States (one multi-color LED, priority order):
+#   boot           red/white/blue chase - Linux is booting
+#   online-4g      solid blue          - data connected, LTE
+#   online-5g      solid white         - data connected, 5G NR
+#   offline        solid red           - booted, no data
+#   thermal        red blink           - SoC above 85C (overrides network color)
+#   wifi-on        WiFi lamp on        - independent from the exact network colour
+#
+# Usage:  led-status <state>          set a state
+#         led-status wifi-on/off     remember the hotspot state
+#         led-status current         print the last set state
+
+export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/sbin:/sbin"
+LED_ROOT=${MU300_LED_SYSFS_ROOT:-/sys/class/leds}
+RUN_DIR=${MU300_LED_RUN_DIR:-/run}
+
+# --- detect LED paths (F50 sc27xx vs V50 plain)
+if [ -d "$LED_ROOT/sc27xx:blue" ]; then
+    LED_R=$LED_ROOT/sc27xx:red/brightness
+    LED_W=$LED_ROOT/sc27xx:green/brightness   # physically white on the F50
+    LED_B=$LED_ROOT/sc27xx:blue/brightness
+elif [ -d "$LED_ROOT/blue" ]; then
+    LED_R=$LED_ROOT/red/brightness
+    LED_W=$LED_ROOT/white/brightness
+    LED_B=$LED_ROOT/blue/brightness
+else
+    exit 0
+fi
+[ -w "$LED_B" ] || exit 0
+
+# On the F50 the keyboard-backlight class is the separate hotspot indicator.
+# Do not use it on the U30 Air: that model assigns the same class to another
+# front-panel function.  Keeping this separate also guarantees that LTE stays
+# pure blue (B=255, R=W=0), 5G pure white and offline pure red.
+WIFI_LED=
+if [ "$(mu300-device 2>/dev/null)" = f50 ] && [ -w "$LED_ROOT/keyboard-backlight/brightness" ]; then
+    WIFI_LED=$LED_ROOT/keyboard-backlight/brightness
+fi
+
+STATE_FILE=$RUN_DIR/led-status.state
+WIFI_FILE=$RUN_DIR/led-status.wifi
+BLINK_PID=$RUN_DIR/led-status.blink.pid
+SIGNAL_ENABLED=$(uci -q get system.mu300_leds.signal 2>/dev/null)
+WIFI_ENABLED=$(uci -q get system.mu300_leds.wifi 2>/dev/null)
+[ "$SIGNAL_ENABLED" = 0 ] || SIGNAL_ENABLED=1
+[ "$WIFI_ENABLED" = 0 ] || WIFI_ENABLED=1
+# V50: LED_DISABLED=1 in /etc/mu300/led.conf keeps the status lamps dark (mu300-v50-led-off also switches the
+# AW9523B off); thermal alarms and an explicit "test" still run.
+[ "$(sed -n 's/^LED_DISABLED=\([01]\)$/\1/p' "${MU300_LED_CONF:-/etc/mu300/led.conf}" 2>/dev/null | tail -n1)" = 1 ] &&
+    { SIGNAL_ENABLED=0; WIFI_ENABLED=0; }
+
+level() {  # validated 0-255 UCI value, otherwise the legacy brightness
+    value=$1 fallback=$2
+    case $value in ''|*[!0-9]*) echo "$fallback"; return ;; esac
+    while [ "${value#0}" != "$value" ]; do value=${value#0}; done
+    [ -n "$value" ] || value=0
+    [ "$value" -le 255 ] && echo "$value" || echo "$fallback"
+}
+hw_max() {
+    value=$(cat "$(dirname "$1")/max_brightness" 2>/dev/null)
+    level "$value" 255
+}
+SIGNAL_BRIGHTNESS=$(level "$(uci -q get system.mu300_leds.signal_brightness 2>/dev/null)" 255)
+WIFI_BRIGHTNESS=$(level "$(uci -q get system.mu300_leds.wifi_brightness 2>/dev/null)" 127)
+R_MAX=$(hw_max "$LED_R")
+W_MAX=$(hw_max "$LED_W")
+B_MAX=$(hw_max "$LED_B")
+[ -n "$WIFI_LED" ] && WIFI_MAX=$(hw_max "$WIFI_LED") || WIFI_MAX=255
+
+scaled() {  # channel intensity, configured brightness, hardware maximum
+    value=$(( ($1 * $2 + 127) / 255 ))
+    [ "$value" -le "$3" ] || value=$3
+    echo "$value"
+}
+
+# Status reads must be side-effect free. In particular, dashboards and event
+# handlers may query this during boot and must not stop the chase animation.
+if [ "${1:-}" = current ]; then
+    cat "$STATE_FILE" 2>/dev/null || echo boot
+    exit 0
+fi
+
+# LuCI's System > LED Configuration stores the two physical lamps separately.
+# Reapply their current logical states after a UCI reload without waiting for
+# the next modem or hostapd event.
+if [ "${1:-}" = refresh ]; then
+    case "$(cat "$WIFI_FILE" 2>/dev/null)" in
+        on) "$0" wifi-on ;;
+        *)  "$0" wifi-off ;;
+    esac
+    state=$(cat "$STATE_FILE" 2>/dev/null)
+    [ -n "$state" ] || state=offline
+    exec "$0" "$state"
+fi
+
+# WiFi changes must not cancel the boot chase, thermal alarm, or modem/network
+# animation.  They only drive the F50's independent hotspot lamp.
+case "${1:-}" in
+wifi-on|wifi-off)
+    [ "${1:-}" = wifi-on ] && wifi_state=on || wifi_state=off
+    echo "$wifi_state" > "$WIFI_FILE"
+    if [ -n "$WIFI_LED" ]; then
+        echo none > "$(dirname "$WIFI_LED")/trigger" 2>/dev/null
+        if [ "$wifi_state" = on ] && [ "$WIFI_ENABLED" = 1 ]; then
+            scaled 255 "$WIFI_BRIGHTNESS" "$WIFI_MAX" > "$WIFI_LED"
+        else
+            echo 0 > "$WIFI_LED"
+        fi
+    fi
+    exit 0 ;;
+esac
+
+# stop any previous user-space blinker
+[ -f "$BLINK_PID" ] && kill "$(cat "$BLINK_PID")" 2>/dev/null
+rm -f "$BLINK_PID"
+
+# clear hardware triggers (a trigger left on would fight our brightness writes)
+for f in $(dirname "$LED_R")/trigger $(dirname "$LED_W")/trigger $(dirname "$LED_B")/trigger; do
+    echo none > "$f" 2>/dev/null
+done
+
+set_rgb() {  # R W B (0-255)
+    [ "$SIGNAL_ENABLED" = 1 ] || set -- 0 0 0
+    scaled "${1:-0}" "$SIGNAL_BRIGHTNESS" "$R_MAX" > "$LED_R" 2>/dev/null
+    scaled "${2:-0}" "$SIGNAL_BRIGHTNESS" "$W_MAX" > "$LED_W" 2>/dev/null
+    scaled "${3:-0}" "$SIGNAL_BRIGHTNESS" "$B_MAX" > "$LED_B" 2>/dev/null
+}
+
+pause_us() {
+    # The rootfs intentionally does not install every BusyBox applet symlink.
+    # Invoke the bundled binary directly so missing `usleep` cannot turn an LED
+    # animation into a CPU-burning tight loop.
+    /opt/mu300/bin/busybox usleep "$1" 2>/dev/null && return 0
+    command -v usleep >/dev/null 2>&1 && usleep "$1" 2>/dev/null && return 0
+    sleep 1
+}
+
+start_blink() {  # R W B ON_MS OFF_MS
+    [ "$SIGNAL_ENABLED" = 1 ] || { set_rgb 0 0 0; return 0; }
+    _r=$1; _w=$2; _b=$3; _on=$4; _off=$5
+    (
+        while :; do
+            set_rgb "$_r" "$_w" "$_b"
+            pause_us "$_on"
+            set_rgb 0 0 0
+            pause_us "$_off"
+        done
+    ) &
+    echo $! > "$BLINK_PID"
+}
+
+start_chase() {
+    [ "$SIGNAL_ENABLED" = 1 ] || { set_rgb 0 0 0; return 0; }
+    (
+        while :; do
+            set_rgb 255 0 0; pause_us 120000
+            set_rgb 0 255 0; pause_us 120000
+            set_rgb 0 0 255; pause_us 120000
+        done
+    ) &
+    echo $! > "$BLINK_PID"
+}
+
+# Restore the exact steady-state network colour. The F50 exposes one RGB lamp,
+# so mixing a WiFi tint here makes LTE look cyan and offline look orange.
+restore_steady() {
+    state=$(cat "$STATE_FILE" 2>/dev/null || echo offline)
+    case "$state" in
+        online-4g)   set_rgb 0 0 255 ;;
+        online-5g)   set_rgb 0 255 0 ;;
+        offline)     set_rgb 255 0 0 ;;
+        *)           set_rgb 0 0 255 ;;
+    esac
+}
+
+case "${1:-}" in
+boot)           # visible chase throughout boot
+    echo boot > "$STATE_FILE"
+    set_rgb 0 0 0
+    start_chase ;;
+modem)          # slow blue blink: CP initializing
+    echo modem > "$STATE_FILE"
+    set_rgb 0 0 0
+    start_blink 0 0 255 500000 500000 ;;
+registering)    # white blink: registering on the network
+    echo registering > "$STATE_FILE"
+    set_rgb 0 0 0
+    start_blink 0 255 0 300000 300000 ;;
+online-4g)      # solid blue: LTE data
+    echo online-4g > "$STATE_FILE"
+    restore_steady ;;
+online-5g)      # solid white: 5G NR data
+    echo online-5g > "$STATE_FILE"
+    restore_steady ;;
+offline)        # solid red: no data
+    echo offline > "$STATE_FILE"
+    restore_steady ;;
+thermal)        # red blink: SoC too hot (called by thermal-guard)
+    start_blink 255 0 0 200000 200000 ;;
+current)
+    cat "$STATE_FILE" 2>/dev/null || echo boot ;;
+*)
+    echo "usage: $0 boot|modem|registering|online-4g|online-5g|offline|thermal|wifi-on|wifi-off|current|refresh" >&2
+    exit 1 ;;
+esac

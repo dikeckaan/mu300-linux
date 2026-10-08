@@ -75,6 +75,18 @@
 		"action": { "type": "view", "path": "mu300/device" },
 		"depends": { "acl": [ "luci-app-mu300" ] }
 	},
+	"admin/modem/forward": {
+		"title": "SMS forwarding",
+		"order": 6,
+		"action": { "type": "view", "path": "mu300/forward" },
+		"depends": { "acl": [ "luci-app-mu300" ] }
+	},
+	"admin/modem/traffic": {
+		"title": "Traffic pool",
+		"order": 7,
+		"action": { "type": "view", "path": "mu300/traffic" },
+		"depends": { "acl": [ "luci-app-mu300" ] }
+	},
 	"admin/system/mu300-languages": {
 		"title": "Languages",
 		"order": 15,

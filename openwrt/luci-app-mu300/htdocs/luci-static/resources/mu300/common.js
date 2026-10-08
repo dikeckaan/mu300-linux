@@ -32,6 +32,12 @@ var callUsbNetList = rpc.declare({ object: 'mu300dash', method: 'usb_net_list', 
 var callUsbNetAdd = rpc.declare({ object: 'mu300dash', method: 'usb_net_add', params: [ 'iface' ], expect: { '': {} } });
 var callLangGet = rpc.declare({ object: 'mu300dash', method: 'lang_get', expect: { '': {} } });
 var callLangSet = rpc.declare({ object: 'mu300dash', method: 'lang_set', params: [ 'op', 'codes', 'source' ], expect: { '': {} } });
+var callForwardGet = rpc.declare({ object: 'mu300dash', method: 'forward_get', expect: { '': {} } });
+var callForwardStatus = rpc.declare({ object: 'mu300dash', method: 'forward_status', expect: { '': {} } });
+var callForwardSet = rpc.declare({ object: 'mu300dash', method: 'forward_set', params: [ 'payload' ], expect: { '': {} } });
+var callForwardTest = rpc.declare({ object: 'mu300dash', method: 'forward_test', expect: { '': {} } });
+var callTrafficGet = rpc.declare({ object: 'mu300dash', method: 'traffic_get', expect: { '': {} } });
+var callTrafficSet = rpc.declare({ object: 'mu300dash', method: 'traffic_set', params: [ 'payload' ], expect: { '': {} } });
 
 /* Mainland carriers by PLMN, for when COPS gives the numeric format. The names are messages: translated once, when
  * the module loads (a page's language does not change without a reload). */
@@ -120,6 +126,16 @@ function fmtBytes(b) {
 	var u = [ 'B', 'KB', 'MB', 'GB', 'TB' ], i = 0;
 	while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
 	return (b >= 100 ? b.toFixed(0) : b.toFixed(1)) + ' ' + u[i];
+}
+// Traffic plans use decimal GB; keep memory/rate formatting unchanged.
+function fmtTrafficBytes(b) {
+	if (b == null || b === '' || !Number.isFinite(Number(b)) || Number(b) < 0) return '--';
+	b = Number(b);
+	var u = [ 'B', 'KB', 'MB', 'GB', 'TB' ], i = 0;
+	while (b >= 1000 && i < u.length - 1) { b /= 1000; i++; }
+	var value = Number(b.toFixed(i === 0 ? 0 : 2));
+	if (value >= 1000 && i < u.length - 1) { value = 1; i++; }
+	return value + ' ' + u[i];
 }
 function fmtRate(bps) {
 	if (bps == null || isNaN(bps) || bps < 0) return '--';
@@ -602,11 +618,14 @@ return baseclass.extend({
 	callLockGet: callLockGet, callLockFresh: callLockFresh, callLockSet: callLockSet,
 	callSmsList: callSmsList, callSmsShow: callSmsShow, callSmsSend: callSmsSend,
 	callSmsDel: callSmsDel, callSmsSync: callSmsSync,
+	callForwardGet: callForwardGet, callForwardStatus: callForwardStatus,
+	callForwardSet: callForwardSet, callForwardTest: callForwardTest,
+	callTrafficGet: callTrafficGet, callTrafficSet: callTrafficSet,
 	callUsbGet: callUsbGet, callUsbSet: callUsbSet,
 	callUsbNetList: callUsbNetList, callUsbNetAdd: callUsbNetAdd,
 	callLangGet: callLangGet, callLangSet: callLangSet,
 	carrierName: carrierName, qLevel: qLevel, qLevelLabel: qLevelLabel, qLabel: qLabel, qCol: qCol, qScore: qScore,
-	esc: esc, fmtBytes: fmtBytes, fmtRate: fmtRate, fmtUptime: fmtUptime, PLMN_CN: PLMN_CN,
+	esc: esc, fmtBytes: fmtBytes, fmtTrafficBytes: fmtTrafficBytes, fmtRate: fmtRate, fmtUptime: fmtUptime, PLMN_CN: PLMN_CN,
 	injectCss: injectCss, v: v, set: set, spark: spark, neighborRows: neighborRows,
 	errText: errText, toast: toast, busy: busy, confirmBox: confirmBox, alertBox: alertBox, choiceBox: choiceBox,
 	notify: notify, watchSms: watchSms

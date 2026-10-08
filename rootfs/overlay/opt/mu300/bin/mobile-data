@@ -16,8 +16,16 @@ IFACE=sipa_eth$((CID - 1))
 # "write error: Invalid argument"), and under `set -e` that killed up() one line before it could report the
 # connection it had just established - so the call was live while the caller saw a failure. Cosmetic writes
 # must never decide that.
-# led on|5g|off|error: see mu300-led (which LED that is depends on the device)
-led() { /opt/mu300/bin/mu300-led data "$1" 2>/dev/null || true; }
+# led on|5g|off|error: see mu300-led (which LED that is depends on the device); the two System > LED Configuration
+# lamps (led-status) follow the same states
+led() {
+    /opt/mu300/bin/mu300-led data "$1" 2>/dev/null || true
+    case ${1:-off} in
+        on) /opt/mu300/bin/led-status online-4g 2>/dev/null || true ;;
+        5g) /opt/mu300/bin/led-status online-5g 2>/dev/null || true ;;
+        *)  /opt/mu300/bin/led-status offline 2>/dev/null || true ;;
+    esac
+}
 # data is up: the LED tells 4G from 5G as ZTE's firmware does (the U30 Air: blue on 4G, white on 5G). The access
 # technology changes under a live connection, so the watchdog asks again on every round. AT+CEREG? is a short
 # local status read; AT+COPS? took about two seconds on weak service and held the AT channel on every round.
