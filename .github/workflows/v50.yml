@@ -2,7 +2,7 @@ name: V50 maintenance
 
 on:
   push:
-    branches: [main, 'codex/v50']
+    branches: [main, 'codex/v50', 'codex/v50*']
   pull_request:
   workflow_dispatch:
 
