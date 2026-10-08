@@ -77,7 +77,9 @@ BACKEND_DYNAMIC_OK = {('mu300dash', 'refuse', '"$2"')}   # reply_obj passing its
 # CJK: only these files may contain it (repository paths; with --root, only po/ of that copy)
 CJK = re.compile('[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]')
 CJK_SCOPE = ['openwrt', 'rootfs/overlay', 'boot', 'tools', 'install.sh', 'uninstall.sh']
-CJK_ALLOWED = re.compile(r'^(tools/i18n\.sh|i18n/[^/]+\.tsv|openwrt/luci-app-mu300/po/.*|openwrt/luci-languages\.tsv|tests/fixtures/.*)$')
+CJK_ALLOWED = re.compile(r'^(tools/i18n\.sh|i18n/[^/]+\.tsv|openwrt/luci-app-mu300/po/.*'
+                         r'|openwrt/luci-app-mu300/root/usr/libexec/unisoc-modem/sms-forward'
+                         r'|openwrt/luci-languages\.tsv|tests/fixtures/.*)$')
 
 PLACEHOLDER = re.compile(r'%(?:%|[-+#0]*\d*(?:\.\d+)?[a-zA-Z])')
 

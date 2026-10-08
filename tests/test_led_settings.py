@@ -17,7 +17,7 @@ class LedSettings(ShellTest):
         leds = self.tmp / 'leds'
         for name in ('sc27xx:red', 'sc27xx:green', 'sc27xx:blue', 'keyboard-backlight'):
             led = leds / name
-            led.mkdir(parents=True)
+            led.mkdir(parents=True, exist_ok=True)
             (led / 'brightness').write_text('0\n')
             (led / 'trigger').write_text('none\n')
             (led / 'max_brightness').write_text(max_wifi if name == 'keyboard-backlight' else '255')
@@ -109,7 +109,8 @@ const form = { NamedSection: {}, GridSection: {}, Flag: {}, Value: {}, ListValue
 form.Map = function() {
     const map = { sections: [], section(_type, name, _id, title) {
         const section = { name, title, options: [], option(_type, key, label, description) {
-            const option = { key, label, description }; this.options.push(option); return option;
+            const option = { key, label, description, value(v) { return this; } };
+            this.options.push(option); return option;
         } }; this.sections.push(section); return section;
     }, render() { return this; } };
     return map;
