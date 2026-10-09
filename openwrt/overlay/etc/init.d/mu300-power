@@ -1,6 +1,5 @@
 #!/bin/sh /etc/rc.common
-# power profiles: the hotspot, the modem and the LEDs go off when nobody is connected, the charging boot, the
-# charge guard (see /opt/mu300/bin/mu300-power)
+# power profiles: the hotspot, the modem and the LEDs go off when nobody is connected (see /opt/mu300/bin/mu300-power)
 START=97
 USE_PROCD=1
 export PATH="$PATH:/opt/mu300/busybox-bin"

@@ -1,5 +1,9 @@
 # Power profiles: what the device does with its battery
 
+> **Scope note (this fork, 2026-10-09).** Only the profiles, the idle radios and the wake are implemented here; this
+> build treats the device as USB powered, with no battery stack, so the charging boot, the low-battery poweroff, the
+> battery-temperature guard, the charge limit (`CHARGE_TO`) and the charge switch are not. See FINDINGS 36.
+
 Date: 2026-10-06. Status: design approved in conversation, awaiting review of this document.
 
 ## Why

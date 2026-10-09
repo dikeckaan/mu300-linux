@@ -489,7 +489,7 @@ m_power_set() {
     allowed "$op" '(set|wake|idle)' || { refuse 'Unknown power operation'; return; }
     case $op in
         set)
-            allowed "$key" '(PROFILE|SAVER_BELOW|CHARGE_TO|(plugged|battery|saver)\.(WIFI_IDLE|RADIO_IDLE|LEDS_IDLE|CPU))' ||
+            allowed "$key" '(PROFILE|SAVER_BELOW|(plugged|battery|saver)\.(WIFI_IDLE|RADIO_IDLE|LEDS_IDLE|CPU))' ||
                 { refuse 'Unknown power setting'; return; }
             allowed "$value" '[a-z0-9]{1,5}' || { refuse 'Invalid power value'; return; }
             out=$("$POWERA" set "$key" "$value" 2>/dev/null) ;;

@@ -1813,7 +1813,7 @@ class Buttons(ShellTest):
         for name in ('mu300-led', 'mu300-wifi-band', 'systemctl', 'logger', 'poweroff', 'mu300-power'):
             self.stub(name, f'echo "{name} $*" >> "$STUBLOG/calls"; [ "{name} $*" != "systemctl is-active --quiet mu300-hotspot" ]')
         # Every press lights the LEDs first (a key always shows life, whatever the state), then wakes mu300-power with
-        # the key's name in the background (only wifi ends a charging boot; other keys count as power), which the
+        # the key's name in the background (other keys count as power), which the
         # rest does not wait for: its order against the band and hotspot toggles is free.
         WP, WW = 'mu300-power wake power', 'mu300-power wake wifi'
         cases = [('116 short', [WP]),

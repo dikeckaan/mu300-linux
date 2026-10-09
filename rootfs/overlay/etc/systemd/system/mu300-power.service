@@ -1,5 +1,5 @@
 [Unit]
-Description=MU300 power profiles: idle radios when nobody is connected, the charging boot, the charge guard
+Description=MU300 power profiles: idle radios when nobody is connected
 After=mu300-hotspot.service mu300-mobile-data.service mu300-buttons.service
 ConditionPathExists=/opt/mu300/bin/mu300-power
 

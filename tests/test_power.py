@@ -1,5 +1,6 @@
-"""mu300-power: profiles, idle radios and the charging boot, against a fake / (MU300_SYSROOT), a fake /run and
-stub commands. The spec is docs/superpowers/specs/2026-10-06-power-profiles-design.md."""
+"""mu300-power: profiles and idle radios, against a fake / (MU300_SYSROOT), a fake /run and stub commands. The spec
+is docs/superpowers/specs/2026-10-06-power-profiles-design.md; the charging boot and the charge guard of the upstream
+branch are not in this build (see FINDINGS 36)."""
 import os
 import unittest
 
