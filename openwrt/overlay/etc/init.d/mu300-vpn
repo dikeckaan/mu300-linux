@@ -10,6 +10,8 @@ start_service() {
 	procd_set_param command /opt/mu300/bin/mu300-vpn run
 	procd_set_param env PATH="$PATH"
 	procd_set_param respawn 3600 5 0
+	# xray ran out of its 1024 descriptors once while the modem was off (see mu300-vpn.service)
+	procd_set_param limits nofile="65536 65536"
 	procd_set_param stdout 1
 	procd_set_param stderr 1
 	procd_close_instance

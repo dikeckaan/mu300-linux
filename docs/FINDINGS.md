@@ -103,6 +103,8 @@ what replaced it. The table below gives each section's state.
 | 33k | Vendor driver fixes from the U30 Air test, measured | current |
 | 34 | LEDs, and the defects from a second board's test | current |
 | 35 | kanoqwq's fixes, measured | current (panel languages: PR #48) |
+| 36 | Power profiles: idle radios, the charging boot, the charge guard | current; power table and device questions open (PR #62) |
+| 37 | System suspend | current (fixes on branch `suspend-drivers`); power not measured |
 
 ## Hardware and firmware facts
 
@@ -2579,6 +2581,164 @@ Air, ten `ifdown wan; ifup wan` gave the WAN back in
 * **LEDs (K38, K39, K68)**: not ported here. The F50's lamp states were measured with someone watching and are
   implemented by the f50-leds-fixes work (FINDINGS 34); the fork's boot chase, lamp switches and LED page
   follow that branch.
+
+### 36. Power profiles: idle radios, the charging boot, the charge guard
+
+The U30 Air ran flat in a day or two of hotspot use. Two causes, both seen before: the charger IC charged on its
+power-on defaults and was never told anything (33d; the bq256xx driver of PR #55 now drives it, so the guard below has
+a node to write), and a boot that Android's LK started because a charger was plugged in ("charger mode") came up as a
+full hotspot with the modem dialling, in a pocket. `mu300-power` (one `/bin/sh` script, `mu300-power.service` or
+`/etc/init.d/mu300-power`) answers both. Design: `docs/superpowers/specs/2026-10-06-power-profiles-design.md`.
+
+What was built:
+
+* **Profiles** `plugged`, `battery`, `saver`, picked automatically (saver below `SAVER_BELOW` % on battery, by the
+  fuel gauge's `capacity` only) or forced with `mu300-power profile NAME`. Each has four knobs: `WIFI_IDLE` (minutes
+  without a client, 0 never), `RADIO_IDLE` `keep|lte|off`, `LEDS_IDLE` `on|off`, `CPU` `full|eco`. Defaults: plugged
+  `0 keep on full`, battery `10 off off full`, saver `5 off off eco`. A bad value in `/etc/mu300/power.conf` counts as
+  the default and `status` names it.
+* **Idle** is "no Wi-Fi station, no USB host, no key press" for `WIFI_IDLE` minutes. Then the hotspot goes down, the
+  LEDs follow `LEDS_IDLE`, and the modem follows `RADIO_IDLE`: `mobile-data suspend lte` only switches EN-DC off with
+  `AT+SPENDC=2` (the lock adapter's measured "off" value; no stack restart, the data connection is untouched) and
+  `resume` restores `AT+SPENDC=1` only if EN-DC was on before; `suspend off` is the radio off (`AT+SFUN=5`) with data
+  down, and `resume` runs `radio_on` and redials itself; `mobile-data up` refuses to dial while the modem is
+  suspended `off`, except from `resume`. On OpenWrt the daemon runs with `MU300_NETIFD=1`, so `suspend off` is
+  `ifdown wan` before `AT+SFUN=5` and `resume` redials with `ifup wan`: netifd keeps owning the WAN's address,
+  route, firewall, DNS and IPv6. Idle wakes on a key, a computer on USB, a Wi-Fi station, or plugging in (the edge
+  battery -> plugged, not being plugged: idle on the charger, a forced profile and the battery-less F50 stay idle).
+  Every wake brings the hotspot up first, then the LEDs and the CPU, then the modem, whose dial can take minutes.
+* **State** is kept across daemon restarts within a boot. The daemon's TERM trap wakes the radios without a dial
+  (`mobile-data resume nodial`: the radio on, the watcher redials) and does nothing during a shutdown (the held
+  power key and the low-battery poweroff leave `/run/mu300/power/shutdown`; Ubuntu also says `stopping`). The
+  units keep a 150 s stop timeout (`TimeoutStopSec=150`, procd `term_timeout 150`) for the radio lock. A failed
+  action is logged and retried by the following loops.
+* **Charging boot**: `init` writes `/run/mu300/boot-mode` and, in a charger boot, `/run/mu300/charging-boot`. The
+  Ubuntu hotspot and mobile-data units skip on that file; the daemon enters the charging boot only on its first start
+  of a boot, and leaves it only by the Wi-Fi key (`mu300-power wake wifi`; a computer on USB or the power key does
+  not). It powers the device off only unplugged (no charger online, no extcon `USB=1`, the battery not `Charging`),
+  below 5 % for three loops in a row, never on one sample. OpenWrt's early radio warm-up skips a charging boot.
+* **Charge guard**: charging off at battery `temp` above 45.0 C or below 0 C, on again below 40.0 C and above 3.0 C;
+  with `CHARGE_TO=80` off at 80 % and on below 75 %. It writes the bq256xx charger's `charge_type` (`N/A` off,
+  `Fast` on). bq256xx reads `N/A` whenever it is not charging, so `Fast` is written only when the guard itself turned
+  charging off (`/run/mu300/power/charge-off`); the driver resets its switch at probe, so a marker lost with `/run`
+  leaves nothing off. It logs only when that marker changes, and a failed write turns the guard off for the boot
+  with one log line. No reading means no change.
+* **Panel**: System -> Power on `openwrt-luci` (state, profile, knobs, charge limit), catalogs in all 31 languages.
+
+Method for the numbers: `mu300-power log 5 /tmp/power.csv` writes `epoch,mV,mA,mW,capacity,temp,state,profile` every 5 s.
+Each row is a 3-minute run unplugged, the hotspot idle (a client associated, no traffic) unless the row says
+otherwise, `mu300-power set` or the verbs between runs. The fuel gauge's `current_now` is negative when
+discharging; the draw is the mean of the run's mA (and W) after the first 30 s. Android's own idle figure comes from
+`dumpsys battery` / the same gauge on the Android side for the target line.
+
+| Row | What is on | Measured (mean W) | Measured on |
+|---|---|---|---|
+| baseline | everything, as before the profiles | pending | pending |
+| LEDs off | baseline with the LEDs dark (`mu300-led idle`) | pending | pending |
+| hotspot off | modem on, Wi-Fi off | pending | pending |
+| LTE only | EN-DC off (`mobile-data suspend lte`), hotspot on | pending | pending |
+| modem off | `AT+SFUN=5`, hotspot on | pending | pending |
+| all off | idle: hotspot, modem and LEDs off, the floor | pending | pending |
+| eco | `CPU=eco` on the baseline | pending | pending |
+| Android idle | the stock firmware at rest (the target) | pending | pending |
+
+What the defaults rest on: not on these numbers (there are none yet) but on the design. Radios are what drains a
+hotspot with nobody connected, so `battery` and `saver` switch them off after a few minutes; `plugged` keeps
+everything because the supply covers it; saver is the profile with the CPU in `eco`. The thresholds (45/40 C, 0/3 C,
+5 % for three loops) follow the spec; the fuel gauge reports `capacity=100` at 3.88 V today (33d), which is why
+nothing acts on the voltage. The table is filled in by the device series, with the date of each run.
+
+Open questions for the device:
+
+* Does `AT+SPENDC=2` without a stack restart really drop the NR leg (check `AT+SPENDC?` and the band readings), or
+  only after the next attach?
+* Does procd's `term_timeout` apply on this OpenWrt build (that `/etc/init.d/mu300-power stop` waits for the wake
+  rather than being killed at the default timeout)?
+* What the bq256xx `charge_type` node does on writes: `N/A` stops charging, `Fast` resumes it, or the driver
+  rewrites it from its own state.
+* The unit tests ran under dash and bash on the dev host; busybox ash (the shell on OpenWrt) has not run them there.
+
+**The device-test incident (2026-10-07, U30 Air, OpenWrt).** A measurement script took the device down with the raw
+actions while `mu300-power`'s state still said `active`: `mu300-led idle on`, `wifi down`, `mobile-data suspend lte`,
+`mobile-data suspend off`. The last one never returned and the script's later steps never ran; `mu300-power log`
+stopped writing at the same moment. Every key press then did nothing: `mu300-power wake` only left a flag for the
+daemon, which saw `active` and had nothing to do, and `mu300-led wake` lit nothing under the idle flag. Every LED
+dark, no reaction to any key, for hours - a device that looks powered off. xray meanwhile ran out of its 1024
+descriptors (`accept4: too many open files`) with the modem off and needed a restart.
+
+Why `suspend off` did not return, from the code (no device access for the analysis; the steps of `suspend off` after
+`suspend lte`, as of 4e62326): `do_suspend off` first resumes `lte` (`resume` -> `under_radio_lock resume_lte_raw`),
+then `down` (the script ran by hand, so without `MU300_NETIFD=1`: the systemd path, `ip`/`nft` on `sipa_eth0`
+behind netifd's back), then `under_radio_lock suspend_off_raw`, then one line to stderr. Every wait in it is bounded
+but long: the radio lock 120 s twice, each `mu300-at` call up to 90 s for the client lock plus `T + 31` s of budget
+(`AT+SPENDC=1` 126 s, `AT+CGACT=0` 41 s with its 5 s lock wait, `AT+SFUN=5` 131 s) - about 9 minutes at worst, not
+hours. What is not bounded: the direct-tty path when no AT daemon runs (the `open` and `write` of the SIPC tty block
+in the driver; the drain loops of `mobile-data`'s `at()` and of `mu300-at` read for as long as the channel talks);
+`ip`, `nft` and the `disable_ipv6` write, which wait on the RTNL lock behind an OpenWrt `wifi down` (it returns at
+once and netifd tears the AP down afterwards; a Wi-Fi driver stuck in that teardown holds RTNL); and the write of the
+final message to a terminal that is gone. The last fits all three symptoms: the script ran in an SSH session, and an
+SSH session over the hotspot dies with `wifi down` (over the WAN, with `suspend off`). The server side notices only
+when TCP gives up (~15 min of retransmissions with dropbear's defaults), and until then a write that fills the pty
+blocks; then it hangs up, and SIGHUP stops the script and every job of the session - `log` among them - wherever they
+are. A `suspend off` stopped that way leaves the mode file `off` and the "down" flag, so the watcher stands aside
+for good, and nothing else ever looked. The most likely cause is therefore the dead session, with the RTNL wait as
+the second candidate; which one it was can be read on the device next time (`ps` for a `mobile-data` still there,
+its `/proc/PID/stack` and `wchan`; `logread` for the session's end).
+
+What changed (the design: bootability and "a key always shows life" over everything else):
+
+* **Keys always show life.** `mu300-buttons` runs `mu300-led wake` first on every press, before it looks at any
+  state, and `mu300-power wake` after it in the background. `mu300-led wake` lights the LEDs for `LED_TIMEOUT`
+  (a minute when it is 0) under the idle flag too; `sleep --if-due` puts them out again while idle. No daemon is
+  involved.
+* **Wake by inspection.** `mu300-power wake` restores whatever is down by looking, not by the state file, and
+  needs no daemon: the AP down (no `hostapd.wlan0` on ubus / `mu300-hotspot` not active) and wanted -> up; the
+  modem's mode file -> `mobile-data resume`; the LED idle flag -> `mu300-led idle off`; `cpu7` offline -> online,
+  and eco's own 1.5 GHz cap on `policy4` -> `cpuinfo_max_freq` (another cap is the toolkit's or thermal-guard's and
+  is left, and nothing is lifted under thermal-guard's alarm); the VPN if mu300-power stopped it; then `active`.
+  The daemon's own wake is the same function. One idle entry or restore runs at a time (`/run/mu300/power/busy`,
+  a dead or stale holder is taken over); a second wake while one restores returns at once. The panel's wake runs it
+  in the background (rpcd ends a call at 30 s).
+* **Nothing can hang.** Every external step of `mu300-power` runs under a deadline (a background job, a watchdog
+  that kills the job's whole process tree, and a USR1 to the waiting shell for a child stuck in the kernel; busybox
+  has no `timeout` in `/bin`): probes 5 s, LEDs 10 s, wifi/systemctl/VPN 30 s, the modem 90 s, the background LED
+  sync 150 s (`MU300_POWER_*_DEADLINE`). The tree is stopped until a look finds nothing new, then every process
+  any look saw is killed (one reparented between two looks too). `mobile-data suspend|resume` end within
+  `MU300_SUSPEND_DEADLINE` (60 s) whatever the modem does: AT through `mu300-at` with `-t` <= 20, a 10 s
+  client-lock wait and a 22 s budget (`MU300_AT_LOCK_WAIT`, `MU300_AT_BUDGET`), the radio lock 20 s, each external
+  step 15 s; HUP ignored; their output goes through a file and a bounded write. On a failure or a timeout they
+  leave the files consistent - no mode file, no "down" flag of their own - so the watcher restores whatever is off,
+  and they exit non-zero. An `lte` step that failed (also an `AT+SPENDC=1` answered ERROR or not at all: only OK
+  counts, as `mu300-at` exits 0 on ERROR) leaves `/run/mu300-mobile-data.endc-restore` (unless EN-DC was off
+  before): every `resume` sends `AT+SPENDC=1` until it answers OK, and mu300-power's wake and self-check call
+  `resume` while it is there; the watcher ignores it. The Wi-Fi key's toggles run in the background under a
+  deadline too, and the hold's direction (is the hotspot up?) is asked within 5 s
+  (`MU300_BUTTONS_PROBE_DEADLINE`): no answer counts as down, and the key turns it on. On OpenWrt they go through
+  netifd (`ifdown`/`ifup wan`) also when run by hand.
+* **The VPN while the modem is off.** `RADIO_IDLE=off` stops `mu300-vpn` (systemd or procd) once the modem is off,
+  if it was running (`/run/mu300/power/vpn-stopped`; a suspend that keeps failing never touches it, and a Wi-Fi
+  client uplink keeps it), and the wake starts it again before the modem, so a `KILL_SWITCH=0` dial is never ahead
+  of it - unless the service was disabled or `ENABLE=0` meanwhile (asked through `mu300-vpn enabled`, which prints
+  `ENABLE` and touches no network; a probe that fails or times out counts as wanted); a start that failed is
+  retried by the self-check at most every 120 s; `lte` leaves it alone. The service stop keeps the kill switch
+  (`nft table inet mu300_vpn` stays; only `ENABLE=0` and `mu300-vpn off` remove it), and the engine's routes
+  go with the engine: with `KILL_SWITCH=1` nothing unmarked leaves on `sipa_eth*` or the Wi-Fi client while it is
+  stopped; with `KILL_SWITCH=0` nothing holds traffic back, as on any stop, and the bearer is down anyway. Both
+  service definitions raise the descriptor limit to 65536 (`LimitNOFILE`, procd `limits nofile`).
+* **Self-check.** Each loop, while the state says `active`: a modem mode file, or (with `WIFI_IDLE=0`) the hotspot
+  down although nobody turned it off on purpose, is logged and restored. On purpose means the Wi-Fi key's hold
+  (`mu300-buttons` writes `/run/mu300/power/hotspot-off` with the hold's uptime before the wake of that press
+  starts, until the next hold; a marker older than the toggle's deadline + 30 s (180 s) is dropped once the hotspot
+  is seen up), UCI (`wireless.@wifi-iface[0].disabled` or `wireless.@wifi-device[0].disabled` = 1: the panel,
+  `wifi-client`), the unit disabled on Ubuntu, a Wi-Fi client (`/run/mu300-wifi-client.active`) or the scan-mode
+  boot. A hotspot that idle took down (`hotspot-idled`) comes back whatever a hold marker says, but not for a Wi-Fi
+  client or in scan mode. The hotspot is not looked at in the first 120 s of a boot nor within 120 s of any
+  `hotspot on`; one that does not stay up is retried at a doubling interval up to 30 min, logged once per step. A
+  modem left with EN-DC off is resumed too, and a VPN left stopped is started (see above).
+
+For measurements this means: the raw actions by hand are undone by the daemon's next loop (the modem) and by any key.
+Use `mu300-power idle` and the profiles, or stop the daemon first, and run long measurements under `nohup` or
+`setsid` with the output in a file, never through the session the hotspot carries.
 
 ### 37. System suspend
 

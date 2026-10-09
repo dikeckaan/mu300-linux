@@ -36,6 +36,9 @@ msgstr "Traffic pool"
 msgid "Languages"
 msgstr "Languages"
 
+msgid "Power"
+msgstr "Power"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 
@@ -1098,6 +1101,123 @@ msgstr "Automatic (%d supported)"
 msgid "%d locked: %s"
 msgstr "%d locked: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Enter a whole number from 0 to %d"
+
+msgid "Power status unavailable"
+msgstr "Power status unavailable"
+
+msgid "Plugged in"
+msgstr "Plugged in"
+
+msgid "On battery"
+msgstr "On battery"
+
+msgid "Saver"
+msgstr "Saver"
+
+msgid "Asleep: hotspot off"
+msgstr "Asleep: hotspot off"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Charging boot: press the Wi-Fi key to start"
+
+msgid "Awake"
+msgstr "Awake"
+
+msgid "forced"
+msgstr "forced"
+
+msgid "automatic, battery under %d %%"
+msgstr "automatic, battery under %d %%"
+
+msgid "automatic"
+msgstr "automatic"
+
+msgid "Nobody connected for %d s"
+msgstr "Nobody connected for %d s"
+
+msgid "Power source"
+msgstr "Power source"
+
+msgid "Profile"
+msgstr "Profile"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Profile in use: %s (%s)"
+
+msgid "Battery"
+msgstr "Battery"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Charger"
+
+msgid "Charger: %s, %s port"
+msgstr "Charger: %s, %s port"
+
+msgid "Charging paused: battery temperature"
+msgstr "Charging paused: battery temperature"
+
+msgid "Charging paused: charge limit"
+msgstr "Charging paused: charge limit"
+
+msgid "Sleep now"
+msgstr "Sleep now"
+
+msgid "Wake"
+msgstr "Wake"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Automatic: plugged in / on battery"
+
+msgid "Switch to Saver under %"
+msgstr "Switch to Saver under %"
+
+msgid "Stop charging at"
+msgstr "Stop charging at"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % keeps the battery healthier on a device that stays plugged in."
+
+msgid "Keep as is"
+msgstr "Keep as is"
+
+msgid "LTE only (5G off)"
+msgstr "LTE only (5G off)"
+
+msgid "Off"
+msgstr "Off"
+
+msgid "On"
+msgstr "On"
+
+msgid "Full"
+msgstr "Full"
+
+msgid "Eco: big core off"
+msgstr "Eco: big core off"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Hotspot off after (min, 0 = never)"
+
+msgid "Modem when idle"
+msgstr "Modem when idle"
+
+msgid "LEDs when idle"
+msgstr "LEDs when idle"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Ignored lines in power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 
@@ -1533,6 +1653,21 @@ msgstr "Unknown USB setting"
 msgid "Invalid interface name"
 msgstr "Invalid interface name"
 
+msgid "The power adapter gave no valid reply"
+msgstr "The power adapter gave no valid reply"
+
+msgid "Unknown power operation"
+msgstr "Unknown power operation"
+
+msgid "Unknown power setting"
+msgstr "Unknown power setting"
+
+msgid "Invalid power value"
+msgstr "Invalid power value"
+
+msgid "Invalid power request"
+msgstr "Invalid power request"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "The languages adapter gave no valid reply"
 
@@ -1685,6 +1820,9 @@ msgstr "Lock cache unavailable"
 
 msgid "No serving cell to lock to"
 msgstr "No serving cell to lock to"
+
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
 
 msgid "The TTL setting could not be read"
 msgstr "The TTL setting could not be read"

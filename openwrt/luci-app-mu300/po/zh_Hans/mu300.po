@@ -36,6 +36,9 @@ msgstr "流量池"
 msgid "Languages"
 msgstr "语言"
 
+msgid "Power"
+msgstr "电源"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 控制中心：状态看板、网络锁定、AT 终端与短信"
 
@@ -1098,6 +1101,123 @@ msgstr "自动（支持 %d 个）"
 msgid "%d locked: %s"
 msgstr "已锁 %d 个：%s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "请输入 0 到 %d 之间的整数"
+
+msgid "Power status unavailable"
+msgstr "无法获取电源状态"
+
+msgid "Plugged in"
+msgstr "已接通电源"
+
+msgid "On battery"
+msgstr "电池供电"
+
+msgid "Saver"
+msgstr "省电"
+
+msgid "Asleep: hotspot off"
+msgstr "休眠：热点已关闭"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "充电开机：按 Wi-Fi 键启动"
+
+msgid "Awake"
+msgstr "已唤醒"
+
+msgid "forced"
+msgstr "强制"
+
+msgid "automatic, battery under %d %%"
+msgstr "自动，电量低于 %d %%"
+
+msgid "automatic"
+msgstr "自动"
+
+msgid "Nobody connected for %d s"
+msgstr "已有 %d 秒无人连接"
+
+msgid "Power source"
+msgstr "电源来源"
+
+msgid "Profile"
+msgstr "方案"
+
+msgid "Profile in use: %s (%s)"
+msgstr "当前方案：%s（%s）"
+
+msgid "Battery"
+msgstr "电池"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "充电器"
+
+msgid "Charger: %s, %s port"
+msgstr "充电器：%s，%s 端口"
+
+msgid "Charging paused: battery temperature"
+msgstr "充电已暂停：电池温度"
+
+msgid "Charging paused: charge limit"
+msgstr "充电已暂停：充电上限"
+
+msgid "Sleep now"
+msgstr "立即休眠"
+
+msgid "Wake"
+msgstr "唤醒"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "无人连接是指没有 Wi-Fi 客户端，USB 上也没有电脑。Wi-Fi 键、USB 上的电脑或充电器都会唤醒设备。"
+
+msgid "Automatic: plugged in / on battery"
+msgstr "自动：接通电源 / 电池供电"
+
+msgid "Switch to Saver under %"
+msgstr "电量低于以下值时切换到省电方案 %"
+
+msgid "Stop charging at"
+msgstr "充电上限"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % 可让长期接着电源的设备电池更健康。"
+
+msgid "Keep as is"
+msgstr "保持不变"
+
+msgid "LTE only (5G off)"
+msgstr "仅 LTE（关闭 5G）"
+
+msgid "Off"
+msgstr "关"
+
+msgid "On"
+msgstr "开"
+
+msgid "Full"
+msgstr "全速"
+
+msgid "Eco: big core off"
+msgstr "节能：关闭大核"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "热点在此时间后关闭（分钟，0 = 永不）"
+
+msgid "Modem when idle"
+msgstr "空闲时的调制解调器"
+
+msgid "LEDs when idle"
+msgstr "空闲时的指示灯"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "power.conf 中被忽略的行：%s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "这里定义插件与当前紫光 OpenWrt 的边界。修改后无需改动看板、AT、锁定或短信页面。"
 
@@ -1533,6 +1653,21 @@ msgstr "未知的 USB 设置"
 msgid "Invalid interface name"
 msgstr "接口名称无效"
 
+msgid "The power adapter gave no valid reply"
+msgstr "电源适配器没有返回有效应答"
+
+msgid "Unknown power operation"
+msgstr "未知的电源操作"
+
+msgid "Unknown power setting"
+msgstr "未知的电源设置"
+
+msgid "Invalid power value"
+msgstr "无效的电源值"
+
+msgid "Invalid power request"
+msgstr "无效的电源请求"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "语言适配程序没有返回有效结果"
 
@@ -1685,6 +1820,9 @@ msgstr "锁定缓存不可用"
 
 msgid "No serving cell to lock to"
 msgstr "没有可锁定的服务小区"
+
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
 
 msgid "The TTL setting could not be read"
 msgstr "无法读取 TTL 设置"

@@ -161,6 +161,23 @@ publish_slot() {
     cp "$_e/misc-bc-slot-$ANDROID_SLOT.bin" "$_r/misc-bc-android.bin"
     cp "$_e/misc-bc-slot-$LINUX_SLOT-trial.bin" "$_r/misc-bc-linux-trial.bin"
     if [ "$LINUX_SLOT" = b ]; then cp "$_e/misc-bc-slot-a.bin" "$_e/misc-bc-slot-b-trial.bin" "$_r/"; fi
+
+    # LK's boot mode, for mu300-power: "charger" is a flat battery plugged in (LK opens our slot in that mode too)
+    _mode= _msrc=default
+    for _f in ${MU300_CMDLINE_SRC:-/proc/cmdline /proc/device-tree/chosen/bootargs}; do
+        [ -r "$_f" ] || continue
+        _mode=$(tr '\000' ' ' < "$_f" | sed -n 's/.*androidboot\.mode=\([a-z]*\).*/\1/p')
+        [ -n "$_mode" ] && { _msrc=$_f; break; }
+    done
+    case $_mode in charger) ;; *) _mode=normal ;; esac
+    echo "$_mode" > "$_r/boot-mode"
+    # Charging boot: create this marker so Ubuntu units with ConditionPathExists=!/run/mu300/charging-boot skip radios
+    if [ "$_mode" = charger ]; then
+        touch "$_r/charging-boot"
+    else
+        rm -f "$_r/charging-boot"
+    fi
+    log "stage=boot-mode mode=$_mode source=$_msrc"
 }
 # --- slot end
 linux_slot_detect

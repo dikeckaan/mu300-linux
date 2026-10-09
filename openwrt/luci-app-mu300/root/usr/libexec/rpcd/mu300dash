@@ -22,6 +22,7 @@
 #                     in the package runtime directory.
 #   at_history        that history, raw text.
 #   lang_get, lang_set  LuCI's languages and the lang extra (unisoc-modem/languages, mu300-extra)
+#   power_get, power_set  the power profiles (unisoc-modem/power, mu300-power)
 #   ttl_get, ttl_set value  the TTL of mobile data (unisoc-modem/ttl, mu300-ttl); value off or 1-255
 #
 # The AT terminal's whole wait is capped below the 30 s endpoint limit (AT_LOCK_WAIT
@@ -478,6 +479,25 @@ m_usb_net_add() {
 # ---------------------------------------------------------------- languages
 # LuCI's languages and the lang extra (the Languages page): the adapter does the work through mu300-extra
 LANGS=${MU300_LANGS_BIN:-$DASH/languages}
+POWERA=${MU300_POWER_ADAPTER:-$DASH/power}
+m_power_get() { reply_obj "$("$POWERA" get 2>/dev/null)" 'The power adapter gave no valid reply'; }
+m_power_set() {
+    local op key value out
+    inp '@.op'; op=$V
+    inp '@.key'; key=$V
+    inp '@.value'; value=$V
+    allowed "$op" '(set|wake|idle)' || { refuse 'Unknown power operation'; return; }
+    case $op in
+        set)
+            allowed "$key" '(PROFILE|SAVER_BELOW|CHARGE_TO|(plugged|battery|saver)\.(WIFI_IDLE|RADIO_IDLE|LEDS_IDLE|CPU))' ||
+                { refuse 'Unknown power setting'; return; }
+            allowed "$value" '[a-z0-9]{1,5}' || { refuse 'Invalid power value'; return; }
+            out=$("$POWERA" set "$key" "$value" 2>/dev/null) ;;
+        *)  [ -z "$key$value" ] || { refuse 'Invalid power request'; return; }
+            out=$("$POWERA" "$op" 2>/dev/null) ;;
+    esac
+    reply_obj "$out" 'The power adapter gave no valid reply'
+}
 m_lang_get() { reply_obj "$("$LANGS" get 2>/dev/null)" 'The languages adapter gave no valid reply'; }
 
 # op: enable|disable (codes: up to 64 language codes, or all), use (one code, en or auto), install (source: release
@@ -562,6 +582,8 @@ do_list() {
 	"usb_net_add": { "iface": "String" },
 	"lang_get": { },
 	"lang_set": { "op": "String", "codes": "String", "source": "String" },
+	"power_get": { },
+	"power_set": { "op": "String", "key": "String", "value": "String" },
 	"ttl_get": { },
 	"ttl_set": { "value": "String" }
 }
@@ -621,6 +643,8 @@ call)
         usb_net_add)  run_m usb_net_add  m_usb_net_add ;;
         lang_get)     run_m lang_get     m_lang_get ;;
         lang_set)     run_m lang_set     m_lang_set ;;
+        power_get)    run_m power_get    m_power_get ;;
+        power_set)    run_m power_set    m_power_set ;;
         ttl_get)      run_m ttl_get      m_ttl_get ;;
         ttl_set)      run_m ttl_set      m_ttl_set ;;
         *)            refuse 'No such method' ;;

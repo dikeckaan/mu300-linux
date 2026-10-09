@@ -91,7 +91,7 @@ exit 0
 DEFAULTS = {
     'dashboard-info': '{"ok":1,"host":"f50"}', 'cell': '{"ok":1}', 'action': '{"ok":1,"op":"x"}',
     'lock': '{"ok":1,"mode":{"label":"auto"}}', 'device-usb': '{"ok":1}', 'at': 'OK', 'sms': 'sent (12)',
-    'languages': '{"ok":1}', 'ttl': '{"ok":1}',
+    'languages': '{"ok":1}', 'power': '{"ok":1}', 'ttl': '{"ok":1}',
 }
 
 # The methods that start something with setsid (in the background of mu300dash)
@@ -213,7 +213,7 @@ class Inventory(Mu300Dash):
     METHODS = {'sysinfo', 'status', 'signal', 'act', 'at', 'at_history', 'lock_get', 'lock_set', 'sms_list',
                'sms_show', 'sms_send', 'sms_delete', 'sms_sync', 'forward_get', 'forward_status', 'forward_set',
                'forward_test', 'traffic_get', 'traffic_set', 'usb_get', 'usb_set', 'usb_net_list', 'usb_net_add',
-               'lang_get', 'lang_set', 'ttl_get', 'ttl_set'}
+               'lang_get', 'lang_set', 'power_get', 'power_set', 'ttl_get', 'ttl_set'}
 
     def test_list_declares_every_method(self):
         for shell in self.each_shell():
@@ -235,7 +235,7 @@ class Inventory(Mu300Dash):
     def test_the_changed_scripts_parse(self):
         for shell in self.each_shell():
             for p in [DASH, LIB] + [ADAPTERS / n for n in ('action', 'at', 'boot-replay', 'cell', 'dashboard-info',
-                                                         'device-usb', 'lock', 'languages', 'sms-forward', 'ttl')]:
+                                                         'device-usb', 'lock', 'languages', 'sms-forward', 'power', 'ttl')]:
                 with self.subTest(p=p.name):
                     r = subprocess.run(shell + ['-n', str(p)], capture_output=True, text=True)
                     self.assertEqual(r.returncode, 0, r.stderr)
@@ -270,6 +270,11 @@ class Refusals(Mu300Dash):
         ('sms_delete', {'id': '3'}, 'sim', '1'),
         ('usb_set', {'kind': 'role', 'value': 'host', 'scope': '', 'auto': '0'}, 'kind', 'role'),
         ('lang_set', {'op': 'enable', 'codes': 'de'}, 'op', 'enable'),
+        ('power_set', {'op': 'set', 'key': 'battery.WIFI_IDLE', 'value': '15'}, 'op', 'set'),
+        ('power_set', {'op': 'set', 'key': 'battery.WIFI_IDLE', 'value': '15'}, 'key', 'battery.WIFI_IDLE'),
+        ('power_set', {'op': 'set', 'key': 'battery.WIFI_IDLE', 'value': '15'}, 'value', '15'),
+        ('power_set', {'op': 'wake'}, 'key', ''),
+        ('power_set', {'op': 'wake'}, 'value', ''),
         ('lang_set', {'op': 'enable', 'codes': 'de'}, 'codes', 'de'),
         ('lang_set', {'op': 'disable', 'codes': 'de pt_br'}, 'codes', 'de pt_br'),
         ('lang_set', {'op': 'use', 'codes': 'en'}, 'codes', 'en'),
@@ -337,6 +342,13 @@ class Refusals(Mu300Dash):
             ('lang install codes', 'lang_set', {'op': 'install', 'source': 'file', 'codes': 'de'}),
             ('lang enable source', 'lang_set', {'op': 'enable', 'codes': 'de', 'source': 'file'}),
             ('lang remove codes', 'lang_set', {'op': 'remove', 'codes': 'de'}),
+            ('power key colour', 'power_set', {'op': 'set', 'key': 'battery.COLOUR', 'value': 'red'}),
+            ('power value chained', 'power_set', {'op': 'set', 'key': 'battery.WIFI_IDLE', 'value': '15; reboot'}),
+            ('power value long', 'power_set', {'op': 'set', 'key': 'battery.WIFI_IDLE', 'value': '123456'}),
+            ('power value upper', 'power_set', {'op': 'set', 'key': 'battery.WIFI_IDLE', 'value': 'OFF'}),
+            ('power op format', 'power_set', {'op': 'format'}),
+            ('power wake with key', 'power_set', {'op': 'wake', 'key': 'PROFILE', 'value': 'saver'}),
+            ('power set no value', 'power_set', {'op': 'set', 'key': 'PROFILE', 'value': ''}),
             ('ttl zero', 'ttl_set', {'value': '0'}),
             ('ttl 256', 'ttl_set', {'value': '256'}),
             ('ttl 999', 'ttl_set', {'value': '999'}),
@@ -395,6 +407,11 @@ class Passthrough(Mu300Dash):
         ('lang_set', {'op': 'install', 'source': 'release'}, [['languages', 'install', 'release']]),
         ('lang_set', {'op': 'install', 'source': 'file'}, [['languages', 'install', 'file']]),
         ('lang_set', {'op': 'remove'}, [['languages', 'remove']]),
+        ('power_get', {}, [['power', 'get']]),
+        ('power_set', {'op': 'set', 'key': 'battery.WIFI_IDLE', 'value': '15'}, [['power', 'set', 'battery.WIFI_IDLE', '15']]),
+        ('power_set', {'op': 'set', 'key': 'PROFILE', 'value': 'saver'}, [['power', 'set', 'PROFILE', 'saver']]),
+        ('power_set', {'op': 'wake'}, [['power', 'wake']]),
+        ('power_set', {'op': 'idle'}, [['power', 'idle']]),
         ('ttl_get', {}, [['ttl', 'get']]),
         ('ttl_set', {'value': '64'}, [['ttl', 'set', '64']]),
         ('ttl_set', {'value': 128}, [['ttl', 'set', '128']]),
@@ -772,9 +789,9 @@ class TtlAdapter(ShellTest):
 class Acl(unittest.TestCase):
     # SMS bodies (one-time codes) and the AT history (AT+CPIN PINs) are not for read-only users (ruling R14)
     READ = {'sysinfo', 'status', 'signal', 'lock_get', 'usb_get', 'usb_net_list', 'lang_get', 'traffic_get',
-            'forward_get', 'forward_status', 'ttl_get'}
+            'forward_get', 'forward_status', 'power_get', 'ttl_get'}
     WRITE = {'act', 'at', 'at_history', 'lock_set', 'sms_list', 'sms_show', 'sms_send', 'sms_delete', 'sms_sync',
-             'usb_set', 'usb_net_add', 'lang_set', 'traffic_set', 'forward_set', 'forward_test', 'ttl_set'}
+             'usb_set', 'usb_net_add', 'lang_set', 'traffic_set', 'forward_set', 'forward_test', 'power_set', 'ttl_set'}
 
     def test_actions_need_write_access(self):
         acl = json.loads(ACL.read_text())['luci-app-mu300']

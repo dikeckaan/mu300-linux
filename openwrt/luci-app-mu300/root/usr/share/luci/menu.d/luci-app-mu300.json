@@ -98,5 +98,11 @@
 		"order": 15,
 		"action": { "type": "view", "path": "mu300/languages" },
 		"depends": { "acl": [ "luci-app-mu300" ] }
+	},
+	"admin/system/power": {
+		"title": "Power",
+		"order": 16,
+		"action": { "type": "view", "path": "mu300/power" },
+		"depends": { "acl": [ "luci-app-mu300" ] }
 	}
 }

@@ -11,6 +11,7 @@
 #   mu300-vpn off       remove the kill switch (the service stop does not, so a crash never leaks),
 #                       and any routing an engine left behind if it is no longer running
 #   mu300-vpn status    service, tunnel, exit IP
+#   mu300-vpn enabled   ENABLE from vpn.conf (0 or 1), nothing else and no network (mu300-power asks it)
 #   mu300-vpn engines   which engine programs it uses (the vpn extra: mu300-extra install vpn)
 set -e
 CONF=${MU300_VPN_CONF:-/etc/mu300/vpn.conf}
@@ -720,6 +721,7 @@ case "${1:-status}" in
     # without it at boot, before the service has started
     guard) if [ "$ENABLE" = 1 ] && [ "$KILL_SWITCH" = 1 ]; then killswitch_on; fi ;;
     off) killswitch_off; echo "kill switch removed"; routing_cleanup ;;
+    enabled) echo "$ENABLE" ;;
     status)
         echo "engine: $ENGINE  enabled: $ENABLE  kill switch: $KILL_SWITCH ($(nft list table inet mu300_vpn >/dev/null 2>&1 && echo active || echo inactive))"
         engines_ok || echo "$MISSING"
@@ -730,5 +732,5 @@ case "${1:-status}" in
     engines)
         for e in "$XRAY" "$HEV" "$BIN"; do printf '%s %s\n' "$e" "$([ -x "$e" ] && echo ok || echo missing)"; done
         engines_ok || { echo "$MISSING" >&2; exit 1; } ;;
-    *) echo "usage: $0 gen|run|guard|off|status|engines" >&2; exit 2 ;;
+    *) echo "usage: $0 gen|run|guard|off|status|enabled|engines" >&2; exit 2 ;;
 esac

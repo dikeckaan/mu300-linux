@@ -239,7 +239,7 @@ printf "%s\n" "${MU300_VERSION:-dev}" > $R/etc/mu300/image-version
 # enable the services (rc.common "enable" needs ubus, which is not running in the build container)
 # accounts still those of the image until an installer or mu300-update puts the device ones in place
 : > $R/etc/.mu300-accounts-from-image
-for s in mu300-accounts mu300-vendor mu300-hw mu300-post mu300-toolkit mu300-atd mu300-modem-log mu300-wifi-client mu300-buttons; do
+for s in mu300-accounts mu300-vendor mu300-hw mu300-post mu300-toolkit mu300-atd mu300-modem-log mu300-wifi-client mu300-buttons mu300-power; do
     n=$(sed -n "s/^START=//p" $R/etc/init.d/$s)
     ln -sf ../init.d/$s $R/etc/rc.d/S$n$s
 done
@@ -260,6 +260,12 @@ if [ -d /in/luci-plugin ]; then
     ln -sf ../init.d/mu300-ndp $R/etc/rc.d/S${n}mu300-ndp
     ln -sf /opt/mu300/bin/mu300-sms $R/usr/bin/mu300-sms
 fi
+# the OpenWrt button handlers (power: a tap is poweroff; wps, rfkill) are replaced: mu300-buttons owns the keys
+mkdir -p $R/etc/rc.button
+for b in power wps rfkill; do
+    printf "#!/bin/sh\n# mu300-buttons owns the keys (see /opt/mu300/bin/mu300-buttons)\nexit 0\n" > "$R/etc/rc.button/$b"
+    chmod 0755 "$R/etc/rc.button/$b"
+done
 # what apk installed, for comparing two builds (packages on the release feed are not pinned)
 apk list --installed | sort > $R/etc/mu300/packages.txt
 # busybox PATH is /usr/sbin:/usr/bin:/sbin:/bin, so the commands go into /usr/bin (the same list as Ubuntu)

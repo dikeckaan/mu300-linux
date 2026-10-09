@@ -12,6 +12,10 @@ ExecStart=/opt/mu300/bin/mu300-vpn run
 # instead of hitting the start limit and giving up
 Restart=always
 RestartSec=10
+# xray ran out of its 1024 descriptors once while the modem was off ("accept4: too many open files": every client
+# connection it could not forward stays open); mu300-power stops the service now while the modem is off, and the
+# engine gets room for a busy LAN in any case
+LimitNOFILE=65536
 
 [Install]
 WantedBy=multi-user.target

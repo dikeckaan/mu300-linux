@@ -210,6 +210,8 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
 * **Cellular > Device management:** USB role (device or host), the USB network mode (NCM, ECM or RNDIS, applied at the next boot) and
   adapters in host mode that can join the LAN bridge.
 * **Cellular > Adapter settings:** how the panel reaches the modem (AT backend, serial port, custom AT adapter).
+* **System > Languages:** the language of the interface, and the lang extra: download it, or upload the file.
+* **System > Power:** the active power profile and why, the power source, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU) and the saver threshold.
 
 IPv6 on this system is relayed from the carrier (router advertisements and NAT66) instead of the prefix extension
 plain OpenWrt uses. Aurora is the default theme, Bootstrap stays installed. The timings of this system are measured
@@ -241,6 +243,7 @@ eamonxg. The app's own notes are in [`openwrt/luci-app-mu300/README.md`](openwrt
 | Return to Linux from Android | `su -c mu300-linux` on the device (see below), or `boot/android-boot-linux.sh boot-linux-slotb.img` from a computer |
 | Send all traffic through a VPN | see below (`sudo mu300-extra install vpn` first) |
 | Add or remove optional parts (the VPN engines, more web interface languages) | `mu300-extra list`, `sudo mu300-extra install vpn`, `sudo mu300-extra remove vpn` (`lang` for the languages) |
+| Save battery: profiles, radios that go idle when nobody is connected, a charge limit | `mu300-power status`, `sudo mu300-power profile battery` (`plugged`, `saver`, `auto`), `sudo mu300-power set battery.WIFI_IDLE 10`, `mu300-power log 5 /tmp/power.csv`; on `openwrt-luci` the page System -> Power. A boot that started from a charger stays a charging boot (LED blinking, hotspot and modem down) until the Wi-Fi key is pressed; see FINDINGS 36 |
 | Language of the web interface (OpenWrt) | System -> System -> Language and Style; more languages: see Languages below |
 
 ### Installing from Android with a Magisk zip

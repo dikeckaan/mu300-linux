@@ -1,5 +1,6 @@
 """Checks over every script without running it: syntax under each shell that runs it, executable bits, and rules
 that past bugs taught (see each test)."""
+import json
 import os
 import re
 import shutil
@@ -67,6 +68,49 @@ class Syntax(unittest.TestCase):
 
 
 class Rules(unittest.TestCase):
+    def test_power_page_is_wired(self):
+        menu = json.loads((TOP / 'openwrt/luci-app-mu300/root/usr/share/luci/menu.d/luci-app-mu300.json').read_text())
+        self.assertEqual(menu['admin/system/power']['action']['path'], 'mu300/power')
+        common = (TOP / 'openwrt/luci-app-mu300/htdocs/luci-static/resources/mu300/common.js').read_text()
+        self.assertIn("method: 'power_get'", common)
+        self.assertIn("method: 'power_set', params: [ 'op', 'key', 'value' ]", common)
+        view = (TOP / 'openwrt/luci-app-mu300/htdocs/luci-static/resources/view/mu300/power.js').read_text()
+        for s in ('WIFI_IDLE', 'RADIO_IDLE', 'LEDS_IDLE', 'CPU', 'SAVER_BELOW', 'CHARGE_TO', 'callPowerSet'):
+            self.assertIn(s, view)
+        acl = json.loads((TOP / 'openwrt/luci-app-mu300/root/usr/share/rpcd/acl.d/luci-app-mu300.json').read_text())
+        self.assertIn('power_get', acl['luci-app-mu300']['read']['ubus']['mu300dash'])
+        self.assertIn('power_set', acl['luci-app-mu300']['write']['ubus']['mu300dash'])
+
+    def test_power_profiles_are_wired_in(self):
+        # the daemon runs on both systems, the keys wake it, the Ubuntu units skip the radios in a charging boot,
+        # the command is on PATH, OpenWrt's own power-key handler (a tap = poweroff) is neutralised, and power.conf is kept
+        self.assertIn('mu300-power', (TOP / 'rootfs/overlay/opt/mu300/lib/path-commands').read_text().split())
+        buttons = (BIN / 'mu300-buttons').read_text()
+        self.assertIn('mu300-power wake', buttons)
+        unit = (TOP / 'rootfs/overlay/etc/systemd/system/mu300-power.service').read_text()
+        self.assertIn('ExecStart=/opt/mu300/bin/mu300-power daemon', unit)
+        self.assertIn('After=mu300-hotspot.service mu300-mobile-data.service', unit)
+        # R10: stopped while idle, the TERM trap runs the whole wake (up to ~120 s for the radio lock)
+        self.assertIn('TimeoutStopSec=150', unit)
+        self.assertIn('mu300-power.service:multi-user.target', (TOP / 'rootfs/assemble.sh').read_text())
+        init = (TOP / 'openwrt/overlay/etc/init.d/mu300-power').read_text()
+        self.assertIn('procd_set_param command /opt/mu300/bin/mu300-power daemon', init)
+        self.assertIn('procd_set_param term_timeout 150', init)
+        self.assertRegex(init, r'START=9[6-9]')
+        for u in ('mu300-hotspot.service', 'mu300-mobile-data.service'):
+            self.assertIn('ConditionPathExists=!/run/mu300/charging-boot', (TOP / 'rootfs/overlay/etc/systemd/system' / u).read_text())
+        build = (TOP / 'openwrt/build-rootfs.sh').read_text()
+        self.assertIn('for b in power wps rfkill', build)
+        self.assertIn('mkdir -p $R/etc/rc.button', build)
+        self.assertIn('rc.button/$b', build)
+        self.assertLess(build.index('cp -a /in/overlay/. $R/'), build.index('for b in power wps rfkill'))
+        self.assertIn('mu300-power', build.split('for s in mu300-accounts')[1].split('; do')[0])
+        # etc/mu300 is kept whole on both systems, and power.conf lives in it
+        update = (TOP / 'rootfs/overlay/opt/mu300/bin/mu300-update').read_text()
+        self.assertRegex(update, r'ubuntu\) echo "etc/mu300 ')
+        self.assertRegex(update, r'openwrt\) echo "etc/config etc/mu300 ')
+        self.assertIn('/etc/mu300/power.conf', (BIN / 'mu300-power').read_text())
+
     def test_customize_leaves_magisks_shell_alone(self):
         # Magisk sources customize.sh: errexit or nounset there would end Magisk's own installer before its cleanup
         c = (TOP / 'android' / 'magisk' / 'installer' / 'customize.sh').read_text()
@@ -415,6 +459,8 @@ class Rules(unittest.TestCase):
         warm = warm[:warm.index('procd_close_instance')]
         self.assertIn('until [ -p /run/mu300-at/cmd ]', warm)
         self.assertIn('exec /opt/mu300/bin/mobile-data radio-on', warm)
+        # a charging boot (init's marker) keeps the radio off until the Wi-Fi key
+        self.assertLess(warm.index('[ -e /run/mu300/charging-boot ] && exit 0'), warm.index('mobile-data radio-on'))
         self.assertNotIn('stty_nr', warm)
         self.assertNotIn('respawn', warm)   # one round per start; netifd's dial and watch retry
         self.assertIn('wait_and_exec /dev/stty_nr1 /opt/mu300/bin/mu300-atd', f)
