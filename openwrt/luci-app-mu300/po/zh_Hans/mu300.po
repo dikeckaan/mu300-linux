@@ -1119,9 +1119,6 @@ msgstr "省电"
 msgid "Asleep: hotspot off"
 msgstr "休眠：热点已关闭"
 
-msgid "Charging boot: press the Wi-Fi key to start"
-msgstr "充电开机：按 Wi-Fi 键启动"
-
 msgid "Awake"
 msgstr "已唤醒"
 
@@ -1146,44 +1143,20 @@ msgstr "方案"
 msgid "Profile in use: %s (%s)"
 msgstr "当前方案：%s（%s）"
 
-msgid "Battery"
-msgstr "电池"
-
-msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
-msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
-
-msgid "Charger"
-msgstr "充电器"
-
-msgid "Charger: %s, %s port"
-msgstr "充电器：%s，%s 端口"
-
-msgid "Charging paused: battery temperature"
-msgstr "充电已暂停：电池温度"
-
-msgid "Charging paused: charge limit"
-msgstr "充电已暂停：充电上限"
-
 msgid "Sleep now"
 msgstr "立即休眠"
 
 msgid "Wake"
 msgstr "唤醒"
 
-msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
-msgstr "无人连接是指没有 Wi-Fi 客户端，USB 上也没有电脑。Wi-Fi 键、USB 上的电脑或充电器都会唤醒设备。"
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key or a computer on USB wake the device."
+msgstr "无人连接指没有 Wi-Fi 客户端，也没有电脑插在 USB 上。Wi-Fi 键或 USB 上的电脑会唤醒设备。"
 
 msgid "Automatic: plugged in / on battery"
 msgstr "自动：接通电源 / 电池供电"
 
 msgid "Switch to Saver under %"
 msgstr "电量低于以下值时切换到省电方案 %"
-
-msgid "Stop charging at"
-msgstr "充电上限"
-
-msgid "80 % keeps the battery healthier on a device that stays plugged in."
-msgstr "80 % 可让长期接着电源的设备电池更健康。"
 
 msgid "Keep as is"
 msgstr "保持不变"

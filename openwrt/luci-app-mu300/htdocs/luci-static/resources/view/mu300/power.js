@@ -5,8 +5,8 @@
 
 /* Every value from the backend goes into E() inside an array: LuCI's E() takes a lone string as HTML, an array's
  * strings as text. */
-/* System > Power: the state of the power daemon (mu300-power), the profile in use, the charge limit and the knobs of
- * the three profiles. The backend is mu300dash power_get/power_set (unisoc-modem/power); the values are validated
+/* System > Power: the state of the power daemon (mu300-power), the profile in use and the knobs of the three
+ * profiles. The backend is mu300dash power_get/power_set (unisoc-modem/power); the values are validated
  * there, a refused one comes back as ok != 1 and the page reloads to show what is really set. */
 return view.extend({
 	load: function() { return L.resolveDefault(M.callPowerGet(), {}); },
@@ -85,7 +85,7 @@ return view.extend({
 	},
 
 	paint: function(st) {
-		var self = this, conf = st.conf || {}, bat = st.battery, chg = st.charger;
+		var self = this, conf = st.conf || {};
 		/* no state in the reply: the backend did not answer; do not paint defaults as if they were real */
 		if (!st.state) {
 			dom.content(this.root, [ E('section', { 'class': 'mud-card', 'id': 'mud-power-unavailable' }, [
@@ -101,8 +101,7 @@ return view.extend({
 		var num = function(x) { return typeof x === 'number'; };
 
 		/* 1. the state */
-		var stateText = st.state === 'idle' ? _('Asleep: hotspot off')
-			: st.state === 'charging-boot' ? _('Charging boot: press the Wi-Fi key to start') : _('Awake');
+		var stateText = st.state === 'idle' ? _('Asleep: hotspot off') : _('Awake');
 		var why = String(st.why || ''), under = /under ([0-9]+)/.exec(why);
 		var whyText = why === 'forced' ? _('forced')
 			: under ? _('automatic, battery under %d %%').format(+under[1]) : _('automatic');
@@ -115,25 +114,15 @@ return view.extend({
 			card.appendChild(row(_('Power source'), [ st.supply === 'plugged' ? names.plugged : names.battery ]));
 		if (names[st.profile])
 			card.appendChild(row(_('Profile'), [ _('Profile in use: %s (%s)').format(names[st.profile], whyText) ]));
-		if (bat) {
-			var ok = num(bat.capacity) && num(bat.mv) && num(bat.ma) && num(bat.temp);
-			card.appendChild(row(_('Battery'), [ ok
-				? _('%d %%, %s, %d mV, %d mA, %.1f °C').format(bat.capacity, String(bat.status || '--'), bat.mv, bat.ma, bat.temp / 10)
-				: '--' ]));
-		}
-		if (chg)
-			card.appendChild(row(_('Charger'), [ _('Charger: %s, %s port').format(String(chg.status || '--'), String(chg.usb_type || '--')) ]));
-		if (st.charge_off === 'temp') card.appendChild(E('div', { 'class': 'mud-note' }, _('Charging paused: battery temperature')));
-		else if (st.charge_off === 'limit') card.appendChild(E('div', { 'class': 'mud-note' }, _('Charging paused: charge limit')));
 		var sleep = E('button', { 'class': 'mud-btn', 'id': 'mud-power-sleep' }, _('Sleep now'));
 		sleep.addEventListener('click', function() { self.act(sleep, 'idle'); });
 		var wake = E('button', { 'class': 'mud-btn', 'id': 'mud-power-wake' }, _('Wake'));
 		wake.addEventListener('click', function() { self.act(wake, 'wake'); });
 		card.appendChild(E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap;margin:10px 0' }, [ sleep, wake ]));
 		card.appendChild(E('div', { 'class': 'mud-note' },
-			_('Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device.')));
+			_('Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key or a computer on USB wake the device.')));
 
-		/* 2. the profile and the charge limit */
+		/* 2. the profile */
 		var prof = E('section', { 'class': 'mud-card', 'style': 'margin-top:14px', 'id': 'mud-power-profile' }, [
 			E('h3', {}, _('Profile')),
 			E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0' }, [
@@ -145,12 +134,7 @@ return view.extend({
 			E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0' }, [
 				E('label', { 'for': 'mud-power-saver' }, _('Switch to Saver under %')),
 				self.number('SAVER_BELOW', conf.SAVER_BELOW, 100, 'mud-power-saver')
-			]),
-			E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0' }, [
-				E('label', { 'for': 'mud-power-chargeto' }, _('Stop charging at')),
-				self.choice('CHARGE_TO', conf.CHARGE_TO === 80 ? 80 : 100, [ [ '100', '100 %' ], [ '80', '80 %' ] ], 'mud-power-chargeto')
-			]),
-			E('div', { 'class': 'mud-note' }, _('80 % keeps the battery healthier on a device that stays plugged in.'))
+			])
 		]);
 
 		/* 3. the knobs of the three profiles */

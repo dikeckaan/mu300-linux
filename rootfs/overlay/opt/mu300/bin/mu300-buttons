@@ -1,13 +1,13 @@
 #!/bin/sh
 # The buttons (Ubuntu and OpenWrt; run by mu300-buttons.service / /etc/init.d/mu300-buttons):
 #   power, short press        wake the LEDs (they go dark after LED_TIMEOUT, see mu300-led)
-#   power, held 3 s           shut down cleanly (the battery-powered U30 Air; the F50 starts again on USB power)
+#   power, held 3 s           shut down cleanly (on USB power it starts again when plugged back in)
 #   Wi-Fi key, short press    hotspot 2.4 <-> 5 GHz (U30 Air; the Wi-Fi LED shows the band: blue 5, white 2.4)
 #   Wi-Fi key, held 3 s       hotspot off / on
 # Every press lights the LEDs first (`mu300-led wake`: also in mu300-power's idle, and without any daemon), so a key
 # always shows life. Then it wakes mu300-power with the key's name (`mu300-power wake wifi|power`; other keys count as
 # power), in the background: the wake restores whatever is down by looking (hotspot, modem, LEDs, CPU), which can
-# take a minute, and the keys must not wait for it. Idle wakes on any key, a charging boot only on the Wi-Fi key. The
+# take a minute, and the keys must not wait for it. Idle wakes on any key. The
 # band toggle and the hotspot toggle act on an awake device, so the first Wi-Fi press on a sleeping device (idle, or
 # the LEDs held dark) only wakes it. Held power does not wake mu300-power: it leaves the shutdown marker, so the
 # daemon's stop on the way down does not bring the radios back. The hotspot toggle leaves $PST/hotspot-off (with the

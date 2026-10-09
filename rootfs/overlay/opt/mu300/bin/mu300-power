@@ -1,11 +1,11 @@
 #!/bin/sh
-# What the MU300 does with its battery: profiles, idle radios, the charging boot.
-#   mu300-power status                  state, profile and why, battery, charger, idle timer
+# What the MU300 does when nobody is using it: profiles and idle radios.
+#   mu300-power status                  state, profile and why, idle timer
 #   mu300-power profile [NAME|auto]     force a profile (plugged|battery|saver), or back to automatic
 #   mu300-power set PROFILE.KNOB VALUE  knobs: WIFI_IDLE (minutes, 0 never), RADIO_IDLE keep|lte|off,
-#                                       LEDS_IDLE on|off, CPU full|eco; also set SAVER_BELOW N, CHARGE_TO 100|80
+#                                       LEDS_IDLE on|off, CPU full|eco; also set SAVER_BELOW N
 #   mu300-power wake [wifi|power]       bring back whatever is down, by looking (the keys call it with their name);
-#                                       restarts the idle timer; a charging boot ends on any wake but "power"
+#                                       restarts the idle timer
 #   mu300-power idle                    enter idle now
 #   mu300-power log [SECONDS] [FILE]    append epoch,mV,mA,mW,capacity,temp,state,profile every SECONDS (5) to
 #                                       FILE (/var/log/mu300-power.csv)
@@ -96,7 +96,7 @@ bounded() {
 # --- configuration
 default() {  # default KEY: the built-in value of a top-level key or PROFILE_KNOB
     case $1 in
-        PROFILE) echo auto ;; SAVER_BELOW) echo 20 ;; CHARGE_TO) echo 100 ;;
+        PROFILE) echo auto ;; SAVER_BELOW) echo 20 ;;
         plugged_WIFI_IDLE) echo 0 ;;  plugged_RADIO_IDLE) echo keep ;; plugged_LEDS_IDLE) echo on ;;  plugged_CPU) echo full ;;
         battery_WIFI_IDLE) echo 10 ;; battery_RADIO_IDLE) echo off ;;  battery_LEDS_IDLE) echo off ;; battery_CPU) echo full ;;
         saver_WIFI_IDLE) echo 5 ;;    saver_RADIO_IDLE) echo off ;;    saver_LEDS_IDLE) echo off ;;   saver_CPU) echo eco ;;
@@ -108,7 +108,6 @@ valid() {  # valid KEY VALUE
         PROFILE) case $2 in auto|plugged|battery|saver) return 0 ;; esac ;;
         # numbers without a leading zero: dash reads 08 as a bad octal number, and 00 would be 0
         SAVER_BELOW) case $2 in [0-9]|[1-9][0-9]|100) return 0 ;; esac ;;
-        CHARGE_TO) case $2 in 100|80) return 0 ;; esac ;;
         *_WIFI_IDLE) case $2 in [0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]) return 0 ;; esac ;;
         *_RADIO_IDLE) case $2 in keep|lte|off) return 0 ;; esac ;;
         *_LEDS_IDLE) case $2 in on|off) return 0 ;; esac ;;
@@ -145,10 +144,6 @@ psy_all() {  # psy_all TYPE...: every power_supply directory whose type is one o
         for _w in "$@"; do [ "$_t" = "$_w" ] && { echo "$_d"; break; }; done
     done
 }
-psy_of_type() {  # the first one, or return 1
-    _f=$(psy_all "$@" | sed -n 1p)
-    [ -n "$_f" ] && echo "$_f"
-}
 battery_dir() {  # the first Battery that is present (present=1 or no present file)
     for _d in $(psy_all Battery); do
         [ ! -f "$_d/present" ] || [ "$(cat "$_d/present" 2>/dev/null)" = 1 ] && { echo "$_d"; return 0; }
@@ -163,8 +158,6 @@ num() {  # a number for arithmetic: empty or junk is 0; leading zeros go (dash r
     case $1 in -*) echo "-$_nd" ;; *) echo "$_nd" ;; esac
 }
 capacity() { _d=$(battery_dir) && rd "$_d/capacity"; }
-battery_temp() { _d=$(battery_dir) && rd "$_d/temp"; }
-charger_dir() { psy_of_type USB Mains; }
 plugged() {
     _any=
     for _d in $(psy_all USB Mains); do
@@ -197,14 +190,8 @@ cmd_status() {
     echo "profile: $PICKED ($WHY)"
     echo "state: $(rd "$ST/state" || echo active)"
     [ -s "$ST/reason" ] && echo "last change: $(rd "$ST/reason")"
-    if _b=$(battery_dir); then
-        echo "battery: $(rd "$_b/capacity") % $(rd "$_b/status" | tr 'A-Z' 'a-z'), $(( $(num "$(rd "$_b/voltage_now")") / 1000 )) mV, $(( $(num "$(rd "$_b/current_now")") / 1000 )) mA, $(( $(num "$(rd "$_b/temp")") / 10 )) C"
-    else
-        echo "battery: none"
-    fi
-    if _c=$(charger_dir); then echo "charger: $(rd "$_c/status" | tr 'A-Z' 'a-z') online=$(rd "$_c/online") usb_type=$(rd "$_c/usb_type" | sed -n 's/.*\[\([A-Za-z_]*\)\].*/\1/p')"; fi
     echo "supply: $(plugged && echo plugged || echo battery)"
-    echo "SAVER_BELOW=$(conf_get SAVER_BELOW) CHARGE_TO=$(conf_get CHARGE_TO)"
+    echo "SAVER_BELOW=$(conf_get SAVER_BELOW)"
     for _p in $PROFILES; do
         echo "$_p: WIFI_IDLE=$(knob "$_p" WIFI_IDLE) RADIO_IDLE=$(knob "$_p" RADIO_IDLE) LEDS_IDLE=$(knob "$_p" LEDS_IDLE) CPU=$(knob "$_p" CPU)"
     done
@@ -353,10 +340,10 @@ retry_run() {  # repeat what failed, if the state still wants it; the actions no
     _st=$(rd "$ST/state"); mv "$ST/retry" "$ST/retry.run"
     while read -r _k _v; do
         case "$_st:$_k $_v" in
-            idle:hotspot\ off|charging-boot:hotspot\ off) hotspot off </dev/null ;;
-            idle:modem\ lte|idle:modem\ off|charging-boot:modem\ off) modem_idle "$_v" </dev/null ;;
-            *:hotspot\ on) [ "$_st" = idle ] || [ "$_st" = charging-boot ] || hotspot on </dev/null ;;
-            *:modem\ resume) [ "$_st" = idle ] || [ "$_st" = charging-boot ] || modem_idle resume </dev/null ;;
+            idle:hotspot\ off) hotspot off </dev/null ;;
+            idle:modem\ lte|idle:modem\ off) modem_idle "$_v" </dev/null ;;
+            *:hotspot\ on) [ "$_st" = idle ] || hotspot on </dev/null ;;
+            *:modem\ resume) [ "$_st" = idle ] || modem_idle resume </dev/null ;;
         esac
     done < "$ST/retry.run"
     rm -f "$ST/retry.run"
@@ -512,105 +499,13 @@ selfcheck() {
     fi
     echo "the hotspot is down"
 }
-# --- the charging boot: LK opened our slot for a flat battery on the charger; stay light until the Wi-Fi key
-boot_mode() { rd "$RUN/boot-mode"; }
-enter_charging_boot() {
-    echo charging-boot > "$ST/state"   # first, as enter_idle does: the retries need to know what the state wants
-    touch "$RUN/charging-boot"         # init made it already; the Ubuntu units check it
-    echo 0 > "$ST/low-loops"
-    hotspot off
-    modem_idle off
-    bounded "$LEDDL" mu300-led charge on </dev/null >/dev/null 2>&1 || true
-    set_state charging-boot "charging boot (LK boot mode charger)"
-}
-leave_charging_boot() {  # leave_charging_boot REASON
-    bounded "$LEDDL" mu300-led charge off </dev/null >/dev/null 2>&1 || true
-    rm -f "$RUN/charging-boot" "$ST/low-loops"
-    # skipped at boot by the flag; --no-block: its start waits 15 s, the hotspot must not wait for it
-    is_openwrt || bounded "$STEP" systemctl start --no-block mu300-mobile-data </dev/null >/dev/null 2>&1 || true
-    leave_idle "$1"
-}
-extcon_usb() { for _s in "$R"/sys/class/extcon/*/state; do grep -qx 'USB=1' "$_s" 2>/dev/null && return 0; done; return 1; }
-low_battery_check() {  # unplugged and under 5 % for three loops in a row: a clean poweroff, not a brown-out
-    _lowc=$(capacity)
-    case $_lowc in ''|*[!0-9]*) echo 0 > "$ST/low-loops"; return 0 ;; esac
-    # unplugged by every account: no charger online, no USB cable on extcon, the battery not charging
-    if plugged || extcon_usb || [ "$(_b=$(battery_dir) && rd "$_b/status")" = Charging ] || [ "$_lowc" -ge 5 ]; then
-        echo 0 > "$ST/low-loops"; return 0
-    fi
-    _lown=$(( $(num "$(rd "$ST/low-loops")") + 1 )); echo "$_lown" > "$ST/low-loops"
-    [ "$_lown" -ge 3 ] || return 0
-    say "battery at $_lowc % and unplugged for three loops: powering off"
-    : > "$ST/shutdown"   # the TERM trap must not wake the radios on the way down
-    if is_openwrt; then poweroff; else systemctl poweroff </dev/null; fi
-    return 0
-}
-
-# --- charging guard: temperature and the charge limit, through the charger's charge_type (bq256xx: N/A off, Fast on)
-# bq256xx reads N/A whenever it is not charging (on battery, full), so N/A alone does not mean "we turned it off":
-# Fast is written only when $ST/charge-off says the guard did. The driver resets its switch at probe, so a marker
-# lost with /run (a reboot) leaves nothing switched off.
-charging_switch() {  # the bq256xx charger's charge_type (by name or by its uevent), else the first USB/Mains one with it
-    _gfirst=
-    for _gc in $(psy_all USB Mains); do
-        [ -f "$_gc/charge_type" ] || continue
-        case ${_gc##*/} in *bq256*) echo "$_gc/charge_type"; return 0 ;; esac
-        if grep -qs bq256 "$_gc/uevent" "$_gc/device/uevent"; then echo "$_gc/charge_type"; return 0; fi
-        [ -n "$_gfirst" ] || _gfirst=$_gc/charge_type
-    done
-    [ -n "$_gfirst" ] && echo "$_gfirst"
-}
-switch_write() {  # switch_write NODE VALUE: a failed write turns the guard off for this boot, with one log line
-    if { echo "$2" > "$1"; } 2>/dev/null; then return 0; fi
-    say "writing $2 to $1 failed: the charge guard is off until the next boot"
-    : > "$ST/switch-failed"
-    return 1
-}
-set_charging() {  # set_charging on|off REASON: logs only when the marker $ST/charge-off changes
-    _sw=$(charging_switch) || return 0
-    _cur=$(rd "$_sw"); _was=$(rd "$ST/charge-off")
-    if [ "$1" = off ]; then
-        if [ "$_cur" != 'N/A' ]; then switch_write "$_sw" 'N/A' || return 0; fi
-        [ "$_was" = "$2" ] || say "charging off: $2"
-        echo "$2" > "$ST/charge-off"
-    else
-        [ -e "$ST/charge-off" ] || return 0   # not ours to turn on
-        if [ "$_cur" = 'N/A' ]; then switch_write "$_sw" Fast || return 0; fi
-        rm -f "$ST/charge-off"
-        say "charging on: $2"
-    fi
-    return 0
-}
-guard() {  # temp in 0.1 C: off above 45.0 or below 0, back on under 40.0 and over 3.0; CHARGE_TO=80: off at 80 %, on under 75
-    [ ! -e "$ST/switch-failed" ] || return 0
-    charging_switch >/dev/null || { [ -e "$ST/no-switch-logged" ] || { say "no charge switch: the guard does nothing"; : > "$ST/no-switch-logged"; }; return 0; }
-    _gt=$(battery_temp); _gcap=$(capacity); _goff=$(rd "$ST/charge-off")
-    case $_goff in   # off for a reason whose reading is gone: fail safe, keep it off
-        temp) case ${_gt#-} in ''|*[!0-9]*) return 0 ;; esac ;;
-        limit) case $_gcap in ''|*[!0-9]*) return 0 ;; esac ;;
-    esac
-    _gwant=on _gwhy=
-    case ${_gt#-} in ''|*[!0-9]*) ;; *)
-        if [ "$_gt" -gt 450 ] || [ "$_gt" -lt 0 ]; then _gwant=off _gwhy=temp
-        elif [ "$_goff" = temp ] && { [ "$_gt" -ge 400 ] || [ "$_gt" -le 30 ]; }; then _gwant=off _gwhy=temp; fi ;;
-    esac
-    if [ "$_gwant" = on ] && [ "$(conf_get CHARGE_TO)" = 80 ]; then
-        case $_gcap in ''|*[!0-9]*) ;; *)
-            if [ "$_gcap" -ge 80 ]; then _gwant=off _gwhy=limit
-            elif [ "$_goff" = limit ] && [ "$_gcap" -ge 75 ]; then _gwant=off _gwhy=limit; fi ;;
-        esac
-    fi
-    if [ "$_gwant" = off ]; then set_charging off "$_gwhy"; else set_charging on "back in range"; fi
-}
-
 step() {  # one look at the world; sets _acted when it changed the state
     mkdir -p "$ST"
     _prof=$(pick_profile); _state=$(rd "$ST/state")
     [ -n "$_state" ] || { _state=active; set_state active "started"; }
     _old=$(rd "$ST/profile"); echo "$_prof" > "$ST/profile"
     _now=$(num "$(uptime_s)")
-    # the supply of the last loop: idle wakes on the edge battery -> plugged, not on being plugged (which an idle on
-    # the charger, a forced profile or the F50 always is)
+    # the supply of the last loop: this device runs on the cable, so it is always "plugged"
     _sup=battery; plugged && _sup=plugged
     _osup=$(rd "$ST/supply"); echo "$_sup" > "$ST/supply"
     if activity; then echo "$_now" > "$ST/idle-since"; fi
@@ -620,19 +515,8 @@ step() {  # one look at the world; sets _acted when it changed the state
             rm -f "$ST/idle-now"
             if [ -e "$ST/wake" ]; then leave_idle "woken by a key"; return 0; fi
             if usb_host; then leave_idle "woken by a computer on USB"; return 0; fi
-            if [ "$_osup" = battery ] && [ "$_sup" = plugged ]; then leave_idle "woken: plugged in"; return 0; fi
             if _sn=$(stations) && [ "$_sn" -gt 0 ]; then leave_idle "woken by a Wi-Fi station"; return 0; fi
             if [ -n "$_old" ] && [ "$_old" != "$_prof" ]; then enter_idle "$_prof" "idle: profile now $_prof"; fi ;;
-        charging-boot)   # only the Wi-Fi key ends it; a computer on USB or the power key does not
-            rm -f "$ST/idle-now"
-            low_battery_check
-            if [ -e "$ST/wake" ]; then
-                case $(rd "$ST/wake") in
-                    power) rm -f "$ST/wake" ;;
-                    wifi) leave_charging_boot "woken by the Wi-Fi key" ;;
-                    *) leave_charging_boot "woken (mu300-power wake)" ;;
-                esac
-            fi ;;
         *)  # active; anything unknown is treated as active
             [ "$_state" = active ] || { set_state active "unknown state '$_state'"; _state=active; }
             if [ -e "$ST/wake" ]; then rm -f "$ST/wake"; echo "$_now" > "$ST/idle-since"; fi
@@ -650,7 +534,6 @@ step() {  # one look at the world; sets _acted when it changed the state
 }
 loop() {  # retries wait for a loop that changed nothing: a transition has just done its own actions
     _acted=
-    guard
     step
     [ -n "$_acted" ] || retry_run
     return 0
@@ -661,9 +544,6 @@ cmd_daemon() {
         # start-up: /run is per boot, so a state found here is from this boot (a restarted daemon); keep it
         rm -f "$ST/idle-now"
         [ -s "$ST/idle-since" ] || uptime_s > "$ST/idle-since"
-        # LK booted us for a flat battery on the charger: charging boot, but only when this boot has no state yet
-        # (a daemon restarted after the key press keeps "active"; one restarted inside the charging boot keeps that)
-        if [ ! -s "$ST/state" ] && [ "$(boot_mode)" = charger ]; then enter_charging_boot; fi
     fi
     _sleep=
     # stopped while idle: the radios come back without a dial (the watcher redials); not during a shutdown. An action
@@ -706,7 +586,7 @@ cmd_log() {  # cmd_log [SECONDS] [FILE]
         sleep "$_lge"
     done
 }
-# shutting_down: mu300-buttons and low_battery_check leave $ST/shutdown before poweroff; Ubuntu also says "stopping"
+# shutting_down: mu300-buttons leaves $ST/shutdown before poweroff; Ubuntu also says "stopping"
 shutting_down() {
     [ -e "$ST/shutdown" ] && return 0
     is_openwrt && return 1
@@ -716,17 +596,7 @@ cmd_wake() {  # cmd_wake [wifi|power]: the flag holds the key's name ("any" with
     case ${1:-} in ''|wifi|power) ;; *) echo "usage: mu300-power wake [wifi|power]" >&2; return 2 ;; esac   # runs now
     mkdir -p "$ST"; echo "${1:-any}" > "$ST/wake"
     trap '' HUP   # a terminal that goes away (an SSH session over the Wi-Fi it brings back) does not stop it half-way
-    case $(rd "$ST/state") in
-        charging-boot)   # only the Wi-Fi key (or a wake without a key name) ends it; the power key only shows the LEDs
-            [ "${1:-any}" != power ] || return 0
-            busy_take "${MU300_POWER_WAKE_LOCK_WAIT:-200}" restore || return 0
-            [ "$(rd "$ST/state")" = charging-boot ] || { busy_drop; return 0; }   # the daemon got there first
-            if [ "${1:-any}" = wifi ]; then leave_charging_boot "woken by the Wi-Fi key"
-            else leave_charging_boot "woken (mu300-power wake)"; fi
-            busy_drop ;;
-        *)
-            if [ -n "${1:-}" ]; then restore "woken by the $1 key"; else restore "woken (mu300-power wake)"; fi ;;
-    esac
+    if [ -n "${1:-}" ]; then restore "woken by the $1 key"; else restore "woken (mu300-power wake)"; fi
     return 0
 }
 cmd_idle() { mkdir -p "$ST"; touch "$ST/idle-now"; }

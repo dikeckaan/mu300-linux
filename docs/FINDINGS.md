@@ -2584,6 +2584,13 @@ Air, ten `ifdown wan; ifup wan` gave the WAN back in
 
 ### 36. Power profiles: idle radios, the charging boot, the charge guard
 
+> **Scope note (this fork, 2026-10-09).** The power profiles and the idle radios were taken from upstream
+> (`dikeckaan/mu300-linux`, PR #62) and are in this repository. The charging boot, the low-battery poweroff, the
+> battery-temperature and the charge-limit guard and the charge switch are **not**: this build treats the device as
+> USB powered, with no battery stack, so those branches were removed from `mu300-power` - and with them `CHARGE_TO`,
+> `mu300-led charge`, the charging-boot marker and `boot/init`'s charger boot mode. The paragraphs below describe the
+> upstream branch as it was measured; the profile knobs, the idle timer and the wake are what this fork runs.
+
 The U30 Air ran flat in a day or two of hotspot use. Two causes, both seen before: the charger IC charged on its
 power-on defaults and was never told anything (33d; the bq256xx driver of PR #55 now drives it, so the guard below has
 a node to write), and a boot that Android's LK started because a charger was plugged in ("charger mode") came up as a

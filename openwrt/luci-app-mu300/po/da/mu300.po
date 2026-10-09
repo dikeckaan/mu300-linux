@@ -1119,9 +1119,6 @@ msgstr "Saver"
 msgid "Asleep: hotspot off"
 msgstr "Asleep: hotspot off"
 
-msgid "Charging boot: press the Wi-Fi key to start"
-msgstr "Charging boot: press the Wi-Fi key to start"
-
 msgid "Awake"
 msgstr "Awake"
 
@@ -1146,44 +1143,20 @@ msgstr "Profile"
 msgid "Profile in use: %s (%s)"
 msgstr "Profile in use: %s (%s)"
 
-msgid "Battery"
-msgstr "Battery"
-
-msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
-msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
-
-msgid "Charger"
-msgstr "Charger"
-
-msgid "Charger: %s, %s port"
-msgstr "Charger: %s, %s port"
-
-msgid "Charging paused: battery temperature"
-msgstr "Charging paused: battery temperature"
-
-msgid "Charging paused: charge limit"
-msgstr "Charging paused: charge limit"
-
 msgid "Sleep now"
 msgstr "Sleep now"
 
 msgid "Wake"
 msgstr "Wake"
 
-msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
-msgstr "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key or a computer on USB wake the device."
+msgstr "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key or a computer on USB wake the device."
 
 msgid "Automatic: plugged in / on battery"
 msgstr "Automatic: plugged in / on battery"
 
 msgid "Switch to Saver under %"
 msgstr "Switch to Saver under %"
-
-msgid "Stop charging at"
-msgstr "Stop charging at"
-
-msgid "80 % keeps the battery healthier on a device that stays plugged in."
-msgstr "80 % keeps the battery healthier on a device that stays plugged in."
 
 msgid "Keep as is"
 msgstr "Keep as is"

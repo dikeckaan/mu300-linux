@@ -1613,20 +1613,6 @@ class Led(ShellTest):
             self.led(shell, 'u30air', 'wake')
             self.assertEqual(self.state()['sc27xx:green'], '255')
 
-    def test_charge_blinks_the_power_led(self):
-        for shell in self.each_shell():
-            self.reset()
-            d = self.root / 'sys/class/leds/sc27xx:green'
-            self.assertEqual(self.led(shell, 'u30air', 'charge', 'on').returncode, 0)
-            self.assertEqual((d / 'trigger').read_text().strip(), 'timer')
-            self.assertEqual((d / 'delay_on').read_text().strip(), '1000')
-            self.assertEqual((d / 'delay_off').read_text().strip(), '1000')
-            self.assertEqual(self.led(shell, 'u30air', 'charge', 'off').returncode, 0)
-            self.assertEqual((d / 'trigger').read_text().strip(), 'none')
-            self.assertEqual(self.state()['sc27xx:green'], '0')
-            # a device without a power LED: nothing to blink, no error
-            self.assertEqual(self.led(shell, 'f50', 'charge', 'on').returncode, 0)
-
     def test_no_timeout(self):
         for shell in self.each_shell():
             for device, conf in (('u30air', 'LED_TIMEOUT=0\n'), ('f50', '')):
@@ -1965,7 +1951,7 @@ class Buttons(ShellTest):
         for name in ('mu300-led', 'mu300-wifi-band', 'systemctl', 'logger', 'mu300-power'):
             self.stub(name, f'echo "{name} $*" >> "$STUBLOG/calls"')
         (self.tmp / 'run/mu300/power').mkdir(parents=True)
-        for state, acts in (('idle', False), ('charging-boot', False), ('active', True)):
+        for state, acts in (('idle', False), ('active', True)):
             (self.tmp / 'run/mu300/power/state').write_text(state + '\n')
             for shell in self.each_shell():
                 for event in ('138 short', '138 long'):
