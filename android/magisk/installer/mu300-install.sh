@@ -149,7 +149,7 @@ conf_valid() {  # conf_valid KEY VALUE: VALUE is exactly one this installer know
         MU300_SD_ERASE|MU300_REGION_OVERWRITE|MU300_PASSWORD_RESET) [ "$2" = yes ] && return 0 ;;
         MU300_HOTSPOT|MU300_GPU) case $2 in yes|no) return 0 ;; esac ;;
         MU300_PASSWORD_FILE) [ "$2" = sdcard ] && return 0 ;;
-        MU300_DEVICE) case $2 in f50|u30air) return 0 ;; esac ;;
+        MU300_DEVICE) case $2 in f50) return 0 ;; esac ;;
         MU300_LANG) case $2 in en|tr|zh) return 0 ;; esac ;;
         MU300_DRY_RUN) [ "$2" = 1 ] && return 0 ;;
         # any characters: it only ever goes to mkpasswd on stdin, never into a path or a command line
@@ -177,12 +177,11 @@ detect_device() {
     _m="$(getprop ro.product.model) / $(getprop ro.product.device)"
     say "$(t 'device: {1}' "$_m")"
     case $_m in
-        *U30Air*|*U30_Air*|*"U30 Air"*) DEVICE=u30air ;;
         *MU300*|*F50*|*mu300*|*MU3351*|*V50*) DEVICE=f50 ;;
         *) DEVICE= ;;
     esac
     [ -z "${MU300_DEVICE:-}" ] || DEVICE=$MU300_DEVICE
-    [ -n "$DEVICE" ] || die "$(t 'This does not look like a ZTE F50/MU300 or U30 Air. If it is one, put MU300_DEVICE=f50 or u30air into {1}.' "$TRUSTED_CONF")"
+    [ -n "$DEVICE" ] || die "$(t 'This does not look like a ZTE F50/MU300. If it is one, put MU300_DEVICE=f50 into {1}.' "$TRUSTED_CONF")"
 }
 hex_at() { dd if="$1" bs=1 skip="$2" count="$3" 2>/dev/null | od -An -tx1 -v | tr -d ' \n'; }
 slot_setup() {
@@ -501,7 +500,7 @@ write_example() {
         echo "#MU300_PASSWORD_RESET=yes"
         echo "# (root) write the password to $PW_FILE_SDCARD instead of $PW_FILE_ROOT"
         echo "#MU300_PASSWORD_FILE=sdcard"
-        echo "# (root) f50 or u30air, only when the model is not recognised"
+        echo "# (root) f50, only when the model is not recognised"
         echo "#MU300_DEVICE=${DEVICE:-f50}"
         echo "# en, tr or zh"
         echo "#MU300_LANG=${MU300_LANG:-en}"
@@ -666,7 +665,7 @@ conf_drop_used() {
 # Linux is armed by now: nothing here may fail the run (main ignores its status), or customize.sh would call an
 # installed Linux "not installed"
 report() {
-    _ip=192.168.77.1; [ "$DEVICE" != u30air ] || _ip=192.168.78.1
+    _ip=192.168.77.1
     _drop=
     for _k in $USED_KEYS MU300_PASSWORD MU300_PASSWORD_RESET; do
         eval "_s=\${SRC_$_k:-}"

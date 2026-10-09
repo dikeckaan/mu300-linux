@@ -182,7 +182,7 @@ class Conf(ShellTest):
 
     def test_untrusted_file_chooses_nothing_destructive(self):
         # any app with storage access can write /sdcard: it may not erase, wipe, set the password or the model
-        text = ('MU300_STORAGE=sd\nMU300_SD_ERASE=yes\nMU300_PASSWORD=hunter22\nMU300_MODE=wipe\nMU300_DEVICE=u30air\n'
+        text = ('MU300_STORAGE=sd\nMU300_SD_ERASE=yes\nMU300_PASSWORD=hunter22\nMU300_MODE=wipe\nMU300_DEVICE=f50\n'
                 'MU300_REGION_OVERWRITE=yes\nMU300_PASSWORD_FILE=sdcard\nMU300_PASSWORD_RESET=yes\n')
         for shell in self.each_shell():
             r = self.load(shell, text)
@@ -356,7 +356,7 @@ class InstallerCase(ShellTest):
 
     IMAGE_SHADOW = 'root::19000:0:99999:7:::\nubuntu:$6$img$imagehash:19000:0:99999:7:::\n'
 
-    def zip(self, system='openwrt', kernel='6.18', features=('sdcard',), devices='f50 u30air', corrupt=False,
+    def zip(self, system='openwrt', kernel='6.18', features=('sdcard',), devices='f50', corrupt=False,
             image_shadow=True):
         """mu300/ with its manifest, and the zip with the payload of SYSTEM and KERNEL"""
         self.mu300 = self.tmp / 'zip' / 'mu300'
@@ -1059,7 +1059,7 @@ class Install(InstallerCase):
 
     def test_update_keeps_the_password(self):
         # update (keep) mode: the accounts and their passwords stay as the device has them, as with mu300-update; no
-        # new password is generated and the password file is left alone (seen on the U30 Air: the Ubuntu zip's
+        # new password is generated and the password file is left alone (seen on a device: the Ubuntu zip's
         # update replaced the user's own password with a generated one)
         f = self.fake.root / 'data/adb/mu300-linux-password.txt'
         for system, users in (('openwrt', 'root'), ('ubuntu-24.04', 'ubuntu')):

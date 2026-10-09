@@ -258,7 +258,7 @@ writes:         {1}, boot_{2}, 32 bytes of misc (boot_{3}, the partition table a
 mu300-install.conf: {1} is taken only from {2}, which only root can change; ignored in {3}	mu300-install.conf：{1} 只从 {2} 读取（只有 root 能修改该文件）；在 {3} 中已忽略
 To use{1}, make the file one only root can change: {2}	如要使用{1}，请把该文件变为只有 root 能修改：{2}
 {1} is not owned by root, or others can change it: it is read like a file on /sdcard	{1} 不属于 root，或其他用户可以修改它：按 /sdcard 上的文件对待
-This does not look like a ZTE F50/MU300 or U30 Air. If it is one, put MU300_DEVICE=f50 or u30air into {1}.	这看起来不是 ZTE F50/MU300 或 U30 Air。如果是，请在 {1} 中写入 MU300_DEVICE=f50 或 u30air。
+This does not look like a ZTE F50/MU300. If it is one, put MU300_DEVICE=f50 into {1}.	这看起来不是 ZTE F50/MU300。如果是，请在 {1} 中写入 MU300_DEVICE=f50。
 could not create a work directory in {1}	无法在 {1} 中创建工作目录
 A Linux filesystem is still mounted in {1}; it was left as it is. Restart the device before installing again.	{1} 中仍挂载着 Linux 文件系统；已保持原样。再次安装前请重启设备。
 There is too little free space inside for Linux, and the SD card ({1}) holds another Linux (ext4) filesystem, which the installer never formats. Copy off what you need and format the card elsewhere, or use another card.	内部存储空闲空间不足以安装 Linux，而 SD 卡（{1}）上有另一个 Linux（ext4）文件系统，安装程序绝不会格式化它。请先复制所需内容并在别处格式化该卡，或换一张卡。
