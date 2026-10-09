@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Run a command on the MU300 over SSH with password auth (no sshpass needed).
-usage: MU300_PASS=ubuntu mu300-ssh.py 'command'   (MU300_HOST: ubuntu@192.168.77.1; a U30 Air is ubuntu@192.168.78.1)"""
+usage: MU300_PASS=ubuntu mu300-ssh.py 'command'   (MU300_HOST: ubuntu@192.168.77.1)"""
 import os, pty, select, sys, time
 host = os.environ.get('MU300_HOST', 'ubuntu@192.168.77.1')
 pw = os.environ.get('MU300_PASS', 'ubuntu').encode()

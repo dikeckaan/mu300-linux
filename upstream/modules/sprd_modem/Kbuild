@@ -1,5 +1,5 @@
 # MU300: the Unisoc modem stack (Trusty, PM co-processor manager, mailbox, SIPC, modem loader, SIPA) from the
-# ZTE U30 Air 5.4.254 GPL tree, built as out-of-tree modules against the mainline kernel.
+# ZTE 5.4.254 GPL tree for this board family, built as out-of-tree modules against the mainline kernel.
 # Vendor Kconfig symbols keep their 5.4 values (make variables for the Makefiles, defines for the sources).
 VENDOR_M := SPRD_SYSTIMER SPRD_TIME_SYNC SPRD_TIME_SYNC_CP TRUSTY TRUSTY_LOG TRUSTY_VIRTIO TRUSTY_VIRTIO_IPC SPRD_TSHM \
 	SPRD_MODEM_POWER_MANAGER UNISOC_MAILBOX UNISOC_SIPC_VIRT_BUS \

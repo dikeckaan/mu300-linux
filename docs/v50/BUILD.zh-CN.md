@@ -35,7 +35,7 @@ upstream/make-bundle.sh work/mu300-kernel-6.18.tar.gz /path/to/verified/mu300-ke
 确认 Docker 能运行 ARM64 OpenWrt 容器，再使用现有 openwrt/build-rootfs.sh 构建通用
 rootfs。准备 out/modules、busybox、logdw 等输入；不要把设备 vendor 输入交给公开构建。
 所有新 Image 必须使用同次构建模块。新增 V50 专属驱动需要适配主线 API、设备树和
-模块顺序；kernel/u30air.fragment 是厂商 5.4 构建范例，不能直接应用到 6.18。
+模块顺序；本仓库只服务 V50，厂商 5.4 构建里的设备专属配置片段不能直接套用到 6.18。
 
 上游 rootfs feed 软件包未完全锁定。复用校验过的通用 rootfs 可以固定实际输入；
 从头构建目前只能记录实际 packages.txt，不能承诺跨时间完全相同的包版本。

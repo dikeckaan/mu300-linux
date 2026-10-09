@@ -34,7 +34,7 @@ kernel/build-all.sh    # -> out/Image, out/modules/*.ko, out/modules.builtin*  (
 Maintainers publish the prebuilt images with `tools/make-release.sh TAG --publish` (it refuses to publish if an image
 contains firmware, Android files, host keys or local settings). The manual steps behind `build-all.sh`:
 ```sh
-git clone https://github.com/dikeckaan/zte-ums9620-kernel-5.4.254   # or the Enceka U30 Air repo
+git clone https://github.com/dikeckaan/zte-ums9620-kernel-5.4.254   # or the Enceka mirror of the same tree
 docker build -t mu300-kbuild kernel/
 docker volume create mu300-kernel
 docker run --rm -v mu300-kernel:/src -v "$PWD/../zte-ums9620-kernel-5.4.254":/tree mu300-kbuild cp -a /tree /src/zte-u30air

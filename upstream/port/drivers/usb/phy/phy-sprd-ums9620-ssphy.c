@@ -683,8 +683,8 @@ static struct regmap *sprd_ssphy_pmic_regmap(struct device *dev)
 }
 
 /*
- * Where VBUS comes from. The F50's device tree gives the PHY the extcon-usb-gpio device; the U30 Air's gives it the
- * PMIC's Type-C block (sprd,sc27xx-typec), which has no driver here, so usb_add_phy_dev() waited for it for ever
+ * Where VBUS comes from. This board's device tree gives the PHY the extcon-usb-gpio device; a sibling board's gives
+ * it the PMIC's Type-C block (sprd,sc27xx-typec), which has no driver here, so usb_add_phy_dev() waited for it for ever
  * and there was no USB at all (no network, no serial console). Both boards have the VBUS GPIO node: point the
  * property at it when it names the Type-C block. The property stays with the node, so it is never freed.
  */

@@ -6,7 +6,7 @@
  *   <code> short      released before the long-press time
  *   <code> long       still held when the long-press time is reached (once; nothing on its release)
  *   0 tick            every -t seconds (the LED timeout of mu300-buttons runs on these)
- * Codes are Linux key codes: 116 KEY_POWER, 138 the U30 Air's Wi-Fi key, 114/115 volume.
+ * Codes are Linux key codes: 116 KEY_POWER, 114/115 volume, 138 Wi-Fi key.
  *
  * usage: mu300-keys [-l MS] [-t SEC]   (long press: MS milliseconds, default 3000; tick: none by default)
  * SPDX-License-Identifier: MIT

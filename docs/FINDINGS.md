@@ -5,6 +5,14 @@ Android 13, stock kernel `5.4.254-android12-9-g9c6342244991`) during September 2
 Each item lists the symptom, the root cause and the fix, so it can be reused for other
 UMS9620 devices (for example the ZTE U30 Air).
 
+> **Scope note (2026-10-09).** This file is a historical log of that bring-up and is kept as
+> hardware reference. The repository now serves **one device only, the ZTE V50 / MU3351** (the
+> F50's board; identity `f50`), which is powered from USB alone. The U30 Air material below
+> (its charger stack, fuel gauge, USB host mode, NFC tag, LDO LEDs, `192.168.78.x`) describes a
+> device this build does not support, and the files it names - `kernel/u30air.fragment`,
+> `kernel/build-u30air.sh`, `boot/module-order-u30air.txt`,
+> `upstream/port/drivers/leds/leds-zte-ldo.c`, patch `0006` - have been removed.
+
 ## Hardware and firmware facts
 
 | Item | Value |

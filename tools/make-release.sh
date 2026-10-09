@@ -181,7 +181,7 @@ kernel_rev=$(sed -n 's/^KERNEL_REV=//p' "$TOP/kernel/build-all.sh")
 modules_rev=$(sed -n 's/^MODULES_REV=//p' "$TOP/kernel/build-all.sh")
 notes=$(mktemp)
 cat > "$notes" <<EOF
-Prebuilt images for \`./install.sh\` (ZTE F50 / MU300 and ZTE U30 Air; the installer recognises which). Check your device
+Prebuilt images for \`./install.sh\` (ZTE V50 / MU3351). Check your device
 first with \`./install.sh --check\`.
 
 | file | contents |

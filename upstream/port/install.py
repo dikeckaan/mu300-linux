@@ -280,8 +280,8 @@ if missing:
     sys.exit('port: edits did not apply (anchor changed in this kernel?): ' + '; '.join(f'{p}: {w}' for p, w in missing))
 print('port installed')
 
-# The PMIC's keypad backlight sink (leds-sc27xx-kpled.c): the Wi-Fi LED of the F50/V50 and the U30 Air's red
-# network LED. (leds-zte-ldo.c, the U30 Air's white LEDs on PMIC LDOs, went with that device.)
+# The PMIC's keypad backlight sink (leds-sc27xx-kpled.c): the Wi-Fi LED of this board. (The LDO LEDs of a sibling
+# board, leds-zte-ldo.c, went with that device.)
 LED_DRIVERS = (
     ('LEDS_SC27XX_KPLED', 'leds-sc27xx-kpled', 'Spreadtrum/Unisoc PMIC keypad backlight',
      'LEDS_CLASS && MFD_SC27XX_PMIC && OF', "The PMIC's keypad backlight sink: this board's status LED sink."),

@@ -8,9 +8,9 @@ Before=sysinit.target
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/opt/mu300/bin/rootfs-fixups
-# the power LED (U30 Air): on from here, off when the system goes down
+# the power LED: on from here, off when the system goes down
 ExecStartPost=-/opt/mu300/bin/mu300-led power on
-# the U30 Air's charger keeps an OTG boost on across a reboot (mu300-usb)
+# a charger that keeps an OTG boost on across a reboot would be switched off here (mu300-usb)
 ExecStartPost=-/opt/mu300/bin/mu300-usb boot
 ExecStop=-/opt/mu300/bin/mu300-led power off
 

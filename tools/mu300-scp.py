@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """scp to the MU300 with password auth (no sshpass). usage: mu300-scp.py LOCAL REMOTE_PATH
-env: MU300_HOST (ubuntu@192.168.77.1; a U30 Air is ubuntu@192.168.78.1), MU300_PASS"""
+env: MU300_HOST (ubuntu@192.168.77.1), MU300_PASS"""
 import os, pty, select, sys
 pw = os.environ.get('MU300_PASS', 'ubuntu').encode()
 cmd = ['scp', '-O', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null', '-o', 'LogLevel=ERROR',

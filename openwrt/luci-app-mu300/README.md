@@ -88,10 +88,10 @@ minutes for it.
 
 USB role defaults to device at every boot. The page can switch it immediately;
 checking host auto-apply asks the package's boot worker to reapply host mode
-at every boot. On the battery-less F50, the plugin writes the requested role
-to sysfs directly: USB management disappears and an attached adapter may need
-an externally powered hub. U30 Air uses `mu300-usb` and its charger boost/VBUS
-checks. Other hardware can use the sysfs fallback or configure
+at every boot. On this board (the battery-less F50/V50), the plugin writes the
+requested role to sysfs directly: USB management disappears and an attached
+adapter may need an externally powered hub. Other hardware can use the sysfs
+fallback or configure
 `unisoc_modem.usb.role_command` with a platform-specific executable that
 accepts `host` or `device`. The plugin must not bypass a known platform's
 power-safety checks.
