@@ -1,8 +1,13 @@
 """tools/linux-mode.sh: which adb device install.sh and uninstall.sh work on. With a phone or tablet attached next to
 the device the installer must ask, never pick one by itself."""
+import hashlib
+import json
 import re
 import struct
+import subprocess
+import sys
 import unittest
+import zlib
 
 from helpers import TOP, ShellTest
 
@@ -537,6 +542,213 @@ class Region(ShellTest):
             self.assertIn(f'skip={start + 1080}', log)
             self.assertNotIn('skip=27762099256', log, 'the legacy offset lies beyond a 16 GiB disk')
             (self.tmp / 'su.log').unlink()
+
+
+def bc_block(suffix, a, b):
+    """A bootloader_control block of misc (AOSP layout) with these slot_info bytes for a and b."""
+    x = bytearray(bytes.fromhex('5f61000042434142010200009f001e000000000000000000000000000be17146'))
+    x[0:4] = suffix
+    x[12] = a
+    x[14] = b
+    x[28:32] = struct.pack('<I', zlib.crc32(bytes(x[:28])))
+    return bytes(x)
+
+
+class InstallSlot(ShellTest):
+    """install.sh's slot block, cut out between its markers (issue #86): Linux goes on the slot Android is not on,
+    boot_<that slot> is written with the image built for it and misc gets that slot's trial block - and the boot
+    partition Android runs from is never written. su_do runs the device commands against files: by-name/boot_a,
+    boot_b and misc, and /data/local/tmp; getprop answers the next line of the file slots on every call."""
+    SRC = (TOP / 'install.sh').read_text()
+    PS1 = (TOP / 'install.ps1').read_text()
+
+    def setUp(self):
+        super().setUp()
+        self.byname = self.tmp / 'byname'
+        self.byname.mkdir()
+        (self.tmp / 't').mkdir()
+        # adb push SRC DST: DST in the fake /data/local/tmp
+        self.stub('adb', '[ "$1" = push ] && cp "$2" "$STUBLOG/t/$(basename "$3")"; exit 0')
+
+    def device(self, *slots, same=False):
+        for f in self.byname.iterdir():
+            f.unlink()
+        for f in (self.tmp / 't').iterdir():
+            f.unlink()
+        (self.byname / 'boot_a').write_bytes(b'A' * 65536)
+        if same:
+            (self.byname / 'boot_b').symlink_to(self.byname / 'boot_a')
+        else:
+            (self.byname / 'boot_b').write_bytes(b'B' * 65536)
+        self.misc0 = bytes(2048) + bc_block(b'_a\0\0', 0x9f, 0x1e) + bytes(4096 - 2080)
+        (self.byname / 'misc').write_bytes(self.misc0)
+        (self.tmp / 'slots').write_text(''.join(s + '\n' for s in slots))
+        (self.tmp / 'n').unlink(missing_ok=True)
+        (self.tmp / 'su.log').write_text('')
+
+    def image(self, built_for, block):
+        """A boot image as build-boot-image.py leaves it: IMG, its .json and the trial block of its slot."""
+        img = self.tmp / f'boot-linux-slot{built_for}.img'
+        data = bytes(range(256)) * 128
+        img.write_bytes(data)
+        img.with_suffix('.json').write_text(json.dumps({'sha256': hashlib.sha256(data).hexdigest(),
+                                                        'linux_slot': built_for}))
+        img.with_suffix(f'.misc-slot-{built_for}-trial.bin').write_bytes(block)
+        return img, data
+
+    def run_slot(self, shell, tail):
+        m = re.search(r'# --- slot begin\n(.*?)# --- slot end', self.SRC, re.S)
+        self.assertIsNotNone(m, 'install.sh has no slot block')
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; T=/data/local/tmp; '
+                'say() { echo "SAY $*"; }; die() { echo "DIE $*"; exit 1; }; '
+                'su_do() { printf "%s\\n" "$1" >> "$STUBLOG/su.log"; case $1 in '
+                '"getprop ro.boot.slot_suffix") n=$(( $(cat "$STUBLOG/n" 2>/dev/null || echo 0) + 1 )); '
+                'echo $n > "$STUBLOG/n"; l=$(sed -n "${n}p" "$STUBLOG/slots"); '
+                '[ $n -le $(wc -l < "$STUBLOG/slots") ] || l=$(tail -n 1 "$STUBLOG/slots"); printf "%s\\n" "$l" ;; '
+                '*) sh -c "$(printf "%s" "$1" | sed -e "s|/dev/block/by-name|$STUBLOG/byname|g" '
+                '-e "s|/data/local/tmp|$STUBLOG/t|g")" ;; esac; }\n'
+                + m.group(1) + tail)
+        return self.sh(shell, code).stdout
+
+    def boots(self):
+        return (self.byname / 'boot_a').read_bytes(), (self.byname / 'boot_b').read_bytes()
+
+    def written(self):
+        """The partitions su_do wrote with dd (of=...)."""
+        return re.findall(r'of=/dev/block/by-name/(\w+)', (self.tmp / 'su.log').read_text())
+
+    def test_android_on_a_puts_linux_on_b(self):
+        block = bc_block(b'_b\0\0', 0x9e, 0x2f)
+        for shell in self.each_shell():
+            self.device('_a')
+            img, data = self.image('b', block)
+            out = self.run_slot(shell, f'slot_setup; echo "A=$ANDROID_SLOT L=$LINUX_SLOT"; write_linux_boot "{img}"; echo DONE')
+            self.assertIn('A=a L=b', out)
+            self.assertIn('Linux goes to slot b (boot_b)', out)
+            self.assertIn('DONE', out, out)
+            self.assertEqual(self.boots(), (b'A' * 65536, data))
+            self.assertEqual((self.byname / 'misc').read_bytes()[2048:2080], block)
+            self.assertEqual(self.written(), ['boot_b', 'misc'])
+
+    def test_android_on_b_puts_linux_on_a_and_never_touches_boot_b(self):
+        block = bc_block(b'_a\0\0', 0x2f, 0x9e)
+        for shell in self.each_shell():
+            self.device('_b')
+            img, data = self.image('a', block)
+            out = self.run_slot(shell, f'slot_setup; echo "A=$ANDROID_SLOT L=$LINUX_SLOT"; write_linux_boot "{img}"; echo DONE')
+            self.assertIn('A=b L=a', out)
+            self.assertIn('Linux goes to slot a (boot_a)', out)
+            self.assertIn('DONE', out, out)
+            self.assertEqual(self.boots(), (data, b'B' * 65536))           # Android's boot_b as it was
+            self.assertEqual((self.byname / 'misc').read_bytes()[2048:2080], block)
+            self.assertEqual(self.written(), ['boot_a', 'misc'])
+            self.assertNotIn('boot_b', ' '.join(l for l in (self.tmp / 'su.log').read_text().splitlines()
+                                                 if 'readlink' not in l))
+
+    def test_unknown_slot_is_refused(self):
+        for shell in self.each_shell():
+            for suffix in ('', '_c', 'a', '_a_b'):
+                self.device(suffix)
+                out = self.run_slot(shell, 'slot_setup; echo SURVIVED')
+                self.assertIn('DIE cannot tell which slot Android runs from', out, suffix)
+                self.assertNotIn('SURVIVED', out)
+                self.assertEqual(self.written(), [])
+
+    def test_slot_read_again_before_writing(self):
+        # Android ran from b when the image was built for a, and from a when it is written: a would be Android's
+        for shell in self.each_shell():
+            self.device('_b', '_a')
+            img, _ = self.image('a', bc_block(b'_a\0\0', 0x2f, 0x9e))
+            out = self.run_slot(shell, f'slot_setup; write_linux_boot "{img}"; echo SURVIVED')
+            self.assertIn('DIE Android no longer runs from slot b; boot_a and misc were not changed', out)
+            self.assertNotIn('SURVIVED', out)
+            self.assertEqual(self.boots(), (b'A' * 65536, b'B' * 65536))
+            self.assertEqual((self.byname / 'misc').read_bytes(), self.misc0)
+
+    def test_image_for_the_other_slot_is_refused(self):
+        # an image (and trial block) built for b next to an Android on b would arm Android's own slot
+        for shell in self.each_shell():
+            self.device('_b')
+            img, _ = self.image('b', bc_block(b'_b\0\0', 0x9e, 0x2f))
+            out = self.run_slot(shell, f'slot_setup; write_linux_boot "{img}"; echo SURVIVED')
+            self.assertIn('DIE the boot image was not built for slot a', out)
+            self.assertEqual(self.written(), [])
+            self.assertEqual(self.boots(), (b'A' * 65536, b'B' * 65536))
+
+    def test_boot_a_and_boot_b_the_same_partition(self):
+        for shell in self.each_shell():
+            self.device('_b', same=True)
+            out = self.run_slot(shell, 'slot_setup; echo SURVIVED')
+            self.assertIn('DIE boot_a and boot_b are the same partition', out)
+            self.assertNotIn('SURVIVED', out)
+
+    def test_release_check_only_for_linux_on_a(self):
+        for shell in self.each_shell():
+            for slot, rel, ok in (('a', 'v2026.10.09', False), ('a', 'v2026.09.28', False), ('a', 'v2026.10.10', True),
+                                  ('a', 'v2026.10.14', True), ('a', 'v2027.01.01', True), ('a', 'custom', True),
+                                  ('b', 'v2026.09.28', True)):
+                out = self.run_slot(shell, f'LINUX_SLOT={slot}; slot_release_ok {rel}; echo SURVIVED')
+                self.assertEqual('SURVIVED' in out, ok, (slot, rel, out))
+                if not ok:
+                    self.assertIn('use v2026.10.10 or newer', out)
+
+    def test_installer_builds_for_the_linux_slot_from_androids_boot(self):
+        src = self.SRC
+        build = src[src.index('python3 "$TOP/boot/build-boot-image.py"'):]
+        build = build[:build.index('>/dev/null')]
+        self.assertIn('--stock-boot "$WORK/dumps/boot_$ANDROID_SLOT.img"', build)
+        self.assertIn('--linux-slot "$LINUX_SLOT"', build)
+        self.assertIn('--out "$WORK/boot-linux-slot$LINUX_SLOT.img"', build)
+        self.assertIn('dev_pull /dev/block/by-name/boot_$ANDROID_SLOT "$WORK/dumps/boot_$ANDROID_SLOT.img"', src)
+        self.assertIn('write_linux_boot "$WORK/boot-linux-slot$LINUX_SLOT.img"', src)
+        self.assertLess(src.index('\nslot_setup\n'), src.index('dev_pull /dev/block/by-name/boot_'))
+        self.assertLess(src.index('slot_release_ok "$RELEASE"'), src.index("say \"$(t 'Downloading release {1}'"))
+        # no slot is named by hand outside the slot block any more
+        rest = src.replace(re.search(r'# --- slot begin\n.*?# --- slot end', src, re.S).group(0), '')
+        for fixed in ('by-name/boot_a', 'by-name/boot_b', 'misc-slot-b-trial', 'boot-linux-slotb', "= _a ]"):
+            self.assertNotIn(fixed, rest)
+
+    def test_windows_installer_does_the_same(self):
+        ps = self.PS1
+        self.assertIn("'_b' { $ANDROID_SLOT = 'b'; $LINUX_SLOT = 'a' }", ps)
+        self.assertIn("'_a' { $ANDROID_SLOT = 'a'; $LINUX_SLOT = 'b' }", ps)
+        self.assertIn("'--linux-slot', $LINUX_SLOT", ps)
+        self.assertIn("'--stock-boot', \"$Work\\dumps\\boot_$ANDROID_SLOT.img\"", ps)
+        self.assertIn('of=/dev/block/by-name/boot_$LINUX_SLOT', ps)
+        self.assertIn('misc-slot-$LINUX_SLOT-trial.bin', ps)
+        for fixed in ('by-name/boot_b bs', 'of=/dev/block/by-name/boot_b', 'misc-slot-b-trial', 'boot-linux-slotb',
+                      "-ne '_a'"):
+            self.assertNotIn(fixed, ps)
+        # the slot is read again right before boot_<Linux slot> is written
+        self.assertLess(ps.index('Android no longer runs from slot {1}'), ps.index('of=/dev/block/by-name/boot_$LINUX_SLOT'))
+
+
+class UninstallSlot(ShellTest):
+    """uninstall.sh puts misc back to the slot Android runs from and copies Android's boot over the Linux slot's."""
+    SRC = (TOP / 'uninstall.sh').read_text()
+
+    def test_the_block_for_androids_slot(self):
+        py = re.search(r"<<'PY'\n(.*?)\nPY\n", self.SRC, re.S).group(1)
+        misc = self.tmp / 'misc'
+        # misc as Linux left it: armed for its trial on the other slot
+        for slot, live, want in (('a', bc_block(b'_b\0\0', 0x9e, 0x2f), bc_block(b'_a\0\0', 0x9f, 0x1e)),
+                                 ('b', bc_block(b'_a\0\0', 0x2f, 0x9e), bc_block(b'_b\0\0', 0x1e, 0x9f))):
+            misc.write_bytes(bytes(2048) + live + bytes(4096 - 2080))
+            r = subprocess.run([sys.executable, '-', str(misc), slot], input=py, capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(r.stdout.strip(), want.hex(), slot)
+
+    def test_slot_follows_android(self):
+        src = self.SRC
+        self.assertIn('_b) ANDROID_SLOT=b; LINUX_SLOT=a ;;', src)
+        self.assertIn('of=/dev/block/by-name/boot_$LINUX_SLOT', src)
+        self.assertIn('if=/dev/block/by-name/boot_$ANDROID_SLOT', src)
+        self.assertNotIn('of=/dev/block/by-name/boot_b', src)
+        self.assertNotIn("= _a ]", src)
+        ps = (TOP / 'uninstall.ps1').read_text()
+        self.assertIn('of=/dev/block/by-name/boot_$LINUX_SLOT', ps)
+        self.assertIn('Python $pyFile $miscTmp $ANDROID_SLOT', ps)
+        self.assertNotIn("-ne '_a'", ps)
 
 
 class ChooseSystems(ShellTest):

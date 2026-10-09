@@ -3,10 +3,12 @@
     Remove MU300 Linux and return the device to stock Android (Windows version of uninstall.sh).
 
 .DESCRIPTION
-    Run with the device booted in rooted Android and connected over USB (adb). It makes slot a (Android) the boot
-    slot in misc, copies boot_a over boot_b, erases the Linux filesystem in the unpartitioned eMMC region and, when you
-    say so, the one on the SD card (ext4 labelled mu300sd; a card with any other filesystem is never touched), and
-    removes the installer leftovers. boot_a, the GPT, userdata and every other partition stay untouched.
+    Run with the device booted in rooted Android and connected over USB (adb). It makes the slot Android runs from
+    the boot slot in misc, copies Android's boot image over the Linux slot's (boot_a over boot_b; boot_b over boot_a
+    when Android runs from slot b), erases the Linux filesystem in the unpartitioned eMMC region and, when you say
+    so, the one on the SD card (ext4 labelled mu300sd; a card with any other filesystem is never touched), and
+    removes the installer leftovers. Android's boot partition, the GPT, userdata and every other partition stay
+    untouched.
     Needs: adb and Python 3.
 #>
 [CmdletBinding()]
@@ -145,7 +147,7 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
     $linux = $linuxFirst -or (LinuxRunning)
     if (-not $linux) { Die 'no adb device (boot Android, enable USB debugging)' }
     Say 'The device is running MU300 Linux, not Android'
-    Write-Host '  Uninstalling happens from Android (slot a), so the device has to reboot first.'
+    Write-Host '  Uninstalling happens from Android, so the device has to reboot first.'
     if ((Ask 'Reboot the device into Android now? (yes/no)' 'yes') -ne 'yes') { Die 'boot Android yourself (in Linux: sudo mu300-next-boot android && sudo reboot)' }
     # -t: sudo needs a terminal to ask for the device password; reboot cuts the connection, so watch the port
     foreach ($u in 'ubuntu', 'root') {
@@ -170,7 +172,14 @@ if ((SuDo 'id -u') -ne '0') { Die 'su does not work on the device' }
 $model = "$(SuDo 'getprop ro.product.model') / $(SuDo 'getprop ro.product.device')"
 Write-Host "device: $model"
 if ($model -notmatch 'MU300|F50|mu300|U30Air|U30_Air') { Die 'this does not look like a ZTE F50/MU300 or U30 Air' }
-if ((SuDo 'getprop ro.boot.slot_suffix') -ne '_a') { Die 'Android must be running from slot a (boot Android first: mu300-next-boot android)' }
+# Linux is on the slot Android is not on (install.ps1): b next to an Android on a, a next to an Android on b
+switch ((SuDo 'getprop ro.boot.slot_suffix').Trim()) {
+    '_a' { $ANDROID_SLOT = 'a'; $LINUX_SLOT = 'b' }
+    '_b' { $ANDROID_SLOT = 'b'; $LINUX_SLOT = 'a' }
+    default { Die 'cannot tell which slot Android runs from (boot Android first: mu300-next-boot android)' }
+}
+if ((SuDo 'readlink -f /dev/block/by-name/boot_a') -eq (SuDo 'readlink -f /dev/block/by-name/boot_b')) { Die 'boot_a and boot_b are the same partition' }
+Write-Host "Android runs from slot $ANDROID_SLOT; Linux is on slot $LINUX_SLOT (boot_$LINUX_SLOT)"
 
 Say 'Looking for the Linux installation'
 $parts = (SuDo 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; done; echo $e $(cat /sys/block/mmcblk0/size)').Split(' ')
@@ -225,22 +234,24 @@ if ($SD_HAS -eq 'yes') {
     Write-Host '  The SD card holds a Linux installation (ext4 labelled mu300sd):'
     Write-Host '  erase   remove the filesystem from the card (its first 64 MiB are overwritten: fast, but the files'
     Write-Host '          stay readable on the card until the space is reused)'
-    Write-Host '  keep    leave the card as it is (it does not boot once boot_b is restored)'
+    Write-Host "  keep    leave the card as it is (it does not boot once boot_$LINUX_SLOT is restored)"
     $sdwipe = Ask 'Linux filesystem on the SD card: erase / keep' 'erase'
     if ($sdwipe -notin @('erase', 'keep')) { Die 'invalid choice' }
 }
 Write-Host ''
-Write-Host '  misc:     boot slot a (Android), Linux boot disabled'
-Write-Host '  boot_b:   replaced with a copy of boot_a (stock Android boot image)'
+Write-Host "  misc:     boot slot $ANDROID_SLOT (Android), Linux boot disabled"
+Write-Host "  boot_$($LINUX_SLOT):   replaced with a copy of boot_$ANDROID_SLOT (stock Android boot image)"
 if ($OFF -eq 0) { Write-Host '  Linux:    no installation on the eMMC' }
 else { Write-Host "  Linux:    $(if ($wipe -eq 'keep') { 'kept on the eMMC (not bootable)' } else { "$wipe erase of $([int64]($SIZE / 1MB)) MiB at offset $OFF" })" }
 if ($sdwipe -eq 'erase') { Write-Host "  SD card:  mu300sd filesystem erased ($SD_DEV, first 64 MiB)" }
 elseif ($SD_HAS -eq 'yes') { Write-Host "  SD card:  kept ($SD_DEV, not bootable)" }
 else { Write-Host '  SD card:  no installation' }
-Write-Host '  untouched: boot_a, GPT, userdata and all other partitions'
+Write-Host "  untouched: boot_$ANDROID_SLOT, GPT, userdata and all other partitions"
 if ((Ask 'Type UNINSTALL to continue' 'no') -ne 'UNINSTALL') { Die 'cancelled' }
 
-Say 'Making slot a the boot slot'
+# Android still runs from the slot it ran from at the start: its partition is never the one written below
+if ((SuDo 'getprop ro.boot.slot_suffix').Trim() -ne "_$ANDROID_SLOT") { Die "Android no longer runs from slot $ANDROID_SLOT; nothing was changed" }
+Say "Making slot $ANDROID_SLOT the boot slot"
 $miscTmp = [IO.Path]::GetTempFileName()
 SuDoToFile 'dd if=/dev/block/by-name/misc bs=4096 count=1 2>/dev/null' $miscTmp
 $py = @'
@@ -249,15 +260,19 @@ head = open(sys.argv[1], "rb").read()
 bc = bytearray(head[0x800:0x820])
 if len(bc) != 32 or bc[4:8] != b"BCAB" or zlib.crc32(bytes(bc[:28])) != struct.unpack("<I", bc[28:])[0]:
     sys.exit("misc has no valid bootloader_control block")
-bc[0:4] = b"_a\0\0"; bc[12] = 0x9f; bc[14] = 0x1e
+# Android's slot active (prio 15, successful), the other inactive (build-boot-image.py's misc-bc-slot-a/b.bin)
+if sys.argv[2] == "a":
+    bc[0:4] = b"_a\0\0"; bc[12] = 0x9f; bc[14] = 0x1e
+else:
+    bc[0:4] = b"_b\0\0"; bc[12] = 0x1e; bc[14] = 0x9f
 bc[28:32] = struct.pack("<I", zlib.crc32(bytes(bc[:28])))
 print(bc.hex())
 '@
 $pyFile = [IO.Path]::GetTempFileName() + '.py'
 [IO.File]::WriteAllText($pyFile, $py)
-$NEW = (Python $pyFile $miscTmp | Select-Object -Last 1).Trim()
+$NEW = (Python $pyFile $miscTmp $ANDROID_SLOT | Select-Object -Last 1).Trim()
 Remove-Item $miscTmp, $pyFile -ErrorAction SilentlyContinue
-if ($NEW.Length -ne 64) { Die 'cannot build the slot a boot control block' }
+if ($NEW.Length -ne 64) { Die "cannot build the slot $ANDROID_SLOT boot control block" }
 if ($BC -ne $NEW) {
     $bin = [IO.Path]::GetTempFileName()
     [IO.File]::WriteAllBytes($bin, ([byte[]] -split ($NEW -replace '..', '0x$& ')))
@@ -265,16 +280,16 @@ if ($BC -ne $NEW) {
     Remove-Item $bin
     SuDo "dd if=$T/mu300-bc-a.bin of=/dev/block/by-name/misc bs=1 seek=2048 conv=notrunc 2>/dev/null && sync && rm $T/mu300-bc-a.bin" | Out-Null
     if ((Hex32) -ne $NEW) { Die 'misc verify failed' }
-    Write-Host 'slot a set'
+    Write-Host "slot $ANDROID_SLOT set"
 } else {
-    Write-Host 'already on slot a'
+    Write-Host "already on slot $ANDROID_SLOT"
 }
 
-Say 'Restoring boot_b from boot_a'
-$A = (SuDo 'sha256sum /dev/block/by-name/boot_a').Split(' ')[0]
-SuDo 'dd if=/dev/block/by-name/boot_a of=/dev/block/by-name/boot_b bs=4M 2>/dev/null && sync' | Out-Null
-if ((SuDo 'sha256sum /dev/block/by-name/boot_b').Split(' ')[0] -ne $A) { Die 'boot_b verify failed (misc already points to slot a, Android keeps booting)' }
-Write-Host 'boot_b = boot_a'
+Say "Restoring boot_$LINUX_SLOT from boot_$ANDROID_SLOT"
+$A = (SuDo "sha256sum /dev/block/by-name/boot_$ANDROID_SLOT").Split(' ')[0]
+SuDo "dd if=/dev/block/by-name/boot_$ANDROID_SLOT of=/dev/block/by-name/boot_$LINUX_SLOT bs=4M 2>/dev/null && sync" | Out-Null
+if ((SuDo "sha256sum /dev/block/by-name/boot_$LINUX_SLOT").Split(' ')[0] -ne $A) { Die "boot_$LINUX_SLOT verify failed (misc already points to slot $ANDROID_SLOT, Android keeps booting)" }
+Write-Host "boot_$LINUX_SLOT = boot_$ANDROID_SLOT"
 
 if ($wipe -ne 'keep') {
     Say "Erasing the Linux filesystem ($wipe)"
@@ -318,12 +333,12 @@ if ($OFF -gt 0 -and $wipe -eq 'keep' -and ($sdwipe -eq 'erase' -or $SD_HAS -ne '
     Quiet { adb push $lf $dst } | Out-Null
     Remove-Item $lf -ErrorAction SilentlyContinue
     $r = SuDo "MU300_OFF=$OFF MU300_SIZE=$SIZE sh $T/android-mount-mu300root.sh $T/mu300root >/dev/null && { rm -f $T/mu300root/.mu300/root-on-sd; sync; sh $T/android-mount-mu300root.sh -u $T/mu300root >/dev/null; echo CLEARED; }"
-    if ($r -notmatch 'CLEARED') { Write-Host 'note: could not open the kept Linux filesystem to clear its SD card marker (harmless: boot_b is Android)' }
+    if ($r -notmatch 'CLEARED') { Write-Host "note: could not open the kept Linux filesystem to clear its SD card marker (harmless: boot_$LINUX_SLOT is Android)" }
 }
 
 # (no double quotes in a command for the device: Windows PowerShell 5.1 drops them on the way to adb)
 SuDo "grep -qw $T/mu300root /proc/mounts || rm -rf $T/mu300root; rm -f $T/mu300-* $T/android-install.sh $T/android-mount-mu300root.sh" | Out-Null
-# the on-device switch would point at a boot_b that is Android again
+# the on-device switch would point at a Linux slot that holds Android again
 Say 'Removing the on-device switch (Magisk module)'
 if ((SuDo 'magisk -v')) { SuDo '[ -d /data/adb/modules/mu300_linux_switch ] && touch /data/adb/modules/mu300_linux_switch/remove' | Out-Null }
 

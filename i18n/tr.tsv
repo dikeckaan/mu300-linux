@@ -8,7 +8,7 @@ kernel outputs missing in {1} (run kernel/build-all.sh)	{1} içinde çekirdek ç
 su does not work on the device	cihazda su çalışmıyor
 device: {1}	cihaz: {1}
 This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)	Bu bir ZTE F50/MU300 ya da U30 Air gibi görünmüyor. Yine de devam edilsin mi? (evet/hayır)
-Android must be running from slot a	Android'in a yuvasından (slot a) çalışıyor olması gerekir
+Android runs from slot b, and release {1} cannot boot Linux from slot a; use {2} or newer	Android b yuvasından çalışıyor ve {1} sürümü Linux'u a yuvasından başlatamıyor; {2} veya daha yenisini kullanın
 Not enough free space - this looks like the 32 GB variant	Yeterli boş alan yok - bu 32 GB'lık model gibi görünüyor
 could not read the partition table	bölüm tablosu okunamadı
 could not read the userdata entry from the partition table	bölüm tablosundan userdata kaydı okunamadı
@@ -143,13 +143,14 @@ CREATE new ext4 (erases the Linux region)	YENİ ext4 OLUŞTUR (Linux alanını s
 keep existing	mevcut olan korunur
 update:         settings and user data of the chosen systems are kept, everything else is replaced	güncelleme:     seçilen sistemlerin ayarları ve kullanıcı verileri korunur, geri kalan her şey yenilenir
 note:           the chosen systems are installed fresh; their previous files and settings are replaced	not:            seçilen sistemler sıfırdan kurulur; önceki dosyaları ve ayarları değiştirilir
-writes:         Linux region at offset {1}, boot_b, 32 bytes of misc (boot_a, GPT and userdata are not touched)	yazılacaklar:   {1} konumundaki Linux alanı, boot_b, misc'in 32 baytı (boot_a, GPT ve userdata'ya dokunulmaz)
+writes:         Linux region at offset {1}, boot_{2}, 32 bytes of misc (boot_{3}, GPT and userdata are not touched)	yazılacaklar:   {1} konumundaki Linux alanı, boot_{2}, misc'in 32 baytı (boot_{3}, GPT ve userdata'ya dokunulmaz)
 Type INSTALL to continue	Devam etmek için INSTALL yazın
 Copying to the device	Cihaza kopyalanıyor
-installation on the device failed; boot_b and misc were not changed	cihazdaki kurulum başarısız oldu; boot_b ve misc değiştirilmedi
-Writing boot_b and arming slot b	boot_b yazılıyor ve b yuvası (slot b) hazırlanıyor
+Android no longer runs from slot {1}; boot_{2} and misc were not changed	Android artık {1} yuvasından çalışmıyor; boot_{2} ve misc değiştirilmedi
+the boot image was not built for slot {1}; boot_{1} and misc were not changed	boot imajı {1} yuvası için oluşturulmamış; boot_{1} ve misc değiştirilmedi
+Writing boot_{1} and arming slot {1}	boot_{1} yazılıyor ve {1} yuvası hazırlanıyor
 pushed boot image hash mismatch	gönderilen boot imajının özeti (hash) uyuşmuyor
-boot_b verify failed (slot a still active, Android keeps booting)	boot_b doğrulaması başarısız (a yuvası hâlâ etkin, Android açılmaya devam eder)
+boot_{1} verify failed (slot {2} still active, Android keeps booting)	boot_{1} doğrulaması başarısız ({2} yuvası hâlâ etkin, Android açılmaya devam eder)
 Installing the on-device switch (Magisk module)	Cihaz üzerindeki geçiş aracı kuruluyor (Magisk modülü)
 (skipped; the installer keeps working either way)	(atlandı; yükleyici her iki durumda da çalışmaya devam eder)
 Done. Rebooting into {1}	Tamamlandı. {1} ile yeniden başlatılıyor
@@ -165,7 +166,7 @@ Python 3.8 or newer is required	Python 3.8 ya da daha yenisi gerekiyor
 the lz4 Python module is required to build the boot image: pip install lz4	boot imajını oluşturmak için lz4 Python modülü gerekiyor: pip install lz4
 no adb device (boot Android, enable USB debugging)	adb cihazı yok (Android'i açın, USB hata ayıklamayı etkinleştirin)
 The device is running MU300 Linux, not Android	Cihazda Android değil, MU300 Linux çalışıyor
-Installing and uninstalling happen from Android (slot a), so the device has to reboot first.	Kurma ve kaldırma Android'den (a yuvası) yapılır, bu yüzden cihazın önce yeniden başlaması gerekiyor.
+Installing and uninstalling happen from Android, so the device has to reboot first.	Kurma ve kaldırma Android'den yapılır, bu yüzden cihazın önce yeniden başlaması gerekiyor.
 I can ask it over SSH; you will be prompted for its password.	Bunu SSH üzerinden isteyebilirim; cihazın şifresi sorulacak.
 Reboot the device into Android now? (yes/no)	Cihaz şimdi Android'e yeniden başlatılsın mı? (evet/hayır)
 boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)	Android'i kendiniz açın (cihazda: sudo mu300-next-boot android && sudo reboot)
@@ -176,7 +177,7 @@ the device did not come back as Android; boot it yourself (mu300-next-boot andro
 Android is up	Android açıldı
 only {1} MiB of free space after the last partition: this device has a different layout, nothing is changed.	son bölümden sonra yalnızca {1} MiB boş alan var: bu cihazın düzeni farklı, hiçbir şey değiştirilmedi.
 Please report the numbers above (eMMC size and where the partitions end); they identify the variant.	Lütfen yukarıdaki sayıları bildirin (eMMC boyutu ve bölümlerin bittiği yer); modeli bunlar belirler.
-pulling boot_a failed	boot_a alınamadı
+pulling boot_{1} failed	boot_{1} alınamadı
 cannot find the newest release of {1} (use -Release <tag> to pick one)	{1} projesinin en yeni sürümü bulunamadı (seçmek için -Release <etiket> kullanın)
 no Magisk (or no root) on this device - skipped	bu cihazda Magisk (ya da root) yok - atlandı
 installed: 'su -c mu300-linux' on the device starts Linux after the next Android boot	kuruldu: bir sonraki Android açılışından sonra cihazda 'su -c mu300-linux' Linux'u başlatır
@@ -205,7 +206,7 @@ Linux filesystem: SD card {1}, {2}, existing mu300sd filesystem: {3}	Linux dosya
 OK: the SD card will be formatted; everything on it is erased	TAMAM: SD kart biçimlendirilecek; üzerindeki her şey silinir
 Everything on the SD card ({1}, {2}) will be erased. Type ERASE to continue	SD karttaki ({1}, {2}) her şey silinecek. Devam etmek için ERASE yazın
 CREATE new ext4 (erases the SD card)	YENİ ext4 OLUŞTUR (SD kartı siler)
-writes:         SD card {1}, boot_b, 32 bytes of misc (the eMMC region, boot_a, GPT and userdata are not touched)	yazılacaklar:   SD kart {1}, boot_b, misc'in 32 baytı (eMMC'deki Linux alanına, boot_a, GPT ve userdata'ya dokunulmaz)
+writes:         SD card {1}, boot_{2}, 32 bytes of misc (the eMMC region, boot_{3}, GPT and userdata are not touched)	yazılacaklar:   SD kart {1}, boot_{2}, misc'in 32 baytı (eMMC'deki Linux alanına, boot_{3}, GPT ve userdata'ya dokunulmaz)
 MU300_STORAGE=sd, but there is no usable SD card in the device	MU300_STORAGE=sd, ama cihazda kullanılabilir bir SD kart yok
 MU300_STORAGE must be internal or sd	MU300_STORAGE internal ya da sd olmalı
 Where should the Linux filesystem go: internal storage or the SD card ({1}, {2})? (internal/sd)	Linux dosya sistemi nereye kurulsun: dahili depolama mı, SD kart mı ({1}, {2})? (internal/sd)

@@ -122,7 +122,54 @@ case "$model" in
     *) ask go "$(t 'This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)')" no; [ "$go" = yes ] || exit 1
        DEVICE=f50 ;;
 esac
-[ "$(su_do 'getprop ro.boot.slot_suffix')" = _a ] || die "$(t 'Android must be running from slot a')"
+# --- slot begin
+# Linux goes on the slot Android is not on: b next to an Android on a, a next to an Android on b (after an OTA the
+# device often runs from b, issue #86) - the rule of the Magisk installer's slot_setup. Android's own boot partition
+# is never written: it is the base the Linux image is built from, and the slot the bootloader falls back to.
+slot_setup() {
+    _ss=$(su_do 'getprop ro.boot.slot_suffix')
+    case $_ss in
+        _a) ANDROID_SLOT=a; LINUX_SLOT=b ;;
+        _b) ANDROID_SLOT=b; LINUX_SLOT=a ;;
+        *) die "$(t 'cannot tell which slot Android runs from')" ;;
+    esac
+    [ "$(su_do "readlink -f /dev/block/by-name/boot_a")" != "$(su_do "readlink -f /dev/block/by-name/boot_b")" ] ||
+        die "$(t 'boot_a and boot_b are the same partition')"
+    echo "$(t 'Android runs from slot {1}; Linux goes to slot {2} (boot_{2})' "$ANDROID_SLOT" "$LINUX_SLOT")"
+}
+# Linux on a needs systems that know it (release v2026.10.10 on: mu300-next-boot, mu300-update and the recorder
+# follow the slot the initramfs names); the init is this checkout's either way, build-boot-image.py puts it behind a
+# mainline kernel's generic segment. A tag that is not a release date (MU300_RELEASE_URL's "custom") is not judged.
+slot_release_ok() {  # slot_release_ok RELEASE
+    [ "$LINUX_SLOT" = a ] || return 0
+    case $1 in v[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]*) ;; *) return 0 ;; esac
+    [ "$(printf '%s\n%s\n' v2026.10.10 "$1" | sort | head -n1)" = v2026.10.10 ] ||
+        die "$(t 'Android runs from slot b, and release {1} cannot boot Linux from slot a; use {2} or newer' "$1" v2026.10.10)"
+}
+# write_linux_boot IMAGE: IMAGE to boot_$LINUX_SLOT, verified, then the block beside it (IMAGE without .img +
+# .misc-slot-$LINUX_SLOT-trial.bin) to misc, which arms Linux for one trial boot. Before anything is written it
+# checks again that Android still runs from the slot it ran from when the image was built, and that the image was
+# built for the other one.
+write_linux_boot() {
+    _wb=${1%.img}
+    case $ANDROID_SLOT$LINUX_SLOT in ab|ba) ;; *) die "$(t 'cannot tell which slot Android runs from')" ;; esac
+    [ "$(su_do 'getprop ro.boot.slot_suffix')" = "_$ANDROID_SLOT" ] ||
+        die "$(t 'Android no longer runs from slot {1}; boot_{2} and misc were not changed' "$ANDROID_SLOT" "$LINUX_SLOT")"
+    [ "$(python3 -c "import json,sys;print(json.load(open(sys.argv[1])).get('linux_slot'))" "$_wb.json")" = "$LINUX_SLOT" ] &&
+        [ -s "$_wb.misc-slot-$LINUX_SLOT-trial.bin" ] ||
+        die "$(t 'the boot image was not built for slot {1}; boot_{1} and misc were not changed' "$LINUX_SLOT")"
+    say "$(t 'Writing boot_{1} and arming slot {1}' "$LINUX_SLOT")"
+    EXP=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['sha256'])" "$_wb.json")
+    adb push "$1" $T/mu300-boot.img >/dev/null
+    adb push "$_wb.misc-slot-$LINUX_SLOT-trial.bin" $T/mu300-bc.bin >/dev/null
+    [ "$(su_do "sha256sum $T/mu300-boot.img" | cut -d' ' -f1)" = "$EXP" ] || die "$(t 'pushed boot image hash mismatch')"
+    su_do "dd if=$T/mu300-boot.img of=/dev/block/by-name/boot_$LINUX_SLOT bs=4M && sync"
+    [ "$(su_do "sha256sum /dev/block/by-name/boot_$LINUX_SLOT" | cut -d' ' -f1)" = "$EXP" ] ||
+        die "$(t 'boot_{1} verify failed (slot {2} still active, Android keeps booting)' "$LINUX_SLOT" "$ANDROID_SLOT")"
+    su_do "dd if=$T/mu300-bc.bin of=/dev/block/by-name/misc bs=1 seek=2048 conv=notrunc && sync && rm $T/mu300-boot.img $T/mu300-bc.bin"
+}
+# --- slot end
+slot_setup
 
 
 # ---------------------------------------------------------------- making room on a small eMMC (EXPERIMENTAL)
@@ -442,7 +489,8 @@ printf '%s: ' "$(t 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)
 # ---------------------------------------------------------------- pull vendor data from the device
 mkdir -p "$WORK/dumps" "$WORK/firmware"
 say "$(t 'Pulling device data into {1} (stays on this computer)' "$WORK")"
-dev_pull /dev/block/by-name/boot_a "$WORK/dumps/boot_a.img"
+# Android's own boot image is the base of the Linux one (its header, its AVB footer)
+dev_pull /dev/block/by-name/boot_$ANDROID_SLOT "$WORK/dumps/boot_$ANDROID_SLOT.img"
 su_do 'dd if=/dev/block/by-name/misc bs=4096 count=1 2>/dev/null > /data/local/tmp/mu300-pull.bin' >/dev/null
 adb pull /data/local/tmp/mu300-pull.bin "$WORK/dumps/misc-head.bin" >/dev/null 2>&1 || true
 su_do 'rm -f /data/local/tmp/mu300-pull.bin' >/dev/null
@@ -478,6 +526,7 @@ if [ -z "$RELEASE" ]; then
         [ -n "$RELEASE" ] || die "$(t 'cannot find the newest release of {1} (set MU300_RELEASE=<tag> to pick one)' "$REPO")"
     fi
 fi
+slot_release_ok "$RELEASE"
 REL=$WORK/release/$RELEASE
 mkdir -p "$REL"
 # MU300_RELEASE_URL: another location with the same files (e.g. a local test server)
@@ -583,12 +632,12 @@ say "$(t 'Building the boot image')"
 sed "s/^ROOT_OFFSET=[0-9]*/ROOT_OFFSET=$OFF/" "$TOP/boot/init" > "$WORK/init"
 # a mainline kernel: its kernel, and its generic ramdisk segment behind this one (its init and modules win) - the
 # image that "mu300-update kernel 6.18" (or 7.2) writes on the device
-python3 "$TOP/boot/build-boot-image.py" --stock-boot "$WORK/dumps/boot_a.img" --misc-head "$WORK/dumps/misc-head.bin" \
+python3 "$TOP/boot/build-boot-image.py" --stock-boot "$WORK/dumps/boot_$ANDROID_SLOT.img" --misc-head "$WORK/dumps/misc-head.bin" \
   --kernel "${KMAIN:-$KOUT}/Image" ${KMAIN:+--append-ramdisk "$KMAIN/ramdisk-generic.lz4"} \
   --modules "$KOUT/modules" --init "$WORK/init" --busybox "$BUSYBOX" --device "$DEVICE" \
   $([ -d "$KOUT/modules-u30air" ] && echo --device-modules "u30air=$KOUT/modules-u30air") \
   --logdw "$LOGDW" --ueventd-perms "$TOP/android-vendor/ueventd-perms.sh" \
-  --android-subset "$WORK/android-subset" --out "$WORK/boot-linux-slotb.img" >/dev/null
+  --android-subset "$WORK/android-subset" --linux-slot "$LINUX_SLOT" --out "$WORK/boot-linux-slot$LINUX_SLOT.img" >/dev/null
 
 # ---------------------------------------------------------------- confirm and install
 say "$(t 'Ready to install')"
@@ -601,9 +650,9 @@ echo "  $(t 'filesystem:     {1}' "$([ $FORMAT = 0 ] && t 'keep existing' || { [
 [ $UPDATE = 1 ] && echo "  $(t 'update:         settings and user data of the chosen systems are kept, everything else is replaced')"
 [ $UPDATE = 0 ] && [ $FORMAT = 0 ] && echo "  $(t 'note:           the chosen systems are installed fresh; their previous files and settings are replaced')"
 if [ $SD_MODE = 1 ]; then
-    echo "  $(t 'writes:         SD card {1}, boot_b, 32 bytes of misc (the eMMC region, boot_a, GPT and userdata are not touched)' "$SD_DEV")"
+    echo "  $(t 'writes:         SD card {1}, boot_{2}, 32 bytes of misc (the eMMC region, boot_{3}, GPT and userdata are not touched)' "$SD_DEV" "$LINUX_SLOT" "$ANDROID_SLOT")"
 else
-    echo "  $(t 'writes:         Linux region at offset {1}, boot_b, 32 bytes of misc (boot_a, GPT and userdata are not touched)' "$OFF")"
+    echo "  $(t 'writes:         Linux region at offset {1}, boot_{2}, 32 bytes of misc (boot_{3}, GPT and userdata are not touched)' "$OFF" "$LINUX_SLOT" "$ANDROID_SLOT")"
 fi
 ask confirm "$(t 'Type INSTALL to continue')" no
 [ "$confirm" = INSTALL ] || die "$(t 'cancelled')"
@@ -624,16 +673,9 @@ env=$(mktemp)
 write_install_env > "$env"
 adb push "$env" $T/mu300-install.env >/dev/null; rm -f "$env"
 su_do "sh $T/android-install.sh" | tee "$WORK/device-install.log"
-grep -q MU300-INSTALL-OK "$WORK/device-install.log" || die "$(t 'installation on the device failed; boot_b and misc were not changed')"
+grep -q MU300-INSTALL-OK "$WORK/device-install.log" || die "$(t 'installation on the device failed; boot_{1} and misc were not changed' "$LINUX_SLOT")"
 
-say "$(t 'Writing boot_b and arming slot b')"
-EXP=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['sha256'])" "$WORK/boot-linux-slotb.json")
-adb push "$WORK/boot-linux-slotb.img" $T/mu300-boot.img >/dev/null
-adb push "$WORK/boot-linux-slotb.misc-slot-b-trial.bin" $T/mu300-bc-b.bin >/dev/null
-[ "$(su_do "sha256sum $T/mu300-boot.img" | cut -d' ' -f1)" = "$EXP" ] || die "$(t 'pushed boot image hash mismatch')"
-su_do "dd if=$T/mu300-boot.img of=/dev/block/by-name/boot_b bs=4M && sync"
-[ "$(su_do 'sha256sum /dev/block/by-name/boot_b' | cut -d' ' -f1)" = "$EXP" ] || die "$(t 'boot_b verify failed (slot a still active, Android keeps booting)')"
-su_do "dd if=$T/mu300-bc-b.bin of=/dev/block/by-name/misc bs=1 seek=2048 conv=notrunc && sync && rm $T/mu300-boot.img $T/mu300-bc-b.bin"
+write_linux_boot "$WORK/boot-linux-slot$LINUX_SLOT.img"
 
 # on-device switch for later: one command in Android instead of plugging into a computer (needs Magisk)
 say "$(t 'Installing the on-device switch (Magisk module)')"

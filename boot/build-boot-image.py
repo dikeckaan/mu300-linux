@@ -296,7 +296,9 @@ def main():
     assert len(image) == len(base)
 
     a.out.write_bytes(image)
-    a.out.with_suffix('.misc-slot-b-trial.bin').write_bytes(linux_b_bc)
+    # the block that arms this image as a one-shot trial, for the slot it goes to: the installer writes it to misc
+    # (only that one sits next to the image, so nothing can arm the slot Android runs from by mistake)
+    a.out.with_suffix(f'.misc-slot-{linux_slot}-trial.bin').write_bytes(linux_a_bc if linux_slot == 'a' else linux_b_bc)
     manifest = {
         'image': a.out.name,
         'sha256': hashlib.sha256(image).hexdigest(),

@@ -5,14 +5,15 @@
 #   ./uninstall.sh
 #
 # It
-#   * makes slot a (Android) the boot slot in misc (Linux is never started again),
-#   * copies boot_a to boot_b, so slot b holds a stock Android boot image instead of the Linux one,
+#   * makes the slot Android runs from the boot slot in misc (Linux is never started again),
+#   * copies Android's boot image over the one of the Linux slot (boot_a to boot_b; boot_b to boot_a when Android
+#     runs from slot b), so that slot holds a stock Android boot image instead of the Linux one,
 #   * erases the Linux filesystem in the unpartitioned eMMC region (secure: overwrite everything and verify;
 #     quick: only the filesystem headers, the data stays readable until the space is reused),
 #   * erases the Linux filesystem on the SD card (ext4 labelled mu300sd) when there is one and you say so: its
 #     first 64 MiB are overwritten, and a card with any other filesystem is never touched,
 #   * removes the installer leftovers in /data/local/tmp.
-# boot_a, the GPT, userdata and every other partition stay untouched. Needs adb and python3.
+# Android's boot partition, the GPT, userdata and every other partition stay untouched. Needs adb and python3.
 set -eu
 T=/data/local/tmp
 TOP=$(cd "$(dirname "$0")" && pwd)
@@ -34,7 +35,15 @@ require_android
 model="$(su_do 'getprop ro.product.model') / $(su_do 'getprop ro.product.device')"
 echo "device: $model"
 case "$model" in *MU300*|*F50*|*mu300*|*U30Air*|*U30_Air*) ;; *) die "this does not look like a ZTE F50/MU300 or U30 Air" ;; esac
-[ "$(su_do 'getprop ro.boot.slot_suffix')" = _a ] || die "Android must be running from slot a (boot Android first: mu300-next-boot android)"
+# Linux is on the slot Android is not on (install.sh): b next to an Android on a, a next to an Android on b
+case $(su_do 'getprop ro.boot.slot_suffix') in
+    _a) ANDROID_SLOT=a; LINUX_SLOT=b ;;
+    _b) ANDROID_SLOT=b; LINUX_SLOT=a ;;
+    *) die "cannot tell which slot Android runs from (boot Android first: mu300-next-boot android)" ;;
+esac
+[ "$(su_do "readlink -f /dev/block/by-name/boot_a")" != "$(su_do "readlink -f /dev/block/by-name/boot_b")" ] ||
+    die "boot_a and boot_b are the same partition"
+echo "Android runs from slot $ANDROID_SLOT; Linux is on slot $LINUX_SLOT (boot_$LINUX_SLOT)"
 
 say "Looking for the Linux installation"
 set -- $(su_do 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; done; echo $e $(cat /sys/block/mmcblk0/size)')
@@ -81,13 +90,13 @@ if [ "$SD_HAS" = yes ]; then
     echo "  The SD card holds a Linux installation (ext4 labelled mu300sd):"
     echo "  erase   remove the filesystem from the card (its first 64 MiB are overwritten: fast, but the files"
     echo "          stay readable on the card until the space is reused)"
-    echo "  keep    leave the card as it is (it does not boot once boot_b is restored)"
+    echo "  keep    leave the card as it is (it does not boot once boot_$LINUX_SLOT is restored)"
     ask sdwipe "Linux filesystem on the SD card: erase / keep" erase
     case $sdwipe in erase|keep) ;; *) die "invalid choice" ;; esac
 fi
 echo
-echo "  misc:     boot slot a (Android), Linux boot disabled"
-echo "  boot_b:   replaced with a copy of boot_a (stock Android boot image)"
+echo "  misc:     boot slot $ANDROID_SLOT (Android), Linux boot disabled"
+echo "  boot_$LINUX_SLOT:   replaced with a copy of boot_$ANDROID_SLOT (stock Android boot image)"
 if [ -z "$OFF" ]; then
     echo "  Linux:    no installation on the eMMC"
 else
@@ -100,27 +109,33 @@ elif [ "$SD_HAS" = yes ]; then
 else
     echo "  SD card:  no installation"
 fi
-echo "  untouched: boot_a, GPT, userdata and all other partitions"
+echo "  untouched: boot_$ANDROID_SLOT, GPT, userdata and all other partitions"
 ask confirm "Type UNINSTALL to continue" no
 [ "$confirm" = UNINSTALL ] || die "cancelled"
 
-say "Making slot a the boot slot"
+# Android still runs from the slot it ran from at the start: its partition is never the one written below
+[ "$(su_do 'getprop ro.boot.slot_suffix')" = "_$ANDROID_SLOT" ] || die "Android no longer runs from slot $ANDROID_SLOT; nothing was changed"
+say "Making slot $ANDROID_SLOT the boot slot"
 MISC_TMP=$(mktemp)
 adb shell "su -c 'dd if=/dev/block/by-name/misc bs=4096 count=1 2>/dev/null > /data/local/tmp/mu300-pull.bin'" </dev/null >/dev/null
 adb pull /data/local/tmp/mu300-pull.bin "$MISC_TMP" >/dev/null 2>&1
 adb shell "su -c 'rm -f /data/local/tmp/mu300-pull.bin'" </dev/null >/dev/null
-NEW=$(python3 - "$MISC_TMP" <<'PY'
+NEW=$(python3 - "$MISC_TMP" "$ANDROID_SLOT" <<'PY'
 import struct, sys, zlib
 head = open(sys.argv[1], 'rb').read()
 bc = bytearray(head[0x800:0x820])
 if len(bc) != 32 or bc[4:8] != b'BCAB' or zlib.crc32(bytes(bc[:28])) != struct.unpack('<I', bc[28:])[0]:
     sys.exit('misc has no valid bootloader_control block')
-# same block install.sh's boot image restores on Android: a active (prio 15, successful), b inactive
-bc[0:4] = b'_a\0\0'; bc[12] = 0x9f; bc[14] = 0x1e
+# same blocks install.sh's boot image restores on Android: Android's slot active (prio 15, successful), the other
+# inactive (build-boot-image.py's misc-bc-slot-a.bin / misc-bc-slot-b.bin)
+if sys.argv[2] == 'a':
+    bc[0:4] = b'_a\0\0'; bc[12] = 0x9f; bc[14] = 0x1e
+else:
+    bc[0:4] = b'_b\0\0'; bc[12] = 0x1e; bc[14] = 0x9f
 bc[28:32] = struct.pack('<I', zlib.crc32(bytes(bc[:28])))
 print(bc.hex())
 PY
-) || { rm -f "$MISC_TMP"; die "cannot build the slot a boot control block"; }
+) || { rm -f "$MISC_TMP"; die "cannot build the slot $ANDROID_SLOT boot control block"; }
 rm -f "$MISC_TMP"
 if [ "$BC" != "$NEW" ]; then
     BIN=$(mktemp)
@@ -128,16 +143,16 @@ if [ "$BC" != "$NEW" ]; then
     adb push "$BIN" $T/mu300-bc-a.bin </dev/null >/dev/null; rm -f "$BIN"
     su_do "dd if=$T/mu300-bc-a.bin of=/dev/block/by-name/misc bs=1 seek=2048 conv=notrunc 2>/dev/null && sync && rm $T/mu300-bc-a.bin"
     [ "$(hex32)" = "$NEW" ] || die "misc verify failed"
-    echo "slot a set"
+    echo "slot $ANDROID_SLOT set"
 else
-    echo "already on slot a"
+    echo "already on slot $ANDROID_SLOT"
 fi
 
-say "Restoring boot_b from boot_a"
-A=$(su_do 'sha256sum /dev/block/by-name/boot_a' | cut -d' ' -f1)
-su_do "dd if=/dev/block/by-name/boot_a of=/dev/block/by-name/boot_b bs=4M 2>/dev/null && sync"
-[ "$(su_do 'sha256sum /dev/block/by-name/boot_b' | cut -d' ' -f1)" = "$A" ] || die "boot_b verify failed (misc already points to slot a, Android keeps booting)"
-echo "boot_b = boot_a"
+say "Restoring boot_$LINUX_SLOT from boot_$ANDROID_SLOT"
+A=$(su_do "sha256sum /dev/block/by-name/boot_$ANDROID_SLOT" | cut -d' ' -f1)
+su_do "dd if=/dev/block/by-name/boot_$ANDROID_SLOT of=/dev/block/by-name/boot_$LINUX_SLOT bs=4M 2>/dev/null && sync"
+[ "$(su_do "sha256sum /dev/block/by-name/boot_$LINUX_SLOT" | cut -d' ' -f1)" = "$A" ] || die "boot_$LINUX_SLOT verify failed (misc already points to slot $ANDROID_SLOT, Android keeps booting)"
+echo "boot_$LINUX_SLOT = boot_$ANDROID_SLOT"
 
 if [ $wipe != keep ]; then
     say "Erasing the Linux filesystem ($wipe)"
@@ -178,7 +193,7 @@ fi
 if [ -n "$OFF" ] && [ $wipe = keep ] && { [ $sdwipe = erase ] || [ "$SD_HAS" != yes ]; }; then
     adb push "$TOP/tools/android-mount-mu300root.sh" $T/ </dev/null >/dev/null
     r=$(su_do "MU300_OFF=$OFF MU300_SIZE=$SIZE sh $T/android-mount-mu300root.sh $T/mu300root >/dev/null && { rm -f $T/mu300root/.mu300/root-on-sd; sync; sh $T/android-mount-mu300root.sh -u $T/mu300root >/dev/null; echo CLEARED; }" 2>/dev/null) || true
-    case $r in *CLEARED*) ;; *) echo "note: could not open the kept Linux filesystem to clear its SD card marker (harmless: boot_b is Android)" ;; esac
+    case $r in *CLEARED*) ;; *) echo "note: could not open the kept Linux filesystem to clear its SD card marker (harmless: boot_$LINUX_SLOT is Android)" ;; esac
 fi
 
 # never delete through a still mounted Linux filesystem
@@ -240,7 +255,7 @@ else
 fi
 rm -rf "$GPTW"
 
-# the on-device switch would point at a boot_b that is Android again
+# the on-device switch would point at a Linux slot that holds Android again
 say "Removing the on-device switch (Magisk module)"
 sh "$TOP/tools/install-magisk-module.sh" --remove || true
 
