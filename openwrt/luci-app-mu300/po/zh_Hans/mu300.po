@@ -24,6 +24,12 @@ msgstr "适配设置"
 msgid "Device management"
 msgstr "设备管理"
 
+msgid "SMS forwarding"
+msgstr "短信转发"
+
+msgid "Traffic pool"
+msgstr "流量池"
+
 msgid "Languages"
 msgstr "语言"
 
@@ -285,6 +291,252 @@ msgstr "正在添加 USB 网卡…"
 msgid "Add failed: %s"
 msgstr "添加失败：%s"
 
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "DingTalk bot"
+msgstr "钉钉机器人"
+
+msgid "Email (SMTP)"
+msgstr "邮件 (SMTP)"
+
+msgid "Local SMS"
+msgstr "本地短信"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "No delivery yet"
+msgstr "尚未投递"
+
+msgid "Delivered"
+msgstr "已投递"
+
+msgid "Forwarding is off"
+msgstr "转发已关闭"
+
+msgid "Forwarding to the original sender was blocked"
+msgstr "转发给原发送方已被阻止"
+
+msgid "The SMS is too long; not sent"
+msgstr "短信过长，未发送"
+
+msgid "The device could not save"
+msgstr "设备无法保存"
+
+msgid "The SMS service is unavailable"
+msgstr "短信服务不可用"
+
+msgid "The device reports no valid battery state"
+msgstr "设备未报告有效的电池状态"
+
+msgid "Invalid configuration"
+msgstr "配置无效"
+
+msgid "The destination is invalid"
+msgstr "目标地址无效"
+
+msgid "Delivery failed; check the settings and the device network"
+msgstr "投递失败；请检查设置与设备网络"
+
+msgid "The mail server rejected the login; check the authorization code"
+msgstr "邮件服务器拒绝了登录；请检查授权码"
+
+msgid "Enable SMS forwarding"
+msgstr "启用短信转发"
+
+msgid "Forwarding method"
+msgstr "转发方式"
+
+msgid "Template language"
+msgstr "模板语言"
+
+msgid "English"
+msgstr "英语"
+
+msgid "Simplified Chinese"
+msgstr "简体中文"
+
+msgid "Turkish"
+msgstr "土耳其语"
+
+msgid "Saved for the forward titles, hint text and power notifications; the SMS text and the device note are unchanged."
+msgstr "已保存到转发标题、提示文本与电源通知；短信正文与设备备注保持不变。"
+
+msgid "HTTPS URL"
+msgstr "HTTPS URL"
+
+msgid "Sent as a fixed JSON payload; no custom command is run."
+msgstr "以固定的 JSON 负载发送；不会执行自定义命令。"
+
+msgid "Bot webhook URL"
+msgstr "机器人 Webhook URL"
+
+msgid "Signing secret · leave blank to keep"
+msgstr "签名密钥 · 留空则保持不变"
+
+msgid "Clear the signing secret"
+msgstr "清除签名密钥"
+
+msgid "Include device information"
+msgstr "包含设备信息"
+
+msgid "Bot token · leave blank to keep"
+msgstr "机器人 Token · 留空则保持不变"
+
+msgid "Clear the bot token"
+msgstr "清除机器人 Token"
+
+msgid "Target chat ID"
+msgstr "目标会话 ID"
+
+msgid "The bot token and default chat come from the nanobot configuration (/root/.nanobot/config.json) unless set here."
+msgstr "除非在此设置，机器人 Token 与默认会话取自 nanobot 配置（/root/.nanobot/config.json）。"
+
+msgid "SMTP server host"
+msgstr "SMTP 服务器地址"
+
+msgid "Port · 465 / 587"
+msgstr "端口 · 465 / 587"
+
+msgid "465 TLS"
+msgstr "465 TLS"
+
+msgid "587 STARTTLS"
+msgstr "587 STARTTLS"
+
+msgid "Sender mailbox"
+msgstr "发件邮箱"
+
+msgid "Recipient mailbox"
+msgstr "收件邮箱"
+
+msgid "Authorization code / password · leave blank to keep"
+msgstr "授权码 / 密码 · 留空则保持不变"
+
+msgid "Clear the mail settings"
+msgstr "清除邮件设置"
+
+msgid "Use the SMTP authorization code from your mail provider; the TLS certificate is always verified."
+msgstr "请使用邮件服务商提供的 SMTP 授权码；TLS 证书始终会被验证。"
+
+msgid "SMS recipient numbers · one per line, up to 3"
+msgstr "短信接收号码 · 每行一个，最多 3 个"
+
+msgid "Forwarded through the local SIM, which may incur SMS charges; one message is at most 70 UCS-2 units, with no daily limit."
+msgstr "通过本地 SIM 卡转发，可能产生短信费用；单条最多 70 个 UCS-2 单位，无每日上限。"
+
+msgid "Power notifications"
+msgstr "电源通知"
+
+msgid "Power status notifications"
+msgstr "电源状态通知"
+
+msgid "Notified on a charge-state change, or when the level crosses 5%, 20%, 40%, 60%, 80% or 100%."
+msgstr "充电状态变化时通知，或电量跨越 5%、20%、40%、60%、80% 或 100% 时通知。"
+
+msgid "Device note"
+msgstr "设备备注"
+
+msgid "Blacklist"
+msgstr "黑名单"
+
+msgid "Number blacklist · one per line, up to 64"
+msgstr "号码黑名单 · 每行一个，最多 64 个"
+
+msgid "Keyword blacklist · one per line, up to 32"
+msgstr "关键词黑名单 · 每行一个，最多 32 个"
+
+msgid "A matching new SMS is only marked as handled and is not forwarded; clearing a rule does not resend anything. The rules do not affect power notifications."
+msgstr "匹配到的新短信只标记为已处理、不会转发；清除规则不会重发任何内容。规则不影响电源通知。"
+
+msgid "Test and status"
+msgstr "测试与状态"
+
+msgid "The device runs it on its own, so it keeps working after the page is closed; only new SMS are forwarded and a failure is not retried automatically."
+msgstr "由设备自行运行，关闭页面后仍会继续；仅转发新收到的短信，失败不会自动重试。"
+
+msgid "Save settings"
+msgstr "保存设置"
+
+msgid "Send a test message"
+msgstr "发送测试消息"
+
+msgid "Refresh status"
+msgstr "刷新状态"
+
+msgid "Could not read the settings; refresh the page"
+msgstr "无法读取设置；请刷新页面"
+
+msgid "configured; leave blank to keep"
+msgstr "已配置；留空则保持不变"
+
+msgid "enter the authorization code"
+msgstr "请输入授权码"
+
+msgid "optional"
+msgstr "可选"
+
+msgid "from the nanobot configuration"
+msgstr "来自 nanobot 配置"
+
+msgid "A number is invalid, duplicated, or over the limit"
+msgstr "号码无效、重复或超出上限"
+
+msgid "A keyword is invalid, duplicated, or over the limit"
+msgstr "关键词无效、重复或超出上限"
+
+msgid "Configure the current channel first"
+msgstr "请先配置当前渠道"
+
+msgid "Forwarding is on"
+msgstr "转发已开启"
+
+msgid "Last forward: "
+msgstr "上次转发："
+
+msgid "Last power notification: "
+msgstr "上次电源通知："
+
+msgid "Save the SMS forwarding settings?"
+msgstr "保存短信转发设置？"
+
+msgid "Once on, only newly received SMS are handled; older messages are not forwarded."
+msgstr "开启后只处理新收到的短信；较早的消息不会转发。"
+
+msgid "Saving the SMS forwarding settings…"
+msgstr "正在保存短信转发设置…"
+
+msgid "Saving failed"
+msgstr "保存失败"
+
+msgid "Saved"
+msgstr "已保存"
+
+msgid "Save your changes before testing"
+msgstr "请先保存更改再测试"
+
+msgid "Enable and save SMS forwarding first"
+msgstr "请先启用并保存短信转发"
+
+msgid "This sends from the local SIM to the saved numbers and may incur SMS charges."
+msgstr "将通过本地 SIM 卡向已保存的号码发送，可能产生短信费用。"
+
+msgid "This sends one fixed test message to the currently saved channel."
+msgstr "将向当前已保存的渠道发送一条固定的测试消息。"
+
+msgid "Send a test message?"
+msgstr "发送测试消息？"
+
+msgid "The test has started; refresh the status in a moment"
+msgstr "测试已开始；请稍后刷新状态"
+
+msgid "Test failed: "
+msgstr "测试失败："
+
+msgid "unknown error"
+msgstr "未知错误"
+
 msgid "Modulation DL/UL"
 msgstr "调制方式 下/上"
 
@@ -335,9 +587,6 @@ msgstr "内存"
 
 msgid "Storage"
 msgstr "存储"
-
-msgid "Battery"
-msgstr "电池"
 
 msgid "Channel"
 msgstr "信道"
@@ -582,35 +831,11 @@ msgstr "簇%d"
 msgid "Total %s · free %s"
 msgstr "共 %s · 余 %s"
 
-msgid "charging %s W"
-msgstr "充电中 %s W"
-
-msgid "charging"
-msgstr "充电中"
-
-msgid "drawing %s W"
-msgstr "耗电 %s W"
-
-msgid "not charging"
-msgstr "未充电"
-
-msgid "on battery"
-msgstr "电池供电"
-
-msgid "full"
-msgstr "已充满"
-
-msgid "USB in %s W"
-msgstr "USB 输入 %s W"
-
 msgid "Online"
 msgstr "在线"
 
 msgid "AT adapter unavailable"
 msgstr "AT 适配器不可用"
-
-msgid "Saved"
-msgstr "已保存"
 
 msgid "Management connection lost"
 msgstr "管理连接已中断"
@@ -1023,6 +1248,141 @@ msgstr "我: %s"
 msgid "Delete"
 msgstr "删除"
 
+msgid "The traffic accounting service is unavailable"
+msgstr "流量统计服务不可用"
+
+msgid "The traffic totals could not be saved"
+msgstr "无法保存流量统计"
+
+msgid "The system clock is not synchronised yet"
+msgstr "系统时钟尚未同步"
+
+msgid "Today"
+msgstr "今天"
+
+msgid "This month"
+msgstr "本月"
+
+msgid "Calendar month"
+msgstr "自然月"
+
+msgid "Used this cycle"
+msgstr "本周期已用"
+
+msgid "Plan remaining"
+msgstr "套餐剩余"
+
+msgid "Plan and traffic pool"
+msgstr "套餐与流量池"
+
+msgid "Plan name"
+msgstr "套餐名称"
+
+msgid "Quota per cycle (GB)"
+msgstr "每周期配额 (GB)"
+
+msgid "Daily reference quota (GB)"
+msgstr "每日参考配额 (GB)"
+
+msgid "Monthly reset day (1–31)"
+msgstr "每月重置日 (1–31)"
+
+msgid "Plan counting mode"
+msgstr "套餐计量方式"
+
+msgid "Uplink + downlink"
+msgstr "上行 + 下行"
+
+msgid "Downlink only"
+msgstr "仅下行"
+
+msgid "Uplink only"
+msgstr "仅上行"
+
+msgid "A quota of 0 means unlimited; 1 GB = 1000 MB. The reset day takes effect at local midnight, and short months use their last day."
+msgstr "配额为 0 表示不限量；1 GB = 1000 MB。重置日在本地时间午夜生效，天数不足的月份使用其最后一天。"
+
+msgid "Interface to account"
+msgstr "统计的接口"
+
+msgid "Use the cellular WAN interface automatically"
+msgstr "自动使用蜂窝 WAN 接口"
+
+msgid "Calibrate used this cycle (GB, optional)"
+msgstr "校准本周期已用量 (GB，可选)"
+
+msgid "Leave blank to keep the current total"
+msgstr "留空则保持当前总量"
+
+msgid "Calibration only adjusts the current plan cycle; the daily and calendar-month histories are unchanged, and the next cycle counts real traffic again."
+msgstr "校准只调整当前套餐周期；每日与自然月历史保持不变，下一周期将重新统计真实流量。"
+
+msgid "Recent daily usage"
+msgstr "近期每日用量"
+
+msgid "Date"
+msgstr "日期"
+
+msgid "Down"
+msgstr "下行"
+
+msgid "Up"
+msgstr "上行"
+
+msgid "Total"
+msgstr "合计"
+
+msgid "Monthly usage history"
+msgstr "每月用量历史"
+
+msgid "Month"
+msgstr "月份"
+
+msgid "Recording starts when accounting is enabled; it updates about every 10 seconds and saves every 60. A sudden power loss can lose the most recent unsaved records."
+msgstr "启用统计后开始记录；约每 10 秒更新一次、每 60 秒保存一次。突然断电可能丢失最近尚未保存的记录。"
+
+msgid "The local interface totals are for reference; the carrier’s billing is authoritative. The quota is for display and alerts only and never disconnects the link."
+msgstr "本地接口统计仅供参考，以运营商账单为准。配额仅用于显示与提醒，绝不会断开连接。"
+
+msgid "Unlimited"
+msgstr "不限量"
+
+msgid "No plan name set"
+msgstr "未设置套餐名称"
+
+msgid "Quota per cycle: "
+msgstr "每周期配额："
+
+msgid "Next reset: "
+msgstr "下次重置："
+
+msgid "Daily reference quota: "
+msgstr "每日参考配额："
+
+msgid "Updated: "
+msgstr "更新时间："
+
+msgid "The accounting interface is unavailable"
+msgstr "统计接口不可用"
+
+msgid "The plan quota is reached"
+msgstr "已达套餐配额"
+
+msgid "The daily reference quota is reached"
+msgstr "已达每日参考配额"
+
+msgid "No records yet"
+msgstr "暂无记录"
+
+msgid "Calibrate used traffic this cycle?"
+msgstr "校准本周期已用流量？"
+
+msgid "This sets the current cycle’s used value to the entered amount; the daily and calendar-month records are unchanged."
+msgstr "这会把当前周期的已用量设为输入值；每日与自然月记录保持不变。"
+
+msgid "Saving the traffic pool settings…"
+msgstr "正在保存流量池设置…"
+
 msgid "Dashboard info failed"
 msgstr "获取仪表盘信息失败"
 
@@ -1145,6 +1505,9 @@ msgstr "语言请求无效"
 
 msgid "Unknown source"
 msgstr "未知的来源"
+
+msgid "traffic_unavailable"
+msgstr "流量统计服务不可用"
 
 msgid "Request too large"
 msgstr "请求过大"

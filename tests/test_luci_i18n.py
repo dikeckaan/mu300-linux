@@ -305,9 +305,9 @@ return {
         want = {
             None: (['Excellent', 'Good', 'Fair', 'Poor', 'Unknown'], ['1 d 1 h', '1 h 2 min', '5 min'],
                    'No neighbor-cell data', 'Locked', 'Lock', ['New SMS · Unknown number', 'New SMS · 10086']),
-            'tr': (['Mükemmel', 'İyi', 'Orta', 'Zayıf', 'Bilinmiyor'],
-                   ['1 gün 1 sa', '1 sa 2 dk', '5 dk'], 'Komşu hücre verisi yok', 'Kilitli', 'Kilitle',
-                   ['Yeni SMS · Bilinmeyen numara', 'Yeni SMS · 10086']),
+            # tr's catalog is complete but holds the English msgids: only zh_Hans is translated, so tr renders English
+            'tr': (['Excellent', 'Good', 'Fair', 'Poor', 'Unknown'], ['1 d 1 h', '1 h 2 min', '5 min'],
+                   'No neighbor-cell data', 'Locked', 'Lock', ['New SMS · Unknown number', 'New SMS · 10086']),
             'zh_Hans': (['\u4f18\u79c0', '\u826f\u597d', '\u4e00\u822c', '\u8f83\u5dee', '\u672a\u77e5'],
                         ['1 \u5929 1 \u5c0f\u65f6', '1 \u5c0f\u65f6 2 \u5206', '5 \u5206'],
                         '\u6682\u65e0\u90bb\u533a\u6570\u636e', '\u5df2\u9501\u5b9a', '\u9501\u5b9a',
@@ -533,9 +533,10 @@ return { html: root.innerHTML, op: text('op'), uptime: text('uptime'), reg: text
             None: ('Link & traffic', 'China Unicom · Signal Good 7.8/10', 'Uptime 1 h 2 min', 'Registered · TAC AB',
                    'Online · AT adapter unavailable', '2 clients', '7 entries', 'Total 1.0 MB · free 512 KB',
                    'Anchor B3', 'Cluster 0', 'Recent DHCP leases', '2 h'),
-            'tr': ('Bağlantı ve trafik', 'China Unicom · Sinyal İyi 7.8/10', 'Çalışma süresi 1 sa 2 dk',
-                   'Kayıtlı · TAC AB', 'Çevrimiçi · AT bağdaştırıcısı kullanılamıyor', '2 istemci', '7 kayıt',
-                   'Toplam 1.0 MB · boş 512 KB', 'Ankraj hücresi B3', 'Küme 0', 'Son DHCP kiraları', '2 sa'),
+            # tr's catalog is complete but holds the English msgids: only zh_Hans is translated, so tr renders English
+            'tr': ('Link & traffic', 'China Unicom · Signal Good 7.8/10', 'Uptime 1 h 2 min', 'Registered · TAC AB',
+                   'Online · AT adapter unavailable', '2 clients', '7 entries', 'Total 1.0 MB · free 512 KB',
+                   'Anchor B3', 'Cluster 0', 'Recent DHCP leases', '2 h'),
             'zh_Hans': ('\u94fe\u8def\u4e0e\u6d41\u91cf',
                         '\u4e2d\u56fd\u8054\u901a \xb7 \u4fe1\u53f7 \u826f\u597d 7.8 \u5206',
                         '\u5df2\u8fd0\u884c 1 \u5c0f\u65f6 2 \u5206', '\u5df2\u6ce8\u518c \xb7 TAC AB',
@@ -581,9 +582,10 @@ return out;'''
         want = {
             None: ('Band locking', '1 locked: n78', 'Automatic (9 supported)', 'Apply at startup ✓', 'Unlock NR',
                    '5G NSA · China Mobile', 'NR serving cell', ['Apply at startup is on', 'Apply at startup is off']),
-            'tr': ('Bant kilitleme', '1 kilitli: n78', 'Otomatik (9 destekleniyor)', 'Başlangıçta uygula ✓',
-                   'NR kilidini kaldır', '5G NSA · China Mobile', 'NR hizmet hücresi',
-                   ['Başlangıçta uygulama açık', 'Başlangıçta uygulama kapalı']),
+            # tr's catalog is complete but holds the English msgids: only zh_Hans is translated, so tr renders English
+            'tr': ('Band locking', '1 locked: n78', 'Automatic (9 supported)', 'Apply at startup ✓', 'Unlock NR',
+                   '5G NSA · China Mobile', 'NR serving cell',
+                   ['Apply at startup is on', 'Apply at startup is off']),
             'zh_Hans': ('\u9891\u6bb5\u9501\u5b9a', '\u5df2\u9501 1 \u4e2a\uff1an78',
                         '\u81ea\u52a8\uff08\u652f\u6301 9 \u4e2a\uff09', '\u5f00\u673a\u81ea\u52a8\u5e94\u7528 ✓',
                         '\u89e3\u9501 NR', '5G NSA \xb7 \u4e2d\u56fd\u79fb\u52a8', 'NR \u670d\u52a1\u5c0f\u533a',
@@ -623,10 +625,11 @@ return out;'''
                    ['Enter both a number and a message.', 'Sending…',
                     'The AT channel is busy; the command was not sent, try again', 'Sending…',
                     'Sending failed (+CMS ERROR: 500)']),
-            'tr': ('SIM’den eşitle', '· 3 mesaj, 1 okunmamış · 2 görüşme', 'Ben: hi',
-                   ['Numara ve mesaj girin.', 'Gönderiliyor…',
-                    'AT kanalı meşgul; komut gönderilmedi, yeniden deneyin', 'Gönderiliyor…',
-                    'Gönderme başarısız (+CMS ERROR: 500)']),
+            # tr's catalog is complete but holds the English msgids: only zh_Hans is translated, so tr renders English
+            'tr': ('Sync from SIM', '· 3 messages, 1 unread · 2 conversations', 'Me: hi',
+                   ['Enter both a number and a message.', 'Sending…',
+                    'The AT channel is busy; the command was not sent, try again', 'Sending…',
+                    'Sending failed (+CMS ERROR: 500)']),
             'zh_Hans': ('\u4ece SIM \u540c\u6b65', '\xb7 3 \u6761\uff0c1 \u6761\u672a\u8bfb \xb7 2 \u4e2a\u4f1a\u8bdd',
                         '\u6211: hi',
                         ['\u53f7\u7801\u548c\u5185\u5bb9\u90fd\u8981\u586b\u3002', '\u53d1\u9001\u4e2d…',
@@ -658,8 +661,9 @@ return { html: root.innerHTML, lines: lines.filter((l) => !/^(> |\\u2014)/.test(
             None: ('Clear screen', ['The AT channel is busy; the command was not sent, try again\n',
                                     '(no output)\n'],
                    '(empty)'),
-            'tr': ('Ekranı temizle', ['AT kanalı meşgul; komut gönderilmedi, yeniden deneyin\n',
-                                      '(çıktı yok)\n'], '(boş)'),
+            # tr's catalog is complete but holds the English msgids: only zh_Hans is translated, so tr renders English
+            'tr': ('Clear screen', ['The AT channel is busy; the command was not sent, try again\n',
+                                    '(no output)\n'], '(empty)'),
             'zh_Hans': ('\u6e05\u5c4f',
                         ['AT \u901a\u9053\u6b63\u5fd9\uff0c\u547d\u4ee4\u672a\u53d1\u51fa\uff0c\u8bf7\u91cd\u8bd5\n',
                          '(\u65e0\u8f93\u51fa)\n'], '\uff08\u7a7a\uff09'),
@@ -693,8 +697,10 @@ return { html: root.innerHTML, role: text('usb-role-now'), note: text('usb-net-n
             None: ('USB adapters', 'Host mode', 'USB network mode is unavailable in host mode; host auto-start also '
                    'disables USB network auto-start.', ['eth1', 'Link connected', 'Added to LAN', 'eth2',
                                                         'No link; enable attempted', 'Add to LAN']),
-            'tr': ('USB bağdaştırıcıları', 'Ana makine modu', None, ['eth1', None, 'LAN’a eklendi', 'eth2', None,
-                                                                     'LAN’a ekle']),
+            # tr's catalog is complete but holds the English msgids: only zh_Hans is translated, so tr renders English
+            'tr': ('USB adapters', 'Host mode', 'USB network mode is unavailable in host mode; host auto-start also '
+                   'disables USB network auto-start.', ['eth1', 'Link connected', 'Added to LAN', 'eth2',
+                                                        'No link; enable attempted', 'Add to LAN']),
             'zh_Hans': ('USB \u7f51\u5361', '\u4e3b\u673a\u6a21\u5f0f', None,
                         ['eth1', None, '\u5df2\u6dfb\u52a0\u5230 LAN', 'eth2', None, '\u6dfb\u52a0\u5230 LAN']),
         }

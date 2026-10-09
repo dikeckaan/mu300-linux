@@ -4,31 +4,37 @@ msgstr ""
 "Language: hu\n"
 
 msgid "Status dashboard"
-msgstr "Állapot-irányítópult"
+msgstr "Status dashboard"
 
 msgid "Cellular"
-msgstr "Mobilhálózat"
+msgstr "Cellular"
 
 msgid "Network locks"
-msgstr "Hálózati zárolások"
+msgstr "Network locks"
 
 msgid "SMS"
 msgstr "SMS"
 
 msgid "AT terminal"
-msgstr "AT-terminál"
+msgstr "AT terminal"
 
 msgid "Adapter settings"
-msgstr "Adapterbeállítások"
+msgstr "Adapter settings"
 
 msgid "Device management"
-msgstr "Eszközkezelés"
+msgstr "Device management"
+
+msgid "SMS forwarding"
+msgstr "SMS forwarding"
+
+msgid "Traffic pool"
+msgstr "Traffic pool"
 
 msgid "Languages"
-msgstr "Nyelvek"
+msgstr "Languages"
 
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
-msgstr "MU300 vezérlőközpont: állapot-irányítópult, hálózati zárolások, AT-terminál és SMS"
+msgstr "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -46,250 +52,496 @@ msgid "China Tietong"
 msgstr "China Tietong"
 
 msgid "Excellent"
-msgstr "Kiváló"
+msgstr "Excellent"
 
 msgid "Good"
-msgstr "Jó"
+msgstr "Good"
 
 msgid "Fair"
-msgstr "Közepes"
+msgstr "Fair"
 
 msgid "Poor"
-msgstr "Gyenge"
+msgstr "Poor"
 
 msgid "Unknown"
-msgstr "Ismeretlen"
+msgstr "Unknown"
 
 msgid "%d d %d h"
-msgstr "%d nap %d óra"
+msgstr "%d d %d h"
 
 msgid "%d h %d min"
-msgstr "%d óra %d perc"
+msgstr "%d h %d min"
 
 msgid "%d min"
-msgstr "%d perc"
+msgstr "%d min"
 
 msgid "No neighbor-cell data"
-msgstr "Nincsenek szomszédcella-adatok"
+msgstr "No neighbor-cell data"
 
 msgid "Locked"
-msgstr "Zárolva"
+msgstr "Locked"
 
 msgid "Lock"
-msgstr "Zárolás"
+msgstr "Lock"
 
 msgid "Unknown error"
-msgstr "Ismeretlen hiba"
+msgstr "Unknown error"
 
 msgid "Confirm"
-msgstr "Megerősítés"
+msgstr "Confirm"
 
 msgid "OK"
 msgstr "OK"
 
 msgid "Cancel"
-msgstr "Mégse"
+msgstr "Cancel"
 
 msgid "New SMS · %s"
-msgstr "Új SMS · %s"
+msgstr "New SMS · %s"
 
 msgid "Unknown number"
-msgstr "Ismeretlen szám"
+msgstr "Unknown number"
 
 msgid "Select"
-msgstr "Kiválasztás"
+msgstr "Select"
 
 msgid "Basic"
-msgstr "Alap"
+msgstr "Basic"
 
 msgid "Registration/signal"
-msgstr "Regisztráció/jel"
+msgstr "Registration/signal"
 
 msgid "Bearer"
-msgstr "Vivő"
+msgstr "Bearer"
 
 msgid "Engineering mode"
-msgstr "Mérnöki mód"
+msgstr "Engineering mode"
 
 msgid "AT command (↑↓ history, Enter to send)"
-msgstr "AT-parancs (↑↓ előzmények, Enter a küldéshez)"
+msgstr "AT command (↑↓ history, Enter to send)"
 
 msgid "Send"
-msgstr "Küldés"
+msgstr "Send"
 
 msgid "Clear screen"
-msgstr "Képernyő törlése"
+msgstr "Clear screen"
 
 msgid "Ready."
-msgstr "Kész."
+msgstr "Ready."
 
 msgid "Session history (click to reuse)"
-msgstr "Munkamenet-előzmények (kattintás az újrahasználathoz)"
+msgstr "Session history (click to reuse)"
 
 msgid "(no output)"
-msgstr "(nincs kimenet)"
+msgstr "(no output)"
 
 msgid "Request failed"
-msgstr "A kérés sikertelen"
+msgstr "Request failed"
 
 msgid "(empty)"
-msgstr "(üres)"
+msgstr "(empty)"
 
 msgid "USB role"
-msgstr "USB-szerep"
+msgstr "USB role"
 
 msgid "Current role"
-msgstr "Jelenlegi szerep"
+msgstr "Current role"
 
 msgid "Switch USB role"
-msgstr "USB-szerep váltása"
+msgstr "Switch USB role"
 
 msgid "Device mode"
-msgstr "Eszköz mód"
+msgstr "Device mode"
 
 msgid "Host mode"
-msgstr "Gazda mód"
+msgstr "Host mode"
 
 msgid "Enable host mode at boot"
-msgstr "Gazda mód engedélyezése rendszerindításkor"
+msgstr "Enable host mode at boot"
 
 msgid "Apply role"
-msgstr "Szerep alkalmazása"
+msgstr "Apply role"
 
 msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
-msgstr "A gazda mód bontja az USB-hálózatot és a soros kapcsolatot ezen a porton. Az F50-nek nincs akkumulátora; a felügyelet megszakadhat, és egy USB-adapterhez általában tápellátással rendelkező hub kell."
+msgstr "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
 
 msgid "USB network mode"
-msgstr "USB-hálózati mód"
+msgstr "USB network mode"
 
 msgid "Network protocol"
-msgstr "Hálózati protokoll"
+msgstr "Network protocol"
 
 msgid "Apply duration"
-msgstr "Alkalmazás időtartama"
+msgstr "Apply duration"
 
 msgid "Next reboot only"
-msgstr "Csak a következő újraindításkor"
+msgstr "Next reboot only"
 
 msgid "Permanent"
-msgstr "Végleges"
+msgstr "Permanent"
 
 msgid "Enable selected protocol"
-msgstr "Kiválasztott protokoll engedélyezése"
+msgstr "Enable selected protocol"
 
 msgid "Save; apply after reboot"
-msgstr "Mentés; alkalmazás újraindítás után"
+msgstr "Save; apply after reboot"
 
 msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
-msgstr "Az NCM az alapértelmezett. A Windows nem támogatja natívan az ECM-et; az RNDIS megváltoztatja az enumerálást. Ha a Kiválasztott protokoll engedélyezése ki van kapcsolva, csak a választás kerül mentésre. A Csak a következő újraindításkor egyszer érvényesül, majd visszaáll NCM-re."
+msgstr "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
 
 msgid "USB adapters"
-msgstr "USB-adapterek"
+msgstr "USB adapters"
 
 msgid "Refresh"
-msgstr "Frissítés"
+msgstr "Refresh"
 
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
-msgstr "Csak gazda módban érhető el. A Frissítés aktiválja a felismert USB-adaptereket; a LAN-hoz adás menti a hidat és újratölti a hálózatot."
+msgstr "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 
 msgid "Unavailable"
-msgstr "Nem érhető el"
+msgstr "Unavailable"
 
 msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
-msgstr "Az USB-hálózati mód gazda módban nem érhető el; a gazda mód automatikus indítása az USB-hálózat automatikus indítását is letiltja."
+msgstr "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
 
 msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
-msgstr "A gazda mód azonnal bontja az USB-n keresztüli felügyeletet. Az F50-nek nincs akkumulátora, és a perifériáknak külső tápellátás kellhet; győződjön meg róla, hogy van más felügyeleti útvonal."
+msgstr "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
 
 msgid "USB networking and serial will re-enumerate in device mode."
-msgstr "Az USB-hálózat és a soros kapcsolat eszköz módban újra enumerálódik."
+msgstr "USB networking and serial will re-enumerate in device mode."
 
 msgid "Switch USB role?"
-msgstr "USB-szerep váltása?"
+msgstr "Switch USB role?"
 
 msgid "Apply"
-msgstr "Alkalmaz"
+msgstr "Apply"
 
 msgid "Switching USB role…"
-msgstr "USB-szerep váltása…"
+msgstr "Switching USB role…"
 
 msgid "Switch failed: %s"
-msgstr "A váltás sikertelen: %s"
+msgstr "Switch failed: %s"
 
 msgid "Management connection lost; reconnect to confirm the USB role."
-msgstr "A felügyeleti kapcsolat megszakadt; csatlakozzon újra az USB-szerep megerősítéséhez."
+msgstr "Management connection lost; reconnect to confirm the USB role."
 
 msgid "Switch request accepted; the USB connection may briefly disconnect."
-msgstr "A váltási kérés elfogadva; az USB-kapcsolat rövid időre megszakadhat."
+msgstr "Switch request accepted; the USB connection may briefly disconnect."
 
 msgid "USB role applied"
-msgstr "USB-szerep alkalmazva"
+msgstr "USB role applied"
 
 msgid "Save USB network mode?"
-msgstr "USB-hálózati mód mentése?"
+msgstr "Save USB network mode?"
 
 msgid "The network mode applies on the next reboot; USB management may need to reconnect."
-msgstr "A hálózati mód a következő újraindításkor lép életbe; az USB-n keresztüli felügyelethez újracsatlakozás kellhet."
+msgstr "The network mode applies on the next reboot; USB management may need to reconnect."
 
 msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
-msgstr "Csak a választás mentése; letiltott kiválasztott protokollal a következő indítás is az alapértelmezett NCM-et használja."
+msgstr "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
 
 msgid "Save"
-msgstr "Mentés"
+msgstr "Save"
 
 msgid "Saving USB network settings…"
-msgstr "USB-hálózati beállítások mentése…"
+msgstr "Saving USB network settings…"
 
 msgid "Settings saved"
-msgstr "Beállítások mentve"
+msgstr "Settings saved"
 
 msgid "Save failed: %s"
-msgstr "A mentés sikertelen: %s"
+msgstr "Save failed: %s"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
-msgstr "A szerep még nem erősíthető meg; csatlakozzon újra, és frissítse az oldalt."
+msgstr "Unable to confirm the role yet; reconnect and refresh the page."
 
 msgid "Switch to host mode to see USB adapters."
-msgstr "Váltson gazda módra az USB-adapterek megtekintéséhez."
+msgstr "Switch to host mode to see USB adapters."
 
 msgid "Scanning USB adapters…"
-msgstr "USB-adapterek keresése…"
+msgstr "Scanning USB adapters…"
 
 msgid "No USB adapters found."
-msgstr "Nem található USB-adapter."
+msgstr "No USB adapters found."
 
 msgid "Link connected"
-msgstr "Kapcsolat létrejött"
+msgstr "Link connected"
 
 msgid "No link; enable attempted"
-msgstr "Nincs kapcsolat; aktiválás megkísérelve"
+msgstr "No link; enable attempted"
 
 msgid "Added to LAN"
-msgstr "Hozzáadva a LAN-hoz"
+msgstr "Added to LAN"
 
 msgid "Add to LAN"
-msgstr "Hozzáadás a LAN-hoz"
+msgstr "Add to LAN"
 
 msgid "Add USB adapter to LAN?"
-msgstr "USB-adapter hozzáadása a LAN-hoz?"
+msgstr "Add USB adapter to LAN?"
 
 msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
-msgstr "Ez menti a híd konfigurációját és újratölti a hálózatot; a meglévő kapcsolatok rövid időre megszakadhatnak."
+msgstr "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
 
 msgid "Add"
-msgstr "Hozzáadás"
+msgstr "Add"
 
 msgid "Adding USB adapter…"
-msgstr "USB-adapter hozzáadása…"
+msgstr "Adding USB adapter…"
 
 msgid "Add failed: %s"
-msgstr "A hozzáadás sikertelen: %s"
+msgstr "Add failed: %s"
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "DingTalk bot"
+msgstr "DingTalk bot"
+
+msgid "Email (SMTP)"
+msgstr "Email (SMTP)"
+
+msgid "Local SMS"
+msgstr "Local SMS"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "No delivery yet"
+msgstr "No delivery yet"
+
+msgid "Delivered"
+msgstr "Delivered"
+
+msgid "Forwarding is off"
+msgstr "Forwarding is off"
+
+msgid "Forwarding to the original sender was blocked"
+msgstr "Forwarding to the original sender was blocked"
+
+msgid "The SMS is too long; not sent"
+msgstr "The SMS is too long; not sent"
+
+msgid "The device could not save"
+msgstr "The device could not save"
+
+msgid "The SMS service is unavailable"
+msgstr "The SMS service is unavailable"
+
+msgid "The device reports no valid battery state"
+msgstr "The device reports no valid battery state"
+
+msgid "Invalid configuration"
+msgstr "Invalid configuration"
+
+msgid "The destination is invalid"
+msgstr "The destination is invalid"
+
+msgid "Delivery failed; check the settings and the device network"
+msgstr "Delivery failed; check the settings and the device network"
+
+msgid "The mail server rejected the login; check the authorization code"
+msgstr "The mail server rejected the login; check the authorization code"
+
+msgid "Enable SMS forwarding"
+msgstr "Enable SMS forwarding"
+
+msgid "Forwarding method"
+msgstr "Forwarding method"
+
+msgid "Template language"
+msgstr "Template language"
+
+msgid "English"
+msgstr "English"
+
+msgid "Simplified Chinese"
+msgstr "Simplified Chinese"
+
+msgid "Turkish"
+msgstr "Turkish"
+
+msgid "Saved for the forward titles, hint text and power notifications; the SMS text and the device note are unchanged."
+msgstr "Saved for the forward titles, hint text and power notifications; the SMS text and the device note are unchanged."
+
+msgid "HTTPS URL"
+msgstr "HTTPS URL"
+
+msgid "Sent as a fixed JSON payload; no custom command is run."
+msgstr "Sent as a fixed JSON payload; no custom command is run."
+
+msgid "Bot webhook URL"
+msgstr "Bot webhook URL"
+
+msgid "Signing secret · leave blank to keep"
+msgstr "Signing secret · leave blank to keep"
+
+msgid "Clear the signing secret"
+msgstr "Clear the signing secret"
+
+msgid "Include device information"
+msgstr "Include device information"
+
+msgid "Bot token · leave blank to keep"
+msgstr "Bot token · leave blank to keep"
+
+msgid "Clear the bot token"
+msgstr "Clear the bot token"
+
+msgid "Target chat ID"
+msgstr "Target chat ID"
+
+msgid "The bot token and default chat come from the nanobot configuration (/root/.nanobot/config.json) unless set here."
+msgstr "The bot token and default chat come from the nanobot configuration (/root/.nanobot/config.json) unless set here."
+
+msgid "SMTP server host"
+msgstr "SMTP server host"
+
+msgid "Port · 465 / 587"
+msgstr "Port · 465 / 587"
+
+msgid "465 TLS"
+msgstr "465 TLS"
+
+msgid "587 STARTTLS"
+msgstr "587 STARTTLS"
+
+msgid "Sender mailbox"
+msgstr "Sender mailbox"
+
+msgid "Recipient mailbox"
+msgstr "Recipient mailbox"
+
+msgid "Authorization code / password · leave blank to keep"
+msgstr "Authorization code / password · leave blank to keep"
+
+msgid "Clear the mail settings"
+msgstr "Clear the mail settings"
+
+msgid "Use the SMTP authorization code from your mail provider; the TLS certificate is always verified."
+msgstr "Use the SMTP authorization code from your mail provider; the TLS certificate is always verified."
+
+msgid "SMS recipient numbers · one per line, up to 3"
+msgstr "SMS recipient numbers · one per line, up to 3"
+
+msgid "Forwarded through the local SIM, which may incur SMS charges; one message is at most 70 UCS-2 units, with no daily limit."
+msgstr "Forwarded through the local SIM, which may incur SMS charges; one message is at most 70 UCS-2 units, with no daily limit."
+
+msgid "Power notifications"
+msgstr "Power notifications"
+
+msgid "Power status notifications"
+msgstr "Power status notifications"
+
+msgid "Notified on a charge-state change, or when the level crosses 5%, 20%, 40%, 60%, 80% or 100%."
+msgstr "Notified on a charge-state change, or when the level crosses 5%, 20%, 40%, 60%, 80% or 100%."
+
+msgid "Device note"
+msgstr "Device note"
+
+msgid "Blacklist"
+msgstr "Blacklist"
+
+msgid "Number blacklist · one per line, up to 64"
+msgstr "Number blacklist · one per line, up to 64"
+
+msgid "Keyword blacklist · one per line, up to 32"
+msgstr "Keyword blacklist · one per line, up to 32"
+
+msgid "A matching new SMS is only marked as handled and is not forwarded; clearing a rule does not resend anything. The rules do not affect power notifications."
+msgstr "A matching new SMS is only marked as handled and is not forwarded; clearing a rule does not resend anything. The rules do not affect power notifications."
+
+msgid "Test and status"
+msgstr "Test and status"
+
+msgid "The device runs it on its own, so it keeps working after the page is closed; only new SMS are forwarded and a failure is not retried automatically."
+msgstr "The device runs it on its own, so it keeps working after the page is closed; only new SMS are forwarded and a failure is not retried automatically."
+
+msgid "Save settings"
+msgstr "Save settings"
+
+msgid "Send a test message"
+msgstr "Send a test message"
+
+msgid "Refresh status"
+msgstr "Refresh status"
+
+msgid "Could not read the settings; refresh the page"
+msgstr "Could not read the settings; refresh the page"
+
+msgid "configured; leave blank to keep"
+msgstr "configured; leave blank to keep"
+
+msgid "enter the authorization code"
+msgstr "enter the authorization code"
+
+msgid "optional"
+msgstr "optional"
+
+msgid "from the nanobot configuration"
+msgstr "from the nanobot configuration"
+
+msgid "A number is invalid, duplicated, or over the limit"
+msgstr "A number is invalid, duplicated, or over the limit"
+
+msgid "A keyword is invalid, duplicated, or over the limit"
+msgstr "A keyword is invalid, duplicated, or over the limit"
+
+msgid "Configure the current channel first"
+msgstr "Configure the current channel first"
+
+msgid "Forwarding is on"
+msgstr "Forwarding is on"
+
+msgid "Last forward: "
+msgstr "Last forward: "
+
+msgid "Last power notification: "
+msgstr "Last power notification: "
+
+msgid "Save the SMS forwarding settings?"
+msgstr "Save the SMS forwarding settings?"
+
+msgid "Once on, only newly received SMS are handled; older messages are not forwarded."
+msgstr "Once on, only newly received SMS are handled; older messages are not forwarded."
+
+msgid "Saving the SMS forwarding settings…"
+msgstr "Saving the SMS forwarding settings…"
+
+msgid "Saving failed"
+msgstr "Saving failed"
+
+msgid "Saved"
+msgstr "Saved"
+
+msgid "Save your changes before testing"
+msgstr "Save your changes before testing"
+
+msgid "Enable and save SMS forwarding first"
+msgstr "Enable and save SMS forwarding first"
+
+msgid "This sends from the local SIM to the saved numbers and may incur SMS charges."
+msgstr "This sends from the local SIM to the saved numbers and may incur SMS charges."
+
+msgid "This sends one fixed test message to the currently saved channel."
+msgstr "This sends one fixed test message to the currently saved channel."
+
+msgid "Send a test message?"
+msgstr "Send a test message?"
+
+msgid "The test has started; refresh the status in a moment"
+msgstr "The test has started; refresh the status in a moment"
+
+msgid "Test failed: "
+msgstr "Test failed: "
+
+msgid "unknown error"
+msgstr "unknown error"
 
 msgid "Modulation DL/UL"
-msgstr "Moduláció DL/UL"
+msgstr "Modulation DL/UL"
 
 msgid "Estimated from current MCS"
-msgstr "A jelenlegi MCS alapján becsülve"
+msgstr "Estimated from current MCS"
 
 msgid "MCS DL/UL"
 msgstr "MCS DL/UL"
@@ -298,979 +550,1090 @@ msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
 msgid "Link & traffic"
-msgstr "Kapcsolat és forgalom"
+msgstr "Link & traffic"
 
 msgid "Download rate"
-msgstr "Letöltési sebesség"
+msgstr "Download rate"
 
 msgid "Upload rate"
-msgstr "Feltöltési sebesség"
+msgstr "Upload rate"
 
 msgid "Total received"
-msgstr "Összes fogadott"
+msgstr "Total received"
 
 msgid "Total sent"
-msgstr "Összes küldött"
+msgstr "Total sent"
 
 msgid "Session duration"
-msgstr "Munkamenet időtartama"
+msgstr "Session duration"
 
 msgid "Registration"
-msgstr "Regisztráció"
+msgstr "Registration"
 
 msgid "Bandwidth"
-msgstr "Sávszélesség"
+msgstr "Bandwidth"
 
 msgid "AMBR DL/UL"
 msgstr "AMBR DL/UL"
 
 msgid "Wi-Fi · LAN · Device · SIM"
-msgstr "Wi-Fi · LAN · Eszköz · SIM"
+msgstr "Wi-Fi · LAN · Device · SIM"
 
 msgid "CPU usage"
-msgstr "CPU-használat"
+msgstr "CPU usage"
 
 msgid "Memory"
-msgstr "Memória"
+msgstr "Memory"
 
 msgid "Storage"
-msgstr "Tárhely"
-
-msgid "Battery"
-msgstr "Akkumulátor"
+msgstr "Storage"
 
 msgid "Channel"
-msgstr "Csatorna"
+msgstr "Channel"
 
 msgid "Encryption"
-msgstr "Titkosítás"
+msgstr "Encryption"
 
 msgid "Hidden SSID"
-msgstr "Rejtett SSID"
+msgstr "Hidden SSID"
 
 msgid "Country"
-msgstr "Ország"
+msgstr "Country"
 
 msgid "AP status"
-msgstr "AP-állapot"
+msgstr "AP status"
 
 msgid "USB network"
-msgstr "USB-hálózat"
+msgstr "USB network"
 
 msgid "Connection tracking"
-msgstr "Kapcsolatkövetés"
+msgstr "Connection tracking"
 
 msgid "LAN address"
-msgstr "LAN-cím"
+msgstr "LAN address"
 
 msgid "Wi-Fi clients"
-msgstr "Wi-Fi-kliensek"
+msgstr "Wi-Fi clients"
 
 msgid "DHCP leases"
-msgstr "DHCP-bérletek"
+msgstr "DHCP leases"
 
 msgid "Device model"
-msgstr "Eszközmodell"
+msgstr "Device model"
 
 msgid "System"
-msgstr "Rendszer"
+msgstr "System"
 
 msgid "Modem"
 msgstr "Modem"
 
 msgid "Carrier"
-msgstr "Szolgáltató"
+msgstr "Carrier"
 
 msgid "Module"
-msgstr "Modul"
+msgstr "Module"
 
 msgid "Firmware"
 msgstr "Firmware"
 
 msgid "Show SIM identifiers"
-msgstr "SIM-azonosítók megjelenítése"
+msgstr "Show SIM identifiers"
 
 msgid "Quick controls"
-msgstr "Gyorsvezérlők"
+msgstr "Quick controls"
 
 msgid "Data connection"
-msgstr "Adatkapcsolat"
+msgstr "Data connection"
 
 msgid "Cellular radio"
-msgstr "Mobilrádió"
+msgstr "Cellular radio"
 
 msgid "Wi-Fi hotspot"
 msgstr "Wi-Fi hotspot"
 
 msgid "Restart modem"
-msgstr "Modem újraindítása"
+msgstr "Restart modem"
 
 msgid "Restart device"
-msgstr "Eszköz újraindítása"
+msgstr "Restart device"
 
 msgid "Switch to Android"
-msgstr "Váltás Androidra"
+msgstr "Switch to Android"
 
 msgid "Neighbor cells"
-msgstr "Szomszédos cellák"
+msgstr "Neighbor cells"
 
 msgid "RAT/Band"
-msgstr "RAT/Sáv"
+msgstr "RAT/Band"
 
 msgid "Frequency"
-msgstr "Frekvencia"
+msgstr "Frequency"
 
 msgid "Running %s…"
-msgstr "%s futtatása…"
+msgstr "Running %s…"
 
 msgid "Started in background: %s"
-msgstr "Elindítva a háttérben: %s"
+msgstr "Started in background: %s"
 
 msgid "Done: %s"
-msgstr "Kész: %s"
+msgstr "Done: %s"
 
 msgid "Failed: %s"
-msgstr "Sikertelen: %s"
+msgstr "Failed: %s"
 
 msgid "Disconnecting data…"
-msgstr "Adatkapcsolat bontása…"
+msgstr "Disconnecting data…"
 
 msgid "Connecting data…"
-msgstr "Adatkapcsolat létrehozása…"
+msgstr "Connecting data…"
 
 msgid "Turn off cellular radio"
-msgstr "Mobilrádió kikapcsolása"
+msgstr "Turn off cellular radio"
 
 msgid "Cellular connectivity will be interrupted."
-msgstr "A mobilkapcsolat megszakad."
+msgstr "Cellular connectivity will be interrupted."
 
 msgid "Turn on cellular radio"
-msgstr "Mobilrádió bekapcsolása"
+msgstr "Turn on cellular radio"
 
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "Lefut az SFUN bekapcsolási sorozat (legfeljebb kb. 1 perc)."
+msgstr "The SFUN power-on sequence will run (up to about 1 minute)."
 
 msgid "Cellular connectivity may stop for 1–2 minutes."
-msgstr "A mobilkapcsolat 1–2 percre leállhat."
+msgstr "Cellular connectivity may stop for 1–2 minutes."
 
 msgid "Restart the entire device"
-msgstr "A teljes eszköz újraindítása"
+msgstr "Restart the entire device"
 
 msgid "All connections will be interrupted."
-msgstr "Minden kapcsolat megszakad."
+msgstr "All connections will be interrupted."
 
 msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
-msgstr "A következő indítás Androidba történik, és az eszköz most újraindul. Ez a felügyeleti oldal és a mobilhálózat-megosztás megszakad."
+msgstr "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
 
 msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
-msgstr "Az OpenWrt-hez való visszatéréshez futtassa Androidban a mu300-next-boot linux parancsot, majd indítsa újra."
+msgstr "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
 
 msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
-msgstr "Vagy ne tegyen semmit: öt be nem fejeződő indítás után automatikusan visszaáll."
+msgstr "Or do nothing: after five boots that do not finish, it falls back automatically."
 
 msgid "Switch and reboot"
-msgstr "Váltás és újraindítás"
+msgstr "Switch and reboot"
 
 msgid "Preparing Android boot and rebooting…"
-msgstr "Android-indítás előkészítése és újraindítás…"
+msgstr "Preparing Android boot and rebooting…"
 
 msgid "Hide SIM identifiers"
-msgstr "SIM-azonosítók elrejtése"
+msgstr "Hide SIM identifiers"
 
 msgid "Lock cell %s?"
-msgstr "Zárolja a(z) %s cellát?"
+msgstr "Lock cell %s?"
 
 msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
-msgstr "A rádióverem újraindul (SFUN); a mobilszolgáltatás kb. 30 másodpercre leáll."
+msgstr "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
 
 msgid "Locking %s in the background, about 30 seconds"
-msgstr "%s zárolása a háttérben, kb. 30 másodperc"
+msgstr "Locking %s in the background, about 30 seconds"
 
 msgid "Locked %s in the background; the status will refresh shortly"
-msgstr "%s zárolva a háttérben; az állapot hamarosan frissül"
+msgstr "Locked %s in the background; the status will refresh shortly"
 
 msgid "Lock failed: %s"
-msgstr "A zárolás sikertelen: %s"
+msgstr "Lock failed: %s"
 
 msgid "Uptime %s"
-msgstr "Üzemidő: %s"
+msgstr "Uptime %s"
 
 msgid "Radio off"
-msgstr "Rádió kikapcsolva"
+msgstr "Radio off"
 
 msgid "No response"
-msgstr "Nincs válasz"
+msgstr "No response"
 
 msgid "%s · Signal %s %s/10"
-msgstr "%s · Jel %s %s/10"
+msgstr "%s · Signal %s %s/10"
 
 msgid "%s · Signal %s"
-msgstr "%s · Jel %s"
+msgstr "%s · Signal %s"
 
 msgid "Anchor B%s"
-msgstr "Horgony B%s"
+msgstr "Anchor B%s"
 
 msgid "No serving cell"
-msgstr "Nincs kiszolgáló cella"
+msgstr "No serving cell"
 
 msgid "Not registered"
-msgstr "Nincs regisztrálva"
+msgstr "Not registered"
 
 msgid "Registered"
-msgstr "Regisztrálva"
+msgstr "Registered"
 
 msgid "Searching"
-msgstr "Keresés"
+msgstr "Searching"
 
 msgid "Registration denied"
-msgstr "Regisztráció elutasítva"
+msgstr "Registration denied"
 
 msgid "Registered (roaming)"
-msgstr "Regisztrálva (roaming)"
+msgstr "Registered (roaming)"
 
 msgid "Emergency only"
-msgstr "Csak segélyhívás"
+msgstr "Emergency only"
 
 msgid "Status %s"
-msgstr "Állapot: %s"
+msgstr "Status %s"
 
 msgid "LTE anchor"
-msgstr "LTE-horgony"
+msgstr "LTE anchor"
 
 msgid "LTE link"
-msgstr "LTE-kapcsolat"
+msgstr "LTE link"
 
 msgid "Hidden"
-msgstr "Rejtett"
+msgstr "Hidden"
 
 msgid "No"
-msgstr "Nem"
+msgstr "No"
 
 msgid "Running"
-msgstr "Fut"
+msgstr "Running"
 
 msgid "Not running"
-msgstr "Nem fut"
+msgstr "Not running"
 
 msgid "Connected"
-msgstr "Csatlakoztatva"
+msgstr "Connected"
 
 msgid "Disconnected"
-msgstr "Leválasztva"
+msgstr "Disconnected"
 
 msgid "%s entries"
-msgstr "%s bejegyzés"
+msgstr "%s entries"
 
 msgid "%s clients"
-msgstr "%s kliens"
+msgstr "%s clients"
 
 msgid "Recent DHCP leases"
-msgstr "Legutóbbi DHCP-bérletek"
+msgstr "Recent DHCP leases"
 
 msgid "%d h"
-msgstr "%d óra"
+msgstr "%d h"
 
 msgid "Board"
-msgstr "Alaplap"
+msgstr "Board"
 
 msgid "No temperature readings"
-msgstr "Nincsenek hőmérsékleti adatok"
+msgstr "No temperature readings"
 
 msgid "Cluster %d"
-msgstr "%d. fürt"
+msgstr "Cluster %d"
 
 msgid "Total %s · free %s"
-msgstr "Összesen %s · szabad %s"
-
-msgid "charging %s W"
-msgstr "töltés %s W"
-
-msgid "charging"
-msgstr "töltés"
-
-msgid "drawing %s W"
-msgstr "fogyasztás %s W"
-
-msgid "not charging"
-msgstr "nem töltődik"
-
-msgid "on battery"
-msgstr "akkumulátorról"
-
-msgid "full"
-msgstr "feltöltve"
-
-msgid "USB in %s W"
-msgstr "USB-bemenet %s W"
+msgstr "Total %s · free %s"
 
 msgid "Online"
 msgstr "Online"
 
 msgid "AT adapter unavailable"
-msgstr "Az AT-adapter nem érhető el"
-
-msgid "Saved"
-msgstr "Mentve"
+msgstr "AT adapter unavailable"
 
 msgid "Management connection lost"
-msgstr "A felügyeleti kapcsolat megszakadt"
+msgstr "Management connection lost"
 
 msgid "Installing the language pack…"
-msgstr "A nyelvi csomag telepítése…"
+msgstr "Installing the language pack…"
 
 msgid "The language pack is installed"
-msgstr "A nyelvi csomag telepítve"
+msgstr "The language pack is installed"
 
 msgid "The language pack could not be installed"
-msgstr "A nyelvi csomagot nem sikerült telepíteni"
+msgstr "The language pack could not be installed"
 
 msgid "Upload failed: %s"
-msgstr "A feltöltés sikertelen: %s"
+msgstr "Upload failed: %s"
 
 msgid "Language of the browser"
-msgstr "A böngésző nyelve"
+msgstr "Language of the browser"
 
 msgid "Language of the web interface"
-msgstr "A webes felület nyelve"
+msgstr "Language of the web interface"
 
 msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
-msgstr "Az angol, a török és a kínai a rendszer része; a nyelvi csomag adja hozzá a többit."
+msgstr "English, Turkish and Chinese come with the system; the language pack adds the others."
 
 msgid "The same setting is in System > System > Language and Style."
-msgstr "Ugyanez a beállítás a Rendszer > Rendszer > Nyelv és Stílus menüben található."
+msgstr "The same setting is in System > System > Language and Style."
 
 msgid "Language pack"
-msgstr "Nyelvi csomag"
+msgstr "Language pack"
 
 msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
-msgstr "A nyelvi csomag (mu300-extra-lang.tar.gz, kb. 2 MB) a LuCI-t további kb. 40 nyelven, ezt a panelt közülük 29 nyelven teszi elérhetővé. Töltse le a rendszer kiadásából, vagy töltse fel a fájlt a kiadási oldalról, ha az eszköznek nincs internetkapcsolata."
+msgstr "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
 
 msgid "Download from the release"
-msgstr "Letöltés a kiadásból"
+msgstr "Download from the release"
 
 msgid "Upload the file…"
-msgstr "Fájl feltöltése…"
+msgstr "Upload the file…"
 
 msgid "Release"
-msgstr "Kiadás"
+msgstr "Release"
 
 msgid "Enable all"
-msgstr "Összes engedélyezése"
+msgstr "Enable all"
 
 msgid "Disable all"
-msgstr "Összes letiltása"
+msgstr "Disable all"
 
 msgid "Remove the language pack"
-msgstr "A nyelvi csomag eltávolítása"
+msgstr "Remove the language pack"
 
 msgid "Remove the language pack?"
-msgstr "Eltávolítja a nyelvi csomagot?"
+msgstr "Remove the language pack?"
 
 msgid "Its languages disappear from the list; a page in one of them switches to English."
-msgstr "Nyelvei eltűnnek a listából; az ezek egyikén megjelenő oldal angolra vált."
+msgstr "Its languages disappear from the list; a page in one of them switches to English."
 
 msgid "Remove"
-msgstr "Eltávolítás"
+msgstr "Remove"
 
 msgid "Disable"
-msgstr "Letiltás"
+msgstr "Disable"
 
 msgid "Enable"
-msgstr "Engedélyezés"
+msgstr "Enable"
 
 msgid "LuCI and this panel"
-msgstr "LuCI és ez a panel"
+msgstr "LuCI and this panel"
 
 msgid "LuCI only"
-msgstr "Csak LuCI"
+msgstr "LuCI only"
 
 msgid "Enabled"
-msgstr "Engedélyezve"
+msgstr "Enabled"
 
 msgid "Disabled"
-msgstr "Letiltva"
+msgstr "Disabled"
 
 msgid "Language"
-msgstr "Nyelv"
+msgstr "Language"
 
 msgid "Code"
-msgstr "Kód"
+msgstr "Code"
 
 msgid "Translated"
-msgstr "Lefordítva"
+msgstr "Translated"
 
 msgid "State"
-msgstr "Állapot"
+msgstr "State"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
-msgstr "A LuCI saját fordításai az OpenWrt-ből származnak. Ennek a panelnek a török és kínai kivételével minden fordítása gépi (AI) fordítás; a javításokat szívesen fogadjuk."
+msgstr "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 
 msgid "Automatic"
-msgstr "Automatikus"
+msgstr "Automatic"
 
 msgid "4G only"
-msgstr "Csak 4G"
+msgstr "4G only"
 
 msgid "Serving network"
-msgstr "Kiszolgáló hálózat"
+msgstr "Serving network"
 
 msgid "Network mode · EN-DC"
-msgstr "Hálózati mód · EN-DC"
+msgstr "Network mode · EN-DC"
 
 msgid "Refresh lock status"
-msgstr "Zárolási állapot frissítése"
+msgstr "Refresh lock status"
 
 msgid "Apply at startup"
-msgstr "Alkalmazás indításkor"
+msgstr "Apply at startup"
 
 msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
-msgstr "Kikapcsolása csak a következő indításkori újraalkalmazást állítja le; a mentett hálózati mód, EN-DC, sáv- és cellabeállítások megmaradnak."
+msgstr "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
 
 msgid "Band locking"
-msgstr "Sávzárolás"
+msgstr "Band locking"
 
 msgid "NR bands"
-msgstr "NR-sávok"
+msgstr "NR bands"
 
 msgid "LTE bands"
-msgstr "LTE-sávok"
+msgstr "LTE bands"
 
 msgid "Apply NR bands"
-msgstr "NR-sávok alkalmazása"
+msgstr "Apply NR bands"
 
 msgid "Apply LTE bands"
-msgstr "LTE-sávok alkalmazása"
+msgstr "Apply LTE bands"
 
 msgid "Neighbor cells and cell locking"
-msgstr "Szomszédos cellák és cellazárolás"
+msgstr "Neighbor cells and cell locking"
 
 msgid "Lock current serving cell"
-msgstr "Jelenlegi kiszolgáló cella zárolása"
+msgstr "Lock current serving cell"
 
 msgid "Unlock cell"
-msgstr "Cellazárolás feloldása"
+msgstr "Unlock cell"
 
 msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
-msgstr "Az alkalmazás újraindítja a rádióvermet (SFUN), és rövid időre megszakítja a mobilszolgáltatást. A beállítások mentésre kerülnek, és ha az Alkalmazás indításkor engedélyezve van, a bővítmény újraalkalmazza őket, amint az AT készen áll. Egy rádió előtti platformhook újraindítás nélkül is újraalkalmazhatja őket. Az automatikus mód visszaállításához alkalmazza kiválasztott sávok nélkül."
+msgstr "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
 
 msgid "Apply “%s”?"
-msgstr "Alkalmazza: „%s”?"
+msgstr "Apply “%s”?"
 
 msgid "Applying %s in the background…"
-msgstr "%s alkalmazása a háttérben…"
+msgstr "Applying %s in the background…"
 
 msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
-msgstr "%s alkalmazása a háttérben… (SFUN-újraindítás és újraregisztráció, kb. 30 másodperc)"
+msgstr "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
 
 msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
-msgstr "Sorba állítva: az SFUN-újraindítás alatt egy másik zárolás alkalmazása folyik; ez utána lép életbe"
+msgstr "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
 
 msgid "Confirming the EN-DC status…"
-msgstr "Az EN-DC állapot megerősítése…"
+msgstr "Confirming the EN-DC status…"
 
 msgid "Confirming apply at startup…"
-msgstr "Az indításkori alkalmazás megerősítése…"
+msgstr "Confirming apply at startup…"
 
 msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "Elindítva a háttérben: %s (SFUN-újraindítás, kb. 30 másodperc); az állapot visszaolvasása…"
+msgstr "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "Network mode: %s"
-msgstr "Hálózati mód: %s"
+msgstr "Network mode: %s"
 
 msgid "Disable EN-DC (NSA anchor)"
-msgstr "EN-DC letiltása (NSA-horgony)"
+msgstr "Disable EN-DC (NSA anchor)"
 
 msgid "Enable EN-DC (NSA anchor)"
-msgstr "EN-DC engedélyezése (NSA-horgony)"
+msgstr "Enable EN-DC (NSA anchor)"
 
 msgid "Disable apply at startup"
-msgstr "Indításkori alkalmazás letiltása"
+msgstr "Disable apply at startup"
 
 msgid "Enable apply at startup"
-msgstr "Indításkori alkalmazás engedélyezése"
+msgstr "Enable apply at startup"
 
 msgid "Reading the modem directly (a few seconds at most)…"
-msgstr "A modem közvetlen olvasása (legfeljebb néhány másodperc)…"
+msgstr "Reading the modem directly (a few seconds at most)…"
 
 msgid "Refreshed"
-msgstr "Frissítve"
+msgstr "Refreshed"
 
 msgid "Refresh failed"
-msgstr "A frissítés sikertelen"
+msgstr "Refresh failed"
 
 msgid "NR bands: back to automatic"
-msgstr "NR-sávok: vissza automatikusra"
+msgstr "NR bands: back to automatic"
 
 msgid "NR band lock: %s"
-msgstr "NR-sávzárolás: %s"
+msgstr "NR band lock: %s"
 
 msgid "LTE bands: back to automatic"
-msgstr "LTE-sávok: vissza automatikusra"
+msgstr "LTE bands: back to automatic"
 
 msgid "LTE band lock: %s"
-msgstr "LTE-sávzárolás: %s"
+msgstr "LTE band lock: %s"
 
 msgid "Remove the %s cell lock"
-msgstr "A(z) %s cellazárolás eltávolítása"
+msgstr "Remove the %s cell lock"
 
 msgid "The radio stack will restart (SFUN), taking about 30 seconds."
-msgstr "A rádióverem újraindul (SFUN), ez kb. 30 másodpercig tart."
+msgstr "The radio stack will restart (SFUN), taking about 30 seconds."
 
 msgid "Removing the %s cell lock…"
-msgstr "A(z) %s cellazárolás eltávolítása…"
+msgstr "Removing the %s cell lock…"
 
 msgid "Unlock failed: %s"
-msgstr "A feloldás sikertelen: %s"
+msgstr "Unlock failed: %s"
 
 msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "Feloldás elindítva a háttérben (SFUN-újraindítás, kb. 30 másodperc); az állapot visszaolvasása…"
+msgstr "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "Locking %s in the background…"
-msgstr "%s zárolása a háttérben…"
+msgstr "Locking %s in the background…"
 
 msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "%s zárolva a háttérben (SFUN-újraindítás, kb. 30 másodperc); az állapot visszaolvasása…"
+msgstr "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "No serving-network data"
-msgstr "Nincsenek kiszolgálóhálózat-adatok"
+msgstr "No serving-network data"
 
 msgid "NR serving cell"
-msgstr "NR kiszolgáló cella"
+msgstr "NR serving cell"
 
 msgid "Status confirmed"
-msgstr "Állapot megerősítve"
+msgstr "Status confirmed"
 
 msgid "Readback timed out; select “Refresh lock status”"
-msgstr "A visszaolvasás időtúllépés miatt megszakadt; válassza a „Zárolási állapot frissítése” lehetőséget"
+msgstr "Readback timed out; select “Refresh lock status”"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
-msgstr "Alkalmazva (az EN-DC-hez nem kell újraindítani a rádióvermet)"
+msgstr "Applied (EN-DC does not require a radio-stack restart)"
 
 msgid "Apply at startup is on"
-msgstr "Az indításkori alkalmazás be van kapcsolva"
+msgstr "Apply at startup is on"
 
 msgid "Apply at startup is off"
-msgstr "Az indításkori alkalmazás ki van kapcsolva"
+msgstr "Apply at startup is off"
 
 msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
-msgstr "Az EN-DC állapot visszaolvasása időtúllépés miatt megszakadt; a megerősítéshez használja a „Zárolási állapot frissítése” lehetőséget"
+msgstr "EN-DC status readback timed out; use “Refresh lock status” to confirm"
 
 msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
-msgstr "Az indításkori alkalmazás állapotának visszaolvasása időtúllépés miatt megszakadt; a megerősítéshez használja a „Zárolási állapot frissítése” lehetőséget"
+msgstr "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
 
 msgid "Locked cells"
-msgstr "Zárolt cellák"
+msgstr "Locked cells"
 
 msgid "Unlock %s"
-msgstr "%s feloldása"
+msgstr "Unlock %s"
 
 msgid "Automatic (%d supported)"
-msgstr "Automatikus (%d támogatott)"
+msgstr "Automatic (%d supported)"
 
 msgid "%d locked: %s"
-msgstr "%d zárolva: %s"
+msgstr "%d locked: %s"
 
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
-msgstr "Annak beállítása, hogyan csatlakozik ez a bővítmény a jelenlegi Unisoc OpenWrt platformhoz. A változtatásokhoz nem kell szerkeszteni az irányítópult, AT, zárolási vagy SMS oldalakat."
+msgstr "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 
 msgid "Platform adapter"
-msgstr "Platformadapter"
+msgstr "Platform adapter"
 
 msgid "AT backend"
-msgstr "AT-háttérrendszer"
+msgstr "AT backend"
 
 msgid "Auto-detect"
-msgstr "Automatikus felismerés"
+msgstr "Auto-detect"
 
 msgid "atinout + serial port"
-msgstr "atinout + soros port"
+msgstr "atinout + serial port"
 
 msgid "Custom adapter"
-msgstr "Egyéni adapter"
+msgstr "Custom adapter"
 
 msgid "AT serial port"
-msgstr "AT soros port"
+msgstr "AT serial port"
 
 msgid "Custom AT adapter"
-msgstr "Egyéni AT-adapter"
+msgstr "Custom AT adapter"
 
 msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
-msgstr "A program egy másodpercben megadott időkorlátot és a teljes AT-parancsot kapja meg, ebben a sorrendben. A soros zárolást meg kell osztania a platform tárcsázójával."
+msgstr "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
 
 msgid "SMS adapter"
-msgstr "SMS-adapter"
+msgstr "SMS adapter"
 
 msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
-msgstr "Valósítsa meg a list, show, send, delete és sync alparancsokat; hagyja üresen a mu300-sms automatikus megkereséséhez."
+msgstr "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
 
 msgid "SMS pool directory"
-msgstr "SMS-tároló könyvtára"
+msgstr "SMS pool directory"
 
 msgid "Cellular logical interface"
-msgstr "Mobilhálózati logikai csatoló"
+msgstr "Cellular logical interface"
 
 msgid "Cellular IPv6 interface"
-msgstr "Mobilhálózati IPv6-csatoló"
+msgstr "Cellular IPv6 interface"
 
 msgid "Cellular network device"
-msgstr "Mobilhálózati eszköz"
+msgstr "Cellular network device"
 
 msgid "Leave blank to detect from netifd"
-msgstr "Hagyja üresen a netifd alapján történő felismeréshez"
+msgstr "Leave blank to detect from netifd"
 
 msgid "LAN bridge"
-msgstr "LAN-híd"
+msgstr "LAN bridge"
 
 msgid "Wi-Fi device"
-msgstr "Wi-Fi-eszköz"
+msgstr "Wi-Fi device"
 
 msgid "USB device"
-msgstr "USB-eszköz"
+msgstr "USB device"
 
 msgid "Maximum wait for AT readiness (seconds)"
-msgstr "Maximális várakozás az AT készenlétére (másodperc)"
+msgstr "Maximum wait for AT readiness (seconds)"
 
 msgid "Home dashboard refresh interval (seconds)"
-msgstr "A kezdőlap frissítési időköze (másodperc)"
+msgstr "Home dashboard refresh interval (seconds)"
 
 msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
-msgstr "Csak a kezdőlap frissítési gyakoriságát szabályozza; 0.5–60 másodperc. Mentés után nyissa meg újra a Kezdőlapot az alkalmazáshoz."
+msgstr "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
 
 msgid "Persistent state directory"
-msgstr "Állandó állapot könyvtára"
+msgstr "Persistent state directory"
 
 msgid "Recipient: number, e.g. 10086 or +86..."
-msgstr "Címzett: szám, pl. 10086 vagy +86..."
+msgstr "Recipient: number, e.g. 10086 or +86..."
 
 msgid "Sync from SIM"
-msgstr "Szinkronizálás a SIM-ről"
+msgstr "Sync from SIM"
 
 msgid "Clear local pool"
-msgstr "Helyi tároló törlése"
+msgstr "Clear local pool"
 
 msgid "Loading…"
-msgstr "Betöltés…"
+msgstr "Loading…"
 
 msgid "Select a conversation on the left, or enter a number below to send."
-msgstr "Válasszon egy beszélgetést bal oldalon, vagy adjon meg lent egy számot a küldéshez."
+msgstr "Select a conversation on the left, or enter a number below to send."
 
 msgid "Message (Enter to send, Shift+Enter for newline)"
-msgstr "Üzenet (Enter a küldéshez, Shift+Enter új sorhoz)"
+msgstr "Message (Enter to send, Shift+Enter for newline)"
 
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
-msgstr "A küldés AT+CMGS-t használ (PDU mód); ha a csatorna foglalt, próbálja újra. Egy üzenet törléséhez használja a buborékján lévő kuka ikont."
+msgstr "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
-msgstr "Szinkronizálás a SIM-ről a háttérben (AT+CMGL)…"
+msgstr "Syncing from the SIM in the background (AT+CMGL)…"
 
 msgid "SIM sync started; the list refreshes in a few seconds."
-msgstr "A SIM-szinkronizálás elindult; a lista néhány másodperc múlva frissül."
+msgstr "SIM sync started; the list refreshes in a few seconds."
 
 msgid "Clear local SMS pool"
-msgstr "Helyi SMS-tároló törlése"
+msgstr "Clear local SMS pool"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
-msgstr "Csak a helyi fájlok törlődnek; a SIM-en lévő üzenetek megmaradnak."
+msgstr "Only local files will be deleted; messages on the SIM remain."
 
 msgid "Clear"
-msgstr "Törlés"
+msgstr "Clear"
 
 msgid "Delete this SMS"
-msgstr "Az SMS törlése"
+msgstr "Delete this SMS"
 
 msgid "Deletion cannot be undone."
-msgstr "A törlés nem vonható vissza."
+msgstr "Deletion cannot be undone."
 
 msgid "Local only"
-msgstr "Csak helyi"
+msgstr "Local only"
 
 msgid "Local + SIM"
-msgstr "Helyi + SIM"
+msgstr "Local + SIM"
 
 msgid "Delete failed"
-msgstr "A törlés sikertelen"
+msgstr "Delete failed"
 
 msgid "Deleted (local + SIM)"
-msgstr "Törölve (helyi + SIM)"
+msgstr "Deleted (local + SIM)"
 
 msgid "Deleted (local only)"
-msgstr "Törölve (csak helyi)"
+msgstr "Deleted (local only)"
 
 msgid "Enter both a number and a message."
-msgstr "Adjon meg számot és üzenetet is."
+msgstr "Enter both a number and a message."
 
 msgid "Sending…"
-msgstr "Küldés…"
+msgstr "Sending…"
 
 msgid "Sent; the list refreshes shortly."
-msgstr "Elküldve; a lista hamarosan frissül."
+msgstr "Sent; the list refreshes shortly."
 
 msgid "Sending failed"
-msgstr "A küldés sikertelen"
+msgstr "Sending failed"
 
 msgid "· %d messages, %d unread · %d conversations"
-msgstr "· %d üzenet, %d olvasatlan · %d beszélgetés"
+msgstr "· %d messages, %d unread · %d conversations"
 
 msgid "· %d messages · %d conversations"
-msgstr "· %d üzenet · %d beszélgetés"
+msgstr "· %d messages · %d conversations"
 
 msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
-msgstr "A tároló üres. A bejövő és elküldött üzenetek itt jelennek meg, vagy válassza a „Szinkronizálás a SIM-ről” lehetőséget."
+msgstr "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
 
 msgid "Me: %s"
-msgstr "Én: %s"
+msgstr "Me: %s"
 
 msgid "Delete"
-msgstr "Törlés"
+msgstr "Delete"
+
+msgid "The traffic accounting service is unavailable"
+msgstr "The traffic accounting service is unavailable"
+
+msgid "The traffic totals could not be saved"
+msgstr "The traffic totals could not be saved"
+
+msgid "The system clock is not synchronised yet"
+msgstr "The system clock is not synchronised yet"
+
+msgid "Today"
+msgstr "Today"
+
+msgid "This month"
+msgstr "This month"
+
+msgid "Calendar month"
+msgstr "Calendar month"
+
+msgid "Used this cycle"
+msgstr "Used this cycle"
+
+msgid "Plan remaining"
+msgstr "Plan remaining"
+
+msgid "Plan and traffic pool"
+msgstr "Plan and traffic pool"
+
+msgid "Plan name"
+msgstr "Plan name"
+
+msgid "Quota per cycle (GB)"
+msgstr "Quota per cycle (GB)"
+
+msgid "Daily reference quota (GB)"
+msgstr "Daily reference quota (GB)"
+
+msgid "Monthly reset day (1–31)"
+msgstr "Monthly reset day (1–31)"
+
+msgid "Plan counting mode"
+msgstr "Plan counting mode"
+
+msgid "Uplink + downlink"
+msgstr "Uplink + downlink"
+
+msgid "Downlink only"
+msgstr "Downlink only"
+
+msgid "Uplink only"
+msgstr "Uplink only"
+
+msgid "A quota of 0 means unlimited; 1 GB = 1000 MB. The reset day takes effect at local midnight, and short months use their last day."
+msgstr "A quota of 0 means unlimited; 1 GB = 1000 MB. The reset day takes effect at local midnight, and short months use their last day."
+
+msgid "Interface to account"
+msgstr "Interface to account"
+
+msgid "Use the cellular WAN interface automatically"
+msgstr "Use the cellular WAN interface automatically"
+
+msgid "Calibrate used this cycle (GB, optional)"
+msgstr "Calibrate used this cycle (GB, optional)"
+
+msgid "Leave blank to keep the current total"
+msgstr "Leave blank to keep the current total"
+
+msgid "Calibration only adjusts the current plan cycle; the daily and calendar-month histories are unchanged, and the next cycle counts real traffic again."
+msgstr "Calibration only adjusts the current plan cycle; the daily and calendar-month histories are unchanged, and the next cycle counts real traffic again."
+
+msgid "Recent daily usage"
+msgstr "Recent daily usage"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Down"
+msgstr "Down"
+
+msgid "Up"
+msgstr "Up"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Monthly usage history"
+msgstr "Monthly usage history"
+
+msgid "Month"
+msgstr "Month"
+
+msgid "Recording starts when accounting is enabled; it updates about every 10 seconds and saves every 60. A sudden power loss can lose the most recent unsaved records."
+msgstr "Recording starts when accounting is enabled; it updates about every 10 seconds and saves every 60. A sudden power loss can lose the most recent unsaved records."
+
+msgid "The local interface totals are for reference; the carrier’s billing is authoritative. The quota is for display and alerts only and never disconnects the link."
+msgstr "The local interface totals are for reference; the carrier’s billing is authoritative. The quota is for display and alerts only and never disconnects the link."
+
+msgid "Unlimited"
+msgstr "Unlimited"
+
+msgid "No plan name set"
+msgstr "No plan name set"
+
+msgid "Quota per cycle: "
+msgstr "Quota per cycle: "
+
+msgid "Next reset: "
+msgstr "Next reset: "
+
+msgid "Daily reference quota: "
+msgstr "Daily reference quota: "
+
+msgid "Updated: "
+msgstr "Updated: "
+
+msgid "The accounting interface is unavailable"
+msgstr "The accounting interface is unavailable"
+
+msgid "The plan quota is reached"
+msgstr "The plan quota is reached"
+
+msgid "The daily reference quota is reached"
+msgstr "The daily reference quota is reached"
+
+msgid "No records yet"
+msgstr "No records yet"
+
+msgid "Calibrate used traffic this cycle?"
+msgstr "Calibrate used traffic this cycle?"
+
+msgid "This sets the current cycle’s used value to the entered amount; the daily and calendar-month records are unchanged."
+msgstr "This sets the current cycle’s used value to the entered amount; the daily and calendar-month records are unchanged."
+
+msgid "Saving the traffic pool settings…"
+msgstr "Saving the traffic pool settings…"
 
 msgid "Dashboard info failed"
-msgstr "Az irányítópult adatai nem érhetők el"
+msgstr "Dashboard info failed"
 
 msgid "Applying network locks: no live signal right now"
-msgstr "Hálózati zárolások alkalmazása: jelenleg nincs élő jel"
+msgstr "Applying network locks: no live signal right now"
 
 msgid "Live signal read failed"
-msgstr "Az élő jel olvasása sikertelen"
+msgstr "Live signal read failed"
 
 msgid "Unknown op"
-msgstr "Ismeretlen művelet"
+msgstr "Unknown op"
 
 msgid "Invalid argument for this op"
-msgstr "Érvénytelen argumentum ehhez a művelethez"
+msgstr "Invalid argument for this op"
 
 msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
-msgstr "A rádió foglalt: a tárcsázó vagy a watchdog éppen kapcsolja, próbálja újra kicsit később"
+msgstr "The radio is busy: the dial or the watchdog is switching it, try again shortly"
 
 msgid "The action gave no valid reply"
-msgstr "A művelet nem adott érvényes választ"
+msgstr "The action gave no valid reply"
 
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
-msgstr "Egy AT-parancs egyetlen sor nyomtatható ASCII, legfeljebb 512 karakter"
+msgstr "An AT command is one line of printable ASCII, at most 512 characters"
 
 msgid "Must be an AT command"
-msgstr "AT-parancsnak kell lennie"
+msgstr "Must be an AT command"
 
 msgid "No \";\" command chaining"
-msgstr "Nincs parancsláncolás \";\" jellel"
+msgstr "No \";\" command chaining"
 
 msgid "Denied: this command wedges the AT port until a reboot"
-msgstr "Elutasítva: ez a parancs újraindításig megbénítja az AT-portot"
+msgstr "Denied: this command wedges the AT port until a reboot"
 
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
-msgstr "Hálózati zárolások alkalmazása: a modem újraindul (kb. fél perc), próbálja újra kicsit később"
+msgstr "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 
 msgid "The AT channel is busy; the command was not sent, try again"
-msgstr "Az AT-csatorna foglalt; a parancs nem lett elküldve, próbálja újra"
+msgstr "The AT channel is busy; the command was not sent, try again"
 
 msgid "The modem did not answer in time; the command may still run, check before sending it again"
-msgstr "A modem nem válaszolt időben; a parancs még futhat, ellenőrizze, mielőtt újra elküldi"
+msgstr "The modem did not answer in time; the command may still run, check before sending it again"
 
 msgid "The fresh parameter must be 0 or 1"
-msgstr "A fresh paraméter értéke 0 vagy 1 lehet"
+msgstr "The fresh parameter must be 0 or 1"
 
 msgid "Lock read failed"
-msgstr "A zárolás olvasása sikertelen"
+msgstr "Lock read failed"
 
 msgid "Unknown lock kind"
-msgstr "Ismeretlen zárolástípus"
+msgstr "Unknown lock kind"
 
 msgid "Invalid value for this lock kind"
-msgstr "Érvénytelen érték ehhez a zárolástípushoz"
+msgstr "Invalid value for this lock kind"
 
 msgid "Invalid page"
-msgstr "Érvénytelen oldal"
+msgstr "Invalid page"
 
 msgid "mu300-sms is not available (the SMS service is not installed or not running)"
-msgstr "A mu300-sms nem érhető el (az SMS-szolgáltatás nincs telepítve vagy nem fut)"
+msgstr "mu300-sms is not available (the SMS service is not installed or not running)"
 
 msgid "No output"
-msgstr "Nincs kimenet"
+msgstr "No output"
 
 msgid "Bad ID"
-msgstr "Hibás azonosító"
+msgstr "Bad ID"
 
 msgid "Read failed"
-msgstr "Az olvasás sikertelen"
+msgstr "Read failed"
 
 msgid "The number may only contain digits (and a leading +)"
-msgstr "A szám csak számjegyeket tartalmazhat (és egy kezdő + jelet)"
+msgstr "The number may only contain digits (and a leading +)"
 
 msgid "The message is empty"
-msgstr "Az üzenet üres"
+msgstr "The message is empty"
 
 msgid "The message is too long (over 480 characters)"
-msgstr "Az üzenet túl hosszú (több mint 480 karakter)"
+msgstr "The message is too long (over 480 characters)"
 
 msgid "The message contains a control character"
-msgstr "Az üzenet vezérlőkaraktert tartalmaz"
+msgstr "The message contains a control character"
 
 msgid "The sim parameter must be 0 or 1"
-msgstr "A sim paraméter értéke 0 vagy 1 lehet"
+msgstr "The sim parameter must be 0 or 1"
 
 msgid "The USB adapter (device-usb) gave no valid reply"
-msgstr "Az USB-adapter (device-usb) nem adott érvényes választ"
+msgstr "The USB adapter (device-usb) gave no valid reply"
 
 msgid "The auto parameter must be 0 or 1"
-msgstr "Az auto paraméter értéke 0 vagy 1 lehet"
+msgstr "The auto parameter must be 0 or 1"
 
 msgid "Invalid USB role"
-msgstr "Érvénytelen USB-szerep"
+msgstr "Invalid USB role"
 
 msgid "A USB role takes no scope"
-msgstr "Az USB-szerephez nem tartozik hatókör"
+msgstr "A USB role takes no scope"
 
 msgid "Invalid USB network mode"
-msgstr "Érvénytelen USB-hálózati mód"
+msgstr "Invalid USB network mode"
 
 msgid "Invalid USB network scope"
-msgstr "Érvénytelen USB-hálózati hatókör"
+msgstr "Invalid USB network scope"
 
 msgid "Unknown USB setting"
-msgstr "Ismeretlen USB-beállítás"
+msgstr "Unknown USB setting"
 
 msgid "Invalid interface name"
-msgstr "Érvénytelen csatolónév"
+msgstr "Invalid interface name"
 
 msgid "The languages adapter gave no valid reply"
-msgstr "A nyelvi adapter nem adott érvényes választ"
+msgstr "The languages adapter gave no valid reply"
 
 msgid "Unknown language operation"
-msgstr "Ismeretlen nyelvi művelet"
+msgstr "Unknown language operation"
 
 msgid "Invalid language code"
-msgstr "Érvénytelen nyelvkód"
+msgstr "Invalid language code"
 
 msgid "Invalid language request"
-msgstr "Érvénytelen nyelvi kérés"
+msgstr "Invalid language request"
 
 msgid "Unknown source"
-msgstr "Ismeretlen forrás"
+msgstr "Unknown source"
+
+msgid "traffic_unavailable"
+msgstr "traffic_unavailable"
 
 msgid "Request too large"
-msgstr "A kérés túl nagy"
+msgstr "Request too large"
 
 msgid "The runtime directory is not safe; nothing was run"
-msgstr "A futtatási könyvtár nem biztonságos; semmi sem futott"
+msgstr "The runtime directory is not safe; nothing was run"
 
 msgid "No such method"
-msgstr "Nincs ilyen metódus"
+msgstr "No such method"
 
 msgid "Radio did not come up"
-msgstr "A rádió nem kapcsolt be"
+msgstr "Radio did not come up"
 
 msgid "Expected on or off"
-msgstr "on vagy off érték szükséges"
+msgstr "Expected on or off"
 
 msgid "VPN integration is not provided by this platform"
-msgstr "Ez a platform nem biztosít VPN-integrációt"
+msgstr "VPN integration is not provided by this platform"
 
 msgid "Dual-boot integration is not provided by this platform"
-msgstr "Ez a platform nem biztosít kettős indítási integrációt"
+msgstr "Dual-boot integration is not provided by this platform"
 
 msgid "mu300-next-boot failed"
-msgstr "A mu300-next-boot sikertelen"
+msgstr "mu300-next-boot failed"
 
 msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
-msgstr "Az AT-háttérrendszer nem válaszolt (rádió kikapcsolva, modem újraindul vagy az adapter nem érhető el)"
+msgstr "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
 
 msgid "USB role adapter is not executable"
-msgstr "Az USB-szerep adapter nem futtatható"
+msgstr "USB role adapter is not executable"
 
 msgid "USB role adapter failed"
-msgstr "Az USB-szerep adapter hibát jelzett"
+msgstr "USB role adapter failed"
 
 msgid "USB role switch is unavailable"
-msgstr "Az USB-szerepváltás nem érhető el"
+msgstr "USB role switch is unavailable"
 
 msgid "USB role switch failed"
-msgstr "Az USB-szerepváltás sikertelen"
+msgstr "USB role switch failed"
 
 msgid "USB role switch was refused by platform safety checks"
-msgstr "Az USB-szerepváltást a platform biztonsági ellenőrzései elutasították"
+msgstr "USB role switch was refused by platform safety checks"
 
 msgid "Cannot create USB boot settings directory"
-msgstr "Az USB-indítási beállítások könyvtára nem hozható létre"
+msgstr "Cannot create USB boot settings directory"
 
 msgid "Cannot write USB boot settings"
-msgstr "Az USB-indítási beállítások nem írhatók"
+msgstr "Cannot write USB boot settings"
 
 msgid "Cannot save USB boot settings"
-msgstr "Az USB-indítási beállítások nem menthetők"
+msgstr "Cannot save USB boot settings"
 
 msgid "Invalid boot-auto value"
-msgstr "Érvénytelen boot-auto érték"
+msgstr "Invalid boot-auto value"
 
 msgid "Device is the boot default; host auto-apply is the only persistent role"
-msgstr "Az eszköz az indítási alapértelmezés; csak a gazda automatikus alkalmazása lehet állandó szerep"
+msgstr "Device is the boot default; host auto-apply is the only persistent role"
 
 msgid "Cannot save USB role policy"
-msgstr "Az USB-szerep szabálya nem menthető"
+msgstr "Cannot save USB role policy"
 
 msgid "Cannot disable USB network boot policy"
-msgstr "Az USB-hálózat indítási szabálya nem tiltható le"
+msgstr "Cannot disable USB network boot policy"
 
 msgid "Cannot commit USB role policy"
-msgstr "Az USB-szerep szabálya nem véglegesíthető"
+msgstr "Cannot commit USB role policy"
 
 msgid "USB network mode is unavailable in host role"
-msgstr "Az USB-hálózati mód gazda szerepben nem érhető el"
+msgstr "USB network mode is unavailable in host role"
 
 msgid "Disable host boot-auto before configuring USB network"
-msgstr "Az USB-hálózat beállítása előtt tiltsa le a gazda boot-auto beállítását"
+msgstr "Disable host boot-auto before configuring USB network"
 
 msgid "Cannot save USB network policy"
-msgstr "Az USB-hálózati szabály nem menthető"
+msgstr "Cannot save USB network policy"
 
 msgid "Cannot commit USB network policy"
-msgstr "Az USB-hálózati szabály nem véglegesíthető"
+msgstr "Cannot commit USB network policy"
 
 msgid "USB host mode is required"
-msgstr "USB gazda mód szükséges"
+msgstr "USB host mode is required"
 
 msgid "Not a USB network interface"
-msgstr "Nem USB-hálózati csatoló"
+msgstr "Not a USB network interface"
 
 msgid "LAN bridge device section was not found"
-msgstr "A LAN-híd eszközszakasza nem található"
+msgstr "LAN bridge device section was not found"
 
 msgid "Cannot bring USB network interface up"
-msgstr "Az USB-hálózati csatoló nem aktiválható"
+msgstr "Cannot bring USB network interface up"
 
 msgid "Cannot add interface to LAN bridge"
-msgstr "A csatoló nem adható hozzá a LAN-hídhoz"
+msgstr "Cannot add interface to LAN bridge"
 
 msgid "Cannot save LAN bridge"
-msgstr "A LAN-híd nem menthető"
+msgstr "Cannot save LAN bridge"
 
 msgid "Network reload failed"
-msgstr "A hálózat újratöltése sikertelen"
+msgstr "Network reload failed"
 
 msgid "Cannot attach USB interface to LAN bridge"
-msgstr "Az USB-csatoló nem kapcsolható a LAN-hídhoz"
+msgstr "Cannot attach USB interface to LAN bridge"
 
 msgid "The language pack is not installed"
-msgstr "A nyelvi csomag nincs telepítve"
+msgstr "The language pack is not installed"
 
 msgid "No language given"
-msgstr "Nincs megadva nyelv"
+msgstr "No language given"
 
 msgid "The language could not be changed"
-msgstr "A nyelvet nem sikerült módosítani"
+msgstr "The language could not be changed"
 
 msgid "LuCI does not offer this language"
-msgstr "A LuCI nem kínálja ezt a nyelvet"
+msgstr "LuCI does not offer this language"
 
 msgid "No uploaded language pack"
-msgstr "Nincs feltöltött nyelvi csomag"
+msgstr "No uploaded language pack"
 
 msgid "An installation is already running"
-msgstr "Egy telepítés már folyamatban van"
+msgstr "An installation is already running"
 
 msgid "The language pack could not be removed"
-msgstr "A nyelvi csomagot nem sikerült eltávolítani"
+msgstr "The language pack could not be removed"
 
 msgid "Lock cache unavailable"
-msgstr "A zárolási gyorsítótár nem érhető el"
+msgstr "Lock cache unavailable"
 
 msgid "No serving cell to lock to"
-msgstr "Nincs kiszolgáló cella a zároláshoz"
+msgstr "No serving cell to lock to"

@@ -4,31 +4,37 @@ msgstr ""
 "Language: ja\n"
 
 msgid "Status dashboard"
-msgstr "ステータスダッシュボード"
+msgstr "Status dashboard"
 
 msgid "Cellular"
-msgstr "セルラー"
+msgstr "Cellular"
 
 msgid "Network locks"
-msgstr "ネットワークロック"
+msgstr "Network locks"
 
 msgid "SMS"
 msgstr "SMS"
 
 msgid "AT terminal"
-msgstr "AT ターミナル"
+msgstr "AT terminal"
 
 msgid "Adapter settings"
-msgstr "アダプタ設定"
+msgstr "Adapter settings"
 
 msgid "Device management"
-msgstr "デバイス管理"
+msgstr "Device management"
+
+msgid "SMS forwarding"
+msgstr "SMS forwarding"
+
+msgid "Traffic pool"
+msgstr "Traffic pool"
 
 msgid "Languages"
-msgstr "言語"
+msgstr "Languages"
 
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
-msgstr "MU300 コントロールセンター: ステータスダッシュボード、ネットワークロック、AT ターミナル、SMS"
+msgstr "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -46,250 +52,496 @@ msgid "China Tietong"
 msgstr "China Tietong"
 
 msgid "Excellent"
-msgstr "非常に良好"
+msgstr "Excellent"
 
 msgid "Good"
-msgstr "良好"
+msgstr "Good"
 
 msgid "Fair"
-msgstr "普通"
+msgstr "Fair"
 
 msgid "Poor"
-msgstr "不良"
+msgstr "Poor"
 
 msgid "Unknown"
-msgstr "不明"
+msgstr "Unknown"
 
 msgid "%d d %d h"
-msgstr "%d 日 %d 時間"
+msgstr "%d d %d h"
 
 msgid "%d h %d min"
-msgstr "%d 時間 %d 分"
+msgstr "%d h %d min"
 
 msgid "%d min"
-msgstr "%d 分"
+msgstr "%d min"
 
 msgid "No neighbor-cell data"
-msgstr "隣接セルのデータなし"
+msgstr "No neighbor-cell data"
 
 msgid "Locked"
-msgstr "ロック済み"
+msgstr "Locked"
 
 msgid "Lock"
-msgstr "ロック"
+msgstr "Lock"
 
 msgid "Unknown error"
-msgstr "不明なエラー"
+msgstr "Unknown error"
 
 msgid "Confirm"
-msgstr "確認"
+msgstr "Confirm"
 
 msgid "OK"
 msgstr "OK"
 
 msgid "Cancel"
-msgstr "キャンセル"
+msgstr "Cancel"
 
 msgid "New SMS · %s"
-msgstr "新着 SMS · %s"
+msgstr "New SMS · %s"
 
 msgid "Unknown number"
-msgstr "不明な番号"
+msgstr "Unknown number"
 
 msgid "Select"
-msgstr "選択"
+msgstr "Select"
 
 msgid "Basic"
-msgstr "基本"
+msgstr "Basic"
 
 msgid "Registration/signal"
-msgstr "登録/信号"
+msgstr "Registration/signal"
 
 msgid "Bearer"
-msgstr "ベアラ"
+msgstr "Bearer"
 
 msgid "Engineering mode"
-msgstr "エンジニアリングモード"
+msgstr "Engineering mode"
 
 msgid "AT command (↑↓ history, Enter to send)"
-msgstr "AT コマンド (↑↓ で履歴、Enter で送信)"
+msgstr "AT command (↑↓ history, Enter to send)"
 
 msgid "Send"
-msgstr "送信"
+msgstr "Send"
 
 msgid "Clear screen"
-msgstr "画面をクリア"
+msgstr "Clear screen"
 
 msgid "Ready."
-msgstr "準備完了。"
+msgstr "Ready."
 
 msgid "Session history (click to reuse)"
-msgstr "セッション履歴 (クリックで再利用)"
+msgstr "Session history (click to reuse)"
 
 msgid "(no output)"
-msgstr "(出力なし)"
+msgstr "(no output)"
 
 msgid "Request failed"
-msgstr "リクエスト失敗"
+msgstr "Request failed"
 
 msgid "(empty)"
-msgstr "(空)"
+msgstr "(empty)"
 
 msgid "USB role"
-msgstr "USB ロール"
+msgstr "USB role"
 
 msgid "Current role"
-msgstr "現在のロール"
+msgstr "Current role"
 
 msgid "Switch USB role"
-msgstr "USB ロールの切り替え"
+msgstr "Switch USB role"
 
 msgid "Device mode"
-msgstr "デバイスモード"
+msgstr "Device mode"
 
 msgid "Host mode"
-msgstr "ホストモード"
+msgstr "Host mode"
 
 msgid "Enable host mode at boot"
-msgstr "起動時にホストモードを有効化"
+msgstr "Enable host mode at boot"
 
 msgid "Apply role"
-msgstr "ロールを適用"
+msgstr "Apply role"
 
 msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
-msgstr "ホストモードではこのポートの USB ネットワークとシリアルが切断されます。F50 にはバッテリーがないため、管理接続が失われる可能性があり、USB アダプタには通常セルフパワーのハブが必要です。"
+msgstr "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
 
 msgid "USB network mode"
-msgstr "USB ネットワークモード"
+msgstr "USB network mode"
 
 msgid "Network protocol"
-msgstr "ネットワークプロトコル"
+msgstr "Network protocol"
 
 msgid "Apply duration"
-msgstr "適用期間"
+msgstr "Apply duration"
 
 msgid "Next reboot only"
-msgstr "次回の再起動のみ"
+msgstr "Next reboot only"
 
 msgid "Permanent"
-msgstr "恒久的"
+msgstr "Permanent"
 
 msgid "Enable selected protocol"
-msgstr "選択したプロトコルを有効化"
+msgstr "Enable selected protocol"
 
 msgid "Save; apply after reboot"
-msgstr "保存し、再起動後に適用"
+msgstr "Save; apply after reboot"
 
 msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
-msgstr "既定は NCM です。Windows は ECM をネイティブにサポートしていません。RNDIS では列挙方法が変わります。「選択したプロトコルを有効化」がオフの場合は選択内容のみ保存されます。「次回の再起動のみ」は一度だけ適用され、その後 NCM に戻ります。"
+msgstr "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
 
 msgid "USB adapters"
-msgstr "USB アダプタ"
+msgstr "USB adapters"
 
 msgid "Refresh"
-msgstr "更新"
+msgstr "Refresh"
 
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
-msgstr "ホストモードでのみ利用できます。更新すると検出された USB アダプタを起動します。LAN に追加するとブリッジ設定を保存し、ネットワークを再読み込みします。"
+msgstr "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 
 msgid "Unavailable"
-msgstr "利用不可"
+msgstr "Unavailable"
 
 msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
-msgstr "ホストモードでは USB ネットワークモードを使用できません。ホストモードの自動起動を有効にすると USB ネットワークの自動起動も無効になります。"
+msgstr "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
 
 msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
-msgstr "ホストモードにすると USB 管理接続がすぐに切断されます。F50 にはバッテリーがなく、周辺機器には外部電源が必要な場合があります。別の管理経路があることを確認してください。"
+msgstr "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
 
 msgid "USB networking and serial will re-enumerate in device mode."
-msgstr "デバイスモードでは USB ネットワークとシリアルが再列挙されます。"
+msgstr "USB networking and serial will re-enumerate in device mode."
 
 msgid "Switch USB role?"
-msgstr "USB ロールを切り替えますか?"
+msgstr "Switch USB role?"
 
 msgid "Apply"
-msgstr "適用"
+msgstr "Apply"
 
 msgid "Switching USB role…"
-msgstr "USB ロールを切り替えています…"
+msgstr "Switching USB role…"
 
 msgid "Switch failed: %s"
-msgstr "切り替えに失敗しました: %s"
+msgstr "Switch failed: %s"
 
 msgid "Management connection lost; reconnect to confirm the USB role."
-msgstr "管理接続が切断されました。再接続して USB ロールを確認してください。"
+msgstr "Management connection lost; reconnect to confirm the USB role."
 
 msgid "Switch request accepted; the USB connection may briefly disconnect."
-msgstr "切り替え要求を受け付けました。USB 接続が一時的に切断される場合があります。"
+msgstr "Switch request accepted; the USB connection may briefly disconnect."
 
 msgid "USB role applied"
-msgstr "USB ロールを適用しました"
+msgstr "USB role applied"
 
 msgid "Save USB network mode?"
-msgstr "USB ネットワークモードを保存しますか?"
+msgstr "Save USB network mode?"
 
 msgid "The network mode applies on the next reboot; USB management may need to reconnect."
-msgstr "ネットワークモードは次回の再起動時に適用されます。USB 管理接続の再接続が必要になる場合があります。"
+msgstr "The network mode applies on the next reboot; USB management may need to reconnect."
 
 msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
-msgstr "選択内容のみ保存します。選択したプロトコルが無効のため、次回の起動でも既定の NCM が使われます。"
+msgstr "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
 
 msgid "Save"
-msgstr "保存"
+msgstr "Save"
 
 msgid "Saving USB network settings…"
-msgstr "USB ネットワーク設定を保存しています…"
+msgstr "Saving USB network settings…"
 
 msgid "Settings saved"
-msgstr "設定を保存しました"
+msgstr "Settings saved"
 
 msgid "Save failed: %s"
-msgstr "保存に失敗しました: %s"
+msgstr "Save failed: %s"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
-msgstr "まだロールを確認できません。再接続してページを更新してください。"
+msgstr "Unable to confirm the role yet; reconnect and refresh the page."
 
 msgid "Switch to host mode to see USB adapters."
-msgstr "USB アダプタを表示するにはホストモードに切り替えてください。"
+msgstr "Switch to host mode to see USB adapters."
 
 msgid "Scanning USB adapters…"
-msgstr "USB アダプタをスキャンしています…"
+msgstr "Scanning USB adapters…"
 
 msgid "No USB adapters found."
-msgstr "USB アダプタが見つかりません。"
+msgstr "No USB adapters found."
 
 msgid "Link connected"
-msgstr "リンク接続済み"
+msgstr "Link connected"
 
 msgid "No link; enable attempted"
-msgstr "リンクなし、有効化を試行済み"
+msgstr "No link; enable attempted"
 
 msgid "Added to LAN"
-msgstr "LAN に追加済み"
+msgstr "Added to LAN"
 
 msgid "Add to LAN"
-msgstr "LAN に追加"
+msgstr "Add to LAN"
 
 msgid "Add USB adapter to LAN?"
-msgstr "USB アダプタを LAN に追加しますか?"
+msgstr "Add USB adapter to LAN?"
 
 msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
-msgstr "ブリッジ設定を保存してネットワークを再読み込みします。既存の接続が一時的に切断される場合があります。"
+msgstr "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
 
 msgid "Add"
-msgstr "追加"
+msgstr "Add"
 
 msgid "Adding USB adapter…"
-msgstr "USB アダプタを追加しています…"
+msgstr "Adding USB adapter…"
 
 msgid "Add failed: %s"
-msgstr "追加に失敗しました: %s"
+msgstr "Add failed: %s"
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "DingTalk bot"
+msgstr "DingTalk bot"
+
+msgid "Email (SMTP)"
+msgstr "Email (SMTP)"
+
+msgid "Local SMS"
+msgstr "Local SMS"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "No delivery yet"
+msgstr "No delivery yet"
+
+msgid "Delivered"
+msgstr "Delivered"
+
+msgid "Forwarding is off"
+msgstr "Forwarding is off"
+
+msgid "Forwarding to the original sender was blocked"
+msgstr "Forwarding to the original sender was blocked"
+
+msgid "The SMS is too long; not sent"
+msgstr "The SMS is too long; not sent"
+
+msgid "The device could not save"
+msgstr "The device could not save"
+
+msgid "The SMS service is unavailable"
+msgstr "The SMS service is unavailable"
+
+msgid "The device reports no valid battery state"
+msgstr "The device reports no valid battery state"
+
+msgid "Invalid configuration"
+msgstr "Invalid configuration"
+
+msgid "The destination is invalid"
+msgstr "The destination is invalid"
+
+msgid "Delivery failed; check the settings and the device network"
+msgstr "Delivery failed; check the settings and the device network"
+
+msgid "The mail server rejected the login; check the authorization code"
+msgstr "The mail server rejected the login; check the authorization code"
+
+msgid "Enable SMS forwarding"
+msgstr "Enable SMS forwarding"
+
+msgid "Forwarding method"
+msgstr "Forwarding method"
+
+msgid "Template language"
+msgstr "Template language"
+
+msgid "English"
+msgstr "English"
+
+msgid "Simplified Chinese"
+msgstr "Simplified Chinese"
+
+msgid "Turkish"
+msgstr "Turkish"
+
+msgid "Saved for the forward titles, hint text and power notifications; the SMS text and the device note are unchanged."
+msgstr "Saved for the forward titles, hint text and power notifications; the SMS text and the device note are unchanged."
+
+msgid "HTTPS URL"
+msgstr "HTTPS URL"
+
+msgid "Sent as a fixed JSON payload; no custom command is run."
+msgstr "Sent as a fixed JSON payload; no custom command is run."
+
+msgid "Bot webhook URL"
+msgstr "Bot webhook URL"
+
+msgid "Signing secret · leave blank to keep"
+msgstr "Signing secret · leave blank to keep"
+
+msgid "Clear the signing secret"
+msgstr "Clear the signing secret"
+
+msgid "Include device information"
+msgstr "Include device information"
+
+msgid "Bot token · leave blank to keep"
+msgstr "Bot token · leave blank to keep"
+
+msgid "Clear the bot token"
+msgstr "Clear the bot token"
+
+msgid "Target chat ID"
+msgstr "Target chat ID"
+
+msgid "The bot token and default chat come from the nanobot configuration (/root/.nanobot/config.json) unless set here."
+msgstr "The bot token and default chat come from the nanobot configuration (/root/.nanobot/config.json) unless set here."
+
+msgid "SMTP server host"
+msgstr "SMTP server host"
+
+msgid "Port · 465 / 587"
+msgstr "Port · 465 / 587"
+
+msgid "465 TLS"
+msgstr "465 TLS"
+
+msgid "587 STARTTLS"
+msgstr "587 STARTTLS"
+
+msgid "Sender mailbox"
+msgstr "Sender mailbox"
+
+msgid "Recipient mailbox"
+msgstr "Recipient mailbox"
+
+msgid "Authorization code / password · leave blank to keep"
+msgstr "Authorization code / password · leave blank to keep"
+
+msgid "Clear the mail settings"
+msgstr "Clear the mail settings"
+
+msgid "Use the SMTP authorization code from your mail provider; the TLS certificate is always verified."
+msgstr "Use the SMTP authorization code from your mail provider; the TLS certificate is always verified."
+
+msgid "SMS recipient numbers · one per line, up to 3"
+msgstr "SMS recipient numbers · one per line, up to 3"
+
+msgid "Forwarded through the local SIM, which may incur SMS charges; one message is at most 70 UCS-2 units, with no daily limit."
+msgstr "Forwarded through the local SIM, which may incur SMS charges; one message is at most 70 UCS-2 units, with no daily limit."
+
+msgid "Power notifications"
+msgstr "Power notifications"
+
+msgid "Power status notifications"
+msgstr "Power status notifications"
+
+msgid "Notified on a charge-state change, or when the level crosses 5%, 20%, 40%, 60%, 80% or 100%."
+msgstr "Notified on a charge-state change, or when the level crosses 5%, 20%, 40%, 60%, 80% or 100%."
+
+msgid "Device note"
+msgstr "Device note"
+
+msgid "Blacklist"
+msgstr "Blacklist"
+
+msgid "Number blacklist · one per line, up to 64"
+msgstr "Number blacklist · one per line, up to 64"
+
+msgid "Keyword blacklist · one per line, up to 32"
+msgstr "Keyword blacklist · one per line, up to 32"
+
+msgid "A matching new SMS is only marked as handled and is not forwarded; clearing a rule does not resend anything. The rules do not affect power notifications."
+msgstr "A matching new SMS is only marked as handled and is not forwarded; clearing a rule does not resend anything. The rules do not affect power notifications."
+
+msgid "Test and status"
+msgstr "Test and status"
+
+msgid "The device runs it on its own, so it keeps working after the page is closed; only new SMS are forwarded and a failure is not retried automatically."
+msgstr "The device runs it on its own, so it keeps working after the page is closed; only new SMS are forwarded and a failure is not retried automatically."
+
+msgid "Save settings"
+msgstr "Save settings"
+
+msgid "Send a test message"
+msgstr "Send a test message"
+
+msgid "Refresh status"
+msgstr "Refresh status"
+
+msgid "Could not read the settings; refresh the page"
+msgstr "Could not read the settings; refresh the page"
+
+msgid "configured; leave blank to keep"
+msgstr "configured; leave blank to keep"
+
+msgid "enter the authorization code"
+msgstr "enter the authorization code"
+
+msgid "optional"
+msgstr "optional"
+
+msgid "from the nanobot configuration"
+msgstr "from the nanobot configuration"
+
+msgid "A number is invalid, duplicated, or over the limit"
+msgstr "A number is invalid, duplicated, or over the limit"
+
+msgid "A keyword is invalid, duplicated, or over the limit"
+msgstr "A keyword is invalid, duplicated, or over the limit"
+
+msgid "Configure the current channel first"
+msgstr "Configure the current channel first"
+
+msgid "Forwarding is on"
+msgstr "Forwarding is on"
+
+msgid "Last forward: "
+msgstr "Last forward: "
+
+msgid "Last power notification: "
+msgstr "Last power notification: "
+
+msgid "Save the SMS forwarding settings?"
+msgstr "Save the SMS forwarding settings?"
+
+msgid "Once on, only newly received SMS are handled; older messages are not forwarded."
+msgstr "Once on, only newly received SMS are handled; older messages are not forwarded."
+
+msgid "Saving the SMS forwarding settings…"
+msgstr "Saving the SMS forwarding settings…"
+
+msgid "Saving failed"
+msgstr "Saving failed"
+
+msgid "Saved"
+msgstr "Saved"
+
+msgid "Save your changes before testing"
+msgstr "Save your changes before testing"
+
+msgid "Enable and save SMS forwarding first"
+msgstr "Enable and save SMS forwarding first"
+
+msgid "This sends from the local SIM to the saved numbers and may incur SMS charges."
+msgstr "This sends from the local SIM to the saved numbers and may incur SMS charges."
+
+msgid "This sends one fixed test message to the currently saved channel."
+msgstr "This sends one fixed test message to the currently saved channel."
+
+msgid "Send a test message?"
+msgstr "Send a test message?"
+
+msgid "The test has started; refresh the status in a moment"
+msgstr "The test has started; refresh the status in a moment"
+
+msgid "Test failed: "
+msgstr "Test failed: "
+
+msgid "unknown error"
+msgstr "unknown error"
 
 msgid "Modulation DL/UL"
-msgstr "変調方式 DL/UL"
+msgstr "Modulation DL/UL"
 
 msgid "Estimated from current MCS"
-msgstr "現在の MCS から推定"
+msgstr "Estimated from current MCS"
 
 msgid "MCS DL/UL"
 msgstr "MCS DL/UL"
@@ -298,979 +550,1090 @@ msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
 msgid "Link & traffic"
-msgstr "リンクとトラフィック"
+msgstr "Link & traffic"
 
 msgid "Download rate"
-msgstr "ダウンロード速度"
+msgstr "Download rate"
 
 msgid "Upload rate"
-msgstr "アップロード速度"
+msgstr "Upload rate"
 
 msgid "Total received"
-msgstr "受信合計"
+msgstr "Total received"
 
 msgid "Total sent"
-msgstr "送信合計"
+msgstr "Total sent"
 
 msgid "Session duration"
-msgstr "セッション時間"
+msgstr "Session duration"
 
 msgid "Registration"
-msgstr "登録"
+msgstr "Registration"
 
 msgid "Bandwidth"
-msgstr "帯域幅"
+msgstr "Bandwidth"
 
 msgid "AMBR DL/UL"
 msgstr "AMBR DL/UL"
 
 msgid "Wi-Fi · LAN · Device · SIM"
-msgstr "Wi-Fi · LAN · デバイス · SIM"
+msgstr "Wi-Fi · LAN · Device · SIM"
 
 msgid "CPU usage"
-msgstr "CPU 使用率"
+msgstr "CPU usage"
 
 msgid "Memory"
-msgstr "メモリ"
+msgstr "Memory"
 
 msgid "Storage"
-msgstr "ストレージ"
-
-msgid "Battery"
-msgstr "バッテリー"
+msgstr "Storage"
 
 msgid "Channel"
-msgstr "チャネル"
+msgstr "Channel"
 
 msgid "Encryption"
-msgstr "暗号化"
+msgstr "Encryption"
 
 msgid "Hidden SSID"
-msgstr "非表示 SSID"
+msgstr "Hidden SSID"
 
 msgid "Country"
-msgstr "国"
+msgstr "Country"
 
 msgid "AP status"
-msgstr "AP ステータス"
+msgstr "AP status"
 
 msgid "USB network"
-msgstr "USB ネットワーク"
+msgstr "USB network"
 
 msgid "Connection tracking"
-msgstr "コネクショントラッキング"
+msgstr "Connection tracking"
 
 msgid "LAN address"
-msgstr "LAN アドレス"
+msgstr "LAN address"
 
 msgid "Wi-Fi clients"
-msgstr "Wi-Fi クライアント"
+msgstr "Wi-Fi clients"
 
 msgid "DHCP leases"
-msgstr "DHCP リース"
+msgstr "DHCP leases"
 
 msgid "Device model"
-msgstr "デバイスモデル"
+msgstr "Device model"
 
 msgid "System"
-msgstr "システム"
+msgstr "System"
 
 msgid "Modem"
-msgstr "モデム"
+msgstr "Modem"
 
 msgid "Carrier"
-msgstr "キャリア"
+msgstr "Carrier"
 
 msgid "Module"
-msgstr "モジュール"
+msgstr "Module"
 
 msgid "Firmware"
-msgstr "ファームウェア"
+msgstr "Firmware"
 
 msgid "Show SIM identifiers"
-msgstr "SIM 識別情報を表示"
+msgstr "Show SIM identifiers"
 
 msgid "Quick controls"
-msgstr "クイックコントロール"
+msgstr "Quick controls"
 
 msgid "Data connection"
-msgstr "データ接続"
+msgstr "Data connection"
 
 msgid "Cellular radio"
-msgstr "セルラー無線"
+msgstr "Cellular radio"
 
 msgid "Wi-Fi hotspot"
-msgstr "Wi-Fi ホットスポット"
+msgstr "Wi-Fi hotspot"
 
 msgid "Restart modem"
-msgstr "モデムを再起動"
+msgstr "Restart modem"
 
 msgid "Restart device"
-msgstr "デバイスを再起動"
+msgstr "Restart device"
 
 msgid "Switch to Android"
-msgstr "Android に切り替え"
+msgstr "Switch to Android"
 
 msgid "Neighbor cells"
-msgstr "隣接セル"
+msgstr "Neighbor cells"
 
 msgid "RAT/Band"
-msgstr "RAT/バンド"
+msgstr "RAT/Band"
 
 msgid "Frequency"
-msgstr "周波数"
+msgstr "Frequency"
 
 msgid "Running %s…"
-msgstr "%s を実行中…"
+msgstr "Running %s…"
 
 msgid "Started in background: %s"
-msgstr "バックグラウンドで開始: %s"
+msgstr "Started in background: %s"
 
 msgid "Done: %s"
-msgstr "完了: %s"
+msgstr "Done: %s"
 
 msgid "Failed: %s"
-msgstr "失敗: %s"
+msgstr "Failed: %s"
 
 msgid "Disconnecting data…"
-msgstr "データ接続を切断しています…"
+msgstr "Disconnecting data…"
 
 msgid "Connecting data…"
-msgstr "データ接続を確立しています…"
+msgstr "Connecting data…"
 
 msgid "Turn off cellular radio"
-msgstr "セルラー無線をオフにする"
+msgstr "Turn off cellular radio"
 
 msgid "Cellular connectivity will be interrupted."
-msgstr "セルラー接続が中断されます。"
+msgstr "Cellular connectivity will be interrupted."
 
 msgid "Turn on cellular radio"
-msgstr "セルラー無線をオンにする"
+msgstr "Turn on cellular radio"
 
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "SFUN の電源投入シーケンスを実行します (最大約 1 分)。"
+msgstr "The SFUN power-on sequence will run (up to about 1 minute)."
 
 msgid "Cellular connectivity may stop for 1–2 minutes."
-msgstr "セルラー接続が 1～2 分間停止する場合があります。"
+msgstr "Cellular connectivity may stop for 1–2 minutes."
 
 msgid "Restart the entire device"
-msgstr "デバイス全体を再起動"
+msgstr "Restart the entire device"
 
 msgid "All connections will be interrupted."
-msgstr "すべての接続が中断されます。"
+msgstr "All connections will be interrupted."
 
 msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
-msgstr "次回の起動で Android に入るよう設定し、今すぐ再起動します。この管理ページとセルラー共有は切断されます。"
+msgstr "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
 
 msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
-msgstr "OpenWrt に戻るには、Android で mu300-next-boot linux を実行して再起動してください。"
+msgstr "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
 
 msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
-msgstr "または何もしなければ、起動が 5 回完了しなかった時点で自動的にフォールバックします。"
+msgstr "Or do nothing: after five boots that do not finish, it falls back automatically."
 
 msgid "Switch and reboot"
-msgstr "切り替えて再起動"
+msgstr "Switch and reboot"
 
 msgid "Preparing Android boot and rebooting…"
-msgstr "Android 起動を準備して再起動しています…"
+msgstr "Preparing Android boot and rebooting…"
 
 msgid "Hide SIM identifiers"
-msgstr "SIM 識別情報を隠す"
+msgstr "Hide SIM identifiers"
 
 msgid "Lock cell %s?"
-msgstr "セル %s をロックしますか?"
+msgstr "Lock cell %s?"
 
 msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
-msgstr "無線スタックが再起動します (SFUN)。セルラーサービスは約 30 秒間停止します。"
+msgstr "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
 
 msgid "Locking %s in the background, about 30 seconds"
-msgstr "バックグラウンドで %s をロック中、約 30 秒"
+msgstr "Locking %s in the background, about 30 seconds"
 
 msgid "Locked %s in the background; the status will refresh shortly"
-msgstr "バックグラウンドで %s をロックしました。まもなくステータスが更新されます"
+msgstr "Locked %s in the background; the status will refresh shortly"
 
 msgid "Lock failed: %s"
-msgstr "ロックに失敗しました: %s"
+msgstr "Lock failed: %s"
 
 msgid "Uptime %s"
-msgstr "稼働時間 %s"
+msgstr "Uptime %s"
 
 msgid "Radio off"
-msgstr "無線オフ"
+msgstr "Radio off"
 
 msgid "No response"
-msgstr "応答なし"
+msgstr "No response"
 
 msgid "%s · Signal %s %s/10"
-msgstr "%s · 信号 %s %s/10"
+msgstr "%s · Signal %s %s/10"
 
 msgid "%s · Signal %s"
-msgstr "%s · 信号 %s"
+msgstr "%s · Signal %s"
 
 msgid "Anchor B%s"
-msgstr "アンカー B%s"
+msgstr "Anchor B%s"
 
 msgid "No serving cell"
-msgstr "サービングセルなし"
+msgstr "No serving cell"
 
 msgid "Not registered"
-msgstr "未登録"
+msgstr "Not registered"
 
 msgid "Registered"
-msgstr "登録済み"
+msgstr "Registered"
 
 msgid "Searching"
-msgstr "検索中"
+msgstr "Searching"
 
 msgid "Registration denied"
-msgstr "登録拒否"
+msgstr "Registration denied"
 
 msgid "Registered (roaming)"
-msgstr "登録済み (ローミング)"
+msgstr "Registered (roaming)"
 
 msgid "Emergency only"
-msgstr "緊急通報のみ"
+msgstr "Emergency only"
 
 msgid "Status %s"
-msgstr "ステータス %s"
+msgstr "Status %s"
 
 msgid "LTE anchor"
-msgstr "LTE アンカー"
+msgstr "LTE anchor"
 
 msgid "LTE link"
-msgstr "LTE リンク"
+msgstr "LTE link"
 
 msgid "Hidden"
-msgstr "非表示"
+msgstr "Hidden"
 
 msgid "No"
-msgstr "いいえ"
+msgstr "No"
 
 msgid "Running"
-msgstr "実行中"
+msgstr "Running"
 
 msgid "Not running"
-msgstr "停止中"
+msgstr "Not running"
 
 msgid "Connected"
-msgstr "接続済み"
+msgstr "Connected"
 
 msgid "Disconnected"
-msgstr "切断"
+msgstr "Disconnected"
 
 msgid "%s entries"
-msgstr "%s 件"
+msgstr "%s entries"
 
 msgid "%s clients"
-msgstr "%s 台"
+msgstr "%s clients"
 
 msgid "Recent DHCP leases"
-msgstr "最近の DHCP リース"
+msgstr "Recent DHCP leases"
 
 msgid "%d h"
-msgstr "%d 時間"
+msgstr "%d h"
 
 msgid "Board"
-msgstr "ボード"
+msgstr "Board"
 
 msgid "No temperature readings"
-msgstr "温度データなし"
+msgstr "No temperature readings"
 
 msgid "Cluster %d"
-msgstr "クラスタ %d"
+msgstr "Cluster %d"
 
 msgid "Total %s · free %s"
-msgstr "合計 %s · 空き %s"
-
-msgid "charging %s W"
-msgstr "%s W で充電中"
-
-msgid "charging"
-msgstr "充電中"
-
-msgid "drawing %s W"
-msgstr "%s W を消費中"
-
-msgid "not charging"
-msgstr "充電していません"
-
-msgid "on battery"
-msgstr "バッテリー駆動"
-
-msgid "full"
-msgstr "満充電"
-
-msgid "USB in %s W"
-msgstr "USB 入力 %s W"
+msgstr "Total %s · free %s"
 
 msgid "Online"
-msgstr "オンライン"
+msgstr "Online"
 
 msgid "AT adapter unavailable"
-msgstr "AT アダプタを利用できません"
-
-msgid "Saved"
-msgstr "保存しました"
+msgstr "AT adapter unavailable"
 
 msgid "Management connection lost"
-msgstr "管理接続が切断されました"
+msgstr "Management connection lost"
 
 msgid "Installing the language pack…"
-msgstr "言語パックをインストールしています…"
+msgstr "Installing the language pack…"
 
 msgid "The language pack is installed"
-msgstr "言語パックをインストールしました"
+msgstr "The language pack is installed"
 
 msgid "The language pack could not be installed"
-msgstr "言語パックをインストールできませんでした"
+msgstr "The language pack could not be installed"
 
 msgid "Upload failed: %s"
-msgstr "アップロードに失敗しました: %s"
+msgstr "Upload failed: %s"
 
 msgid "Language of the browser"
-msgstr "ブラウザの言語"
+msgstr "Language of the browser"
 
 msgid "Language of the web interface"
-msgstr "Web インターフェースの言語"
+msgstr "Language of the web interface"
 
 msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
-msgstr "英語、トルコ語、中国語はシステムに含まれています。その他の言語は言語パックで追加されます。"
+msgstr "English, Turkish and Chinese come with the system; the language pack adds the others."
 
 msgid "The same setting is in System > System > Language and Style."
-msgstr "同じ設定は システム > システム > 言語とスタイル にもあります。"
+msgstr "The same setting is in System > System > Language and Style."
 
 msgid "Language pack"
-msgstr "言語パック"
+msgstr "Language pack"
 
 msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
-msgstr "言語パック (mu300-extra-lang.tar.gz、約 2 MB) は LuCI に約 40 の言語を追加し、そのうち 29 言語でこのパネルも利用できるようにします。このシステムのリリースからダウンロードするか、デバイスがインターネットに接続できない場合はリリースページのファイルをアップロードしてください。"
+msgstr "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
 
 msgid "Download from the release"
-msgstr "リリースからダウンロード"
+msgstr "Download from the release"
 
 msgid "Upload the file…"
-msgstr "ファイルをアップロード…"
+msgstr "Upload the file…"
 
 msgid "Release"
-msgstr "リリース"
+msgstr "Release"
 
 msgid "Enable all"
-msgstr "すべて有効化"
+msgstr "Enable all"
 
 msgid "Disable all"
-msgstr "すべて無効化"
+msgstr "Disable all"
 
 msgid "Remove the language pack"
-msgstr "言語パックを削除"
+msgstr "Remove the language pack"
 
 msgid "Remove the language pack?"
-msgstr "言語パックを削除しますか?"
+msgstr "Remove the language pack?"
 
 msgid "Its languages disappear from the list; a page in one of them switches to English."
-msgstr "その言語は一覧から消えます。それらの言語で表示中のページは英語に切り替わります。"
+msgstr "Its languages disappear from the list; a page in one of them switches to English."
 
 msgid "Remove"
-msgstr "削除"
+msgstr "Remove"
 
 msgid "Disable"
-msgstr "無効化"
+msgstr "Disable"
 
 msgid "Enable"
-msgstr "有効化"
+msgstr "Enable"
 
 msgid "LuCI and this panel"
-msgstr "LuCI とこのパネル"
+msgstr "LuCI and this panel"
 
 msgid "LuCI only"
-msgstr "LuCI のみ"
+msgstr "LuCI only"
 
 msgid "Enabled"
-msgstr "有効"
+msgstr "Enabled"
 
 msgid "Disabled"
-msgstr "無効"
+msgstr "Disabled"
 
 msgid "Language"
-msgstr "言語"
+msgstr "Language"
 
 msgid "Code"
-msgstr "コード"
+msgstr "Code"
 
 msgid "Translated"
-msgstr "翻訳範囲"
+msgstr "Translated"
 
 msgid "State"
-msgstr "状態"
+msgstr "State"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
-msgstr "LuCI 自体の翻訳は OpenWrt によるものです。このパネルのトルコ語と中国語以外の翻訳は機械 (AI) 翻訳です。修正を歓迎します。"
+msgstr "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 
 msgid "Automatic"
-msgstr "自動"
+msgstr "Automatic"
 
 msgid "4G only"
-msgstr "4G のみ"
+msgstr "4G only"
 
 msgid "Serving network"
-msgstr "サービングネットワーク"
+msgstr "Serving network"
 
 msgid "Network mode · EN-DC"
-msgstr "ネットワークモード · EN-DC"
+msgstr "Network mode · EN-DC"
 
 msgid "Refresh lock status"
-msgstr "ロック状態を更新"
+msgstr "Refresh lock status"
 
 msgid "Apply at startup"
-msgstr "起動時に適用"
+msgstr "Apply at startup"
 
 msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
-msgstr "オフにしても次回起動時の再適用が止まるだけで、保存済みのネットワークモード、EN-DC、バンド、セルの設定は残ります。"
+msgstr "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
 
 msgid "Band locking"
-msgstr "バンドロック"
+msgstr "Band locking"
 
 msgid "NR bands"
-msgstr "NR バンド"
+msgstr "NR bands"
 
 msgid "LTE bands"
-msgstr "LTE バンド"
+msgstr "LTE bands"
 
 msgid "Apply NR bands"
-msgstr "NR バンドを適用"
+msgstr "Apply NR bands"
 
 msgid "Apply LTE bands"
-msgstr "LTE バンドを適用"
+msgstr "Apply LTE bands"
 
 msgid "Neighbor cells and cell locking"
-msgstr "隣接セルとセルロック"
+msgstr "Neighbor cells and cell locking"
 
 msgid "Lock current serving cell"
-msgstr "現在のサービングセルをロック"
+msgstr "Lock current serving cell"
 
 msgid "Unlock cell"
-msgstr "セルロックを解除"
+msgstr "Unlock cell"
 
 msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
-msgstr "適用すると無線スタックが再起動し (SFUN)、セルラーサービスが一時的に中断されます。設定は保存され、「起動時に適用」が有効な場合は AT の準備完了後にプラグインが再適用します。プラットフォームの無線起動前フックがあれば再起動なしで再適用できます。バンドを何も選択せずに適用すると自動モードに戻ります。"
+msgstr "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
 
 msgid "Apply “%s”?"
-msgstr "「%s」を適用しますか?"
+msgstr "Apply “%s”?"
 
 msgid "Applying %s in the background…"
-msgstr "バックグラウンドで %s を適用しています…"
+msgstr "Applying %s in the background…"
 
 msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
-msgstr "バックグラウンドで %s を適用しています… (SFUN 再起動と再登録、約 30 秒)"
+msgstr "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
 
 msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
-msgstr "キュー登録: SFUN 再起動中に別のロックを適用中です。完了後に有効になります"
+msgstr "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
 
 msgid "Confirming the EN-DC status…"
-msgstr "EN-DC の状態を確認しています…"
+msgstr "Confirming the EN-DC status…"
 
 msgid "Confirming apply at startup…"
-msgstr "起動時の適用を確認しています…"
+msgstr "Confirming apply at startup…"
 
 msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "バックグラウンドで開始: %s (SFUN 再起動、約 30 秒)。ステータスを読み戻しています…"
+msgstr "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "Network mode: %s"
-msgstr "ネットワークモード: %s"
+msgstr "Network mode: %s"
 
 msgid "Disable EN-DC (NSA anchor)"
-msgstr "EN-DC を無効化 (NSA アンカー)"
+msgstr "Disable EN-DC (NSA anchor)"
 
 msgid "Enable EN-DC (NSA anchor)"
-msgstr "EN-DC を有効化 (NSA アンカー)"
+msgstr "Enable EN-DC (NSA anchor)"
 
 msgid "Disable apply at startup"
-msgstr "起動時の適用を無効化"
+msgstr "Disable apply at startup"
 
 msgid "Enable apply at startup"
-msgstr "起動時の適用を有効化"
+msgstr "Enable apply at startup"
 
 msgid "Reading the modem directly (a few seconds at most)…"
-msgstr "モデムから直接読み取っています (最大数秒)…"
+msgstr "Reading the modem directly (a few seconds at most)…"
 
 msgid "Refreshed"
-msgstr "更新しました"
+msgstr "Refreshed"
 
 msgid "Refresh failed"
-msgstr "更新に失敗しました"
+msgstr "Refresh failed"
 
 msgid "NR bands: back to automatic"
-msgstr "NR バンド: 自動に戻しました"
+msgstr "NR bands: back to automatic"
 
 msgid "NR band lock: %s"
-msgstr "NR バンドロック: %s"
+msgstr "NR band lock: %s"
 
 msgid "LTE bands: back to automatic"
-msgstr "LTE バンド: 自動に戻しました"
+msgstr "LTE bands: back to automatic"
 
 msgid "LTE band lock: %s"
-msgstr "LTE バンドロック: %s"
+msgstr "LTE band lock: %s"
 
 msgid "Remove the %s cell lock"
-msgstr "%s のセルロックを解除"
+msgstr "Remove the %s cell lock"
 
 msgid "The radio stack will restart (SFUN), taking about 30 seconds."
-msgstr "無線スタックが再起動します (SFUN)。約 30 秒かかります。"
+msgstr "The radio stack will restart (SFUN), taking about 30 seconds."
 
 msgid "Removing the %s cell lock…"
-msgstr "%s のセルロックを解除しています…"
+msgstr "Removing the %s cell lock…"
 
 msgid "Unlock failed: %s"
-msgstr "ロック解除に失敗しました: %s"
+msgstr "Unlock failed: %s"
 
 msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "バックグラウンドでロック解除を開始しました (SFUN 再起動、約 30 秒)。ステータスを読み戻しています…"
+msgstr "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "Locking %s in the background…"
-msgstr "バックグラウンドで %s をロックしています…"
+msgstr "Locking %s in the background…"
 
 msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "バックグラウンドで %s をロックしました (SFUN 再起動、約 30 秒)。ステータスを読み戻しています…"
+msgstr "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "No serving-network data"
-msgstr "サービングネットワークのデータなし"
+msgstr "No serving-network data"
 
 msgid "NR serving cell"
-msgstr "NR サービングセル"
+msgstr "NR serving cell"
 
 msgid "Status confirmed"
-msgstr "ステータスを確認しました"
+msgstr "Status confirmed"
 
 msgid "Readback timed out; select “Refresh lock status”"
-msgstr "読み戻しがタイムアウトしました。「ロック状態を更新」を選択してください"
+msgstr "Readback timed out; select “Refresh lock status”"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
-msgstr "適用しました (EN-DC は無線スタックの再起動を必要としません)"
+msgstr "Applied (EN-DC does not require a radio-stack restart)"
 
 msgid "Apply at startup is on"
-msgstr "起動時の適用はオンです"
+msgstr "Apply at startup is on"
 
 msgid "Apply at startup is off"
-msgstr "起動時の適用はオフです"
+msgstr "Apply at startup is off"
 
 msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
-msgstr "EN-DC 状態の読み戻しがタイムアウトしました。「ロック状態を更新」で確認してください"
+msgstr "EN-DC status readback timed out; use “Refresh lock status” to confirm"
 
 msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
-msgstr "起動時の適用状態の読み戻しがタイムアウトしました。「ロック状態を更新」で確認してください"
+msgstr "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
 
 msgid "Locked cells"
-msgstr "ロック中のセル"
+msgstr "Locked cells"
 
 msgid "Unlock %s"
-msgstr "%s のロックを解除"
+msgstr "Unlock %s"
 
 msgid "Automatic (%d supported)"
-msgstr "自動 (%d 個対応)"
+msgstr "Automatic (%d supported)"
 
 msgid "%d locked: %s"
-msgstr "%d 件ロック中: %s"
+msgstr "%d locked: %s"
 
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
-msgstr "このプラグインが現在の Unisoc OpenWrt プラットフォームに接続する方法を設定します。変更してもダッシュボード、AT、ロック、SMS の各ページを編集する必要はありません。"
+msgstr "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 
 msgid "Platform adapter"
-msgstr "プラットフォームアダプタ"
+msgstr "Platform adapter"
 
 msgid "AT backend"
-msgstr "AT バックエンド"
+msgstr "AT backend"
 
 msgid "Auto-detect"
-msgstr "自動検出"
+msgstr "Auto-detect"
 
 msgid "atinout + serial port"
-msgstr "atinout + シリアルポート"
+msgstr "atinout + serial port"
 
 msgid "Custom adapter"
-msgstr "カスタムアダプタ"
+msgstr "Custom adapter"
 
 msgid "AT serial port"
-msgstr "AT シリアルポート"
+msgstr "AT serial port"
 
 msgid "Custom AT adapter"
-msgstr "カスタム AT アダプタ"
+msgstr "Custom AT adapter"
 
 msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
-msgstr "実行ファイルにはタイムアウト秒数と完全な AT コマンドがこの順で渡されます。プラットフォームのダイヤラーとシリアルロックを共有する必要があります。"
+msgstr "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
 
 msgid "SMS adapter"
-msgstr "SMS アダプタ"
+msgstr "SMS adapter"
 
 msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
-msgstr "list、show、send、delete、sync のサブコマンドを実装してください。空欄の場合は mu300-sms を自動で検出します。"
+msgstr "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
 
 msgid "SMS pool directory"
-msgstr "SMS プールディレクトリ"
+msgstr "SMS pool directory"
 
 msgid "Cellular logical interface"
-msgstr "セルラー論理インターフェース"
+msgstr "Cellular logical interface"
 
 msgid "Cellular IPv6 interface"
-msgstr "セルラー IPv6 インターフェース"
+msgstr "Cellular IPv6 interface"
 
 msgid "Cellular network device"
-msgstr "セルラーネットワークデバイス"
+msgstr "Cellular network device"
 
 msgid "Leave blank to detect from netifd"
-msgstr "空欄にすると netifd から検出します"
+msgstr "Leave blank to detect from netifd"
 
 msgid "LAN bridge"
-msgstr "LAN ブリッジ"
+msgstr "LAN bridge"
 
 msgid "Wi-Fi device"
-msgstr "Wi-Fi デバイス"
+msgstr "Wi-Fi device"
 
 msgid "USB device"
-msgstr "USB デバイス"
+msgstr "USB device"
 
 msgid "Maximum wait for AT readiness (seconds)"
-msgstr "AT 準備完了の最大待機時間 (秒)"
+msgstr "Maximum wait for AT readiness (seconds)"
 
 msgid "Home dashboard refresh interval (seconds)"
-msgstr "ホームダッシュボードの更新間隔 (秒)"
+msgstr "Home dashboard refresh interval (seconds)"
 
 msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
-msgstr "ホームダッシュボードの更新頻度のみを制御します。0.5～60 秒。保存後にホームを開き直すと反映されます。"
+msgstr "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
 
 msgid "Persistent state directory"
-msgstr "永続状態ディレクトリ"
+msgstr "Persistent state directory"
 
 msgid "Recipient: number, e.g. 10086 or +86..."
-msgstr "宛先: 番号 (例: 10086 または +86...)"
+msgstr "Recipient: number, e.g. 10086 or +86..."
 
 msgid "Sync from SIM"
-msgstr "SIM から同期"
+msgstr "Sync from SIM"
 
 msgid "Clear local pool"
-msgstr "ローカルプールをクリア"
+msgstr "Clear local pool"
 
 msgid "Loading…"
-msgstr "読み込み中…"
+msgstr "Loading…"
 
 msgid "Select a conversation on the left, or enter a number below to send."
-msgstr "左側の会話を選択するか、下に番号を入力して送信してください。"
+msgstr "Select a conversation on the left, or enter a number below to send."
 
 msgid "Message (Enter to send, Shift+Enter for newline)"
-msgstr "メッセージ (Enter で送信、Shift+Enter で改行)"
+msgstr "Message (Enter to send, Shift+Enter for newline)"
 
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
-msgstr "送信には AT+CMGS (PDU モード) を使用します。チャネルがビジーの場合は再試行してください。1 件だけ削除するには、吹き出しのゴミ箱アイコンを使用します。"
+msgstr "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
-msgstr "バックグラウンドで SIM から同期しています (AT+CMGL)…"
+msgstr "Syncing from the SIM in the background (AT+CMGL)…"
 
 msgid "SIM sync started; the list refreshes in a few seconds."
-msgstr "SIM の同期を開始しました。数秒後に一覧が更新されます。"
+msgstr "SIM sync started; the list refreshes in a few seconds."
 
 msgid "Clear local SMS pool"
-msgstr "ローカル SMS プールをクリア"
+msgstr "Clear local SMS pool"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
-msgstr "ローカルファイルのみ削除されます。SIM 上のメッセージは残ります。"
+msgstr "Only local files will be deleted; messages on the SIM remain."
 
 msgid "Clear"
-msgstr "クリア"
+msgstr "Clear"
 
 msgid "Delete this SMS"
-msgstr "この SMS を削除"
+msgstr "Delete this SMS"
 
 msgid "Deletion cannot be undone."
-msgstr "削除は元に戻せません。"
+msgstr "Deletion cannot be undone."
 
 msgid "Local only"
-msgstr "ローカルのみ"
+msgstr "Local only"
 
 msgid "Local + SIM"
-msgstr "ローカル + SIM"
+msgstr "Local + SIM"
 
 msgid "Delete failed"
-msgstr "削除に失敗しました"
+msgstr "Delete failed"
 
 msgid "Deleted (local + SIM)"
-msgstr "削除しました (ローカル + SIM)"
+msgstr "Deleted (local + SIM)"
 
 msgid "Deleted (local only)"
-msgstr "削除しました (ローカルのみ)"
+msgstr "Deleted (local only)"
 
 msgid "Enter both a number and a message."
-msgstr "番号とメッセージの両方を入力してください。"
+msgstr "Enter both a number and a message."
 
 msgid "Sending…"
-msgstr "送信中…"
+msgstr "Sending…"
 
 msgid "Sent; the list refreshes shortly."
-msgstr "送信しました。まもなく一覧が更新されます。"
+msgstr "Sent; the list refreshes shortly."
 
 msgid "Sending failed"
-msgstr "送信に失敗しました"
+msgstr "Sending failed"
 
 msgid "· %d messages, %d unread · %d conversations"
-msgstr "· %d 件、未読 %d 件 · 会話 %d 件"
+msgstr "· %d messages, %d unread · %d conversations"
 
 msgid "· %d messages · %d conversations"
-msgstr "· %d 件 · 会話 %d 件"
+msgstr "· %d messages · %d conversations"
 
 msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
-msgstr "プールは空です。受信・送信したメッセージがここに表示されます。または「SIM から同期」を選択してください。"
+msgstr "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
 
 msgid "Me: %s"
-msgstr "自分: %s"
+msgstr "Me: %s"
 
 msgid "Delete"
-msgstr "削除"
+msgstr "Delete"
+
+msgid "The traffic accounting service is unavailable"
+msgstr "The traffic accounting service is unavailable"
+
+msgid "The traffic totals could not be saved"
+msgstr "The traffic totals could not be saved"
+
+msgid "The system clock is not synchronised yet"
+msgstr "The system clock is not synchronised yet"
+
+msgid "Today"
+msgstr "Today"
+
+msgid "This month"
+msgstr "This month"
+
+msgid "Calendar month"
+msgstr "Calendar month"
+
+msgid "Used this cycle"
+msgstr "Used this cycle"
+
+msgid "Plan remaining"
+msgstr "Plan remaining"
+
+msgid "Plan and traffic pool"
+msgstr "Plan and traffic pool"
+
+msgid "Plan name"
+msgstr "Plan name"
+
+msgid "Quota per cycle (GB)"
+msgstr "Quota per cycle (GB)"
+
+msgid "Daily reference quota (GB)"
+msgstr "Daily reference quota (GB)"
+
+msgid "Monthly reset day (1–31)"
+msgstr "Monthly reset day (1–31)"
+
+msgid "Plan counting mode"
+msgstr "Plan counting mode"
+
+msgid "Uplink + downlink"
+msgstr "Uplink + downlink"
+
+msgid "Downlink only"
+msgstr "Downlink only"
+
+msgid "Uplink only"
+msgstr "Uplink only"
+
+msgid "A quota of 0 means unlimited; 1 GB = 1000 MB. The reset day takes effect at local midnight, and short months use their last day."
+msgstr "A quota of 0 means unlimited; 1 GB = 1000 MB. The reset day takes effect at local midnight, and short months use their last day."
+
+msgid "Interface to account"
+msgstr "Interface to account"
+
+msgid "Use the cellular WAN interface automatically"
+msgstr "Use the cellular WAN interface automatically"
+
+msgid "Calibrate used this cycle (GB, optional)"
+msgstr "Calibrate used this cycle (GB, optional)"
+
+msgid "Leave blank to keep the current total"
+msgstr "Leave blank to keep the current total"
+
+msgid "Calibration only adjusts the current plan cycle; the daily and calendar-month histories are unchanged, and the next cycle counts real traffic again."
+msgstr "Calibration only adjusts the current plan cycle; the daily and calendar-month histories are unchanged, and the next cycle counts real traffic again."
+
+msgid "Recent daily usage"
+msgstr "Recent daily usage"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Down"
+msgstr "Down"
+
+msgid "Up"
+msgstr "Up"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Monthly usage history"
+msgstr "Monthly usage history"
+
+msgid "Month"
+msgstr "Month"
+
+msgid "Recording starts when accounting is enabled; it updates about every 10 seconds and saves every 60. A sudden power loss can lose the most recent unsaved records."
+msgstr "Recording starts when accounting is enabled; it updates about every 10 seconds and saves every 60. A sudden power loss can lose the most recent unsaved records."
+
+msgid "The local interface totals are for reference; the carrier’s billing is authoritative. The quota is for display and alerts only and never disconnects the link."
+msgstr "The local interface totals are for reference; the carrier’s billing is authoritative. The quota is for display and alerts only and never disconnects the link."
+
+msgid "Unlimited"
+msgstr "Unlimited"
+
+msgid "No plan name set"
+msgstr "No plan name set"
+
+msgid "Quota per cycle: "
+msgstr "Quota per cycle: "
+
+msgid "Next reset: "
+msgstr "Next reset: "
+
+msgid "Daily reference quota: "
+msgstr "Daily reference quota: "
+
+msgid "Updated: "
+msgstr "Updated: "
+
+msgid "The accounting interface is unavailable"
+msgstr "The accounting interface is unavailable"
+
+msgid "The plan quota is reached"
+msgstr "The plan quota is reached"
+
+msgid "The daily reference quota is reached"
+msgstr "The daily reference quota is reached"
+
+msgid "No records yet"
+msgstr "No records yet"
+
+msgid "Calibrate used traffic this cycle?"
+msgstr "Calibrate used traffic this cycle?"
+
+msgid "This sets the current cycle’s used value to the entered amount; the daily and calendar-month records are unchanged."
+msgstr "This sets the current cycle’s used value to the entered amount; the daily and calendar-month records are unchanged."
+
+msgid "Saving the traffic pool settings…"
+msgstr "Saving the traffic pool settings…"
 
 msgid "Dashboard info failed"
-msgstr "ダッシュボード情報の取得に失敗しました"
+msgstr "Dashboard info failed"
 
 msgid "Applying network locks: no live signal right now"
-msgstr "ネットワークロックを適用中: 現在ライブ信号はありません"
+msgstr "Applying network locks: no live signal right now"
 
 msgid "Live signal read failed"
-msgstr "ライブ信号の読み取りに失敗しました"
+msgstr "Live signal read failed"
 
 msgid "Unknown op"
-msgstr "不明な操作"
+msgstr "Unknown op"
 
 msgid "Invalid argument for this op"
-msgstr "この操作の引数が無効です"
+msgstr "Invalid argument for this op"
 
 msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
-msgstr "無線がビジーです: ダイヤルまたはウォッチドッグが切り替え中です。しばらくしてから再試行してください"
+msgstr "The radio is busy: the dial or the watchdog is switching it, try again shortly"
 
 msgid "The action gave no valid reply"
-msgstr "操作から有効な応答がありませんでした"
+msgstr "The action gave no valid reply"
 
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
-msgstr "AT コマンドは印字可能な ASCII 文字の 1 行で、最大 512 文字です"
+msgstr "An AT command is one line of printable ASCII, at most 512 characters"
 
 msgid "Must be an AT command"
-msgstr "AT コマンドである必要があります"
+msgstr "Must be an AT command"
 
 msgid "No \";\" command chaining"
-msgstr "\";\" によるコマンドの連結はできません"
+msgstr "No \";\" command chaining"
 
 msgid "Denied: this command wedges the AT port until a reboot"
-msgstr "拒否: このコマンドは再起動するまで AT ポートを停止させます"
+msgstr "Denied: this command wedges the AT port until a reboot"
 
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
-msgstr "ネットワークロックを適用中: モデムが再起動しています (約 30 秒)。しばらくしてから再試行してください"
+msgstr "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 
 msgid "The AT channel is busy; the command was not sent, try again"
-msgstr "AT チャネルがビジーです。コマンドは送信されませんでした。再試行してください"
+msgstr "The AT channel is busy; the command was not sent, try again"
 
 msgid "The modem did not answer in time; the command may still run, check before sending it again"
-msgstr "モデムが時間内に応答しませんでした。コマンドはまだ実行中の可能性があるため、再送信する前に確認してください"
+msgstr "The modem did not answer in time; the command may still run, check before sending it again"
 
 msgid "The fresh parameter must be 0 or 1"
-msgstr "fresh パラメータは 0 または 1 である必要があります"
+msgstr "The fresh parameter must be 0 or 1"
 
 msgid "Lock read failed"
-msgstr "ロックの読み取りに失敗しました"
+msgstr "Lock read failed"
 
 msgid "Unknown lock kind"
-msgstr "不明なロック種別"
+msgstr "Unknown lock kind"
 
 msgid "Invalid value for this lock kind"
-msgstr "このロック種別に対して無効な値です"
+msgstr "Invalid value for this lock kind"
 
 msgid "Invalid page"
-msgstr "無効なページ"
+msgstr "Invalid page"
 
 msgid "mu300-sms is not available (the SMS service is not installed or not running)"
-msgstr "mu300-sms を利用できません (SMS サービスがインストールされていないか、実行されていません)"
+msgstr "mu300-sms is not available (the SMS service is not installed or not running)"
 
 msgid "No output"
-msgstr "出力なし"
+msgstr "No output"
 
 msgid "Bad ID"
-msgstr "無効な ID"
+msgstr "Bad ID"
 
 msgid "Read failed"
-msgstr "読み取りに失敗しました"
+msgstr "Read failed"
 
 msgid "The number may only contain digits (and a leading +)"
-msgstr "番号には数字 (と先頭の +) のみ使用できます"
+msgstr "The number may only contain digits (and a leading +)"
 
 msgid "The message is empty"
-msgstr "メッセージが空です"
+msgstr "The message is empty"
 
 msgid "The message is too long (over 480 characters)"
-msgstr "メッセージが長すぎます (480 文字超)"
+msgstr "The message is too long (over 480 characters)"
 
 msgid "The message contains a control character"
-msgstr "メッセージに制御文字が含まれています"
+msgstr "The message contains a control character"
 
 msgid "The sim parameter must be 0 or 1"
-msgstr "sim パラメータは 0 または 1 である必要があります"
+msgstr "The sim parameter must be 0 or 1"
 
 msgid "The USB adapter (device-usb) gave no valid reply"
-msgstr "USB アダプタ (device-usb) から有効な応答がありませんでした"
+msgstr "The USB adapter (device-usb) gave no valid reply"
 
 msgid "The auto parameter must be 0 or 1"
-msgstr "auto パラメータは 0 または 1 である必要があります"
+msgstr "The auto parameter must be 0 or 1"
 
 msgid "Invalid USB role"
-msgstr "無効な USB ロール"
+msgstr "Invalid USB role"
 
 msgid "A USB role takes no scope"
-msgstr "USB ロールには適用範囲を指定できません"
+msgstr "A USB role takes no scope"
 
 msgid "Invalid USB network mode"
-msgstr "無効な USB ネットワークモード"
+msgstr "Invalid USB network mode"
 
 msgid "Invalid USB network scope"
-msgstr "無効な USB ネットワークの適用範囲"
+msgstr "Invalid USB network scope"
 
 msgid "Unknown USB setting"
-msgstr "不明な USB 設定"
+msgstr "Unknown USB setting"
 
 msgid "Invalid interface name"
-msgstr "無効なインターフェース名"
+msgstr "Invalid interface name"
 
 msgid "The languages adapter gave no valid reply"
-msgstr "言語アダプタから有効な応答がありませんでした"
+msgstr "The languages adapter gave no valid reply"
 
 msgid "Unknown language operation"
-msgstr "不明な言語操作"
+msgstr "Unknown language operation"
 
 msgid "Invalid language code"
-msgstr "無効な言語コード"
+msgstr "Invalid language code"
 
 msgid "Invalid language request"
-msgstr "無効な言語リクエスト"
+msgstr "Invalid language request"
 
 msgid "Unknown source"
-msgstr "不明なソース"
+msgstr "Unknown source"
+
+msgid "traffic_unavailable"
+msgstr "traffic_unavailable"
 
 msgid "Request too large"
-msgstr "リクエストが大きすぎます"
+msgstr "Request too large"
 
 msgid "The runtime directory is not safe; nothing was run"
-msgstr "ランタイムディレクトリが安全ではありません。何も実行されませんでした"
+msgstr "The runtime directory is not safe; nothing was run"
 
 msgid "No such method"
-msgstr "該当するメソッドがありません"
+msgstr "No such method"
 
 msgid "Radio did not come up"
-msgstr "無線を起動できませんでした"
+msgstr "Radio did not come up"
 
 msgid "Expected on or off"
-msgstr "on または off を指定してください"
+msgstr "Expected on or off"
 
 msgid "VPN integration is not provided by this platform"
-msgstr "このプラットフォームは VPN 連携を提供していません"
+msgstr "VPN integration is not provided by this platform"
 
 msgid "Dual-boot integration is not provided by this platform"
-msgstr "このプラットフォームはデュアルブート連携を提供していません"
+msgstr "Dual-boot integration is not provided by this platform"
 
 msgid "mu300-next-boot failed"
-msgstr "mu300-next-boot が失敗しました"
+msgstr "mu300-next-boot failed"
 
 msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
-msgstr "AT バックエンドが応答しませんでした (無線オフ、モデム再起動中、またはアダプタ利用不可)"
+msgstr "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
 
 msgid "USB role adapter is not executable"
-msgstr "USB ロールアダプタが実行可能ではありません"
+msgstr "USB role adapter is not executable"
 
 msgid "USB role adapter failed"
-msgstr "USB ロールアダプタが失敗しました"
+msgstr "USB role adapter failed"
 
 msgid "USB role switch is unavailable"
-msgstr "USB ロールの切り替えは利用できません"
+msgstr "USB role switch is unavailable"
 
 msgid "USB role switch failed"
-msgstr "USB ロールの切り替えに失敗しました"
+msgstr "USB role switch failed"
 
 msgid "USB role switch was refused by platform safety checks"
-msgstr "USB ロールの切り替えがプラットフォームの安全チェックにより拒否されました"
+msgstr "USB role switch was refused by platform safety checks"
 
 msgid "Cannot create USB boot settings directory"
-msgstr "USB 起動設定ディレクトリを作成できません"
+msgstr "Cannot create USB boot settings directory"
 
 msgid "Cannot write USB boot settings"
-msgstr "USB 起動設定を書き込めません"
+msgstr "Cannot write USB boot settings"
 
 msgid "Cannot save USB boot settings"
-msgstr "USB 起動設定を保存できません"
+msgstr "Cannot save USB boot settings"
 
 msgid "Invalid boot-auto value"
-msgstr "無効な boot-auto 値"
+msgstr "Invalid boot-auto value"
 
 msgid "Device is the boot default; host auto-apply is the only persistent role"
-msgstr "起動時の既定はデバイスモードです。永続化できるのはホストモードの自動適用のみです"
+msgstr "Device is the boot default; host auto-apply is the only persistent role"
 
 msgid "Cannot save USB role policy"
-msgstr "USB ロールポリシーを保存できません"
+msgstr "Cannot save USB role policy"
 
 msgid "Cannot disable USB network boot policy"
-msgstr "USB ネットワークの起動ポリシーを無効化できません"
+msgstr "Cannot disable USB network boot policy"
 
 msgid "Cannot commit USB role policy"
-msgstr "USB ロールポリシーをコミットできません"
+msgstr "Cannot commit USB role policy"
 
 msgid "USB network mode is unavailable in host role"
-msgstr "ホストモードでは USB ネットワークモードを使用できません"
+msgstr "USB network mode is unavailable in host role"
 
 msgid "Disable host boot-auto before configuring USB network"
-msgstr "USB ネットワークを設定する前にホストモードの boot-auto を無効にしてください"
+msgstr "Disable host boot-auto before configuring USB network"
 
 msgid "Cannot save USB network policy"
-msgstr "USB ネットワークポリシーを保存できません"
+msgstr "Cannot save USB network policy"
 
 msgid "Cannot commit USB network policy"
-msgstr "USB ネットワークポリシーをコミットできません"
+msgstr "Cannot commit USB network policy"
 
 msgid "USB host mode is required"
-msgstr "USB ホストモードが必要です"
+msgstr "USB host mode is required"
 
 msgid "Not a USB network interface"
-msgstr "USB ネットワークインターフェースではありません"
+msgstr "Not a USB network interface"
 
 msgid "LAN bridge device section was not found"
-msgstr "LAN ブリッジのデバイスセクションが見つかりません"
+msgstr "LAN bridge device section was not found"
 
 msgid "Cannot bring USB network interface up"
-msgstr "USB ネットワークインターフェースを起動できません"
+msgstr "Cannot bring USB network interface up"
 
 msgid "Cannot add interface to LAN bridge"
-msgstr "インターフェースを LAN ブリッジに追加できません"
+msgstr "Cannot add interface to LAN bridge"
 
 msgid "Cannot save LAN bridge"
-msgstr "LAN ブリッジを保存できません"
+msgstr "Cannot save LAN bridge"
 
 msgid "Network reload failed"
-msgstr "ネットワークの再読み込みに失敗しました"
+msgstr "Network reload failed"
 
 msgid "Cannot attach USB interface to LAN bridge"
-msgstr "USB インターフェースを LAN ブリッジに接続できません"
+msgstr "Cannot attach USB interface to LAN bridge"
 
 msgid "The language pack is not installed"
-msgstr "言語パックがインストールされていません"
+msgstr "The language pack is not installed"
 
 msgid "No language given"
-msgstr "言語が指定されていません"
+msgstr "No language given"
 
 msgid "The language could not be changed"
-msgstr "言語を変更できませんでした"
+msgstr "The language could not be changed"
 
 msgid "LuCI does not offer this language"
-msgstr "LuCI はこの言語を提供していません"
+msgstr "LuCI does not offer this language"
 
 msgid "No uploaded language pack"
-msgstr "アップロードされた言語パックがありません"
+msgstr "No uploaded language pack"
 
 msgid "An installation is already running"
-msgstr "インストールはすでに実行中です"
+msgstr "An installation is already running"
 
 msgid "The language pack could not be removed"
-msgstr "言語パックを削除できませんでした"
+msgstr "The language pack could not be removed"
 
 msgid "Lock cache unavailable"
-msgstr "ロックキャッシュを利用できません"
+msgstr "Lock cache unavailable"
 
 msgid "No serving cell to lock to"
-msgstr "ロックできるサービングセルがありません"
+msgstr "No serving cell to lock to"

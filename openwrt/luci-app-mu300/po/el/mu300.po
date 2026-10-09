@@ -4,31 +4,37 @@ msgstr ""
 "Language: el\n"
 
 msgid "Status dashboard"
-msgstr "Πίνακας κατάστασης"
+msgstr "Status dashboard"
 
 msgid "Cellular"
-msgstr "Κινητό δίκτυο"
+msgstr "Cellular"
 
 msgid "Network locks"
-msgstr "Κλειδώματα δικτύου"
+msgstr "Network locks"
 
 msgid "SMS"
 msgstr "SMS"
 
 msgid "AT terminal"
-msgstr "Τερματικό AT"
+msgstr "AT terminal"
 
 msgid "Adapter settings"
-msgstr "Ρυθμίσεις προσαρμογέα"
+msgstr "Adapter settings"
 
 msgid "Device management"
-msgstr "Διαχείριση συσκευής"
+msgstr "Device management"
+
+msgid "SMS forwarding"
+msgstr "SMS forwarding"
+
+msgid "Traffic pool"
+msgstr "Traffic pool"
 
 msgid "Languages"
-msgstr "Γλώσσες"
+msgstr "Languages"
 
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
-msgstr "Κέντρο ελέγχου MU300: πίνακας κατάστασης, κλειδώματα δικτύου, τερματικό AT και SMS"
+msgstr "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -46,250 +52,496 @@ msgid "China Tietong"
 msgstr "China Tietong"
 
 msgid "Excellent"
-msgstr "Εξαιρετικό"
+msgstr "Excellent"
 
 msgid "Good"
-msgstr "Καλό"
+msgstr "Good"
 
 msgid "Fair"
-msgstr "Μέτριο"
+msgstr "Fair"
 
 msgid "Poor"
-msgstr "Κακό"
+msgstr "Poor"
 
 msgid "Unknown"
-msgstr "Άγνωστο"
+msgstr "Unknown"
 
 msgid "%d d %d h"
-msgstr "%d ημ. %d ώρ."
+msgstr "%d d %d h"
 
 msgid "%d h %d min"
-msgstr "%d ώρ. %d λεπ."
+msgstr "%d h %d min"
 
 msgid "%d min"
-msgstr "%d λεπ."
+msgstr "%d min"
 
 msgid "No neighbor-cell data"
-msgstr "Δεν υπάρχουν δεδομένα γειτονικών κυψελών"
+msgstr "No neighbor-cell data"
 
 msgid "Locked"
-msgstr "Κλειδωμένο"
+msgstr "Locked"
 
 msgid "Lock"
-msgstr "Κλείδωμα"
+msgstr "Lock"
 
 msgid "Unknown error"
-msgstr "Άγνωστο σφάλμα"
+msgstr "Unknown error"
 
 msgid "Confirm"
-msgstr "Επιβεβαίωση"
+msgstr "Confirm"
 
 msgid "OK"
 msgstr "OK"
 
 msgid "Cancel"
-msgstr "Ακύρωση"
+msgstr "Cancel"
 
 msgid "New SMS · %s"
-msgstr "Νέο SMS · %s"
+msgstr "New SMS · %s"
 
 msgid "Unknown number"
-msgstr "Άγνωστος αριθμός"
+msgstr "Unknown number"
 
 msgid "Select"
-msgstr "Επιλογή"
+msgstr "Select"
 
 msgid "Basic"
-msgstr "Βασικά"
+msgstr "Basic"
 
 msgid "Registration/signal"
-msgstr "Καταχώριση/σήμα"
+msgstr "Registration/signal"
 
 msgid "Bearer"
-msgstr "Φορέας"
+msgstr "Bearer"
 
 msgid "Engineering mode"
-msgstr "Λειτουργία μηχανικού"
+msgstr "Engineering mode"
 
 msgid "AT command (↑↓ history, Enter to send)"
-msgstr "Εντολή AT (↑↓ ιστορικό, Enter για αποστολή)"
+msgstr "AT command (↑↓ history, Enter to send)"
 
 msgid "Send"
-msgstr "Αποστολή"
+msgstr "Send"
 
 msgid "Clear screen"
-msgstr "Καθαρισμός οθόνης"
+msgstr "Clear screen"
 
 msgid "Ready."
-msgstr "Έτοιμο."
+msgstr "Ready."
 
 msgid "Session history (click to reuse)"
-msgstr "Ιστορικό συνεδρίας (κλικ για επαναχρησιμοποίηση)"
+msgstr "Session history (click to reuse)"
 
 msgid "(no output)"
-msgstr "(χωρίς έξοδο)"
+msgstr "(no output)"
 
 msgid "Request failed"
-msgstr "Το αίτημα απέτυχε"
+msgstr "Request failed"
 
 msgid "(empty)"
-msgstr "(κενό)"
+msgstr "(empty)"
 
 msgid "USB role"
-msgstr "Ρόλος USB"
+msgstr "USB role"
 
 msgid "Current role"
-msgstr "Τρέχων ρόλος"
+msgstr "Current role"
 
 msgid "Switch USB role"
-msgstr "Αλλαγή ρόλου USB"
+msgstr "Switch USB role"
 
 msgid "Device mode"
-msgstr "Λειτουργία συσκευής"
+msgstr "Device mode"
 
 msgid "Host mode"
-msgstr "Λειτουργία κεντρικού υπολογιστή"
+msgstr "Host mode"
 
 msgid "Enable host mode at boot"
-msgstr "Ενεργοποίηση λειτουργίας κεντρικού υπολογιστή κατά την εκκίνηση"
+msgstr "Enable host mode at boot"
 
 msgid "Apply role"
-msgstr "Εφαρμογή ρόλου"
+msgstr "Apply role"
 
 msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
-msgstr "Η λειτουργία κεντρικού υπολογιστή αποσυνδέει τη δικτύωση USB και τη σειριακή σύνδεση σε αυτή τη θύρα. Το F50 δεν έχει μπαταρία· η διαχείριση μπορεί να χαθεί και ένας προσαρμογέας USB συνήθως χρειάζεται hub με τροφοδοσία."
+msgstr "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
 
 msgid "USB network mode"
-msgstr "Λειτουργία δικτύου USB"
+msgstr "USB network mode"
 
 msgid "Network protocol"
-msgstr "Πρωτόκολλο δικτύου"
+msgstr "Network protocol"
 
 msgid "Apply duration"
-msgstr "Διάρκεια εφαρμογής"
+msgstr "Apply duration"
 
 msgid "Next reboot only"
-msgstr "Μόνο στην επόμενη επανεκκίνηση"
+msgstr "Next reboot only"
 
 msgid "Permanent"
-msgstr "Μόνιμα"
+msgstr "Permanent"
 
 msgid "Enable selected protocol"
-msgstr "Ενεργοποίηση επιλεγμένου πρωτοκόλλου"
+msgstr "Enable selected protocol"
 
 msgid "Save; apply after reboot"
-msgstr "Αποθήκευση· εφαρμογή μετά την επανεκκίνηση"
+msgstr "Save; apply after reboot"
 
 msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
-msgstr "Το NCM είναι η προεπιλογή. Τα Windows δεν υποστηρίζουν εγγενώς το ECM· το RNDIS αλλάζει την απαρίθμηση. Με απενεργοποιημένη την Ενεργοποίηση επιλεγμένου πρωτοκόλλου, αποθηκεύεται μόνο η επιλογή σας. Η επιλογή Μόνο στην επόμενη επανεκκίνηση εφαρμόζεται μία φορά και μετά επιστρέφει στο NCM."
+msgstr "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
 
 msgid "USB adapters"
-msgstr "Προσαρμογείς USB"
+msgstr "USB adapters"
 
 msgid "Refresh"
-msgstr "Ανανέωση"
+msgstr "Refresh"
 
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
-msgstr "Διαθέσιμο μόνο σε λειτουργία κεντρικού υπολογιστή. Η Ανανέωση ενεργοποιεί τους προσαρμογείς USB που εντοπίστηκαν· η προσθήκη στο LAN αποθηκεύει τη γέφυρα και επαναφορτώνει το δίκτυο."
+msgstr "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 
 msgid "Unavailable"
-msgstr "Μη διαθέσιμο"
+msgstr "Unavailable"
 
 msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
-msgstr "Η λειτουργία δικτύου USB δεν είναι διαθέσιμη σε λειτουργία κεντρικού υπολογιστή· η αυτόματη εκκίνηση κεντρικού υπολογιστή απενεργοποιεί επίσης την αυτόματη εκκίνηση δικτύου USB."
+msgstr "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
 
 msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
-msgstr "Η λειτουργία κεντρικού υπολογιστή αποσυνδέει αμέσως τη διαχείριση μέσω USB. Το F50 δεν έχει μπαταρία και τα περιφερειακά μπορεί να χρειάζονται εξωτερική τροφοδοσία· βεβαιωθείτε ότι υπάρχει άλλη διαδρομή διαχείρισης."
+msgstr "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
 
 msgid "USB networking and serial will re-enumerate in device mode."
-msgstr "Η δικτύωση USB και η σειριακή σύνδεση θα απαριθμηθούν ξανά σε λειτουργία συσκευής."
+msgstr "USB networking and serial will re-enumerate in device mode."
 
 msgid "Switch USB role?"
-msgstr "Αλλαγή ρόλου USB;"
+msgstr "Switch USB role?"
 
 msgid "Apply"
-msgstr "Εφαρμογή"
+msgstr "Apply"
 
 msgid "Switching USB role…"
-msgstr "Αλλαγή ρόλου USB…"
+msgstr "Switching USB role…"
 
 msgid "Switch failed: %s"
-msgstr "Η αλλαγή απέτυχε: %s"
+msgstr "Switch failed: %s"
 
 msgid "Management connection lost; reconnect to confirm the USB role."
-msgstr "Η σύνδεση διαχείρισης χάθηκε· συνδεθείτε ξανά για να επιβεβαιώσετε τον ρόλο USB."
+msgstr "Management connection lost; reconnect to confirm the USB role."
 
 msgid "Switch request accepted; the USB connection may briefly disconnect."
-msgstr "Το αίτημα αλλαγής έγινε δεκτό· η σύνδεση USB μπορεί να διακοπεί για λίγο."
+msgstr "Switch request accepted; the USB connection may briefly disconnect."
 
 msgid "USB role applied"
-msgstr "Ο ρόλος USB εφαρμόστηκε"
+msgstr "USB role applied"
 
 msgid "Save USB network mode?"
-msgstr "Αποθήκευση λειτουργίας δικτύου USB;"
+msgstr "Save USB network mode?"
 
 msgid "The network mode applies on the next reboot; USB management may need to reconnect."
-msgstr "Η λειτουργία δικτύου εφαρμόζεται στην επόμενη επανεκκίνηση· η διαχείριση μέσω USB μπορεί να χρειαστεί επανασύνδεση."
+msgstr "The network mode applies on the next reboot; USB management may need to reconnect."
 
 msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
-msgstr "Αποθήκευση μόνο της επιλογής· με απενεργοποιημένο το επιλεγμένο πρωτόκολλο, η επόμενη εκκίνηση χρησιμοποιεί ακόμη το προεπιλεγμένο NCM."
+msgstr "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
 
 msgid "Save"
-msgstr "Αποθήκευση"
+msgstr "Save"
 
 msgid "Saving USB network settings…"
-msgstr "Αποθήκευση ρυθμίσεων δικτύου USB…"
+msgstr "Saving USB network settings…"
 
 msgid "Settings saved"
-msgstr "Οι ρυθμίσεις αποθηκεύτηκαν"
+msgstr "Settings saved"
 
 msgid "Save failed: %s"
-msgstr "Η αποθήκευση απέτυχε: %s"
+msgstr "Save failed: %s"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
-msgstr "Δεν είναι ακόμη δυνατή η επιβεβαίωση του ρόλου· συνδεθείτε ξανά και ανανεώστε τη σελίδα."
+msgstr "Unable to confirm the role yet; reconnect and refresh the page."
 
 msgid "Switch to host mode to see USB adapters."
-msgstr "Μεταβείτε σε λειτουργία κεντρικού υπολογιστή για να δείτε τους προσαρμογείς USB."
+msgstr "Switch to host mode to see USB adapters."
 
 msgid "Scanning USB adapters…"
-msgstr "Σάρωση προσαρμογέων USB…"
+msgstr "Scanning USB adapters…"
 
 msgid "No USB adapters found."
-msgstr "Δεν βρέθηκαν προσαρμογείς USB."
+msgstr "No USB adapters found."
 
 msgid "Link connected"
-msgstr "Η ζεύξη συνδέθηκε"
+msgstr "Link connected"
 
 msgid "No link; enable attempted"
-msgstr "Χωρίς ζεύξη· έγινε απόπειρα ενεργοποίησης"
+msgstr "No link; enable attempted"
 
 msgid "Added to LAN"
-msgstr "Προστέθηκε στο LAN"
+msgstr "Added to LAN"
 
 msgid "Add to LAN"
-msgstr "Προσθήκη στο LAN"
+msgstr "Add to LAN"
 
 msgid "Add USB adapter to LAN?"
-msgstr "Προσθήκη προσαρμογέα USB στο LAN;"
+msgstr "Add USB adapter to LAN?"
 
 msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
-msgstr "Αυτό αποθηκεύει τη διαμόρφωση της γέφυρας και επαναφορτώνει το δίκτυο· οι υπάρχουσες συνδέσεις μπορεί να διακοπούν για λίγο."
+msgstr "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
 
 msgid "Add"
-msgstr "Προσθήκη"
+msgstr "Add"
 
 msgid "Adding USB adapter…"
-msgstr "Προσθήκη προσαρμογέα USB…"
+msgstr "Adding USB adapter…"
 
 msgid "Add failed: %s"
-msgstr "Η προσθήκη απέτυχε: %s"
+msgstr "Add failed: %s"
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "DingTalk bot"
+msgstr "DingTalk bot"
+
+msgid "Email (SMTP)"
+msgstr "Email (SMTP)"
+
+msgid "Local SMS"
+msgstr "Local SMS"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "No delivery yet"
+msgstr "No delivery yet"
+
+msgid "Delivered"
+msgstr "Delivered"
+
+msgid "Forwarding is off"
+msgstr "Forwarding is off"
+
+msgid "Forwarding to the original sender was blocked"
+msgstr "Forwarding to the original sender was blocked"
+
+msgid "The SMS is too long; not sent"
+msgstr "The SMS is too long; not sent"
+
+msgid "The device could not save"
+msgstr "The device could not save"
+
+msgid "The SMS service is unavailable"
+msgstr "The SMS service is unavailable"
+
+msgid "The device reports no valid battery state"
+msgstr "The device reports no valid battery state"
+
+msgid "Invalid configuration"
+msgstr "Invalid configuration"
+
+msgid "The destination is invalid"
+msgstr "The destination is invalid"
+
+msgid "Delivery failed; check the settings and the device network"
+msgstr "Delivery failed; check the settings and the device network"
+
+msgid "The mail server rejected the login; check the authorization code"
+msgstr "The mail server rejected the login; check the authorization code"
+
+msgid "Enable SMS forwarding"
+msgstr "Enable SMS forwarding"
+
+msgid "Forwarding method"
+msgstr "Forwarding method"
+
+msgid "Template language"
+msgstr "Template language"
+
+msgid "English"
+msgstr "English"
+
+msgid "Simplified Chinese"
+msgstr "Simplified Chinese"
+
+msgid "Turkish"
+msgstr "Turkish"
+
+msgid "Saved for the forward titles, hint text and power notifications; the SMS text and the device note are unchanged."
+msgstr "Saved for the forward titles, hint text and power notifications; the SMS text and the device note are unchanged."
+
+msgid "HTTPS URL"
+msgstr "HTTPS URL"
+
+msgid "Sent as a fixed JSON payload; no custom command is run."
+msgstr "Sent as a fixed JSON payload; no custom command is run."
+
+msgid "Bot webhook URL"
+msgstr "Bot webhook URL"
+
+msgid "Signing secret · leave blank to keep"
+msgstr "Signing secret · leave blank to keep"
+
+msgid "Clear the signing secret"
+msgstr "Clear the signing secret"
+
+msgid "Include device information"
+msgstr "Include device information"
+
+msgid "Bot token · leave blank to keep"
+msgstr "Bot token · leave blank to keep"
+
+msgid "Clear the bot token"
+msgstr "Clear the bot token"
+
+msgid "Target chat ID"
+msgstr "Target chat ID"
+
+msgid "The bot token and default chat come from the nanobot configuration (/root/.nanobot/config.json) unless set here."
+msgstr "The bot token and default chat come from the nanobot configuration (/root/.nanobot/config.json) unless set here."
+
+msgid "SMTP server host"
+msgstr "SMTP server host"
+
+msgid "Port · 465 / 587"
+msgstr "Port · 465 / 587"
+
+msgid "465 TLS"
+msgstr "465 TLS"
+
+msgid "587 STARTTLS"
+msgstr "587 STARTTLS"
+
+msgid "Sender mailbox"
+msgstr "Sender mailbox"
+
+msgid "Recipient mailbox"
+msgstr "Recipient mailbox"
+
+msgid "Authorization code / password · leave blank to keep"
+msgstr "Authorization code / password · leave blank to keep"
+
+msgid "Clear the mail settings"
+msgstr "Clear the mail settings"
+
+msgid "Use the SMTP authorization code from your mail provider; the TLS certificate is always verified."
+msgstr "Use the SMTP authorization code from your mail provider; the TLS certificate is always verified."
+
+msgid "SMS recipient numbers · one per line, up to 3"
+msgstr "SMS recipient numbers · one per line, up to 3"
+
+msgid "Forwarded through the local SIM, which may incur SMS charges; one message is at most 70 UCS-2 units, with no daily limit."
+msgstr "Forwarded through the local SIM, which may incur SMS charges; one message is at most 70 UCS-2 units, with no daily limit."
+
+msgid "Power notifications"
+msgstr "Power notifications"
+
+msgid "Power status notifications"
+msgstr "Power status notifications"
+
+msgid "Notified on a charge-state change, or when the level crosses 5%, 20%, 40%, 60%, 80% or 100%."
+msgstr "Notified on a charge-state change, or when the level crosses 5%, 20%, 40%, 60%, 80% or 100%."
+
+msgid "Device note"
+msgstr "Device note"
+
+msgid "Blacklist"
+msgstr "Blacklist"
+
+msgid "Number blacklist · one per line, up to 64"
+msgstr "Number blacklist · one per line, up to 64"
+
+msgid "Keyword blacklist · one per line, up to 32"
+msgstr "Keyword blacklist · one per line, up to 32"
+
+msgid "A matching new SMS is only marked as handled and is not forwarded; clearing a rule does not resend anything. The rules do not affect power notifications."
+msgstr "A matching new SMS is only marked as handled and is not forwarded; clearing a rule does not resend anything. The rules do not affect power notifications."
+
+msgid "Test and status"
+msgstr "Test and status"
+
+msgid "The device runs it on its own, so it keeps working after the page is closed; only new SMS are forwarded and a failure is not retried automatically."
+msgstr "The device runs it on its own, so it keeps working after the page is closed; only new SMS are forwarded and a failure is not retried automatically."
+
+msgid "Save settings"
+msgstr "Save settings"
+
+msgid "Send a test message"
+msgstr "Send a test message"
+
+msgid "Refresh status"
+msgstr "Refresh status"
+
+msgid "Could not read the settings; refresh the page"
+msgstr "Could not read the settings; refresh the page"
+
+msgid "configured; leave blank to keep"
+msgstr "configured; leave blank to keep"
+
+msgid "enter the authorization code"
+msgstr "enter the authorization code"
+
+msgid "optional"
+msgstr "optional"
+
+msgid "from the nanobot configuration"
+msgstr "from the nanobot configuration"
+
+msgid "A number is invalid, duplicated, or over the limit"
+msgstr "A number is invalid, duplicated, or over the limit"
+
+msgid "A keyword is invalid, duplicated, or over the limit"
+msgstr "A keyword is invalid, duplicated, or over the limit"
+
+msgid "Configure the current channel first"
+msgstr "Configure the current channel first"
+
+msgid "Forwarding is on"
+msgstr "Forwarding is on"
+
+msgid "Last forward: "
+msgstr "Last forward: "
+
+msgid "Last power notification: "
+msgstr "Last power notification: "
+
+msgid "Save the SMS forwarding settings?"
+msgstr "Save the SMS forwarding settings?"
+
+msgid "Once on, only newly received SMS are handled; older messages are not forwarded."
+msgstr "Once on, only newly received SMS are handled; older messages are not forwarded."
+
+msgid "Saving the SMS forwarding settings…"
+msgstr "Saving the SMS forwarding settings…"
+
+msgid "Saving failed"
+msgstr "Saving failed"
+
+msgid "Saved"
+msgstr "Saved"
+
+msgid "Save your changes before testing"
+msgstr "Save your changes before testing"
+
+msgid "Enable and save SMS forwarding first"
+msgstr "Enable and save SMS forwarding first"
+
+msgid "This sends from the local SIM to the saved numbers and may incur SMS charges."
+msgstr "This sends from the local SIM to the saved numbers and may incur SMS charges."
+
+msgid "This sends one fixed test message to the currently saved channel."
+msgstr "This sends one fixed test message to the currently saved channel."
+
+msgid "Send a test message?"
+msgstr "Send a test message?"
+
+msgid "The test has started; refresh the status in a moment"
+msgstr "The test has started; refresh the status in a moment"
+
+msgid "Test failed: "
+msgstr "Test failed: "
+
+msgid "unknown error"
+msgstr "unknown error"
 
 msgid "Modulation DL/UL"
-msgstr "Διαμόρφωση DL/UL"
+msgstr "Modulation DL/UL"
 
 msgid "Estimated from current MCS"
-msgstr "Εκτίμηση από το τρέχον MCS"
+msgstr "Estimated from current MCS"
 
 msgid "MCS DL/UL"
 msgstr "MCS DL/UL"
@@ -298,979 +550,1090 @@ msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
 msgid "Link & traffic"
-msgstr "Ζεύξη και κίνηση"
+msgstr "Link & traffic"
 
 msgid "Download rate"
-msgstr "Ρυθμός λήψης"
+msgstr "Download rate"
 
 msgid "Upload rate"
-msgstr "Ρυθμός αποστολής"
+msgstr "Upload rate"
 
 msgid "Total received"
-msgstr "Σύνολο ληφθέντων"
+msgstr "Total received"
 
 msgid "Total sent"
-msgstr "Σύνολο απεσταλμένων"
+msgstr "Total sent"
 
 msgid "Session duration"
-msgstr "Διάρκεια συνεδρίας"
+msgstr "Session duration"
 
 msgid "Registration"
-msgstr "Καταχώριση"
+msgstr "Registration"
 
 msgid "Bandwidth"
-msgstr "Εύρος ζώνης"
+msgstr "Bandwidth"
 
 msgid "AMBR DL/UL"
 msgstr "AMBR DL/UL"
 
 msgid "Wi-Fi · LAN · Device · SIM"
-msgstr "Wi-Fi · LAN · Συσκευή · SIM"
+msgstr "Wi-Fi · LAN · Device · SIM"
 
 msgid "CPU usage"
-msgstr "Χρήση CPU"
+msgstr "CPU usage"
 
 msgid "Memory"
-msgstr "Μνήμη"
+msgstr "Memory"
 
 msgid "Storage"
-msgstr "Αποθηκευτικός χώρος"
-
-msgid "Battery"
-msgstr "Μπαταρία"
+msgstr "Storage"
 
 msgid "Channel"
-msgstr "Κανάλι"
+msgstr "Channel"
 
 msgid "Encryption"
-msgstr "Κρυπτογράφηση"
+msgstr "Encryption"
 
 msgid "Hidden SSID"
-msgstr "Κρυφό SSID"
+msgstr "Hidden SSID"
 
 msgid "Country"
-msgstr "Χώρα"
+msgstr "Country"
 
 msgid "AP status"
-msgstr "Κατάσταση AP"
+msgstr "AP status"
 
 msgid "USB network"
-msgstr "Δίκτυο USB"
+msgstr "USB network"
 
 msgid "Connection tracking"
-msgstr "Παρακολούθηση συνδέσεων"
+msgstr "Connection tracking"
 
 msgid "LAN address"
-msgstr "Διεύθυνση LAN"
+msgstr "LAN address"
 
 msgid "Wi-Fi clients"
-msgstr "Πελάτες Wi-Fi"
+msgstr "Wi-Fi clients"
 
 msgid "DHCP leases"
-msgstr "Μισθώσεις DHCP"
+msgstr "DHCP leases"
 
 msgid "Device model"
-msgstr "Μοντέλο συσκευής"
+msgstr "Device model"
 
 msgid "System"
-msgstr "Σύστημα"
+msgstr "System"
 
 msgid "Modem"
-msgstr "Μόντεμ"
+msgstr "Modem"
 
 msgid "Carrier"
-msgstr "Πάροχος"
+msgstr "Carrier"
 
 msgid "Module"
-msgstr "Μονάδα"
+msgstr "Module"
 
 msgid "Firmware"
-msgstr "Υλικολογισμικό"
+msgstr "Firmware"
 
 msgid "Show SIM identifiers"
-msgstr "Εμφάνιση αναγνωριστικών SIM"
+msgstr "Show SIM identifiers"
 
 msgid "Quick controls"
-msgstr "Γρήγορα χειριστήρια"
+msgstr "Quick controls"
 
 msgid "Data connection"
-msgstr "Σύνδεση δεδομένων"
+msgstr "Data connection"
 
 msgid "Cellular radio"
-msgstr "Ραδιόφωνο κινητού δικτύου"
+msgstr "Cellular radio"
 
 msgid "Wi-Fi hotspot"
-msgstr "Σημείο πρόσβασης Wi-Fi"
+msgstr "Wi-Fi hotspot"
 
 msgid "Restart modem"
-msgstr "Επανεκκίνηση μόντεμ"
+msgstr "Restart modem"
 
 msgid "Restart device"
-msgstr "Επανεκκίνηση συσκευής"
+msgstr "Restart device"
 
 msgid "Switch to Android"
-msgstr "Μετάβαση σε Android"
+msgstr "Switch to Android"
 
 msgid "Neighbor cells"
-msgstr "Γειτονικές κυψέλες"
+msgstr "Neighbor cells"
 
 msgid "RAT/Band"
-msgstr "RAT/Ζώνη"
+msgstr "RAT/Band"
 
 msgid "Frequency"
-msgstr "Συχνότητα"
+msgstr "Frequency"
 
 msgid "Running %s…"
-msgstr "Εκτέλεση %s…"
+msgstr "Running %s…"
 
 msgid "Started in background: %s"
-msgstr "Ξεκίνησε στο παρασκήνιο: %s"
+msgstr "Started in background: %s"
 
 msgid "Done: %s"
-msgstr "Ολοκληρώθηκε: %s"
+msgstr "Done: %s"
 
 msgid "Failed: %s"
-msgstr "Απέτυχε: %s"
+msgstr "Failed: %s"
 
 msgid "Disconnecting data…"
-msgstr "Αποσύνδεση δεδομένων…"
+msgstr "Disconnecting data…"
 
 msgid "Connecting data…"
-msgstr "Σύνδεση δεδομένων…"
+msgstr "Connecting data…"
 
 msgid "Turn off cellular radio"
-msgstr "Απενεργοποίηση ραδιοφώνου κινητού δικτύου"
+msgstr "Turn off cellular radio"
 
 msgid "Cellular connectivity will be interrupted."
-msgstr "Η συνδεσιμότητα κινητού δικτύου θα διακοπεί."
+msgstr "Cellular connectivity will be interrupted."
 
 msgid "Turn on cellular radio"
-msgstr "Ενεργοποίηση ραδιοφώνου κινητού δικτύου"
+msgstr "Turn on cellular radio"
 
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "Θα εκτελεστεί η ακολουθία ενεργοποίησης SFUN (έως περίπου 1 λεπτό)."
+msgstr "The SFUN power-on sequence will run (up to about 1 minute)."
 
 msgid "Cellular connectivity may stop for 1–2 minutes."
-msgstr "Η συνδεσιμότητα κινητού δικτύου μπορεί να διακοπεί για 1–2 λεπτά."
+msgstr "Cellular connectivity may stop for 1–2 minutes."
 
 msgid "Restart the entire device"
-msgstr "Επανεκκίνηση ολόκληρης της συσκευής"
+msgstr "Restart the entire device"
 
 msgid "All connections will be interrupted."
-msgstr "Όλες οι συνδέσεις θα διακοπούν."
+msgstr "All connections will be interrupted."
 
 msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
-msgstr "Η επόμενη εκκίνηση θα γίνει σε Android και η συσκευή επανεκκινείται τώρα. Αυτή η σελίδα διαχείρισης και η κοινή χρήση κινητού δικτύου θα αποσυνδεθούν."
+msgstr "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
 
 msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
-msgstr "Για επιστροφή στο OpenWrt, εκτελέστε mu300-next-boot linux στο Android και επανεκκινήστε."
+msgstr "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
 
 msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
-msgstr "Ή μην κάνετε τίποτα: μετά από πέντε εκκινήσεις που δεν ολοκληρώνονται, επιστρέφει αυτόματα."
+msgstr "Or do nothing: after five boots that do not finish, it falls back automatically."
 
 msgid "Switch and reboot"
-msgstr "Αλλαγή και επανεκκίνηση"
+msgstr "Switch and reboot"
 
 msgid "Preparing Android boot and rebooting…"
-msgstr "Προετοιμασία εκκίνησης Android και επανεκκίνηση…"
+msgstr "Preparing Android boot and rebooting…"
 
 msgid "Hide SIM identifiers"
-msgstr "Απόκρυψη αναγνωριστικών SIM"
+msgstr "Hide SIM identifiers"
 
 msgid "Lock cell %s?"
-msgstr "Κλείδωμα κυψέλης %s;"
+msgstr "Lock cell %s?"
 
 msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
-msgstr "Η στοίβα ραδιοφώνου θα επανεκκινηθεί (SFUN)· η υπηρεσία κινητού δικτύου θα διακοπεί για περίπου 30 δευτερόλεπτα."
+msgstr "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
 
 msgid "Locking %s in the background, about 30 seconds"
-msgstr "Κλείδωμα %s στο παρασκήνιο, περίπου 30 δευτερόλεπτα"
+msgstr "Locking %s in the background, about 30 seconds"
 
 msgid "Locked %s in the background; the status will refresh shortly"
-msgstr "Το %s κλειδώθηκε στο παρασκήνιο· η κατάσταση θα ανανεωθεί σύντομα"
+msgstr "Locked %s in the background; the status will refresh shortly"
 
 msgid "Lock failed: %s"
-msgstr "Το κλείδωμα απέτυχε: %s"
+msgstr "Lock failed: %s"
 
 msgid "Uptime %s"
-msgstr "Χρόνος λειτουργίας %s"
+msgstr "Uptime %s"
 
 msgid "Radio off"
-msgstr "Ραδιόφωνο ανενεργό"
+msgstr "Radio off"
 
 msgid "No response"
-msgstr "Καμία απόκριση"
+msgstr "No response"
 
 msgid "%s · Signal %s %s/10"
-msgstr "%s · Σήμα %s %s/10"
+msgstr "%s · Signal %s %s/10"
 
 msgid "%s · Signal %s"
-msgstr "%s · Σήμα %s"
+msgstr "%s · Signal %s"
 
 msgid "Anchor B%s"
-msgstr "Άγκυρα B%s"
+msgstr "Anchor B%s"
 
 msgid "No serving cell"
-msgstr "Καμία κυψέλη εξυπηρέτησης"
+msgstr "No serving cell"
 
 msgid "Not registered"
-msgstr "Μη καταχωρισμένο"
+msgstr "Not registered"
 
 msgid "Registered"
-msgstr "Καταχωρισμένο"
+msgstr "Registered"
 
 msgid "Searching"
-msgstr "Αναζήτηση"
+msgstr "Searching"
 
 msgid "Registration denied"
-msgstr "Η καταχώριση απορρίφθηκε"
+msgstr "Registration denied"
 
 msgid "Registered (roaming)"
-msgstr "Καταχωρισμένο (περιαγωγή)"
+msgstr "Registered (roaming)"
 
 msgid "Emergency only"
-msgstr "Μόνο κλήσεις έκτακτης ανάγκης"
+msgstr "Emergency only"
 
 msgid "Status %s"
-msgstr "Κατάσταση %s"
+msgstr "Status %s"
 
 msgid "LTE anchor"
-msgstr "Άγκυρα LTE"
+msgstr "LTE anchor"
 
 msgid "LTE link"
-msgstr "Ζεύξη LTE"
+msgstr "LTE link"
 
 msgid "Hidden"
-msgstr "Κρυφό"
+msgstr "Hidden"
 
 msgid "No"
-msgstr "Όχι"
+msgstr "No"
 
 msgid "Running"
-msgstr "Εκτελείται"
+msgstr "Running"
 
 msgid "Not running"
-msgstr "Δεν εκτελείται"
+msgstr "Not running"
 
 msgid "Connected"
-msgstr "Συνδεδεμένο"
+msgstr "Connected"
 
 msgid "Disconnected"
-msgstr "Αποσυνδεδεμένο"
+msgstr "Disconnected"
 
 msgid "%s entries"
-msgstr "%s εγγραφές"
+msgstr "%s entries"
 
 msgid "%s clients"
-msgstr "%s πελάτες"
+msgstr "%s clients"
 
 msgid "Recent DHCP leases"
-msgstr "Πρόσφατες μισθώσεις DHCP"
+msgstr "Recent DHCP leases"
 
 msgid "%d h"
-msgstr "%d ώρ."
+msgstr "%d h"
 
 msgid "Board"
-msgstr "Πλακέτα"
+msgstr "Board"
 
 msgid "No temperature readings"
-msgstr "Δεν υπάρχουν μετρήσεις θερμοκρασίας"
+msgstr "No temperature readings"
 
 msgid "Cluster %d"
-msgstr "Συστάδα %d"
+msgstr "Cluster %d"
 
 msgid "Total %s · free %s"
-msgstr "Σύνολο %s · ελεύθερα %s"
-
-msgid "charging %s W"
-msgstr "φόρτιση %s W"
-
-msgid "charging"
-msgstr "φορτίζει"
-
-msgid "drawing %s W"
-msgstr "κατανάλωση %s W"
-
-msgid "not charging"
-msgstr "δεν φορτίζει"
-
-msgid "on battery"
-msgstr "σε μπαταρία"
-
-msgid "full"
-msgstr "πλήρης"
-
-msgid "USB in %s W"
-msgstr "είσοδος USB %s W"
+msgstr "Total %s · free %s"
 
 msgid "Online"
-msgstr "Σε σύνδεση"
+msgstr "Online"
 
 msgid "AT adapter unavailable"
-msgstr "Ο προσαρμογέας AT δεν είναι διαθέσιμος"
-
-msgid "Saved"
-msgstr "Αποθηκεύτηκε"
+msgstr "AT adapter unavailable"
 
 msgid "Management connection lost"
-msgstr "Η σύνδεση διαχείρισης χάθηκε"
+msgstr "Management connection lost"
 
 msgid "Installing the language pack…"
-msgstr "Εγκατάσταση του πακέτου γλωσσών…"
+msgstr "Installing the language pack…"
 
 msgid "The language pack is installed"
-msgstr "Το πακέτο γλωσσών εγκαταστάθηκε"
+msgstr "The language pack is installed"
 
 msgid "The language pack could not be installed"
-msgstr "Δεν ήταν δυνατή η εγκατάσταση του πακέτου γλωσσών"
+msgstr "The language pack could not be installed"
 
 msgid "Upload failed: %s"
-msgstr "Η μεταφόρτωση απέτυχε: %s"
+msgstr "Upload failed: %s"
 
 msgid "Language of the browser"
-msgstr "Γλώσσα του προγράμματος περιήγησης"
+msgstr "Language of the browser"
 
 msgid "Language of the web interface"
-msgstr "Γλώσσα της διεπαφής ιστού"
+msgstr "Language of the web interface"
 
 msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
-msgstr "Τα Αγγλικά, τα Τουρκικά και τα Κινεζικά περιλαμβάνονται στο σύστημα· το πακέτο γλωσσών προσθέτει τις υπόλοιπες."
+msgstr "English, Turkish and Chinese come with the system; the language pack adds the others."
 
 msgid "The same setting is in System > System > Language and Style."
-msgstr "Η ίδια ρύθμιση βρίσκεται στο Σύστημα > Σύστημα > Γλώσσα και στυλ."
+msgstr "The same setting is in System > System > Language and Style."
 
 msgid "Language pack"
-msgstr "Πακέτο γλωσσών"
+msgstr "Language pack"
 
 msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
-msgstr "Το πακέτο γλωσσών (mu300-extra-lang.tar.gz, περίπου 2 MB) προσθέτει το LuCI σε περίπου 40 ακόμη γλώσσες και αυτόν τον πίνακα σε 29 από αυτές. Κατεβάστε το από την έκδοση αυτού του συστήματος ή μεταφορτώστε το αρχείο από τη σελίδα της έκδοσης όταν η συσκευή δεν έχει internet."
+msgstr "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
 
 msgid "Download from the release"
-msgstr "Λήψη από την έκδοση"
+msgstr "Download from the release"
 
 msgid "Upload the file…"
-msgstr "Μεταφόρτωση του αρχείου…"
+msgstr "Upload the file…"
 
 msgid "Release"
-msgstr "Έκδοση"
+msgstr "Release"
 
 msgid "Enable all"
-msgstr "Ενεργοποίηση όλων"
+msgstr "Enable all"
 
 msgid "Disable all"
-msgstr "Απενεργοποίηση όλων"
+msgstr "Disable all"
 
 msgid "Remove the language pack"
-msgstr "Αφαίρεση του πακέτου γλωσσών"
+msgstr "Remove the language pack"
 
 msgid "Remove the language pack?"
-msgstr "Αφαίρεση του πακέτου γλωσσών;"
+msgstr "Remove the language pack?"
 
 msgid "Its languages disappear from the list; a page in one of them switches to English."
-msgstr "Οι γλώσσες του εξαφανίζονται από τη λίστα· μια σελίδα σε μία από αυτές αλλάζει σε Αγγλικά."
+msgstr "Its languages disappear from the list; a page in one of them switches to English."
 
 msgid "Remove"
-msgstr "Αφαίρεση"
+msgstr "Remove"
 
 msgid "Disable"
-msgstr "Απενεργοποίηση"
+msgstr "Disable"
 
 msgid "Enable"
-msgstr "Ενεργοποίηση"
+msgstr "Enable"
 
 msgid "LuCI and this panel"
-msgstr "LuCI και αυτός ο πίνακας"
+msgstr "LuCI and this panel"
 
 msgid "LuCI only"
-msgstr "Μόνο LuCI"
+msgstr "LuCI only"
 
 msgid "Enabled"
-msgstr "Ενεργοποιημένο"
+msgstr "Enabled"
 
 msgid "Disabled"
-msgstr "Απενεργοποιημένο"
+msgstr "Disabled"
 
 msgid "Language"
-msgstr "Γλώσσα"
+msgstr "Language"
 
 msgid "Code"
-msgstr "Κωδικός"
+msgstr "Code"
 
 msgid "Translated"
-msgstr "Μεταφρασμένο"
+msgstr "Translated"
 
 msgid "State"
-msgstr "Κατάσταση"
+msgstr "State"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
-msgstr "Οι μεταφράσεις του ίδιου του LuCI προέρχονται από το OpenWrt. Οι μεταφράσεις αυτού του πίνακα εκτός των Τουρκικών και των Κινεζικών είναι αυτόματες (AI)· οι διορθώσεις είναι ευπρόσδεκτες."
+msgstr "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 
 msgid "Automatic"
-msgstr "Αυτόματο"
+msgstr "Automatic"
 
 msgid "4G only"
-msgstr "Μόνο 4G"
+msgstr "4G only"
 
 msgid "Serving network"
-msgstr "Δίκτυο εξυπηρέτησης"
+msgstr "Serving network"
 
 msgid "Network mode · EN-DC"
-msgstr "Λειτουργία δικτύου · EN-DC"
+msgstr "Network mode · EN-DC"
 
 msgid "Refresh lock status"
-msgstr "Ανανέωση κατάστασης κλειδώματος"
+msgstr "Refresh lock status"
 
 msgid "Apply at startup"
-msgstr "Εφαρμογή κατά την εκκίνηση"
+msgstr "Apply at startup"
 
 msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
-msgstr "Η απενεργοποίηση σταματά μόνο την επαναφορά στην επόμενη εκκίνηση· οι αποθηκευμένες ρυθμίσεις λειτουργίας δικτύου, EN-DC, ζωνών και κυψελών παραμένουν."
+msgstr "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
 
 msgid "Band locking"
-msgstr "Κλείδωμα ζωνών"
+msgstr "Band locking"
 
 msgid "NR bands"
-msgstr "Ζώνες NR"
+msgstr "NR bands"
 
 msgid "LTE bands"
-msgstr "Ζώνες LTE"
+msgstr "LTE bands"
 
 msgid "Apply NR bands"
-msgstr "Εφαρμογή ζωνών NR"
+msgstr "Apply NR bands"
 
 msgid "Apply LTE bands"
-msgstr "Εφαρμογή ζωνών LTE"
+msgstr "Apply LTE bands"
 
 msgid "Neighbor cells and cell locking"
-msgstr "Γειτονικές κυψέλες και κλείδωμα κυψέλης"
+msgstr "Neighbor cells and cell locking"
 
 msgid "Lock current serving cell"
-msgstr "Κλείδωμα τρέχουσας κυψέλης εξυπηρέτησης"
+msgstr "Lock current serving cell"
 
 msgid "Unlock cell"
-msgstr "Ξεκλείδωμα κυψέλης"
+msgstr "Unlock cell"
 
 msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
-msgstr "Η εφαρμογή επανεκκινεί τη στοίβα ραδιοφώνου (SFUN) και διακόπτει για λίγο την υπηρεσία κινητού δικτύου. Οι ρυθμίσεις αποθηκεύονται και εφαρμόζονται ξανά από το πρόσθετο όταν το AT είναι έτοιμο, εφόσον είναι ενεργή η Εφαρμογή κατά την εκκίνηση. Ένα hook πλατφόρμας πριν από το ραδιόφωνο μπορεί να τις εφαρμόσει χωρίς επανεκκίνηση. Εφαρμόστε χωρίς επιλεγμένες ζώνες για επαναφορά της αυτόματης λειτουργίας."
+msgstr "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
 
 msgid "Apply “%s”?"
-msgstr "Εφαρμογή «%s»;"
+msgstr "Apply “%s”?"
 
 msgid "Applying %s in the background…"
-msgstr "Εφαρμογή %s στο παρασκήνιο…"
+msgstr "Applying %s in the background…"
 
 msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
-msgstr "Εφαρμογή %s στο παρασκήνιο… (επανεκκίνηση SFUN και νέα καταχώριση, περίπου 30 δευτερόλεπτα)"
+msgstr "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
 
 msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
-msgstr "Σε αναμονή: άλλο κλείδωμα εφαρμόζεται κατά την επανεκκίνηση SFUN· αυτό θα ισχύσει μετά"
+msgstr "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
 
 msgid "Confirming the EN-DC status…"
-msgstr "Επιβεβαίωση κατάστασης EN-DC…"
+msgstr "Confirming the EN-DC status…"
 
 msgid "Confirming apply at startup…"
-msgstr "Επιβεβαίωση εφαρμογής κατά την εκκίνηση…"
+msgstr "Confirming apply at startup…"
 
 msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "Ξεκίνησε στο παρασκήνιο: %s (επανεκκίνηση SFUN, περίπου 30 δευτερόλεπτα)· ανάγνωση της κατάστασης…"
+msgstr "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "Network mode: %s"
-msgstr "Λειτουργία δικτύου: %s"
+msgstr "Network mode: %s"
 
 msgid "Disable EN-DC (NSA anchor)"
-msgstr "Απενεργοποίηση EN-DC (άγκυρα NSA)"
+msgstr "Disable EN-DC (NSA anchor)"
 
 msgid "Enable EN-DC (NSA anchor)"
-msgstr "Ενεργοποίηση EN-DC (άγκυρα NSA)"
+msgstr "Enable EN-DC (NSA anchor)"
 
 msgid "Disable apply at startup"
-msgstr "Απενεργοποίηση εφαρμογής κατά την εκκίνηση"
+msgstr "Disable apply at startup"
 
 msgid "Enable apply at startup"
-msgstr "Ενεργοποίηση εφαρμογής κατά την εκκίνηση"
+msgstr "Enable apply at startup"
 
 msgid "Reading the modem directly (a few seconds at most)…"
-msgstr "Απευθείας ανάγνωση του μόντεμ (το πολύ λίγα δευτερόλεπτα)…"
+msgstr "Reading the modem directly (a few seconds at most)…"
 
 msgid "Refreshed"
-msgstr "Ανανεώθηκε"
+msgstr "Refreshed"
 
 msgid "Refresh failed"
-msgstr "Η ανανέωση απέτυχε"
+msgstr "Refresh failed"
 
 msgid "NR bands: back to automatic"
-msgstr "Ζώνες NR: επιστροφή σε αυτόματο"
+msgstr "NR bands: back to automatic"
 
 msgid "NR band lock: %s"
-msgstr "Κλείδωμα ζωνών NR: %s"
+msgstr "NR band lock: %s"
 
 msgid "LTE bands: back to automatic"
-msgstr "Ζώνες LTE: επιστροφή σε αυτόματο"
+msgstr "LTE bands: back to automatic"
 
 msgid "LTE band lock: %s"
-msgstr "Κλείδωμα ζωνών LTE: %s"
+msgstr "LTE band lock: %s"
 
 msgid "Remove the %s cell lock"
-msgstr "Αφαίρεση κλειδώματος κυψέλης %s"
+msgstr "Remove the %s cell lock"
 
 msgid "The radio stack will restart (SFUN), taking about 30 seconds."
-msgstr "Η στοίβα ραδιοφώνου θα επανεκκινηθεί (SFUN), περίπου 30 δευτερόλεπτα."
+msgstr "The radio stack will restart (SFUN), taking about 30 seconds."
 
 msgid "Removing the %s cell lock…"
-msgstr "Αφαίρεση κλειδώματος κυψέλης %s…"
+msgstr "Removing the %s cell lock…"
 
 msgid "Unlock failed: %s"
-msgstr "Το ξεκλείδωμα απέτυχε: %s"
+msgstr "Unlock failed: %s"
 
 msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "Το ξεκλείδωμα ξεκίνησε στο παρασκήνιο (επανεκκίνηση SFUN, περίπου 30 δευτερόλεπτα)· ανάγνωση της κατάστασης…"
+msgstr "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "Locking %s in the background…"
-msgstr "Κλείδωμα %s στο παρασκήνιο…"
+msgstr "Locking %s in the background…"
 
 msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "Το %s κλειδώθηκε στο παρασκήνιο (επανεκκίνηση SFUN, περίπου 30 δευτερόλεπτα)· ανάγνωση της κατάστασης…"
+msgstr "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "No serving-network data"
-msgstr "Δεν υπάρχουν δεδομένα δικτύου εξυπηρέτησης"
+msgstr "No serving-network data"
 
 msgid "NR serving cell"
-msgstr "Κυψέλη εξυπηρέτησης NR"
+msgstr "NR serving cell"
 
 msgid "Status confirmed"
-msgstr "Η κατάσταση επιβεβαιώθηκε"
+msgstr "Status confirmed"
 
 msgid "Readback timed out; select “Refresh lock status”"
-msgstr "Λήξη χρόνου ανάγνωσης· επιλέξτε «Ανανέωση κατάστασης κλειδώματος»"
+msgstr "Readback timed out; select “Refresh lock status”"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
-msgstr "Εφαρμόστηκε (το EN-DC δεν απαιτεί επανεκκίνηση της στοίβας ραδιοφώνου)"
+msgstr "Applied (EN-DC does not require a radio-stack restart)"
 
 msgid "Apply at startup is on"
-msgstr "Η εφαρμογή κατά την εκκίνηση είναι ενεργή"
+msgstr "Apply at startup is on"
 
 msgid "Apply at startup is off"
-msgstr "Η εφαρμογή κατά την εκκίνηση είναι ανενεργή"
+msgstr "Apply at startup is off"
 
 msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
-msgstr "Λήξη χρόνου ανάγνωσης κατάστασης EN-DC· χρησιμοποιήστε «Ανανέωση κατάστασης κλειδώματος» για επιβεβαίωση"
+msgstr "EN-DC status readback timed out; use “Refresh lock status” to confirm"
 
 msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
-msgstr "Λήξη χρόνου ανάγνωσης κατάστασης εφαρμογής κατά την εκκίνηση· χρησιμοποιήστε «Ανανέωση κατάστασης κλειδώματος» για επιβεβαίωση"
+msgstr "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
 
 msgid "Locked cells"
-msgstr "Κλειδωμένες κυψέλες"
+msgstr "Locked cells"
 
 msgid "Unlock %s"
-msgstr "Ξεκλείδωμα %s"
+msgstr "Unlock %s"
 
 msgid "Automatic (%d supported)"
-msgstr "Αυτόματο (%d υποστηριζόμενες)"
+msgstr "Automatic (%d supported)"
 
 msgid "%d locked: %s"
-msgstr "%d κλειδωμένες: %s"
+msgstr "%d locked: %s"
 
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
-msgstr "Ρυθμίστε πώς συνδέεται αυτό το πρόσθετο με την τρέχουσα πλατφόρμα Unisoc OpenWrt. Οι αλλαγές δεν απαιτούν επεξεργασία των σελίδων πίνακα κατάστασης, AT, κλειδωμάτων ή SMS."
+msgstr "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 
 msgid "Platform adapter"
-msgstr "Προσαρμογέας πλατφόρμας"
+msgstr "Platform adapter"
 
 msgid "AT backend"
-msgstr "Σύστημα υποστήριξης AT"
+msgstr "AT backend"
 
 msgid "Auto-detect"
-msgstr "Αυτόματος εντοπισμός"
+msgstr "Auto-detect"
 
 msgid "atinout + serial port"
-msgstr "atinout + σειριακή θύρα"
+msgstr "atinout + serial port"
 
 msgid "Custom adapter"
-msgstr "Προσαρμοσμένος προσαρμογέας"
+msgstr "Custom adapter"
 
 msgid "AT serial port"
-msgstr "Σειριακή θύρα AT"
+msgstr "AT serial port"
 
 msgid "Custom AT adapter"
-msgstr "Προσαρμοσμένος προσαρμογέας AT"
+msgstr "Custom AT adapter"
 
 msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
-msgstr "Το εκτελέσιμο λαμβάνει ένα χρονικό όριο σε δευτερόλεπτα και την πλήρη εντολή AT, με αυτή τη σειρά. Πρέπει να μοιράζεται το κλείδωμα σειριακής θύρας με τον dialer της πλατφόρμας."
+msgstr "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
 
 msgid "SMS adapter"
-msgstr "Προσαρμογέας SMS"
+msgstr "SMS adapter"
 
 msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
-msgstr "Υλοποιήστε τις υποεντολές list, show, send, delete και sync· αφήστε κενό για αυτόματο εντοπισμό του mu300-sms."
+msgstr "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
 
 msgid "SMS pool directory"
-msgstr "Κατάλογος αποθήκης SMS"
+msgstr "SMS pool directory"
 
 msgid "Cellular logical interface"
-msgstr "Λογική διεπαφή κινητού δικτύου"
+msgstr "Cellular logical interface"
 
 msgid "Cellular IPv6 interface"
-msgstr "Διεπαφή IPv6 κινητού δικτύου"
+msgstr "Cellular IPv6 interface"
 
 msgid "Cellular network device"
-msgstr "Συσκευή δικτύου κινητού δικτύου"
+msgstr "Cellular network device"
 
 msgid "Leave blank to detect from netifd"
-msgstr "Αφήστε κενό για εντοπισμό από το netifd"
+msgstr "Leave blank to detect from netifd"
 
 msgid "LAN bridge"
-msgstr "Γέφυρα LAN"
+msgstr "LAN bridge"
 
 msgid "Wi-Fi device"
-msgstr "Συσκευή Wi-Fi"
+msgstr "Wi-Fi device"
 
 msgid "USB device"
-msgstr "Συσκευή USB"
+msgstr "USB device"
 
 msgid "Maximum wait for AT readiness (seconds)"
-msgstr "Μέγιστη αναμονή για ετοιμότητα AT (δευτερόλεπτα)"
+msgstr "Maximum wait for AT readiness (seconds)"
 
 msgid "Home dashboard refresh interval (seconds)"
-msgstr "Διάστημα ανανέωσης αρχικού πίνακα (δευτερόλεπτα)"
+msgstr "Home dashboard refresh interval (seconds)"
 
 msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
-msgstr "Ελέγχει μόνο τον ρυθμό ανανέωσης του αρχικού πίνακα· 0.5–60 δευτερόλεπτα. Ανοίξτε ξανά την Αρχική μετά την αποθήκευση για εφαρμογή."
+msgstr "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
 
 msgid "Persistent state directory"
-msgstr "Κατάλογος μόνιμης κατάστασης"
+msgstr "Persistent state directory"
 
 msgid "Recipient: number, e.g. 10086 or +86..."
-msgstr "Παραλήπτης: αριθμός, π.χ. 10086 ή +86..."
+msgstr "Recipient: number, e.g. 10086 or +86..."
 
 msgid "Sync from SIM"
-msgstr "Συγχρονισμός από SIM"
+msgstr "Sync from SIM"
 
 msgid "Clear local pool"
-msgstr "Εκκαθάριση τοπικής αποθήκης"
+msgstr "Clear local pool"
 
 msgid "Loading…"
-msgstr "Φόρτωση…"
+msgstr "Loading…"
 
 msgid "Select a conversation on the left, or enter a number below to send."
-msgstr "Επιλέξτε μια συνομιλία στα αριστερά ή εισαγάγετε έναν αριθμό παρακάτω για αποστολή."
+msgstr "Select a conversation on the left, or enter a number below to send."
 
 msgid "Message (Enter to send, Shift+Enter for newline)"
-msgstr "Μήνυμα (Enter για αποστολή, Shift+Enter για νέα γραμμή)"
+msgstr "Message (Enter to send, Shift+Enter for newline)"
 
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
-msgstr "Η αποστολή χρησιμοποιεί AT+CMGS (λειτουργία PDU)· δοκιμάστε ξανά αν το κανάλι είναι απασχολημένο. Για διαγραφή ενός μηνύματος, χρησιμοποιήστε το εικονίδιο κάδου στο συννεφάκι του."
+msgstr "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
-msgstr "Συγχρονισμός από τη SIM στο παρασκήνιο (AT+CMGL)…"
+msgstr "Syncing from the SIM in the background (AT+CMGL)…"
 
 msgid "SIM sync started; the list refreshes in a few seconds."
-msgstr "Ο συγχρονισμός SIM ξεκίνησε· η λίστα ανανεώνεται σε λίγα δευτερόλεπτα."
+msgstr "SIM sync started; the list refreshes in a few seconds."
 
 msgid "Clear local SMS pool"
-msgstr "Εκκαθάριση τοπικής αποθήκης SMS"
+msgstr "Clear local SMS pool"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
-msgstr "Θα διαγραφούν μόνο τα τοπικά αρχεία· τα μηνύματα στη SIM παραμένουν."
+msgstr "Only local files will be deleted; messages on the SIM remain."
 
 msgid "Clear"
-msgstr "Εκκαθάριση"
+msgstr "Clear"
 
 msgid "Delete this SMS"
-msgstr "Διαγραφή αυτού του SMS"
+msgstr "Delete this SMS"
 
 msgid "Deletion cannot be undone."
-msgstr "Η διαγραφή δεν μπορεί να αναιρεθεί."
+msgstr "Deletion cannot be undone."
 
 msgid "Local only"
-msgstr "Μόνο τοπικά"
+msgstr "Local only"
 
 msgid "Local + SIM"
-msgstr "Τοπικά + SIM"
+msgstr "Local + SIM"
 
 msgid "Delete failed"
-msgstr "Η διαγραφή απέτυχε"
+msgstr "Delete failed"
 
 msgid "Deleted (local + SIM)"
-msgstr "Διαγράφηκε (τοπικά + SIM)"
+msgstr "Deleted (local + SIM)"
 
 msgid "Deleted (local only)"
-msgstr "Διαγράφηκε (μόνο τοπικά)"
+msgstr "Deleted (local only)"
 
 msgid "Enter both a number and a message."
-msgstr "Εισαγάγετε αριθμό και μήνυμα."
+msgstr "Enter both a number and a message."
 
 msgid "Sending…"
-msgstr "Αποστολή…"
+msgstr "Sending…"
 
 msgid "Sent; the list refreshes shortly."
-msgstr "Εστάλη· η λίστα ανανεώνεται σύντομα."
+msgstr "Sent; the list refreshes shortly."
 
 msgid "Sending failed"
-msgstr "Η αποστολή απέτυχε"
+msgstr "Sending failed"
 
 msgid "· %d messages, %d unread · %d conversations"
-msgstr "· %d μηνύματα, %d μη αναγνωσμένα · %d συνομιλίες"
+msgstr "· %d messages, %d unread · %d conversations"
 
 msgid "· %d messages · %d conversations"
-msgstr "· %d μηνύματα · %d συνομιλίες"
+msgstr "· %d messages · %d conversations"
 
 msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
-msgstr "Η αποθήκη είναι κενή. Τα εισερχόμενα και απεσταλμένα μηνύματα εμφανίζονται εδώ, ή επιλέξτε «Συγχρονισμός από SIM»."
+msgstr "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
 
 msgid "Me: %s"
-msgstr "Εγώ: %s"
+msgstr "Me: %s"
 
 msgid "Delete"
-msgstr "Διαγραφή"
+msgstr "Delete"
+
+msgid "The traffic accounting service is unavailable"
+msgstr "The traffic accounting service is unavailable"
+
+msgid "The traffic totals could not be saved"
+msgstr "The traffic totals could not be saved"
+
+msgid "The system clock is not synchronised yet"
+msgstr "The system clock is not synchronised yet"
+
+msgid "Today"
+msgstr "Today"
+
+msgid "This month"
+msgstr "This month"
+
+msgid "Calendar month"
+msgstr "Calendar month"
+
+msgid "Used this cycle"
+msgstr "Used this cycle"
+
+msgid "Plan remaining"
+msgstr "Plan remaining"
+
+msgid "Plan and traffic pool"
+msgstr "Plan and traffic pool"
+
+msgid "Plan name"
+msgstr "Plan name"
+
+msgid "Quota per cycle (GB)"
+msgstr "Quota per cycle (GB)"
+
+msgid "Daily reference quota (GB)"
+msgstr "Daily reference quota (GB)"
+
+msgid "Monthly reset day (1–31)"
+msgstr "Monthly reset day (1–31)"
+
+msgid "Plan counting mode"
+msgstr "Plan counting mode"
+
+msgid "Uplink + downlink"
+msgstr "Uplink + downlink"
+
+msgid "Downlink only"
+msgstr "Downlink only"
+
+msgid "Uplink only"
+msgstr "Uplink only"
+
+msgid "A quota of 0 means unlimited; 1 GB = 1000 MB. The reset day takes effect at local midnight, and short months use their last day."
+msgstr "A quota of 0 means unlimited; 1 GB = 1000 MB. The reset day takes effect at local midnight, and short months use their last day."
+
+msgid "Interface to account"
+msgstr "Interface to account"
+
+msgid "Use the cellular WAN interface automatically"
+msgstr "Use the cellular WAN interface automatically"
+
+msgid "Calibrate used this cycle (GB, optional)"
+msgstr "Calibrate used this cycle (GB, optional)"
+
+msgid "Leave blank to keep the current total"
+msgstr "Leave blank to keep the current total"
+
+msgid "Calibration only adjusts the current plan cycle; the daily and calendar-month histories are unchanged, and the next cycle counts real traffic again."
+msgstr "Calibration only adjusts the current plan cycle; the daily and calendar-month histories are unchanged, and the next cycle counts real traffic again."
+
+msgid "Recent daily usage"
+msgstr "Recent daily usage"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Down"
+msgstr "Down"
+
+msgid "Up"
+msgstr "Up"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Monthly usage history"
+msgstr "Monthly usage history"
+
+msgid "Month"
+msgstr "Month"
+
+msgid "Recording starts when accounting is enabled; it updates about every 10 seconds and saves every 60. A sudden power loss can lose the most recent unsaved records."
+msgstr "Recording starts when accounting is enabled; it updates about every 10 seconds and saves every 60. A sudden power loss can lose the most recent unsaved records."
+
+msgid "The local interface totals are for reference; the carrier’s billing is authoritative. The quota is for display and alerts only and never disconnects the link."
+msgstr "The local interface totals are for reference; the carrier’s billing is authoritative. The quota is for display and alerts only and never disconnects the link."
+
+msgid "Unlimited"
+msgstr "Unlimited"
+
+msgid "No plan name set"
+msgstr "No plan name set"
+
+msgid "Quota per cycle: "
+msgstr "Quota per cycle: "
+
+msgid "Next reset: "
+msgstr "Next reset: "
+
+msgid "Daily reference quota: "
+msgstr "Daily reference quota: "
+
+msgid "Updated: "
+msgstr "Updated: "
+
+msgid "The accounting interface is unavailable"
+msgstr "The accounting interface is unavailable"
+
+msgid "The plan quota is reached"
+msgstr "The plan quota is reached"
+
+msgid "The daily reference quota is reached"
+msgstr "The daily reference quota is reached"
+
+msgid "No records yet"
+msgstr "No records yet"
+
+msgid "Calibrate used traffic this cycle?"
+msgstr "Calibrate used traffic this cycle?"
+
+msgid "This sets the current cycle’s used value to the entered amount; the daily and calendar-month records are unchanged."
+msgstr "This sets the current cycle’s used value to the entered amount; the daily and calendar-month records are unchanged."
+
+msgid "Saving the traffic pool settings…"
+msgstr "Saving the traffic pool settings…"
 
 msgid "Dashboard info failed"
-msgstr "Οι πληροφορίες του πίνακα απέτυχαν"
+msgstr "Dashboard info failed"
 
 msgid "Applying network locks: no live signal right now"
-msgstr "Εφαρμογή κλειδωμάτων δικτύου: δεν υπάρχει ζωντανό σήμα αυτή τη στιγμή"
+msgstr "Applying network locks: no live signal right now"
 
 msgid "Live signal read failed"
-msgstr "Η ανάγνωση ζωντανού σήματος απέτυχε"
+msgstr "Live signal read failed"
 
 msgid "Unknown op"
-msgstr "Άγνωστη λειτουργία"
+msgstr "Unknown op"
 
 msgid "Invalid argument for this op"
-msgstr "Μη έγκυρο όρισμα για αυτή τη λειτουργία"
+msgstr "Invalid argument for this op"
 
 msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
-msgstr "Το ραδιόφωνο είναι απασχολημένο: η κλήση σύνδεσης ή το watchdog το αλλάζει, δοκιμάστε ξανά σε λίγο"
+msgstr "The radio is busy: the dial or the watchdog is switching it, try again shortly"
 
 msgid "The action gave no valid reply"
-msgstr "Η ενέργεια δεν έδωσε έγκυρη απάντηση"
+msgstr "The action gave no valid reply"
 
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
-msgstr "Μια εντολή AT είναι μία γραμμή εκτυπώσιμων ASCII, έως 512 χαρακτήρες"
+msgstr "An AT command is one line of printable ASCII, at most 512 characters"
 
 msgid "Must be an AT command"
-msgstr "Πρέπει να είναι εντολή AT"
+msgstr "Must be an AT command"
 
 msgid "No \";\" command chaining"
-msgstr "Χωρίς αλυσίδωση εντολών με \";\""
+msgstr "No \";\" command chaining"
 
 msgid "Denied: this command wedges the AT port until a reboot"
-msgstr "Απορρίφθηκε: αυτή η εντολή μπλοκάρει τη θύρα AT μέχρι την επανεκκίνηση"
+msgstr "Denied: this command wedges the AT port until a reboot"
 
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
-msgstr "Εφαρμογή κλειδωμάτων δικτύου: το μόντεμ επανεκκινείται (περίπου μισό λεπτό), δοκιμάστε ξανά σε λίγο"
+msgstr "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 
 msgid "The AT channel is busy; the command was not sent, try again"
-msgstr "Το κανάλι AT είναι απασχολημένο· η εντολή δεν στάλθηκε, δοκιμάστε ξανά"
+msgstr "The AT channel is busy; the command was not sent, try again"
 
 msgid "The modem did not answer in time; the command may still run, check before sending it again"
-msgstr "Το μόντεμ δεν απάντησε εγκαίρως· η εντολή μπορεί ακόμη να εκτελείται, ελέγξτε πριν τη στείλετε ξανά"
+msgstr "The modem did not answer in time; the command may still run, check before sending it again"
 
 msgid "The fresh parameter must be 0 or 1"
-msgstr "Η παράμετρος fresh πρέπει να είναι 0 ή 1"
+msgstr "The fresh parameter must be 0 or 1"
 
 msgid "Lock read failed"
-msgstr "Η ανάγνωση κλειδώματος απέτυχε"
+msgstr "Lock read failed"
 
 msgid "Unknown lock kind"
-msgstr "Άγνωστο είδος κλειδώματος"
+msgstr "Unknown lock kind"
 
 msgid "Invalid value for this lock kind"
-msgstr "Μη έγκυρη τιμή για αυτό το είδος κλειδώματος"
+msgstr "Invalid value for this lock kind"
 
 msgid "Invalid page"
-msgstr "Μη έγκυρη σελίδα"
+msgstr "Invalid page"
 
 msgid "mu300-sms is not available (the SMS service is not installed or not running)"
-msgstr "Το mu300-sms δεν είναι διαθέσιμο (η υπηρεσία SMS δεν είναι εγκατεστημένη ή δεν εκτελείται)"
+msgstr "mu300-sms is not available (the SMS service is not installed or not running)"
 
 msgid "No output"
-msgstr "Χωρίς έξοδο"
+msgstr "No output"
 
 msgid "Bad ID"
-msgstr "Μη έγκυρο ID"
+msgstr "Bad ID"
 
 msgid "Read failed"
-msgstr "Η ανάγνωση απέτυχε"
+msgstr "Read failed"
 
 msgid "The number may only contain digits (and a leading +)"
-msgstr "Ο αριθμός μπορεί να περιέχει μόνο ψηφία (και ένα αρχικό +)"
+msgstr "The number may only contain digits (and a leading +)"
 
 msgid "The message is empty"
-msgstr "Το μήνυμα είναι κενό"
+msgstr "The message is empty"
 
 msgid "The message is too long (over 480 characters)"
-msgstr "Το μήνυμα είναι πολύ μεγάλο (πάνω από 480 χαρακτήρες)"
+msgstr "The message is too long (over 480 characters)"
 
 msgid "The message contains a control character"
-msgstr "Το μήνυμα περιέχει χαρακτήρα ελέγχου"
+msgstr "The message contains a control character"
 
 msgid "The sim parameter must be 0 or 1"
-msgstr "Η παράμετρος sim πρέπει να είναι 0 ή 1"
+msgstr "The sim parameter must be 0 or 1"
 
 msgid "The USB adapter (device-usb) gave no valid reply"
-msgstr "Ο προσαρμογέας USB (device-usb) δεν έδωσε έγκυρη απάντηση"
+msgstr "The USB adapter (device-usb) gave no valid reply"
 
 msgid "The auto parameter must be 0 or 1"
-msgstr "Η παράμετρος auto πρέπει να είναι 0 ή 1"
+msgstr "The auto parameter must be 0 or 1"
 
 msgid "Invalid USB role"
-msgstr "Μη έγκυρος ρόλος USB"
+msgstr "Invalid USB role"
 
 msgid "A USB role takes no scope"
-msgstr "Ένας ρόλος USB δεν δέχεται εμβέλεια"
+msgstr "A USB role takes no scope"
 
 msgid "Invalid USB network mode"
-msgstr "Μη έγκυρη λειτουργία δικτύου USB"
+msgstr "Invalid USB network mode"
 
 msgid "Invalid USB network scope"
-msgstr "Μη έγκυρη εμβέλεια δικτύου USB"
+msgstr "Invalid USB network scope"
 
 msgid "Unknown USB setting"
-msgstr "Άγνωστη ρύθμιση USB"
+msgstr "Unknown USB setting"
 
 msgid "Invalid interface name"
-msgstr "Μη έγκυρο όνομα διεπαφής"
+msgstr "Invalid interface name"
 
 msgid "The languages adapter gave no valid reply"
-msgstr "Ο προσαρμογέας γλωσσών δεν έδωσε έγκυρη απάντηση"
+msgstr "The languages adapter gave no valid reply"
 
 msgid "Unknown language operation"
-msgstr "Άγνωστη λειτουργία γλώσσας"
+msgstr "Unknown language operation"
 
 msgid "Invalid language code"
-msgstr "Μη έγκυρος κωδικός γλώσσας"
+msgstr "Invalid language code"
 
 msgid "Invalid language request"
-msgstr "Μη έγκυρο αίτημα γλώσσας"
+msgstr "Invalid language request"
 
 msgid "Unknown source"
-msgstr "Άγνωστη πηγή"
+msgstr "Unknown source"
+
+msgid "traffic_unavailable"
+msgstr "traffic_unavailable"
 
 msgid "Request too large"
-msgstr "Το αίτημα είναι πολύ μεγάλο"
+msgstr "Request too large"
 
 msgid "The runtime directory is not safe; nothing was run"
-msgstr "Ο κατάλογος εκτέλεσης δεν είναι ασφαλής· δεν εκτελέστηκε τίποτα"
+msgstr "The runtime directory is not safe; nothing was run"
 
 msgid "No such method"
-msgstr "Δεν υπάρχει τέτοια μέθοδος"
+msgstr "No such method"
 
 msgid "Radio did not come up"
-msgstr "Το ραδιόφωνο δεν ενεργοποιήθηκε"
+msgstr "Radio did not come up"
 
 msgid "Expected on or off"
-msgstr "Αναμενόταν on ή off"
+msgstr "Expected on or off"
 
 msgid "VPN integration is not provided by this platform"
-msgstr "Η ενσωμάτωση VPN δεν παρέχεται από αυτή την πλατφόρμα"
+msgstr "VPN integration is not provided by this platform"
 
 msgid "Dual-boot integration is not provided by this platform"
-msgstr "Η ενσωμάτωση διπλής εκκίνησης δεν παρέχεται από αυτή την πλατφόρμα"
+msgstr "Dual-boot integration is not provided by this platform"
 
 msgid "mu300-next-boot failed"
-msgstr "Το mu300-next-boot απέτυχε"
+msgstr "mu300-next-boot failed"
 
 msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
-msgstr "Το σύστημα υποστήριξης AT δεν απάντησε (ραδιόφωνο ανενεργό, επανεκκίνηση μόντεμ ή μη διαθέσιμος προσαρμογέας)"
+msgstr "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
 
 msgid "USB role adapter is not executable"
-msgstr "Ο προσαρμογέας ρόλου USB δεν είναι εκτελέσιμος"
+msgstr "USB role adapter is not executable"
 
 msgid "USB role adapter failed"
-msgstr "Ο προσαρμογέας ρόλου USB απέτυχε"
+msgstr "USB role adapter failed"
 
 msgid "USB role switch is unavailable"
-msgstr "Η αλλαγή ρόλου USB δεν είναι διαθέσιμη"
+msgstr "USB role switch is unavailable"
 
 msgid "USB role switch failed"
-msgstr "Η αλλαγή ρόλου USB απέτυχε"
+msgstr "USB role switch failed"
 
 msgid "USB role switch was refused by platform safety checks"
-msgstr "Η αλλαγή ρόλου USB απορρίφθηκε από τους ελέγχους ασφαλείας της πλατφόρμας"
+msgstr "USB role switch was refused by platform safety checks"
 
 msgid "Cannot create USB boot settings directory"
-msgstr "Δεν είναι δυνατή η δημιουργία καταλόγου ρυθμίσεων εκκίνησης USB"
+msgstr "Cannot create USB boot settings directory"
 
 msgid "Cannot write USB boot settings"
-msgstr "Δεν είναι δυνατή η εγγραφή ρυθμίσεων εκκίνησης USB"
+msgstr "Cannot write USB boot settings"
 
 msgid "Cannot save USB boot settings"
-msgstr "Δεν είναι δυνατή η αποθήκευση ρυθμίσεων εκκίνησης USB"
+msgstr "Cannot save USB boot settings"
 
 msgid "Invalid boot-auto value"
-msgstr "Μη έγκυρη τιμή boot-auto"
+msgstr "Invalid boot-auto value"
 
 msgid "Device is the boot default; host auto-apply is the only persistent role"
-msgstr "Η συσκευή είναι η προεπιλογή εκκίνησης· η αυτόματη εφαρμογή κεντρικού υπολογιστή είναι ο μόνος μόνιμος ρόλος"
+msgstr "Device is the boot default; host auto-apply is the only persistent role"
 
 msgid "Cannot save USB role policy"
-msgstr "Δεν είναι δυνατή η αποθήκευση πολιτικής ρόλου USB"
+msgstr "Cannot save USB role policy"
 
 msgid "Cannot disable USB network boot policy"
-msgstr "Δεν είναι δυνατή η απενεργοποίηση πολιτικής εκκίνησης δικτύου USB"
+msgstr "Cannot disable USB network boot policy"
 
 msgid "Cannot commit USB role policy"
-msgstr "Δεν είναι δυνατή η δέσμευση πολιτικής ρόλου USB"
+msgstr "Cannot commit USB role policy"
 
 msgid "USB network mode is unavailable in host role"
-msgstr "Η λειτουργία δικτύου USB δεν είναι διαθέσιμη σε ρόλο κεντρικού υπολογιστή"
+msgstr "USB network mode is unavailable in host role"
 
 msgid "Disable host boot-auto before configuring USB network"
-msgstr "Απενεργοποιήστε το boot-auto κεντρικού υπολογιστή πριν από τη ρύθμιση δικτύου USB"
+msgstr "Disable host boot-auto before configuring USB network"
 
 msgid "Cannot save USB network policy"
-msgstr "Δεν είναι δυνατή η αποθήκευση πολιτικής δικτύου USB"
+msgstr "Cannot save USB network policy"
 
 msgid "Cannot commit USB network policy"
-msgstr "Δεν είναι δυνατή η δέσμευση πολιτικής δικτύου USB"
+msgstr "Cannot commit USB network policy"
 
 msgid "USB host mode is required"
-msgstr "Απαιτείται λειτουργία κεντρικού υπολογιστή USB"
+msgstr "USB host mode is required"
 
 msgid "Not a USB network interface"
-msgstr "Δεν είναι διεπαφή δικτύου USB"
+msgstr "Not a USB network interface"
 
 msgid "LAN bridge device section was not found"
-msgstr "Δεν βρέθηκε η ενότητα συσκευής της γέφυρας LAN"
+msgstr "LAN bridge device section was not found"
 
 msgid "Cannot bring USB network interface up"
-msgstr "Δεν είναι δυνατή η ενεργοποίηση της διεπαφής δικτύου USB"
+msgstr "Cannot bring USB network interface up"
 
 msgid "Cannot add interface to LAN bridge"
-msgstr "Δεν είναι δυνατή η προσθήκη διεπαφής στη γέφυρα LAN"
+msgstr "Cannot add interface to LAN bridge"
 
 msgid "Cannot save LAN bridge"
-msgstr "Δεν είναι δυνατή η αποθήκευση της γέφυρας LAN"
+msgstr "Cannot save LAN bridge"
 
 msgid "Network reload failed"
-msgstr "Η επαναφόρτωση δικτύου απέτυχε"
+msgstr "Network reload failed"
 
 msgid "Cannot attach USB interface to LAN bridge"
-msgstr "Δεν είναι δυνατή η σύνδεση διεπαφής USB στη γέφυρα LAN"
+msgstr "Cannot attach USB interface to LAN bridge"
 
 msgid "The language pack is not installed"
-msgstr "Το πακέτο γλωσσών δεν είναι εγκατεστημένο"
+msgstr "The language pack is not installed"
 
 msgid "No language given"
-msgstr "Δεν δόθηκε γλώσσα"
+msgstr "No language given"
 
 msgid "The language could not be changed"
-msgstr "Δεν ήταν δυνατή η αλλαγή της γλώσσας"
+msgstr "The language could not be changed"
 
 msgid "LuCI does not offer this language"
-msgstr "Το LuCI δεν προσφέρει αυτή τη γλώσσα"
+msgstr "LuCI does not offer this language"
 
 msgid "No uploaded language pack"
-msgstr "Δεν υπάρχει μεταφορτωμένο πακέτο γλωσσών"
+msgstr "No uploaded language pack"
 
 msgid "An installation is already running"
-msgstr "Μια εγκατάσταση εκτελείται ήδη"
+msgstr "An installation is already running"
 
 msgid "The language pack could not be removed"
-msgstr "Δεν ήταν δυνατή η αφαίρεση του πακέτου γλωσσών"
+msgstr "The language pack could not be removed"
 
 msgid "Lock cache unavailable"
-msgstr "Η κρυφή μνήμη κλειδωμάτων δεν είναι διαθέσιμη"
+msgstr "Lock cache unavailable"
 
 msgid "No serving cell to lock to"
-msgstr "Δεν υπάρχει κυψέλη εξυπηρέτησης για κλείδωμα"
+msgstr "No serving cell to lock to"

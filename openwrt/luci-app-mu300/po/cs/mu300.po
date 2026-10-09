@@ -4,31 +4,37 @@ msgstr ""
 "Language: cs\n"
 
 msgid "Status dashboard"
-msgstr "Přehled stavu"
+msgstr "Status dashboard"
 
 msgid "Cellular"
-msgstr "Mobilní síť"
+msgstr "Cellular"
 
 msgid "Network locks"
-msgstr "Zámky sítě"
+msgstr "Network locks"
 
 msgid "SMS"
 msgstr "SMS"
 
 msgid "AT terminal"
-msgstr "Terminál AT"
+msgstr "AT terminal"
 
 msgid "Adapter settings"
-msgstr "Nastavení adaptéru"
+msgstr "Adapter settings"
 
 msgid "Device management"
-msgstr "Správa zařízení"
+msgstr "Device management"
+
+msgid "SMS forwarding"
+msgstr "SMS forwarding"
+
+msgid "Traffic pool"
+msgstr "Traffic pool"
 
 msgid "Languages"
-msgstr "Jazyky"
+msgstr "Languages"
 
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
-msgstr "Řídicí centrum MU300: přehled stavu, zámky sítě, terminál AT a SMS"
+msgstr "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -46,19 +52,19 @@ msgid "China Tietong"
 msgstr "China Tietong"
 
 msgid "Excellent"
-msgstr "Výborný"
+msgstr "Excellent"
 
 msgid "Good"
-msgstr "Dobrý"
+msgstr "Good"
 
 msgid "Fair"
-msgstr "Průměrný"
+msgstr "Fair"
 
 msgid "Poor"
-msgstr "Slabý"
+msgstr "Poor"
 
 msgid "Unknown"
-msgstr "Neznámý"
+msgstr "Unknown"
 
 msgid "%d d %d h"
 msgstr "%d d %d h"
@@ -70,226 +76,472 @@ msgid "%d min"
 msgstr "%d min"
 
 msgid "No neighbor-cell data"
-msgstr "Žádná data o sousedních buňkách"
+msgstr "No neighbor-cell data"
 
 msgid "Locked"
-msgstr "Uzamčeno"
+msgstr "Locked"
 
 msgid "Lock"
-msgstr "Uzamknout"
+msgstr "Lock"
 
 msgid "Unknown error"
-msgstr "Neznámá chyba"
+msgstr "Unknown error"
 
 msgid "Confirm"
-msgstr "Potvrdit"
+msgstr "Confirm"
 
 msgid "OK"
 msgstr "OK"
 
 msgid "Cancel"
-msgstr "Zrušit"
+msgstr "Cancel"
 
 msgid "New SMS · %s"
-msgstr "Nová SMS · %s"
+msgstr "New SMS · %s"
 
 msgid "Unknown number"
-msgstr "Neznámé číslo"
+msgstr "Unknown number"
 
 msgid "Select"
-msgstr "Vybrat"
+msgstr "Select"
 
 msgid "Basic"
-msgstr "Základní"
+msgstr "Basic"
 
 msgid "Registration/signal"
-msgstr "Registrace/signál"
+msgstr "Registration/signal"
 
 msgid "Bearer"
-msgstr "Nosič"
+msgstr "Bearer"
 
 msgid "Engineering mode"
-msgstr "Servisní režim"
+msgstr "Engineering mode"
 
 msgid "AT command (↑↓ history, Enter to send)"
-msgstr "Příkaz AT (↑↓ historie, Enter odešle)"
+msgstr "AT command (↑↓ history, Enter to send)"
 
 msgid "Send"
-msgstr "Odeslat"
+msgstr "Send"
 
 msgid "Clear screen"
-msgstr "Vymazat obrazovku"
+msgstr "Clear screen"
 
 msgid "Ready."
-msgstr "Připraveno."
+msgstr "Ready."
 
 msgid "Session history (click to reuse)"
-msgstr "Historie relace (kliknutím znovu použít)"
+msgstr "Session history (click to reuse)"
 
 msgid "(no output)"
-msgstr "(žádný výstup)"
+msgstr "(no output)"
 
 msgid "Request failed"
-msgstr "Požadavek selhal"
+msgstr "Request failed"
 
 msgid "(empty)"
-msgstr "(prázdné)"
+msgstr "(empty)"
 
 msgid "USB role"
-msgstr "Role USB"
+msgstr "USB role"
 
 msgid "Current role"
-msgstr "Aktuální role"
+msgstr "Current role"
 
 msgid "Switch USB role"
-msgstr "Přepnout roli USB"
+msgstr "Switch USB role"
 
 msgid "Device mode"
-msgstr "Režim zařízení"
+msgstr "Device mode"
 
 msgid "Host mode"
-msgstr "Režim hostitele"
+msgstr "Host mode"
 
 msgid "Enable host mode at boot"
-msgstr "Povolit režim hostitele při spuštění"
+msgstr "Enable host mode at boot"
 
 msgid "Apply role"
-msgstr "Použít roli"
+msgstr "Apply role"
 
 msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
-msgstr "Režim hostitele odpojí síť a sériovou linku přes USB na tomto portu. F50 nemá baterii; správa může být ztracena a adaptér USB obvykle vyžaduje napájený rozbočovač."
+msgstr "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
 
 msgid "USB network mode"
-msgstr "Režim sítě USB"
+msgstr "USB network mode"
 
 msgid "Network protocol"
-msgstr "Síťový protokol"
+msgstr "Network protocol"
 
 msgid "Apply duration"
-msgstr "Platnost"
+msgstr "Apply duration"
 
 msgid "Next reboot only"
-msgstr "Pouze příští spuštění"
+msgstr "Next reboot only"
 
 msgid "Permanent"
-msgstr "Trvale"
+msgstr "Permanent"
 
 msgid "Enable selected protocol"
-msgstr "Povolit vybraný protokol"
+msgstr "Enable selected protocol"
 
 msgid "Save; apply after reboot"
-msgstr "Uložit; použít po restartu"
+msgstr "Save; apply after reboot"
 
 msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
-msgstr "Výchozí je NCM. Windows nativně nepodporuje ECM; RNDIS mění enumeraci. Je-li volba Povolit vybraný protokol vypnutá, uloží se pouze vaše volba. Pouze příští spuštění se použije jednou, pak se vrátí k NCM."
+msgstr "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
 
 msgid "USB adapters"
-msgstr "Adaptéry USB"
+msgstr "USB adapters"
 
 msgid "Refresh"
-msgstr "Obnovit"
+msgstr "Refresh"
 
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
-msgstr "Dostupné pouze v režimu hostitele. Obnovit aktivuje nalezené adaptéry USB; přidání do LAN uloží most a znovu načte síť."
+msgstr "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 
 msgid "Unavailable"
-msgstr "Nedostupné"
+msgstr "Unavailable"
 
 msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
-msgstr "Režim sítě USB není v režimu hostitele dostupný; automatické spuštění hostitele vypne i automatické spuštění sítě USB."
+msgstr "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
 
 msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
-msgstr "Režim hostitele okamžitě odpojí správu přes USB. F50 nemá baterii a periferie mohou potřebovat externí napájení; zajistěte jinou cestu pro správu."
+msgstr "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
 
 msgid "USB networking and serial will re-enumerate in device mode."
-msgstr "Síť a sériová linka přes USB se v režimu zařízení znovu enumerují."
+msgstr "USB networking and serial will re-enumerate in device mode."
 
 msgid "Switch USB role?"
-msgstr "Přepnout roli USB?"
+msgstr "Switch USB role?"
 
 msgid "Apply"
-msgstr "Použít"
+msgstr "Apply"
 
 msgid "Switching USB role…"
-msgstr "Přepínání role USB…"
+msgstr "Switching USB role…"
 
 msgid "Switch failed: %s"
-msgstr "Přepnutí selhalo: %s"
+msgstr "Switch failed: %s"
 
 msgid "Management connection lost; reconnect to confirm the USB role."
-msgstr "Spojení pro správu bylo ztraceno; připojte se znovu a potvrďte roli USB."
+msgstr "Management connection lost; reconnect to confirm the USB role."
 
 msgid "Switch request accepted; the USB connection may briefly disconnect."
-msgstr "Požadavek na přepnutí přijat; spojení USB se může krátce přerušit."
+msgstr "Switch request accepted; the USB connection may briefly disconnect."
 
 msgid "USB role applied"
-msgstr "Role USB použita"
+msgstr "USB role applied"
 
 msgid "Save USB network mode?"
-msgstr "Uložit režim sítě USB?"
+msgstr "Save USB network mode?"
 
 msgid "The network mode applies on the next reboot; USB management may need to reconnect."
-msgstr "Režim sítě se použije při příštím spuštění; správa přes USB se možná bude muset znovu připojit."
+msgstr "The network mode applies on the next reboot; USB management may need to reconnect."
 
 msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
-msgstr "Uložit pouze volbu; s vypnutým vybraným protokolem použije příští spuštění stále výchozí NCM."
+msgstr "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
 
 msgid "Save"
-msgstr "Uložit"
+msgstr "Save"
 
 msgid "Saving USB network settings…"
-msgstr "Ukládání nastavení sítě USB…"
+msgstr "Saving USB network settings…"
 
 msgid "Settings saved"
-msgstr "Nastavení uloženo"
+msgstr "Settings saved"
 
 msgid "Save failed: %s"
-msgstr "Uložení selhalo: %s"
+msgstr "Save failed: %s"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
-msgstr "Roli zatím nelze potvrdit; připojte se znovu a obnovte stránku."
+msgstr "Unable to confirm the role yet; reconnect and refresh the page."
 
 msgid "Switch to host mode to see USB adapters."
-msgstr "Pro zobrazení adaptérů USB přepněte do režimu hostitele."
+msgstr "Switch to host mode to see USB adapters."
 
 msgid "Scanning USB adapters…"
-msgstr "Vyhledávání adaptérů USB…"
+msgstr "Scanning USB adapters…"
 
 msgid "No USB adapters found."
-msgstr "Nebyly nalezeny žádné adaptéry USB."
+msgstr "No USB adapters found."
 
 msgid "Link connected"
-msgstr "Linka připojena"
+msgstr "Link connected"
 
 msgid "No link; enable attempted"
-msgstr "Žádná linka; pokus o aktivaci proveden"
+msgstr "No link; enable attempted"
 
 msgid "Added to LAN"
-msgstr "Přidáno do LAN"
+msgstr "Added to LAN"
 
 msgid "Add to LAN"
-msgstr "Přidat do LAN"
+msgstr "Add to LAN"
 
 msgid "Add USB adapter to LAN?"
-msgstr "Přidat adaptér USB do LAN?"
+msgstr "Add USB adapter to LAN?"
 
 msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
-msgstr "Uloží se konfigurace mostu a znovu se načte síť; stávající spojení se mohou krátce přerušit."
+msgstr "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
 
 msgid "Add"
-msgstr "Přidat"
+msgstr "Add"
 
 msgid "Adding USB adapter…"
-msgstr "Přidávání adaptéru USB…"
+msgstr "Adding USB adapter…"
 
 msgid "Add failed: %s"
-msgstr "Přidání selhalo: %s"
+msgstr "Add failed: %s"
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "DingTalk bot"
+msgstr "DingTalk bot"
+
+msgid "Email (SMTP)"
+msgstr "Email (SMTP)"
+
+msgid "Local SMS"
+msgstr "Local SMS"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "No delivery yet"
+msgstr "No delivery yet"
+
+msgid "Delivered"
+msgstr "Delivered"
+
+msgid "Forwarding is off"
+msgstr "Forwarding is off"
+
+msgid "Forwarding to the original sender was blocked"
+msgstr "Forwarding to the original sender was blocked"
+
+msgid "The SMS is too long; not sent"
+msgstr "The SMS is too long; not sent"
+
+msgid "The device could not save"
+msgstr "The device could not save"
+
+msgid "The SMS service is unavailable"
+msgstr "The SMS service is unavailable"
+
+msgid "The device reports no valid battery state"
+msgstr "The device reports no valid battery state"
+
+msgid "Invalid configuration"
+msgstr "Invalid configuration"
+
+msgid "The destination is invalid"
+msgstr "The destination is invalid"
+
+msgid "Delivery failed; check the settings and the device network"
+msgstr "Delivery failed; check the settings and the device network"
+
+msgid "The mail server rejected the login; check the authorization code"
+msgstr "The mail server rejected the login; check the authorization code"
+
+msgid "Enable SMS forwarding"
+msgstr "Enable SMS forwarding"
+
+msgid "Forwarding method"
+msgstr "Forwarding method"
+
+msgid "Template language"
+msgstr "Template language"
+
+msgid "English"
+msgstr "English"
+
+msgid "Simplified Chinese"
+msgstr "Simplified Chinese"
+
+msgid "Turkish"
+msgstr "Turkish"
+
+msgid "Saved for the forward titles, hint text and power notifications; the SMS text and the device note are unchanged."
+msgstr "Saved for the forward titles, hint text and power notifications; the SMS text and the device note are unchanged."
+
+msgid "HTTPS URL"
+msgstr "HTTPS URL"
+
+msgid "Sent as a fixed JSON payload; no custom command is run."
+msgstr "Sent as a fixed JSON payload; no custom command is run."
+
+msgid "Bot webhook URL"
+msgstr "Bot webhook URL"
+
+msgid "Signing secret · leave blank to keep"
+msgstr "Signing secret · leave blank to keep"
+
+msgid "Clear the signing secret"
+msgstr "Clear the signing secret"
+
+msgid "Include device information"
+msgstr "Include device information"
+
+msgid "Bot token · leave blank to keep"
+msgstr "Bot token · leave blank to keep"
+
+msgid "Clear the bot token"
+msgstr "Clear the bot token"
+
+msgid "Target chat ID"
+msgstr "Target chat ID"
+
+msgid "The bot token and default chat come from the nanobot configuration (/root/.nanobot/config.json) unless set here."
+msgstr "The bot token and default chat come from the nanobot configuration (/root/.nanobot/config.json) unless set here."
+
+msgid "SMTP server host"
+msgstr "SMTP server host"
+
+msgid "Port · 465 / 587"
+msgstr "Port · 465 / 587"
+
+msgid "465 TLS"
+msgstr "465 TLS"
+
+msgid "587 STARTTLS"
+msgstr "587 STARTTLS"
+
+msgid "Sender mailbox"
+msgstr "Sender mailbox"
+
+msgid "Recipient mailbox"
+msgstr "Recipient mailbox"
+
+msgid "Authorization code / password · leave blank to keep"
+msgstr "Authorization code / password · leave blank to keep"
+
+msgid "Clear the mail settings"
+msgstr "Clear the mail settings"
+
+msgid "Use the SMTP authorization code from your mail provider; the TLS certificate is always verified."
+msgstr "Use the SMTP authorization code from your mail provider; the TLS certificate is always verified."
+
+msgid "SMS recipient numbers · one per line, up to 3"
+msgstr "SMS recipient numbers · one per line, up to 3"
+
+msgid "Forwarded through the local SIM, which may incur SMS charges; one message is at most 70 UCS-2 units, with no daily limit."
+msgstr "Forwarded through the local SIM, which may incur SMS charges; one message is at most 70 UCS-2 units, with no daily limit."
+
+msgid "Power notifications"
+msgstr "Power notifications"
+
+msgid "Power status notifications"
+msgstr "Power status notifications"
+
+msgid "Notified on a charge-state change, or when the level crosses 5%, 20%, 40%, 60%, 80% or 100%."
+msgstr "Notified on a charge-state change, or when the level crosses 5%, 20%, 40%, 60%, 80% or 100%."
+
+msgid "Device note"
+msgstr "Device note"
+
+msgid "Blacklist"
+msgstr "Blacklist"
+
+msgid "Number blacklist · one per line, up to 64"
+msgstr "Number blacklist · one per line, up to 64"
+
+msgid "Keyword blacklist · one per line, up to 32"
+msgstr "Keyword blacklist · one per line, up to 32"
+
+msgid "A matching new SMS is only marked as handled and is not forwarded; clearing a rule does not resend anything. The rules do not affect power notifications."
+msgstr "A matching new SMS is only marked as handled and is not forwarded; clearing a rule does not resend anything. The rules do not affect power notifications."
+
+msgid "Test and status"
+msgstr "Test and status"
+
+msgid "The device runs it on its own, so it keeps working after the page is closed; only new SMS are forwarded and a failure is not retried automatically."
+msgstr "The device runs it on its own, so it keeps working after the page is closed; only new SMS are forwarded and a failure is not retried automatically."
+
+msgid "Save settings"
+msgstr "Save settings"
+
+msgid "Send a test message"
+msgstr "Send a test message"
+
+msgid "Refresh status"
+msgstr "Refresh status"
+
+msgid "Could not read the settings; refresh the page"
+msgstr "Could not read the settings; refresh the page"
+
+msgid "configured; leave blank to keep"
+msgstr "configured; leave blank to keep"
+
+msgid "enter the authorization code"
+msgstr "enter the authorization code"
+
+msgid "optional"
+msgstr "optional"
+
+msgid "from the nanobot configuration"
+msgstr "from the nanobot configuration"
+
+msgid "A number is invalid, duplicated, or over the limit"
+msgstr "A number is invalid, duplicated, or over the limit"
+
+msgid "A keyword is invalid, duplicated, or over the limit"
+msgstr "A keyword is invalid, duplicated, or over the limit"
+
+msgid "Configure the current channel first"
+msgstr "Configure the current channel first"
+
+msgid "Forwarding is on"
+msgstr "Forwarding is on"
+
+msgid "Last forward: "
+msgstr "Last forward: "
+
+msgid "Last power notification: "
+msgstr "Last power notification: "
+
+msgid "Save the SMS forwarding settings?"
+msgstr "Save the SMS forwarding settings?"
+
+msgid "Once on, only newly received SMS are handled; older messages are not forwarded."
+msgstr "Once on, only newly received SMS are handled; older messages are not forwarded."
+
+msgid "Saving the SMS forwarding settings…"
+msgstr "Saving the SMS forwarding settings…"
+
+msgid "Saving failed"
+msgstr "Saving failed"
+
+msgid "Saved"
+msgstr "Saved"
+
+msgid "Save your changes before testing"
+msgstr "Save your changes before testing"
+
+msgid "Enable and save SMS forwarding first"
+msgstr "Enable and save SMS forwarding first"
+
+msgid "This sends from the local SIM to the saved numbers and may incur SMS charges."
+msgstr "This sends from the local SIM to the saved numbers and may incur SMS charges."
+
+msgid "This sends one fixed test message to the currently saved channel."
+msgstr "This sends one fixed test message to the currently saved channel."
+
+msgid "Send a test message?"
+msgstr "Send a test message?"
+
+msgid "The test has started; refresh the status in a moment"
+msgstr "The test has started; refresh the status in a moment"
+
+msgid "Test failed: "
+msgstr "Test failed: "
+
+msgid "unknown error"
+msgstr "unknown error"
 
 msgid "Modulation DL/UL"
-msgstr "Modulace DL/UL"
+msgstr "Modulation DL/UL"
 
 msgid "Estimated from current MCS"
-msgstr "Odhadnuto z aktuálního MCS"
+msgstr "Estimated from current MCS"
 
 msgid "MCS DL/UL"
 msgstr "MCS DL/UL"
@@ -298,979 +550,1090 @@ msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
 msgid "Link & traffic"
-msgstr "Linka a provoz"
+msgstr "Link & traffic"
 
 msgid "Download rate"
-msgstr "Rychlost stahování"
+msgstr "Download rate"
 
 msgid "Upload rate"
-msgstr "Rychlost odesílání"
+msgstr "Upload rate"
 
 msgid "Total received"
-msgstr "Celkem přijato"
+msgstr "Total received"
 
 msgid "Total sent"
-msgstr "Celkem odesláno"
+msgstr "Total sent"
 
 msgid "Session duration"
-msgstr "Doba relace"
+msgstr "Session duration"
 
 msgid "Registration"
-msgstr "Registrace"
+msgstr "Registration"
 
 msgid "Bandwidth"
-msgstr "Šířka pásma"
+msgstr "Bandwidth"
 
 msgid "AMBR DL/UL"
 msgstr "AMBR DL/UL"
 
 msgid "Wi-Fi · LAN · Device · SIM"
-msgstr "Wi-Fi · LAN · Zařízení · SIM"
+msgstr "Wi-Fi · LAN · Device · SIM"
 
 msgid "CPU usage"
-msgstr "Využití CPU"
+msgstr "CPU usage"
 
 msgid "Memory"
-msgstr "Paměť"
+msgstr "Memory"
 
 msgid "Storage"
-msgstr "Úložiště"
-
-msgid "Battery"
-msgstr "Baterie"
+msgstr "Storage"
 
 msgid "Channel"
-msgstr "Kanál"
+msgstr "Channel"
 
 msgid "Encryption"
-msgstr "Šifrování"
+msgstr "Encryption"
 
 msgid "Hidden SSID"
-msgstr "Skryté SSID"
+msgstr "Hidden SSID"
 
 msgid "Country"
-msgstr "Země"
+msgstr "Country"
 
 msgid "AP status"
-msgstr "Stav AP"
+msgstr "AP status"
 
 msgid "USB network"
-msgstr "Síť USB"
+msgstr "USB network"
 
 msgid "Connection tracking"
-msgstr "Sledování spojení"
+msgstr "Connection tracking"
 
 msgid "LAN address"
-msgstr "Adresa LAN"
+msgstr "LAN address"
 
 msgid "Wi-Fi clients"
-msgstr "Klienti Wi-Fi"
+msgstr "Wi-Fi clients"
 
 msgid "DHCP leases"
-msgstr "Přidělené adresy DHCP"
+msgstr "DHCP leases"
 
 msgid "Device model"
-msgstr "Model zařízení"
+msgstr "Device model"
 
 msgid "System"
-msgstr "Systém"
+msgstr "System"
 
 msgid "Modem"
 msgstr "Modem"
 
 msgid "Carrier"
-msgstr "Operátor"
+msgstr "Carrier"
 
 msgid "Module"
-msgstr "Modul"
+msgstr "Module"
 
 msgid "Firmware"
 msgstr "Firmware"
 
 msgid "Show SIM identifiers"
-msgstr "Zobrazit identifikátory SIM"
+msgstr "Show SIM identifiers"
 
 msgid "Quick controls"
-msgstr "Rychlé ovládání"
+msgstr "Quick controls"
 
 msgid "Data connection"
-msgstr "Datové připojení"
+msgstr "Data connection"
 
 msgid "Cellular radio"
-msgstr "Mobilní rádio"
+msgstr "Cellular radio"
 
 msgid "Wi-Fi hotspot"
-msgstr "Hotspot Wi-Fi"
+msgstr "Wi-Fi hotspot"
 
 msgid "Restart modem"
-msgstr "Restartovat modem"
+msgstr "Restart modem"
 
 msgid "Restart device"
-msgstr "Restartovat zařízení"
+msgstr "Restart device"
 
 msgid "Switch to Android"
-msgstr "Přepnout na Android"
+msgstr "Switch to Android"
 
 msgid "Neighbor cells"
-msgstr "Sousední buňky"
+msgstr "Neighbor cells"
 
 msgid "RAT/Band"
-msgstr "RAT/pásmo"
+msgstr "RAT/Band"
 
 msgid "Frequency"
-msgstr "Frekvence"
+msgstr "Frequency"
 
 msgid "Running %s…"
-msgstr "Spouštění %s…"
+msgstr "Running %s…"
 
 msgid "Started in background: %s"
-msgstr "Spuštěno na pozadí: %s"
+msgstr "Started in background: %s"
 
 msgid "Done: %s"
-msgstr "Hotovo: %s"
+msgstr "Done: %s"
 
 msgid "Failed: %s"
-msgstr "Selhalo: %s"
+msgstr "Failed: %s"
 
 msgid "Disconnecting data…"
-msgstr "Odpojování dat…"
+msgstr "Disconnecting data…"
 
 msgid "Connecting data…"
-msgstr "Připojování dat…"
+msgstr "Connecting data…"
 
 msgid "Turn off cellular radio"
-msgstr "Vypnout mobilní rádio"
+msgstr "Turn off cellular radio"
 
 msgid "Cellular connectivity will be interrupted."
-msgstr "Mobilní připojení bude přerušeno."
+msgstr "Cellular connectivity will be interrupted."
 
 msgid "Turn on cellular radio"
-msgstr "Zapnout mobilní rádio"
+msgstr "Turn on cellular radio"
 
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "Proběhne sekvence zapnutí SFUN (až asi 1 minuta)."
+msgstr "The SFUN power-on sequence will run (up to about 1 minute)."
 
 msgid "Cellular connectivity may stop for 1–2 minutes."
-msgstr "Mobilní připojení se může na 1–2 minuty zastavit."
+msgstr "Cellular connectivity may stop for 1–2 minutes."
 
 msgid "Restart the entire device"
-msgstr "Restartovat celé zařízení"
+msgstr "Restart the entire device"
 
 msgid "All connections will be interrupted."
-msgstr "Všechna spojení budou přerušena."
+msgstr "All connections will be interrupted."
 
 msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
-msgstr "Příští spuštění přejde do Android a zařízení se nyní restartuje. Tato stránka správy a sdílení mobilního připojení se odpojí."
+msgstr "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
 
 msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
-msgstr "Pro návrat do OpenWrt spusťte v Android mu300-next-boot linux a restartujte."
+msgstr "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
 
 msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
-msgstr "Nebo nedělejte nic: po pěti nedokončených spuštěních dojde k automatickému návratu."
+msgstr "Or do nothing: after five boots that do not finish, it falls back automatically."
 
 msgid "Switch and reboot"
-msgstr "Přepnout a restartovat"
+msgstr "Switch and reboot"
 
 msgid "Preparing Android boot and rebooting…"
-msgstr "Příprava spuštění Android a restart…"
+msgstr "Preparing Android boot and rebooting…"
 
 msgid "Hide SIM identifiers"
-msgstr "Skrýt identifikátory SIM"
+msgstr "Hide SIM identifiers"
 
 msgid "Lock cell %s?"
-msgstr "Uzamknout buňku %s?"
+msgstr "Lock cell %s?"
 
 msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
-msgstr "Rádiový stack se restartuje (SFUN); mobilní služba se zastaví asi na 30 sekund."
+msgstr "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
 
 msgid "Locking %s in the background, about 30 seconds"
-msgstr "Zamykání %s na pozadí, asi 30 sekund"
+msgstr "Locking %s in the background, about 30 seconds"
 
 msgid "Locked %s in the background; the status will refresh shortly"
-msgstr "%s uzamčeno na pozadí; stav se brzy obnoví"
+msgstr "Locked %s in the background; the status will refresh shortly"
 
 msgid "Lock failed: %s"
-msgstr "Uzamčení selhalo: %s"
+msgstr "Lock failed: %s"
 
 msgid "Uptime %s"
-msgstr "Doba provozu %s"
+msgstr "Uptime %s"
 
 msgid "Radio off"
-msgstr "Rádio vypnuto"
+msgstr "Radio off"
 
 msgid "No response"
-msgstr "Žádná odpověď"
+msgstr "No response"
 
 msgid "%s · Signal %s %s/10"
-msgstr "%s · Signál %s %s/10"
+msgstr "%s · Signal %s %s/10"
 
 msgid "%s · Signal %s"
-msgstr "%s · Signál %s"
+msgstr "%s · Signal %s"
 
 msgid "Anchor B%s"
-msgstr "Kotva B%s"
+msgstr "Anchor B%s"
 
 msgid "No serving cell"
-msgstr "Žádná obsluhující buňka"
+msgstr "No serving cell"
 
 msgid "Not registered"
-msgstr "Neregistrováno"
+msgstr "Not registered"
 
 msgid "Registered"
-msgstr "Registrováno"
+msgstr "Registered"
 
 msgid "Searching"
-msgstr "Vyhledávání"
+msgstr "Searching"
 
 msgid "Registration denied"
-msgstr "Registrace odmítnuta"
+msgstr "Registration denied"
 
 msgid "Registered (roaming)"
-msgstr "Registrováno (roaming)"
+msgstr "Registered (roaming)"
 
 msgid "Emergency only"
-msgstr "Pouze tísňová volání"
+msgstr "Emergency only"
 
 msgid "Status %s"
-msgstr "Stav %s"
+msgstr "Status %s"
 
 msgid "LTE anchor"
-msgstr "Kotva LTE"
+msgstr "LTE anchor"
 
 msgid "LTE link"
-msgstr "Linka LTE"
+msgstr "LTE link"
 
 msgid "Hidden"
-msgstr "Skryté"
+msgstr "Hidden"
 
 msgid "No"
-msgstr "Ne"
+msgstr "No"
 
 msgid "Running"
-msgstr "Běží"
+msgstr "Running"
 
 msgid "Not running"
-msgstr "Neběží"
+msgstr "Not running"
 
 msgid "Connected"
-msgstr "Připojeno"
+msgstr "Connected"
 
 msgid "Disconnected"
-msgstr "Odpojeno"
+msgstr "Disconnected"
 
 msgid "%s entries"
-msgstr "Záznamů: %s"
+msgstr "%s entries"
 
 msgid "%s clients"
-msgstr "Klientů: %s"
+msgstr "%s clients"
 
 msgid "Recent DHCP leases"
-msgstr "Nedávno přidělené adresy DHCP"
+msgstr "Recent DHCP leases"
 
 msgid "%d h"
 msgstr "%d h"
 
 msgid "Board"
-msgstr "Deska"
+msgstr "Board"
 
 msgid "No temperature readings"
-msgstr "Žádné údaje o teplotě"
+msgstr "No temperature readings"
 
 msgid "Cluster %d"
 msgstr "Cluster %d"
 
 msgid "Total %s · free %s"
-msgstr "Celkem %s · volno %s"
-
-msgid "charging %s W"
-msgstr "nabíjí se %s W"
-
-msgid "charging"
-msgstr "nabíjí se"
-
-msgid "drawing %s W"
-msgstr "odebírá %s W"
-
-msgid "not charging"
-msgstr "nenabíjí se"
-
-msgid "on battery"
-msgstr "na baterii"
-
-msgid "full"
-msgstr "nabitá"
-
-msgid "USB in %s W"
-msgstr "vstup USB %s W"
+msgstr "Total %s · free %s"
 
 msgid "Online"
 msgstr "Online"
 
 msgid "AT adapter unavailable"
-msgstr "Adaptér AT nedostupný"
-
-msgid "Saved"
-msgstr "Uloženo"
+msgstr "AT adapter unavailable"
 
 msgid "Management connection lost"
-msgstr "Spojení pro správu bylo ztraceno"
+msgstr "Management connection lost"
 
 msgid "Installing the language pack…"
-msgstr "Instalace jazykového balíčku…"
+msgstr "Installing the language pack…"
 
 msgid "The language pack is installed"
-msgstr "Jazykový balíček je nainstalován"
+msgstr "The language pack is installed"
 
 msgid "The language pack could not be installed"
-msgstr "Jazykový balíček se nepodařilo nainstalovat"
+msgstr "The language pack could not be installed"
 
 msgid "Upload failed: %s"
-msgstr "Nahrání selhalo: %s"
+msgstr "Upload failed: %s"
 
 msgid "Language of the browser"
-msgstr "Jazyk prohlížeče"
+msgstr "Language of the browser"
 
 msgid "Language of the web interface"
-msgstr "Jazyk webového rozhraní"
+msgstr "Language of the web interface"
 
 msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
-msgstr "Angličtina, turečtina a čínština jsou součástí systému; jazykový balíček přidává ostatní."
+msgstr "English, Turkish and Chinese come with the system; the language pack adds the others."
 
 msgid "The same setting is in System > System > Language and Style."
-msgstr "Stejné nastavení je v Systém > Systém > Jazyk a vzhled."
+msgstr "The same setting is in System > System > Language and Style."
 
 msgid "Language pack"
-msgstr "Jazykový balíček"
+msgstr "Language pack"
 
 msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
-msgstr "Jazykový balíček (mu300-extra-lang.tar.gz, asi 2 MB) přidává LuCI v asi 40 dalších jazycích a tento panel ve 29 z nich. Stáhněte jej z vydání tohoto systému, nebo nahrajte soubor ze stránky vydání, pokud zařízení nemá internet."
+msgstr "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
 
 msgid "Download from the release"
-msgstr "Stáhnout z vydání"
+msgstr "Download from the release"
 
 msgid "Upload the file…"
-msgstr "Nahrát soubor…"
+msgstr "Upload the file…"
 
 msgid "Release"
-msgstr "Vydání"
+msgstr "Release"
 
 msgid "Enable all"
-msgstr "Povolit vše"
+msgstr "Enable all"
 
 msgid "Disable all"
-msgstr "Zakázat vše"
+msgstr "Disable all"
 
 msgid "Remove the language pack"
-msgstr "Odebrat jazykový balíček"
+msgstr "Remove the language pack"
 
 msgid "Remove the language pack?"
-msgstr "Odebrat jazykový balíček?"
+msgstr "Remove the language pack?"
 
 msgid "Its languages disappear from the list; a page in one of them switches to English."
-msgstr "Jeho jazyky zmizí ze seznamu; stránka v některém z nich se přepne do angličtiny."
+msgstr "Its languages disappear from the list; a page in one of them switches to English."
 
 msgid "Remove"
-msgstr "Odebrat"
+msgstr "Remove"
 
 msgid "Disable"
-msgstr "Zakázat"
+msgstr "Disable"
 
 msgid "Enable"
-msgstr "Povolit"
+msgstr "Enable"
 
 msgid "LuCI and this panel"
-msgstr "LuCI a tento panel"
+msgstr "LuCI and this panel"
 
 msgid "LuCI only"
-msgstr "Pouze LuCI"
+msgstr "LuCI only"
 
 msgid "Enabled"
-msgstr "Povoleno"
+msgstr "Enabled"
 
 msgid "Disabled"
-msgstr "Zakázáno"
+msgstr "Disabled"
 
 msgid "Language"
-msgstr "Jazyk"
+msgstr "Language"
 
 msgid "Code"
-msgstr "Kód"
+msgstr "Code"
 
 msgid "Translated"
-msgstr "Přeloženo"
+msgstr "Translated"
 
 msgid "State"
-msgstr "Stav"
+msgstr "State"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
-msgstr "Vlastní překlady LuCI pocházejí z OpenWrt. Překlady tohoto panelu kromě turečtiny a čínštiny jsou strojové (AI); opravy jsou vítány."
+msgstr "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 
 msgid "Automatic"
-msgstr "Automaticky"
+msgstr "Automatic"
 
 msgid "4G only"
-msgstr "Pouze 4G"
+msgstr "4G only"
 
 msgid "Serving network"
-msgstr "Obsluhující síť"
+msgstr "Serving network"
 
 msgid "Network mode · EN-DC"
-msgstr "Režim sítě · EN-DC"
+msgstr "Network mode · EN-DC"
 
 msgid "Refresh lock status"
-msgstr "Obnovit stav zámků"
+msgstr "Refresh lock status"
 
 msgid "Apply at startup"
-msgstr "Použít při spuštění"
+msgstr "Apply at startup"
 
 msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
-msgstr "Vypnutím se pouze zastaví opětovné použití při příštím spuštění; uložená nastavení režimu sítě, EN-DC, pásem a buněk zůstanou."
+msgstr "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
 
 msgid "Band locking"
-msgstr "Zámek pásem"
+msgstr "Band locking"
 
 msgid "NR bands"
-msgstr "Pásma NR"
+msgstr "NR bands"
 
 msgid "LTE bands"
-msgstr "Pásma LTE"
+msgstr "LTE bands"
 
 msgid "Apply NR bands"
-msgstr "Použít pásma NR"
+msgstr "Apply NR bands"
 
 msgid "Apply LTE bands"
-msgstr "Použít pásma LTE"
+msgstr "Apply LTE bands"
 
 msgid "Neighbor cells and cell locking"
-msgstr "Sousední buňky a zámek buňky"
+msgstr "Neighbor cells and cell locking"
 
 msgid "Lock current serving cell"
-msgstr "Uzamknout aktuální obsluhující buňku"
+msgstr "Lock current serving cell"
 
 msgid "Unlock cell"
-msgstr "Odemknout buňku"
+msgstr "Unlock cell"
 
 msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
-msgstr "Použití restartuje rádiový stack (SFUN) a krátce přeruší mobilní službu. Nastavení se uloží a plugin je znovu použije, jakmile je AT připraveno, pokud je povoleno Použít při spuštění. Háček platformy spouštěný před rádiem je může použít bez restartu. Použijte bez vybraných pásem pro obnovení automatického režimu."
+msgstr "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
 
 msgid "Apply “%s”?"
-msgstr "Použít „%s“?"
+msgstr "Apply “%s”?"
 
 msgid "Applying %s in the background…"
-msgstr "Použití %s na pozadí…"
+msgstr "Applying %s in the background…"
 
 msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
-msgstr "Použití %s na pozadí… (restart SFUN a nová registrace, asi 30 sekund)"
+msgstr "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
 
 msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
-msgstr "Ve frontě: během restartu SFUN se používá jiný zámek; tento se projeví poté"
+msgstr "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
 
 msgid "Confirming the EN-DC status…"
-msgstr "Ověřování stavu EN-DC…"
+msgstr "Confirming the EN-DC status…"
 
 msgid "Confirming apply at startup…"
-msgstr "Ověřování použití při spuštění…"
+msgstr "Confirming apply at startup…"
 
 msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "Spuštěno na pozadí: %s (restart SFUN, asi 30 sekund); zpětné čtení stavu…"
+msgstr "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "Network mode: %s"
-msgstr "Režim sítě: %s"
+msgstr "Network mode: %s"
 
 msgid "Disable EN-DC (NSA anchor)"
-msgstr "Vypnout EN-DC (kotva NSA)"
+msgstr "Disable EN-DC (NSA anchor)"
 
 msgid "Enable EN-DC (NSA anchor)"
-msgstr "Zapnout EN-DC (kotva NSA)"
+msgstr "Enable EN-DC (NSA anchor)"
 
 msgid "Disable apply at startup"
-msgstr "Vypnout použití při spuštění"
+msgstr "Disable apply at startup"
 
 msgid "Enable apply at startup"
-msgstr "Zapnout použití při spuštění"
+msgstr "Enable apply at startup"
 
 msgid "Reading the modem directly (a few seconds at most)…"
-msgstr "Přímé čtení z modemu (nejvýše několik sekund)…"
+msgstr "Reading the modem directly (a few seconds at most)…"
 
 msgid "Refreshed"
-msgstr "Obnoveno"
+msgstr "Refreshed"
 
 msgid "Refresh failed"
-msgstr "Obnovení selhalo"
+msgstr "Refresh failed"
 
 msgid "NR bands: back to automatic"
-msgstr "Pásma NR: zpět na automatický režim"
+msgstr "NR bands: back to automatic"
 
 msgid "NR band lock: %s"
-msgstr "Zámek pásem NR: %s"
+msgstr "NR band lock: %s"
 
 msgid "LTE bands: back to automatic"
-msgstr "Pásma LTE: zpět na automatický režim"
+msgstr "LTE bands: back to automatic"
 
 msgid "LTE band lock: %s"
-msgstr "Zámek pásem LTE: %s"
+msgstr "LTE band lock: %s"
 
 msgid "Remove the %s cell lock"
-msgstr "Odebrat zámek buňky %s"
+msgstr "Remove the %s cell lock"
 
 msgid "The radio stack will restart (SFUN), taking about 30 seconds."
-msgstr "Rádiový stack se restartuje (SFUN), což trvá asi 30 sekund."
+msgstr "The radio stack will restart (SFUN), taking about 30 seconds."
 
 msgid "Removing the %s cell lock…"
-msgstr "Odebírání zámku buňky %s…"
+msgstr "Removing the %s cell lock…"
 
 msgid "Unlock failed: %s"
-msgstr "Odemknutí selhalo: %s"
+msgstr "Unlock failed: %s"
 
 msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "Odemknutí spuštěno na pozadí (restart SFUN, asi 30 sekund); zpětné čtení stavu…"
+msgstr "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "Locking %s in the background…"
-msgstr "Zamykání %s na pozadí…"
+msgstr "Locking %s in the background…"
 
 msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "%s uzamčeno na pozadí (restart SFUN, asi 30 sekund); zpětné čtení stavu…"
+msgstr "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "No serving-network data"
-msgstr "Žádná data o obsluhující síti"
+msgstr "No serving-network data"
 
 msgid "NR serving cell"
-msgstr "Obsluhující buňka NR"
+msgstr "NR serving cell"
 
 msgid "Status confirmed"
-msgstr "Stav ověřen"
+msgstr "Status confirmed"
 
 msgid "Readback timed out; select “Refresh lock status”"
-msgstr "Časový limit zpětného čtení vypršel; zvolte „Obnovit stav zámků“"
+msgstr "Readback timed out; select “Refresh lock status”"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
-msgstr "Použito (EN-DC nevyžaduje restart rádiového stacku)"
+msgstr "Applied (EN-DC does not require a radio-stack restart)"
 
 msgid "Apply at startup is on"
-msgstr "Použití při spuštění je zapnuto"
+msgstr "Apply at startup is on"
 
 msgid "Apply at startup is off"
-msgstr "Použití při spuštění je vypnuto"
+msgstr "Apply at startup is off"
 
 msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
-msgstr "Časový limit čtení stavu EN-DC vypršel; pro ověření použijte „Obnovit stav zámků“"
+msgstr "EN-DC status readback timed out; use “Refresh lock status” to confirm"
 
 msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
-msgstr "Časový limit čtení stavu použití při spuštění vypršel; pro ověření použijte „Obnovit stav zámků“"
+msgstr "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
 
 msgid "Locked cells"
-msgstr "Uzamčené buňky"
+msgstr "Locked cells"
 
 msgid "Unlock %s"
-msgstr "Odemknout %s"
+msgstr "Unlock %s"
 
 msgid "Automatic (%d supported)"
-msgstr "Automaticky (podporováno: %d)"
+msgstr "Automatic (%d supported)"
 
 msgid "%d locked: %s"
-msgstr "Uzamčeno %d: %s"
+msgstr "%d locked: %s"
 
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
-msgstr "Nastavte, jak se tento plugin připojuje k aktuální platformě Unisoc OpenWrt. Změny nevyžadují úpravu stránek přehledu, AT, zámků ani SMS."
+msgstr "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 
 msgid "Platform adapter"
-msgstr "Adaptér platformy"
+msgstr "Platform adapter"
 
 msgid "AT backend"
-msgstr "Backend AT"
+msgstr "AT backend"
 
 msgid "Auto-detect"
-msgstr "Automaticky rozpoznat"
+msgstr "Auto-detect"
 
 msgid "atinout + serial port"
-msgstr "atinout + sériový port"
+msgstr "atinout + serial port"
 
 msgid "Custom adapter"
-msgstr "Vlastní adaptér"
+msgstr "Custom adapter"
 
 msgid "AT serial port"
-msgstr "Sériový port AT"
+msgstr "AT serial port"
 
 msgid "Custom AT adapter"
-msgstr "Vlastní adaptér AT"
+msgstr "Custom AT adapter"
 
 msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
-msgstr "Spustitelný soubor dostane časový limit v sekundách a úplný příkaz AT, v tomto pořadí. Musí sdílet zámek sériového portu s vytáčecím programem platformy."
+msgstr "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
 
 msgid "SMS adapter"
-msgstr "Adaptér SMS"
+msgstr "SMS adapter"
 
 msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
-msgstr "Implementujte podpříkazy list, show, send, delete a sync; ponechte prázdné pro automatické nalezení mu300-sms."
+msgstr "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
 
 msgid "SMS pool directory"
-msgstr "Adresář fondu SMS"
+msgstr "SMS pool directory"
 
 msgid "Cellular logical interface"
-msgstr "Logické mobilní rozhraní"
+msgstr "Cellular logical interface"
 
 msgid "Cellular IPv6 interface"
-msgstr "Mobilní rozhraní IPv6"
+msgstr "Cellular IPv6 interface"
 
 msgid "Cellular network device"
-msgstr "Mobilní síťové zařízení"
+msgstr "Cellular network device"
 
 msgid "Leave blank to detect from netifd"
-msgstr "Ponechte prázdné pro zjištění z netifd"
+msgstr "Leave blank to detect from netifd"
 
 msgid "LAN bridge"
-msgstr "Most LAN"
+msgstr "LAN bridge"
 
 msgid "Wi-Fi device"
-msgstr "Zařízení Wi-Fi"
+msgstr "Wi-Fi device"
 
 msgid "USB device"
-msgstr "Zařízení USB"
+msgstr "USB device"
 
 msgid "Maximum wait for AT readiness (seconds)"
-msgstr "Maximální čekání na připravenost AT (sekundy)"
+msgstr "Maximum wait for AT readiness (seconds)"
 
 msgid "Home dashboard refresh interval (seconds)"
-msgstr "Interval obnovení domovského přehledu (sekundy)"
+msgstr "Home dashboard refresh interval (seconds)"
 
 msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
-msgstr "Řídí pouze rychlost obnovení domovského přehledu; 0,5–60 sekund. Pro použití po uložení znovu otevřete domovskou stránku."
+msgstr "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
 
 msgid "Persistent state directory"
-msgstr "Adresář trvalého stavu"
+msgstr "Persistent state directory"
 
 msgid "Recipient: number, e.g. 10086 or +86..."
-msgstr "Příjemce: číslo, např. 10086 nebo +86..."
+msgstr "Recipient: number, e.g. 10086 or +86..."
 
 msgid "Sync from SIM"
-msgstr "Synchronizovat ze SIM"
+msgstr "Sync from SIM"
 
 msgid "Clear local pool"
-msgstr "Vymazat místní fond"
+msgstr "Clear local pool"
 
 msgid "Loading…"
-msgstr "Načítání…"
+msgstr "Loading…"
 
 msgid "Select a conversation on the left, or enter a number below to send."
-msgstr "Vyberte konverzaci vlevo, nebo zadejte číslo níže a odešlete."
+msgstr "Select a conversation on the left, or enter a number below to send."
 
 msgid "Message (Enter to send, Shift+Enter for newline)"
-msgstr "Zpráva (Enter odešle, Shift+Enter nový řádek)"
+msgstr "Message (Enter to send, Shift+Enter for newline)"
 
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
-msgstr "Odesílání používá AT+CMGS (režim PDU); pokud je kanál obsazen, zkuste to znovu. Jednotlivou zprávu smažete ikonou koše na její bublině."
+msgstr "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
-msgstr "Synchronizace ze SIM na pozadí (AT+CMGL)…"
+msgstr "Syncing from the SIM in the background (AT+CMGL)…"
 
 msgid "SIM sync started; the list refreshes in a few seconds."
-msgstr "Synchronizace SIM spuštěna; seznam se obnoví za několik sekund."
+msgstr "SIM sync started; the list refreshes in a few seconds."
 
 msgid "Clear local SMS pool"
-msgstr "Vymazat místní fond SMS"
+msgstr "Clear local SMS pool"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
-msgstr "Smazány budou pouze místní soubory; zprávy na SIM zůstanou."
+msgstr "Only local files will be deleted; messages on the SIM remain."
 
 msgid "Clear"
-msgstr "Vymazat"
+msgstr "Clear"
 
 msgid "Delete this SMS"
-msgstr "Smazat tuto SMS"
+msgstr "Delete this SMS"
 
 msgid "Deletion cannot be undone."
-msgstr "Smazání nelze vrátit zpět."
+msgstr "Deletion cannot be undone."
 
 msgid "Local only"
-msgstr "Pouze místně"
+msgstr "Local only"
 
 msgid "Local + SIM"
-msgstr "Místně + SIM"
+msgstr "Local + SIM"
 
 msgid "Delete failed"
-msgstr "Smazání selhalo"
+msgstr "Delete failed"
 
 msgid "Deleted (local + SIM)"
-msgstr "Smazáno (místně + SIM)"
+msgstr "Deleted (local + SIM)"
 
 msgid "Deleted (local only)"
-msgstr "Smazáno (pouze místně)"
+msgstr "Deleted (local only)"
 
 msgid "Enter both a number and a message."
-msgstr "Zadejte číslo i zprávu."
+msgstr "Enter both a number and a message."
 
 msgid "Sending…"
-msgstr "Odesílání…"
+msgstr "Sending…"
 
 msgid "Sent; the list refreshes shortly."
-msgstr "Odesláno; seznam se brzy obnoví."
+msgstr "Sent; the list refreshes shortly."
 
 msgid "Sending failed"
-msgstr "Odeslání selhalo"
+msgstr "Sending failed"
 
 msgid "· %d messages, %d unread · %d conversations"
-msgstr "· zpráv: %d, nepřečtených: %d · konverzací: %d"
+msgstr "· %d messages, %d unread · %d conversations"
 
 msgid "· %d messages · %d conversations"
-msgstr "· zpráv: %d · konverzací: %d"
+msgstr "· %d messages · %d conversations"
 
 msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
-msgstr "Fond je prázdný. Zobrazí se zde příchozí a odeslané zprávy, nebo zvolte „Synchronizovat ze SIM“."
+msgstr "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
 
 msgid "Me: %s"
-msgstr "Já: %s"
+msgstr "Me: %s"
 
 msgid "Delete"
-msgstr "Smazat"
+msgstr "Delete"
+
+msgid "The traffic accounting service is unavailable"
+msgstr "The traffic accounting service is unavailable"
+
+msgid "The traffic totals could not be saved"
+msgstr "The traffic totals could not be saved"
+
+msgid "The system clock is not synchronised yet"
+msgstr "The system clock is not synchronised yet"
+
+msgid "Today"
+msgstr "Today"
+
+msgid "This month"
+msgstr "This month"
+
+msgid "Calendar month"
+msgstr "Calendar month"
+
+msgid "Used this cycle"
+msgstr "Used this cycle"
+
+msgid "Plan remaining"
+msgstr "Plan remaining"
+
+msgid "Plan and traffic pool"
+msgstr "Plan and traffic pool"
+
+msgid "Plan name"
+msgstr "Plan name"
+
+msgid "Quota per cycle (GB)"
+msgstr "Quota per cycle (GB)"
+
+msgid "Daily reference quota (GB)"
+msgstr "Daily reference quota (GB)"
+
+msgid "Monthly reset day (1–31)"
+msgstr "Monthly reset day (1–31)"
+
+msgid "Plan counting mode"
+msgstr "Plan counting mode"
+
+msgid "Uplink + downlink"
+msgstr "Uplink + downlink"
+
+msgid "Downlink only"
+msgstr "Downlink only"
+
+msgid "Uplink only"
+msgstr "Uplink only"
+
+msgid "A quota of 0 means unlimited; 1 GB = 1000 MB. The reset day takes effect at local midnight, and short months use their last day."
+msgstr "A quota of 0 means unlimited; 1 GB = 1000 MB. The reset day takes effect at local midnight, and short months use their last day."
+
+msgid "Interface to account"
+msgstr "Interface to account"
+
+msgid "Use the cellular WAN interface automatically"
+msgstr "Use the cellular WAN interface automatically"
+
+msgid "Calibrate used this cycle (GB, optional)"
+msgstr "Calibrate used this cycle (GB, optional)"
+
+msgid "Leave blank to keep the current total"
+msgstr "Leave blank to keep the current total"
+
+msgid "Calibration only adjusts the current plan cycle; the daily and calendar-month histories are unchanged, and the next cycle counts real traffic again."
+msgstr "Calibration only adjusts the current plan cycle; the daily and calendar-month histories are unchanged, and the next cycle counts real traffic again."
+
+msgid "Recent daily usage"
+msgstr "Recent daily usage"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Down"
+msgstr "Down"
+
+msgid "Up"
+msgstr "Up"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Monthly usage history"
+msgstr "Monthly usage history"
+
+msgid "Month"
+msgstr "Month"
+
+msgid "Recording starts when accounting is enabled; it updates about every 10 seconds and saves every 60. A sudden power loss can lose the most recent unsaved records."
+msgstr "Recording starts when accounting is enabled; it updates about every 10 seconds and saves every 60. A sudden power loss can lose the most recent unsaved records."
+
+msgid "The local interface totals are for reference; the carrier’s billing is authoritative. The quota is for display and alerts only and never disconnects the link."
+msgstr "The local interface totals are for reference; the carrier’s billing is authoritative. The quota is for display and alerts only and never disconnects the link."
+
+msgid "Unlimited"
+msgstr "Unlimited"
+
+msgid "No plan name set"
+msgstr "No plan name set"
+
+msgid "Quota per cycle: "
+msgstr "Quota per cycle: "
+
+msgid "Next reset: "
+msgstr "Next reset: "
+
+msgid "Daily reference quota: "
+msgstr "Daily reference quota: "
+
+msgid "Updated: "
+msgstr "Updated: "
+
+msgid "The accounting interface is unavailable"
+msgstr "The accounting interface is unavailable"
+
+msgid "The plan quota is reached"
+msgstr "The plan quota is reached"
+
+msgid "The daily reference quota is reached"
+msgstr "The daily reference quota is reached"
+
+msgid "No records yet"
+msgstr "No records yet"
+
+msgid "Calibrate used traffic this cycle?"
+msgstr "Calibrate used traffic this cycle?"
+
+msgid "This sets the current cycle’s used value to the entered amount; the daily and calendar-month records are unchanged."
+msgstr "This sets the current cycle’s used value to the entered amount; the daily and calendar-month records are unchanged."
+
+msgid "Saving the traffic pool settings…"
+msgstr "Saving the traffic pool settings…"
 
 msgid "Dashboard info failed"
-msgstr "Informace přehledu selhaly"
+msgstr "Dashboard info failed"
 
 msgid "Applying network locks: no live signal right now"
-msgstr "Použití zámků sítě: momentálně není k dispozici živý signál"
+msgstr "Applying network locks: no live signal right now"
 
 msgid "Live signal read failed"
-msgstr "Čtení živého signálu selhalo"
+msgstr "Live signal read failed"
 
 msgid "Unknown op"
-msgstr "Neznámá operace"
+msgstr "Unknown op"
 
 msgid "Invalid argument for this op"
-msgstr "Neplatný argument pro tuto operaci"
+msgstr "Invalid argument for this op"
 
 msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
-msgstr "Rádio je zaneprázdněné: přepíná ho vytáčení nebo watchdog, zkuste to za chvíli znovu"
+msgstr "The radio is busy: the dial or the watchdog is switching it, try again shortly"
 
 msgid "The action gave no valid reply"
-msgstr "Akce nevrátila platnou odpověď"
+msgstr "The action gave no valid reply"
 
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
-msgstr "Příkaz AT je jeden řádek tisknutelných znaků ASCII, nejvýše 512 znaků"
+msgstr "An AT command is one line of printable ASCII, at most 512 characters"
 
 msgid "Must be an AT command"
-msgstr "Musí jít o příkaz AT"
+msgstr "Must be an AT command"
 
 msgid "No \";\" command chaining"
-msgstr "Žádné řetězení příkazů pomocí \";\""
+msgstr "No \";\" command chaining"
 
 msgid "Denied: this command wedges the AT port until a reboot"
-msgstr "Zamítnuto: tento příkaz zablokuje port AT až do restartu"
+msgstr "Denied: this command wedges the AT port until a reboot"
 
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
-msgstr "Použití zámků sítě: modem se restartuje (asi půl minuty), zkuste to za chvíli znovu"
+msgstr "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 
 msgid "The AT channel is busy; the command was not sent, try again"
-msgstr "Kanál AT je obsazen; příkaz nebyl odeslán, zkuste to znovu"
+msgstr "The AT channel is busy; the command was not sent, try again"
 
 msgid "The modem did not answer in time; the command may still run, check before sending it again"
-msgstr "Modem neodpověděl včas; příkaz může stále běžet, před opětovným odesláním to ověřte"
+msgstr "The modem did not answer in time; the command may still run, check before sending it again"
 
 msgid "The fresh parameter must be 0 or 1"
-msgstr "Parametr fresh musí být 0 nebo 1"
+msgstr "The fresh parameter must be 0 or 1"
 
 msgid "Lock read failed"
-msgstr "Čtení zámků selhalo"
+msgstr "Lock read failed"
 
 msgid "Unknown lock kind"
-msgstr "Neznámý druh zámku"
+msgstr "Unknown lock kind"
 
 msgid "Invalid value for this lock kind"
-msgstr "Neplatná hodnota pro tento druh zámku"
+msgstr "Invalid value for this lock kind"
 
 msgid "Invalid page"
-msgstr "Neplatná stránka"
+msgstr "Invalid page"
 
 msgid "mu300-sms is not available (the SMS service is not installed or not running)"
-msgstr "mu300-sms není k dispozici (služba SMS není nainstalována nebo neběží)"
+msgstr "mu300-sms is not available (the SMS service is not installed or not running)"
 
 msgid "No output"
-msgstr "Žádný výstup"
+msgstr "No output"
 
 msgid "Bad ID"
-msgstr "Chybné ID"
+msgstr "Bad ID"
 
 msgid "Read failed"
-msgstr "Čtení selhalo"
+msgstr "Read failed"
 
 msgid "The number may only contain digits (and a leading +)"
-msgstr "Číslo smí obsahovat pouze číslice (a úvodní +)"
+msgstr "The number may only contain digits (and a leading +)"
 
 msgid "The message is empty"
-msgstr "Zpráva je prázdná"
+msgstr "The message is empty"
 
 msgid "The message is too long (over 480 characters)"
-msgstr "Zpráva je příliš dlouhá (více než 480 znaků)"
+msgstr "The message is too long (over 480 characters)"
 
 msgid "The message contains a control character"
-msgstr "Zpráva obsahuje řídicí znak"
+msgstr "The message contains a control character"
 
 msgid "The sim parameter must be 0 or 1"
-msgstr "Parametr sim musí být 0 nebo 1"
+msgstr "The sim parameter must be 0 or 1"
 
 msgid "The USB adapter (device-usb) gave no valid reply"
-msgstr "Adaptér USB (device-usb) nevrátil platnou odpověď"
+msgstr "The USB adapter (device-usb) gave no valid reply"
 
 msgid "The auto parameter must be 0 or 1"
-msgstr "Parametr auto musí být 0 nebo 1"
+msgstr "The auto parameter must be 0 or 1"
 
 msgid "Invalid USB role"
-msgstr "Neplatná role USB"
+msgstr "Invalid USB role"
 
 msgid "A USB role takes no scope"
-msgstr "Role USB nepřijímá rozsah"
+msgstr "A USB role takes no scope"
 
 msgid "Invalid USB network mode"
-msgstr "Neplatný režim sítě USB"
+msgstr "Invalid USB network mode"
 
 msgid "Invalid USB network scope"
-msgstr "Neplatný rozsah sítě USB"
+msgstr "Invalid USB network scope"
 
 msgid "Unknown USB setting"
-msgstr "Neznámé nastavení USB"
+msgstr "Unknown USB setting"
 
 msgid "Invalid interface name"
-msgstr "Neplatný název rozhraní"
+msgstr "Invalid interface name"
 
 msgid "The languages adapter gave no valid reply"
-msgstr "Adaptér jazyků nevrátil platnou odpověď"
+msgstr "The languages adapter gave no valid reply"
 
 msgid "Unknown language operation"
-msgstr "Neznámá jazyková operace"
+msgstr "Unknown language operation"
 
 msgid "Invalid language code"
-msgstr "Neplatný kód jazyka"
+msgstr "Invalid language code"
 
 msgid "Invalid language request"
-msgstr "Neplatný jazykový požadavek"
+msgstr "Invalid language request"
 
 msgid "Unknown source"
-msgstr "Neznámý zdroj"
+msgstr "Unknown source"
+
+msgid "traffic_unavailable"
+msgstr "traffic_unavailable"
 
 msgid "Request too large"
-msgstr "Požadavek je příliš velký"
+msgstr "Request too large"
 
 msgid "The runtime directory is not safe; nothing was run"
-msgstr "Běhový adresář není bezpečný; nic nebylo spuštěno"
+msgstr "The runtime directory is not safe; nothing was run"
 
 msgid "No such method"
-msgstr "Žádná taková metoda"
+msgstr "No such method"
 
 msgid "Radio did not come up"
-msgstr "Rádio se nespustilo"
+msgstr "Radio did not come up"
 
 msgid "Expected on or off"
-msgstr "Očekáváno on nebo off"
+msgstr "Expected on or off"
 
 msgid "VPN integration is not provided by this platform"
-msgstr "Tato platforma neposkytuje integraci VPN"
+msgstr "VPN integration is not provided by this platform"
 
 msgid "Dual-boot integration is not provided by this platform"
-msgstr "Tato platforma neposkytuje integraci duálního spouštění"
+msgstr "Dual-boot integration is not provided by this platform"
 
 msgid "mu300-next-boot failed"
-msgstr "mu300-next-boot selhal"
+msgstr "mu300-next-boot failed"
 
 msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
-msgstr "Backend AT neodpověděl (rádio vypnuto, modem se restartuje nebo adaptér není dostupný)"
+msgstr "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
 
 msgid "USB role adapter is not executable"
-msgstr "Adaptér role USB není spustitelný"
+msgstr "USB role adapter is not executable"
 
 msgid "USB role adapter failed"
-msgstr "Adaptér role USB selhal"
+msgstr "USB role adapter failed"
 
 msgid "USB role switch is unavailable"
-msgstr "Přepnutí role USB není dostupné"
+msgstr "USB role switch is unavailable"
 
 msgid "USB role switch failed"
-msgstr "Přepnutí role USB selhalo"
+msgstr "USB role switch failed"
 
 msgid "USB role switch was refused by platform safety checks"
-msgstr "Přepnutí role USB bylo odmítnuto bezpečnostními kontrolami platformy"
+msgstr "USB role switch was refused by platform safety checks"
 
 msgid "Cannot create USB boot settings directory"
-msgstr "Nelze vytvořit adresář nastavení spouštění USB"
+msgstr "Cannot create USB boot settings directory"
 
 msgid "Cannot write USB boot settings"
-msgstr "Nelze zapsat nastavení spouštění USB"
+msgstr "Cannot write USB boot settings"
 
 msgid "Cannot save USB boot settings"
-msgstr "Nelze uložit nastavení spouštění USB"
+msgstr "Cannot save USB boot settings"
 
 msgid "Invalid boot-auto value"
-msgstr "Neplatná hodnota boot-auto"
+msgstr "Invalid boot-auto value"
 
 msgid "Device is the boot default; host auto-apply is the only persistent role"
-msgstr "Zařízení je výchozí role při spuštění; jedinou trvalou rolí je automatické použití hostitele"
+msgstr "Device is the boot default; host auto-apply is the only persistent role"
 
 msgid "Cannot save USB role policy"
-msgstr "Nelze uložit zásady role USB"
+msgstr "Cannot save USB role policy"
 
 msgid "Cannot disable USB network boot policy"
-msgstr "Nelze vypnout zásady spouštění sítě USB"
+msgstr "Cannot disable USB network boot policy"
 
 msgid "Cannot commit USB role policy"
-msgstr "Nelze potvrdit zásady role USB"
+msgstr "Cannot commit USB role policy"
 
 msgid "USB network mode is unavailable in host role"
-msgstr "Režim sítě USB není v roli hostitele dostupný"
+msgstr "USB network mode is unavailable in host role"
 
 msgid "Disable host boot-auto before configuring USB network"
-msgstr "Před nastavením sítě USB vypněte boot-auto hostitele"
+msgstr "Disable host boot-auto before configuring USB network"
 
 msgid "Cannot save USB network policy"
-msgstr "Nelze uložit zásady sítě USB"
+msgstr "Cannot save USB network policy"
 
 msgid "Cannot commit USB network policy"
-msgstr "Nelze potvrdit zásady sítě USB"
+msgstr "Cannot commit USB network policy"
 
 msgid "USB host mode is required"
-msgstr "Je vyžadován režim hostitele USB"
+msgstr "USB host mode is required"
 
 msgid "Not a USB network interface"
-msgstr "Nejde o síťové rozhraní USB"
+msgstr "Not a USB network interface"
 
 msgid "LAN bridge device section was not found"
-msgstr "Sekce zařízení mostu LAN nebyla nalezena"
+msgstr "LAN bridge device section was not found"
 
 msgid "Cannot bring USB network interface up"
-msgstr "Nelze aktivovat síťové rozhraní USB"
+msgstr "Cannot bring USB network interface up"
 
 msgid "Cannot add interface to LAN bridge"
-msgstr "Nelze přidat rozhraní do mostu LAN"
+msgstr "Cannot add interface to LAN bridge"
 
 msgid "Cannot save LAN bridge"
-msgstr "Nelze uložit most LAN"
+msgstr "Cannot save LAN bridge"
 
 msgid "Network reload failed"
-msgstr "Opětovné načtení sítě selhalo"
+msgstr "Network reload failed"
 
 msgid "Cannot attach USB interface to LAN bridge"
-msgstr "Nelze připojit rozhraní USB k mostu LAN"
+msgstr "Cannot attach USB interface to LAN bridge"
 
 msgid "The language pack is not installed"
-msgstr "Jazykový balíček není nainstalován"
+msgstr "The language pack is not installed"
 
 msgid "No language given"
-msgstr "Nebyl zadán jazyk"
+msgstr "No language given"
 
 msgid "The language could not be changed"
-msgstr "Jazyk se nepodařilo změnit"
+msgstr "The language could not be changed"
 
 msgid "LuCI does not offer this language"
-msgstr "LuCI tento jazyk nenabízí"
+msgstr "LuCI does not offer this language"
 
 msgid "No uploaded language pack"
-msgstr "Žádný nahraný jazykový balíček"
+msgstr "No uploaded language pack"
 
 msgid "An installation is already running"
-msgstr "Instalace již probíhá"
+msgstr "An installation is already running"
 
 msgid "The language pack could not be removed"
-msgstr "Jazykový balíček se nepodařilo odebrat"
+msgstr "The language pack could not be removed"
 
 msgid "Lock cache unavailable"
-msgstr "Mezipaměť zámků není dostupná"
+msgstr "Lock cache unavailable"
 
 msgid "No serving cell to lock to"
-msgstr "Žádná obsluhující buňka k uzamčení"
+msgstr "No serving cell to lock to"

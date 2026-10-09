@@ -4,31 +4,37 @@ msgstr ""
 "Language: he\n"
 
 msgid "Status dashboard"
-msgstr "לוח מצב"
+msgstr "Status dashboard"
 
 msgid "Cellular"
-msgstr "סלולר"
+msgstr "Cellular"
 
 msgid "Network locks"
-msgstr "נעילות רשת"
+msgstr "Network locks"
 
 msgid "SMS"
 msgstr "SMS"
 
 msgid "AT terminal"
-msgstr "מסוף AT"
+msgstr "AT terminal"
 
 msgid "Adapter settings"
-msgstr "הגדרות מתאם"
+msgstr "Adapter settings"
 
 msgid "Device management"
-msgstr "ניהול התקן"
+msgstr "Device management"
+
+msgid "SMS forwarding"
+msgstr "SMS forwarding"
+
+msgid "Traffic pool"
+msgstr "Traffic pool"
 
 msgid "Languages"
-msgstr "שפות"
+msgstr "Languages"
 
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
-msgstr "מרכז הבקרה של MU300: לוח מצב, נעילות רשת, מסוף AT ו-SMS"
+msgstr "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -46,250 +52,496 @@ msgid "China Tietong"
 msgstr "China Tietong"
 
 msgid "Excellent"
-msgstr "מצוין"
+msgstr "Excellent"
 
 msgid "Good"
-msgstr "טוב"
+msgstr "Good"
 
 msgid "Fair"
-msgstr "סביר"
+msgstr "Fair"
 
 msgid "Poor"
-msgstr "חלש"
+msgstr "Poor"
 
 msgid "Unknown"
-msgstr "לא ידוע"
+msgstr "Unknown"
 
 msgid "%d d %d h"
-msgstr "%d ימ׳ %d שע׳"
+msgstr "%d d %d h"
 
 msgid "%d h %d min"
-msgstr "%d שע׳ %d דק׳"
+msgstr "%d h %d min"
 
 msgid "%d min"
-msgstr "%d דק׳"
+msgstr "%d min"
 
 msgid "No neighbor-cell data"
-msgstr "אין נתוני תאים שכנים"
+msgstr "No neighbor-cell data"
 
 msgid "Locked"
-msgstr "נעול"
+msgstr "Locked"
 
 msgid "Lock"
-msgstr "נעילה"
+msgstr "Lock"
 
 msgid "Unknown error"
-msgstr "שגיאה לא ידועה"
+msgstr "Unknown error"
 
 msgid "Confirm"
-msgstr "אישור"
+msgstr "Confirm"
 
 msgid "OK"
-msgstr "אישור"
+msgstr "OK"
 
 msgid "Cancel"
-msgstr "ביטול"
+msgstr "Cancel"
 
 msgid "New SMS · %s"
-msgstr "SMS חדש · %s"
+msgstr "New SMS · %s"
 
 msgid "Unknown number"
-msgstr "מספר לא ידוע"
+msgstr "Unknown number"
 
 msgid "Select"
-msgstr "בחירה"
+msgstr "Select"
 
 msgid "Basic"
-msgstr "בסיסי"
+msgstr "Basic"
 
 msgid "Registration/signal"
-msgstr "רישום/אות"
+msgstr "Registration/signal"
 
 msgid "Bearer"
-msgstr "נושא (Bearer)"
+msgstr "Bearer"
 
 msgid "Engineering mode"
-msgstr "מצב הנדסי"
+msgstr "Engineering mode"
 
 msgid "AT command (↑↓ history, Enter to send)"
-msgstr "פקודת AT (↑↓ היסטוריה, Enter לשליחה)"
+msgstr "AT command (↑↓ history, Enter to send)"
 
 msgid "Send"
-msgstr "שליחה"
+msgstr "Send"
 
 msgid "Clear screen"
-msgstr "ניקוי מסך"
+msgstr "Clear screen"
 
 msgid "Ready."
-msgstr "מוכן."
+msgstr "Ready."
 
 msgid "Session history (click to reuse)"
-msgstr "היסטוריית הפעלה (לחיצה לשימוש חוזר)"
+msgstr "Session history (click to reuse)"
 
 msgid "(no output)"
-msgstr "(אין פלט)"
+msgstr "(no output)"
 
 msgid "Request failed"
-msgstr "הבקשה נכשלה"
+msgstr "Request failed"
 
 msgid "(empty)"
-msgstr "(ריק)"
+msgstr "(empty)"
 
 msgid "USB role"
-msgstr "תפקיד USB"
+msgstr "USB role"
 
 msgid "Current role"
-msgstr "תפקיד נוכחי"
+msgstr "Current role"
 
 msgid "Switch USB role"
-msgstr "החלפת תפקיד USB"
+msgstr "Switch USB role"
 
 msgid "Device mode"
-msgstr "מצב התקן"
+msgstr "Device mode"
 
 msgid "Host mode"
-msgstr "מצב מארח"
+msgstr "Host mode"
 
 msgid "Enable host mode at boot"
-msgstr "הפעלת מצב מארח בעת האתחול"
+msgstr "Enable host mode at boot"
 
 msgid "Apply role"
-msgstr "החלת תפקיד"
+msgstr "Apply role"
 
 msgid "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
-msgstr "מצב מארח מנתק את רשת ה-USB ואת הממשק הטורי ביציאה זו. ל-F50 אין סוללה; הגישה לניהול עלולה לאבד, ומתאם USB זקוק בדרך כלל למפצל (hub) עם הזנת חשמל."
+msgstr "Host mode disconnects USB networking and serial on this port. F50 has no battery; management may be lost and a USB adapter usually needs a powered hub."
 
 msgid "USB network mode"
-msgstr "מצב רשת USB"
+msgstr "USB network mode"
 
 msgid "Network protocol"
-msgstr "פרוטוקול רשת"
+msgstr "Network protocol"
 
 msgid "Apply duration"
-msgstr "משך ההחלה"
+msgstr "Apply duration"
 
 msgid "Next reboot only"
-msgstr "באתחול הבא בלבד"
+msgstr "Next reboot only"
 
 msgid "Permanent"
-msgstr "קבוע"
+msgstr "Permanent"
 
 msgid "Enable selected protocol"
-msgstr "הפעלת הפרוטוקול הנבחר"
+msgstr "Enable selected protocol"
 
 msgid "Save; apply after reboot"
-msgstr "שמירה; החלה לאחר אתחול מחדש"
+msgstr "Save; apply after reboot"
 
 msgid "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
-msgstr "NCM הוא ברירת המחדל. Windows אינו תומך ב-ECM באופן מובנה; RNDIS משנה את אופן הזיהוי. כאשר “הפעלת הפרוטוקול הנבחר” כבויה, רק הבחירה נשמרת. “באתחול הבא בלבד” מוחל פעם אחת ולאחר מכן חוזר ל-NCM."
+msgstr "NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM."
 
 msgid "USB adapters"
-msgstr "מתאמי USB"
+msgstr "USB adapters"
 
 msgid "Refresh"
-msgstr "רענון"
+msgstr "Refresh"
 
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
-msgstr "זמין במצב מארח בלבד. רענון מעלה את מתאמי ה-USB שהתגלו; הוספה ל-LAN שומרת את הגשר וטוענת מחדש את הרשת."
+msgstr "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 
 msgid "Unavailable"
-msgstr "לא זמין"
+msgstr "Unavailable"
 
 msgid "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
-msgstr "מצב רשת USB אינו זמין במצב מארח; הפעלה אוטומטית של מצב מארח משביתה גם את ההפעלה האוטומטית של רשת ה-USB."
+msgstr "USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start."
 
 msgid "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
-msgstr "מצב מארח מנתק מיד את הניהול דרך USB. ל-F50 אין סוללה וייתכן שהתקנים היקפיים יזדקקו להזנת חשמל חיצונית; יש לוודא שקיימת דרך ניהול אחרת."
+msgstr "Host mode immediately disconnects USB management. F50 has no battery and peripherals may need external power; make sure another management path exists."
 
 msgid "USB networking and serial will re-enumerate in device mode."
-msgstr "רשת ה-USB והממשק הטורי יזוהו מחדש במצב התקן."
+msgstr "USB networking and serial will re-enumerate in device mode."
 
 msgid "Switch USB role?"
-msgstr "להחליף את תפקיד ה-USB?"
+msgstr "Switch USB role?"
 
 msgid "Apply"
-msgstr "החלה"
+msgstr "Apply"
 
 msgid "Switching USB role…"
-msgstr "מחליף תפקיד USB…"
+msgstr "Switching USB role…"
 
 msgid "Switch failed: %s"
-msgstr "ההחלפה נכשלה: %s"
+msgstr "Switch failed: %s"
 
 msgid "Management connection lost; reconnect to confirm the USB role."
-msgstr "חיבור הניהול אבד; יש להתחבר מחדש כדי לאשר את תפקיד ה-USB."
+msgstr "Management connection lost; reconnect to confirm the USB role."
 
 msgid "Switch request accepted; the USB connection may briefly disconnect."
-msgstr "בקשת ההחלפה התקבלה; חיבור ה-USB עלול להתנתק לזמן קצר."
+msgstr "Switch request accepted; the USB connection may briefly disconnect."
 
 msgid "USB role applied"
-msgstr "תפקיד ה-USB הוחל"
+msgstr "USB role applied"
 
 msgid "Save USB network mode?"
-msgstr "לשמור את מצב רשת ה-USB?"
+msgstr "Save USB network mode?"
 
 msgid "The network mode applies on the next reboot; USB management may need to reconnect."
-msgstr "מצב הרשת יוחל באתחול הבא; ייתכן שיהיה צורך לחבר מחדש את הניהול דרך USB."
+msgstr "The network mode applies on the next reboot; USB management may need to reconnect."
 
 msgid "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
-msgstr "שמירת הבחירה בלבד; כשהפרוטוקול הנבחר מושבת, האתחול הבא ישתמש עדיין ב-NCM כברירת מחדל."
+msgstr "Save the selection only; with the selected protocol disabled, the next boot still uses default NCM."
 
 msgid "Save"
-msgstr "שמירה"
+msgstr "Save"
 
 msgid "Saving USB network settings…"
-msgstr "שומר את הגדרות רשת ה-USB…"
+msgstr "Saving USB network settings…"
 
 msgid "Settings saved"
-msgstr "ההגדרות נשמרו"
+msgstr "Settings saved"
 
 msgid "Save failed: %s"
-msgstr "השמירה נכשלה: %s"
+msgstr "Save failed: %s"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
-msgstr "עדיין לא ניתן לאשר את התפקיד; יש להתחבר מחדש ולרענן את הדף."
+msgstr "Unable to confirm the role yet; reconnect and refresh the page."
 
 msgid "Switch to host mode to see USB adapters."
-msgstr "יש לעבור למצב מארח כדי לראות מתאמי USB."
+msgstr "Switch to host mode to see USB adapters."
 
 msgid "Scanning USB adapters…"
-msgstr "סורק מתאמי USB…"
+msgstr "Scanning USB adapters…"
 
 msgid "No USB adapters found."
-msgstr "לא נמצאו מתאמי USB."
+msgstr "No USB adapters found."
 
 msgid "Link connected"
-msgstr "הקישור מחובר"
+msgstr "Link connected"
 
 msgid "No link; enable attempted"
-msgstr "אין קישור; בוצע ניסיון הפעלה"
+msgstr "No link; enable attempted"
 
 msgid "Added to LAN"
-msgstr "נוסף ל-LAN"
+msgstr "Added to LAN"
 
 msgid "Add to LAN"
-msgstr "הוספה ל-LAN"
+msgstr "Add to LAN"
 
 msgid "Add USB adapter to LAN?"
-msgstr "להוסיף את מתאם ה-USB ל-LAN?"
+msgstr "Add USB adapter to LAN?"
 
 msgid "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
-msgstr "פעולה זו שומרת את תצורת הגשר וטוענת מחדש את הרשת; חיבורים קיימים עלולים להתנתק לזמן קצר."
+msgstr "This saves the bridge configuration and reloads networking; existing connections may briefly drop."
 
 msgid "Add"
-msgstr "הוספה"
+msgstr "Add"
 
 msgid "Adding USB adapter…"
-msgstr "מוסיף מתאם USB…"
+msgstr "Adding USB adapter…"
 
 msgid "Add failed: %s"
-msgstr "ההוספה נכשלה: %s"
+msgstr "Add failed: %s"
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "DingTalk bot"
+msgstr "DingTalk bot"
+
+msgid "Email (SMTP)"
+msgstr "Email (SMTP)"
+
+msgid "Local SMS"
+msgstr "Local SMS"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "No delivery yet"
+msgstr "No delivery yet"
+
+msgid "Delivered"
+msgstr "Delivered"
+
+msgid "Forwarding is off"
+msgstr "Forwarding is off"
+
+msgid "Forwarding to the original sender was blocked"
+msgstr "Forwarding to the original sender was blocked"
+
+msgid "The SMS is too long; not sent"
+msgstr "The SMS is too long; not sent"
+
+msgid "The device could not save"
+msgstr "The device could not save"
+
+msgid "The SMS service is unavailable"
+msgstr "The SMS service is unavailable"
+
+msgid "The device reports no valid battery state"
+msgstr "The device reports no valid battery state"
+
+msgid "Invalid configuration"
+msgstr "Invalid configuration"
+
+msgid "The destination is invalid"
+msgstr "The destination is invalid"
+
+msgid "Delivery failed; check the settings and the device network"
+msgstr "Delivery failed; check the settings and the device network"
+
+msgid "The mail server rejected the login; check the authorization code"
+msgstr "The mail server rejected the login; check the authorization code"
+
+msgid "Enable SMS forwarding"
+msgstr "Enable SMS forwarding"
+
+msgid "Forwarding method"
+msgstr "Forwarding method"
+
+msgid "Template language"
+msgstr "Template language"
+
+msgid "English"
+msgstr "English"
+
+msgid "Simplified Chinese"
+msgstr "Simplified Chinese"
+
+msgid "Turkish"
+msgstr "Turkish"
+
+msgid "Saved for the forward titles, hint text and power notifications; the SMS text and the device note are unchanged."
+msgstr "Saved for the forward titles, hint text and power notifications; the SMS text and the device note are unchanged."
+
+msgid "HTTPS URL"
+msgstr "HTTPS URL"
+
+msgid "Sent as a fixed JSON payload; no custom command is run."
+msgstr "Sent as a fixed JSON payload; no custom command is run."
+
+msgid "Bot webhook URL"
+msgstr "Bot webhook URL"
+
+msgid "Signing secret · leave blank to keep"
+msgstr "Signing secret · leave blank to keep"
+
+msgid "Clear the signing secret"
+msgstr "Clear the signing secret"
+
+msgid "Include device information"
+msgstr "Include device information"
+
+msgid "Bot token · leave blank to keep"
+msgstr "Bot token · leave blank to keep"
+
+msgid "Clear the bot token"
+msgstr "Clear the bot token"
+
+msgid "Target chat ID"
+msgstr "Target chat ID"
+
+msgid "The bot token and default chat come from the nanobot configuration (/root/.nanobot/config.json) unless set here."
+msgstr "The bot token and default chat come from the nanobot configuration (/root/.nanobot/config.json) unless set here."
+
+msgid "SMTP server host"
+msgstr "SMTP server host"
+
+msgid "Port · 465 / 587"
+msgstr "Port · 465 / 587"
+
+msgid "465 TLS"
+msgstr "465 TLS"
+
+msgid "587 STARTTLS"
+msgstr "587 STARTTLS"
+
+msgid "Sender mailbox"
+msgstr "Sender mailbox"
+
+msgid "Recipient mailbox"
+msgstr "Recipient mailbox"
+
+msgid "Authorization code / password · leave blank to keep"
+msgstr "Authorization code / password · leave blank to keep"
+
+msgid "Clear the mail settings"
+msgstr "Clear the mail settings"
+
+msgid "Use the SMTP authorization code from your mail provider; the TLS certificate is always verified."
+msgstr "Use the SMTP authorization code from your mail provider; the TLS certificate is always verified."
+
+msgid "SMS recipient numbers · one per line, up to 3"
+msgstr "SMS recipient numbers · one per line, up to 3"
+
+msgid "Forwarded through the local SIM, which may incur SMS charges; one message is at most 70 UCS-2 units, with no daily limit."
+msgstr "Forwarded through the local SIM, which may incur SMS charges; one message is at most 70 UCS-2 units, with no daily limit."
+
+msgid "Power notifications"
+msgstr "Power notifications"
+
+msgid "Power status notifications"
+msgstr "Power status notifications"
+
+msgid "Notified on a charge-state change, or when the level crosses 5%, 20%, 40%, 60%, 80% or 100%."
+msgstr "Notified on a charge-state change, or when the level crosses 5%, 20%, 40%, 60%, 80% or 100%."
+
+msgid "Device note"
+msgstr "Device note"
+
+msgid "Blacklist"
+msgstr "Blacklist"
+
+msgid "Number blacklist · one per line, up to 64"
+msgstr "Number blacklist · one per line, up to 64"
+
+msgid "Keyword blacklist · one per line, up to 32"
+msgstr "Keyword blacklist · one per line, up to 32"
+
+msgid "A matching new SMS is only marked as handled and is not forwarded; clearing a rule does not resend anything. The rules do not affect power notifications."
+msgstr "A matching new SMS is only marked as handled and is not forwarded; clearing a rule does not resend anything. The rules do not affect power notifications."
+
+msgid "Test and status"
+msgstr "Test and status"
+
+msgid "The device runs it on its own, so it keeps working after the page is closed; only new SMS are forwarded and a failure is not retried automatically."
+msgstr "The device runs it on its own, so it keeps working after the page is closed; only new SMS are forwarded and a failure is not retried automatically."
+
+msgid "Save settings"
+msgstr "Save settings"
+
+msgid "Send a test message"
+msgstr "Send a test message"
+
+msgid "Refresh status"
+msgstr "Refresh status"
+
+msgid "Could not read the settings; refresh the page"
+msgstr "Could not read the settings; refresh the page"
+
+msgid "configured; leave blank to keep"
+msgstr "configured; leave blank to keep"
+
+msgid "enter the authorization code"
+msgstr "enter the authorization code"
+
+msgid "optional"
+msgstr "optional"
+
+msgid "from the nanobot configuration"
+msgstr "from the nanobot configuration"
+
+msgid "A number is invalid, duplicated, or over the limit"
+msgstr "A number is invalid, duplicated, or over the limit"
+
+msgid "A keyword is invalid, duplicated, or over the limit"
+msgstr "A keyword is invalid, duplicated, or over the limit"
+
+msgid "Configure the current channel first"
+msgstr "Configure the current channel first"
+
+msgid "Forwarding is on"
+msgstr "Forwarding is on"
+
+msgid "Last forward: "
+msgstr "Last forward: "
+
+msgid "Last power notification: "
+msgstr "Last power notification: "
+
+msgid "Save the SMS forwarding settings?"
+msgstr "Save the SMS forwarding settings?"
+
+msgid "Once on, only newly received SMS are handled; older messages are not forwarded."
+msgstr "Once on, only newly received SMS are handled; older messages are not forwarded."
+
+msgid "Saving the SMS forwarding settings…"
+msgstr "Saving the SMS forwarding settings…"
+
+msgid "Saving failed"
+msgstr "Saving failed"
+
+msgid "Saved"
+msgstr "Saved"
+
+msgid "Save your changes before testing"
+msgstr "Save your changes before testing"
+
+msgid "Enable and save SMS forwarding first"
+msgstr "Enable and save SMS forwarding first"
+
+msgid "This sends from the local SIM to the saved numbers and may incur SMS charges."
+msgstr "This sends from the local SIM to the saved numbers and may incur SMS charges."
+
+msgid "This sends one fixed test message to the currently saved channel."
+msgstr "This sends one fixed test message to the currently saved channel."
+
+msgid "Send a test message?"
+msgstr "Send a test message?"
+
+msgid "The test has started; refresh the status in a moment"
+msgstr "The test has started; refresh the status in a moment"
+
+msgid "Test failed: "
+msgstr "Test failed: "
+
+msgid "unknown error"
+msgstr "unknown error"
 
 msgid "Modulation DL/UL"
-msgstr "אפנון DL/UL"
+msgstr "Modulation DL/UL"
 
 msgid "Estimated from current MCS"
-msgstr "מוערך לפי ה-MCS הנוכחי"
+msgstr "Estimated from current MCS"
 
 msgid "MCS DL/UL"
 msgstr "MCS DL/UL"
@@ -298,979 +550,1090 @@ msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
 msgid "Link & traffic"
-msgstr "קישור ותעבורה"
+msgstr "Link & traffic"
 
 msgid "Download rate"
-msgstr "קצב הורדה"
+msgstr "Download rate"
 
 msgid "Upload rate"
-msgstr "קצב העלאה"
+msgstr "Upload rate"
 
 msgid "Total received"
-msgstr "סה״כ התקבל"
+msgstr "Total received"
 
 msgid "Total sent"
-msgstr "סה״כ נשלח"
+msgstr "Total sent"
 
 msgid "Session duration"
-msgstr "משך ההפעלה"
+msgstr "Session duration"
 
 msgid "Registration"
-msgstr "רישום"
+msgstr "Registration"
 
 msgid "Bandwidth"
-msgstr "רוחב פס"
+msgstr "Bandwidth"
 
 msgid "AMBR DL/UL"
 msgstr "AMBR DL/UL"
 
 msgid "Wi-Fi · LAN · Device · SIM"
-msgstr "Wi-Fi · LAN · התקן · SIM"
+msgstr "Wi-Fi · LAN · Device · SIM"
 
 msgid "CPU usage"
-msgstr "ניצול מעבד"
+msgstr "CPU usage"
 
 msgid "Memory"
-msgstr "זיכרון"
+msgstr "Memory"
 
 msgid "Storage"
-msgstr "אחסון"
-
-msgid "Battery"
-msgstr "סוללה"
+msgstr "Storage"
 
 msgid "Channel"
-msgstr "ערוץ"
+msgstr "Channel"
 
 msgid "Encryption"
-msgstr "הצפנה"
+msgstr "Encryption"
 
 msgid "Hidden SSID"
-msgstr "SSID מוסתר"
+msgstr "Hidden SSID"
 
 msgid "Country"
-msgstr "מדינה"
+msgstr "Country"
 
 msgid "AP status"
-msgstr "מצב נקודת הגישה"
+msgstr "AP status"
 
 msgid "USB network"
-msgstr "רשת USB"
+msgstr "USB network"
 
 msgid "Connection tracking"
-msgstr "מעקב חיבורים"
+msgstr "Connection tracking"
 
 msgid "LAN address"
-msgstr "כתובת LAN"
+msgstr "LAN address"
 
 msgid "Wi-Fi clients"
-msgstr "לקוחות Wi-Fi"
+msgstr "Wi-Fi clients"
 
 msgid "DHCP leases"
-msgstr "החכרות DHCP"
+msgstr "DHCP leases"
 
 msgid "Device model"
-msgstr "דגם ההתקן"
+msgstr "Device model"
 
 msgid "System"
-msgstr "מערכת"
+msgstr "System"
 
 msgid "Modem"
-msgstr "מודם"
+msgstr "Modem"
 
 msgid "Carrier"
-msgstr "ספק"
+msgstr "Carrier"
 
 msgid "Module"
-msgstr "מודול"
+msgstr "Module"
 
 msgid "Firmware"
-msgstr "קושחה"
+msgstr "Firmware"
 
 msgid "Show SIM identifiers"
-msgstr "הצגת מזהי SIM"
+msgstr "Show SIM identifiers"
 
 msgid "Quick controls"
-msgstr "פקדים מהירים"
+msgstr "Quick controls"
 
 msgid "Data connection"
-msgstr "חיבור נתונים"
+msgstr "Data connection"
 
 msgid "Cellular radio"
-msgstr "רדיו סלולרי"
+msgstr "Cellular radio"
 
 msgid "Wi-Fi hotspot"
-msgstr "נקודה חמה Wi-Fi"
+msgstr "Wi-Fi hotspot"
 
 msgid "Restart modem"
-msgstr "הפעלה מחדש של המודם"
+msgstr "Restart modem"
 
 msgid "Restart device"
-msgstr "הפעלה מחדש של ההתקן"
+msgstr "Restart device"
 
 msgid "Switch to Android"
-msgstr "מעבר ל-Android"
+msgstr "Switch to Android"
 
 msgid "Neighbor cells"
-msgstr "תאים שכנים"
+msgstr "Neighbor cells"
 
 msgid "RAT/Band"
-msgstr "RAT/פס"
+msgstr "RAT/Band"
 
 msgid "Frequency"
-msgstr "תדר"
+msgstr "Frequency"
 
 msgid "Running %s…"
-msgstr "מריץ %s…"
+msgstr "Running %s…"
 
 msgid "Started in background: %s"
-msgstr "הופעל ברקע: %s"
+msgstr "Started in background: %s"
 
 msgid "Done: %s"
-msgstr "בוצע: %s"
+msgstr "Done: %s"
 
 msgid "Failed: %s"
-msgstr "נכשל: %s"
+msgstr "Failed: %s"
 
 msgid "Disconnecting data…"
-msgstr "מנתק נתונים…"
+msgstr "Disconnecting data…"
 
 msgid "Connecting data…"
-msgstr "מחבר נתונים…"
+msgstr "Connecting data…"
 
 msgid "Turn off cellular radio"
-msgstr "כיבוי הרדיו הסלולרי"
+msgstr "Turn off cellular radio"
 
 msgid "Cellular connectivity will be interrupted."
-msgstr "הקישוריות הסלולרית תיקטע."
+msgstr "Cellular connectivity will be interrupted."
 
 msgid "Turn on cellular radio"
-msgstr "הפעלת הרדיו הסלולרי"
+msgstr "Turn on cellular radio"
 
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "רצף ההפעלה SFUN יורץ (עד כדקה אחת)."
+msgstr "The SFUN power-on sequence will run (up to about 1 minute)."
 
 msgid "Cellular connectivity may stop for 1–2 minutes."
-msgstr "הקישוריות הסלולרית עלולה להיפסק ל-1–2 דקות."
+msgstr "Cellular connectivity may stop for 1–2 minutes."
 
 msgid "Restart the entire device"
-msgstr "הפעלה מחדש של ההתקן כולו"
+msgstr "Restart the entire device"
 
 msgid "All connections will be interrupted."
-msgstr "כל החיבורים ינותקו."
+msgstr "All connections will be interrupted."
 
 msgid "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
-msgstr "האתחול הבא ייכנס ל-Android וההתקן יאותחל כעת. דף ניהול זה ושיתוף החיבור הסלולרי ינותקו."
+msgstr "The next boot will enter Android and reboot now. This management page and cellular sharing will disconnect."
 
 msgid "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
-msgstr "כדי לחזור ל-OpenWrt, יש להריץ mu300-next-boot linux ב-Android ולאתחל."
+msgstr "To return to OpenWrt, run mu300-next-boot linux in Android and reboot."
 
 msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
-msgstr "או לא לעשות דבר: לאחר חמישה אתחולים שלא הושלמו, ההתקן חוזר אוטומטית."
+msgstr "Or do nothing: after five boots that do not finish, it falls back automatically."
 
 msgid "Switch and reboot"
-msgstr "החלפה ואתחול"
+msgstr "Switch and reboot"
 
 msgid "Preparing Android boot and rebooting…"
-msgstr "מכין אתחול Android ומאתחל…"
+msgstr "Preparing Android boot and rebooting…"
 
 msgid "Hide SIM identifiers"
-msgstr "הסתרת מזהי SIM"
+msgstr "Hide SIM identifiers"
 
 msgid "Lock cell %s?"
-msgstr "לנעול את התא %s?"
+msgstr "Lock cell %s?"
 
 msgid "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
-msgstr "מחסנית הרדיו תופעל מחדש (SFUN); השירות הסלולרי ייפסק לכ-30 שניות."
+msgstr "The radio stack will restart (SFUN); cellular service will stop for about 30 seconds."
 
 msgid "Locking %s in the background, about 30 seconds"
-msgstr "נועל את %s ברקע, כ-30 שניות"
+msgstr "Locking %s in the background, about 30 seconds"
 
 msgid "Locked %s in the background; the status will refresh shortly"
-msgstr "%s ננעל ברקע; המצב יתרענן בקרוב"
+msgstr "Locked %s in the background; the status will refresh shortly"
 
 msgid "Lock failed: %s"
-msgstr "הנעילה נכשלה: %s"
+msgstr "Lock failed: %s"
 
 msgid "Uptime %s"
-msgstr "זמן פעולה %s"
+msgstr "Uptime %s"
 
 msgid "Radio off"
-msgstr "הרדיו כבוי"
+msgstr "Radio off"
 
 msgid "No response"
-msgstr "אין תגובה"
+msgstr "No response"
 
 msgid "%s · Signal %s %s/10"
-msgstr "%s · אות %s %s/10"
+msgstr "%s · Signal %s %s/10"
 
 msgid "%s · Signal %s"
-msgstr "%s · אות %s"
+msgstr "%s · Signal %s"
 
 msgid "Anchor B%s"
-msgstr "עוגן B%s"
+msgstr "Anchor B%s"
 
 msgid "No serving cell"
-msgstr "אין תא משרת"
+msgstr "No serving cell"
 
 msgid "Not registered"
-msgstr "לא רשום"
+msgstr "Not registered"
 
 msgid "Registered"
-msgstr "רשום"
+msgstr "Registered"
 
 msgid "Searching"
-msgstr "מחפש"
+msgstr "Searching"
 
 msgid "Registration denied"
-msgstr "הרישום נדחה"
+msgstr "Registration denied"
 
 msgid "Registered (roaming)"
-msgstr "רשום (נדידה)"
+msgstr "Registered (roaming)"
 
 msgid "Emergency only"
-msgstr "חירום בלבד"
+msgstr "Emergency only"
 
 msgid "Status %s"
-msgstr "מצב %s"
+msgstr "Status %s"
 
 msgid "LTE anchor"
-msgstr "עוגן LTE"
+msgstr "LTE anchor"
 
 msgid "LTE link"
-msgstr "קישור LTE"
+msgstr "LTE link"
 
 msgid "Hidden"
-msgstr "מוסתר"
+msgstr "Hidden"
 
 msgid "No"
-msgstr "לא"
+msgstr "No"
 
 msgid "Running"
-msgstr "פועל"
+msgstr "Running"
 
 msgid "Not running"
-msgstr "לא פועל"
+msgstr "Not running"
 
 msgid "Connected"
-msgstr "מחובר"
+msgstr "Connected"
 
 msgid "Disconnected"
-msgstr "מנותק"
+msgstr "Disconnected"
 
 msgid "%s entries"
-msgstr "%s רשומות"
+msgstr "%s entries"
 
 msgid "%s clients"
-msgstr "%s לקוחות"
+msgstr "%s clients"
 
 msgid "Recent DHCP leases"
-msgstr "החכרות DHCP אחרונות"
+msgstr "Recent DHCP leases"
 
 msgid "%d h"
-msgstr "%d שע׳"
+msgstr "%d h"
 
 msgid "Board"
-msgstr "לוח"
+msgstr "Board"
 
 msgid "No temperature readings"
-msgstr "אין קריאות טמפרטורה"
+msgstr "No temperature readings"
 
 msgid "Cluster %d"
-msgstr "אשכול %d"
+msgstr "Cluster %d"
 
 msgid "Total %s · free %s"
-msgstr "סה״כ %s · פנוי %s"
-
-msgid "charging %s W"
-msgstr "נטענת ב־%s W"
-
-msgid "charging"
-msgstr "נטענת"
-
-msgid "drawing %s W"
-msgstr "צורכת %s W"
-
-msgid "not charging"
-msgstr "לא נטענת"
-
-msgid "on battery"
-msgstr "על סוללה"
-
-msgid "full"
-msgstr "מלאה"
-
-msgid "USB in %s W"
-msgstr "כניסת USB %s W"
+msgstr "Total %s · free %s"
 
 msgid "Online"
-msgstr "מקוון"
+msgstr "Online"
 
 msgid "AT adapter unavailable"
-msgstr "מתאם AT אינו זמין"
-
-msgid "Saved"
-msgstr "נשמר"
+msgstr "AT adapter unavailable"
 
 msgid "Management connection lost"
-msgstr "חיבור הניהול אבד"
+msgstr "Management connection lost"
 
 msgid "Installing the language pack…"
-msgstr "מתקין את חבילת השפות…"
+msgstr "Installing the language pack…"
 
 msgid "The language pack is installed"
-msgstr "חבילת השפות הותקנה"
+msgstr "The language pack is installed"
 
 msgid "The language pack could not be installed"
-msgstr "לא ניתן היה להתקין את חבילת השפות"
+msgstr "The language pack could not be installed"
 
 msgid "Upload failed: %s"
-msgstr "ההעלאה נכשלה: %s"
+msgstr "Upload failed: %s"
 
 msgid "Language of the browser"
-msgstr "שפת הדפדפן"
+msgstr "Language of the browser"
 
 msgid "Language of the web interface"
-msgstr "שפת ממשק הרשת"
+msgstr "Language of the web interface"
 
 msgid "English, Turkish and Chinese come with the system; the language pack adds the others."
-msgstr "אנגלית, טורקית וסינית מגיעות עם המערכת; חבילת השפות מוסיפה את השאר."
+msgstr "English, Turkish and Chinese come with the system; the language pack adds the others."
 
 msgid "The same setting is in System > System > Language and Style."
-msgstr "אותה הגדרה נמצאת גם בתפריט System > System > Language and Style."
+msgstr "The same setting is in System > System > Language and Style."
 
 msgid "Language pack"
-msgstr "חבילת השפות"
+msgstr "Language pack"
 
 msgid "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
-msgstr "חבילת השפות (mu300-extra-lang.tar.gz, כ-2 MB) מוסיפה את LuCI בכ-40 שפות נוספות ואת הלוח הזה ב-29 מהן. ניתן להוריד אותה מהגרסה של מערכת זו, או להעלות את הקובץ מדף הגרסה כשאין להתקן חיבור לאינטרנט."
+msgstr "The language pack (mu300-extra-lang.tar.gz, about 2 MB) adds LuCI in about 40 more languages and this panel in 29 of them. Download it from the release of this system, or upload the file from the release page when the device has no internet."
 
 msgid "Download from the release"
-msgstr "הורדה מהגרסה"
+msgstr "Download from the release"
 
 msgid "Upload the file…"
-msgstr "העלאת הקובץ…"
+msgstr "Upload the file…"
 
 msgid "Release"
-msgstr "גרסה"
+msgstr "Release"
 
 msgid "Enable all"
-msgstr "הפעלת הכול"
+msgstr "Enable all"
 
 msgid "Disable all"
-msgstr "השבתת הכול"
+msgstr "Disable all"
 
 msgid "Remove the language pack"
-msgstr "הסרת חבילת השפות"
+msgstr "Remove the language pack"
 
 msgid "Remove the language pack?"
-msgstr "להסיר את חבילת השפות?"
+msgstr "Remove the language pack?"
 
 msgid "Its languages disappear from the list; a page in one of them switches to English."
-msgstr "השפות שלה ייעלמו מהרשימה; דף המוצג באחת מהן יעבור לאנגלית."
+msgstr "Its languages disappear from the list; a page in one of them switches to English."
 
 msgid "Remove"
-msgstr "הסרה"
+msgstr "Remove"
 
 msgid "Disable"
-msgstr "השבתה"
+msgstr "Disable"
 
 msgid "Enable"
-msgstr "הפעלה"
+msgstr "Enable"
 
 msgid "LuCI and this panel"
-msgstr "LuCI והלוח הזה"
+msgstr "LuCI and this panel"
 
 msgid "LuCI only"
-msgstr "LuCI בלבד"
+msgstr "LuCI only"
 
 msgid "Enabled"
-msgstr "מופעל"
+msgstr "Enabled"
 
 msgid "Disabled"
-msgstr "מושבת"
+msgstr "Disabled"
 
 msgid "Language"
-msgstr "שפה"
+msgstr "Language"
 
 msgid "Code"
-msgstr "קוד"
+msgstr "Code"
 
 msgid "Translated"
-msgstr "מתורגם"
+msgstr "Translated"
 
 msgid "State"
-msgstr "מצב"
+msgstr "State"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
-msgstr "התרגומים של LuCI עצמו מגיעים מ-OpenWrt. התרגומים של לוח זה, למעט טורקית וסינית, הם תרגומי מכונה (בינה מלאכותית); תיקונים יתקבלו בברכה."
+msgstr "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 
 msgid "Automatic"
-msgstr "אוטומטי"
+msgstr "Automatic"
 
 msgid "4G only"
-msgstr "4G בלבד"
+msgstr "4G only"
 
 msgid "Serving network"
-msgstr "רשת משרתת"
+msgstr "Serving network"
 
 msgid "Network mode · EN-DC"
-msgstr "מצב רשת · EN-DC"
+msgstr "Network mode · EN-DC"
 
 msgid "Refresh lock status"
-msgstr "רענון מצב הנעילה"
+msgstr "Refresh lock status"
 
 msgid "Apply at startup"
-msgstr "החלה בעת האתחול"
+msgstr "Apply at startup"
 
 msgid "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
-msgstr "כיבוי אפשרות זו מפסיק רק את ההחלה החוזרת באתחול הבא; הגדרות מצב הרשת, EN-DC, הפסים והתאים השמורות נשארות."
+msgstr "Turning this off only stops replay at the next boot; saved network mode, EN-DC, band and cell settings remain."
 
 msgid "Band locking"
-msgstr "נעילת פסים"
+msgstr "Band locking"
 
 msgid "NR bands"
-msgstr "פסי NR"
+msgstr "NR bands"
 
 msgid "LTE bands"
-msgstr "פסי LTE"
+msgstr "LTE bands"
 
 msgid "Apply NR bands"
-msgstr "החלת פסי NR"
+msgstr "Apply NR bands"
 
 msgid "Apply LTE bands"
-msgstr "החלת פסי LTE"
+msgstr "Apply LTE bands"
 
 msgid "Neighbor cells and cell locking"
-msgstr "תאים שכנים ונעילת תא"
+msgstr "Neighbor cells and cell locking"
 
 msgid "Lock current serving cell"
-msgstr "נעילת התא המשרת הנוכחי"
+msgstr "Lock current serving cell"
 
 msgid "Unlock cell"
-msgstr "ביטול נעילת תא"
+msgstr "Unlock cell"
 
 msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
-msgstr "ההחלה מפעילה מחדש את מחסנית הרדיו (SFUN) וקוטעת לזמן קצר את השירות הסלולרי. ההגדרות נשמרות, והתוסף מחיל אותן מחדש לאחר ש-AT מוכן כאשר “החלה בעת האתחול” מופעלת. Hook של הפלטפורמה שרץ לפני הרדיו יכול להחיל אותן ללא הפעלה מחדש. החלה ללא בחירת פסים משחזרת את המצב האוטומטי."
+msgstr "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
 
 msgid "Apply “%s”?"
-msgstr "להחיל את “%s”?"
+msgstr "Apply “%s”?"
 
 msgid "Applying %s in the background…"
-msgstr "מחיל את %s ברקע…"
+msgstr "Applying %s in the background…"
 
 msgid "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
-msgstr "מחיל את %s ברקע… (הפעלה מחדש של SFUN ורישום מחדש, כ-30 שניות)"
+msgstr "Applying %s in the background… (SFUN restart and re-registration, about 30 seconds)"
 
 msgid "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
-msgstr "בתור: נעילה אחרת מוחלת במהלך הפעלה מחדש של SFUN; זו תיכנס לתוקף לאחר מכן"
+msgstr "Queued: another lock is being applied during SFUN restart; this will take effect afterward"
 
 msgid "Confirming the EN-DC status…"
-msgstr "מאשר את מצב EN-DC…"
+msgstr "Confirming the EN-DC status…"
 
 msgid "Confirming apply at startup…"
-msgstr "מאשר את ההחלה בעת האתחול…"
+msgstr "Confirming apply at startup…"
 
 msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "הופעל ברקע: %s (הפעלה מחדש של SFUN, כ-30 שניות); קורא את המצב בחזרה…"
+msgstr "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "Network mode: %s"
-msgstr "מצב רשת: %s"
+msgstr "Network mode: %s"
 
 msgid "Disable EN-DC (NSA anchor)"
-msgstr "השבתת EN-DC (עוגן NSA)"
+msgstr "Disable EN-DC (NSA anchor)"
 
 msgid "Enable EN-DC (NSA anchor)"
-msgstr "הפעלת EN-DC (עוגן NSA)"
+msgstr "Enable EN-DC (NSA anchor)"
 
 msgid "Disable apply at startup"
-msgstr "השבתת ההחלה בעת האתחול"
+msgstr "Disable apply at startup"
 
 msgid "Enable apply at startup"
-msgstr "הפעלת ההחלה בעת האתחול"
+msgstr "Enable apply at startup"
 
 msgid "Reading the modem directly (a few seconds at most)…"
-msgstr "קורא ישירות מהמודם (כמה שניות לכל היותר)…"
+msgstr "Reading the modem directly (a few seconds at most)…"
 
 msgid "Refreshed"
-msgstr "רוענן"
+msgstr "Refreshed"
 
 msgid "Refresh failed"
-msgstr "הרענון נכשל"
+msgstr "Refresh failed"
 
 msgid "NR bands: back to automatic"
-msgstr "פסי NR: חזרה לאוטומטי"
+msgstr "NR bands: back to automatic"
 
 msgid "NR band lock: %s"
-msgstr "נעילת פסי NR: %s"
+msgstr "NR band lock: %s"
 
 msgid "LTE bands: back to automatic"
-msgstr "פסי LTE: חזרה לאוטומטי"
+msgstr "LTE bands: back to automatic"
 
 msgid "LTE band lock: %s"
-msgstr "נעילת פסי LTE: %s"
+msgstr "LTE band lock: %s"
 
 msgid "Remove the %s cell lock"
-msgstr "הסרת נעילת התא %s"
+msgstr "Remove the %s cell lock"
 
 msgid "The radio stack will restart (SFUN), taking about 30 seconds."
-msgstr "מחסנית הרדיו תופעל מחדש (SFUN), והדבר יימשך כ-30 שניות."
+msgstr "The radio stack will restart (SFUN), taking about 30 seconds."
 
 msgid "Removing the %s cell lock…"
-msgstr "מסיר את נעילת התא %s…"
+msgstr "Removing the %s cell lock…"
 
 msgid "Unlock failed: %s"
-msgstr "ביטול הנעילה נכשל: %s"
+msgstr "Unlock failed: %s"
 
 msgid "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "ביטול הנעילה הופעל ברקע (הפעלה מחדש של SFUN, כ-30 שניות); קורא את המצב בחזרה…"
+msgstr "Unlock started in background (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "Locking %s in the background…"
-msgstr "נועל את %s ברקע…"
+msgstr "Locking %s in the background…"
 
 msgid "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
-msgstr "%s ננעל ברקע (הפעלה מחדש של SFUN, כ-30 שניות); קורא את המצב בחזרה…"
+msgstr "Locked %s in the background (SFUN restart, about 30 seconds); reading the status back…"
 
 msgid "No serving-network data"
-msgstr "אין נתוני רשת משרתת"
+msgstr "No serving-network data"
 
 msgid "NR serving cell"
-msgstr "תא משרת NR"
+msgstr "NR serving cell"
 
 msgid "Status confirmed"
-msgstr "המצב אושר"
+msgstr "Status confirmed"
 
 msgid "Readback timed out; select “Refresh lock status”"
-msgstr "תם הזמן לקריאה חוזרת; יש לבחור “רענון מצב הנעילה”"
+msgstr "Readback timed out; select “Refresh lock status”"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
-msgstr "הוחל (EN-DC אינו דורש הפעלה מחדש של מחסנית הרדיו)"
+msgstr "Applied (EN-DC does not require a radio-stack restart)"
 
 msgid "Apply at startup is on"
-msgstr "ההחלה בעת האתחול פועלת"
+msgstr "Apply at startup is on"
 
 msgid "Apply at startup is off"
-msgstr "ההחלה בעת האתחול כבויה"
+msgstr "Apply at startup is off"
 
 msgid "EN-DC status readback timed out; use “Refresh lock status” to confirm"
-msgstr "תם הזמן לקריאת מצב EN-DC; יש להשתמש ב“רענון מצב הנעילה” לאישור"
+msgstr "EN-DC status readback timed out; use “Refresh lock status” to confirm"
 
 msgid "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
-msgstr "תם הזמן לקריאת מצב ההחלה בעת האתחול; יש להשתמש ב“רענון מצב הנעילה” לאישור"
+msgstr "Apply-at-startup status readback timed out; use “Refresh lock status” to confirm"
 
 msgid "Locked cells"
-msgstr "תאים נעולים"
+msgstr "Locked cells"
 
 msgid "Unlock %s"
-msgstr "ביטול נעילת %s"
+msgstr "Unlock %s"
 
 msgid "Automatic (%d supported)"
-msgstr "אוטומטי (%d נתמכים)"
+msgstr "Automatic (%d supported)"
 
 msgid "%d locked: %s"
-msgstr "%d נעולים: %s"
+msgstr "%d locked: %s"
 
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
-msgstr "הגדרת אופן החיבור של תוסף זה לפלטפורמת Unisoc OpenWrt הנוכחית. השינויים אינם דורשים עריכה של דפי לוח המצב, AT, הנעילות או SMS."
+msgstr "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 
 msgid "Platform adapter"
-msgstr "מתאם פלטפורמה"
+msgstr "Platform adapter"
 
 msgid "AT backend"
-msgstr "מנגנון AT"
+msgstr "AT backend"
 
 msgid "Auto-detect"
-msgstr "זיהוי אוטומטי"
+msgstr "Auto-detect"
 
 msgid "atinout + serial port"
-msgstr "atinout + יציאה טורית"
+msgstr "atinout + serial port"
 
 msgid "Custom adapter"
-msgstr "מתאם מותאם אישית"
+msgstr "Custom adapter"
 
 msgid "AT serial port"
-msgstr "יציאה טורית של AT"
+msgstr "AT serial port"
 
 msgid "Custom AT adapter"
-msgstr "מתאם AT מותאם אישית"
+msgstr "Custom AT adapter"
 
 msgid "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
-msgstr "קובץ ההפעלה מקבל זמן קצוב בשניות ואת פקודת ה-AT המלאה, בסדר זה. עליו לחלוק את נעילת היציאה הטורית עם החייגן של הפלטפורמה."
+msgstr "The executable receives a timeout in seconds and the complete AT command, in that order. It must share the serial lock with the platform dialer."
 
 msgid "SMS adapter"
-msgstr "מתאם SMS"
+msgstr "SMS adapter"
 
 msgid "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
-msgstr "יש לממש את פקודות המשנה list, show, send, delete ו-sync; להשאיר ריק כדי לאתר את mu300-sms אוטומטית."
+msgstr "Implement the list, show, send, delete and sync subcommands; leave blank to find mu300-sms automatically."
 
 msgid "SMS pool directory"
-msgstr "תיקיית מאגר SMS"
+msgstr "SMS pool directory"
 
 msgid "Cellular logical interface"
-msgstr "ממשק לוגי סלולרי"
+msgstr "Cellular logical interface"
 
 msgid "Cellular IPv6 interface"
-msgstr "ממשק IPv6 סלולרי"
+msgstr "Cellular IPv6 interface"
 
 msgid "Cellular network device"
-msgstr "התקן רשת סלולרי"
+msgstr "Cellular network device"
 
 msgid "Leave blank to detect from netifd"
-msgstr "להשאיר ריק לזיהוי מ-netifd"
+msgstr "Leave blank to detect from netifd"
 
 msgid "LAN bridge"
-msgstr "גשר LAN"
+msgstr "LAN bridge"
 
 msgid "Wi-Fi device"
-msgstr "התקן Wi-Fi"
+msgstr "Wi-Fi device"
 
 msgid "USB device"
-msgstr "התקן USB"
+msgstr "USB device"
 
 msgid "Maximum wait for AT readiness (seconds)"
-msgstr "המתנה מרבית למוכנות AT (שניות)"
+msgstr "Maximum wait for AT readiness (seconds)"
 
 msgid "Home dashboard refresh interval (seconds)"
-msgstr "מרווח רענון של לוח הבית (שניות)"
+msgstr "Home dashboard refresh interval (seconds)"
 
 msgid "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
-msgstr "שולט רק בקצב הרענון של לוח הבית; 0.5–60 שניות. יש לפתוח מחדש את דף הבית לאחר השמירה כדי להחיל."
+msgstr "Controls only the home dashboard refresh rate; 0.5–60 seconds. Reopen Home after saving to apply."
 
 msgid "Persistent state directory"
-msgstr "תיקיית מצב קבועה"
+msgstr "Persistent state directory"
 
 msgid "Recipient: number, e.g. 10086 or +86..."
-msgstr "נמען: מספר, לדוגמה 10086 או +86..."
+msgstr "Recipient: number, e.g. 10086 or +86..."
 
 msgid "Sync from SIM"
-msgstr "סנכרון מה-SIM"
+msgstr "Sync from SIM"
 
 msgid "Clear local pool"
-msgstr "ניקוי המאגר המקומי"
+msgstr "Clear local pool"
 
 msgid "Loading…"
-msgstr "טוען…"
+msgstr "Loading…"
 
 msgid "Select a conversation on the left, or enter a number below to send."
-msgstr "יש לבחור שיחה מהרשימה, או להזין מספר למטה כדי לשלוח."
+msgstr "Select a conversation on the left, or enter a number below to send."
 
 msgid "Message (Enter to send, Shift+Enter for newline)"
-msgstr "הודעה (Enter לשליחה, Shift+Enter לשורה חדשה)"
+msgstr "Message (Enter to send, Shift+Enter for newline)"
 
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
-msgstr "השליחה משתמשת ב-AT+CMGS (מצב PDU); יש לנסות שוב אם הערוץ תפוס. למחיקת הודעה בודדת, יש להשתמש בסמל הפח שעל הבועה שלה."
+msgstr "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
-msgstr "מסנכרן מה-SIM ברקע (AT+CMGL)…"
+msgstr "Syncing from the SIM in the background (AT+CMGL)…"
 
 msgid "SIM sync started; the list refreshes in a few seconds."
-msgstr "סנכרון ה-SIM החל; הרשימה תתרענן בעוד כמה שניות."
+msgstr "SIM sync started; the list refreshes in a few seconds."
 
 msgid "Clear local SMS pool"
-msgstr "ניקוי מאגר ה-SMS המקומי"
+msgstr "Clear local SMS pool"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
-msgstr "רק קבצים מקומיים יימחקו; ההודעות ב-SIM יישארו."
+msgstr "Only local files will be deleted; messages on the SIM remain."
 
 msgid "Clear"
-msgstr "ניקוי"
+msgstr "Clear"
 
 msgid "Delete this SMS"
-msgstr "מחיקת SMS זה"
+msgstr "Delete this SMS"
 
 msgid "Deletion cannot be undone."
-msgstr "לא ניתן לבטל את המחיקה."
+msgstr "Deletion cannot be undone."
 
 msgid "Local only"
-msgstr "מקומי בלבד"
+msgstr "Local only"
 
 msgid "Local + SIM"
-msgstr "מקומי + SIM"
+msgstr "Local + SIM"
 
 msgid "Delete failed"
-msgstr "המחיקה נכשלה"
+msgstr "Delete failed"
 
 msgid "Deleted (local + SIM)"
-msgstr "נמחק (מקומי + SIM)"
+msgstr "Deleted (local + SIM)"
 
 msgid "Deleted (local only)"
-msgstr "נמחק (מקומי בלבד)"
+msgstr "Deleted (local only)"
 
 msgid "Enter both a number and a message."
-msgstr "יש להזין גם מספר וגם הודעה."
+msgstr "Enter both a number and a message."
 
 msgid "Sending…"
-msgstr "שולח…"
+msgstr "Sending…"
 
 msgid "Sent; the list refreshes shortly."
-msgstr "נשלח; הרשימה תתרענן בקרוב."
+msgstr "Sent; the list refreshes shortly."
 
 msgid "Sending failed"
-msgstr "השליחה נכשלה"
+msgstr "Sending failed"
 
 msgid "· %d messages, %d unread · %d conversations"
-msgstr "· %d הודעות, %d שלא נקראו · %d שיחות"
+msgstr "· %d messages, %d unread · %d conversations"
 
 msgid "· %d messages · %d conversations"
-msgstr "· %d הודעות · %d שיחות"
+msgstr "· %d messages · %d conversations"
 
 msgid "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
-msgstr "המאגר ריק. הודעות נכנסות ויוצאות מופיעות כאן, או שניתן לבחור “סנכרון מה-SIM”."
+msgstr "The pool is empty. Incoming and sent messages appear here, or select “Sync from SIM”."
 
 msgid "Me: %s"
-msgstr "אני: %s"
+msgstr "Me: %s"
 
 msgid "Delete"
-msgstr "מחיקה"
+msgstr "Delete"
+
+msgid "The traffic accounting service is unavailable"
+msgstr "The traffic accounting service is unavailable"
+
+msgid "The traffic totals could not be saved"
+msgstr "The traffic totals could not be saved"
+
+msgid "The system clock is not synchronised yet"
+msgstr "The system clock is not synchronised yet"
+
+msgid "Today"
+msgstr "Today"
+
+msgid "This month"
+msgstr "This month"
+
+msgid "Calendar month"
+msgstr "Calendar month"
+
+msgid "Used this cycle"
+msgstr "Used this cycle"
+
+msgid "Plan remaining"
+msgstr "Plan remaining"
+
+msgid "Plan and traffic pool"
+msgstr "Plan and traffic pool"
+
+msgid "Plan name"
+msgstr "Plan name"
+
+msgid "Quota per cycle (GB)"
+msgstr "Quota per cycle (GB)"
+
+msgid "Daily reference quota (GB)"
+msgstr "Daily reference quota (GB)"
+
+msgid "Monthly reset day (1–31)"
+msgstr "Monthly reset day (1–31)"
+
+msgid "Plan counting mode"
+msgstr "Plan counting mode"
+
+msgid "Uplink + downlink"
+msgstr "Uplink + downlink"
+
+msgid "Downlink only"
+msgstr "Downlink only"
+
+msgid "Uplink only"
+msgstr "Uplink only"
+
+msgid "A quota of 0 means unlimited; 1 GB = 1000 MB. The reset day takes effect at local midnight, and short months use their last day."
+msgstr "A quota of 0 means unlimited; 1 GB = 1000 MB. The reset day takes effect at local midnight, and short months use their last day."
+
+msgid "Interface to account"
+msgstr "Interface to account"
+
+msgid "Use the cellular WAN interface automatically"
+msgstr "Use the cellular WAN interface automatically"
+
+msgid "Calibrate used this cycle (GB, optional)"
+msgstr "Calibrate used this cycle (GB, optional)"
+
+msgid "Leave blank to keep the current total"
+msgstr "Leave blank to keep the current total"
+
+msgid "Calibration only adjusts the current plan cycle; the daily and calendar-month histories are unchanged, and the next cycle counts real traffic again."
+msgstr "Calibration only adjusts the current plan cycle; the daily and calendar-month histories are unchanged, and the next cycle counts real traffic again."
+
+msgid "Recent daily usage"
+msgstr "Recent daily usage"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Down"
+msgstr "Down"
+
+msgid "Up"
+msgstr "Up"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Monthly usage history"
+msgstr "Monthly usage history"
+
+msgid "Month"
+msgstr "Month"
+
+msgid "Recording starts when accounting is enabled; it updates about every 10 seconds and saves every 60. A sudden power loss can lose the most recent unsaved records."
+msgstr "Recording starts when accounting is enabled; it updates about every 10 seconds and saves every 60. A sudden power loss can lose the most recent unsaved records."
+
+msgid "The local interface totals are for reference; the carrier’s billing is authoritative. The quota is for display and alerts only and never disconnects the link."
+msgstr "The local interface totals are for reference; the carrier’s billing is authoritative. The quota is for display and alerts only and never disconnects the link."
+
+msgid "Unlimited"
+msgstr "Unlimited"
+
+msgid "No plan name set"
+msgstr "No plan name set"
+
+msgid "Quota per cycle: "
+msgstr "Quota per cycle: "
+
+msgid "Next reset: "
+msgstr "Next reset: "
+
+msgid "Daily reference quota: "
+msgstr "Daily reference quota: "
+
+msgid "Updated: "
+msgstr "Updated: "
+
+msgid "The accounting interface is unavailable"
+msgstr "The accounting interface is unavailable"
+
+msgid "The plan quota is reached"
+msgstr "The plan quota is reached"
+
+msgid "The daily reference quota is reached"
+msgstr "The daily reference quota is reached"
+
+msgid "No records yet"
+msgstr "No records yet"
+
+msgid "Calibrate used traffic this cycle?"
+msgstr "Calibrate used traffic this cycle?"
+
+msgid "This sets the current cycle’s used value to the entered amount; the daily and calendar-month records are unchanged."
+msgstr "This sets the current cycle’s used value to the entered amount; the daily and calendar-month records are unchanged."
+
+msgid "Saving the traffic pool settings…"
+msgstr "Saving the traffic pool settings…"
 
 msgid "Dashboard info failed"
-msgstr "קבלת נתוני לוח המצב נכשלה"
+msgstr "Dashboard info failed"
 
 msgid "Applying network locks: no live signal right now"
-msgstr "מחיל נעילות רשת: אין כרגע אות חי"
+msgstr "Applying network locks: no live signal right now"
 
 msgid "Live signal read failed"
-msgstr "קריאת האות החי נכשלה"
+msgstr "Live signal read failed"
 
 msgid "Unknown op"
-msgstr "פעולה לא ידועה"
+msgstr "Unknown op"
 
 msgid "Invalid argument for this op"
-msgstr "ארגומנט לא חוקי לפעולה זו"
+msgstr "Invalid argument for this op"
 
 msgid "The radio is busy: the dial or the watchdog is switching it, try again shortly"
-msgstr "הרדיו תפוס: החייגן או ה-watchdog מחליפים את מצבו, יש לנסות שוב בעוד רגע"
+msgstr "The radio is busy: the dial or the watchdog is switching it, try again shortly"
 
 msgid "The action gave no valid reply"
-msgstr "הפעולה לא החזירה תשובה תקינה"
+msgstr "The action gave no valid reply"
 
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
-msgstr "פקודת AT היא שורה אחת של תווי ASCII הניתנים להדפסה, עד 512 תווים"
+msgstr "An AT command is one line of printable ASCII, at most 512 characters"
 
 msgid "Must be an AT command"
-msgstr "חייבת להיות פקודת AT"
+msgstr "Must be an AT command"
 
 msgid "No \";\" command chaining"
-msgstr "אין לשרשר פקודות באמצעות \";\""
+msgstr "No \";\" command chaining"
 
 msgid "Denied: this command wedges the AT port until a reboot"
-msgstr "נדחה: פקודה זו תוקעת את יציאת ה-AT עד לאתחול"
+msgstr "Denied: this command wedges the AT port until a reboot"
 
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
-msgstr "מחיל נעילות רשת: המודם מופעל מחדש (כחצי דקה), יש לנסות שוב בעוד רגע"
+msgstr "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 
 msgid "The AT channel is busy; the command was not sent, try again"
-msgstr "ערוץ ה-AT תפוס; הפקודה לא נשלחה, יש לנסות שוב"
+msgstr "The AT channel is busy; the command was not sent, try again"
 
 msgid "The modem did not answer in time; the command may still run, check before sending it again"
-msgstr "המודם לא ענה בזמן; ייתכן שהפקודה עדיין רצה, יש לבדוק לפני שליחה חוזרת"
+msgstr "The modem did not answer in time; the command may still run, check before sending it again"
 
 msgid "The fresh parameter must be 0 or 1"
-msgstr "הפרמטר fresh חייב להיות 0 או 1"
+msgstr "The fresh parameter must be 0 or 1"
 
 msgid "Lock read failed"
-msgstr "קריאת הנעילה נכשלה"
+msgstr "Lock read failed"
 
 msgid "Unknown lock kind"
-msgstr "סוג נעילה לא ידוע"
+msgstr "Unknown lock kind"
 
 msgid "Invalid value for this lock kind"
-msgstr "ערך לא חוקי לסוג נעילה זה"
+msgstr "Invalid value for this lock kind"
 
 msgid "Invalid page"
-msgstr "דף לא חוקי"
+msgstr "Invalid page"
 
 msgid "mu300-sms is not available (the SMS service is not installed or not running)"
-msgstr "mu300-sms אינו זמין (שירות ה-SMS לא מותקן או לא פועל)"
+msgstr "mu300-sms is not available (the SMS service is not installed or not running)"
 
 msgid "No output"
-msgstr "אין פלט"
+msgstr "No output"
 
 msgid "Bad ID"
-msgstr "מזהה שגוי"
+msgstr "Bad ID"
 
 msgid "Read failed"
-msgstr "הקריאה נכשלה"
+msgstr "Read failed"
 
 msgid "The number may only contain digits (and a leading +)"
-msgstr "המספר יכול להכיל ספרות בלבד (ו-+ בתחילתו)"
+msgstr "The number may only contain digits (and a leading +)"
 
 msgid "The message is empty"
-msgstr "ההודעה ריקה"
+msgstr "The message is empty"
 
 msgid "The message is too long (over 480 characters)"
-msgstr "ההודעה ארוכה מדי (מעל 480 תווים)"
+msgstr "The message is too long (over 480 characters)"
 
 msgid "The message contains a control character"
-msgstr "ההודעה מכילה תו בקרה"
+msgstr "The message contains a control character"
 
 msgid "The sim parameter must be 0 or 1"
-msgstr "הפרמטר sim חייב להיות 0 או 1"
+msgstr "The sim parameter must be 0 or 1"
 
 msgid "The USB adapter (device-usb) gave no valid reply"
-msgstr "מתאם ה-USB (device-usb) לא החזיר תשובה תקינה"
+msgstr "The USB adapter (device-usb) gave no valid reply"
 
 msgid "The auto parameter must be 0 or 1"
-msgstr "הפרמטר auto חייב להיות 0 או 1"
+msgstr "The auto parameter must be 0 or 1"
 
 msgid "Invalid USB role"
-msgstr "תפקיד USB לא חוקי"
+msgstr "Invalid USB role"
 
 msgid "A USB role takes no scope"
-msgstr "תפקיד USB אינו מקבל טווח החלה"
+msgstr "A USB role takes no scope"
 
 msgid "Invalid USB network mode"
-msgstr "מצב רשת USB לא חוקי"
+msgstr "Invalid USB network mode"
 
 msgid "Invalid USB network scope"
-msgstr "טווח החלה לא חוקי לרשת USB"
+msgstr "Invalid USB network scope"
 
 msgid "Unknown USB setting"
-msgstr "הגדרת USB לא ידועה"
+msgstr "Unknown USB setting"
 
 msgid "Invalid interface name"
-msgstr "שם ממשק לא חוקי"
+msgstr "Invalid interface name"
 
 msgid "The languages adapter gave no valid reply"
-msgstr "מתאם השפות לא החזיר תשובה תקינה"
+msgstr "The languages adapter gave no valid reply"
 
 msgid "Unknown language operation"
-msgstr "פעולת שפה לא ידועה"
+msgstr "Unknown language operation"
 
 msgid "Invalid language code"
-msgstr "קוד שפה לא חוקי"
+msgstr "Invalid language code"
 
 msgid "Invalid language request"
-msgstr "בקשת שפה לא חוקית"
+msgstr "Invalid language request"
 
 msgid "Unknown source"
-msgstr "מקור לא ידוע"
+msgstr "Unknown source"
+
+msgid "traffic_unavailable"
+msgstr "traffic_unavailable"
 
 msgid "Request too large"
-msgstr "הבקשה גדולה מדי"
+msgstr "Request too large"
 
 msgid "The runtime directory is not safe; nothing was run"
-msgstr "תיקיית זמן הריצה אינה בטוחה; דבר לא הורץ"
+msgstr "The runtime directory is not safe; nothing was run"
 
 msgid "No such method"
-msgstr "אין שיטה כזו"
+msgstr "No such method"
 
 msgid "Radio did not come up"
-msgstr "הרדיו לא עלה"
+msgstr "Radio did not come up"
 
 msgid "Expected on or off"
-msgstr "נדרש on או off"
+msgstr "Expected on or off"
 
 msgid "VPN integration is not provided by this platform"
-msgstr "הפלטפורמה אינה מספקת שילוב VPN"
+msgstr "VPN integration is not provided by this platform"
 
 msgid "Dual-boot integration is not provided by this platform"
-msgstr "הפלטפורמה אינה מספקת שילוב אתחול כפול"
+msgstr "Dual-boot integration is not provided by this platform"
 
 msgid "mu300-next-boot failed"
-msgstr "mu300-next-boot נכשל"
+msgstr "mu300-next-boot failed"
 
 msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
-msgstr "מנגנון ה-AT לא ענה (הרדיו כבוי, המודם מופעל מחדש, או שהמתאם אינו זמין)"
+msgstr "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
 
 msgid "USB role adapter is not executable"
-msgstr "מתאם תפקיד ה-USB אינו ניתן להרצה"
+msgstr "USB role adapter is not executable"
 
 msgid "USB role adapter failed"
-msgstr "מתאם תפקיד ה-USB נכשל"
+msgstr "USB role adapter failed"
 
 msgid "USB role switch is unavailable"
-msgstr "החלפת תפקיד USB אינה זמינה"
+msgstr "USB role switch is unavailable"
 
 msgid "USB role switch failed"
-msgstr "החלפת תפקיד ה-USB נכשלה"
+msgstr "USB role switch failed"
 
 msgid "USB role switch was refused by platform safety checks"
-msgstr "החלפת תפקיד ה-USB נדחתה על ידי בדיקות הבטיחות של הפלטפורמה"
+msgstr "USB role switch was refused by platform safety checks"
 
 msgid "Cannot create USB boot settings directory"
-msgstr "לא ניתן ליצור את תיקיית הגדרות האתחול של USB"
+msgstr "Cannot create USB boot settings directory"
 
 msgid "Cannot write USB boot settings"
-msgstr "לא ניתן לכתוב את הגדרות האתחול של USB"
+msgstr "Cannot write USB boot settings"
 
 msgid "Cannot save USB boot settings"
-msgstr "לא ניתן לשמור את הגדרות האתחול של USB"
+msgstr "Cannot save USB boot settings"
 
 msgid "Invalid boot-auto value"
-msgstr "ערך boot-auto לא חוקי"
+msgstr "Invalid boot-auto value"
 
 msgid "Device is the boot default; host auto-apply is the only persistent role"
-msgstr "מצב התקן הוא ברירת המחדל באתחול; החלה אוטומטית של מצב מארח היא התפקיד הקבוע היחיד"
+msgstr "Device is the boot default; host auto-apply is the only persistent role"
 
 msgid "Cannot save USB role policy"
-msgstr "לא ניתן לשמור את מדיניות תפקיד ה-USB"
+msgstr "Cannot save USB role policy"
 
 msgid "Cannot disable USB network boot policy"
-msgstr "לא ניתן להשבית את מדיניות האתחול של רשת ה-USB"
+msgstr "Cannot disable USB network boot policy"
 
 msgid "Cannot commit USB role policy"
-msgstr "לא ניתן לבצע commit למדיניות תפקיד ה-USB"
+msgstr "Cannot commit USB role policy"
 
 msgid "USB network mode is unavailable in host role"
-msgstr "מצב רשת USB אינו זמין בתפקיד מארח"
+msgstr "USB network mode is unavailable in host role"
 
 msgid "Disable host boot-auto before configuring USB network"
-msgstr "יש להשבית את boot-auto של המארח לפני הגדרת רשת ה-USB"
+msgstr "Disable host boot-auto before configuring USB network"
 
 msgid "Cannot save USB network policy"
-msgstr "לא ניתן לשמור את מדיניות רשת ה-USB"
+msgstr "Cannot save USB network policy"
 
 msgid "Cannot commit USB network policy"
-msgstr "לא ניתן לבצע commit למדיניות רשת ה-USB"
+msgstr "Cannot commit USB network policy"
 
 msgid "USB host mode is required"
-msgstr "נדרש מצב מארח USB"
+msgstr "USB host mode is required"
 
 msgid "Not a USB network interface"
-msgstr "אינו ממשק רשת USB"
+msgstr "Not a USB network interface"
 
 msgid "LAN bridge device section was not found"
-msgstr "מקטע ההתקן של גשר ה-LAN לא נמצא"
+msgstr "LAN bridge device section was not found"
 
 msgid "Cannot bring USB network interface up"
-msgstr "לא ניתן להעלות את ממשק רשת ה-USB"
+msgstr "Cannot bring USB network interface up"
 
 msgid "Cannot add interface to LAN bridge"
-msgstr "לא ניתן להוסיף את הממשק לגשר ה-LAN"
+msgstr "Cannot add interface to LAN bridge"
 
 msgid "Cannot save LAN bridge"
-msgstr "לא ניתן לשמור את גשר ה-LAN"
+msgstr "Cannot save LAN bridge"
 
 msgid "Network reload failed"
-msgstr "טעינת הרשת מחדש נכשלה"
+msgstr "Network reload failed"
 
 msgid "Cannot attach USB interface to LAN bridge"
-msgstr "לא ניתן לחבר את ממשק ה-USB לגשר ה-LAN"
+msgstr "Cannot attach USB interface to LAN bridge"
 
 msgid "The language pack is not installed"
-msgstr "חבילת השפות אינה מותקנת"
+msgstr "The language pack is not installed"
 
 msgid "No language given"
-msgstr "לא צוינה שפה"
+msgstr "No language given"
 
 msgid "The language could not be changed"
-msgstr "לא ניתן היה לשנות את השפה"
+msgstr "The language could not be changed"
 
 msgid "LuCI does not offer this language"
-msgstr "LuCI אינו מציע שפה זו"
+msgstr "LuCI does not offer this language"
 
 msgid "No uploaded language pack"
-msgstr "אין חבילת שפות שהועלתה"
+msgstr "No uploaded language pack"
 
 msgid "An installation is already running"
-msgstr "התקנה כבר מתבצעת"
+msgstr "An installation is already running"
 
 msgid "The language pack could not be removed"
-msgstr "לא ניתן היה להסיר את חבילת השפות"
+msgstr "The language pack could not be removed"
 
 msgid "Lock cache unavailable"
-msgstr "מטמון הנעילות אינו זמין"
+msgstr "Lock cache unavailable"
 
 msgid "No serving cell to lock to"
-msgstr "אין תא משרת לנעילה"
+msgstr "No serving cell to lock to"
