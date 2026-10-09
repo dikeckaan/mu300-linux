@@ -21,6 +21,9 @@ git merge upstream/main
 面板的 31 个 `openwrt/luci-app-mu300/po/*/mu300.po` 合并冲突不用手工解。策略只有一条：
 只有 `zh_Hans` 是真翻译，其余 30 种语言的 catalog 都放英文 msgid（LuCI 于是显示英文）。
 
+先解完其余冲突（`common.js`、`mu300dash`、`acl.d` 等），再跑工具——它从合并后的源码里
+重新提取消息，源码里还有冲突标记时会漏消息：
+
 ```sh
 git checkout --ours -- openwrt/luci-app-mu300/po   # 任取一侧即可，内容随后由工具重写
 python3 tools/v50/i18n-policy.py                   # 清 stale、补缺失、除 zh_Hans 外填英文 msgid
