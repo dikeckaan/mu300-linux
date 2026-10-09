@@ -22,6 +22,7 @@ release = load('release')
 maintenance = load('maintain')
 patcher = load('patch-openclash')
 audit = load('audit')
+policy = load('i18n-policy')
 
 
 class Archives(unittest.TestCase):
@@ -204,3 +205,58 @@ class Preflight(ShellTest):
                         MU300_REPO='tester/v50', MU300_V50_MIGRATION_READY=1)
             self.assertEqual(r.returncode, 0, r.stderr)
             (root / 'etc/init.d/openclash').unlink()
+
+
+class Translations(unittest.TestCase):
+    """tools/v50/i18n-policy.py: only zh_Hans is translated, every other catalog carries the English msgid."""
+
+    HELLO = '\u4f60\u597d'
+    BYE = '\u518d\u89c1'
+
+    def mini(self, temp):
+        """A one-view app with po/tr and po/zh_Hans: Hello is translated, Bye arrives with the policy."""
+        root = Path(temp) / 'app'
+        (root / 'htdocs' / 'luci-static' / 'resources').mkdir(parents=True)
+        (root / 'htdocs' / 'luci-static' / 'resources' / 'view.js').write_text(
+            "'use strict';\nE('p', {}, _('Hello'));\nE('p', {}, _('Bye'));\n", encoding='utf-8')
+        for lang, body in (('tr', 'Merhaba'), ('zh_Hans', self.HELLO)):
+            (root / 'po' / lang).mkdir(parents=True)
+            (root / 'po' / lang / 'mu300.po').write_text(
+                f'msgid ""\nmsgstr ""\n"Content-Type: text/plain; charset=UTF-8\\n"\n"Language: {lang}\\n"'
+                f'\n\nmsgid "Hello"\nmsgstr "{body}"\n', encoding='utf-8')
+        return root
+
+    def catalog(self, root, lang):
+        return {e['msgid']: e['msgstr'] for e in policy.luci.read_po(root / 'po' / lang / 'mu300.po')[1]}
+
+    def test_apply_makes_every_other_catalog_english_and_keeps_zh_hans(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.mini(temp)
+            self.assertEqual(policy.main(['apply', '--root', str(root)]), 1, 'Bye still needs a translator')
+            self.assertEqual(self.catalog(root, 'tr'), {'Hello': 'Hello', 'Bye': 'Bye'})
+            self.assertEqual(self.catalog(root, 'zh_Hans'), {'Hello': self.HELLO, 'Bye': ''})
+
+    def test_check_names_the_catalog_that_is_not_english(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.mini(temp)
+            problems = policy.check(root)
+            self.assertTrue(any(p.startswith('po/tr/mu300.po:') and 'English msgid' in p for p in problems), problems)
+            self.assertTrue(any(p.startswith('po/zh_Hans/mu300.po:') and 'missing "Bye"' in p for p in problems),
+                            problems)
+
+    def test_a_translated_zh_hans_makes_check_clean_and_apply_idempotent(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.mini(temp)
+            policy.main(['apply', '--root', str(root)])
+            path = root / 'po' / 'zh_Hans' / 'mu300.po'
+            path.write_text(path.read_text(encoding='utf-8').replace('msgid "Bye"\nmsgstr ""',
+                                                                     f'msgid "Bye"\nmsgstr "{self.BYE}"'),
+                            encoding='utf-8')
+            self.assertEqual(policy.check(root), [])
+            before = path.read_text(encoding='utf-8')
+            self.assertEqual(policy.main(['apply', '--root', str(root)]), 0)
+            self.assertEqual(path.read_text(encoding='utf-8'), before)
+
+    def test_the_repository_obeys_the_policy(self):
+        self.assertEqual(policy.check(policy.luci.APP), [])
+

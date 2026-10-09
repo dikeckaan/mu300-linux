@@ -130,6 +130,11 @@ first-boot defaults), the app in `openwrt/luci-app-mu300/` and the Aurora theme.
 * `tools/luci-i18n.py check|extract|update` keeps `po/tr` and `po/zh_Hans` in step with the messages in the app's
   JavaScript, menu, ACL and backend (missing, stale, placeholder and stray CJK problems). `python3 tools/check-i18n.py`
   does the same for the installers' `i18n/*.tsv`.
+* `tools/v50/i18n-policy.py` is this fork's policy on top of that check: only `zh_Hans` is translated, every other
+  catalog holds the English msgid. `apply` (the default) rewrites the catalogs - stale out, missing in, ordered by
+  first use - and `check` reports the catalogs that differ; both exit 1 while a `zh_Hans` message waits for a
+  translator, so an upstream merge never leaves the 31 `po/` files to be resolved by hand.
+
 
 `tools/make-release.sh` builds the `mu300-openwrt-luci-rootfs.tar.gz` asset next to the other images and audits it
 like them. The asset boots from `/openwrt-luci` on the Linux disk.

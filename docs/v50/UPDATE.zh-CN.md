@@ -16,6 +16,20 @@ git merge upstream/main
 文件。重点审查安装识别、boot/init、更新器、LED、构建脚本以及模块加载顺序。
 源码合并不会直接更新设备。每次构建记录上游来源及输入 SHA256。
 
+## 解决面板目录（po）冲突
+
+面板的 31 个 `openwrt/luci-app-mu300/po/*/mu300.po` 合并冲突不用手工解。策略只有一条：
+只有 `zh_Hans` 是真翻译，其余 30 种语言的 catalog 都放英文 msgid（LuCI 于是显示英文）。
+
+```sh
+git checkout --ours -- openwrt/luci-app-mu300/po   # 任取一侧即可，内容随后由工具重写
+python3 tools/v50/i18n-policy.py                   # 清 stale、补缺失、除 zh_Hans 外填英文 msgid
+python3 tools/v50/i18n-policy.py check             # 干净则退出 0；zh_Hans 待译消息会在这里列出
+```
+
+`apply`（默认动作）会列出仍需人工翻译的 `zh_Hans` 消息，有则退出码 1；补齐译文后 `check` 即干净。
+
+
 ## 更新设备
 
 先在电脑创建当前备份；系统 OpenSSH 会询问未知主机指纹和登录密码，工具不保存密码：
