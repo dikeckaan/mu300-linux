@@ -1466,3 +1466,83 @@ msgstr "TTL ayarlanamadı"
 
 msgid "Unknown TTL operation"
 msgstr "Bilinmeyen TTL işlemi"
+
+# Dual SIM controls.
+msgid "Dual SIM"
+msgstr "Çift SIM"
+
+# Dual SIM controls.
+msgid "Switching SIM. Mobile data will disconnect briefly."
+msgstr "SIM değiştiriliyor. Mobil veri kısa süreliğine kesilecek."
+
+# Dual SIM controls.
+msgid "SIM switch failed; check SIM readiness and hot switching."
+msgstr "SIM geçişi başarısız; SIM durumunu ve canlı geçiş ayarını kontrol edin."
+
+# Dual SIM controls.
+msgid "Ready"
+msgstr "Ready"
+
+# Dual SIM controls.
+msgid "Switching SIM"
+msgstr "SIM değiştiriliyor"
+
+# Dual SIM controls.
+msgid "SIM switched; saved as boot default"
+msgstr "SIM değiştirildi ve başlatma varsayılanı olarak kaydedildi"
+
+# Dual SIM controls.
+msgid "Switch failed; previous SIM restored"
+msgstr "Geçiş başarısız; önceki SIM geri yüklendi"
+
+# Dual SIM controls.
+msgid "Radio state unknown; reboot required"
+msgstr "Radyo durumu bilinmiyor; yeniden başlatma gerekiyor"
+
+# Dual SIM controls.
+msgid "A successful switch also saves that SIM as the next cold-boot default. A SIM without service can switch successfully but cannot provide internet."
+msgstr "Başarılı geçiş, seçilen SIM kartını sonraki soğuk başlatma için varsayılan olarak kaydeder. Servisi olmayan bir SIM kartına geçilebilir ancak internet bağlantısı sağlanamaz."
+
+# Dual SIM controls.
+msgid "Active SIM"
+msgstr "Etkin SIM"
+
+# Dual SIM controls.
+msgid "Cold-boot default"
+msgstr "Soğuk başlatma varsayılanı"
+
+# Dual SIM controls.
+msgid "SIM control unavailable"
+msgstr "SIM denetimi kullanılamıyor"
+
+# Dual SIM controls.
+msgid "Enable hot switching"
+msgstr "Canlı SIM geçişini etkinleştir"
+
+# Dual SIM controls.
+msgid "Reboot after enabling hot switching to prepare both SIM channels."
+msgstr "İki SIM kanalını hazırlamak için canlı geçişi etkinleştirdikten sonra yeniden başlatın."
+
+# Dual SIM controls.
+msgid "Switch to SIM%d"
+msgstr "SIM%d kartına geç"
+
+# Dual SIM controls.
+msgid "Use SIM%d at next boot"
+msgstr "Sonraki başlatmada SIM%d kullan"
+
+# Dual SIM controls.
+msgid "Invalid SIM setting"
+msgstr "Geçersiz SIM ayarı"
+
+# Dual SIM controls.
+msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
+msgstr "Canlı SIM geçişini etkinleştirin; kanallar hazır değilse yeniden başlatın veya işlem bitene kadar bekleyin."
+
+# Dual SIM controls.
+msgid "SIM control failed"
+msgstr "SIM denetimi başarısız"
+
+# Dual SIM controls.
+msgid "Use SIM control or reboot for managed dual-SIM radio"
+msgstr "Yönetilen çift SIM radyosu için SIM denetimini kullanın veya yeniden başlatın."

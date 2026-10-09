@@ -1466,3 +1466,68 @@ msgstr "无法设置 TTL"
 
 msgid "Unknown TTL operation"
 msgstr "未知的 TTL 操作"
+
+msgid "Dual SIM"
+msgstr "双 SIM 卡"
+
+msgid "Active SIM"
+msgstr "当前使用卡"
+
+msgid "Cold-boot default"
+msgstr "冷启动默认卡"
+
+msgid "Enable hot switching"
+msgstr "启用热切换"
+
+msgid "Switch to SIM%d"
+msgstr "切换到卡%d"
+
+msgid "Use SIM%d at next boot"
+msgstr "下次启动使用卡%d"
+
+msgid "SIM switched; saved as boot default"
+msgstr "已切换，同时设为默认启动卡"
+
+msgid "Switching SIM"
+msgstr "正在切换 SIM 卡"
+
+msgid "Switching SIM. Mobile data will disconnect briefly."
+msgstr "正在切换 SIM 卡，移动网络会短暂断开。"
+
+msgid "Switch failed; previous SIM restored"
+msgstr "切换失败，已恢复原卡"
+
+msgid "Radio state unknown; reboot required"
+msgstr "射频状态未知，请重启设备"
+
+msgid "SIM control unavailable"
+msgstr "SIM 控制不可用"
+
+msgid "SIM switch failed; check SIM readiness and hot switching."
+msgstr "SIM 切换失败，请检查 SIM 卡状态和热切换开关。"
+
+msgid "Reboot after enabling hot switching to prepare both SIM channels."
+msgstr "启用热切换后请重启，以准备两张 SIM 卡的通道。"
+
+msgid "A successful switch also saves that SIM as the next cold-boot default. A SIM without service can switch successfully but cannot provide internet."
+msgstr "切换成功后，该卡也会成为下次冷启动的默认卡。没有网络服务的卡可以切换成功，但无法提供互联网连接。"
+
+# Dual SIM controls.
+msgid "Ready"
+msgstr "就绪"
+
+# Dual SIM controls.
+msgid "Invalid SIM setting"
+msgstr "SIM 设置无效"
+
+# Dual SIM controls.
+msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
+msgstr "请启用热切换；通道尚未准备好时请重启，操作进行中请等待。"
+
+# Dual SIM controls.
+msgid "SIM control failed"
+msgstr "SIM 控制失败"
+
+# Dual SIM controls.
+msgid "Use SIM control or reboot for managed dual-SIM radio"
+msgstr "请使用双 SIM 控制页或重启来操作受管理的双卡射频。"

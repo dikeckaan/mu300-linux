@@ -34,6 +34,8 @@ var callLangGet = rpc.declare({ object: 'mu300dash', method: 'lang_get', expect:
 var callLangSet = rpc.declare({ object: 'mu300dash', method: 'lang_set', params: [ 'op', 'codes', 'source' ], expect: { '': {} } });
 var callPowerGet = rpc.declare({ object: 'mu300dash', method: 'power_get', expect: { '': {} } });
 var callPowerSet = rpc.declare({ object: 'mu300dash', method: 'power_set', params: [ 'op', 'key', 'value' ], expect: { '': {} } });
+var callSimGet = rpc.declare({ object: 'mu300dash', method: 'sim_get', expect: { '': {} } });
+var callSimSet = rpc.declare({ object: 'mu300dash', method: 'sim_set', params: [ 'op', 'value' ], expect: { '': {} } });
 var callTtlGet = rpc.declare({ object: 'mu300dash', method: 'ttl_get', expect: { '': {} } });
 var callTtlSet = rpc.declare({ object: 'mu300dash', method: 'ttl_set', params: [ 'value' ], expect: { '': {} } });
 
@@ -610,6 +612,7 @@ return baseclass.extend({
 	callUsbNetList: callUsbNetList, callUsbNetAdd: callUsbNetAdd,
 	callLangGet: callLangGet, callLangSet: callLangSet,
 	callPowerGet: callPowerGet, callPowerSet: callPowerSet,
+	callSimGet: callSimGet, callSimSet: callSimSet,
 	callTtlGet: callTtlGet, callTtlSet: callTtlSet,
 	carrierName: carrierName, qLevel: qLevel, qLevelLabel: qLevelLabel, qLabel: qLabel, qCol: qCol, qScore: qScore,
 	esc: esc, fmtBytes: fmtBytes, fmtRate: fmtRate, fmtUptime: fmtUptime, PLMN_CN: PLMN_CN,

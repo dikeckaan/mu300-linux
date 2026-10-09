@@ -154,11 +154,23 @@ exit 0''')
     def test_teardown(self):
         for shell in self.each_shell():
             calls = self.run_proto(shell, 'proto_mu300cell_teardown')
-            self.assertEqual(calls[0], 'proto_kill_command wan')
-            self.assertEqual(calls[1].split(' env:')[0], 'mobile-data down')
+            self.assertEqual(calls[0], 'ubus call network.interface.wan status')
+            self.assertEqual(calls[1], 'proto_kill_command wan')
+            self.assertEqual(calls[2].split(' env:')[0], 'mobile-data down')
             for c in ('ip -4 addr flush dev sipa_eth0 scope global', 'ip -4 route del default dev sipa_eth0',
                       'ip -6 addr flush dev sipa_eth0 scope global', 'ip -6 route flush dev sipa_eth0'):
-                self.assertIn(c, calls[2:])
+                self.assertIn(c, calls[3:])
+
+    def test_teardown_uses_active_bearer_and_rejects_other_interfaces(self):
+        self.stub('jsonfilter', 'echo "$T_BEARER"')
+        for shell in self.each_shell():
+            for bearer, expected in [('sipa_eth8', 'sipa_eth8'), ('br-lan', 'sipa_eth0'),
+                                     ('sipa_eth8;touch injected', 'sipa_eth0')]:
+                calls = self.run_proto(shell, 'proto_mu300cell_teardown', T_BEARER=bearer)
+                flushes = [c for c in calls if c.startswith('ip ')]
+                self.assertEqual(flushes, [f'ip -4 addr flush dev {expected} scope global',
+                    f'ip -4 route del default dev {expected}', f'ip -6 addr flush dev {expected} scope global',
+                    f'ip -6 route flush dev {expected}'])
 
     def test_attach_failure_still_sleeps_20(self):
         for shell in self.each_shell():

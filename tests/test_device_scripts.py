@@ -371,7 +371,8 @@ class MobileData(ShellTest):
         body = text[text.index('\nat() {'):text.index('\n}\n', text.index('\nat() {')) + 3]
         body = body.replace('/run/', f'{run}/').replace('/opt/mu300/bin/mu300-at', 'mu300-at')
         (self.tmp / 'calls').unlink(missing_ok=True)
-        r = self.sh(shell, body + '\nat "AT+CSQ" 4', MU300_AT_DIR='')
+        r = self.sh(shell, body + '\nat "AT+CSQ" 4', MU300_AT_DIR='', SIM_SLOT='0',
+                    MAIN_DIR=run / 'mu300-at', DATA_DIR=run / 'mu300-at2')
         self.assertEqual(r.returncode, 0, r.stderr)
         return (self.tmp / 'calls').read_text().strip()
 
@@ -381,7 +382,7 @@ class MobileData(ShellTest):
             self.assertRegex(out, r'^dir=\S*/run/mu300-at2 args=-t 4 AT\+CSQ$', shell)
             # the nr1 daemon takes over while nr2's is not there (yet): mu300-at's own default directory
             out = self.run_at(shell, nr2=False)
-            self.assertEqual(out, 'dir= args=-t 4 AT+CSQ', shell)
+            self.assertRegex(out, r'^dir=\S*/run/mu300-at args=-t 4 AT\+CSQ$', shell)
 
     # mobile-data's functions with MU300_LIB=1 (K56, K59-K62). mobile-data is a bash script (#!/bin/bash, on OpenWrt
     # too), so these run under bash only; under alpine they still use busybox's tail, wc, sleep and awk.

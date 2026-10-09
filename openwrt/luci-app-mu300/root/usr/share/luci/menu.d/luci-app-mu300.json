@@ -22,6 +22,13 @@
 		}
 	},
 
+	"admin/modem/sim": {
+		"title": "Dual SIM",
+		"order": 0,
+		"action": { "type": "view", "path": "mu300/sim" },
+		"depends": { "acl": [ "luci-app-mu300" ] }
+	},
+
 	"admin/modem/locks": {
 		"title": "Network locks",
 		"order": 1,

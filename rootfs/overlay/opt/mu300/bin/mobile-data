@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mobile data on the MU300 modem without Android RIL: AT commands on /dev/stty_nr1, data over sipa_eth<cid-1>.
+# Mobile data without Android RIL: SIM1 nr1/nr2 -> sipa_eth0; SIM2 nr4/nr5 -> sipa_eth8.
 # usage: mobile-data up [APN] | radio-on | down | status | signal | at "CMD" | sim-reset | watch
 #        mobile-data radio-locked CMD [ARG...] | radio-busy
 #        mobile-data suspend off|lte | resume [nodial]   (mu300-power: modem down or LTE only while nobody uses the
@@ -12,9 +12,34 @@
 # OpenWrt: od/timeout come from the static busybox in /opt/mu300/busybox-bin
 export PATH="$PATH:/opt/mu300/busybox-bin"
 set -euo pipefail
-DEV=${MU300_AT_DEV:-/dev/stty_nr1}
+
+# Physical SIM/RIL group selection
+# 0 = slot0: nr0/nr1/nr2
+# 1 = slot1: nr3/nr4/nr5
+SIM_SLOT=${MU300_SIM_SLOT:-$(cat /run/mu300/sim-slot 2>/dev/null || cat /etc/mu300-sim-slot 2>/dev/null || echo 0)}
+
+case "$SIM_SLOT" in
+    0)
+        MAIN_DIR=/run/mu300-at
+        DATA_DIR=/run/mu300-at2
+        MAIN_DEV=/dev/stty_nr1
+        URCLOG_DEFAULT=/run/mu300-at/urc/stty_nr0.log
+        ;;
+    1)
+        MAIN_DIR=/run/mu300-at4
+        DATA_DIR=/run/mu300-at5
+        MAIN_DEV=/dev/stty_nr4
+        URCLOG_DEFAULT=/run/mu300-at4/urc/stty_nr3.log
+        ;;
+    *)
+        echo "invalid SIM slot: $SIM_SLOT" >&2
+        exit 2
+        ;;
+esac
+DEV=${MU300_AT_DEV:-$MAIN_DEV}
 CID=1
-IFACE=sipa_eth$((CID - 1))
+IFACE=sipa_eth$((CID - 1 + SIM_SLOT * 8))
+export MU300_SIM_SLOT="$SIM_SLOT"
 
 # The blue LED only reports whether data is up. The PMIC rejects a brightness write now and then (seen as
 # "write error: Invalid argument"), and under `set -e` that killed up() one line before it could report the
@@ -27,6 +52,7 @@ led() { bnd "${MU300_LED_DEADLINE:-10}" /opt/mu300/bin/mu300-led data "$1" </dev
 # local status read; AT+COPS? took about two seconds on weak service and held the AT channel on every round.
 # +CEREG: <n>,<stat>[,<tac>,<ci>,<AcT>[,...]]: the AcT is the fifth field (with <n> 4 or 5 more fields follow it).
 led_up() {
+    [ ! -e /run/mu300/sim-switching ] && [ ! -e /run/mu300/sim-active-unknown ] || { echo "SIM control is busy or requires a reboot" >&2; return 1; }
     case $(at 'AT+CEREG?' 4 2>/dev/null | awk -F, '/^\+CEREG:/ { gsub(/[" ]/, "", $5); print $5; exit }' || true) in
         11|12|13|15) led 5g ;;
         *) led on ;;
@@ -48,7 +74,7 @@ radio_say() {
     printf 't=%-9s %s\n' "$(cut -d' ' -f1 /proc/uptime 2>/dev/null || true)" "$*" 2>/dev/null >> "$RADIOLOG" || true
 }
 
-ATLOCK=/run/mu300-at/owner
+ATLOCK=$MAIN_DIR/owner
 
 # --- deadlines. suspend/resume run for mu300-power and must never hang (2026-10-07: a `suspend off` that never
 # returned left a device dark for hours); busybox on OpenWrt has no timeout(1) in /bin, so: a background job and a
@@ -118,17 +144,18 @@ at() {  # at CMD [timeout] -> response lines up to the final result code
     # mobile-data has its own AT channel (nr2, the same slot 0 group as nr1): AT+CGDATA blocks its channel for
     # 10-20 s, and on the shared nr1 every other AT user (toolkit signal checks, SMS) waited behind it. The nr2
     # daemon serves only this script.
-    if [ -p /run/mu300-at2/cmd ]; then
-        MU300_AT_DIR=/run/mu300-at2 /opt/mu300/bin/mu300-at -t "$t" "$cmd"
+    if [ -p "$DATA_DIR/cmd" ]; then
+        MU300_AT_DIR="$DATA_DIR" /opt/mu300/bin/mu300-at -t "$t" "$cmd"
         return
     fi
     # the nr2 daemon is not running (yet): fall through to the shared nr1 daemon
     # mu300-atd owns the AT channel when it runs: closing the SIPC tty wedges it until the modem restarts, so
     # ask the daemon instead of opening the device here
-    if [ -p /run/mu300-at/cmd ]; then
-        /opt/mu300/bin/mu300-at -t "$t" "$cmd"
+    if [ -p "$MAIN_DIR/cmd" ]; then
+        MU300_AT_DIR="$MAIN_DIR" /opt/mu300/bin/mu300-at -t "$t" "$cmd"
         return
     fi
+    [ "$SIM_SLOT" = 1 ] && return 1   # SIM2 requires its persistent owners; never open directly
     [ -c "$DEV" ] || return 1   # never let the redirection create a regular file in /dev
     # No command fifo, but the daemon can still be there with the channel open - that is what /run/mu300-at
     # being removed under a running mu300-atd leaves behind. Opening the device here would make a second reader
@@ -322,7 +349,20 @@ v6_relay_ra() {
 # Every decision goes to radio.log. Returns 1 when this round cannot switch the radio on; the caller retries later
 # (netifd's next attempt, systemd's restart, the watchdog).
 PLUGIN_LOCK=${MU300_PLUGIN_LOCK:-/usr/libexec/unisoc-modem/lock}
+[ "$SIM_SLOT" = 1 ] && PLUGIN_LOCK=/nonexistent
 radio_on_locked() {
+    if [ -e /run/mu300/sim-managed ]; then
+        [ -e /run/mu300/sim-radio-ready ] && [ ! -e /run/mu300/sim-active-unknown ] || return 1
+        at 'AT+CFUN?' 4 | tr -d '\r' | grep -E '^\+CFUN: *1$' >/dev/null
+        return $?
+    fi
+    if [ "$SIM_SLOT" = 1 ]; then
+        # The native boot controller owns SIM2 bring-up. Never let netifd/watchdog run a second SFUN sequence.
+        [ -e /run/mu300/sim2-radio-ready ] || return 1
+        at 'AT+CFUN?' 4 | tr -d '\r' | grep -E '^\+CFUN: *1$' >/dev/null
+        return $?
+    fi
+    [ -e /run/mu300-radio-freeze ] && return 1
     local out silent=0 answered=0 t0 end
     local ready_deadline=$((SECONDS + ${MU300_CFUN_WAIT:-30}))
     mark radio-on-enter
@@ -338,11 +378,11 @@ radio_on_locked() {
     # channel that has not finished its RIL handshake do not help. An ERROR is an answer, from a live channel (a
     # firmware that does not take the command): it is logged, and the round goes on to CFUN as after OK.
     if [ ! -e /run/mu300-ril-handshake ]; then
-        out=$(MU300_AT_LOCK_WAIT=1 MU300_AT_DIR=/run/mu300-at /opt/mu300/bin/mu300-at -t 4 'AT+SMMSWAP=0' 2>&1 || true)
+        out=$(MU300_AT_LOCK_WAIT=1 MU300_AT_DIR="$MAIN_DIR" /opt/mu300/bin/mu300-at -t 4 'AT+SMMSWAP=0' 2>&1 || true)
         case $(printf '%s\n' "$out" | tr -d '\r' | grep -E '^(OK|ERROR|\+CME ERROR|\+CMS ERROR)' | tail -n 1) in
             OK)
                 : > /run/mu300-ril-handshake
-                radio_say "slot 0 RIL handshake done (AT+SMMSWAP=0)"
+                radio_say "RIL handshake done (AT+SMMSWAP=0)"
                 mark ril-handshake-done
                 ;;
             ERROR*|+CME\ ERROR*|+CMS\ ERROR*)
@@ -488,7 +528,7 @@ is_registered() {
 # announces nothing; it replaces the old query every 2 s. When the modem's last word before the start was "not
 # registered", the change will be announced, so the first query waits 5 s too; otherwise (no log, nothing heard,
 # or registered) it is sent at once - a reconnect after a lost context is registered all along.
-URCLOG=${MU300_URC_LOG:-/run/mu300-at/urc/stty_nr0.log}
+URCLOG=${MU300_URC_LOG:-$URCLOG_DEFAULT}
 wait_registered() {
     local deadline=$((SECONDS + ${MU300_REGISTER_WAIT:-60})) next=$SECONDS seen size last
     seen=$(fsize "$URCLOG")   # bytes of the log that were there before the start
@@ -536,7 +576,8 @@ modem_stack() { [ -e /dev/modem ] || [ -e /dev/pmsys ] || [ -c "$DEV" ]; }
 # "stty -F" opens and closes the tty, which desynchronises the SIPC channel (docs/FINDINGS.md 13b). When
 # mu300-atd owns the device it has already set the flags on its own descriptor, so leave the tty alone.
 tty_setup() {
-    [ -p /run/mu300-at/cmd ] && return 0
+    [ -p "$MAIN_DIR/cmd" ] && return 0
+    [ "$SIM_SLOT" = 1 ] && return 1
     # same for a daemon whose fifo has gone missing: its descriptor is still the one the modem talks to
     at_owner_alive "$(cat "$ATLOCK/pid" 2>/dev/null || true)" && return 0
     bnd "$STEPDL" stty -F "$DEV" raw -echo 2>/dev/null || true   # (an open of the SIPC tty can block)
@@ -665,7 +706,6 @@ up_locked() {
     # On OpenWrt this is undone a moment later - netifd turns IPv6 back on while it configures the interface -
     # so the proto handler repeats it after proto_send_update. Relay mode (v6_relay_ra) keeps it on instead.
     v6_relay_ra || { [ -n "$iid" ] || v6_off; }
-    # mu300-ttl's rule, again on every bring-up: its tc backend's filters belong to the interface (idempotent)
     "${MU300_TTL_CMD:-/opt/mu300/bin/mu300-ttl}" apply >/dev/null 2>&1 || true
     if [ "${MU300_NETIFD:-0}" = 1 ]; then
         # OpenWrt: netifd (proto mu300cell) configures the address, routes, DNS and firewall itself
@@ -736,6 +776,8 @@ down() {
 }
 
 sim_reset() {
+    [ ! -e /run/mu300/sim-managed ] || { echo "Use SIM control or reboot for a managed dual-SIM radio" >&2; return 1; }
+    [ "$SIM_SLOT" != 1 ] || { echo "SIM2 requires a Linux reboot, not a live modem reset" >&2; return 1; }
     tty_setup
     at 'AT+SFUN=5' 20; at 'AT+SFUN=3' 10; sleep 2; at 'AT+SFUN=2' 10; at 'AT+SFUN=4' 30
     for _ in $(seq 1 30); do at 'AT+CPIN?' | grep -q READY && break; sleep 2; done
@@ -800,6 +842,9 @@ endc_restore() {
 }
 # not "suspend": that is a bash builtin
 do_suspend() {
+    # A SIM2 cold-start can only run once. Do not power it down until its resume sequence is validated.
+    [ ! -e /run/mu300/sim-managed ] || { echo "Managed dual-SIM suspend/resume is not supported" >&2; return 1; }
+    [ "$SIM_SLOT" != 1 ] || { echo "SIM2 radio suspend/resume is not supported yet" >&2; return 1; }
     local mode=${1:-off}
     case $mode in off|lte) ;; *) echo "usage: mobile-data suspend off|lte" >&2; return 2 ;; esac
     [ "$(cat "$SUSPEND" 2>/dev/null)" = "$mode" ] && return 0
@@ -894,6 +939,17 @@ watch() {
         if [ -n "${MU300_WATCH_ROUNDS:-}" ]; then   # tests only: stop after that many rounds
             rounds=$((rounds + 1))
             if [ "$rounds" -gt "$MU300_WATCH_ROUNDS" ]; then rm -rf "$wlock"; trap - EXIT INT TERM; break; fi
+        fi
+        [ -e /run/mu300/sim-switching ] && continue
+        [ -e /run/mu300/sim-active-unknown ] && continue
+        # A live switch publishes the slot only after its RF and routing gates pass.
+        local current_slot
+        current_slot=$(cat /run/mu300/sim-slot 2>/dev/null || echo "$SIM_SLOT")
+        if [ "$current_slot" != "$SIM_SLOT" ]; then
+            rm -rf "$wlock"
+            trap - EXIT INT TERM
+            unset MU300_SIM_SLOT
+            exec "$0" watch
         fi
         [ -e /run/mu300-mobile-data-down ] && continue
         [ -s "$SUSPEND" ] && continue   # mu300-power holds the modem down; nothing to restore

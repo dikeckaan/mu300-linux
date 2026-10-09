@@ -40,6 +40,17 @@ class AtdDash(unittest.TestCase):
         self.assertEqual(b.count('S${n}mu300-atd-dash'), 1)
         self.assertNotIn('mu300-atd-dash', b[:start])
 
+    def test_managed_boot_does_not_start_optional_pool(self):
+        import os, subprocess, tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            marker=Path(tmp)/'managed'; marker.touch()
+            src=INIT.read_text().replace('/run/mu300/sim-managed',str(marker))
+            harness='procd_open_instance() { echo OPEN; }; procd_set_param() { :; }; procd_close_instance() { :; };\n'
+            r=subprocess.run(['sh','-c',harness+src+'\nstart_service'],env={**os.environ,'MU300_SIM_SLOT':'0'},capture_output=True,text=True)
+            self.assertEqual(r.returncode,0,r.stderr)
+            self.assertNotIn('OPEN',r.stdout)
+
     def test_adapter_uses_the_pool_and_falls_back_to_nr1(self):
         c = CELL.read_text()
         self.assertIn('/run/mu300-at6 /run/mu300-at7 /run/mu300-at', c)

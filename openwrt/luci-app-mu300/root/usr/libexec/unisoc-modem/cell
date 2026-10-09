@@ -66,12 +66,23 @@ mkdir -p "$IDENT_DIR" 2>/dev/null
 # nr3/nr4/nr5 belong to SIM slot 1 and return the wrong state for slot 0.
 # The dashboard therefore uses the two verified slot-0-capable optional
 # channels nr6/nr7; nr1 is only the final fallback for a failed pool channel.
+SIM_SLOT=${MU300_SIM_SLOT:-$(cat /run/mu300/sim-slot 2>/dev/null || cat /etc/mu300-sim-slot 2>/dev/null || echo 0)}
+case "$SIM_SLOT" in
+    0) CHANNELS="6 7"; FALLBACKS="/run/mu300-at6 /run/mu300-at7 /run/mu300-at" ;;
+    1) CHANNELS=4; FALLBACKS=/run/mu300-at4; IDENT=$IDENT_DIR/sim-slot1.json ;;
+    *) exit 2 ;;
+esac
+if [ "$SIM_SLOT" = 0 ] && [ -e /run/mu300/sim-managed ]; then
+    CHANNELS=1; FALLBACKS=/run/mu300-at
+fi
 ATC=${MU300_DASH_AT_DIR:-}
 at() {
+    [ ! -e /run/mu300/sim-switching ] && [ ! -e /run/mu300/sim-active-unknown ] || return 1
+    [ "$(cat /run/mu300/sim-slot 2>/dev/null || echo "$SIM_SLOT")" = "$SIM_SLOT" ] || return 1
     local cmd=$1 timeout=${2:-5} d out seen=
     # The assigned regular channel is first. A silent channel fails in about
     # timeout+1 seconds; only then touch the two unpolled disaster channels.
-    for d in "$ATC" /run/mu300-at6 /run/mu300-at7 /run/mu300-at; do
+    for d in "$ATC" $FALLBACKS; do
         [ -n "$d" ] && [ -p "$d/cmd" ] || continue
         case " $seen " in *" $d "*) continue ;; esac
         seen="$seen $d"
@@ -115,7 +126,7 @@ take_lock "$LOCK"
 POOL=${MU300_DASH_POOL_DIR:-/run/unisoc-modem-at-pool}
 mkdir -p "$POOL" 2>/dev/null
 SLOT=
-for n in 6 7; do
+for n in $CHANNELS; do
     s=$POOL/nr$n
     if mkdir "$s" 2>/dev/null; then
         SLOT=$s; ATC=/run/mu300-at$n; break
@@ -355,6 +366,10 @@ if [ "$MODE" = full ]; then
         elif [ -s "$IDENT" ]; then IDENT_JSON=$(cat "$IDENT"); fi
     fi
 fi
+
+# A collector that began before a switch must not publish the previous card's readings.
+[ ! -e /run/mu300/sim-switching ] && [ ! -e /run/mu300/sim-active-unknown ] || exit 0
+[ "$(cat /run/mu300/sim-slot 2>/dev/null || echo "$SIM_SLOT")" = "$SIM_SLOT" ] || exit 0
 
 # "no answer at all" is a modem/daemon problem, not "no signal".
 if [ -z "$CFUN$CEREG$CESQ$SP_LTE$SP_NR$COPS" ]; then

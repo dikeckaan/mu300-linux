@@ -142,7 +142,7 @@ m_status() {
     # a full round in flight also writes the fast cache, so it counts for both.
     # During a lock apply (SFUN restart) do not kick anything: the modem answers
     # garbage mid-restart and the collectors would only burn the AT channel.
-    if [ -d /run/unisoc-modem-lock-apply ]; then busy=1; fbusy=1; fi
+    if { [ -d /run/unisoc-modem-lock-apply ] || [ -e /run/mu300/sim-switching ] || [ -e /run/mu300/sim-active-unknown ]; }; then busy=1; fbusy=1; fi
     if collecting; then busy=1; fbusy=1; fi
     fast_busy && fbusy=1
     # A full round also refreshes sig.json. Prefer it when both tiers are stale;
@@ -168,7 +168,7 @@ m_signal() {
     # that window return garbage or wedge, and rpcd died with a userspace
     # segfault (sessions wiped -> LuCI login loop) on at least one live
     # read's output. Serve the last snapshot until the apply finishes.
-    if [ -d /run/unisoc-modem-lock-apply ]; then
+    if { [ -d /run/unisoc-modem-lock-apply ] || [ -e /run/mu300/sim-switching ] || [ -e /run/mu300/sim-active-unknown ]; }; then
         json_obj "$(cat "$SIGF" 2>/dev/null)" ||
             printf '{"error":"Applying network locks: no live signal right now"}\n'
         return
@@ -257,7 +257,7 @@ m_at() {
     fi
     # a lock apply in flight means the modem is restarting (SFUN) - say so instead
     # of a generic busy, so it does not look like the console died
-    if [ -d /run/unisoc-modem-lock-apply ]; then
+    if { [ -d /run/unisoc-modem-lock-apply ] || [ -e /run/mu300/sim-switching ] || [ -e /run/mu300/sim-active-unknown ]; }; then
         printf '{"ok":0,"busy":1,"error":"Applying network locks: the modem is restarting (about half a minute), try again shortly"}\n'
         return
     fi
@@ -325,7 +325,7 @@ m_lock_set() {
     # cellular - exactly the thing that must never run inside a request
     # queued=1 tells the page another apply is still running (SFUN restart);
     # the new one waits for the modem and the page can say so
-    [ -d /run/unisoc-modem-lock-apply ] && q=1
+    { [ -d /run/unisoc-modem-lock-apply ] || [ -e /run/mu300/sim-switching ] || [ -e /run/mu300/sim-active-unknown ]; } && q=1
     setsid "$DASH/lock" apply "$kind" "$val" >/dev/null 2>&1 &
     printf '{"ok":1,"started":1,"queued":%d,"op":%s}\n' "$q" "$(json_str "lock $kind=$val")"
 }
@@ -569,10 +569,36 @@ do_list() {
 	"lang_set": { "op": "String", "codes": "String", "source": "String" },
 	"power_get": { },
 	"power_set": { "op": "String", "key": "String", "value": "String" },
+	"sim_get": { },
+	"sim_set": { "op": "String", "value": "String" },
 	"ttl_get": { },
 	"ttl_set": { "value": "String" }
 }
 EOF
+}
+
+SIMCTL=${MU300_DASH_SIM:-/opt/mu300/bin/mu300-sim}
+m_sim_get() { reply_obj "$("$SIMCTL" status 2>/dev/null)" 'SIM control unavailable'; }
+m_sim_set() {
+    local op value
+    inp '@.op'; op=$V
+    inp '@.value'; value=$V
+    case $op:$value in default:1|default:2|hot:0|hot:1|switch:1|switch:2) ;;
+        *) refuse 'Invalid SIM setting'; return;; esac
+    if [ "$op" = switch ]; then
+        local state
+        state=$("$SIMCTL" status 2>/dev/null)
+        [ "$(printf '%s' "$state" | jsonfilter -e '@.hot')" = 1 ] &&
+            [ "$(printf '%s' "$state" | jsonfilter -e '@.available')" = 1 ] &&
+            [ "$(printf '%s' "$state" | jsonfilter -e '@.busy')" = 0 ] || {
+                refuse 'Enable hot switching; reboot if channels are unavailable or wait until idle'; return;
+            }
+        setsid "$SIMCTL" switch "$value" </dev/null >/dev/null 2>&1 &
+        printf '{"ok":1,"started":1}
+'
+    else
+        reply_obj "$("$SIMCTL" "$op" "$value" 2>/dev/null)" 'SIM control failed'
+    fi
 }
 
 # Forensics for the rpcd crash (2026-09-28): rpcd segfaulted while parsing a
@@ -624,6 +650,8 @@ call)
         lang_set)     run_m lang_set     m_lang_set ;;
         power_get)    run_m power_get    m_power_get ;;
         power_set)    run_m power_set    m_power_set ;;
+        sim_get)      run_m sim_get m_sim_get ;;
+        sim_set)      run_m sim_set m_sim_set ;;
         ttl_get)      run_m ttl_get      m_ttl_get ;;
         ttl_set)      run_m ttl_set      m_ttl_set ;;
         *)            refuse 'No such method' ;;

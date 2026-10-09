@@ -528,6 +528,8 @@ class Rules(unittest.TestCase):
         f = (TOP / 'openwrt' / 'overlay' / 'etc' / 'init.d' / 'mu300-atd').read_text()
         self.assertRegex(f, r'(?m)^START=19$')
         # K20: radio-warmup is the third instance, and it opens no channel: it waits for nr1's daemon and asks it
+        # These assertions describe the unchanged default SIM1 path. SIM2 is exercised by test_sim2.
+        f = f[:f.index('\nbroker() {')]
         self.assertEqual(re.findall(r'procd_open_instance (\S+)', f), ['atd', 'atd2', 'radio-warmup'])
         warm = f[f.index('procd_open_instance radio-warmup'):]
         warm = warm[:warm.index('procd_close_instance')]

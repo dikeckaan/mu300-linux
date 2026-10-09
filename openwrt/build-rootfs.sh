@@ -125,7 +125,7 @@ mkdir -p /var/lock /var/run /tmp
 apk update >/dev/null
 # openssl-util: mu300-vpn fetches the VPN server certificate with it to pin, for links that ask for allowInsecure;
 # i2c-tools, gpiod-tools: mu300-usb (the charger of the U30 Air) and mu300-nfc (its NFC tag)
-apk add wpad-basic-mbedtls wifi-scripts iwinfo wireless-regdb iw bash ip-full coreutils-stty openssl-util \
+apk add wpad-basic-mbedtls wifi-scripts iwinfo wireless-regdb iw bash flock ip-full coreutils-stty openssl-util \
     i2c-tools gpiod-tools >/dev/null
 # the router protocols LuCI offers, with their tools: WireGuard, PPTP/L2TP (PPPoE is in the base), 6in4/6rd/DS-Lite,
 # GRE and VXLAN, ipset, and SQM (cake). Their kmod-* dependencies install the 6.12 modules of the feed, removed below like

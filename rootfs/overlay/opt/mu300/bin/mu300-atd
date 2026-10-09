@@ -129,7 +129,7 @@ now() { date +%s; }
 # Has the modem said anything at all lately? The drainers above append every unsolicited line to a log, so a log
 # that has been written to in the last few minutes means the modem is running, whatever it thinks of our
 # commands. With no drainer (a single-channel device) there is nothing to go on, and this answers "no".
-URCLOG=$URCDIR/$(basename "${DEV%[0-9]}0").log
+URCLOG=${MU300_AT_LIVE_URC_LOG:-$URCDIR/$(basename "${DEV%[0-9]}0").log}
 modem_alive() {
     [ -f "$URCLOG" ] || return 1
     [ "$(( $(now) - $(date -r "$URCLOG" +%s 2>/dev/null || echo 0) ))" -lt "${MU300_AT_URC_QUIET:-240}" ]
@@ -229,7 +229,7 @@ while :; do
     # gone away, and then there is nothing left to lose.
     if [ -z "$reply" ]; then
         silent=$((silent + 1))
-        if [ "$silent" -ge 5 ] && [ $(( $(now) - last_reopen )) -ge 300 ] && ! modem_alive; then
+        if [ "${MU300_AT_DISABLE_REOPEN:-0}" != 1 ] && [ "$silent" -ge 5 ] && [ $(( $(now) - last_reopen )) -ge 300 ] && ! modem_alive; then
             echo "mu300-atd: no reply and no URCs either, the modem looks gone; reopening $DEV" >&2
             last_reopen=$(now)
             if open_tty; then

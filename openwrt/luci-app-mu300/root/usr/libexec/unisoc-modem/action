@@ -55,6 +55,11 @@ radio_off() {
 
 # The radio ops run under mobile-data's radio lock (lib.sh radio_locked): this script runs itself again inside it.
 # A lock another radio sequence holds is "busy" at once; nothing is sent to the modem.
+# Managed SIM stacks must only be restarted through the card-aware controller.
+case ${1:-} in radio|modem-reset)
+    [ ! -e /run/mu300/sim-managed ] && [ ! -e /run/mu300/sim-switching ] || { fail "$1" 'Use SIM control or reboot for managed dual-SIM radio'; exit 1; } ;;
+esac
+
 case "${1:-}:${2:-}" in
     radio:on|radio:off|modem-reset:)
         if [ "${MU300_RADIO_LOCKED:-}" != 1 ]; then

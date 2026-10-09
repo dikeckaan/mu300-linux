@@ -236,7 +236,7 @@ check() {
 keep_list() {
     case $(os_kind "$1") in
         ubuntu) echo "etc/mu300 etc/ssh etc/hostname etc/localtime etc/timezone etc/fstab home root srv usr/local var/lib/bluetooth" ;;
-        openwrt) echo "etc/config etc/mu300 etc/dropbear etc/rc.local root" ;;
+        openwrt) echo "etc/config etc/mu300 etc/mu300-sim-slot etc/mu300-sim-hot etc/dropbear etc/rc.local root" ;;
     esac
 }
 # vendor files that the published images deliberately do not contain

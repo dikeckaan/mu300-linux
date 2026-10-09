@@ -148,16 +148,20 @@ proto_mu300cell_renew() {
 }
 
 proto_mu300cell_teardown() {
-	local config="$1"
+	local config="$1" ifname
+	ifname=$(ubus call "network.interface.$config" status 2>/dev/null | jsonfilter -e "@.l3_device")
+	case "$ifname" in sipa_eth[0-9]|sipa_eth[0-9][0-9]) ;;
+		*) case "$(cat /run/mu300/sim-slot 2>/dev/null || cat /etc/mu300-sim-slot 2>/dev/null)" in 1) ifname=sipa_eth8 ;; *) ifname=sipa_eth0 ;; esac ;;
+	esac
 	proto_kill_command "$config"
 	/opt/mu300/bin/mobile-data down >/dev/null 2>&1
 	# External state is not removed by netifd on ifdown, so clean the bearer ourselves, both families:
 	# an unflushed SLAAC address (infinite RA lifetimes) would survive every redial and stack up.
-	# sipa_eth0 is the one bearer this hardware has (mobile-data assumes it too).
-	ip -4 addr flush dev sipa_eth0 scope global 2>/dev/null
-	ip -4 route del default dev sipa_eth0 2>/dev/null
-	ip -6 addr flush dev sipa_eth0 scope global 2>/dev/null
-	ip -6 route flush dev sipa_eth0 2>/dev/null
+	# Remove the active SIM bearer reported by netifd, including SIM2 sipa_eth8.
+	ip -4 addr flush dev "$ifname" scope global 2>/dev/null
+	ip -4 route del default dev "$ifname" 2>/dev/null
+	ip -6 addr flush dev "$ifname" scope global 2>/dev/null
+	ip -6 route flush dev "$ifname" 2>/dev/null
 }
 
 [ -n "$INCLUDE_ONLY" ] || add_protocol mu300cell

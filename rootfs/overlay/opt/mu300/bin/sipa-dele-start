@@ -55,8 +55,16 @@ grep -q '^sipa_dele ' /proc/modules && { log "already loaded"; exit 0; }
 # more; and a first dial hours into the boot (no SIM or no signal until then) could find the line gone from the
 # kernel's ring buffer and refuse for the rest of the boot.
 modem_up() {
-    [ -c /dev/stty_nr1 ] || return 1
-    mu300-at -t 8 'AT+CGATT?' 2>/dev/null | grep '+CGATT: *1' >/dev/null
+    local slot directory device
+    slot=${MU300_SIM_SLOT:-$(cat /run/mu300/sim-slot 2>/dev/null || cat /etc/mu300-sim-slot 2>/dev/null || echo 0)}
+    case "$slot" in
+        0) directory=/run/mu300-at; device=/dev/stty_nr1 ;;
+        1) directory=/run/mu300-at4; device=/dev/stty_nr4 ;;
+        *) return 1 ;;
+    esac
+    [ -c "$device" ] || return 1
+    [ "$slot" = 0 ] || [ -p "$directory/cmd" ] || return 1
+    MU300_AT_DIR="$directory" mu300-at -t 8 'AT+CGATT?' 2>/dev/null | grep '+CGATT: *1' >/dev/null
 }
 
 # a deadline in seconds: one round is an AT answer (up to 8 s) plus the pause, not the 2 s the old count assumed

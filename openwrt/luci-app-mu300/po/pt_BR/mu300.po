@@ -1466,3 +1466,83 @@ msgstr "Não foi possível definir o TTL"
 
 msgid "Unknown TTL operation"
 msgstr "Operação de TTL desconhecida"
+
+# Source-language fallback for untranslated new controls.
+msgid "Dual SIM"
+msgstr "Dual SIM"
+
+# Source-language fallback for untranslated new controls.
+msgid "Switching SIM. Mobile data will disconnect briefly."
+msgstr "Switching SIM. Mobile data will disconnect briefly."
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM switch failed; check SIM readiness and hot switching."
+msgstr "SIM switch failed; check SIM readiness and hot switching."
+
+# Source-language fallback for untranslated new controls.
+msgid "Ready"
+msgstr "Ready"
+
+# Source-language fallback for untranslated new controls.
+msgid "Switching SIM"
+msgstr "Switching SIM"
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM switched; saved as boot default"
+msgstr "SIM switched; saved as boot default"
+
+# Source-language fallback for untranslated new controls.
+msgid "Switch failed; previous SIM restored"
+msgstr "Switch failed; previous SIM restored"
+
+# Source-language fallback for untranslated new controls.
+msgid "Radio state unknown; reboot required"
+msgstr "Radio state unknown; reboot required"
+
+# Source-language fallback for untranslated new controls.
+msgid "A successful switch also saves that SIM as the next cold-boot default. A SIM without service can switch successfully but cannot provide internet."
+msgstr "A successful switch also saves that SIM as the next cold-boot default. A SIM without service can switch successfully but cannot provide internet."
+
+# Source-language fallback for untranslated new controls.
+msgid "Active SIM"
+msgstr "Active SIM"
+
+# Source-language fallback for untranslated new controls.
+msgid "Cold-boot default"
+msgstr "Cold-boot default"
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM control unavailable"
+msgstr "SIM control unavailable"
+
+# Source-language fallback for untranslated new controls.
+msgid "Enable hot switching"
+msgstr "Enable hot switching"
+
+# Source-language fallback for untranslated new controls.
+msgid "Reboot after enabling hot switching to prepare both SIM channels."
+msgstr "Reboot after enabling hot switching to prepare both SIM channels."
+
+# Source-language fallback for untranslated new controls.
+msgid "Switch to SIM%d"
+msgstr "Switch to SIM%d"
+
+# Source-language fallback for untranslated new controls.
+msgid "Use SIM%d at next boot"
+msgstr "Use SIM%d at next boot"
+
+# Source-language fallback for untranslated new controls.
+msgid "Invalid SIM setting"
+msgstr "Invalid SIM setting"
+
+# Source-language fallback for untranslated new controls.
+msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
+msgstr "Enable hot switching; reboot if channels are unavailable or wait until idle"
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM control failed"
+msgstr "SIM control failed"
+
+# Source-language fallback for untranslated new controls.
+msgid "Use SIM control or reboot for managed dual-SIM radio"
+msgstr "Use SIM control or reboot for managed dual-SIM radio"

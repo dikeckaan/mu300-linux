@@ -1466,3 +1466,83 @@ msgstr "無法設定 TTL"
 
 msgid "Unknown TTL operation"
 msgstr "未知的 TTL 操作"
+
+# Dual SIM controls.
+msgid "Dual SIM"
+msgstr "雙 SIM 卡"
+
+# Dual SIM controls.
+msgid "Switching SIM. Mobile data will disconnect briefly."
+msgstr "正在切換 SIM 卡，行動網路會短暫中斷。"
+
+# Dual SIM controls.
+msgid "SIM switch failed; check SIM readiness and hot switching."
+msgstr "SIM 切換失敗，請檢查 SIM 卡狀態和熱切換開關。"
+
+# Dual SIM controls.
+msgid "Ready"
+msgstr "就绪"
+
+# Dual SIM controls.
+msgid "Switching SIM"
+msgstr "正在切換 SIM 卡"
+
+# Dual SIM controls.
+msgid "SIM switched; saved as boot default"
+msgstr "已切換，同時設為預設啟動卡"
+
+# Dual SIM controls.
+msgid "Switch failed; previous SIM restored"
+msgstr "切換失敗，已恢復原卡"
+
+# Dual SIM controls.
+msgid "Radio state unknown; reboot required"
+msgstr "射頻狀態未知，請重新啟動裝置"
+
+# Dual SIM controls.
+msgid "A successful switch also saves that SIM as the next cold-boot default. A SIM without service can switch successfully but cannot provide internet."
+msgstr "切換成功後，該卡也會成為下次冷啟動的預設卡。沒有網路服務的卡可以切換成功，但無法提供網際網路連線。"
+
+# Dual SIM controls.
+msgid "Active SIM"
+msgstr "目前使用卡"
+
+# Dual SIM controls.
+msgid "Cold-boot default"
+msgstr "冷啟動預設卡"
+
+# Dual SIM controls.
+msgid "SIM control unavailable"
+msgstr "SIM 控制無法使用"
+
+# Dual SIM controls.
+msgid "Enable hot switching"
+msgstr "啟用熱切換"
+
+# Dual SIM controls.
+msgid "Reboot after enabling hot switching to prepare both SIM channels."
+msgstr "啟用熱切換後請重新啟動，以準備兩張 SIM 卡的通道。"
+
+# Dual SIM controls.
+msgid "Switch to SIM%d"
+msgstr "切換到卡%d"
+
+# Dual SIM controls.
+msgid "Use SIM%d at next boot"
+msgstr "下次啟動使用卡%d"
+
+# Dual SIM controls.
+msgid "Invalid SIM setting"
+msgstr "SIM 設定無效"
+
+# Dual SIM controls.
+msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
+msgstr "請啟用熱切換；通道尚未準備好時請重新啟動，操作進行中請等待。"
+
+# Dual SIM controls.
+msgid "SIM control failed"
+msgstr "SIM 控制失敗"
+
+# Dual SIM controls.
+msgid "Use SIM control or reboot for managed dual-SIM radio"
+msgstr "請使用雙 SIM 控制頁或重新啟動來操作受管理的雙卡射頻。"

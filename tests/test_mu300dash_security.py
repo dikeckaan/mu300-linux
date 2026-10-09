@@ -91,11 +91,11 @@ exit 0
 DEFAULTS = {
     'dashboard-info': '{"ok":1,"host":"f50"}', 'cell': '{"ok":1}', 'action': '{"ok":1,"op":"x"}',
     'lock': '{"ok":1,"mode":{"label":"auto"}}', 'device-usb': '{"ok":1}', 'at': 'OK', 'sms': 'sent (12)',
-    'languages': '{"ok":1}', 'power': '{"ok":1}', 'ttl': '{"ok":1}',
+    'languages': '{"ok":1}', 'power': '{"ok":1}', 'ttl': '{"ok":1}', 'sim': '{"ok":1,"hot":1,"available":1,"busy":0}',
 }
 
 # The methods that start something with setsid (in the background of mu300dash)
-DETACHED = {'act', 'lock_set', 'sms_sync', 'status'}
+DETACHED = {'act', 'lock_set', 'sms_sync', 'status', 'sim_set'}
 
 # Hostile values: each is refused by every field that takes a fixed set, a number or a name. The NUL cases: the
 # stand-in jsonfilter passes the NUL on (the backend maps it to \001 and refuses); the real jsonfilter prints strings
@@ -157,7 +157,7 @@ class Mu300Dash(ShellTest):
         stdin = raw if raw is not None else json.dumps(params or {}, ensure_ascii=False)
         env = self.env(STUB_CALLS=calls, STUB_OUT=self.out, MU300_DASH_BIN=self.adapters,
                        MU300_DASH_DIR=run / 'dash', MU300_AT=self.adapters / 'at', MU300_SMS_BIN=self.adapters / 'sms',
-                       MU300_SMS_POOL=run / 'pool')
+                       MU300_SMS_POOL=run / 'pool', MU300_DASH_SIM=self.adapters / 'sim')
         env.update({k: str(v) for k, v in extra.items()})
         env = {k: v for k, v in env.items() if v != ''}
         r = subprocess.run(shell + [str(DASH), 'call', method], input=stdin.encode(), capture_output=True,
@@ -213,7 +213,7 @@ class Inventory(Mu300Dash):
     METHODS = {'sysinfo', 'status', 'signal', 'act', 'at', 'at_history', 'lock_get', 'lock_set', 'sms_list',
                'sms_show', 'sms_send', 'sms_delete', 'sms_sync', 'usb_get', 'usb_set', 'usb_net_list', 'usb_net_add',
                'lang_get', 'lang_set', 'power_get', 'power_set',
-               'ttl_get', 'ttl_set'}
+               'ttl_get', 'ttl_set', 'sim_get', 'sim_set'}
 
     def test_list_declares_every_method(self):
         for shell in self.each_shell():
@@ -275,6 +275,8 @@ class Refusals(Mu300Dash):
         ('power_set', {'op': 'set', 'key': 'battery.WIFI_IDLE', 'value': '15'}, 'value', '15'),
         ('power_set', {'op': 'wake'}, 'key', ''),
         ('power_set', {'op': 'wake'}, 'value', ''),
+        ('sim_set', {'op':'switch','value':'1'}, 'op','switch'),
+        ('sim_set', {'op':'switch','value':'1'}, 'value','1'),
         ('lang_set', {'op': 'enable', 'codes': 'de'}, 'codes', 'de'),
         ('lang_set', {'op': 'disable', 'codes': 'de pt_br'}, 'codes', 'de pt_br'),
         ('lang_set', {'op': 'use', 'codes': 'en'}, 'codes', 'en'),
@@ -413,6 +415,9 @@ class Passthrough(Mu300Dash):
         ('power_set', {'op': 'wake'}, [['power', 'wake']]),
         ('power_set', {'op': 'idle'}, [['power', 'idle']]),
         ('ttl_get', {}, [['ttl', 'get']]),
+        ('sim_get', {}, [['sim', 'status']]),
+        ('sim_set', {'op':'default','value':'2'}, [['sim','default','2']]),
+        ('sim_set', {'op':'hot','value':'1'}, [['sim','hot','1']]),
         ('ttl_set', {'value': '64'}, [['ttl', 'set', '64']]),
         ('ttl_set', {'value': 128}, [['ttl', 'set', '128']]),
         ('ttl_set', {'value': '255'}, [['ttl', 'set', '255']]),
@@ -788,9 +793,9 @@ class TtlAdapter(ShellTest):
 
 class Acl(unittest.TestCase):
     # SMS bodies (one-time codes) and the AT history (AT+CPIN PINs) are not for read-only users (ruling R14)
-    READ = {'sysinfo', 'status', 'signal', 'lock_get', 'usb_get', 'usb_net_list', 'lang_get', 'power_get', 'ttl_get'}
+    READ = {'sysinfo', 'status', 'signal', 'lock_get', 'usb_get', 'usb_net_list', 'lang_get', 'power_get', 'ttl_get', 'sim_get'}
     WRITE = {'act', 'at', 'at_history', 'lock_set', 'sms_list', 'sms_show', 'sms_send', 'sms_delete', 'sms_sync',
-             'usb_set', 'usb_net_add', 'lang_set', 'power_set', 'ttl_set'}
+             'usb_set', 'usb_net_add', 'lang_set', 'power_set', 'ttl_set', 'sim_set'}
 
     def test_actions_need_write_access(self):
         acl = json.loads(ACL.read_text())['luci-app-mu300']

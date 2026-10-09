@@ -1,0 +1,176 @@
+#!/bin/bash
+# OpenWrt SIM policy and a bounded, broker-only live switch. Public slots are 1/2.
+set -euo pipefail
+export PATH="$PATH:/opt/mu300/busybox-bin"
+umask 077
+R=/run/mu300
+DEFAULT=/etc/mu300-sim-slot
+HOT=/etc/mu300-sim-hot
+AT=/opt/mu300/bin/mu300-at
+MD=/opt/mu300/bin/mobile-data
+mkdir -p "$R"
+active() { cat "$R/sim-slot" 2>/dev/null || cat "$DEFAULT" 2>/dev/null || echo 0; }
+policy() { cat "$HOT" 2>/dev/null || echo 0; }
+main() { [ "$1" = 0 ] && echo /run/mu300-at || echo /run/mu300-at4; }
+data() { [ "$1" = 0 ] && echo /run/mu300-at2 || echo /run/mu300-at5; }
+owner() {
+    local pid
+    [ -p "$1/cmd" ] && [ -s "$1/owner/pid" ] || return 1
+    pid=$(cat "$1/owner/pid")
+    [[ "$pid" =~ ^[0-9]+$ ]] && kill -0 "$pid" 2>/dev/null
+}
+available() {
+    [ -e /run/mu300-radio-freeze ] || return 1
+    local d
+    for d in /run/mu300-at /run/mu300-at2 /run/mu300-at4 /run/mu300-at5; do owner "$d" || return 1; done
+}
+atomic() { local t; t=$(mktemp "$1.XXXXXX"); printf '%s\n' "$2" > "$t"; mv -f "$t" "$1"; }
+fail() {
+    if [ "${LOCKED:-0}" = 1 ]; then
+        case "$(cat "$R/sim-result" 2>/dev/null || true)" in rolled_back|reboot_required) ;; *) atomic "$R/sim-result" failed;; esac
+    fi
+    printf '{"ok":0,"error":"%s"}\n' "$1"; return 1; }
+status() {
+    local slot boot hot can=0 busy=0 result=idle
+    slot=$(active); boot=$(cat "$DEFAULT" 2>/dev/null || echo 0); hot=$(policy)
+    case "$slot" in 0|1) slot=$((slot+1));; *) slot=null;; esac
+    [ ! -e "$R/sim-active-unknown" ] || slot=null
+    case "$boot" in 0|1) boot=$((boot+1));; *) boot=null;; esac
+    [ "$hot" = 1 ] || hot=0
+    available && can=1
+    # Kernel flock is released on exit, including SIGKILL; a leftover file is harmless.
+    if command -v flock >/dev/null; then
+        (exec 9>"$R/sim-control.lock"; flock -n 9) || busy=1
+    fi
+    result=$(cat "$R/sim-result" 2>/dev/null || echo idle)
+    case "$result" in idle|switching|switched|rolled_back|reboot_required|failed) ;; *) result=idle;; esac
+    if [ -e "$R/sim-switching" ] && [ "$busy" = 0 ]; then
+        slot=null; result=reboot_required
+    fi
+    printf '{"ok":1,"active":%s,"default":%s,"hot":%s,"available":%s,"busy":%s,"result":"%s"}\n' "$slot" "$boot" "$hot" "$can" "$busy" "$result"
+}
+cmd() {
+    local directory=$1 command=$2 output
+    owner "$directory" || return 1
+    # Do not log replies: CCID, subscriber or cell identifiers never belong in switch logs.
+    printf '%s %s %s\n' "$(cut -d' ' -f1 /proc/uptime)" "$directory" "$command" >> "$R/sim-switch.log"
+    output=$(MU300_AT_DIR="$directory" MU300_AT_LOCK_WAIT=5 MU300_AT_BUDGET=12 "$AT" -t 8 "$command") || return 1
+    output=$(printf '%s\n' "$output" | tr -d '\r')
+    [ "$(printf '%s\n' "$output" | tail -1)" = OK ] || return 1
+    printf '%s\n' "$output"
+}
+check() { cmd "$(main "$1")" 'AT+CFUN?' | grep -Eq "^\+CFUN: *$2$"; }
+ready() { cmd "$(main "$1")" 'AT+CPIN?' | grep -Eq '^\+CPIN: *READY$'; }
+sequence() {
+    local target=$1 old=$((1-$1))
+    # VendorTelephonyManager.setProtocolStack: select the card before each SFUN group.
+    cmd "$(main "$target")" "AT+SPACTCARD=$target;+SFUN=2" >/dev/null || return 1
+    cmd "$(main "$target")" 'AT+SFUN=4' >/dev/null || return 1
+    cmd "$(main "$target")" 'AT+SPACTCARD=0' >/dev/null || return 1
+    cmd "$(data "$target")" 'AT+SPSWDATA' >/dev/null || return 1
+    cmd "$(main "$old")" "AT+SPACTCARD=$old;+SFUN=5" >/dev/null || return 1
+    cmd "$(main "$old")" 'AT+SFUN=3' >/dev/null || return 1
+    cmd "$(main "$old")" 'AT+SPACTCARD=0' >/dev/null || return 1
+    check "$target" 1 && check "$old" 0 && ready "$target"
+}
+publish() {
+    atomic "$R/sim-slot" "$1"
+    : > "$R/sim-managed"
+    : > "$R/sim-radio-ready"
+    if [ "$1" = 1 ]; then : > "$R/sim2-radio-ready"; else rm -f "$R/sim2-radio-ready"; fi
+    rm -f "$R/sim-active-unknown"
+    # The dashboard caches are shared across cards; identity caches remain per card.
+    rm -f /run/unisoc-modem/cell.json /run/unisoc-modem/sig.json
+}
+SEQPID=
+interrupt_switch() {
+    [ -z "$SEQPID" ] || kill -TERM -- "-$SEQPID" 2>/dev/null || true
+    exit 143
+}
+run_sequence() {
+    local rc=0
+    setsid "$MD" radio-locked "$0" --sequence "$1" &
+    SEQPID=$!
+    # A shell waiting on a builtin wait runs TERM traps immediately; a foreground child delays them.
+    wait "$SEQPID" || rc=$?
+    SEQPID=
+    return "$rc"
+}
+live_switch() {
+    local target=$1 old rc=0
+    old=$(active); case "$old" in 0|1) ;; *) fail 'Unknown active SIM; reboot first'; return 1;; esac
+    [ ! -e "$R/sim-switching" ] || { fail 'Interrupted switch; reboot first'; return 1; }
+    [ ! -e "$R/sim-active-unknown" ] || { fail 'Unknown radio state; reboot first'; return 1; }
+    [ "$(policy)" = 1 ] || { fail 'Enable hot switching first'; return 1; }
+    available || { fail 'Persistent dual-SIM brokers unavailable; reboot first'; return 1; }
+    [ ! -e /run/mu300-mobile-data.suspend ] || { fail 'Resume the modem before switching'; return 1; }
+    [ ! -d /run/unisoc-modem-lock-apply ] || { fail 'Network locks are being applied'; return 1; }
+    [ "$old" != "$target" ] || { atomic "$DEFAULT" "$target"; status; return 0; }
+    # SFUN=5/3 makes CPIN return CME ERROR 10 even for an inserted inactive card.
+    # Validate the starting RF state, then validate CPIN only AFTER enabling the target.
+    check "$old" 1 && check "$target" 0 || { fail 'Unexpected radio state; reboot first'; return 1; }
+    # Prevent new dial/watch rounds before netifd cancels the old protocol task.
+    : > "$R/sim-switching"
+    atomic "$R/sim-result" switching
+    trap 'rm -f "$R/sim-switching"; if [ "$(cat "$R/sim-result")" = switching ]; then : > "$R/sim-active-unknown"; atomic "$R/sim-result" reboot_required; fi' EXIT
+    trap interrupt_switch INT TERM
+    ifdown wan || { fail 'Cannot stop WAN'; return 1; }
+    # Serialize the whole protocol-stack transaction against radio-on and manual resets.
+    if run_sequence "$target"; then
+        if ! atomic "$DEFAULT" "$target"; then
+            : > "$R/sim-active-unknown"
+            atomic "$R/sim-result" reboot_required
+            fail 'Cannot save boot policy; reboot required'
+            return 1
+        fi
+        publish "$target" || return 1
+        atomic "$R/sim-result" switched
+    else
+        # A silent CP must not receive blind restart loops. Roll back once only if BOTH brokers still answer.
+        if cmd "$(main 0)" 'AT+CFUN?' >/dev/null && cmd "$(main 1)" 'AT+CFUN?' >/dev/null &&
+                run_sequence "$old"; then
+            publish "$old" || return 1
+            atomic "$R/sim-result" rolled_back
+            rc=1
+        else
+            : > "$R/sim-active-unknown"
+            atomic "$R/sim-result" reboot_required
+            fail 'Switch failed; radio state unknown, reboot required'
+            return 1
+        fi
+    fi
+    rm -f "$R/sim-switching"
+    rm -f /run/mu300-mobile-data-down
+    ifup wan || { fail 'SIM switched but WAN could not be started'; return 1; }
+    # Existing watcher reloads its slot itself; never restart AT owners or the whole mu300-post service.
+    [ "$rc" = 0 ] && status || fail 'Switch failed; previous SIM restored'
+}
+case ${1:-status} in
+    status) status; exit 0;;
+    --sequence)
+        # Only the parent holding BOTH locks may enter this internal operation.
+        [[ ${2:-} =~ ^[01]$ ]] && [ -e "$R/sim-switching" ] &&
+            [ "$(readlink /run/mu300-radio-on.owner 2>/dev/null)" = "$PPID" ] || exit 2
+        sequence "$2"; exit $?;;
+    default|hot|switch) ;;
+    *) fail 'Usage: mu300-sim status | default 1|2 | hot 0|1 | switch 1|2'; exit 2;;
+esac
+[ "$#" = 2 ] || { fail 'Exactly one value is required'; exit 2; }
+case $1:$2 in default:1|default:2|switch:1|switch:2|hot:0|hot:1) ;; *) fail 'Invalid SIM setting'; exit 2;; esac
+command -v flock >/dev/null || { fail 'flock is required for SIM control'; exit 1; }
+exec 9>"$R/sim-control.lock"
+flock -n 9 || { fail 'SIM control is busy'; exit 1; }
+LOCKED=1
+case $1 in
+    default) atomic "$DEFAULT" "$(( $2-1 ))"; status;;
+    hot) atomic "$HOT" "$2"; status;;
+    switch)
+        ( trap 'kill "$sleeper" 2>/dev/null || true; exit 0' TERM INT
+          sleep 150 & sleeper=$!; wait "$sleeper"; kill -TERM "$$" 2>/dev/null
+        ) 9>&- </dev/null >/dev/null 2>&1 &
+        deadline=$!
+        rc=0; live_switch "$(( $2-1 ))" || rc=$?
+        kill "$deadline" 2>/dev/null || true
+        wait "$deadline" 2>/dev/null || true
+        exit "$rc";;
+esac

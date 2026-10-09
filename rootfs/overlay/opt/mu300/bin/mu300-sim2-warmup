@@ -1,0 +1,19 @@
+#!/bin/bash
+# One SIM2 native bring-up per Linux boot; all modem I/O stays in persistent brokers.
+set -euo pipefail
+export PATH="$PATH:/opt/mu300/busybox-bin"
+# Preserve the charging-only boot's promise to leave both radios off.
+[[ ! -e /run/mu300/charging-boot ]] || exit 0
+SLOT=$(cat /run/mu300/sim-slot 2>/dev/null || echo 1)
+MU300_EXPECT_CCID=$(cat /etc/mu300/sim$((SLOT+1))-iccid 2>/dev/null || true)
+export MU300_EXPECT_CCID
+for ((attempt=0; attempt<120; attempt++)); do
+    ready=1
+    for directory in /run/mu300-at /run/mu300-at2 /run/mu300-at4 /run/mu300-at5; do
+        [[ -p "$directory/cmd" ]] || ready=0
+    done
+    [[ $ready == 1 ]] && break
+    sleep 1
+done
+[[ $ready == 1 ]] || { echo 'SIM2 persistent AT brokers did not start' >&2; exit 1; }
+exec /opt/mu300/bin/mobile-data radio-locked /bin/bash /opt/mu300/bin/mu300-sim2-start --cold-start

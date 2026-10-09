@@ -1,0 +1,86 @@
+#!/bin/bash
+# Native selected-SIM cold-start sequence verified on this U30 Air firmware; once per boot.
+# Run once during Linux boot, through: mobile-data radio-locked /path/to/this/script --cold-start
+# Existing nr0/nr1/nr2 and nr3/nr4/nr5 owners must already be running; this opens no modem device.
+set -euo pipefail
+export PATH="$PATH:/opt/mu300/busybox-bin"
+[[ ${1:-} == --cold-start ]] || { echo 'Requires an explicitly prepared cold-start boot.' >&2; exit 2; }
+[[ -e /run/mu300-radio-freeze ]] || { echo 'Automatic radio bring-up must be inhibited before cold-start.' >&2; exit 2; }
+[[ ! -e /run/mu300/charging-boot ]] || exit 0
+SLOT=${MU300_SIM_SLOT:-$(cat /run/mu300/sim-slot 2>/dev/null || echo 1)}
+case "$SLOT" in 0|1) ;; *) exit 2;; esac
+LOG=/run/mu300/sim2-cold-start.log
+mkdir -p /run/mu300
+say() { printf '%s %s\n' "$(cut -d' ' -f1 /proc/uptime)" "$*" >> "$LOG"; }
+trap 'result=$?; say "EXIT rc=$result; no further radio commands will be sent"' EXIT
+at() {
+    local slot=$1 command=$2 seconds=${3:-6} directory
+    case "$slot" in main0) directory=/run/mu300-at ;; main1) directory=/run/mu300-at4 ;; data0) directory=/run/mu300-at2 ;; data1) directory=/run/mu300-at5 ;; *) return 2 ;; esac
+    # mu300-at has a direct-device fallback: never allow this probe to take it.
+    [[ -p "$directory/cmd" && -s "$directory/owner/pid" ]] || return 2
+    local owner
+    owner=$(cat "$directory/owner/pid")
+    [[ "$owner" =~ ^[0-9]+$ && -d /proc/$owner ]] || return 2
+    say "TX $slot $command"
+    MU300_AT_DIR="$directory" /opt/mu300/bin/mu300-at -t "$seconds" "$command"
+}
+expect_ok() {
+    local output
+    output=$(at "$@") || { say "FAILED $1 $2 (no completed response)"; return 1; }
+    [[ $(printf '%s\n' "$output" | tr -d '\r' | tail -n 1) == OK ]] || { say "FAILED $1 $2 (modem rejected command)"; return 1; }
+}
+
+[[ ! -e /run/mu300/sim2-cold-start.attempted ]] || { say 'Refusing a second attempt in this boot'; exit 2; }
+: > /run/mu300/sim2-cold-start.attempted
+for directory in /run/mu300-at /run/mu300-at2 /run/mu300-at4 /run/mu300-at5; do
+    [[ -p "$directory/cmd" ]] || { say "Missing broker $directory"; exit 2; }
+done
+# Wait for actual CP output, not merely a FIFO created before open_tty completes.
+for ((attempt=0; attempt<60; attempt++)); do
+    [[ -s /run/mu300-at/urc/stty_nr0.log ]] && break
+    sleep 1
+done
+[[ -s /run/mu300-at/urc/stty_nr0.log ]] || { say 'No CP unsolicited output; refusing to send bring-up commands'; exit 1; }
+# Verified Android SIM2-primary handshake: nr1, SMMSWAP=0. SMMSWAP=1 is not a slot selector.
+expect_ok main0 'AT+SMMSWAP=0'
+: > /run/mu300-ril-handshake
+for slot in main0 main1; do
+    response=$(at "$slot" 'AT+CFUN?')
+    [[ "$response" == *'+CFUN: 0'* ]] || { say "$slot was already active; this is not the required cold baseline"; exit 2; }
+done
+response=$(at main$SLOT 'AT+CPIN?')
+[[ "$response" == *'+CPIN: READY'* ]] || { say "SIM$((SLOT+1)) is not ready"; exit 1; }
+response=$(at main$SLOT 'AT+CCID')
+identity=$(printf '%s\n' "$response" | sed -n 's/^+CCID: *//p' | tr -d '\r" ')
+[[ -n "$identity" && ( -z ${MU300_EXPECT_CCID:-} || "$identity" == "$MU300_EXPECT_CCID" ) ]] || { say "SIM$((SLOT+1)) identity did not match the recorded card"; exit 1; }
+# Native-RIL-derived sequence validated by cold-start registration and data traffic on this device.
+# In this firmware s_modemConfig=7: buildWorkModeCmd does NOT append the primary SIM argument used by mode 6.
+expect_ok data$SLOT 'AT+SPTESTMODEM=134,134'
+expect_ok data$SLOT 'AT+SPSWDATA'
+expect_ok data$SLOT 'AT+SFUN=4' 20
+
+for ((attempt=0; attempt<15; attempt++)); do
+    response=$(at main$SLOT 'AT+CFUN?') || exit 1
+    if [[ "$response" == *'+CFUN: 1'* ]]; then break; fi
+    sleep 1
+done
+[[ "$response" == *'+CFUN: 1'* ]] || { say "SIM$((SLOT+1)) did not reach CFUN=1"; exit 1; }
+if [[ "$SLOT" == 0 ]]; then
+    # No service on a card does not invalidate its RF bring-up; netifd owns registration/dial retries.
+    : > /run/mu300/sim-radio-ready
+    say 'SIM1 native RF ready; data registration belongs to netifd'
+    exit 0
+fi
+say 'SIM2 CFUN=1; waiting for registration (OK alone is insufficient)'
+for ((attempt=0; attempt<30; attempt++)); do
+    response=$(at main$SLOT 'AT+CEREG?') || exit 1
+    if printf '%s\n' "$response" | grep -Eq '^\+CEREG: [0-9]+,(1|5)(,|\r?$)'; then
+        say 'SIM2 registered; native radio ready; data attachment belongs to netifd on sipa_eth8'
+        : > /run/mu300/sim-radio-ready
+        : > /run/mu300/sim2-radio-ready
+        exit 0
+    fi
+    sleep 2
+done
+say 'SIM2 failed registration gate'
+exit 1
