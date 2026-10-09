@@ -194,8 +194,8 @@ copied from Android.
 
 ### OpenWrt with the MU300 control panel
 
-The third system, `openwrt-luci`, is OpenWrt 25.12 with a LuCI application written for these devices, in English,
-Turkish and Chinese. It is an option next to plain OpenWrt, not a replacement: the installer asks "Which OpenWrt?"
+The third system, `openwrt-luci`, is OpenWrt 25.12 with a LuCI application written for these devices, in English
+and Simplified Chinese. It is an option next to plain OpenWrt, not a replacement: the installer asks "Which OpenWrt?"
 whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), and the system lives in
 `/openwrt-luci` on the Linux disk. Its release asset is `mu300-openwrt-luci-rootfs.tar.gz`; switch to it with
 `sudo mu300-os openwrt-luci`. The panel's pages:
@@ -430,15 +430,17 @@ as usual; `mu300-vpn off` and the next start clear them. IPv4 only. `TAILSCALE=0
 
 ### Languages
 
-Both OpenWrt systems speak **English, Turkish and Simplified Chinese** out of the box: LuCI's own pages (from
-OpenWrt's translations of LuCI, its firewall and its package manager) and, on `openwrt-luci`, the MU300 control
-panel. The web interface starts in **English**; switch it under System -> System -> Language and Style, or on
-`openwrt-luci` under System -> Languages. An update keeps the language you picked.
+Both OpenWrt systems speak **English and Simplified Chinese** out of the box: LuCI's own pages (from OpenWrt's
+translations of LuCI, its firewall and its package manager) and, on `openwrt-luci`, the MU300 control panel. The web
+interface starts in **English**; switch it under System -> System -> Language and Style, or on `openwrt-luci` under
+System -> Languages. An update keeps the language you picked.
 
 Every other language is the **lang extra** (about 2 MB, OpenWrt only - Ubuntu has no web interface): LuCI in the 40
-further languages OpenWrt 25.12.5 translates it to, and the control panel in 29 of them (ar, az, bg, cs, da, de, el,
-es, fa, fi, fr, he, hi, hu, id, it, ja, kk, ko, nl, pl, pt-BR, ro, ru, sk, sv, uk, vi, zh-TW; az, kk and id have no
-LuCI translation, only the panel's). Install it from the panel (System -> Languages: download it, or upload
+further languages OpenWrt 25.12.5 translates it to, and the control panel's own catalog for 29 of them (ar, az, bg,
+cs, da, de, el, es, fa, fi, fr, he, hi, hu, id, it, ja, kk, ko, nl, pl, pt-BR, ro, ru, sk, sv, tr, uk, vi, zh-TW).
+**Only `zh_Hans` is translated**: every other catalog - the Turkish one in the image included - holds the English
+message ids, so the panel shows English for those languages while LuCI's own pages stay translated. Install it from
+the panel (System -> Languages: download it, or upload
 `mu300-extra-lang.tar.gz` from the release page when the device has no internet) or on the device:
 
 ```sh
@@ -452,9 +454,10 @@ mu300-extra remove lang
 The languages appear in the language list at once (no reboot); the extra stays across updates and is updated with
 them. Which of its languages a system offers is that system's own setting (`/etc/mu300/languages`).
 
-The control panel's translations other than Turkish and Chinese are **machine (AI) translations** from the English
-original. Corrections are very welcome: edit `openwrt/luci-app-mu300/po/<language>/mu300.po` and open a pull request
-(`python3 tools/luci-i18n.py check` must stay clean; a new language also needs a row in
+**Only `zh_Hans` is translated.** The other catalogs are complete but hold the English message ids: a catalog is what
+makes a language selectable in LuCI, and `tools/luci-i18n.py check` refuses an empty one, so they carry the English
+text instead of being absent. To translate one, edit `openwrt/luci-app-mu300/po/<language>/mu300.po` and open a pull
+request (`python3 tools/luci-i18n.py check` must stay clean; a new language also needs a row in
 `openwrt/luci-languages.tsv`).
 
 ### Wi-Fi client

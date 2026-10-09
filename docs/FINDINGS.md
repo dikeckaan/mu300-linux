@@ -2376,6 +2376,8 @@ Air, ten `ifdown wan; ifup wan` gave the WAN back in
   browser set to English, German, Turkish and Chinese on both devices: no Chinese in English, German or Turkish, no
   string of the catalogs left in English in Turkish or Chinese, German shows English. Backend refusals (a bad
   number, an over-long SMS) have Turkish and Chinese entries; a radio switch during a dial answers "busy".
+  (**2026-10-09**: only `zh_Hans` is translated now. Every other catalog, Turkish and German included, is complete
+  but holds the English message ids, so those panels show English; the measurement above is the earlier state.)
 * **LEDs (K38, K39, K68)**: not ported here. The F50's lamp states were measured with someone watching and are
   implemented by the f50-leds-fixes work (FINDINGS 34); the fork's boot chase, lamp switches and LED page
   follow that branch.
