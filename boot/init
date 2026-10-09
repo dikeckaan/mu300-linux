@@ -84,8 +84,8 @@ echo 1 > /proc/sys/kernel/sysrq
  rmdir /run/persist.lock
  persist; reboot -f; sleep 10; echo b > /proc/sysrq-trigger) &
 
-# This device is the ZTE V50 / MU3351: the F50's board, and its identity is f50. (The U30 Air, the same board
-# with ZTE's SQC charger stack, USB-PD and LEDs, is not supported by this build.)
+# This device is the ZTE V50 / MU3351: the F50's board, and its identity is f50. This build serves that one device,
+# so the device and its module order are fixed here instead of probed.
 DEVICE=f50
 MODULE_ORDER=/etc/module-order
 log "stage=device $DEVICE order=$MODULE_ORDER"
@@ -649,8 +649,8 @@ if [ "$root_mounted" = 1 ] && rootdir=$(pick_root) && [ -n "$rootdir" ]; then
     kill $(jobs -p) 2>/dev/null
     for p in /proc/[0-9]*; do [ "${p#/proc/}" = 1 ] || kill -9 "${p#/proc/}" 2>/dev/null; done
     # Trial guard, only in images built with --trial-guard SECONDS (tools/flash-trial.sh experiments, never an
-    # install): the timer above ends here, and a trial kernel that boots but never brings up USB (6.18 on the U30
-    # Air) left a device that only failing five boots by hand brought back. So one more timer outlives
+    # install): the timer above ends here, and a trial kernel that boots but never brings up USB left a device that
+    # only failing five boots by hand brought back. So one more timer outlives
     # switch_root: unless /run/stay exists by then (created over SSH), it reboots - into Android, as Android's slot
     # is already restored. switch_root deletes this ramdisk, so it runs from a copy of busybox in /run, reached
     # through its working directory once /run has moved.

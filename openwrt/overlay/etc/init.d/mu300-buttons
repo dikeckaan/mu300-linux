@@ -1,6 +1,5 @@
 #!/bin/sh /etc/rc.common
-# the buttons: power wakes the LEDs (held: shut down), the U30 Air's Wi-Fi key switches the hotspot band
-# (see /opt/mu300/bin/mu300-buttons)
+# the buttons: power wakes the LEDs (held: shut down); see /opt/mu300/bin/mu300-buttons
 START=95
 USE_PROCD=1
 export PATH="$PATH:/opt/mu300/busybox-bin"

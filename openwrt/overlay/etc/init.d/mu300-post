@@ -36,7 +36,7 @@ start_service() {
 	procd_open_instance usb-lease
 	procd_set_param command /opt/mu300/bin/mu300-usb-reset --if-no-lease 25
 	procd_close_instance
-	# K13 (ported from the kanoqwq fork, cd4fb28): the U30 Air has a second gadget netdev on some kernels; it
+	# K13 (ported from the kanoqwq fork, cd4fb28): a second gadget netdev can appear on some kernels; it
 	# belongs to the LAN like usb0
 	[ -e /sys/class/net/usb1 ] && ip link set usb1 master br-lan 2>/dev/null && ip link set usb1 up
 

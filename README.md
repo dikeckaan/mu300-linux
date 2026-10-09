@@ -2,60 +2,54 @@
 
 > V50 / MU3351 maintenance branch: [中文说明](docs/v50/README.zh-CN.md),
 > [update](docs/v50/UPDATE.zh-CN.md), [build and publish](docs/v50/BUILD.zh-CN.md).
-> V50 retains the f50 kernel layout. Upstream release badges below refer to the original project.
-> Source repository: [tri-dev3/mu300-linux](https://github.com/tri-dev3/mu300-linux).
+> V50 retains the f50 kernel layout. Source repository:
+> [tri-dev3/mu300-linux](https://github.com/tri-dev3/mu300-linux).
 > This fork has no device-validated V50 release yet; locally generated preview assets are not installation releases.
 
-[![Latest Release](https://img.shields.io/github/v/release/dikeckaan/mu300-linux?logo=github)](https://github.com/dikeckaan/mu300-linux/releases/latest)
-[![Total Downloads](https://img.shields.io/github/downloads/dikeckaan/mu300-linux/total?color=blue&logo=github)](https://github.com/dikeckaan/mu300-linux/releases)
-[![Stars](https://img.shields.io/github/stars/dikeckaan/mu300-linux?logo=github)](https://github.com/dikeckaan/mu300-linux/stargazers)
-[![Forks](https://img.shields.io/github/forks/dikeckaan/mu300-linux?logo=github)](https://github.com/dikeckaan/mu300-linux/network/members)
-[![Issues](https://img.shields.io/github/issues/dikeckaan/mu300-linux?logo=github)](https://github.com/dikeckaan/mu300-linux/issues)
+[![Latest Release](https://img.shields.io/github/v/release/tri-dev3/mu300-linux?logo=github)](https://github.com/tri-dev3/mu300-linux/releases/latest)
+[![Total Downloads](https://img.shields.io/github/downloads/tri-dev3/mu300-linux/total?color=blue&logo=github)](https://github.com/tri-dev3/mu300-linux/releases)
 [![License](https://img.shields.io/badge/license-MIT%20%2F%20GPL--2.0-blue)](LICENSE)
 
-The ZTE F50 is a pocket 5G router. This project turns it into a small Linux computer: **Ubuntu 24.04 LTS** or
-**OpenWrt**, with SSH, Wi-Fi, Bluetooth and its 5G modem working. Android stays on the device, and you can go back
-to it at any time.
+The **ZTE V50 / MU3351** is a pocket 5G router built on Unisoc's UMS9620 (T760). This project turns it into a small
+Linux computer: **OpenWrt 25.12.5** - plain, or with the MU300 control panel - or **Ubuntu 24.04 LTS**, with SSH,
+Wi-Fi, Bluetooth and its 5G modem working. Android stays on the device, and you can go back to it at any time.
 
 Think of it as a Raspberry Pi that already has a 5G modem, a Wi-Fi access point and 32 GB of storage inside.
 
-The **ZTE U30 Air** is supported too: the same board and chip with a battery. The installer recognises which one it
-is talking to; see [Supported devices](#supported-devices).
+This repository serves **one device only**, and it is this one. The V50 is the F50's board and chip, so its identity
+inside the boot image and the ramdisk is `f50`, and the F50 kernel layout is used unchanged. It is powered from USB
+alone: there is no battery to charge, no charger stack and no fuel gauge.
 
-> **Türkçe:** ZTE F50 / MU300'ü küçük bir Linux bilgisayarına çevirir: Ubuntu 24.04 veya OpenWrt; SSH, Wi-Fi,
+> **Türkçe:** ZTE V50 / MU3351'i küçük bir Linux bilgisayarına çevirir: OpenWrt veya Ubuntu 24.04; SSH, Wi-Fi,
 > Bluetooth ve 5G modem çalışır. Android cihazda kalır, istediğiniz an geri dönersiniz. Kurulum: önce
 > `./install.sh --check` ile cihazınıza bakın, sonra `./install.sh` ile kurun; `./uninstall.sh` ile kaldırın.
-> ZTE U30 Air de desteklenir (aynı kart, pilli); kurulum programı cihazı kendisi tanır.
 
 ---
 
-## Supported devices
+## The device
 
-| | ZTE F50 / MU300 | ZTE U30 Air |
-|---|---|---|
-| Board, chip | `ums9620_2h10_feimao`, Unisoc T760 (UMS9620) | the same |
-| Power | USB only | battery (4050 mAh), charger and fuel gauge |
-| LEDs used by Linux | the blue LED: mobile data | as in ZTE's firmware: battery (white: Linux is up), network (blue: 4G, white: 5G, red: no service), Wi-Fi (white: 2.4 GHz, blue: 5 GHz) |
-| Heat alarm | the LED flashes red and blue | the battery LED flashes red, white, blue in turn: the SoC at 85 °C or the battery at 50 °C, until they cool down (`thermal-guard`) |
-| USB network | `192.168.77.1` | `192.168.78.1` (so both can be plugged into one computer) |
-| Tested | everything below | 5.4, 6.18 and 7.2: USB, Wi-Fi hotspot, Bluetooth, mobile data, VPN, LEDs |
-| Battery | - | level, voltage, current, temperature and charging state in `mu300-toolkit` and `/sys/class/power_supply` on every kernel (mainline: `sc27xx-fgu`) |
-| USB host (OTG) | - (its USB port is its power supply) | `sudo mu300-usb host` with an OTG adapter: flash drives (FAT, exFAT), keyboards and mice, USB modems and Ethernet adapters, with 5 V from the battery; `sudo mu300-usb device` back to the computer (the default at every boot). Mainline kernels; HDMI through USB-C adapters does not work |
-| Buttons | power: held 3 s shuts down | power: a short press wakes the LEDs (they go dark after 60 s), held 3 s shuts down; the Wi-Fi key switches the hotspot 2.4 / 5 GHz, held 3 s turns it off or on |
-| NFC | - | a phone held to the device joins the hotspot, as with ZTE's firmware: `sudo mu300-nfc` shows the tag, `wifi` writes the hotspot's name and password (again at every hotspot start), `url https://...` or `text ...` anything else, `clear` empties it, `on`/`off` is the NFC switch of ZTE's web interface (kept in the tag) |
+| | ZTE V50 / MU3351 |
+|---|---|
+| Board, chip | `ums9620_2h10_feimao`, Unisoc UMS9620 / T760 (8 cores, Mali-G57) |
+| Power | **USB only**: no battery, no charger and no fuel gauge |
+| RAM | 1.4 GB usable (the modem firmware keeps the rest) |
+| Storage | 58.2 GiB eMMC; about 32 GiB free behind Android's partitions |
+| USB network | `192.168.77.1`, fixed - the LAN address of the Linux system |
+| LEDs used by Linux | the blue LED: mobile data |
+| Heat alarm | the LED flashes red and blue (`thermal-guard`) |
+| Buttons | power: held 3 s shuts down |
+| Not present | battery, screen output, sound, USB host (the USB port is the power supply) |
 
-Both run the same kernel, the same systems and the same releases; what differs is a handful of drivers for the U30
-Air's charger and LEDs, which its boot image loads in place of the F50's ([`kernel/u30air.fragment`](kernel/u30air.fragment)).
-Nothing about the device has to be chosen by hand: the installer reads it from Android, and the boot image, the
-LEDs and the default address follow. The U30 **Pro** is a different chip (UMS9632) and is not supported.
+The device is plugged into a USB port for power and for the network; there is no battery to charge and no charge
+state to read. Nothing in this repository polls a battery, and the installer never asks about one.
 
 ## What you get
 
-* **A real Linux system**, not an app or a container: Ubuntu 24.04 LTS with systemd and `apt`, OpenWrt with its
-  LuCI web interface, or OpenWrt with the MU300 control panel (below).
+* **A real Linux system**, not an app or a container: OpenWrt 25.12.5 with its LuCI web interface, OpenWrt with the
+  MU300 control panel (the system this device runs), or Ubuntu 24.04 LTS with systemd and `apt`.
 * **Internet over 5G/LTE**, shared with everything connected to the device.
 * **A Wi-Fi hotspot** (5 GHz or 2.4 GHz) and **USB networking**: plug it into a computer and it shows up as a network adapter.
-* **SSH access** at `192.168.77.1` (U30 Air: `192.168.78.1`), plus a USB serial console.
+* **SSH access** at `192.168.77.1`, plus a USB serial console.
 * **Bluetooth** and the **Mali GPU** (OpenCL; no screen output).
 * **`mu300-toolkit`**, a menu like `raspi-config`: temperatures, CPU and RAM use, network speeds, performance
   profiles, stress tests, VPN and services.
@@ -77,7 +71,7 @@ need `adb` on your computer. Getting to that point is not part of this project.
 > **Warning.** Installing writes to the `boot_b` and `misc` partitions. If something goes badly wrong you may need a
 > recovery tool (SPD/BROM) to revive the device. On the usual 64 GB device Android, its data and the partition table
 > are never modified. The **32 GB variant** is the exception: it has no free space at all, and the installer offers to
-> make some by shrinking `userdata` — that rewrites the partition table and erases everything in Android, it is
+> make some by shrinking `userdata` - that rewrites the partition table and erases everything in Android, it is
 > experimental, and it asks first. Take a full backup with `tools/backup-device.sh` before going that way.
 > There is always some risk. Nothing here is endorsed by ZTE or Unisoc.
 
@@ -87,7 +81,7 @@ need `adb` on your computer. Getting to that point is not part of this project.
 * `./uninstall.sh` puts everything back.
 
 **You need:**
-* A ZTE F50 / MU300 or U30 Air, rooted, connected by USB, with USB debugging enabled.
+* A ZTE V50 / MU3351, rooted, connected by USB, with USB debugging enabled.
 * A computer with `adb`:
   * **macOS or Linux:** also Python 3, `lz4` and `curl` (usually already installed).
   * **Windows 10/11:** PowerShell. The installer installs Python 3 (for your user, with winget or from
@@ -129,7 +123,6 @@ goes there instead of into the free eMMC space (`MU300_STORAGE=sd` answers it). 
 label `mu300sd`); on the eMMC only `boot_b` and 32 bytes of `misc` are written, so a device with a small eMMC
 needs no repartitioning. A card that holds another Linux (ext4) filesystem is never formatted. Without the card
 the device starts the internal installation if there is one, Android otherwise. All three kernels read the card.
-The U30 Air has no card slot, so it never asks there.
 
 * Put the card in while the device is switched off. A card inserted while Linux runs is seen, but it cannot be
   read until the next reboot.
@@ -146,14 +139,15 @@ install.cmd                   # Windows (cmd)
 
 ![The installer: language, checks, systems and Ubuntu release](docs/images/installer/installer-1-start.png)
 
-It asks a few questions (Ubuntu, OpenWrt or both; which one boots; a password), downloads the ready-made images,
+It asks a few questions (OpenWrt, Ubuntu or both; which one boots; a password), downloads the ready-made images,
 copies the Wi-Fi and modem files from your own device, shows exactly what it is about to write, and waits for you to
 type `INSTALL`. Then it reboots into Linux.
 
 The installer speaks **English, Türkçe and 中文**: it asks at the start (English is the default; `MU300_LANG=tr`
-or `.\install.ps1 -Lang zh` skips the question). Adding a language is one file: see `i18n/README.md`. Before anything else it brings your copy of the project up to date
-with GitHub - a `git clone` is fast-forwarded, a downloaded zip gets the files that changed - and restarts itself if
-there was anything new; without GitHub it simply continues (`MU300_NO_SELF_UPDATE=1` / `-NoSelfUpdate` skips it).
+or `.\install.ps1 -Lang zh` skips the question). Adding a language is one file: see `i18n/README.md`. Before
+anything else it brings your copy of the project up to date with GitHub - a `git clone` is fast-forwarded, a
+downloaded zip gets the files that changed - and restarts itself if there was anything new; without GitHub it simply
+continues (`MU300_NO_SELF_UPDATE=1` / `-NoSelfUpdate` skips it).
 
 With Ubuntu it asks for the release: **24.04 LTS** (the default, the longest tested) or **26.04 LTS (beta)** - the
 newest, with systemd 259; tested on the device for a shorter time. An installed Ubuntu moves
@@ -164,7 +158,7 @@ It also asks for the **kernel**:
 | choice | kernel | |
 |---|---|---|
 | 1 | 5.4 | Unisoc's vendor kernel (Android 12 base): the longest tested, everything this project supports |
-| 2 | 6.18 | mainline Linux, the current long-term (LTS) release: newer drivers and security fixes, the same functions (hotspot, mobile data, SMS, Bluetooth, VPN, GPU); no USB-C video output yet |
+| 2 | 6.18 | mainline Linux, the current long-term (LTS) release: newer drivers and security fixes, the same functions (hotspot, mobile data, SMS, Bluetooth, VPN, GPU); no USB-C video output yet. **This is what the V50 runs** |
 | 3 | latest stable (7.2 for now) | the newest mainline release: the newest drivers, the same functions as 6.18; tested less than 6.18 |
 
 It can be changed later on the device with `sudo mu300-update kernel 5.4`, `... kernel 6.18` or `... kernel 7.2`.
@@ -188,11 +182,12 @@ into Android for you over SSH.
 **Step 3 — log in.** Wait about a minute, then on the computer it is plugged into:
 
 ```sh
-ssh ubuntu@192.168.77.1        # the password you chose during the install
+ssh root@192.168.77.1          # OpenWrt (the password you chose during the install)
+ssh ubuntu@192.168.77.1        # Ubuntu (the password you chose during the install)
 ```
 
-For OpenWrt use `ssh root@192.168.77.1`, or open `http://192.168.77.1` in a browser for LuCI. On a U30 Air the
-address is `192.168.78.1` instead.
+Open `http://192.168.77.1` in a browser for LuCI. The address is always `192.168.77.1`: this build serves one
+device, so there is no second subnet.
 
 The Wi-Fi network the device broadcasts is its hotspot; unless you chose otherwise it uses the name and password
 copied from Android.
@@ -257,8 +252,8 @@ without a computer: from the Magisk app (reached through scrcpy, a web panel or 
 only there once the workflow has run for the release: look at the release's assets. Building them yourself:
 `tools/make-magisk-zips.sh RELEASE_DIR OUT_DIR`.
 
-**1. Take one zip.** One per system and kernel. The same zip works on the F50 and on the U30 Air, and installs to
-the internal storage or to an SD card: the installer recognises the device and finds the place.
+**1. Take one zip.** One per system and kernel. It installs to the internal storage or to an SD card: the installer
+finds the place.
 
 | zip | system | kernel | size |
 |---|---|---|---|
@@ -362,7 +357,7 @@ update - would wipe or erase again. For another erase, put the line back.
 | `MU300_PASSWORD` | 6 or more characters | `/data/adb` only | Generated for a new system: 12 characters from `/dev/urandom` without look-alikes. An update keeps the existing password |
 | `MU300_PASSWORD_RESET` | `yes` | `/data/adb` only | Not set: an update keeps the existing password. `yes`: a new one is generated |
 | `MU300_PASSWORD_FILE` | `sdcard` | `/data/adb` only | Not set: the password file is `/data/adb/mu300-linux-password.txt` |
-| `MU300_DEVICE` | `f50`, `u30air` | `/data/adb` only | Detected; needed only for a model name the installer does not know |
+| `MU300_DEVICE` | `f50` | `/data/adb` only | Detected; needed only for a model name the installer does not know |
 | `MU300_LANG` | `en`, `tr`, `zh` | either | The language of the Android locale |
 | `MU300_DRY_RUN` | `1` | either | Not set |
 
@@ -544,11 +539,11 @@ v2026.09.28 on it also switches to the updater of the release it installs before
 (older boot images can lose mobile data after a few quiet minutes, see docs/FINDINGS.md 32):
 
 ```sh
-sudo curl -fL https://github.com/dikeckaan/mu300-linux/releases/latest/download/mu300-update -o /opt/mu300/bin/mu300-update
+sudo curl -fL https://github.com/tri-dev3/mu300-linux/releases/latest/download/mu300-update -o /opt/mu300/bin/mu300-update
 sudo mu300-update apply
 ```
 
-On OpenWrt, as root: `wget -O /opt/mu300/bin/mu300-update https://github.com/dikeckaan/mu300-linux/releases/latest/download/mu300-update`
+On OpenWrt, as root: `wget -O /opt/mu300/bin/mu300-update https://github.com/tri-dev3/mu300-linux/releases/latest/download/mu300-update`
 and then `mu300-update apply`. Reboot afterwards to start the new system and kernel.
 
 **Back in Android after an update?** With the older boot images a single crash or reset of Linux (the update could
@@ -588,10 +583,10 @@ Like the installer, it offers to reboot the device from Linux into Android first
 
 | | |
 |---|---|
-| Ubuntu 24.04 LTS / OpenWrt 25.12 | ✅ boots, no failed services |
+| OpenWrt 25.12.5 / Ubuntu 24.04 LTS | ✅ boots, no failed services |
 | Mobile data (5G NSA / LTE) | ✅ shared with Wi-Fi and USB clients; reconnects by itself after modem resets |
 | Wi-Fi access point | ✅ 5 GHz (802.11ac) or 2.4 GHz, one at a time |
-| USB network + serial console | ✅ `192.168.77.1` (U30 Air `192.168.78.1`), `screen /dev/cu.usbmodem* 115200` |
+| USB network + serial console | ✅ `192.168.77.1`, `screen /dev/cu.usbmodem* 115200` |
 | SSH, telnet | ✅ |
 | Bluetooth | ✅ BlueZ, scanning works |
 | GPU (Mali-G57) | ✅ OpenCL 3.0, headless |
@@ -601,6 +596,7 @@ Like the installer, it offers to reboot the device from Linux into Android first
 | Back to Android, automatic rollback | ✅ |
 | Screen output (HDMI over USB-C) | ✗ the USB-C power chip never answers, so no display |
 | Sound | 🚧 the card comes up (`sprdphone-sc2730`, 19 PCM devices), the audio DSP loads and answers, and calls connect — but no audio moves: every scene takes one buffer and stops. Android does not get further on this board either ([FINDINGS 24](docs/FINDINGS.md)) |
+| Battery | — none: the device is powered from USB |
 | Mainline kernel (6.18) | 🚧 experimental, see [`upstream/`](upstream/) |
 
 ## How it works, in short
@@ -608,8 +604,11 @@ Like the installer, it offers to reboot the device from Linux into Android first
 The device has two Android boot slots, A and B. Android lives on slot A and is left alone. The installer puts a
 custom Linux kernel into slot B and marks it as a one-time trial. At boot, a small startup program loads the
 device's drivers, finds the Linux filesystem on the SD card or in the unused part of the internal storage and
-starts Ubuntu or OpenWrt from it. If Linux ever fails to start, the bootloader falls back to Android by itself. Three
+starts OpenWrt or Ubuntu from it. If Linux ever fails to start, the bootloader falls back to Android by itself. Three
 small Android programs keep running inside Linux in a sandbox, because the modem needs them.
+
+The device identifies itself as `f50` inside the boot image and the ramdisk (the V50 is the F50's board), so the
+kernel, its module order and the boot program are the F50 ones, unchanged.
 
 The kernel is built from ZTE's published (GPL) source. The reasoning behind each step is in
 [`docs/FINDINGS.md`](docs/FINDINGS.md), and the full build is in [`docs/BUILD.md`](docs/BUILD.md).
@@ -621,9 +620,7 @@ it: the bootloader will have returned to Android on its own. Collect logs with `
 
 **The computer sees the device but gets no address (macOS).** macOS does not set up a network interface it has
 never seen while the screen is locked. Each device has its own USB MAC address, so the first time one is plugged in
-(or after an update that brought these addresses) unlock the Mac, and the interface appears. With both an F50 and a
-U30 Air plugged in, they are `192.168.77.1` and `192.168.78.1`; two of the same kind need `/etc/mu300/lan.conf` to
-tell them apart.
+(or after an update that brought these addresses) unlock the Mac, and the interface appears.
 
 **No internet.** Check that the SIM has a data plan, then run `sudo mobile-data status`. A missing plan looks like a
 connection that keeps dropping.
@@ -664,7 +661,8 @@ and would overwrite the device's storage. A normal `apk upgrade` is fine, except
 * [`docs/DISTROS.md`](docs/DISTROS.md) — running other distributions (ImmortalWrt, Arch Linux ARM, Debian, Kali)
   and what the 5.4 kernel rules out.
 * [`upstream/`](upstream/) — the mainline 6.18 kernel port.
-* [Releases](https://github.com/dikeckaan/mu300-linux/releases) — prebuilt images. They contain **no proprietary
+* [`docs/v50/`](docs/v50/) — the V50 branch's own notes: install, update, build and publish.
+* [Releases](https://github.com/tri-dev3/mu300-linux/releases) — prebuilt images. They contain **no proprietary
   files**; the installer takes those from your own device.
 
 | Path | Contents |
@@ -678,13 +676,17 @@ and would overwrite the device's storage. A normal `apk upgrade` is fine, except
 | `arch/` | Arch Linux ARM image build |
 | `android-vendor/` | scripts that copy the needed Android files from *your* device |
 | `tools/` | helper programs, release tooling, backup, SSH/serial/log helpers |
+| `profiles/v50/` | what makes this build the V50's: profile, LED config, checks |
+
+This build serves one device, the ZTE V50 / MU3351, and no other. The kernel module order it installs is the F50
+one (`boot/module-order.txt`); there is no per-device module set.
 
 The kernel source used here is mirrored at
 [`dikeckaan/zte-ums9620-kernel-5.4.254`](https://github.com/dikeckaan/zte-ums9620-kernel-5.4.254).
 
 ## Credits and licenses
 
-* Kernel source: ZTE's GPL release for the U30 Air (mirrored by Enceka) and the Unisoc drivers in it — GPL-2.0.
+* Kernel source: ZTE's GPL kernel release for this board family (mirrored by Enceka) and the Unisoc drivers in it — GPL-2.0.
 * Wi-Fi, Bluetooth and GPU drivers: realme C51/C53 AndroidT kernel release — GPL-2.0; the patches in
   `kernel/patches` are GPL-2.0.
 * Scripts, tools and documentation in this repository: MIT (see `LICENSE`).
@@ -694,3 +696,4 @@ The kernel source used here is mirrored at
   with one exception: [`stock/`](stock/) holds the stock `trustos` (TEE) image for firmware `ZYV1.0.0B09`, as a
   last-resort repair for devices whose own TEE is damaged; all rights to it remain with ZTE/Unisoc. Read
   [`stock/README.md`](stock/README.md) before touching it — it can make a non-booting device worse.
+

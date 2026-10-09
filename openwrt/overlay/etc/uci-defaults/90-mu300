@@ -5,7 +5,7 @@
 # /etc/uci-defaults again) and keep /etc/config, so it runs on the first boot after every update, against the
 # user's settings.
 #
-# Once (a first install): one LAN for USB and Wi-Fi (192.168.77.1/24 on an F50, 192.168.78.1/24 on a U30 Air) with
+# Once (a first install): one LAN for USB and Wi-Fi (192.168.77.1/24) with
 # the USB gadget in its bridge, no wan6, an empty APN, the hostname and time zone, and fw4's software flowtable. The
 # marker system.mu300.defaults is written last, in /etc/config with the settings it guards: an update keeps both, a
 # fresh or reset configuration has neither and gets the defaults again.

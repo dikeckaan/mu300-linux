@@ -21,8 +21,6 @@ hw_bringup() {
 	# cfg80211 looked for regulatory.db before the rootfs was mounted; load it now so hostapd sees the country rules
 	/opt/mu300/bin/regdb-load >>/tmp/mu300-wifi-start.log 2>&1
 	/opt/mu300/bin/openwrt-wifi-config >>/tmp/mu300-wifi-start.log 2>&1
-	# the U30 Air's NFC tag: the hotspot's name and password, if that is what it holds (see mu300-nfc)
-	[ "$(/opt/mu300/bin/mu300-device)" = u30air ] && /opt/mu300/bin/mu300-nfc sync >/tmp/mu300-nfc.log 2>&1
 	# apply the country before netifd starts hostapd, otherwise 5 GHz channels are still NO-IR under world rules
 	country=$(uci -q get wireless.radio0.country)
 	if [ -n "$country" ]; then
