@@ -1,3 +1,0 @@
-swaybg -c '#1f3a4d' >/dev/null 2>&1 &
-waybar >/dev/null 2>&1 &
-foot >/dev/null 2>&1 &

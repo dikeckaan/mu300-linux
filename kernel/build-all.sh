@@ -1,6 +1,6 @@
 #!/bin/sh
 # Build everything install.sh --build and tools/make-release.sh need from public sources, in one step:
-#   kernel/build-all.sh            -> out/Image, out/modules/*.ko, out/modules.builtin*, out/modules-u30air/*.ko
+#   kernel/build-all.sh            -> out/Image, out/modules/*.ko, out/modules.builtin*
 # Sources (pinned commits, downloaded into the docker volume $MU300_KBUILD_VOLUME on first run):
 #   ZTE UMS9620 MiFi 5.4.254 kernel (GPL release published by Enceka)
 #   realme C51/C53 AndroidT kernel_modules: wlan_combo (Wi-Fi), bluetooth tty-pcie, Mali kbase (sparse checkout)
@@ -76,10 +76,8 @@ find /src/out-linux -name "*.ko" -exec cp {} /work/out/modules/ \;
 cp /src/ext-wlan_combo/sprd_wlan_combo.ko /src/ext-sprdbt/sprdbt_tty.ko /work/out/modules/
 llvm-strip --strip-debug /work/out/modules/*.ko
 echo "$(ls /work/out/modules | wc -l) modules, $(strings /work/out/Image | grep -m1 "^Linux version 5" | cut -d" " -f1-3)"
-echo "==> ZTE U30 Air modules"
-bash /work/build-u30air.sh
 '
 mkdir -p "$OUT"
-rm -rf "$OUT/modules" "$OUT/modules-u30air"
+rm -rf "$OUT/modules"
 cp -R "$W/out/." "$OUT/"
 echo "kernel outputs in $OUT"

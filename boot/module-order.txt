@@ -59,11 +59,7 @@ sbuf_bridge.ko
 sblock_bridge.ko
 extcon-usb-gpio.ko
 sc27xx_adc.ko
-sprd_battery_info.ko
 sprd_tcpm.ko
-sprd-charger-manager.ko
-sc27xx_fuel_gauge.ko
-bq2560x-charger.ko
 pinctrl-sprd.ko
 pinctrl-sprd-qogirn6pro.ko
 ptn38003a-i2c.ko

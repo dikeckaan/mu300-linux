@@ -280,13 +280,11 @@ if missing:
     sys.exit('port: edits did not apply (anchor changed in this kernel?): ' + '; '.join(f'{p}: {w}' for p, w in missing))
 print('port installed')
 
-# LEDs of the ZTE U30 Air: its white ones on PMIC LDOs (leds-zte-ldo.c), and its red on the PMIC's keypad backlight
-# sink (leds-sc27xx-kpled.c)
+# The PMIC's keypad backlight sink (leds-sc27xx-kpled.c): the Wi-Fi LED of the F50/V50 and the U30 Air's red
+# network LED. (leds-zte-ldo.c, the U30 Air's white LEDs on PMIC LDOs, went with that device.)
 LED_DRIVERS = (
-    ('LEDS_ZTE_LDO', 'leds-zte-ldo', 'LEDs on PMIC LDOs (ZTE U30 Air)', 'LEDS_CLASS && REGULATOR && OF',
-     "The ZTE U30 Air's white LEDs, powered by three PMIC LDOs."),
     ('LEDS_SC27XX_KPLED', 'leds-sc27xx-kpled', 'Spreadtrum/Unisoc PMIC keypad backlight',
-     'LEDS_CLASS && MFD_SC27XX_PMIC && OF', "The PMIC's keypad backlight sink: the U30 Air's red network LED."),
+     'LEDS_CLASS && MFD_SC27XX_PMIC && OF', "The PMIC's keypad backlight sink: this board's status LED sink."),
 )
 kl = os.path.join(tree, 'drivers/leds/Kconfig')
 kls = open(kl).read()

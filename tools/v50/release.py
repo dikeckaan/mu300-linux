@@ -111,7 +111,7 @@ def extract_helpers(bundle, directory):
         for m in tar:
             name = audit_member(m)
             if not m.isfile() or not (name in ('busybox', 'logdw', 'kernel.release') or
-                                     re.fullmatch(r'modules(?:-u30air)?/[A-Za-z0-9_.-]+\.ko', name)):
+                                     re.fullmatch(r'modules/[A-Za-z0-9_.-]+\.ko', name)):
                 continue
             p = directory / name
             p.parent.mkdir(parents=True, exist_ok=True)
@@ -128,8 +128,6 @@ def rebuild_ramdisk(kernel, helpers, directory, mainline):
             '--out', str(out)]
     if mainline:
         args += ['--module-order', str(TOP / 'upstream/module-order.txt')]
-    else:
-        args += ['--device-modules', 'u30air=' + str(helpers / 'modules-u30air')]
     subprocess.run(args, check=True)
     return out.read_bytes()
 
