@@ -37,11 +37,10 @@ $T = '/data/local/tmp'
 # $PSScriptRoot can be empty in Windows PowerShell 5.1 (param defaults, `powershell -File` from cmd.exe)
 $Top = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 if (-not $Work) { $Work = Join-Path $Top 'work' }
-# the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1; $MU300_IP is set to the one
-# that answers
+# the USB network of the device: 192.168.77.1; $MU300_IP is set to it when it answers
 $MU300_IP = '192.168.77.1'
 function LinuxRunning {
-    foreach ($ip in @('192.168.77.1', '192.168.78.1')) {
+    foreach ($ip in @('192.168.77.1')) {
         if (Test-NetConnection -ComputerName $ip -Port 22 -InformationLevel Quiet -WarningAction SilentlyContinue) { $script:MU300_IP = $ip; return $true }
     }
     return $false
@@ -212,22 +211,22 @@ function Die($m) { Write-Host ("`n" + (T 'ERROR:') + " $m") -ForegroundColor Red
 function Quiet([scriptblock]$QuietBlock_) { $ErrorActionPreference = 'Continue'; & $QuietBlock_ 2>$null }
 # With more than one adb device attached (a phone, an emulator, a device over the network) every plain adb command
 # fails with "more than one device/emulator", which read as "no adb device". Pick the F50 and point adb at it with
-# ANDROID_SERIAL: the only device, else the only one that says it is an F50/MU300 or a U30 Air, else ask (-Quiet
+# ANDROID_SERIAL: the only device, else the only one that says it is an F50/MU300, else ask (-Quiet
 # never asks).
 function SelectDevice([switch]$Quiet) {
     if ($env:ANDROID_SERIAL) { return }
     $all = @((Quiet { adb devices -l }) | Where-Object { $_ -match '^\S+\s+device\b' })
     if ($all.Count -eq 0) { return }
-    $f50 = @($all | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|product:MU3351|device:MU3351' })
-    # the only adb device, and an F50/U30 Air: nothing to ask
+    $f50 = @($all | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|product:MU3351|device:MU3351' })
+    # the only adb device, and an F50/MU300: nothing to ask
     if ($all.Count -eq 1 -and $f50.Count -eq 1) { $env:ANDROID_SERIAL = ($all[0] -split '\s+')[0]; return }
-    # -Quiet (waiting for the device to come back as Android): only the one F50/U30 Air, never a question.
+    # -Quiet (waiting for the device to come back as Android): only the one F50/MU300, never a question.
     # Otherwise always ask: a phone or tablet next to it is what the installer must never write to.
     if ($Quiet) {
         if ($f50.Count -eq 1) { $env:ANDROID_SERIAL = ($f50[0] -split '\s+')[0] }
         return
     }
-    Write-Host ('  ' + (T 'which adb device is the F50 or U30 Air?'))
+    Write-Host ('  ' + (T 'which adb device is the F50/MU300?'))
     $def = 1
     for ($i = 0; $i -lt $all.Count; $i++) {
         $model = if ($all[$i] -match 'model:(\S+)') { $Matches[1] } else { '' }
@@ -371,7 +370,7 @@ if (-not $Check) {
 Quiet { adb start-server } | Out-Null
 # The device in Linux, and only a phone or tablet in Android: that is not the one to install to - offer to send the
 # device back to Android first
-$target = @((Quiet { adb devices -l }) | Where-Object { $_ -match '^\S+\s+device\b' -and $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|product:MU3351|device:MU3351' })
+$target = @((Quiet { adb devices -l }) | Where-Object { $_ -match '^\S+\s+device\b' -and $_ -match 'model:F50|product:MU300|device:MU300|product:MU3351|device:MU3351' })
 $linuxFirst = (-not $env:ANDROID_SERIAL) -and $target.Count -eq 0 -and (LinuxRunning)
 if (-not $linuxFirst) { SelectDevice }
 if ($linuxFirst -or (AdbState) -notmatch 'device') {
@@ -410,13 +409,10 @@ for ($i = 0; $i -lt 60 -and (SuDo 'getprop sys.boot_completed') -ne '1'; $i++) {
 if ((SuDo 'id -u') -ne '0') { Die (T 'su does not work on the device') }
 $model = "$(SuDo 'getprop ro.product.model') / $(SuDo 'getprop ro.product.device')"
 Write-Host (T 'device: {1}' $model)
-# The U30 Air is the F50's board with a battery: the same kernel and images, a few modules of its own (init
-# loads them; the boot image says which device it is for)
+# This device is the ZTE V50 / MU3351: the F50's board, and its internal identity is f50
 $DEVICE = 'f50'
-if ($model -match 'U30Air|U30_Air|U30 Air') {
-    $DEVICE = 'u30air'
-} elseif ($model -notmatch 'MU300|F50|mu300|MU3351|V50') {
-    if ((Ask (T 'This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)') 'no') -ne 'yes') { exit 1 }
+if ($model -notmatch 'MU300|F50|mu300|MU3351|V50') {
+    if ((Ask (T 'This does not look like a ZTE F50/MU300. Continue anyway? (yes/no)') 'no') -ne 'yes') { exit 1 }
 }
 if ((SuDo 'getprop ro.boot.slot_suffix') -ne '_a') { Die (T 'Android must be running from slot a') }
 
@@ -797,7 +793,6 @@ foreach ($f in $files) {
 Remove-Item -Recurse -Force "$REL\kernel" -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path "$REL\kernel" | Out-Null
 & tar -xzf "$REL\mu300-kernel.tar.gz" -C "$REL\kernel"
-if ($DEVICE -ne 'f50' -and -not (Test-Path "$REL\kernel\modules-$DEVICE")) { Die (T 'release {1} does not support this device yet; use a newer one' $Release) }
 # a mainline kernel (6.18, 7.2): its bundle, unpacked
 $KMAIN = $null
 if ($KERNEL -ne '5.4') {
@@ -807,10 +802,6 @@ if ($KERNEL -ne '5.4') {
     & tar -xzf "$REL\mu300-kernel-$KERNEL.tar.gz" -C $KMAIN
     foreach ($k in 'Image', 'ramdisk-generic.lz4', 'kernel.release') {
         if (-not (Test-Path "$KMAIN\$k")) { Die (T '{1} is incomplete' "mu300-kernel-$KERNEL.tar.gz") }
-    }
-    # a bundle names the devices it runs on; older mainline kernels do not bring up the U30 Air's USB (FINDINGS 33c)
-    if ($DEVICE -ne 'f50' -and -not ((Test-Path "$KMAIN\devices") -and ((Get-Content "$KMAIN\devices") -match "\b$DEVICE\b"))) {
-        Die (T 'release {1} does not support this device yet; use a newer one' $Release)
     }
     if (-not (SdKernelOk $SD_MODE $KMAIN)) {
         Die (T 'the {1} kernel of release {2} cannot read the SD card: choose kernel 5.4, a newer release, or internal storage (MU300_STORAGE=internal)' $KERNEL $Release)
@@ -839,7 +830,6 @@ $bootArgs = @("$Top\boot\build-boot-image.py", '--stock-boot', "$Work\dumps\boot
     '--modules', "$REL\kernel\modules", '--init', "$Work\init", '--busybox', "$REL\kernel\busybox",
     '--logdw', "$REL\kernel\logdw", '--ueventd-perms', "$Top\android-vendor\ueventd-perms.sh",
     '--android-subset', "$Work\android-subset", '--out', "$Work\boot-linux-slotb.img", '--device', $DEVICE)
-if (Test-Path "$REL\kernel\modules-u30air") { $bootArgs += @('--device-modules', "u30air=$REL\kernel\modules-u30air") }
 if ($KMAIN) { $bootArgs += @('--append-ramdisk', "$KMAIN\ramdisk-generic.lz4") }
 # a failed build must stop here: otherwise an earlier image (or none) would be written to the device
 Remove-Item "$Work\boot-linux-slotb.*" -ErrorAction SilentlyContinue
@@ -914,7 +904,7 @@ if ((SuDo 'magisk -v')) {
 }
 
 Say (T 'Done. Rebooting into {1}' $BOOT_OS)
-$ip = if ($DEVICE -eq 'u30air') { '192.168.78.1' } else { '192.168.77.1' }
+$ip = '192.168.77.1'
 Write-Host ('  ' + (T 'USB network: {1}   SSH: {2}' $ip $(if ($BOOT_OS -eq 'ubuntu') { "ubuntu@$ip" } else { "root@$ip, LuCI http://$ip" })))
 Write-Host ('  ' + (T 'switch systems: mu300-os {1}   back to Android: mu300-next-boot android' ($OSES -join '|')))
 Write-Host ('  ' + (T 'back to Linux from Android (with Magisk): su -c mu300-linux'))

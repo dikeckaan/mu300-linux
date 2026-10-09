@@ -84,34 +84,17 @@ echo 1 > /proc/sys/kernel/sysrq
  rmdir /run/persist.lock
  persist; reboot -f; sleep 10; echo b > /proc/sysrq-trigger) &
 
-# Which device this is. The ZTE U30 Air is the F50's board with a battery: ZTE's SQC charger stack, USB-PD, LEDs.
-# It runs the same kernel with its own build of a few modules (linux-modules/u30air/, see kernel/build-u30air.sh)
-# and its own load order; without them the charger manager never probes and USB stays down. The installer names
-# the device in /etc/mu300-device (the device segment of the ramdisk, which the generic segment of an update does
-# not replace); without that file the stock device tree tells: only the U30 Air's has the charger policy service.
-if [ -s /etc/mu300-device ]; then
-    DEVICE=$(cat /etc/mu300-device)
-elif [ -d /proc/device-tree/charger_policy_service ]; then
-    DEVICE=u30air
-else
-    DEVICE=f50
-fi
-# its modules only for the kernel they were built for (a mainline kernel brings its own set and order)
+# This device is the ZTE V50 / MU3351: the F50's board, and its identity is f50. (The U30 Air, the same board
+# with ZTE's SQC charger stack, USB-PD and LEDs, is not supported by this build.)
+DEVICE=f50
 MODULE_ORDER=/etc/module-order
-if [ "$DEVICE" != f50 ] && [ -s /etc/module-order-$DEVICE ] &&
-   [ "$(cat /linux-modules/$DEVICE/kernel.release 2>/dev/null)" = "$(uname -r)" ]; then
-    MODULE_ORDER=/etc/module-order-$DEVICE
-else
-    DEVICE_MODULES=none
-fi
 log "stage=device $DEVICE order=$MODULE_ORDER"
 
-# The USB network. Its subnet goes with the kind of device, so that an F50 and a U30 Air on one computer do not
-# collide: F50 192.168.77.1, U30 Air 192.168.78.1 (the system's lan.conf overrides it after switch_root). The
+# The USB network. Its subnet is 192.168.77.1/24 (the system's lan.conf overrides it after switch_root). The
 # gadget's MAC addresses and USB serial number go with the device's serial number and its eMMC's: two devices on one
 # computer used to have the same ones, and macOS then gave the second one no network interface at all. The serial
 # number alone was not enough: a device restored from another's backup has its androidboot.serialno too.
-case $DEVICE in u30air) NET=192.168.78 ;; *) NET=192.168.77 ;; esac
+NET=192.168.77
 # --- usb-id begin
 # usb_id BOOTARGS...: USBID (serial number-eMMC serial) and MAC (its first five bytes) from the bootloader's
 # arguments. Not from the eMMC's CID in /sys: this runs before the modules that find the eMMC, so it would come and go.
@@ -133,7 +116,6 @@ load_vendor_modules() {
     while read module; do
         # vendor_boot's /lib/modules were built for the stock kernel; only our rebuilt copies match
         file="/linux-modules/$module"
-        [ -z "${DEVICE_MODULES:-}" ] && [ -f "/linux-modules/$DEVICE/$module" ] && file="/linux-modules/$DEVICE/$module"
         if insmod "$file" 2>/run/insmod.err; then
             loaded=$((loaded + 1))
         else
@@ -184,7 +166,7 @@ publish_slot() {
 linux_slot_detect
 
 # misc and the Linux slot's boot partition: where they are is known only once the eMMC is there, and its driver
-# (sdhci-sprd) is one of the vendor modules - an earlier lookup found nothing (U30 Air: misc-NOT-FOUND, no persistent
+# (sdhci-sprd) is one of the vendor modules - an earlier lookup found nothing (misc-NOT-FOUND, no persistent
 # log). So this runs after load_vendor_modules; whether Android's slot is restored is decided once the rootfs is known.
 # --- emmc begin
 # The eMMC and the card by what they are, never by number: the host index follows probe order, and under mainline

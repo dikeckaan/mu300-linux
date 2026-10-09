@@ -7,7 +7,7 @@ Checking host tools and device	正在检查电脑上的工具和设备
 kernel outputs missing in {1} (run kernel/build-all.sh)	{1} 中缺少内核编译输出（请运行 kernel/build-all.sh）
 su does not work on the device	设备上的 su 无法使用
 device: {1}	设备：{1}
-This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)	这看起来不是 ZTE F50/MU300 或 U30 Air。仍要继续吗？(是/否)
+This does not look like a ZTE F50/MU300. Continue anyway? (yes/no)	这看起来不是 ZTE F50/MU300。仍要继续吗？(是/否)
 Android must be running from slot a	Android 必须从 a 槽 (slot a) 启动
 Not enough free space - this looks like the 32 GB variant	空闲空间不足——这似乎是 32 GB 版本
 could not read the partition table	无法读取分区表
@@ -192,13 +192,12 @@ restarting the updated installer	正在重新启动更新后的安装程序
 yes	是
 no	否
 update	update（更新）
-release {1} does not support this device yet; use a newer one	版本 {1} 尚不支持此设备；请使用更新的版本
 installing the lz4 Python module (pip install --user lz4)	正在安装 lz4 Python 模块（pip install --user lz4）
 start of the region: {1}	区域开头：{1}
 Python 3 is not installed; installing it for this user	未安装 Python 3；正在为当前用户安装
 {1} failed	{1} 失败
 waiting for Android to finish starting	正在等待 Android 启动完成
-which adb device is the F50 or U30 Air?	哪个 adb 设备是 F50 或 U30 Air？
+which adb device is the F50/MU300?	哪个 adb 设备是 F50/MU300？
 SD card present but smaller than 700 MiB; not used	已插入 SD 卡，但容量小于 700 MiB；不使用
 SD card: {1}, {2}, existing mu300sd filesystem: {3}	SD 卡：{1}，{2}，已有 mu300sd 文件系统：{3}
 Linux filesystem: SD card {1}, {2}, existing mu300sd filesystem: {3}	Linux 文件系统：SD 卡 {1}，{2}，已有 mu300sd 文件系统：{3}

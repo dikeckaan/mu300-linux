@@ -7,7 +7,7 @@ Checking host tools and device	Bilgisayardaki araçlar ve cihaz kontrol ediliyor
 kernel outputs missing in {1} (run kernel/build-all.sh)	{1} içinde çekirdek çıktıları yok (kernel/build-all.sh çalıştırın)
 su does not work on the device	cihazda su çalışmıyor
 device: {1}	cihaz: {1}
-This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)	Bu bir ZTE F50/MU300 ya da U30 Air gibi görünmüyor. Yine de devam edilsin mi? (evet/hayır)
+This does not look like a ZTE F50/MU300. Continue anyway? (yes/no)	Bu bir ZTE F50/MU300 gibi görünmüyor. Yine de devam edilsin mi? (evet/hayır)
 Android must be running from slot a	Android'in a yuvasından (slot a) çalışıyor olması gerekir
 Not enough free space - this looks like the 32 GB variant	Yeterli boş alan yok - bu 32 GB'lık model gibi görünüyor
 could not read the partition table	bölüm tablosu okunamadı
@@ -192,13 +192,12 @@ restarting the updated installer	güncellenen yükleyici yeniden başlatılıyor
 yes	evet
 no	hayır
 update	update (güncelle)
-release {1} does not support this device yet; use a newer one	{1} sürümü bu cihazı henüz desteklemiyor; daha yenisini kullanın
 installing the lz4 Python module (pip install --user lz4)	lz4 Python modülü kuruluyor (pip install --user lz4)
 start of the region: {1}	bölgenin başı: {1}
 Python 3 is not installed; installing it for this user	Python 3 kurulu değil; bu kullanıcı için kuruluyor
 {1} failed	{1} başarısız oldu
 waiting for Android to finish starting	Android'in açılmasını bitirmesi bekleniyor
-which adb device is the F50 or U30 Air?	hangi adb cihazı F50 ya da U30 Air?
+which adb device is the F50/MU300?	hangi adb cihazı F50/MU300?
 SD card present but smaller than 700 MiB; not used	SD kart takılı ama 700 MiB'tan küçük; kullanılmıyor
 SD card: {1}, {2}, existing mu300sd filesystem: {3}	SD kart: {1}, {2}, mevcut mu300sd dosya sistemi: {3}
 Linux filesystem: SD card {1}, {2}, existing mu300sd filesystem: {3}	Linux dosya sistemi: SD kart {1}, {2}, mevcut mu300sd dosya sistemi: {3}

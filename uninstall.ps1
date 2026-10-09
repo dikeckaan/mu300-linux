@@ -14,11 +14,10 @@ param()
 
 $ErrorActionPreference = 'Stop'
 $T = '/data/local/tmp'
-# the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1; $MU300_IP is set to the one
-# that answers
+# the USB network of the device: 192.168.77.1; $MU300_IP is set to it when it answers
 $MU300_IP = '192.168.77.1'
 function LinuxRunning {
-    foreach ($ip in @('192.168.77.1', '192.168.78.1')) {
+    foreach ($ip in @('192.168.77.1')) {
         if (Test-NetConnection -ComputerName $ip -Port 22 -InformationLevel Quiet -WarningAction SilentlyContinue) { $script:MU300_IP = $ip; return $true }
     }
     return $false
@@ -50,22 +49,22 @@ function Die($m) { Write-Host "`nERROR: $m" -ForegroundColor Red; exit 1 }
 function Quiet([scriptblock]$QuietBlock_) { $ErrorActionPreference = 'Continue'; & $QuietBlock_ 2>$null }
 # With more than one adb device attached (a phone, an emulator, a device over the network) every plain adb command
 # fails with "more than one device/emulator", which read as "no adb device". Pick the F50 and point adb at it with
-# ANDROID_SERIAL: the only device, else the only one that says it is an F50/MU300 or a U30 Air, else ask (-Quiet
+# ANDROID_SERIAL: the only device, else the only one that says it is an F50/MU300, else ask (-Quiet
 # never asks).
 function SelectDevice([switch]$Quiet) {
     if ($env:ANDROID_SERIAL) { return }
     $all = @((Quiet { adb devices -l }) | Where-Object { $_ -match '^\S+\s+device\b' })
     if ($all.Count -eq 0) { return }
-    $f50 = @($all | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|product:MU3351|device:MU3351' })
-    # the only adb device, and an F50/U30 Air: nothing to ask
+    $f50 = @($all | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|product:MU3351|device:MU3351' })
+    # the only adb device, and an F50/MU300: nothing to ask
     if ($all.Count -eq 1 -and $f50.Count -eq 1) { $env:ANDROID_SERIAL = ($all[0] -split '\s+')[0]; return }
-    # -Quiet (waiting for the device to come back): only the one F50/U30 Air. Otherwise always ask: a phone or
+    # -Quiet (waiting for the device to come back): only the one F50/MU300. Otherwise always ask: a phone or
     # tablet next to it is what this must never touch.
     if ($Quiet) {
         if ($f50.Count -eq 1) { $env:ANDROID_SERIAL = ($f50[0] -split '\s+')[0] }
         return
     }
-    Write-Host ('  ' + 'which adb device is the F50 or U30 Air?')
+    Write-Host ('  ' + 'which adb device is the F50/MU300?')
     $def = 1
     for ($i = 0; $i -lt $all.Count; $i++) {
         $model = if ($all[$i] -match 'model:(\S+)') { $Matches[1] } else { '' }
@@ -138,7 +137,7 @@ Say 'Checking host tools and device'
 FindAdb
 if (-not (Get-Command adb -ErrorAction SilentlyContinue)) { Die 'adb not found' }
 # the device in Linux, and only a phone or tablet in Android: that is not the one to touch - reboot the device first
-$target = @((Quiet { adb devices -l }) | Where-Object { $_ -match '^\S+\s+device\b' -and $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|product:MU3351|device:MU3351' })
+$target = @((Quiet { adb devices -l }) | Where-Object { $_ -match '^\S+\s+device\b' -and $_ -match 'model:F50|product:MU300|device:MU300|product:MU3351|device:MU3351' })
 $linuxFirst = (-not $env:ANDROID_SERIAL) -and $target.Count -eq 0 -and (LinuxRunning)
 if (-not $linuxFirst) { SelectDevice }
 if ($linuxFirst -or (AdbState) -notmatch 'device') {
@@ -169,7 +168,7 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
 if ((SuDo 'id -u') -ne '0') { Die 'su does not work on the device' }
 $model = "$(SuDo 'getprop ro.product.model') / $(SuDo 'getprop ro.product.device')"
 Write-Host "device: $model"
-if ($model -notmatch 'MU300|F50|mu300|U30Air|U30_Air|MU3351|V50') { Die 'this does not look like a ZTE F50/MU300 or U30 Air' }
+if ($model -notmatch 'MU300|F50|mu300|MU3351|V50') { Die 'this does not look like a ZTE F50/MU300' }
 if ((SuDo 'getprop ro.boot.slot_suffix') -ne '_a') { Die 'Android must be running from slot a (boot Android first: mu300-next-boot android)' }
 
 Say 'Looking for the Linux installation'

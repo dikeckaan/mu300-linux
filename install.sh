@@ -114,12 +114,10 @@ require_android
 [ "$(su_do 'id -u')" = 0 ] || die "$(t 'su does not work on the device')"
 model="$(su_do 'getprop ro.product.model') / $(su_do 'getprop ro.product.device')"
 echo "$(t 'device: {1}' "$model")"
-# The U30 Air is the F50's board with a battery: the same kernel and images, a few modules of its own (init
-# loads them; the boot image says which device it is for)
+# This device is the ZTE V50 / MU3351: the F50's board, and its internal identity is f50
 case "$model" in
-    *U30Air*|*U30_Air*|*"U30 Air"*) DEVICE=u30air ;;
     *MU300*|*F50*|*mu300*|*MU3351*|*V50*) DEVICE=f50 ;;
-    *) ask go "$(t 'This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)')" no; [ "$go" = yes ] || exit 1
+    *) ask go "$(t 'This does not look like a ZTE F50/MU300. Continue anyway? (yes/no)')" no; [ "$go" = yes ] || exit 1
        DEVICE=f50 ;;
 esac
 [ "$(su_do 'getprop ro.boot.slot_suffix')" = _a ] || die "$(t 'Android must be running from slot a')"
@@ -509,7 +507,6 @@ for f in $files; do
 done
 rm -rf "$REL/kernel" && mkdir -p "$REL/kernel" && tar -xzf "$REL/mu300-kernel.tar.gz" -C "$REL/kernel"
 KOUT=$REL/kernel
-[ $DEVICE = f50 ] || [ -d "$KOUT/modules-$DEVICE" ] || die "$(t 'release {1} does not support this device yet; use a newer one' "$RELEASE")"
 BUSYBOX=$KOUT/busybox; LOGDW=$KOUT/logdw
 # a mainline kernel (6.18, 7.2): its bundle, unpacked
 KMAIN=
@@ -517,8 +514,6 @@ if [ "$KERNEL" != 5.4 ]; then
     KMAIN=$REL/kernel-$KERNEL
     rm -rf "$KMAIN" && mkdir -p "$KMAIN" && tar -xzf "$REL/mu300-kernel-$KERNEL.tar.gz" -C "$KMAIN"
     [ -s "$KMAIN/Image" ] && [ -s "$KMAIN/ramdisk-generic.lz4" ] && [ -s "$KMAIN/kernel.release" ] || die "$(t '{1} is incomplete' "mu300-kernel-$KERNEL.tar.gz")"
-    # a bundle names the devices it runs on; older mainline kernels do not bring up the U30 Air's USB (FINDINGS 33c)
-    [ $DEVICE = f50 ] || grep -qw $DEVICE "$KMAIN/devices" 2>/dev/null || die "$(t 'release {1} does not support this device yet; use a newer one' "$RELEASE")"
     sd_kernel_ok "$KMAIN" || die "$(t 'the {1} kernel of release {2} cannot read the SD card: choose kernel 5.4, a newer release, or internal storage (MU300_STORAGE=internal)' "$KERNEL" "$RELEASE")"
 fi
 say "$(t 'Adding the vendor files from your device to the images')"
@@ -586,7 +581,6 @@ sed "s/^ROOT_OFFSET=[0-9]*/ROOT_OFFSET=$OFF/" "$TOP/boot/init" > "$WORK/init"
 python3 "$TOP/boot/build-boot-image.py" --stock-boot "$WORK/dumps/boot_a.img" --misc-head "$WORK/dumps/misc-head.bin" \
   --kernel "${KMAIN:-$KOUT}/Image" ${KMAIN:+--append-ramdisk "$KMAIN/ramdisk-generic.lz4"} \
   --modules "$KOUT/modules" --init "$WORK/init" --busybox "$BUSYBOX" --device "$DEVICE" \
-  $([ -d "$KOUT/modules-u30air" ] && echo --device-modules "u30air=$KOUT/modules-u30air") \
   --logdw "$LOGDW" --ueventd-perms "$TOP/android-vendor/ueventd-perms.sh" \
   --android-subset "$WORK/android-subset" --out "$WORK/boot-linux-slotb.img" >/dev/null
 
@@ -640,7 +634,7 @@ say "$(t 'Installing the on-device switch (Magisk module)')"
 sh "$TOP/tools/install-magisk-module.sh" || echo "  $(t '(skipped; the installer keeps working either way)')"
 
 say "$(t 'Done. Rebooting into {1}' "$BOOT_OS")"
-IP=192.168.77.1; [ $DEVICE = u30air ] && IP=192.168.78.1
+IP=192.168.77.1
 echo "  $(t 'USB network: {1}   SSH: {2}' $IP "$([ "$BOOT_OS" = ubuntu ] && echo ubuntu@$IP || echo root@$IP, LuCI http://$IP)")"
 echo "  $(t 'switch systems: mu300-os {1}   back to Android: mu300-next-boot android' "$(echo "$OSES" | tr ' ' '|')")"
 echo "  $(t 'back to Linux from Android (with Magisk): su -c mu300-linux')"

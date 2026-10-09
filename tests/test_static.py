@@ -215,13 +215,14 @@ class Rules(unittest.TestCase):
         calls = [l.strip() for l in init.splitlines() if l.strip() in ('load_vendor_modules', 'find_partitions')]
         self.assertEqual(calls, ['load_vendor_modules', 'find_partitions'])
 
-    def test_every_device_has_its_files(self):
-        # a device the installers know needs its module order; its modules come from kernel/build-<device>.sh
-        for dev in ('u30air',):
-            self.assertTrue((TOP / 'boot' / f'module-order-{dev}.txt').is_file())
-            self.assertTrue((TOP / 'kernel' / f'{dev}.fragment').is_file())
-            self.assertIn(dev, (TOP / 'install.sh').read_text())
-            self.assertIn(dev, (TOP / 'install.ps1').read_text())
+    def test_the_only_device_is_f50(self):
+        # this build serves one device (the ZTE V50, whose identity is f50): the U30 Air files are gone
+        self.assertFalse((TOP / 'boot' / 'module-order-u30air.txt').exists())
+        self.assertFalse((TOP / 'kernel' / 'u30air.fragment').exists())
+        for name in ('install.sh', 'install.ps1'):
+            text = (TOP / name).read_text()
+            self.assertNotIn('u30air', text)
+            self.assertNotIn('192.168.78', text)
 
     def test_mainline_keeps_the_sd_host(self):
         # the SD card can hold the Linux filesystem: the port lets the card slot's host probe next to the eMMC, and

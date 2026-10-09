@@ -7,7 +7,6 @@ import unittest
 from helpers import TOP, ShellTest
 
 F50 = '324950664950           device usb:1 product:MU300 model:F50 device:MU300 transport_id:1'
-U30 = '323960377386           device usb:2 product:U30Air model:U30_Air device:U30Air transport_id:2'
 V50 = 'v50-test               device usb:4 product:MU3351 model:V50 device:MU3351 transport_id:5'
 TABLET = 'd16d93c5               device usb:3 product:nabu_global model:21051182G device:nabu transport_id:3'
 OFFLINE = '192.168.31.1:55555     offline product:MU5358 model:MU5358 device:MU5358 transport_id:4'
@@ -26,7 +25,7 @@ class SelectDevice(ShellTest):
 
     def test_one_device_that_is_the_target(self):
         for shell in self.each_shell():
-            for dev, serial in ((F50, '324950664950'), (U30, '323960377386'), (V50, 'v50-test')):
+            for dev, serial in ((F50, '324950664950'), (V50, 'v50-test')):
                 out = self.run_select(shell, [dev])
                 self.assertNotIn('ASKED', out)
                 self.assertIn(f'serial={serial}', out)
@@ -38,7 +37,7 @@ class SelectDevice(ShellTest):
             self.assertIn('serial=324950664950', out)
             out = self.run_select(shell, [TABLET, F50], answer='1')
             self.assertIn('serial=d16d93c5', out)          # the user's choice counts
-            out = self.run_select(shell, [F50, U30])       # two targets: ask, first is the default
+            out = self.run_select(shell, [F50, TABLET])    # one target and one other: ask, the target is the default
             self.assertIn('ASKED[1]', out)
 
     def test_only_a_tablet_asks(self):
