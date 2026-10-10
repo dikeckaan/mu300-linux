@@ -91,7 +91,7 @@ exit 0
 DEFAULTS = {
     'dashboard-info': '{"ok":1,"host":"f50"}', 'cell': '{"ok":1}', 'action': '{"ok":1,"op":"x"}',
     'lock': '{"ok":1,"mode":{"label":"auto"}}', 'device-usb': '{"ok":1}', 'at': 'OK', 'sms': 'sent (12)',
-    'languages': '{"ok":1}', 'power': '{"ok":1}', 'ttl': '{"ok":1}',
+    'languages': '{"ok":1}', 'power': '{"ok":1}', 'ttl': '{"ok":1}', 'traffic': '{"ok":1}',
 }
 
 # The methods that start something with setsid (in the background of mu300dash)
@@ -213,7 +213,7 @@ class Inventory(Mu300Dash):
     METHODS = {'sysinfo', 'status', 'signal', 'act', 'at', 'at_history', 'lock_get', 'lock_set', 'sms_list',
                'sms_show', 'sms_send', 'sms_delete', 'sms_sync', 'usb_get', 'usb_set', 'usb_net_list', 'usb_net_add',
                'lang_get', 'lang_set', 'power_get', 'power_set',
-               'ttl_get', 'ttl_set'}
+               'ttl_get', 'ttl_set', 'traffic_get', 'traffic_set'}
 
     def test_list_declares_every_method(self):
         for shell in self.each_shell():
@@ -235,7 +235,8 @@ class Inventory(Mu300Dash):
     def test_the_changed_scripts_parse(self):
         for shell in self.each_shell():
             for p in [DASH, LIB] + [ADAPTERS / n for n in ('action', 'at', 'boot-replay', 'cell', 'dashboard-info',
-                                                         'device-usb', 'lock', 'languages', 'power', 'ttl')]:
+                                                         'device-usb', 'lock', 'languages', 'power', 'ttl',
+                                                         'traffic')]:
                 with self.subTest(p=p.name):
                     r = subprocess.run(shell + ['-n', str(p)], capture_output=True, text=True)
                     self.assertEqual(r.returncode, 0, r.stderr)
@@ -291,6 +292,11 @@ class Refusals(Mu300Dash):
         ('usb_net_add', {}, 'iface', 'eth1'),
         ('ttl_set', {}, 'value', '64'),
         ('ttl_set', {}, 'value', 'off'),
+        ('traffic_set', {'op': 'cap', 'value': '1024'}, 'op', 'cap'),
+        ('traffic_set', {'op': 'cap', 'value': '1024'}, 'value', '1024'),
+        ('traffic_set', {'op': 'reset_day', 'value': '15'}, 'value', '15'),
+        ('traffic_set', {'op': 'cut', 'value': 'on'}, 'value', 'on'),
+        ('traffic_set', {'op': 'clear', 'value': 'yes'}, 'value', 'yes'),
     ]
 
     def test_hostile_values_are_refused(self):
@@ -328,6 +334,16 @@ class Refusals(Mu300Dash):
             ('sms num inner plus', 'sms_send', {'num': '12+3', 'text': 'hi'}),
             ('sms page', 'sms_list', {'page': '1234567'}),
             ('usb role mode', 'usb_set', {'kind': 'role', 'value': 'ncm', 'scope': '', 'auto': '0'}),
+            ('traffic op unknown', 'traffic_set', {'op': 'device', 'value': 'wwan0'}),
+            ('traffic reset day 0', 'traffic_set', {'op': 'reset_day', 'value': '0'}),
+            ('traffic reset day 32', 'traffic_set', {'op': 'reset_day', 'value': '32'}),
+            ('traffic cap leading zero', 'traffic_set', {'op': 'cap', 'value': '01'}),
+            ('traffic cap 17 digits', 'traffic_set', {'op': 'cap', 'value': '1' * 17}),
+            ('traffic cap decimal', 'traffic_set', {'op': 'cap', 'value': '1.5'}),
+            ('traffic warn 0', 'traffic_set', {'op': 'warn', 'value': '0'}),
+            ('traffic warn 101', 'traffic_set', {'op': 'warn', 'value': '101'}),
+            ('traffic cut yes', 'traffic_set', {'op': 'cut', 'value': 'yes'}),
+            ('traffic clear without yes', 'traffic_set', {'op': 'clear', 'value': ''}),
             ('usb net role', 'usb_set', {'kind': 'net', 'value': 'host', 'scope': 'once', 'auto': '0'}),
             ('usb iface dots', 'usb_net_add', {'iface': '..'}),
             ('usb iface slash', 'usb_net_add', {'iface': 'eth1/../x'}),
@@ -428,6 +444,14 @@ class Passthrough(Mu300Dash):
         ('ttl_set', {'value': '255'}, [['ttl', 'set', '255']]),
         ('ttl_set', {'value': '1'}, [['ttl', 'set', '1']]),
         ('ttl_set', {'value': 'off'}, [['ttl', 'set', 'off']]),
+        ('traffic_get', {}, [['traffic', 'get']]),
+        ('traffic_set', {'op': 'reset_day', 'value': '31'}, [['traffic', 'set', 'reset_day', '31']]),
+        ('traffic_set', {'op': 'cap', 'value': '0'}, [['traffic', 'set', 'cap', '0']]),
+        ('traffic_set', {'op': 'cap', 'value': '53687091200'}, [['traffic', 'set', 'cap', '53687091200']]),
+        ('traffic_set', {'op': 'warn', 'value': '100'}, [['traffic', 'set', 'warn', '100']]),
+        ('traffic_set', {'op': 'cut', 'value': 'off'}, [['traffic', 'set', 'cut', 'off']]),
+        ('traffic_set', {'op': 'used', 'value': '1'}, [['traffic', 'set', 'used', '1']]),
+        ('traffic_set', {'op': 'clear', 'value': 'yes'}, [['traffic', 'set', 'clear', 'yes']]),
     ]
 
     def test_valid_values_reach_the_adapter(self):
@@ -796,11 +820,62 @@ class TtlAdapter(ShellTest):
                                  'detail': 'the rule could not be set "x" \\ (tc and nftables)'})
 
 
+class TrafficAdapter(ShellTest):
+    """unisoc-modem/traffic: the Data usage page's adapter over mu300-traffic (a stub that records its arguments)."""
+
+    def setUp(self):
+        super().setUp()
+        self.cmd = self.stubs / 'mu300-traffic'
+        self.cmd.write_text('#!/bin/sh\necho "$*" >> "$STUBLOG/traffic.log"\n'
+                            '[ "$1" = json ] && { echo \'{"device":"sipa_eth0","cycle":{"used":5}}\'; exit 0; }\n'
+                            '[ -e "$STUBLOG/fail" ] && { cat "$STUBLOG/fail" >&2; exit 1; }\necho saved\n')
+        self.cmd.chmod(0o755)
+
+    def run_ad(self, shell, *args, **env):
+        r = self.script(shell, ADAPTERS / 'traffic', *args, MU300_TRAFFIC_CMD=env.get('cmd', self.cmd))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return json.loads(r.stdout)
+
+    def log(self):
+        p = self.tmp / 'traffic.log'
+        t = p.read_text() if p.exists() else ''
+        p.unlink(missing_ok=True)
+        return t
+
+    def test_get_and_set(self):
+        for shell in self.each_shell():
+            self.log()
+            self.assertEqual(self.run_ad(shell, 'get'), {'device': 'sipa_eth0', 'cycle': {'used': 5}})
+            for args, want in ((('reset_day', '31'), 'set reset-day 31'), (('cap', '0'), 'set cap off'),
+                               (('cap', '1073741824'), 'set cap 1073741824'), (('warn', '80'), 'set warn 80'),
+                               (('cut', 'on'), 'set cut on'), (('used', '5'), 'used 5'), (('clear', 'yes'), 'clear --yes')):
+                self.assertEqual(self.run_ad(shell, 'get') and self.run_ad(shell, 'set', *args), {'ok': 1}, args)
+                self.assertEqual(self.log().splitlines()[-1], want)
+
+    def test_bad_values_run_nothing(self):
+        for shell in self.each_shell():
+            self.log()
+            for op, v in (('reset_day', '0'), ('cap', '-1'), ('cap', '1.5'), ('warn', '101'), ('cut', 'yes'),
+                          ('used', '$(id)'), ('clear', ''), ('cap', '5\n6'), ('device', 'wwan0')):
+                with self.subTest(op=op, v=v):
+                    self.assertEqual(self.run_ad(shell, 'set', op, v)['ok'], 0)
+                    self.assertEqual(self.log(), '')
+
+    def test_a_failure_says_why_and_a_missing_tool_is_said(self):
+        (self.tmp / 'fail').write_text('mu300-traffic: cannot write "/x"\n')
+        for shell in self.each_shell():
+            self.assertEqual(self.run_ad(shell, 'set', 'warn', '50'),
+                             {'ok': 0, 'error': 'The setting could not be saved', 'detail': 'mu300-traffic: cannot write "/x"'})
+            self.assertEqual(self.run_ad(shell, 'get', cmd=self.tmp / 'none'),
+                             {'ok': 0, 'error': 'Data usage is not available on this system'})
+
+
 class Acl(unittest.TestCase):
     # SMS bodies (one-time codes) and the AT history (AT+CPIN PINs) are not for read-only users (ruling R14)
-    READ = {'sysinfo', 'status', 'signal', 'lock_get', 'usb_get', 'usb_net_list', 'lang_get', 'power_get', 'ttl_get'}
+    READ = {'sysinfo', 'status', 'signal', 'lock_get', 'usb_get', 'usb_net_list', 'lang_get', 'power_get', 'ttl_get',
+            'traffic_get'}
     WRITE = {'act', 'at', 'at_history', 'lock_set', 'sms_list', 'sms_show', 'sms_send', 'sms_delete', 'sms_sync',
-             'usb_set', 'usb_net_add', 'lang_set', 'power_set', 'ttl_set'}
+             'usb_set', 'usb_net_add', 'lang_set', 'power_set', 'ttl_set', 'traffic_set'}
 
     def test_actions_need_write_access(self):
         acl = json.loads(ACL.read_text())['luci-app-mu300']
@@ -813,7 +888,10 @@ class Acl(unittest.TestCase):
         self.assertEqual(acl['write'].get('cgi-io'), ['upload'])
         self.assertEqual(acl['write'].get('file'), {'/tmp/mu300-extra-lang.tar.gz': ['write']})
         self.assertNotIn('cgi-io', acl['read'])
-        self.assertNotIn('file', acl['read'])
+        # the dashboard's live rates read the interface counters through rpcd's file read, and nothing else: rpcd
+        # checks the path it resolved, and /proc/net is the link /proc/self/net (rpcd's own pid)
+        self.assertEqual(acl['read'].get('file'), {'/proc/net/dev': ['read'], '/proc/[0-9]*/net/dev': ['read']})
+        self.assertEqual(acl['read']['ubus'].get('file'), ['read'])
 
 
 LIB = APP / 'usr' / 'share' / 'unisoc-modem' / 'lib.sh'
@@ -1014,6 +1092,56 @@ esac
             self.assertIsNone(cell['qos'])
             json.loads((run / 'sig.json').read_text())
             self.assertEqual((run / 'cell.json').stat().st_mode & 0o777, 0o600)
+
+    def test_cell_names_the_operator(self):
+        # COPS's <format> decides what the quoted text is: 2 a PLMN (the F50's modem keeps that format), whose long
+        # name comes from one line that puts format 2 back, once per PLMN; 0/1 a name, UCS2 hex decoded only when the
+        # modem's character set is UCS2, and never a PLMN however many digits it has
+        at = self.tmp / 'modem'
+        at.write_text(r"""#!/bin/sh
+echo "$3" >> "$STUBLOG/at.log"
+case $3 in
+    'AT+CFUN?') echo '+CFUN: 1' ;;
+    'AT+COPS?') cat "$STUBLOG/cops" ;;
+    'AT+CSCS?') printf '+CSCS: "%s"\nOK\n' "$(cat "$STUBLOG/cscs")" ;;
+    'AT+CSCS?;+COPS=3,0;+COPS?;+COPS=3,2') printf '+CSCS: "%s"\n%s\nOK\n' "$(cat "$STUBLOG/cscs")" "$(cat "$STUBLOG/named")" ;;
+esac
+""")
+        at.chmod(0o755)
+        cases = [
+            # (COPS?, the long-name answer, CSCS, name, plmn, act)
+            ('+COPS: 0,2,"28602",13', '+COPS: 0,0,"vodafone TR",13', 'HEX', 'vodafone TR', '28602', 13),
+            ('+COPS: 0,2,"310260",7', '+COPS: 0,0,"0054002D004D006F00620069006C0065",7', 'UCS2', 'T-Mobile', '310260', 7),
+            ('+COPS: 0,2,"46001",7', 'ERROR', 'IRA', None, '46001', 7),
+            ('+COPS: 0,0,"00540054",7', '', 'UCS2', 'TT', None, 7),
+            ('+COPS: 0,0,"00540054",7', '', 'IRA', '00540054', None, 7),
+            ('+COPS: 0,0,"D800",7', '', 'UCS2', 'D800', None, 7),            # a lone surrogate: not UCS2 text
+            ('+COPS: 0,0,"000A0041",7', '', 'UCS2', '000A0041', None, 7),    # a control character: not decoded
+            ('+COPS: 0,1,"12345",7', '', 'IRA', '12345', None, 7),           # a short name of digits stays a name
+            ('+COPS: 0,0,"4E2D56FD79FB52A8",7', '', 'UCS2', '中国移动', None, 7),
+            ('+COPS: 0', '', 'IRA', None, None, None),
+        ]
+        for shell in self.each_shell():
+            for cops, named, cscs, name, plmn, act in cases:
+                with self.subTest(cops=cops, cscs=cscs):
+                    (self.tmp / 'cops').write_text(cops + '\nOK\n')
+                    (self.tmp / 'named').write_text(named)
+                    (self.tmp / 'cscs').write_text(cscs)
+                    (self.tmp / 'at.log').unlink(missing_ok=True)
+                    run = self.tmp / f'cell{self.n}'
+                    self.n += 1
+                    for _ in range(2):
+                        self.script(shell, ADAPTERS / 'cell', MU300_AT=at, MU300_DASH_DIR=run,
+                                    MU300_DASH_POOL_DIR=run / 'pool', MU300_DASH_IDENT_DIR=run / 'ident')
+                        op = json.loads((run / 'cell.json').read_text())['operator']
+                        if act is None:
+                            self.assertIsNone(op)
+                            continue
+                        self.assertEqual((op['name'], op['plmn'], op['act']), (name, plmn, act))
+                    log = (self.tmp / 'at.log').read_text().splitlines()
+                    # the long name is asked once per PLMN (two rounds here), and only for the numeric format
+                    want = 1 if named.startswith('+COPS') else 2 if ',2,' in cops else 0
+                    self.assertEqual(log.count('AT+CSCS?;+COPS=3,0;+COPS?;+COPS=3,2'), want)
 
     def test_dashboard_info_escapes_names(self):
         self.stub('busybox', 'shift 4; exec "$@"')   # busybox timeout -s KILL N CMD...

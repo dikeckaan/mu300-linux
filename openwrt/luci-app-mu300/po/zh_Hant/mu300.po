@@ -24,6 +24,9 @@ msgstr "轉接器設定"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "流量統計"
+
 msgid "Device management"
 msgstr "裝置管理"
 
@@ -321,6 +324,18 @@ msgstr "MCS 下行/上行"
 msgid "BLER DL/UL"
 msgstr "BLER 下行/上行"
 
+msgid "%s of %s"
+msgstr "%s / %s"
+
+msgid "The monthly cap is reached"
+msgstr "已達到每月流量上限"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "已用每月上限的 %d%%"
+
+msgid "This billing cycle"
+msgstr "本計費週期"
+
 msgid "Link & traffic"
 msgstr "連結與流量"
 
@@ -335,6 +350,9 @@ msgstr "累計接收"
 
 msgid "Total sent"
 msgstr "累計傳送"
+
+msgid "Used today"
+msgstr "今日已用"
 
 msgid "Session duration"
 msgstr "連線時間"
@@ -1200,6 +1218,108 @@ msgstr "我：%s"
 msgid "Delete"
 msgstr "刪除"
 
+msgid "The data usage could not be read"
+msgstr "無法讀取流量統計"
+
+msgid "Today"
+msgstr "今天"
+
+msgid "Days left in this cycle"
+msgstr "本週期剩餘天數"
+
+msgid "Received"
+msgstr "下載"
+
+msgid "Sent"
+msgstr "上傳"
+
+msgid "Corrected by"
+msgstr "校正"
+
+msgid "Monthly cap"
+msgstr "每月上限"
+
+msgid "%s, warning at %d%%"
+msgstr "%s，%d%% 時提醒"
+
+msgid "None"
+msgstr "無"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "已達到每月流量上限：行動數據已關閉，下一個週期開始時自動恢復。"
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s 正在等待時鐘：時鐘尚未透過網路校準。這部分流量已計入本週期，時鐘校準後會記到對應的日期。"
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "介面 %s 目前不存在：在它恢復之前不計數。"
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "統計 %s 的雙向流量，與電信業者的計算方式一致（包括 VPN 的額外開銷）。"
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "計數保存在記憶體中，每 30 分鐘以及關機時寫入磁碟：斷電最多遺失最近半小時的資料。"
+
+msgid "Counting since %s."
+msgstr "自 %s 起統計。"
+
+msgid "Per day"
+msgstr "按日"
+
+msgid "Date"
+msgstr "日期"
+
+msgid "Total"
+msgstr "合計"
+
+msgid "Per billing cycle"
+msgstr "按計費週期"
+
+msgid "Billing cycle"
+msgstr "計費週期"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "請輸入以 GB 為單位的大小，例如 50 或 2.5"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "請輸入 1 到 100 之間的百分比"
+
+msgid "Turn mobile data off at the cap"
+msgstr "達到上限時關閉行動數據"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "本週期達到上限時將關閉行動數據：在下一個週期開始、提高上限或關閉此選項之前，無法透過電信業者上網。手動重新開啟行動數據後，它會保持開啟直到下次重新啟動。"
+
+msgid "Set"
+msgstr "設定"
+
+msgid "Clear the count"
+msgstr "清除統計"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "迄今統計的所有日期和計費週期都將被清除，從現在起重新統計。"
+
+msgid "Billing cycle and cap"
+msgstr "計費週期與上限"
+
+msgid "A billing cycle starts on day"
+msgstr "計費週期開始於每月第幾天"
+
+msgid "31: on the last day of each month"
+msgstr "31：每月最後一天"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "每月上限（GB，0 表示無）"
+
+msgid "Warning at this percentage of the cap"
+msgstr "達到上限的此百分比時提醒"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "本週期已用（GB）"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "電信業者顯示的本週期用量（例如統計從週期中途開始時），統計將據此校正。"
+
 msgid "Current setting"
 msgstr "目前設定"
 
@@ -1226,9 +1346,6 @@ msgstr "在此核心上，設定 TTL 期間防火牆快速路徑為關閉狀態"
 
 msgid "Set %d"
 msgstr "設為 %d"
-
-msgid "Set"
-msgstr "設定"
 
 msgid "Enter a number from 1 to 255"
 msgstr "請輸入 1 到 255 之間的數字"
@@ -1383,6 +1500,15 @@ msgstr "TTL 介面卡未傳回有效回覆"
 msgid "Invalid TTL"
 msgstr "無效的 TTL"
 
+msgid "The data usage adapter gave no valid reply"
+msgstr "流量統計介面卡沒有回傳有效的回覆"
+
+msgid "Unknown data usage setting"
+msgstr "未知的流量統計設定"
+
+msgid "Invalid value for this setting"
+msgstr "此設定的值無效"
+
 msgid "Request too large"
 msgstr "請求過大"
 
@@ -1514,6 +1640,15 @@ msgstr "沒有可鎖定的服務基地台"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "此系統不支援流量統計"
+
+msgid "The setting could not be saved"
+msgstr "無法儲存設定"
+
+msgid "Unknown data usage operation"
+msgstr "未知的流量統計操作"
 
 msgid "The TTL setting could not be read"
 msgstr "無法讀取 TTL 設定"

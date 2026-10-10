@@ -24,6 +24,9 @@ msgstr "Ajustes del adaptador"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "Uso de datos"
+
 msgid "Device management"
 msgstr "Administración del dispositivo"
 
@@ -321,6 +324,18 @@ msgstr "MCS DL/UL"
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
+msgid "%s of %s"
+msgstr "%s de %s"
+
+msgid "The monthly cap is reached"
+msgstr "Se alcanzó el límite mensual"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "%d%% del límite mensual usado"
+
+msgid "This billing cycle"
+msgstr "Este ciclo de facturación"
+
 msgid "Link & traffic"
 msgstr "Enlace y tráfico"
 
@@ -335,6 +350,9 @@ msgstr "Total recibido"
 
 msgid "Total sent"
 msgstr "Total enviado"
+
+msgid "Used today"
+msgstr "Usado hoy"
 
 msgid "Session duration"
 msgstr "Duración de la sesión"
@@ -1200,6 +1218,108 @@ msgstr "Yo: %s"
 msgid "Delete"
 msgstr "Eliminar"
 
+msgid "The data usage could not be read"
+msgstr "No se pudo leer el uso de datos"
+
+msgid "Today"
+msgstr "Hoy"
+
+msgid "Days left in this cycle"
+msgstr "Días restantes en este ciclo"
+
+msgid "Received"
+msgstr "Recibido"
+
+msgid "Sent"
+msgstr "Enviado"
+
+msgid "Corrected by"
+msgstr "Corregido en"
+
+msgid "Monthly cap"
+msgstr "Límite mensual"
+
+msgid "%s, warning at %d%%"
+msgstr "%s, aviso al %d%%"
+
+msgid "None"
+msgstr "Ninguno"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "Se alcanzó el límite mensual: los datos móviles se apagaron. Vuelven a encenderse cuando empiece el siguiente ciclo."
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s espera al reloj: aún no se ha ajustado desde la red. Ya cuenta para este ciclo e irá a su día cuando se ajuste el reloj."
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "La interfaz %s no está presente ahora: no se cuenta nada hasta que vuelva."
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "Contado en %s, en ambos sentidos, como lo cuenta el operador (incluida la sobrecarga de una VPN)."
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "El conteo se guarda en memoria y se escribe en el disco cada 30 minutos y al apagar: un corte de luz pierde como mucho la última media hora."
+
+msgid "Counting since %s."
+msgstr "Contando desde %s."
+
+msgid "Per day"
+msgstr "Por día"
+
+msgid "Date"
+msgstr "Fecha"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Per billing cycle"
+msgstr "Por ciclo de facturación"
+
+msgid "Billing cycle"
+msgstr "Ciclo de facturación"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "Introduce un tamaño en GB, por ejemplo 50 o 2.5"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "Introduce un porcentaje de 1 a 100"
+
+msgid "Turn mobile data off at the cap"
+msgstr "Apagar los datos móviles al llegar al límite"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Cuando este ciclo llegue al límite, se apagan los datos móviles: sin internet a través del operador hasta que empiece el siguiente ciclo, se suba el límite o se desactive esta opción. Si los datos móviles se vuelven a encender a mano, siguen encendidos hasta el próximo reinicio."
+
+msgid "Set"
+msgstr "Fijar"
+
+msgid "Clear the count"
+msgstr "Borrar el conteo"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "Se olvidan todos los días y ciclos contados hasta ahora. El conteo sigue desde este momento."
+
+msgid "Billing cycle and cap"
+msgstr "Ciclo de facturación y límite"
+
+msgid "A billing cycle starts on day"
+msgstr "Un ciclo de facturación empieza el día"
+
+msgid "31: on the last day of each month"
+msgstr "31: el último día de cada mes"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "Límite mensual (GB, 0: ninguno)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "Avisar a este porcentaje del límite"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "Usado hasta ahora en este ciclo (GB)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "Lo que muestra el operador para este ciclo (por ejemplo, si el conteo empezó a mitad); el conteo se corrige a ese valor."
+
 msgid "Current setting"
 msgstr "Ajuste actual"
 
@@ -1226,9 +1346,6 @@ msgstr "En este kernel la vía rápida del cortafuegos está desactivada mientra
 
 msgid "Set %d"
 msgstr "Fijar %d"
-
-msgid "Set"
-msgstr "Fijar"
 
 msgid "Enter a number from 1 to 255"
 msgstr "Introduzca un número del 1 al 255"
@@ -1383,6 +1500,15 @@ msgstr "El adaptador de TTL no dio una respuesta válida"
 msgid "Invalid TTL"
 msgstr "TTL no válido"
 
+msgid "The data usage adapter gave no valid reply"
+msgstr "El adaptador de uso de datos no dio una respuesta válida"
+
+msgid "Unknown data usage setting"
+msgstr "Ajuste de uso de datos desconocido"
+
+msgid "Invalid value for this setting"
+msgstr "Valor no válido para este ajuste"
+
 msgid "Request too large"
 msgstr "Solicitud demasiado grande"
 
@@ -1514,6 +1640,15 @@ msgstr "No hay celda de servicio que bloquear"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "El uso de datos no está disponible en este sistema"
+
+msgid "The setting could not be saved"
+msgstr "No se pudo guardar el ajuste"
+
+msgid "Unknown data usage operation"
+msgstr "Operación de uso de datos desconocida"
 
 msgid "The TTL setting could not be read"
 msgstr "No se pudo leer el ajuste de TTL"

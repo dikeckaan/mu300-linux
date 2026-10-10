@@ -36,6 +36,37 @@ var callPowerGet = rpc.declare({ object: 'mu300dash', method: 'power_get', expec
 var callPowerSet = rpc.declare({ object: 'mu300dash', method: 'power_set', params: [ 'op', 'key', 'value' ], expect: { '': {} } });
 var callTtlGet = rpc.declare({ object: 'mu300dash', method: 'ttl_get', expect: { '': {} } });
 var callTtlSet = rpc.declare({ object: 'mu300dash', method: 'ttl_set', params: [ 'value' ], expect: { '': {} } });
+var callTrafficGet = rpc.declare({ object: 'mu300dash', method: 'traffic_get', expect: { '': {} } });
+var callTrafficSet = rpc.declare({ object: 'mu300dash', method: 'traffic_set', params: [ 'op', 'value' ], expect: { '': {} } });
+/* The live rates' one read: rpcd's own file read of /proc/net/dev (no process started, no AT), every second. Sent on
+ * its own (nobatch): a declared call is batched with whatever else is pending, and then waits for the status
+ * snapshot, which takes a few hundred milliseconds and made the rates come every two seconds. Resolves to the text,
+ * rejects on any failure. */
+function callNetDev(path) {
+	return new Promise(function(resolve, reject) {
+		rpc.call({ jsonrpc: '2.0', id: Date.now(), method: 'call',
+			params: [ rpc.getSessionID(), 'file', 'read', { path: path } ] }, function(res) {
+			try {
+				var r = res && res.ok ? res.json().result : null;
+				if (Array.isArray(r) && r[0] === 0 && r[1] && typeof r[1].data === 'string') resolve(r[1].data);
+				else reject(new Error('file read failed'));
+			} catch (e) { reject(e); }
+		}, true);
+	});
+}
+
+/* netDev(text of /proc/net/dev, interface) -> { rx, tx } bytes, or null when it is not there */
+function netDev(text, dev) {
+	var lines = String(text || '').split('\n');
+	for (var i = 0; i < lines.length; i++) {
+		var c = lines[i].indexOf(':');
+		if (c < 0 || lines[i].substring(0, c).trim() !== dev) continue;
+		var f = lines[i].substring(c + 1).trim().split(/\s+/);
+		if (f.length < 9) return null;
+		return { rx: Number(f[0]), tx: Number(f[8]) };
+	}
+	return null;
+}
 
 /* Mainland carriers by PLMN, for when COPS gives the numeric format. The names are messages: translated once, when
  * the module loads (a page's language does not change without a reload). */
@@ -611,6 +642,7 @@ return baseclass.extend({
 	callLangGet: callLangGet, callLangSet: callLangSet,
 	callPowerGet: callPowerGet, callPowerSet: callPowerSet,
 	callTtlGet: callTtlGet, callTtlSet: callTtlSet,
+	callTrafficGet: callTrafficGet, callTrafficSet: callTrafficSet, callNetDev: callNetDev, netDev: netDev,
 	carrierName: carrierName, qLevel: qLevel, qLevelLabel: qLevelLabel, qLabel: qLabel, qCol: qCol, qScore: qScore,
 	esc: esc, fmtBytes: fmtBytes, fmtRate: fmtRate, fmtUptime: fmtUptime, PLMN_CN: PLMN_CN,
 	injectCss: injectCss, v: v, set: set, spark: spark, neighborRows: neighborRows,

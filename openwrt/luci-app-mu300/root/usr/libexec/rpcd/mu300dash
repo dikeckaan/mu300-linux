@@ -24,6 +24,8 @@
 #   lang_get, lang_set  LuCI's languages and the lang extra (unisoc-modem/languages, mu300-extra)
 #   power_get, power_set  the power profiles (unisoc-modem/power, mu300-power)
 #   ttl_get, ttl_set value  the TTL of mobile data (unisoc-modem/ttl, mu300-ttl); value off or 1-255
+#   traffic_get, traffic_set op value  the mobile data count, its billing cycle and cap (unisoc-modem/traffic,
+#                     mu300-traffic)
 #
 # The AT terminal's whole wait is capped below the 30 s endpoint limit (AT_LOCK_WAIT
 # for the channel lock plus AT_BUDGET for the answer, mu300-at's MU300_AT_BUDGET),
@@ -551,6 +553,25 @@ m_ttl_set() {
     reply_obj "$("$TTLA" set "$value" 2>/dev/null)" 'The TTL adapter gave no valid reply'
 }
 
+# --------------------------------------------------------------- data usage
+# The Data usage page: mu300-traffic through the adapter, which checks every value again. Sizes are whole bytes.
+TRAFA=${MU300_TRAFFIC_ADAPTER:-$DASH/traffic}
+m_traffic_get() { reply_obj "$("$TRAFA" get 2>/dev/null)" 'The data usage adapter gave no valid reply'; }
+m_traffic_set() {
+    local op value
+    inp '@.op'; op=$V
+    inp '@.value'; value=$V
+    case $op in
+        reset_day) allowed "$value" '([1-9]|[12][0-9]|3[01])' ;;
+        cap|used)  allowed "$value" '(0|[1-9][0-9]{0,15})' ;;
+        warn)      allowed "$value" '([1-9]|[1-9][0-9]|100)' ;;
+        cut)       allowed "$value" '(on|off)' ;;
+        clear)     allowed "$value" 'yes' ;;
+        *)         refuse 'Unknown data usage setting'; return ;;
+    esac || { refuse 'Invalid value for this setting'; return; }
+    reply_obj "$("$TRAFA" set "$op" "$value" 2>/dev/null)" 'The data usage adapter gave no valid reply'
+}
+
 do_list() {
     cat <<EOF
 {
@@ -576,7 +597,9 @@ do_list() {
 	"power_get": { },
 	"power_set": { "op": "String", "key": "String", "value": "String" },
 	"ttl_get": { },
-	"ttl_set": { "value": "String" }
+	"ttl_set": { "value": "String" },
+	"traffic_get": { },
+	"traffic_set": { "op": "String", "value": "String" }
 }
 EOF
 }
@@ -632,6 +655,8 @@ call)
         power_set)    run_m power_set    m_power_set ;;
         ttl_get)      run_m ttl_get      m_ttl_get ;;
         ttl_set)      run_m ttl_set      m_ttl_set ;;
+        traffic_get)  run_m traffic_get  m_traffic_get ;;
+        traffic_set)  run_m traffic_set  m_traffic_set ;;
         *)            refuse 'No such method' ;;
     esac
     ;;

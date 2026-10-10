@@ -315,6 +315,14 @@ CAP_DUALBOOT=0; [ -x /opt/mu300/bin/mu300-next-boot ] && CAP_DUALBOOT=1
 BOOT_LOCK=0
 for _d in /mnt/mu300-disk ""; do [ -f "$_d/.mu300/boot-lock" ] && { BOOT_LOCK=1; break; }; done
 
+# ------------------------------------------------------------- data usage
+# mu300-traffic's service writes this summary after each of its readings (RAM, once a minute): today and the
+# billing cycle, against the cap. Numbers and fixed words only; anything else is left out.
+TSUM=${MU300_TRAFFIC_SUMMARY:-/run/mu300/traffic/summary}
+tsum() { sed -n "s/^$1=//p" "$TSUM" 2>/dev/null | head -n1; }
+tint() { v=$(tsum "$1"); case $v in ''|*[!0-9]*|0?*) echo 0 ;; *) echo "$v" ;; esac; }
+T_LEVEL=$(tsum level); case $T_LEVEL in ok|warn|over|none) ;; *) T_LEVEL= ;; esac
+
 # ------------------------------------------------------------------ output
 printf '{"ts":%d,"uptime":%d,"host":%s,"model":%s,"fw":%s,"kernel":%s,' \
     "$NOW" "$UPTIME" "$(qs "$HOST")" "$(qs "$MODEL")" "$(qs "$FW")" "$(qs "$(uname -r)")"
@@ -328,6 +336,14 @@ printf '"power":{"present":%d,"capacity":%s,"status":%s,"volt":%s,"ua":%s,"w":%s
     "$(n_or_null "$P_W")" "$(n_or_null "$P_USB")" "$(n_or_null "$P_IN_V")" "$(n_or_null "$P_IN_I")" "$(n_or_null "$P_IN_W")"
 printf '"net":{"mobile":%s,"sipa_eth0":%s,"brlan":%s,"wlan0":%s,"usb0":%s},' \
     "$(net_obj "$DATA_DEVICE")" "$(net_obj "$DATA_DEVICE")" "$(net_obj "$LAN_DEVICE")" "$(net_obj "$WIFI_DEVICE")" "$(net_obj "$USB_DEVICE")"
+# the interface the page reads its live rates of (from /proc/net/dev, every second)
+printf '"data_device":%s,' "$(qs "$DATA_DEVICE")"
+if [ -n "$T_LEVEL" ]; then
+    printf '"traffic":{"level":"%s","today":%s,"used":%s,"cap":%s,"warn":%s,"clock":%s},' "$T_LEVEL" \
+        "$(( $(tint today_rx) + $(tint today_tx) ))" "$(tint used)" "$(tint cap)" "$(tint warn)" "$(tint clock)"
+else
+    printf '"traffic":null,'
+fi
 printf '"wan":{"up":%d,"uptime":%s,"proto":%s,"apn":%s,"ip4":%s,"ip6":%s,"dns":%s},' \
     "$wan_up" "$(n_or_null "$wan_uptime")" "$(qs "$wan_proto")" "$(qs "$apn")" "$(qs "$wan_ip4")" "$(qs "$wan6_ip")" "$(qs "$wan_dns")"
 printf '"wifi":{"up":%d,"ssid":%s,"channel":%s,"band":%s,"width":%s,"country":%s,"enc":%s,"hidden":%s,"hostapd":%d,"clients":[%s],"clients_n":%d},' \

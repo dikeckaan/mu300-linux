@@ -24,6 +24,9 @@ msgstr "Impostazioni adattatore"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "Consumo dati"
+
 msgid "Device management"
 msgstr "Gestione dispositivo"
 
@@ -321,6 +324,18 @@ msgstr "MCS DL/UL"
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
+msgid "%s of %s"
+msgstr "%s di %s"
+
+msgid "The monthly cap is reached"
+msgstr "Il limite mensile è stato raggiunto"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "Usato il %d%% del limite mensile"
+
+msgid "This billing cycle"
+msgstr "Questo ciclo di fatturazione"
+
 msgid "Link & traffic"
 msgstr "Collegamento e traffico"
 
@@ -335,6 +350,9 @@ msgstr "Totale ricevuto"
 
 msgid "Total sent"
 msgstr "Totale inviato"
+
+msgid "Used today"
+msgstr "Usato oggi"
 
 msgid "Session duration"
 msgstr "Durata della sessione"
@@ -1200,6 +1218,108 @@ msgstr "Io: %s"
 msgid "Delete"
 msgstr "Elimina"
 
+msgid "The data usage could not be read"
+msgstr "Impossibile leggere il consumo dati"
+
+msgid "Today"
+msgstr "Oggi"
+
+msgid "Days left in this cycle"
+msgstr "Giorni rimasti in questo ciclo"
+
+msgid "Received"
+msgstr "Ricevuti"
+
+msgid "Sent"
+msgstr "Inviati"
+
+msgid "Corrected by"
+msgstr "Corretto di"
+
+msgid "Monthly cap"
+msgstr "Limite mensile"
+
+msgid "%s, warning at %d%%"
+msgstr "%s, avviso al %d%%"
+
+msgid "None"
+msgstr "Nessuno"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "Il limite mensile è stato raggiunto: i dati mobili sono stati spenti. Si riaccendono all'inizio del prossimo ciclo."
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s attende l'orologio: non è ancora stato impostato dalla rete. Conta già per questo ciclo e andrà al suo giorno quando l'orologio sarà impostato."
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "L'interfaccia %s ora non c'è: non si conta nulla finché non torna."
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "Contato su %s, in entrambe le direzioni, come lo conta l'operatore (incluso il sovraccarico di una VPN)."
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "Il conteggio è tenuto in memoria e scritto sul disco ogni 30 minuti e allo spegnimento: un'interruzione di corrente perde al massimo l'ultima mezz'ora."
+
+msgid "Counting since %s."
+msgstr "Conteggio dal %s."
+
+msgid "Per day"
+msgstr "Per giorno"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Total"
+msgstr "Totale"
+
+msgid "Per billing cycle"
+msgstr "Per ciclo di fatturazione"
+
+msgid "Billing cycle"
+msgstr "Ciclo di fatturazione"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "Inserisci una dimensione in GB, ad esempio 50 o 2.5"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "Inserisci una percentuale da 1 a 100"
+
+msgid "Turn mobile data off at the cap"
+msgstr "Spegni i dati mobili al limite"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Quando questo ciclo raggiunge il limite, i dati mobili vengono spenti: niente internet tramite l'operatore finché non inizia il prossimo ciclo, il limite viene alzato o questa opzione viene disattivata. Riaccendendo i dati mobili a mano restano accesi fino al prossimo riavvio."
+
+msgid "Set"
+msgstr "Imposta"
+
+msgid "Clear the count"
+msgstr "Azzera il conteggio"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "Tutti i giorni e i cicli contati finora vengono dimenticati. Il conteggio continua da adesso."
+
+msgid "Billing cycle and cap"
+msgstr "Ciclo di fatturazione e limite"
+
+msgid "A billing cycle starts on day"
+msgstr "Un ciclo di fatturazione inizia il giorno"
+
+msgid "31: on the last day of each month"
+msgstr "31: l'ultimo giorno di ogni mese"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "Limite mensile (GB, 0: nessuno)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "Avvisa a questa percentuale del limite"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "Usato finora in questo ciclo (GB)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "Ciò che l'operatore mostra per questo ciclo (ad esempio se il conteggio è iniziato a metà); il conteggio viene corretto su questo valore."
+
 msgid "Current setting"
 msgstr "Impostazione attuale"
 
@@ -1226,9 +1346,6 @@ msgstr "Su questo kernel il percorso rapido del firewall è disattivato finché 
 
 msgid "Set %d"
 msgstr "Imposta %d"
-
-msgid "Set"
-msgstr "Imposta"
 
 msgid "Enter a number from 1 to 255"
 msgstr "Inserisci un numero da 1 a 255"
@@ -1383,6 +1500,15 @@ msgstr "L'adattatore TTL non ha dato una risposta valida"
 msgid "Invalid TTL"
 msgstr "TTL non valido"
 
+msgid "The data usage adapter gave no valid reply"
+msgstr "L'adattatore del consumo dati non ha dato una risposta valida"
+
+msgid "Unknown data usage setting"
+msgstr "Impostazione del consumo dati sconosciuta"
+
+msgid "Invalid value for this setting"
+msgstr "Valore non valido per questa impostazione"
+
 msgid "Request too large"
 msgstr "Richiesta troppo grande"
 
@@ -1514,6 +1640,15 @@ msgstr "Nessuna cella di servizio da bloccare"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "Il consumo dati non è disponibile su questo sistema"
+
+msgid "The setting could not be saved"
+msgstr "Impossibile salvare l'impostazione"
+
+msgid "Unknown data usage operation"
+msgstr "Operazione del consumo dati sconosciuta"
 
 msgid "The TTL setting could not be read"
 msgstr "Impossibile leggere l'impostazione del TTL"

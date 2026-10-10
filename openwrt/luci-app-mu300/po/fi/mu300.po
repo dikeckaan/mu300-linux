@@ -24,6 +24,9 @@ msgstr "Sovittimen asetukset"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "Datan käyttö"
+
 msgid "Device management"
 msgstr "Laitehallinta"
 
@@ -321,6 +324,18 @@ msgstr "MCS DL/UL"
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
+msgid "%s of %s"
+msgstr "%s / %s"
+
+msgid "The monthly cap is reached"
+msgstr "Kuukausiraja on täynnä"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "%d%% kuukausirajasta käytetty"
+
+msgid "This billing cycle"
+msgstr "Tämä laskutusjakso"
+
 msgid "Link & traffic"
 msgstr "Linkki ja liikenne"
 
@@ -335,6 +350,9 @@ msgstr "Vastaanotettu yhteensä"
 
 msgid "Total sent"
 msgstr "Lähetetty yhteensä"
+
+msgid "Used today"
+msgstr "Käytetty tänään"
 
 msgid "Session duration"
 msgstr "Istunnon kesto"
@@ -1200,6 +1218,108 @@ msgstr "Minä: %s"
 msgid "Delete"
 msgstr "Poista"
 
+msgid "The data usage could not be read"
+msgstr "Datan käyttöä ei voitu lukea"
+
+msgid "Today"
+msgstr "Tänään"
+
+msgid "Days left in this cycle"
+msgstr "Päiviä jäljellä jaksossa"
+
+msgid "Received"
+msgstr "Vastaanotettu"
+
+msgid "Sent"
+msgstr "Lähetetty"
+
+msgid "Corrected by"
+msgstr "Korjattu"
+
+msgid "Monthly cap"
+msgstr "Kuukausiraja"
+
+msgid "%s, warning at %d%%"
+msgstr "%s, varoitus %d%%:ssa"
+
+msgid "None"
+msgstr "Ei mitään"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "Kuukausiraja on täynnä: mobiilidata kytkettiin pois. Se kytkeytyy takaisin, kun seuraava jakso alkaa."
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s odottaa kelloa: sitä ei ole vielä asetettu verkosta. Se lasketaan jo tähän jaksoon ja siirtyy omalle päivälleen, kun kello on asetettu."
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "Liitäntää %s ei nyt ole: mitään ei lasketa ennen kuin se palaa."
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "Laskettu liitännästä %s, molempiin suuntiin, kuten operaattori laskee (VPN:n lisäkuorma mukaan lukien)."
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "Laskuri pidetään muistissa ja kirjoitetaan levylle 30 minuutin välein ja sammutettaessa: sähkökatko menettää enintään viimeisen puolen tunnin."
+
+msgid "Counting since %s."
+msgstr "Laskettu alkaen %s."
+
+msgid "Per day"
+msgstr "Päivittäin"
+
+msgid "Date"
+msgstr "Päivämäärä"
+
+msgid "Total"
+msgstr "Yhteensä"
+
+msgid "Per billing cycle"
+msgstr "Laskutusjaksoittain"
+
+msgid "Billing cycle"
+msgstr "Laskutusjakso"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "Anna koko gigatavuina, esimerkiksi 50 tai 2.5"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "Anna prosentti väliltä 1–100"
+
+msgid "Turn mobile data off at the cap"
+msgstr "Katkaise mobiilidata rajalla"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Kun tämä jakso saavuttaa rajan, mobiilidata katkaistaan: ei internetiä operaattorin kautta ennen kuin seuraava jakso alkaa, rajaa nostetaan tai tämä kytketään taas pois. Käsin uudelleen kytketty mobiilidata pysyy päällä seuraavaan uudelleenkäynnistykseen asti."
+
+msgid "Set"
+msgstr "Aseta"
+
+msgid "Clear the count"
+msgstr "Tyhjennä laskuri"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "Kaikki tähän asti lasketut päivät ja laskutusjaksot unohdetaan. Laskenta jatkuu tästä eteenpäin."
+
+msgid "Billing cycle and cap"
+msgstr "Laskutusjakso ja raja"
+
+msgid "A billing cycle starts on day"
+msgstr "Laskutusjakso alkaa päivänä"
+
+msgid "31: on the last day of each month"
+msgstr "31: kunkin kuukauden viimeisenä päivänä"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "Kuukausiraja (GB, 0: ei rajaa)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "Varoita tällä prosentilla rajasta"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "Käytetty tähän mennessä tässä jaksossa (GB)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "Mitä operaattori näyttää tälle jaksolle (esimerkiksi jos laskenta alkoi kesken jakson); laskuri korjataan siihen."
+
 msgid "Current setting"
 msgstr "Nykyinen asetus"
 
@@ -1226,9 +1346,6 @@ msgstr "Tässä ytimessä palomuurin pikapolku on pois päältä, kun TTL on ase
 
 msgid "Set %d"
 msgstr "Aseta %d"
-
-msgid "Set"
-msgstr "Aseta"
 
 msgid "Enter a number from 1 to 255"
 msgstr "Anna luku väliltä 1–255"
@@ -1383,6 +1500,15 @@ msgstr "TTL-sovitin ei antanut kelvollista vastausta"
 msgid "Invalid TTL"
 msgstr "Virheellinen TTL"
 
+msgid "The data usage adapter gave no valid reply"
+msgstr "Datan käytön sovitin ei antanut kelvollista vastausta"
+
+msgid "Unknown data usage setting"
+msgstr "Tuntematon datan käytön asetus"
+
+msgid "Invalid value for this setting"
+msgstr "Virheellinen arvo tälle asetukselle"
+
 msgid "Request too large"
 msgstr "Pyyntö on liian suuri"
 
@@ -1514,6 +1640,15 @@ msgstr "Ei palvelevaa solua lukittavaksi"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "Datan käyttö ei ole käytettävissä tässä järjestelmässä"
+
+msgid "The setting could not be saved"
+msgstr "Asetusta ei voitu tallentaa"
+
+msgid "Unknown data usage operation"
+msgstr "Tuntematon datan käytön toiminto"
 
 msgid "The TTL setting could not be read"
 msgstr "TTL-asetusta ei voitu lukea"

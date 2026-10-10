@@ -24,6 +24,9 @@ msgstr "Setări adaptor"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "Consum de date"
+
 msgid "Device management"
 msgstr "Gestionare dispozitiv"
 
@@ -321,6 +324,18 @@ msgstr "MCS DL/UL"
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
+msgid "%s of %s"
+msgstr "%s din %s"
+
+msgid "The monthly cap is reached"
+msgstr "Limita lunară a fost atinsă"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "%d%% din limita lunară folosit"
+
+msgid "This billing cycle"
+msgstr "Acest ciclu de facturare"
+
 msgid "Link & traffic"
 msgstr "Legătură și trafic"
 
@@ -335,6 +350,9 @@ msgstr "Total primit"
 
 msgid "Total sent"
 msgstr "Total trimis"
+
+msgid "Used today"
+msgstr "Folosit azi"
 
 msgid "Session duration"
 msgstr "Durata sesiunii"
@@ -1200,6 +1218,108 @@ msgstr "Eu: %s"
 msgid "Delete"
 msgstr "Ștergere"
 
+msgid "The data usage could not be read"
+msgstr "Consumul de date nu a putut fi citit"
+
+msgid "Today"
+msgstr "Azi"
+
+msgid "Days left in this cycle"
+msgstr "Zile rămase în ciclu"
+
+msgid "Received"
+msgstr "Primit"
+
+msgid "Sent"
+msgstr "Trimis"
+
+msgid "Corrected by"
+msgstr "Corectat cu"
+
+msgid "Monthly cap"
+msgstr "Limită lunară"
+
+msgid "%s, warning at %d%%"
+msgstr "%s, avertizare la %d%%"
+
+msgid "None"
+msgstr "Niciuna"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "Limita lunară a fost atinsă: datele mobile au fost oprite. Revin când începe ciclul următor."
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s așteaptă ceasul: nu a fost încă setat din rețea. Se socotește deja în acest ciclu și va merge la ziua lui după ce ceasul e setat."
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "Interfața %s nu există acum: nu se numără nimic până revine."
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "Numărat pe %s, în ambele sensuri, cum numără operatorul (inclusiv suprasarcina unui VPN)."
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "Contorul e ținut în memorie și scris pe disc la fiecare 30 de minute și la oprire: o pană de curent pierde cel mult ultima jumătate de oră."
+
+msgid "Counting since %s."
+msgstr "Numărat din %s."
+
+msgid "Per day"
+msgstr "Pe zi"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Per billing cycle"
+msgstr "Pe ciclu de facturare"
+
+msgid "Billing cycle"
+msgstr "Ciclu de facturare"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "Introduceți o dimensiune în GB, de exemplu 50 sau 2.5"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "Introduceți un procent de la 1 la 100"
+
+msgid "Turn mobile data off at the cap"
+msgstr "Oprește datele mobile la limită"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Când acest ciclu atinge limita, datele mobile se opresc: fără internet prin operator până începe ciclul următor, se mărește limita sau se dezactivează din nou această opțiune. Datele mobile repornite manual rămân pornite până la următoarea repornire."
+
+msgid "Set"
+msgstr "Setează"
+
+msgid "Clear the count"
+msgstr "Șterge contorul"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "Toate zilele și ciclurile numărate până acum sunt uitate. Numărarea continuă de acum."
+
+msgid "Billing cycle and cap"
+msgstr "Ciclu de facturare și limită"
+
+msgid "A billing cycle starts on day"
+msgstr "Un ciclu de facturare începe în ziua"
+
+msgid "31: on the last day of each month"
+msgstr "31: în ultima zi a fiecărei luni"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "Limită lunară (GB, 0: niciuna)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "Avertizează la acest procent din limită"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "Folosit până acum în acest ciclu (GB)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "Ce arată operatorul pentru acest ciclu (de exemplu dacă numărarea a început la mijlocul lui); contorul se corectează la această valoare."
+
 msgid "Current setting"
 msgstr "Setarea curentă"
 
@@ -1226,9 +1346,6 @@ msgstr "Pe acest kernel calea rapidă a firewallului este oprită cât timp este
 
 msgid "Set %d"
 msgstr "Setează %d"
-
-msgid "Set"
-msgstr "Setează"
 
 msgid "Enter a number from 1 to 255"
 msgstr "Introduceți un număr de la 1 la 255"
@@ -1383,6 +1500,15 @@ msgstr "Adaptorul TTL nu a dat un răspuns valid"
 msgid "Invalid TTL"
 msgstr "TTL nevalid"
 
+msgid "The data usage adapter gave no valid reply"
+msgstr "Adaptorul de consum de date nu a dat un răspuns valid"
+
+msgid "Unknown data usage setting"
+msgstr "Setare de consum de date necunoscută"
+
+msgid "Invalid value for this setting"
+msgstr "Valoare invalidă pentru această setare"
+
 msgid "Request too large"
 msgstr "Cerere prea mare"
 
@@ -1514,6 +1640,15 @@ msgstr "Nicio celulă de servire pe care să se blocheze"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "Consumul de date nu este disponibil pe acest sistem"
+
+msgid "The setting could not be saved"
+msgstr "Setarea nu a putut fi salvată"
+
+msgid "Unknown data usage operation"
+msgstr "Operație de consum de date necunoscută"
 
 msgid "The TTL setting could not be read"
 msgstr "Setarea TTL nu a putut fi citită"

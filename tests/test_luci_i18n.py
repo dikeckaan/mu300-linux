@@ -411,7 +411,7 @@ if (selected !== true) throw Error('the Bootstrap token bridge must survive the 
 
 
 VIEWS = APP / 'htdocs/luci-static/resources/view/mu300'
-VIEW_NAMES = ('home', 'locks', 'sms', 'at', 'settings', 'device', 'languages', 'ttl')
+VIEW_NAMES = ('home', 'locks', 'sms', 'at', 'settings', 'device', 'languages', 'ttl', 'traffic')
 CJK_RE = re.compile('[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]')
 
 
@@ -801,6 +801,49 @@ rpcReply = { ok: 0, error: 'Invalid TTL' }; await V.set(null, 64); await flush()
 rpcReply = { ok: 1, enabled: 1, value: 65, backend: 'tc', offload: 1, iface: [ 'sipa_eth0' ] };
 await V.set(null, 65); await flush(); await flush();
 return notes();'''
+
+    # the Data usage page over its cap with bytes waiting for the clock, under it with a correction, without an
+    # interface, and the replies of traffic_set
+    TRAFFIC = '''
+const st = { device: 'sipa_eth0', available: 1, clock: 0, since: 1791622800, reset_day: 15,
+             today: { date: '2026-10-10', rx: 1000, tx: 10 }, pending: { rx: 5, tx: 5 },
+             cycle: { start: '2026-09-15', last: '2026-10-14', days_left: 5, rx: 2000, tx: 20, adj: 0, used: 2030 },
+             cap: { bytes: 2000, warn: 90, cut: 1, level: 'over', cut_active: 1 },
+             days: [ { date: '2026-10-10', rx: 1000, tx: 10 }, { date: '2026-10-08', rx: 1000, tx: 10 } ],
+             cycles: [ { start: '2026-09-15', last: '2026-10-14', rx: 2000, tx: 20, adj: 0 } ] };
+V.render(st);
+V.paint(Object.assign({}, st, { available: 0, cap: { bytes: 4000, warn: 50, cut: 0, level: 'warn', cut_active: 0 },
+                                cycle: Object.assign({}, st.cycle, { adj: -100 }) }));
+V.paint({ ok: 0, error: 'Data usage is not available on this system' });
+rpcReply = { ok: 0, error: 'Invalid value for this setting' }; await V.set(null, 'warn', '0'); await flush();
+rpcReply = { ok: 1 }; await V.set(null, 'warn', '80'); await flush();
+return notes();'''
+
+    def test_traffic_page_messages(self):
+        for lang, want in ((None, ['Failed: Invalid value for this setting', 'Saved']),
+                           ('tr', ['Başarısız: Bu ayar için geçersiz değer', 'Kaydedildi'])):
+            with self.subTest(lang=lang):
+                out = self.run_view('traffic', lang, self.TRAFFIC)
+                self.assertEqual(out['result'], want)
+                for m in ('Data usage', 'The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts.',
+                          '%d%% of the monthly cap is used', 'Corrected by', 'Turn mobile data off at the cap'):
+                    self.assertIn(m, out['used'])
+
+    def test_home_rates_come_from_proc_net_dev(self):
+        # the fast lane: two readings of /proc/net/dev one second apart give the rates; a counter that went down
+        # (the interface made again) starts over instead of a negative rate
+        body = r'''
+V.render(); await flush();
+V.update({ info: { ts: 1, data_device: 'sipa_eth0', traffic: { level: 'warn', today: 2048, used: 950, cap: 1000, warn: 90 } } });
+const dev = (rx, tx) => 'Inter-| Receive\n face |bytes\n    lo: 5 1 0 0 0 0 0 0 5 1 0 0 0 0 0 0\n' +
+    ' sipa_eth0: ' + rx + ' 10 0 0 0 0 0 0 ' + tx + ' 5 0 0 0 0 0 0\n';
+V.rate(dev(1000, 100), 1000); V.rate(dev(1000 + 2048 * 1024, 100 + 1024), 3000);
+const a = [ text('dl'), text('ul'), text('rx') ];
+V.rate(dev(10, 1), 4000);
+return a.concat([ text('dl'), text('rx'), text('usage-today'), text('usage-cycle'), text('usage-note') ]);'''
+        r = self.run_view('home', None, body)['result']
+        self.assertEqual(r, ['1.0 MB/s', '512 B/s', '2.0 MB', '1.0 MB/s', '10.0 B', '2.0 KB', '950 B of 1000 B',
+                             '95% of the monthly cap is used'])
 
     # a backend error on each page: (view, body returning what was shown, [(template, error, detail)]); the
     # page shows the error through the catalog, inside its template if any, and the detail after it as data

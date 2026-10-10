@@ -75,6 +75,12 @@
 		"action": { "type": "view", "path": "mu300/ttl" },
 		"depends": { "acl": [ "luci-app-mu300" ] }
 	},
+	"admin/modem/traffic": {
+		"title": "Data usage",
+		"order": 7,
+		"action": { "type": "view", "path": "mu300/traffic" },
+		"depends": { "acl": [ "luci-app-mu300" ] }
+	},
 	"admin/modem/device": {
 		"title": "Device management",
 		"order": 5,

@@ -24,6 +24,9 @@ msgstr "Adapterinstellingen"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "Dataverbruik"
+
 msgid "Device management"
 msgstr "Apparaatbeheer"
 
@@ -321,6 +324,18 @@ msgstr "MCS DL/UL"
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
+msgid "%s of %s"
+msgstr "%s van %s"
+
+msgid "The monthly cap is reached"
+msgstr "De maandlimiet is bereikt"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "%d%% van de maandlimiet gebruikt"
+
+msgid "This billing cycle"
+msgstr "Deze factuurperiode"
+
 msgid "Link & traffic"
 msgstr "Verbinding & verkeer"
 
@@ -335,6 +350,9 @@ msgstr "Totaal ontvangen"
 
 msgid "Total sent"
 msgstr "Totaal verzonden"
+
+msgid "Used today"
+msgstr "Vandaag gebruikt"
 
 msgid "Session duration"
 msgstr "Sessieduur"
@@ -1200,6 +1218,108 @@ msgstr "Ik: %s"
 msgid "Delete"
 msgstr "Verwijderen"
 
+msgid "The data usage could not be read"
+msgstr "Het dataverbruik kon niet worden gelezen"
+
+msgid "Today"
+msgstr "Vandaag"
+
+msgid "Days left in this cycle"
+msgstr "Resterende dagen in deze periode"
+
+msgid "Received"
+msgstr "Ontvangen"
+
+msgid "Sent"
+msgstr "Verzonden"
+
+msgid "Corrected by"
+msgstr "Gecorrigeerd met"
+
+msgid "Monthly cap"
+msgstr "Maandlimiet"
+
+msgid "%s, warning at %d%%"
+msgstr "%s, waarschuwing bij %d%%"
+
+msgid "None"
+msgstr "Geen"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "De maandlimiet is bereikt: mobiele data is uitgeschakeld. Die gaat weer aan als de volgende periode begint."
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s wacht op de klok: die is nog niet via het netwerk gezet. Het telt al mee voor deze periode en gaat naar zijn dag zodra de klok gezet is."
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "De interface %s is er nu niet: er wordt niets geteld tot hij terug is."
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "Geteld op %s, in beide richtingen, zoals de provider telt (inclusief de overhead van een VPN)."
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "De telling staat in het geheugen en wordt elke 30 minuten en bij het afsluiten naar de schijf geschreven: een stroomstoring verliest hooguit het laatste halfuur."
+
+msgid "Counting since %s."
+msgstr "Geteld sinds %s."
+
+msgid "Per day"
+msgstr "Per dag"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Total"
+msgstr "Totaal"
+
+msgid "Per billing cycle"
+msgstr "Per factuurperiode"
+
+msgid "Billing cycle"
+msgstr "Factuurperiode"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "Voer een grootte in GB in, bijvoorbeeld 50 of 2.5"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "Voer een percentage van 1 tot 100 in"
+
+msgid "Turn mobile data off at the cap"
+msgstr "Mobiele data uitschakelen bij de limiet"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Bereikt deze periode de limiet, dan wordt mobiele data uitgeschakeld: geen internet via de provider tot de volgende periode begint, de limiet verhoogd wordt of dit weer wordt uitgezet. Wordt mobiele data met de hand weer aangezet, dan blijft die aan tot de volgende herstart."
+
+msgid "Set"
+msgstr "Instellen"
+
+msgid "Clear the count"
+msgstr "Telling wissen"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "Alle tot nu toe getelde dagen en factuurperiodes worden vergeten. Het tellen gaat vanaf nu verder."
+
+msgid "Billing cycle and cap"
+msgstr "Factuurperiode en limiet"
+
+msgid "A billing cycle starts on day"
+msgstr "Een factuurperiode begint op dag"
+
+msgid "31: on the last day of each month"
+msgstr "31: op de laatste dag van elke maand"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "Maandlimiet (GB, 0: geen)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "Waarschuwen bij dit percentage van de limiet"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "Tot nu toe gebruikt in deze periode (GB)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "Wat de provider voor deze periode toont (bijvoorbeeld als het tellen halverwege begon); de telling wordt daarop gecorrigeerd."
+
 msgid "Current setting"
 msgstr "Huidige instelling"
 
@@ -1226,9 +1346,6 @@ msgstr "Op deze kernel staat het snelle pad van de firewall uit zolang er een TT
 
 msgid "Set %d"
 msgstr "%d instellen"
-
-msgid "Set"
-msgstr "Instellen"
 
 msgid "Enter a number from 1 to 255"
 msgstr "Voer een getal van 1 tot 255 in"
@@ -1383,6 +1500,15 @@ msgstr "De TTL-adapter gaf geen geldig antwoord"
 msgid "Invalid TTL"
 msgstr "Ongeldige TTL"
 
+msgid "The data usage adapter gave no valid reply"
+msgstr "De dataverbruik-adapter gaf geen geldig antwoord"
+
+msgid "Unknown data usage setting"
+msgstr "Onbekende instelling voor dataverbruik"
+
+msgid "Invalid value for this setting"
+msgstr "Ongeldige waarde voor deze instelling"
+
 msgid "Request too large"
 msgstr "Verzoek te groot"
 
@@ -1514,6 +1640,15 @@ msgstr "Geen serving cell om op te vergrendelen"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "Dataverbruik is op dit systeem niet beschikbaar"
+
+msgid "The setting could not be saved"
+msgstr "De instelling kon niet worden opgeslagen"
+
+msgid "Unknown data usage operation"
+msgstr "Onbekende bewerking voor dataverbruik"
 
 msgid "The TTL setting could not be read"
 msgstr "De TTL-instelling kon niet worden gelezen"

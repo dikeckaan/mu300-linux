@@ -24,6 +24,9 @@ msgstr "एडेप्टर सेटिंग्स"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "डेटा उपयोग"
+
 msgid "Device management"
 msgstr "डिवाइस प्रबंधन"
 
@@ -321,6 +324,18 @@ msgstr "MCS DL/UL"
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
+msgid "%s of %s"
+msgstr "%s / %s"
+
+msgid "The monthly cap is reached"
+msgstr "मासिक सीमा पूरी हो गई"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "मासिक सीमा का %d%% उपयोग हुआ"
+
+msgid "This billing cycle"
+msgstr "यह बिलिंग चक्र"
+
 msgid "Link & traffic"
 msgstr "लिंक और ट्रैफ़िक"
 
@@ -335,6 +350,9 @@ msgstr "कुल प्राप्त"
 
 msgid "Total sent"
 msgstr "कुल भेजा गया"
+
+msgid "Used today"
+msgstr "आज उपयोग किया"
 
 msgid "Session duration"
 msgstr "सत्र अवधि"
@@ -1200,6 +1218,108 @@ msgstr "मैं: %s"
 msgid "Delete"
 msgstr "हटाएँ"
 
+msgid "The data usage could not be read"
+msgstr "डेटा उपयोग पढ़ा नहीं जा सका"
+
+msgid "Today"
+msgstr "आज"
+
+msgid "Days left in this cycle"
+msgstr "चक्र में शेष दिन"
+
+msgid "Received"
+msgstr "प्राप्त"
+
+msgid "Sent"
+msgstr "भेजा गया"
+
+msgid "Corrected by"
+msgstr "सुधार"
+
+msgid "Monthly cap"
+msgstr "मासिक सीमा"
+
+msgid "%s, warning at %d%%"
+msgstr "%s, %d%% पर चेतावनी"
+
+msgid "None"
+msgstr "कोई नहीं"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "मासिक सीमा पूरी हो गई: मोबाइल डेटा बंद कर दिया गया। अगला चक्र शुरू होने पर यह फिर चालू होगा।"
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s घड़ी की प्रतीक्षा में है: घड़ी अभी नेटवर्क से सेट नहीं हुई है। यह पहले से इस चक्र में गिना जा रहा है और घड़ी सेट होने पर अपने दिन में जाएगा।"
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "इंटरफ़ेस %s अभी मौजूद नहीं है: इसके लौटने तक कुछ नहीं गिना जाता।"
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "%s पर, दोनों दिशाओं में, ऑपरेटर की तरह गिना जाता है (VPN का अतिरिक्त भार शामिल)।"
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "गिनती मेमोरी में रखी जाती है और हर 30 मिनट तथा बंद होने पर डिस्क पर लिखी जाती है: बिजली कटने पर अधिकतम पिछला आधा घंटा खोता है।"
+
+msgid "Counting since %s."
+msgstr "%s से गिनती।"
+
+msgid "Per day"
+msgstr "प्रति दिन"
+
+msgid "Date"
+msgstr "तारीख"
+
+msgid "Total"
+msgstr "कुल"
+
+msgid "Per billing cycle"
+msgstr "प्रति बिलिंग चक्र"
+
+msgid "Billing cycle"
+msgstr "बिलिंग चक्र"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "GB में आकार दर्ज करें, उदाहरण 50 या 2.5"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "1 से 100 तक प्रतिशत दर्ज करें"
+
+msgid "Turn mobile data off at the cap"
+msgstr "सीमा पर मोबाइल डेटा बंद करें"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "जब यह चक्र सीमा तक पहुँचेगा, मोबाइल डेटा बंद हो जाएगा: अगला चक्र शुरू होने, सीमा बढ़ाने या यह विकल्प फिर बंद करने तक ऑपरेटर से इंटरनेट नहीं मिलेगा। मोबाइल डेटा हाथ से फिर चालू करने पर वह अगले रीबूट तक चालू रहता है।"
+
+msgid "Set"
+msgstr "सेट करें"
+
+msgid "Clear the count"
+msgstr "गिनती साफ़ करें"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "अब तक गिने गए सभी दिन और बिलिंग चक्र भुला दिए जाएँगे। गिनती अभी से जारी रहेगी।"
+
+msgid "Billing cycle and cap"
+msgstr "बिलिंग चक्र और सीमा"
+
+msgid "A billing cycle starts on day"
+msgstr "बिलिंग चक्र इस दिन शुरू होता है"
+
+msgid "31: on the last day of each month"
+msgstr "31: हर महीने के अंतिम दिन"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "मासिक सीमा (GB, 0: कोई नहीं)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "सीमा के इस प्रतिशत पर चेतावनी दें"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "इस चक्र में अब तक उपयोग (GB)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "ऑपरेटर इस चक्र के लिए जो दिखाता है (उदाहरण के लिए जब गिनती चक्र के बीच में शुरू हुई); गिनती उसी के अनुसार सुधारी जाती है।"
+
 msgid "Current setting"
 msgstr "वर्तमान सेटिंग"
 
@@ -1226,9 +1346,6 @@ msgstr "इस कर्नेल पर TTL सेट रहने तक फ�
 
 msgid "Set %d"
 msgstr "%d सेट करें"
-
-msgid "Set"
-msgstr "सेट करें"
 
 msgid "Enter a number from 1 to 255"
 msgstr "1 से 255 तक की संख्या दर्ज करें"
@@ -1383,6 +1500,15 @@ msgstr "TTL एडेप्टर ने कोई मान्य उत्त�
 msgid "Invalid TTL"
 msgstr "अमान्य TTL"
 
+msgid "The data usage adapter gave no valid reply"
+msgstr "डेटा उपयोग एडेप्टर ने मान्य उत्तर नहीं दिया"
+
+msgid "Unknown data usage setting"
+msgstr "अज्ञात डेटा उपयोग सेटिंग"
+
+msgid "Invalid value for this setting"
+msgstr "इस सेटिंग के लिए अमान्य मान"
+
 msgid "Request too large"
 msgstr "अनुरोध बहुत बड़ा है"
 
@@ -1514,6 +1640,15 @@ msgstr "लॉक करने के लिए कोई सर्विंग 
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "इस सिस्टम पर डेटा उपयोग उपलब्ध नहीं है"
+
+msgid "The setting could not be saved"
+msgstr "सेटिंग सहेजी नहीं जा सकी"
+
+msgid "Unknown data usage operation"
+msgstr "अज्ञात डेटा उपयोग ऑपरेशन"
 
 msgid "The TTL setting could not be read"
 msgstr "TTL सेटिंग पढ़ी नहीं जा सकी"

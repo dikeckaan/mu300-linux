@@ -24,6 +24,9 @@ msgstr "アダプタ設定"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "データ使用量"
+
 msgid "Device management"
 msgstr "デバイス管理"
 
@@ -321,6 +324,18 @@ msgstr "MCS DL/UL"
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
+msgid "%s of %s"
+msgstr "%s / %s"
+
+msgid "The monthly cap is reached"
+msgstr "月間上限に達しました"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "月間上限の %d%% を使用"
+
+msgid "This billing cycle"
+msgstr "今回の請求期間"
+
 msgid "Link & traffic"
 msgstr "リンクとトラフィック"
 
@@ -335,6 +350,9 @@ msgstr "受信合計"
 
 msgid "Total sent"
 msgstr "送信合計"
+
+msgid "Used today"
+msgstr "今日の使用量"
 
 msgid "Session duration"
 msgstr "セッション時間"
@@ -1200,6 +1218,108 @@ msgstr "自分: %s"
 msgid "Delete"
 msgstr "削除"
 
+msgid "The data usage could not be read"
+msgstr "データ使用量を読み取れませんでした"
+
+msgid "Today"
+msgstr "今日"
+
+msgid "Days left in this cycle"
+msgstr "期間の残り日数"
+
+msgid "Received"
+msgstr "受信"
+
+msgid "Sent"
+msgstr "送信"
+
+msgid "Corrected by"
+msgstr "補正"
+
+msgid "Monthly cap"
+msgstr "月間上限"
+
+msgid "%s, warning at %d%%"
+msgstr "%s、%d%% で警告"
+
+msgid "None"
+msgstr "なし"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "月間上限に達しました: モバイルデータをオフにしました。次の期間が始まるとオンに戻ります。"
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s は時刻待ちです: 時刻がまだネットワークから設定されていません。すでに今回の期間に計上されており、時刻が設定されるとその日に記録されます。"
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "インターフェース %s は現在ありません: 戻るまで何も計上されません。"
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "%s で、送受信の両方向を、通信事業者と同じ方法で計上します (VPN のオーバーヘッドを含む)。"
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "カウントはメモリに保持され、30 分ごとと終了時にディスクへ書き込まれます: 停電で失われるのは最大で直近 30 分です。"
+
+msgid "Counting since %s."
+msgstr "%s から計上中。"
+
+msgid "Per day"
+msgstr "日別"
+
+msgid "Date"
+msgstr "日付"
+
+msgid "Total"
+msgstr "合計"
+
+msgid "Per billing cycle"
+msgstr "請求期間別"
+
+msgid "Billing cycle"
+msgstr "請求期間"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "GB 単位でサイズを入力してください (例: 50 や 2.5)"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "1 から 100 までのパーセントを入力してください"
+
+msgid "Turn mobile data off at the cap"
+msgstr "上限でモバイルデータをオフにする"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "今回の期間が上限に達するとモバイルデータをオフにします: 次の期間が始まる、上限を上げる、またはこの設定をオフにするまで、通信事業者経由のインターネットは使えません。手動でモバイルデータをオンに戻すと、次の再起動までオンのままです。"
+
+msgid "Set"
+msgstr "設定"
+
+msgid "Clear the count"
+msgstr "カウントを消去"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "これまでに計上したすべての日と請求期間を消去します。今から計上を続けます。"
+
+msgid "Billing cycle and cap"
+msgstr "請求期間と上限"
+
+msgid "A billing cycle starts on day"
+msgstr "請求期間の開始日"
+
+msgid "31: on the last day of each month"
+msgstr "31: 毎月の最終日"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "月間上限 (GB、0: なし)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "上限のこのパーセントで警告"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "今回の期間のこれまでの使用量 (GB)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "通信事業者が今回の期間について表示している量 (例えば期間の途中で計上を始めた場合)。カウントがこの値に補正されます。"
+
 msgid "Current setting"
 msgstr "現在の設定"
 
@@ -1226,9 +1346,6 @@ msgstr "このカーネルでは、TTL を設定している間はファイア�
 
 msgid "Set %d"
 msgstr "%d に設定"
-
-msgid "Set"
-msgstr "設定"
 
 msgid "Enter a number from 1 to 255"
 msgstr "1 から 255 までの数値を入力してください"
@@ -1383,6 +1500,15 @@ msgstr "TTL アダプターから有効な応答がありませんでした"
 msgid "Invalid TTL"
 msgstr "無効な TTL"
 
+msgid "The data usage adapter gave no valid reply"
+msgstr "データ使用量アダプターが有効な応答を返しませんでした"
+
+msgid "Unknown data usage setting"
+msgstr "不明なデータ使用量の設定"
+
+msgid "Invalid value for this setting"
+msgstr "この設定には無効な値です"
+
 msgid "Request too large"
 msgstr "リクエストが大きすぎます"
 
@@ -1514,6 +1640,15 @@ msgstr "ロックできるサービングセルがありません"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "このシステムではデータ使用量を利用できません"
+
+msgid "The setting could not be saved"
+msgstr "設定を保存できませんでした"
+
+msgid "Unknown data usage operation"
+msgstr "不明なデータ使用量の操作"
 
 msgid "The TTL setting could not be read"
 msgstr "TTL 設定を読み取れませんでした"

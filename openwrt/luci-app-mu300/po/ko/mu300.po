@@ -24,6 +24,9 @@ msgstr "어댑터 설정"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "데이터 사용량"
+
 msgid "Device management"
 msgstr "장치 관리"
 
@@ -321,6 +324,18 @@ msgstr "MCS DL/UL"
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
+msgid "%s of %s"
+msgstr "%s / %s"
+
+msgid "The monthly cap is reached"
+msgstr "월 한도에 도달했습니다"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "월 한도의 %d%% 사용"
+
+msgid "This billing cycle"
+msgstr "이번 청구 기간"
+
 msgid "Link & traffic"
 msgstr "링크 및 트래픽"
 
@@ -335,6 +350,9 @@ msgstr "총 수신량"
 
 msgid "Total sent"
 msgstr "총 송신량"
+
+msgid "Used today"
+msgstr "오늘 사용량"
 
 msgid "Session duration"
 msgstr "세션 시간"
@@ -1200,6 +1218,108 @@ msgstr "나: %s"
 msgid "Delete"
 msgstr "삭제"
 
+msgid "The data usage could not be read"
+msgstr "데이터 사용량을 읽을 수 없습니다"
+
+msgid "Today"
+msgstr "오늘"
+
+msgid "Days left in this cycle"
+msgstr "이번 기간 남은 일수"
+
+msgid "Received"
+msgstr "수신"
+
+msgid "Sent"
+msgstr "송신"
+
+msgid "Corrected by"
+msgstr "보정"
+
+msgid "Monthly cap"
+msgstr "월 한도"
+
+msgid "%s, warning at %d%%"
+msgstr "%s, %d%%에서 경고"
+
+msgid "None"
+msgstr "없음"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "월 한도에 도달했습니다: 모바일 데이터를 껐습니다. 다음 기간이 시작되면 다시 켜집니다."
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s은(는) 시계를 기다리는 중입니다: 시계가 아직 네트워크로 설정되지 않았습니다. 이미 이번 기간에 포함되며, 시계가 설정되면 해당 날짜로 기록됩니다."
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "인터페이스 %s이(가) 지금 없습니다: 돌아올 때까지 아무것도 집계되지 않습니다."
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "%s에서 양방향으로, 통신사와 같은 방식으로 집계합니다 (VPN 오버헤드 포함)."
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "집계는 메모리에 보관되며 30분마다 그리고 종료 시 디스크에 기록됩니다: 정전 시 최대 마지막 30분만 손실됩니다."
+
+msgid "Counting since %s."
+msgstr "%s부터 집계 중."
+
+msgid "Per day"
+msgstr "일별"
+
+msgid "Date"
+msgstr "날짜"
+
+msgid "Total"
+msgstr "합계"
+
+msgid "Per billing cycle"
+msgstr "청구 기간별"
+
+msgid "Billing cycle"
+msgstr "청구 기간"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "GB 단위로 크기를 입력하세요 (예: 50 또는 2.5)"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "1에서 100 사이의 백분율을 입력하세요"
+
+msgid "Turn mobile data off at the cap"
+msgstr "한도에서 모바일 데이터 끄기"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "이번 기간이 한도에 도달하면 모바일 데이터가 꺼집니다: 다음 기간이 시작되거나, 한도를 올리거나, 이 옵션을 다시 끌 때까지 통신사를 통한 인터넷을 사용할 수 없습니다. 모바일 데이터를 수동으로 다시 켜면 다음 재부팅까지 켜진 상태로 유지됩니다."
+
+msgid "Set"
+msgstr "설정"
+
+msgid "Clear the count"
+msgstr "집계 지우기"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "지금까지 집계된 모든 날짜와 청구 기간이 삭제됩니다. 지금부터 다시 집계합니다."
+
+msgid "Billing cycle and cap"
+msgstr "청구 기간과 한도"
+
+msgid "A billing cycle starts on day"
+msgstr "청구 기간 시작일"
+
+msgid "31: on the last day of each month"
+msgstr "31: 매월 마지막 날"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "월 한도 (GB, 0: 없음)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "한도의 이 백분율에서 경고"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "이번 기간 지금까지 사용량 (GB)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "통신사가 이번 기간에 대해 표시하는 사용량 (예: 기간 중간에 집계를 시작한 경우). 집계가 이 값으로 보정됩니다."
+
 msgid "Current setting"
 msgstr "현재 설정"
 
@@ -1226,9 +1346,6 @@ msgstr "이 커널에서는 TTL이 설정된 동안 방화벽 빠른 경로가 �
 
 msgid "Set %d"
 msgstr "%d(으)로 설정"
-
-msgid "Set"
-msgstr "설정"
 
 msgid "Enter a number from 1 to 255"
 msgstr "1부터 255까지의 숫자를 입력하세요"
@@ -1383,6 +1500,15 @@ msgstr "TTL 어댑터가 올바른 응답을 주지 않았습니다"
 msgid "Invalid TTL"
 msgstr "잘못된 TTL"
 
+msgid "The data usage adapter gave no valid reply"
+msgstr "데이터 사용량 어댑터가 올바른 응답을 주지 않았습니다"
+
+msgid "Unknown data usage setting"
+msgstr "알 수 없는 데이터 사용량 설정"
+
+msgid "Invalid value for this setting"
+msgstr "이 설정에 잘못된 값입니다"
+
 msgid "Request too large"
 msgstr "요청이 너무 큽니다"
 
@@ -1514,6 +1640,15 @@ msgstr "잠글 서빙 셀이 없습니다"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "이 시스템에서는 데이터 사용량을 사용할 수 없습니다"
+
+msgid "The setting could not be saved"
+msgstr "설정을 저장할 수 없습니다"
+
+msgid "Unknown data usage operation"
+msgstr "알 수 없는 데이터 사용량 작업"
 
 msgid "The TTL setting could not be read"
 msgstr "TTL 설정을 읽을 수 없습니다"
