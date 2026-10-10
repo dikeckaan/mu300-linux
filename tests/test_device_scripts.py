@@ -487,8 +487,10 @@ at() {
     def test_fetch_addr_bounded(self):
         """+CGCONTRDP keeps answering 0.0.0.0: fetch_addr gives up within its budget (in seconds, not rounds), and
         does not sleep past it (queries at 0 and 2 s; a third would start after the budget, so none is waited for)."""
+        # (the budget is counted on whole seconds of the clock, $SECONDS on whole seconds since the shell started: a
+        # start late in a second shows a run of the same length as 1 on a fast machine - 1 to 3 is within the budget)
         r, _ = self.lib('rc=0; fetch_addr 3 || rc=$?; echo "rc=$rc t=$SECONDS rdp=$rdp"', ADDR_AFTER=99)
-        self.assertRegex(r.stdout, r'rc=1 t=[23] rdp=$', r.stderr)
+        self.assertRegex(r.stdout, r'rc=1 t=[123] rdp=$', r.stderr)
         r, _ = self.lib('rc=0; fetch_addr 3 || rc=$?; echo "rc=$rc rdp=$rdp"', ADDR_AFTER=0)
         self.assertIn('rc=0 rdp=+CGCONTRDP: 1,5,"apn","10.1.2.3.255.255.255.0"', r.stdout, r.stderr)
 
