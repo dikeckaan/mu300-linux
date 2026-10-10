@@ -729,9 +729,14 @@ class Watch(ShellTest):
         (self.tmp / 'at' / 'CMGL4').write_text(cmgl)
         (self.tmp / 'rounds').unlink(missing_ok=True)
         hook = f'printf "%s|%s\\n" "$SMS_FROM" "$SMS_TEXT" >> "{self.tmp}/hook.out"'
-        return subprocess.run(shell + [str(TOP / 'rootfs/overlay/opt/mu300/bin/sms'), 'watch', hook],
-                              capture_output=True, text=True, timeout=60,
-                              env=self.env(MU300_SMS_AWK=AWK, MU300_SMS_STATE=self.tmp / 'state', **env))
+        # A busybox that runs sleep as its own applet never calls the stub, so the loop sleeps for real: one round
+        # takes well under the timeout, which then ends it.
+        try:
+            return subprocess.run(shell + [str(TOP / 'rootfs/overlay/opt/mu300/bin/sms'), 'watch', hook],
+                                  capture_output=True, text=True, timeout=8,
+                                  env=self.env(MU300_SMS_AWK=AWK, MU300_SMS_STATE=self.tmp / 'state', **env))
+        except subprocess.TimeoutExpired as e:
+            return e
 
     def test_an_incomplete_message_waits_then_is_reported(self):
         part = Pool.part
