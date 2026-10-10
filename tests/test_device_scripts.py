@@ -1693,6 +1693,47 @@ class Led(ShellTest):
                     self.led(shell, device, 'wifi', 'sync')
                     self.assertEqual(self.state()[lit], '0', (device, iw))
 
+    def test_events_follow_hostapd_on_ubus(self):
+        # OpenWrt: "events" lights the Wi-Fi LED from hostapd's ubus object as it comes and goes, whoever stopped or
+        # started the access point. The fake ubusd: "listen" plays STUBLOG/events, one line each 0.3 s, and before
+        # each line sets what "call hostapd.wlan0 get_status" answers (STUBLOG/status, empty: no such object).
+        self.stub('ubus', r'''case $1 in
+listen) while IFS='|' read -r st ev; do printf '%s' "$st" > "$STUBLOG/status"; echo "$ev"; sleep 0.3; done \
+            < "$STUBLOG/events"; sleep 0.5 ;;
+call) echo "call $2" >> "$STUBLOG/ubus.calls"
+      st=$(cat "$STUBLOG/status"); [ -n "$st" ] || exit 4
+      printf '{\n\t"status": "%s",\n\t"bss": [ "wlan0" ]\n}\n' "$st" ;;
+esac''')
+        rm = '{ "ubus.object.remove": {"id":2011872946,"path":"hostapd.wlan0"} }'
+        add = '{ "ubus.object.add": {"id":-1383968478,"path":"hostapd.wlan0"} }'
+        other = '{ "ubus.object.add": {"id":77,"path":"network.interface.wan"} }'
+        (self.tmp / 'iw.out').write_text('Interface wlan0\n\tssid F50\n\ttype AP\n')
+        for shell in self.each_shell():
+            for events, lit in (
+                    # wifi down: the object goes (iw still shows the SSID at that moment)
+                    ([('', rm)], '0'),
+                    # wifi up after a down: remove, add, remove, add (netifd's two passes); it ends on
+                    ([('', rm), ('ENABLED', add), ('', rm), ('ENABLED', add)], '48'),
+                    # an access point that hostapd set up but disabled is off; one still on its way (DFS) is on
+                    ([('DISABLED', add)], '0'), ([('DFS', add)], '48')):
+                with self.subTest(events=events):
+                    self.reset()
+                    self.conf.write_text('LED_TIMEOUT=0\n')
+                    (self.tmp / 'status').write_text('ENABLED' if events[0][1] == rm else '')
+                    (self.tmp / 'ubus.calls').unlink(missing_ok=True)
+                    (self.tmp / 'events').write_text(''.join(f'{s}|{e}\n' for s, e in events + [(events[-1][0], other)]))
+                    self.assertEqual(self.led(shell, 'f50', 'events').returncode, 0)
+                    self.assertEqual(self.state()['keyboard-backlight'], lit)
+                    # one status read at the start and one per hostapd event, none for the other object
+                    self.assertEqual(len((self.tmp / 'ubus.calls').read_text().splitlines()), 1 + len(events))
+        # Ubuntu has no ubus: systemd's hotspot unit lights it (ExecStartPost, ExecStopPost)
+        (self.stubs / 'ubus').unlink()
+        r = self.script(self.shells[0], BIN / 'mu300-led', 'events', MU300_SYSROOT=self.root, MU300_BIN=BIN,
+                        PATH='%s:/usr/bin:/bin' % self.stubs)
+        self.assertNotEqual(r.returncode, 0)
+        unit = (BIN.parents[2] / 'etc/systemd/system/mu300-hotspot.service').read_text()
+        self.assertIn('ExecStopPost=-/opt/mu300/bin/mu300-led wifi off', unit)
+
     def test_stale_siren_stops(self):
         # a siren the pid file does not name (left behind by a restart) stops by itself: two of them flashed
         # together, white lit throughout
