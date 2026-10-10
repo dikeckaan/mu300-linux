@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZTE F50 / MU300 ve U30 Air'e Linux: Ubuntu ve OpenWrt | MU300 Linux</title>
+<meta name="description" content="ZTE F50 / MU300 ve U30 Air'e Android'in yanına Ubuntu ya da OpenWrt kurun: 5G, hotspot, SSH ve VPN'li bir Linux yönlendirici. Android yerinde kalır.">
+<link rel="canonical" href="https://kaandikec.com/mu300-linux/tr/">
+<link rel="alternate" hreflang="en" href="https://kaandikec.com/mu300-linux/">
+<link rel="alternate" hreflang="tr" href="https://kaandikec.com/mu300-linux/tr/">
+<link rel="alternate" hreflang="zh-Hans" href="https://kaandikec.com/mu300-linux/zh/">
+<link rel="alternate" hreflang="x-default" href="https://kaandikec.com/mu300-linux/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MU300 Linux">
+<meta property="og:title" content="ZTE F50 / MU300 ve U30 Air'e Linux: Ubuntu ve OpenWrt | MU300 Linux">
+<meta property="og:description" content="ZTE F50 / MU300 ve U30 Air'e Android'in yanına Ubuntu ya da OpenWrt kurun: 5G, hotspot, SSH ve VPN'li bir Linux yönlendirici. Android yerinde kalır.">
+<meta property="og:url" content="https://kaandikec.com/mu300-linux/tr/">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:image" content="https://kaandikec.com/mu300-linux/assets/img/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="İki odalı bir 5G cep hotspot'u: biri Android'e, biri Linux'a ait">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ZTE F50 / MU300 ve U30 Air'e Linux: Ubuntu ve OpenWrt | MU300 Linux">
+<meta name="twitter:description" content="ZTE F50 / MU300 ve U30 Air'e Android'in yanına Ubuntu ya da OpenWrt kurun: 5G, hotspot, SSH ve VPN'li bir Linux yönlendirici. Android yerinde kalır.">
+<meta name="twitter:image" content="https://kaandikec.com/mu300-linux/assets/img/og-image.png">
+<meta name="theme-color" content="#f3f6fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1520" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&amp;family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/site.js" defer></script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "SoftwareApplication",
+ "name": "MU300 Linux",
+ "alternateName": [
+  "mu300-linux",
+  "Linux for the ZTE F50 / MU300 and U30 Air"
+ ],
+ "description": "ZTE F50 / MU300 ve U30 Air'e Android'in yanına Ubuntu ya da OpenWrt kurun: 5G, hotspot, SSH ve VPN'li bir Linux yönlendirici. Android yerinde kalır.",
+ "url": "https://kaandikec.com/mu300-linux/",
+ "inLanguage": "tr",
+ "applicationCategory": "UtilitiesApplication",
+ "applicationSubCategory": "Operating system installer",
+ "operatingSystem": "Ubuntu 24.04 / 26.04 LTS, OpenWrt 25.12 (installer runs on Windows 10/11, macOS and Linux)",
+ "isAccessibleForFree": true,
+ "license": "https://github.com/dikeckaan/mu300-linux/blob/main/LICENSE",
+ "codeRepository": "https://github.com/dikeckaan/mu300-linux",
+ "downloadUrl": "https://github.com/dikeckaan/mu300-linux/releases/latest",
+ "softwareHelp": "https://github.com/dikeckaan/mu300-linux/wiki",
+ "offers": {
+  "@type": "Offer",
+  "price": "0",
+  "priceCurrency": "USD"
+ }
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "Linux kurmak Android'i ya da verilerimi siler mi?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Yaygın 64 GB cihazda hayır. Linux, hiçbir bölüme ait olmayan yaklaşık 32 GiB'lık alana kurulur; Android'in bölümlerine, verilerine ve bölüm tablosuna hiç yazılmaz. Kurulum yalnızca bir açılış bölümüne (Android'in kullanmadığı yuvaya) ve misc'in 32 baytına yazar.İstisna 32 GB sürümdür: onda hiç boş alan yoktur. Orada bir SD kart kullanabilir (F50) ya da kurulum programının userdata'yı küçültmesine izin verebilirsiniz; bu, Android'deki her şeyi siler. Bu yol deneyseldir ve önce ERASE yazmanızı ister."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Önce cihazı root'lamam gerekiyor mu?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Evet. Cihaz zaten root'lu ve kilidi açık olmalı: değiştirilmiş bir Android açılış imajıyla açılabiliyor ve USB hata ayıklama açık olmalı. Bu noktaya gelmek projenin parçası değildir; o araçların kendi talimatlarıyla ve kendi sorumluluğunuzda yaparsınız."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Linux açılmazsa ne olur?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Cihaz kendiliğinden Android'e döner. Linux'un her açılışı bir denemedir; arka arkaya 5 kez başarısız olursa (kurulumda 1 ile 6 arasında seçersiniz) bir sonraki açılış Android olur. Ayrıntılar güvenlik ağı bölümünde (İngilizce)."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Android'e nasıl dönerim?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Linux'tan: sudo mu300-next-boot android, ardından sudo reboot. Linux'u tamamen kaldırmak için cihaz Android'deyken ./uninstall.sh (Windows: .\\uninstall.ps1) çalıştırın. Android'den su -c mu300-linux Linux'u yeniden başlatır."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Ubuntu mu OpenWrt mi, hangisini seçmeliyim?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Çoğunlukla web arayüzlü bir yönlendirici istiyorsanız OpenWrt; apt ile küçük bir sunucu istiyorsanız Ubuntu. İkisini birden kurup mu300-os ile geçiş de yapabilirsiniz. Sistem seçimi sayfası (İngilizce) bunu üç çekirdekle birlikte anlatır."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "ZTE U30 Pro destekleniyor mu?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Hayır. U30 Pro'da farklı bir çip (UMS9632) var. Desteklenenler ZTE F50 / MU300 ve ZTE U30 Air'dir; ikisi aynı kartı ve çipi paylaşır, kurulum programı hangisiyle konuştuğunu kendisi tanır."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Bilgisayarsız kurabilir miyim?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Evet, cihaz zaten Magisk 26 veya daha yenisiyle root'lu bir Android çalıştırıyorsa: her sürümde, her sistem ve çekirdek için bir tane olmak üzere, Magisk uygulamasından kurulan Magisk zip'leri vardır. Kontrol panelli OpenWrt yalnızca bilgisayardaki kurulum programıyla gelir. Bkz. Magisk zip'iyle kurulum."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Linux'u SD karta kurabilir miyim?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "F50'de evet: yuvada en az 700 MiB'lık bir kart varsa kurulum programı Linux'un oraya gidip gitmeyeceğini sorar. U30 Air'de kart yuvası yoktur."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Ekran ya da ses var mı?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Hayır. USB-C üzerinden HDMI çalışmaz, kartta hoparlör ve mikrofon yoktur. Cihazı SSH, bir web arayüzü ya da seri konsol üzerinden kullanırsınız."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Ücretli mi?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Hayır. Betikler ve belgeler MIT lisanslıdır, çekirdekler GPL-2.0'dır. Sürüm imajlarında tescilli dosya yoktur: kurulum programı Wi-Fi ve modem dosyalarını sizin cihazınızdan kopyalar."
+   }
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">İçeriğe geç</a>
+<header class="site-header">
+<div class="wrap">
+<a class="brand" href="../tr/"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="8" width="52" height="50" rx="12" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="22" cy="20" r="3.5" fill="#2259d6"/><circle cx="32" cy="20" r="3.5" fill="currentColor"/><circle cx="42" cy="20" r="3.5" fill="#f2b23a"/><path d="M17 32 l9 7 l-9 7" fill="none" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 47 h15" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round"/></svg>MU300 Linux</a>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menü</button>
+<nav class="site-nav" id="site-nav" aria-label="Main">
+<a href="../tr/install/">Kurulum</a>
+<a href="../choose/" hreflang="en">Sistem seçimi <span class="en-tag">EN</span></a>
+<a href="../features/" hreflang="en">Özellikler <span class="en-tag">EN</span></a>
+<a href="../updates/" hreflang="en">Güncelleme ve güvenlik <span class="en-tag">EN</span></a>
+<a href="../troubleshooting/" hreflang="en">Sorun giderme <span class="en-tag">EN</span></a>
+<a href="https://github.com/dikeckaan/mu300-linux">GitHub</a>
+<span class="langs" role="group" aria-label="Dil"><a href="../" hreflang="en" lang="en">English</a><a href="../tr/" hreflang="tr" lang="tr" aria-current="true">Türkçe</a><a href="../zh/" hreflang="zh-Hans" lang="zh-Hans">中文</a></span>
+</nav>
+</div>
+</header>
+<main id="content">
+
+<section class="hero">
+<div class="wrap">
+<div>
+<h1>5G hotspot'unuz bir Linux bilgisayarı</h1>
+<p class="lede">ZTE F50 / MU300 ve ZTE U30 Air'e Android'in yanına <strong>Ubuntu</strong> ya da
+<strong>OpenWrt</strong> kurun. SSH, Wi-Fi, Bluetooth ve 5G modem çalışır. Android yerinde kalır; Linux bir gün
+açılamazsa cihaz kendiliğinden Android'e döner.</p>
+<div class="actions">
+<a class="btn primary" href="install/">Kurulum rehberini okuyun</a>
+<a class="btn" href="https://github.com/dikeckaan/mu300-linux/releases/latest">GitHub'daki son sürüm</a>
+</div>
+</div>
+<img class="hero-art" src="../assets/img/device.svg" alt="Üç durum LED'i olan küçük bir 5G hotspot çizimi. Ön yüzünde iki oda var: Android için yeşil, Linux için turuncu." width="440" height="440">
+</div>
+</section>
+
+<div class="prose">
+
+<h2 id="what">Bu nedir?</h2>
+<p>ZTE F50, içine SIM kart takılan ve 5G interneti Wi-Fi ile paylaşan küçük bir kutudur. İçinde Android çalıştıran
+küçük bir bilgisayar vardır. Bu proje, Android'in yanına gerçek bir Linux sistemi kurar.</p>
+<p>Onu <strong>içinde zaten bir 5G modem, bir Wi-Fi erişim noktası ve 32 GB depolama olan bir Raspberry Pi</strong>
+gibi düşünün. ZTE U30 Air aynı kart ve çipin pilli hâlidir; o da desteklenir.</p>
+
+<h2 id="why">Neden isteyesiniz?</h2>
+<ul class="dots">
+<li><strong>Kontrolü sizde bir 5G yönlendirici</strong>LuCI web arayüzlü OpenWrt, bir güvenlik duvarı ve kendi
+kurallarınız; hotspot'taki her telefon ve dizüstü için.</li>
+<li class="a"><strong>Cebinizde bir sunucu</strong>systemd ve <code>apt</code> ile Ubuntu 24.04 ya da 26.04 LTS:
+kendi internet bağlantısı olan kendi servisleriniz.</li>
+<li><strong>Konuşabildiğiniz bir modem</strong>SMS okuyun ve gönderin, USSD kodları gönderin; kontrol panelinde bant
+ve hücre kilitleyin.</li>
+<li class="a"><strong>Arkasındaki her şey için bir VPN</strong>WireGuard, OpenVPN, VLESS ve dahası, kill switch ile,
+isteğe bağlı bir modül olarak.</li>
+</ul>
+
+<h2 id="works">Neler çalışıyor</h2>
+<ul class="dots">
+<li><strong>Mobil veri, 5G NSA ve LTE</strong>Wi-Fi ve USB istemcileriyle paylaşılır; modem sıfırlanınca kendiliğinden yeniden bağlanır.</li>
+<li><strong>Wi-Fi hotspot</strong>5 GHz (802.11ac) ya da 2.4 GHz, aynı anda biri.</li>
+<li><strong>Wi-Fi istemcisi</strong>Başka bir ağa katılın (WPA2, WPA2/WPA3 karma) ve onu USB'den paylaşın.</li>
+<li><strong>USB ağı ve SSH</strong>Bir bilgisayara takın, ağ bağdaştırıcısı olarak görünür.</li>
+<li><strong>SMS ve USSD</strong>Komut satırında <code>sms</code> ve <code>mu300-ussd</code>, ayrıca kontrol panelinde.</li>
+<li><strong>VPN</strong>WireGuard, OpenVPN, VLESS, VMess, Trojan, Shadowsocks, Clash/mihomo profilleri; tünel üzerinden Tailscale.</li>
+<li><strong>Üç çekirdek</strong>Unisoc'un üretici çekirdeği 5.4, ana hat 6.18 LTS ve ana hat 7.2; üçünde de KVM.</li>
+<li><strong>Bluetooth ve GPU</strong>BlueZ ve OpenCL için Mali-G57 (görüntü çıkışı yok).</li>
+<li class="g"><strong>Android yerinde kalır</strong>Tek komutla geri dönülür, başarısız açılışlar kendiliğinden Android'e döner.</li>
+<li class="r"><strong>Ekran yok, ses yok</strong>USB-C görüntü çıkışı çalışmaz, kartta hoparlör ve mikrofon yoktur.</li>
+</ul>
+
+<h2 id="devices">Desteklenen cihazlar</h2>
+<div class="table-scroll"><table>
+<thead><tr><th scope="col"></th><th scope="col">ZTE F50 / MU300</th><th scope="col">ZTE U30 Air</th></tr></thead><tbody>
+<tr><th scope="row">Çip</th><td>Unisoc T760 (UMS9620)</td><td>aynısı</td></tr>
+<tr><th scope="row">Güç</th><td>yalnızca USB</td><td>pil (4050 mAh), şarj devresi ve pil göstergesi</td></tr>
+<tr><th scope="row">USB ağ adresi</th><td><code>192.168.77.1</code></td><td><code>192.168.78.1</code></td></tr>
+<tr><th scope="row">SD kart</th><td class="yes">Linux dahili depolama yerine kartta durabilir</td><td class="no">kart yuvası yok</td></tr>
+<tr><th scope="row">Ekstralar</th><td>durum LED'leri</td><td>durum LED'leri, pil bilgileri, NFC etiketi, OTG adaptörüyle USB host (ana hat çekirdekler)</td></tr>
+</tbody></table></div>
+<p>Kurulum programı hangisi olduğunu Android'den okur; elle seçmeniz gerekmez. <strong>U30 Pro</strong> farklı bir
+çiptir (UMS9632) ve <strong>desteklenmez</strong>. Cihazların çoğunda 64 GB dahili depolama vardır; 32 GB sürümde
+her şeyden önce <a href="install/#check">kontrol adımını</a> okuyun.</p>
+
+<h2 id="how">Nasıl çalışır, bir masal gibi</h2>
+<p>Önemli olan her şeyi dört küçük resim anlatıyor.</p>
+
+<h3>1. Tek ev, iki oda</h3>
+<p>Cihazınız bir ev gibidir. Android bir odada, bütün eşyalarıyla zaten yaşıyor. Yaygın 64 GB cihazda kimsenin
+kullanmadığı ikinci, boş bir oda daha var: Android'in bölümlerinden sonra yaklaşık 32 GiB'lık depolama. Linux o boş
+odaya taşınır. Android'in odasındaki hiçbir şey yerinden oynamaz, değişmez.</p>
+<p>Evin iki ön kapısı da vardır: bunlara A ve B <strong>açılış yuvaları (slot)</strong> denir. Android bunlardan birini
+kullanır. Kurulum programı Linux'un kapısını, yani açılış imajını, diğerine koyar.</p>
+<figure class="wide"><div class="panel diagram" tabindex="0"><img src="../assets/img/two-systems.tr.svg" alt="Çubuk olarak çizilmiş dahili depolama: soldaki Android bölümleri olduğu gibi kalır; sağdaki yaklaşık 32 GiB&#x27;lık boş alan Linux&#x27;un yaşadığı yerdir. Altta iki açılış yuvası: Android&#x27;in yuvasına hiç yazılmaz, diğer yuvada Linux&#x27;un açılış imajı durur. F50&#x27;de Linux SD kartta da durabilir." width="960" height="440" loading="lazy" decoding="async"></div></figure>
+
+<h3>2. Her açılış bir denemedir</h3>
+<p>Cihaz Linux'u her başlattığında bunu bir deneme sayar ve bir hak harcar. Linux açılınca (USB ağı ve SSH çalışınca)
+cihaza "bu açılış iyiydi" der ve bütün haklar geri gelir. Linux açılmazsa harcanan hak gider. Arka arkaya 5 başarısız
+açılıştan sonra (1 ile 6 arasında siz seçersiniz) cihaz bu kez Android'i başlatır. Yanlışlıkla kendinizi dışarıda
+bırakamazsınız.</p>
+<figure class="wide"><div class="panel diagram" tabindex="0"><img src="../assets/img/boot-fallback.tr.svg" alt="Akış şeması: cihaz açılır, önyükleyici Linux&#x27;u başlatır ve bir deneme hakkı harcar. Linux yaklaşık bir dakika içinde açılırsa açılış onaylanır ve bütün haklar geri gelir. Açılmazsa bir hak eksilir; hak kaldıkça cihaz yeniden dener, hak kalmayınca Android kendiliğinden açılır. Deneme hakkı 1 ile 6 arası, varsayılan 5. Kilitli Linux kendiliğinden Android&#x27;e dönmez." width="960" height="860" loading="lazy" decoding="async"></div></figure>
+
+<h3>3. Android'e dönmek tek komut</h3>
+<p>Linux'tayken bir sonraki açılışta Android'i isteyin ve yeniden başlatın:</p>
+<pre><code>sudo mu300-next-boot android
+sudo reboot</code></pre>
+<p>Android'deyken Linux, <code>su -c mu300-linux</code> ile ya da kurulum programının eklediği "MU300 Linux" Magisk
+modülünün Action düğmesiyle geri gelir. Linux'u kalıcı olarak kaldırmak için bilgisayarınızdan kaldırma programını
+çalıştırın. Bunların hepsi <a href="../updates/" hreflang="en">güncelleme ve güvenlik</a> sayfasında (İngilizce).</p>
+
+<h3>4. Masanızda kendi ağınız</h3>
+<p>Telefonlar ve dizüstüler cihazın Wi-Fi hotspot'una katılır ya da USB'sine takılır. Cihaz onları SIM kartınızla 5G
+veya LTE üzerinden ya da katıldığı başka bir Wi-Fi ağı üzerinden internete çıkarır. USB üzerinden bilgisayarınız
+cihazın kendisine <code>192.168.77.1</code> (F50) ya da <code>192.168.78.1</code> (U30 Air) adresinden ulaşır.</p>
+<figure class="wide"><div class="panel diagram" tabindex="0"><img src="../assets/img/network.tr.svg" alt="Şema: bir telefon cihazın Wi-Fi hotspot&#x27;una katılır, bir dizüstü USB kablosuyla takılıdır. F50&#x27;de 192.168.77.1, U30 Air&#x27;de 192.168.78.1 adresindeki cihaz, SIM kartla 5G veya LTE üzerinden ya da başka bir Wi-Fi ağı üzerinden internete bağlanır." width="980" height="410" loading="lazy" decoding="async"></div></figure>
+
+<h2 id="quick-start">Hızlı başlangıç</h2>
+<p>Windows, macOS ya da Linux'ta, cihaz root'lu ve USB ile bağlıyken yaklaşık 15 dakika.
+<a href="install/">Kurulum rehberi</a> her soruyu tek tek anlatır.</p>
+</div>
+
+<div class="wrap">
+<ol class="steps">
+<li><svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="24" cy="24" r="13" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M34 34l11 11" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M18 24l4 4 8-8" fill="none" stroke="#3fae6a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Kontrol</h3><p><code>./install.sh --check</code> cihazı yalnızca okur ve Linux'un sığıp sığmadığını, nereye sığdığını söyler.</p></li>
+<li><svg viewBox="0 0 56 56" aria-hidden="true"><rect x="12" y="20" width="32" height="28" rx="7" fill="none" stroke="currentColor" stroke-width="3"/><path d="M28 4v22m-7-7 7 7 7-7" fill="none" stroke="#f2b23a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="22" cy="40" r="2.5" fill="#2259d6"/><circle cx="34" cy="40" r="2.5" fill="#f2b23a"/></svg><h3>Kurulum</h3><p><code>./install.sh</code> birkaç soru sorar, ne yazacağını gösterir ve <code>INSTALL</code> yazmanızı bekler.</p></li>
+<li><svg viewBox="0 0 56 56" aria-hidden="true"><rect x="6" y="10" width="44" height="36" rx="7" fill="none" stroke="currentColor" stroke-width="3"/><path d="M15 22l7 6-7 6" fill="none" stroke="#f2b23a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 36h13" stroke="#f2b23a" stroke-width="3.5" stroke-linecap="round"/></svg><h3>Giriş</h3><p>Yaklaşık bir dakika sonra: <code>ssh ubuntu@192.168.77.1</code>, OpenWrt için <code>http://192.168.77.1</code>.</p></li>
+</ol>
+</div>
+
+<div class="prose">
+<pre><code>git clone https://github.com/dikeckaan/mu300-linux
+cd mu300-linux
+MU300_LANG=tr ./install.sh --check   <span class="c"># yalnızca okur, hiçbir şey yazmaz</span>
+MU300_LANG=tr ./install.sh           <span class="c"># Windows: .\install.ps1 -Lang tr</span></code></pre>
+<p><code>MU300_LANG=tr</code> (Windows'ta <code>-Lang tr</code>) kurulum programını doğrudan Türkçe başlatır;
+yazmazsanız başta dili sorar.</p>
+
+<h2 id="costs">Karşılığında neyi kaybedersiniz</h2>
+<ul>
+<li><strong>Android ve Linux cihazı paylaşır.</strong> Aynı anda yalnızca biri çalışır; yeniden başlatma aralarında geçiş yapar.</li>
+<li><strong>Görüntü çıkışı yok.</strong> SSH ya da bir web sayfası üzerinden kullandığınız ekransız bir makinedir.</li>
+<li><strong>Ses yok.</strong> Kartta hoparlör ve mikrofon yoktur; sesli aramalar çalışmaz.</li>
+<li><strong>Yaklaşık 1.4 GB RAM.</strong> Geri kalanın çoğu modem yazılımına ayrılmıştır.</li>
+</ul>
+
+<div class="callout warn" id="risk">
+<strong>Kendi sorumluluğunuzda bir hobi projesi</strong>
+<p>Bu, boş zamanlarda yapılmış deneysel bir projedir. Bir ürün değildir, destek hattı yoktur ve hiçbir garantisi
+yoktur. Telefon sınıfı bir cihaza yazmak onu kullanılamaz hâle getirebilir; root'lama, kilit açma ve kurtarma araçları
+bu projenin dışındadır. Yedek alın ve kaybetmeyi göze alamayacağınız bir cihaza kurmayın. Cihazınızın gönderdiklerini
+değiştirmek (TTL, bant kilidi, VPN) operatörünüzün koşullarına ya da yerel yasalara aykırı olabilir. Tam metin
+<a href="https://github.com/dikeckaan/mu300-linux#a-hobby-project-at-your-own-risk">README</a>'de.</p>
+</div>
+
+<h2 id="faq">Sık sorulan sorular</h2>
+<details class="faq">
+<summary>Linux kurmak Android'i ya da verilerimi siler mi?</summary>
+<div>
+<p>Yaygın 64 GB cihazda hayır. Linux, hiçbir bölüme ait olmayan yaklaşık 32 GiB'lık alana kurulur; Android'in bölümlerine, verilerine ve bölüm tablosuna hiç yazılmaz. Kurulum yalnızca bir açılış bölümüne (Android'in kullanmadığı yuvaya) ve <code>misc</code>'in 32 baytına yazar.</p><p>İstisna <strong>32 GB sürümdür</strong>: onda hiç boş alan yoktur. Orada bir SD kart kullanabilir (F50) ya da kurulum programının <code>userdata</code>'yı küçültmesine izin verebilirsiniz; bu, Android'deki her şeyi siler. Bu yol deneyseldir ve önce <code>ERASE</code> yazmanızı ister.</p>
+</div>
+</details>
+<details class="faq">
+<summary>Önce cihazı root'lamam gerekiyor mu?</summary>
+<div>
+<p>Evet. Cihaz zaten <strong>root'lu ve kilidi açık</strong> olmalı: değiştirilmiş bir Android açılış imajıyla açılabiliyor ve USB hata ayıklama açık olmalı. Bu noktaya gelmek projenin parçası değildir; o araçların kendi talimatlarıyla ve kendi sorumluluğunuzda yaparsınız.</p>
+</div>
+</details>
+<details class="faq">
+<summary>Linux açılmazsa ne olur?</summary>
+<div>
+<p>Cihaz kendiliğinden Android'e döner. Linux'un her açılışı bir denemedir; arka arkaya 5 kez başarısız olursa (kurulumda 1 ile 6 arasında seçersiniz) bir sonraki açılış Android olur. Ayrıntılar <a href="../updates/#safety-net" hreflang="en">güvenlik ağı</a> bölümünde (İngilizce).</p>
+</div>
+</details>
+<details class="faq">
+<summary>Android'e nasıl dönerim?</summary>
+<div>
+<p>Linux'tan: <code>sudo mu300-next-boot android</code>, ardından <code>sudo reboot</code>. Linux'u tamamen kaldırmak için cihaz Android'deyken <code>./uninstall.sh</code> (Windows: <code>.\uninstall.ps1</code>) çalıştırın. Android'den <code>su -c mu300-linux</code> Linux'u yeniden başlatır.</p>
+</div>
+</details>
+<details class="faq">
+<summary>Ubuntu mu OpenWrt mi, hangisini seçmeliyim?</summary>
+<div>
+<p>Çoğunlukla web arayüzlü bir yönlendirici istiyorsanız OpenWrt; <code>apt</code> ile küçük bir sunucu istiyorsanız Ubuntu. İkisini birden kurup <code>mu300-os</code> ile geçiş de yapabilirsiniz. <a href="../choose/" hreflang="en">Sistem seçimi</a> sayfası (İngilizce) bunu üç çekirdekle birlikte anlatır.</p>
+</div>
+</details>
+<details class="faq">
+<summary>ZTE U30 Pro destekleniyor mu?</summary>
+<div>
+<p>Hayır. U30 Pro'da farklı bir çip (UMS9632) var. Desteklenenler ZTE F50 / MU300 ve ZTE U30 Air'dir; ikisi aynı kartı ve çipi paylaşır, kurulum programı hangisiyle konuştuğunu kendisi tanır.</p>
+</div>
+</details>
+<details class="faq">
+<summary>Bilgisayarsız kurabilir miyim?</summary>
+<div>
+<p>Evet, cihaz zaten Magisk 26 veya daha yenisiyle root'lu bir Android çalıştırıyorsa: her sürümde, her sistem ve çekirdek için bir tane olmak üzere, Magisk uygulamasından kurulan Magisk zip'leri vardır. Kontrol panelli OpenWrt yalnızca bilgisayardaki kurulum programıyla gelir. Bkz. <a href="install/#magisk">Magisk zip'iyle kurulum</a>.</p>
+</div>
+</details>
+<details class="faq">
+<summary>Linux'u SD karta kurabilir miyim?</summary>
+<div>
+<p>F50'de evet: yuvada en az 700 MiB'lık bir kart varsa kurulum programı Linux'un oraya gidip gitmeyeceğini sorar. U30 Air'de kart yuvası yoktur.</p>
+</div>
+</details>
+<details class="faq">
+<summary>Ekran ya da ses var mı?</summary>
+<div>
+<p>Hayır. USB-C üzerinden HDMI çalışmaz, kartta hoparlör ve mikrofon yoktur. Cihazı SSH, bir web arayüzü ya da seri konsol üzerinden kullanırsınız.</p>
+</div>
+</details>
+<details class="faq">
+<summary>Ücretli mi?</summary>
+<div>
+<p>Hayır. Betikler ve belgeler MIT lisanslıdır, çekirdekler GPL-2.0'dır. Sürüm imajlarında tescilli dosya yoktur: kurulum programı Wi-Fi ve modem dosyalarını sizin cihazınızdan kopyalar.</p>
+</div>
+</details>
+
+<h2 id="more">Buradan nereye</h2>
+<ul>
+<li><a href="install/">Kurulum rehberi</a>: yeni başlayanlar için her adım ve her soru.</li>
+<li><a href="../choose/" hreflang="en">Sistem seçimi</a> (İngilizce): Ubuntu, OpenWrt ya da kontrol paneli, ve hangi çekirdek.</li>
+<li><a href="../features/" hreflang="en">Özellikler</a> (İngilizce): mobil veri, hotspot, Wi-Fi istemcisi, SMS, VPN, pil ve LED'ler.</li>
+<li><a href="../updates/" hreflang="en">Güncelleme ve güvenlik</a> (İngilizce): güncelleme, geri alma, Android'e dönüş, kaldırma.</li>
+<li><a href="../troubleshooting/" hreflang="en">Sorun giderme</a> (İngilizce): bilinen sorunlar ve çözümleri.</li>
+<li><a href="https://github.com/dikeckaan/mu300-linux/wiki">Wiki</a> (İngilizce): her teknik kelimenin sözlüğü ve daha ayrıntılı sayfalar.</li>
+</ul>
+</div>
+
+</main>
+<footer class="site-footer">
+<div class="wrap">
+<div>
+<h2>Proje</h2>
+<ul>
+<li><a href="https://github.com/dikeckaan/mu300-linux">GitHub'daki kaynak kod</a></li>
+<li><a href="https://github.com/dikeckaan/mu300-linux/releases">Sürümler (indirmeler)</a></li>
+<li><a href="https://github.com/dikeckaan/mu300-linux-vpn">VPN modülü</a></li>
+</ul>
+</div>
+<div>
+<h2>Yardım</h2>
+<ul>
+<li><a href="https://github.com/dikeckaan/mu300-linux/wiki">Wiki (İngilizce)</a></li>
+<li><a href="../troubleshooting/" hreflang="en">Sorun giderme (İngilizce)</a></li>
+<li><a href="https://github.com/dikeckaan/mu300-linux/issues">Sorun bildir</a></li>
+</ul>
+</div>
+<div>
+<p>Kendi sorumluluğunuzda kullanılan, garantisi olmayan bir hobi projesi. ZTE, Unisoc ya da herhangi bir operatör tarafından desteklenmez. Betikler ve belgeler: MIT; çekirdekler: GPL-2.0.</p>
+</div>
+</div>
+</footer>
+</body>
+</html>
