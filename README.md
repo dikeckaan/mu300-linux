@@ -193,8 +193,8 @@ or `.\install.ps1 -Lang zh` skips the question). Adding a language is one file: 
 with GitHub - a `git clone` is fast-forwarded, a downloaded zip gets the files that changed - and restarts itself if
 there was anything new; without GitHub it simply continues (`MU300_NO_SELF_UPDATE=1` / `-NoSelfUpdate` skips it).
 
-With Ubuntu it asks for the release: **24.04 LTS** (the default, the longest tested) or **26.04 LTS (beta)** - the
-newest, with systemd 259; tested on the device for a shorter time. An installed Ubuntu moves
+With Ubuntu it asks for the release: **24.04 LTS** (the default, the longest tested) or **26.04 LTS** - the
+newest, with systemd 259, on kernel 6.18 or 7.2. An installed Ubuntu moves
 to the other release with `sudo MU300_UBUNTU=26.04 mu300-update apply` (or `24.04`), keeping settings and data.
 
 It also asks for the **kernel**:
@@ -644,7 +644,7 @@ Like the installer, it offers to reboot the device from Linux into Android first
 | | |
 |---|---|
 | Ubuntu 24.04 LTS, OpenWrt 25.12, OpenWrt with the control panel | ✅ |
-| Ubuntu 26.04 LTS | 🚧 beta: kernel 6.18 or 7.2 only, tested for a shorter time than 24.04 |
+| Ubuntu 26.04 LTS | ✅ kernel 6.18 or 7.2 (its programs need system calls 5.4 does not have) |
 | Kernels | ✅ vendor 5.4, mainline 6.18 LTS and 7.2, with the same functions (USB host on the U30 Air: mainline only); the mainline bundles carry about 360 modules (WireGuard, SQM, tunnels, USB adapters and modems, NTFS/exFAT/btrfs/NFS/CIFS, dm-crypt, containers). 6.18 hangs at boot about once in 20 boots and the device goes back to Android ([FINDINGS 31m](docs/FINDINGS.md)) |
 | KVM | ✅ `/dev/kvm` on all three kernels |
 | Mobile data (5G NSA / LTE) | ✅ shared with Wi-Fi and USB clients; reconnects by itself after modem resets |
