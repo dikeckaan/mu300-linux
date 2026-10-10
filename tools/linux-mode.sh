@@ -19,7 +19,7 @@ linux_mode_running() {
 # ask the running Linux to boot Android next and reboot; then wait for adb
 linux_mode_to_android() {
     say "$(t 'The device is running MU300 Linux, not Android')"
-    echo "  $(t 'Installing and uninstalling happen from Android (slot a), so the device has to reboot first.')"
+    echo "  $(t 'Installing and uninstalling happen from Android, so the device has to reboot first.')"
     ask go "$(t 'Reboot the device into Android now? (yes/no)')" yes
     [ "$go" = yes ] || die "$(t 'boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)')"
     # -t: sudo needs a terminal to ask for the device password, and everything runs in one sudo call so it is

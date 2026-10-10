@@ -1,5 +1,6 @@
 """boot/build-boot-image.py: the generic ramdisk segment (what every release and mu300-update ship) holds init,
 the modules of boot/module-order.txt and, for another device, its own modules, order and kernel release."""
+import json
 import shutil
 import struct
 import subprocess
@@ -205,6 +206,18 @@ class SlotBlocks(Fixtures):
     def test_slot_default_and_choice(self):
         self.assertEqual(self.image()['etc/mu300-linux-slot'][1], b'b\n')
         self.assertEqual(self.image('--linux-slot', 'a')['etc/mu300-linux-slot'][1], b'a\n')
+
+    def test_trial_block_next_to_the_image_is_the_one_of_its_slot(self):
+        # install.sh writes the block beside the image to misc: for Linux on a it must arm a, and no block that
+        # arms b (the slot Android runs from then) may lie next to it
+        for slot, other, block in (('b', 'a', with_slots(LIVE_A, b'_b\0\0', 0x9e, 0x2f)),
+                                   ('a', 'b', with_slots(LIVE_A, b'_a\0\0', 0x2f, 0x9e))):
+            for f in self.tmp.glob('boot.misc-slot-*'):
+                f.unlink()
+            self.image('--linux-slot', slot)
+            self.assertEqual((self.tmp / f'boot.misc-slot-{slot}-trial.bin').read_bytes(), block, slot)
+            self.assertFalse((self.tmp / f'boot.misc-slot-{other}-trial.bin').exists(), slot)
+            self.assertEqual(json.loads((self.tmp / 'boot.json').read_text())['linux_slot'], slot)
 
     def test_header_says_linux(self):
         # loglevel=5 in the header's command line is how the Magisk switch tells our image from another Android

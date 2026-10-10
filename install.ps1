@@ -16,8 +16,9 @@
     cannot hold every name the Android subset contains (the property area is a set of files called
     u:object_r:<context>:s0), so the archive from the device is kept beside it as work\android-subset\
     windows-source.tar.gz, and the tools that build the images take the subset from that file.
-    Only the Linux region (or the SD card), boot_b and 32 bytes of misc are written; boot_a, the GPT and userdata
-    stay untouched. With an SD card in the slot it asks where the Linux filesystem goes ($env:MU300_STORAGE =
+    Only the Linux region (or the SD card), the boot partition of the slot Android does not run from (boot_b, or
+    boot_a when Android runs from b) and 32 bytes of misc are written; Android's boot partition, the GPT and
+    userdata stay untouched. With an SD card in the slot it asks where the Linux filesystem goes ($env:MU300_STORAGE =
     'internal' or 'sd' answers without asking).
     The VPN, when wanted, is the module of github.com/dikeckaan/mu300-linux-vpn: its latest release
     ($env:MU300_VPN_URL: another place with its files and SHA256SUMS; $env:MU300_VPN_MODULE: a copy on this computer).
@@ -419,7 +420,7 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
     $linux = $linuxFirst -or (LinuxRunning)
     if (-not $linux) { Die (T 'no adb device (boot Android, enable USB debugging)') }
     Say (T 'The device is running MU300 Linux, not Android')
-    Write-Host ('  ' + (T 'Installing and uninstalling happen from Android (slot a), so the device has to reboot first.'))
+    Write-Host ('  ' + (T 'Installing and uninstalling happen from Android, so the device has to reboot first.'))
     Write-Host ('  ' + (T 'I can ask it over SSH; you will be prompted for its password.'))
     if ((Ask (T 'Reboot the device into Android now? (yes/no)') 'yes') -ne 'yes') { Die (T 'boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)') }
     # -t: sudo needs a terminal to ask for the device password; reboot cuts the connection, so watch the port
@@ -458,7 +459,15 @@ if ($model -match 'U30Air|U30_Air|U30 Air') {
 } elseif ($model -notmatch 'MU300|F50|mu300') {
     if ((Ask (T 'This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)') 'no') -ne 'yes') { exit 1 }
 }
-if ((SuDo 'getprop ro.boot.slot_suffix') -ne '_a') { Die (T 'Android must be running from slot a') }
+# Linux goes on the slot Android is not on: b next to an Android on a, a next to an Android on b (after an OTA the
+# device often runs from b, issue #86) - install.sh's slot_setup. Android's own boot partition is never written.
+switch ((SuDo 'getprop ro.boot.slot_suffix').Trim()) {
+    '_a' { $ANDROID_SLOT = 'a'; $LINUX_SLOT = 'b' }
+    '_b' { $ANDROID_SLOT = 'b'; $LINUX_SLOT = 'a' }
+    default { Die (T 'cannot tell which slot Android runs from') }
+}
+if ((SuDo 'readlink -f /dev/block/by-name/boot_a') -eq (SuDo 'readlink -f /dev/block/by-name/boot_b')) { Die (T 'boot_a and boot_b are the same partition') }
+Write-Host (T 'Android runs from slot {1}; Linux goes to slot {2} (boot_{2})' $ANDROID_SLOT $LINUX_SLOT)
 
 Say (T 'Locating free eMMC space after the last partition')
 $parts = (SuDo 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; done; echo $e $(cat /sys/block/mmcblk0/size)').Split(' ')
@@ -803,9 +812,10 @@ if ($p1 -ne $p2 -or $p1.Length -lt 6) { Die (T 'passwords differ or are shorter 
 
 New-Item -ItemType Directory -Force -Path "$Work\dumps", "$Work\firmware" | Out-Null
 Say (T 'Pulling device data into {1} (stays on this computer)' $Work)
-SuDoToFile 'cat /dev/block/by-name/boot_a' "$Work\dumps\boot_a.img"
+# Android's own boot image is the base of the Linux one (its header, its AVB footer)
+SuDoToFile "cat /dev/block/by-name/boot_$ANDROID_SLOT" "$Work\dumps\boot_$ANDROID_SLOT.img"
 SuDoToFile 'dd if=/dev/block/by-name/misc bs=4096 count=1 2>/dev/null' "$Work\dumps\misc-head.bin"
-if ((Get-Item "$Work\dumps\boot_a.img").Length -lt 1MB) { Die (T 'pulling boot_a failed') }
+if ((Get-Item "$Work\dumps\boot_$ANDROID_SLOT.img").Length -lt 1MB) { Die (T 'pulling boot_{1} failed' $ANDROID_SLOT) }
 # extract_subset.py builds the tree beside its place and renames it only when it is complete, so a
 # directory that is there holds the whole subset - and on Windows it also holds windows-source.tar.gz,
 # which is where the tools take the subset from there (see the header). An older run of the extractor
@@ -836,6 +846,10 @@ if (-not $Release) {
         try { $Release = (Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest" -UseBasicParsing).tag_name }
         catch { Die (T 'cannot find the newest release of {1} (use -Release <tag> to pick one)' $Repo) }
     }
+}
+# Linux on a needs systems that know it (release v2026.10.10 on); a tag that is not a release date is not judged
+if ($LINUX_SLOT -eq 'a' -and $Release -match '^v\d{4}\.\d{2}\.\d{2}' -and [string]::CompareOrdinal($Release, 'v2026.10.10') -lt 0) {
+    Die (T 'Android runs from slot b, and release {1} cannot boot Linux from slot a; use {2} or newer' $Release 'v2026.10.10')
 }
 Say (T 'Downloading release {1}' $Release)
 $REL = "$Work\release\$Release"
@@ -910,17 +924,17 @@ Say (T 'Building the boot image')
 WriteUnix "$Work\init" (((Get-Content -Raw "$Top\boot\init") -replace '(?m)^ROOT_OFFSET=[0-9]*', "ROOT_OFFSET=$OFF"))
 # a mainline kernel: its kernel, and its generic ramdisk segment behind this one (its init and modules win) - the
 # image that "mu300-update kernel 6.18" (or 7.2) writes on the device
-$bootArgs = @("$Top\boot\build-boot-image.py", '--stock-boot', "$Work\dumps\boot_a.img", '--misc-head', "$Work\dumps\misc-head.bin",
+$bootArgs = @("$Top\boot\build-boot-image.py", '--stock-boot', "$Work\dumps\boot_$ANDROID_SLOT.img", '--misc-head', "$Work\dumps\misc-head.bin",
     '--kernel', $(if ($KMAIN) { "$KMAIN\Image" } else { "$REL\kernel\Image" }),
     '--modules', "$REL\kernel\modules", '--init', "$Work\init", '--busybox', "$REL\kernel\busybox",
     '--logdw', "$REL\kernel\logdw", '--ueventd-perms', "$Top\android-vendor\ueventd-perms.sh",
-    '--android-subset', "$Work\android-subset", '--out', "$Work\boot-linux-slotb.img", '--device', $DEVICE)
+    '--android-subset', "$Work\android-subset", '--out', "$Work\boot-linux-slot$LINUX_SLOT.img", '--device', $DEVICE, '--linux-slot', $LINUX_SLOT)
 if (Test-Path "$REL\kernel\modules-u30air") { $bootArgs += @('--device-modules', "u30air=$REL\kernel\modules-u30air") }
 if ($KMAIN) { $bootArgs += @('--append-ramdisk', "$KMAIN\ramdisk-generic.lz4") }
 # a failed build must stop here: otherwise an earlier image (or none) would be written to the device
-Remove-Item "$Work\boot-linux-slotb.*" -ErrorAction SilentlyContinue
+Remove-Item "$Work\boot-linux-slot$LINUX_SLOT.*" -ErrorAction SilentlyContinue
 Python @bootArgs | Out-Null
-if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$Work\boot-linux-slotb.img")) { Die (T '{1} failed' 'build-boot-image.py') }
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$Work\boot-linux-slot$LINUX_SLOT.img")) { Die (T '{1} failed' 'build-boot-image.py') }
 
 Say (T 'Ready to install')
 Write-Host ('  ' + (T 'source:         {1}' (T 'prebuilt release {1} + vendor files from this device' $Release)))
@@ -933,9 +947,9 @@ $fsText = if ($FORMAT -eq 0) { T 'keep existing' } elseif ($SD_MODE -eq 1) { T '
 Write-Host ('  ' + (T 'filesystem:     {1}' $fsText))
 if ($UPDATE -eq 1) { Write-Host ('  ' + (T 'update:         settings and user data of the chosen systems are kept, everything else is replaced')) }
 if ($SD_MODE -eq 1) {
-    Write-Host ('  ' + (T 'writes:         SD card {1}, boot_b, 32 bytes of misc (the eMMC region, boot_a, GPT and userdata are not touched)' $SD_DEV))
+    Write-Host ('  ' + (T 'writes:         SD card {1}, boot_{2}, 32 bytes of misc (the eMMC region, boot_{3}, GPT and userdata are not touched)' $SD_DEV $LINUX_SLOT $ANDROID_SLOT))
 } else {
-    Write-Host ('  ' + (T 'writes:         Linux region at offset {1}, boot_b, 32 bytes of misc (boot_a, GPT and userdata are not touched)' $OFF))
+    Write-Host ('  ' + (T 'writes:         Linux region at offset {1}, boot_{2}, 32 bytes of misc (boot_{3}, GPT and userdata are not touched)' $OFF $LINUX_SLOT $ANDROID_SLOT))
 }
 if ((Ask (T 'Type INSTALL to continue') 'no') -ne 'INSTALL') { Die (T 'cancelled') }
 
@@ -957,16 +971,27 @@ WriteUnix $envFile (InstallEnvText @{ OFF = $OFF; SIZE = $SIZE; INT_SIZE = $INT_
 Remove-Item $envFile
 $log = SuDo "sh $T/android-install.sh"
 Write-Host $log
-if ($log -notmatch 'MU300-INSTALL-OK') { Die (T 'installation on the device failed; boot_b and misc were not changed') }
+if ($log -notmatch 'MU300-INSTALL-OK') { Die (T 'installation on the device failed; boot_{1} and misc were not changed' $LINUX_SLOT) }
 
-Say (T 'Writing boot_b and arming slot b')
-$EXP = (Get-Content "$Work\boot-linux-slotb.json" | ConvertFrom-Json).sha256
-& adb push "$Work\boot-linux-slotb.img" "$T/mu300-boot.img" | Out-Null
-& adb push "$Work\boot-linux-slotb.misc-slot-b-trial.bin" "$T/mu300-bc-b.bin" | Out-Null
+# Android still runs from the slot it ran from when the image was built, and the image is the one for the other slot
+if ((SuDo 'getprop ro.boot.slot_suffix').Trim() -ne "_$ANDROID_SLOT") {
+    Die (T 'Android no longer runs from slot {1}; boot_{2} and misc were not changed' $ANDROID_SLOT $LINUX_SLOT)
+}
+$bootJson = Get-Content "$Work\boot-linux-slot$LINUX_SLOT.json" | ConvertFrom-Json
+$bcFile = "$Work\boot-linux-slot$LINUX_SLOT.misc-slot-$LINUX_SLOT-trial.bin"
+if ($bootJson.linux_slot -ne $LINUX_SLOT -or -not (Test-Path $bcFile)) {
+    Die (T 'the boot image was not built for slot {1}; boot_{1} and misc were not changed' $LINUX_SLOT)
+}
+Say (T 'Writing boot_{1} and arming slot {1}' $LINUX_SLOT)
+$EXP = $bootJson.sha256
+& adb push "$Work\boot-linux-slot$LINUX_SLOT.img" "$T/mu300-boot.img" | Out-Null
+& adb push $bcFile "$T/mu300-bc.bin" | Out-Null
 if ((SuDo "sha256sum $T/mu300-boot.img").Split(' ')[0] -ne $EXP) { Die (T 'pushed boot image hash mismatch') }
-SuDo "dd if=$T/mu300-boot.img of=/dev/block/by-name/boot_b bs=4M && sync" | Out-Null
-if ((SuDo 'sha256sum /dev/block/by-name/boot_b').Split(' ')[0] -ne $EXP) { Die (T 'boot_b verify failed (slot a still active, Android keeps booting)') }
-SuDo "dd if=$T/mu300-bc-b.bin of=/dev/block/by-name/misc bs=1 seek=2048 conv=notrunc && sync && rm $T/mu300-boot.img $T/mu300-bc-b.bin" | Out-Null
+SuDo "dd if=$T/mu300-boot.img of=/dev/block/by-name/boot_$LINUX_SLOT bs=4M && sync" | Out-Null
+if ((SuDo "sha256sum /dev/block/by-name/boot_$LINUX_SLOT").Split(' ')[0] -ne $EXP) {
+    Die (T 'boot_{1} verify failed (slot {2} still active, Android keeps booting)' $LINUX_SLOT $ANDROID_SLOT)
+}
+SuDo "dd if=$T/mu300-bc.bin of=/dev/block/by-name/misc bs=1 seek=2048 conv=notrunc && sync && rm $T/mu300-boot.img $T/mu300-bc.bin" | Out-Null
 
 # on-device switch for later: one command in Android instead of plugging into a computer (needs Magisk)
 Say (T 'Installing the on-device switch (Magisk module)')

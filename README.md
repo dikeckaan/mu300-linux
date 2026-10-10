@@ -105,7 +105,8 @@ LEDs and the default address follow. The U30 **Pro** is a different chip (UMS963
 Your device must already be **rooted and unlocked** (it must already boot a modified Android boot image), and you
 need `adb` on your computer. Getting to that point is not part of this project.
 
-> **Warning.** Installing writes to the `boot_b` and `misc` partitions. If something goes badly wrong you may need a
+> **Warning.** Installing writes to the `boot_b` and `misc` partitions (`boot_a` instead of `boot_b` when Android
+> runs from slot b, as it often does after an OTA update). If something goes badly wrong you may need a
 > recovery tool (SPD/BROM) to revive the device. On the usual 64 GB device Android, its data and the partition table
 > are never modified. The **32 GB variant** is the exception: it has no free space at all, and the installer offers to
 > make some by shrinking `userdata` — that rewrites the partition table and erases everything in Android, it is
@@ -160,7 +161,7 @@ slot there is a way that erases nothing: `--check` says so, and the installer of
 
 **On the SD card.** With a card of at least 700 MiB in the slot the installer asks whether the Linux filesystem
 goes there instead of into the free eMMC space (`MU300_STORAGE=sd` answers it). The card is formatted (ext4,
-label `mu300sd`); on the eMMC only `boot_b` and 32 bytes of `misc` are written, so a device with a small eMMC
+label `mu300sd`); on the eMMC only `boot_b` (or `boot_a`) and 32 bytes of `misc` are written, so a device with a small eMMC
 needs no repartitioning. A card that holds another Linux (ext4) filesystem is never formatted. A `mu300sd` card
 always comes first. Without the card the device starts the internal installation if there is one; with none, it
 waits 8 s for the card (30 s while one is still being detected), then returns to Android after about five minutes.

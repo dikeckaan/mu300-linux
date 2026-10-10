@@ -8,7 +8,7 @@ kernel outputs missing in {1} (run kernel/build-all.sh)	{1} 中缺少内核编�
 su does not work on the device	设备上的 su 无法使用
 device: {1}	设备：{1}
 This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)	这看起来不是 ZTE F50/MU300 或 U30 Air。仍要继续吗？(是/否)
-Android must be running from slot a	Android 必须从 a 槽 (slot a) 启动
+Android runs from slot b, and release {1} cannot boot Linux from slot a; use {2} or newer	Android 从 b 槽运行，而版本 {1} 不能从 a 槽启动 Linux；请使用 {2} 或更新的版本
 Not enough free space - this looks like the 32 GB variant	空闲空间不足——这似乎是 32 GB 版本
 could not read the partition table	无法读取分区表
 could not read the userdata entry from the partition table	无法从分区表中读取 userdata 条目
@@ -143,13 +143,14 @@ CREATE new ext4 (erases the Linux region)	创建新的 ext4（将清除 Linux �
 keep existing	保留现有的
 update:         settings and user data of the chosen systems are kept, everything else is replaced	更新：          保留所选系统的设置和用户数据，其余全部替换
 note:           the chosen systems are installed fresh; their previous files and settings are replaced	注意：          所选系统将全新安装；原有文件和设置会被替换
-writes:         Linux region at offset {1}, boot_b, 32 bytes of misc (boot_a, GPT and userdata are not touched)	写入：          偏移 {1} 处的 Linux 区域、boot_b、misc 的 32 字节（不会触碰 boot_a、GPT 和 userdata）
+writes:         Linux region at offset {1}, boot_{2}, 32 bytes of misc (boot_{3}, GPT and userdata are not touched)	写入：          偏移 {1} 处的 Linux 区域、boot_{2}、misc 的 32 字节（不会触碰 boot_{3}、GPT 和 userdata）
 Type INSTALL to continue	输入 INSTALL 继续
 Copying to the device	正在复制到设备
-installation on the device failed; boot_b and misc were not changed	设备上的安装失败；boot_b 和 misc 未被更改
-Writing boot_b and arming slot b	正在写入 boot_b 并启用 b 槽
+Android no longer runs from slot {1}; boot_{2} and misc were not changed	Android 已不再从 {1} 槽运行；boot_{2} 和 misc 未被更改
+the boot image was not built for slot {1}; boot_{1} and misc were not changed	启动镜像不是为 {1} 槽构建的；boot_{1} 和 misc 未被更改
+Writing boot_{1} and arming slot {1}	正在写入 boot_{1} 并启用 {1} 槽
 pushed boot image hash mismatch	推送的启动镜像哈希不匹配
-boot_b verify failed (slot a still active, Android keeps booting)	boot_b 校验失败（a 槽仍然有效，Android 会照常启动）
+boot_{1} verify failed (slot {2} still active, Android keeps booting)	boot_{1} 校验失败（{2} 槽仍然有效，Android 会照常启动）
 Installing the on-device switch (Magisk module)	正在安装设备端切换工具（Magisk 模块）
 (skipped; the installer keeps working either way)	（已跳过；不影响安装程序的使用）
 Done. Rebooting into {1}	完成。正在重启进入 {1}
@@ -165,7 +166,7 @@ Python 3.8 or newer is required	需要 Python 3.8 或更高版本
 the lz4 Python module is required to build the boot image: pip install lz4	构建启动镜像需要 lz4 Python 模块：pip install lz4
 no adb device (boot Android, enable USB debugging)	没有 adb 设备（请启动 Android 并开启 USB 调试）
 The device is running MU300 Linux, not Android	设备当前运行的是 MU300 Linux，而不是 Android
-Installing and uninstalling happen from Android (slot a), so the device has to reboot first.	安装和卸载需在 Android（a 槽）中进行，因此设备需要先重启。
+Installing and uninstalling happen from Android, so the device has to reboot first.	安装和卸载需在 Android 中进行，因此设备需要先重启。
 I can ask it over SSH; you will be prompted for its password.	我可以通过 SSH 让它重启；届时会要求输入设备密码。
 Reboot the device into Android now? (yes/no)	现在重启设备进入 Android 吗？(是/否)
 boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)	请自行启动 Android（在设备上执行：sudo mu300-next-boot android && sudo reboot）
@@ -176,7 +177,7 @@ the device did not come back as Android; boot it yourself (mu300-next-boot andro
 Android is up	Android 已启动
 only {1} MiB of free space after the last partition: this device has a different layout, nothing is changed.	最后一个分区之后只有 {1} MiB 空闲空间：此设备布局不同，未做任何更改。
 Please report the numbers above (eMMC size and where the partitions end); they identify the variant.	请报告上面的数字（eMMC 大小和分区结束位置），它们可以识别设备型号。
-pulling boot_a failed	拉取 boot_a 失败
+pulling boot_{1} failed	拉取 boot_{1} 失败
 cannot find the newest release of {1} (use -Release <tag> to pick one)	找不到 {1} 的最新版本（可用 -Release <标签> 指定）
 no Magisk (or no root) on this device - skipped	此设备没有 Magisk（或没有 root）——已跳过
 installed: 'su -c mu300-linux' on the device starts Linux after the next Android boot	已安装：下次 Android 启动后，在设备上执行 'su -c mu300-linux' 即可启动 Linux
@@ -205,7 +206,7 @@ Linux filesystem: SD card {1}, {2}, existing mu300sd filesystem: {3}	Linux 文�
 OK: the SD card will be formatted; everything on it is erased	正常：SD 卡将被格式化；卡上的所有内容都会被清除
 Everything on the SD card ({1}, {2}) will be erased. Type ERASE to continue	SD 卡（{1}，{2}）上的所有内容都将被清除。输入 ERASE 继续
 CREATE new ext4 (erases the SD card)	创建新的 ext4（将清除 SD 卡）
-writes:         SD card {1}, boot_b, 32 bytes of misc (the eMMC region, boot_a, GPT and userdata are not touched)	写入：          SD 卡 {1}、boot_b、misc 的 32 字节（不会触碰 eMMC 上的 Linux 区域、boot_a、GPT 和 userdata）
+writes:         SD card {1}, boot_{2}, 32 bytes of misc (the eMMC region, boot_{3}, GPT and userdata are not touched)	写入：          SD 卡 {1}、boot_{2}、misc 的 32 字节（不会触碰 eMMC 上的 Linux 区域、boot_{3}、GPT 和 userdata）
 MU300_STORAGE=sd, but there is no usable SD card in the device	MU300_STORAGE=sd，但设备中没有可用的 SD 卡
 MU300_STORAGE must be internal or sd	MU300_STORAGE 必须是 internal 或 sd
 Where should the Linux filesystem go: internal storage or the SD card ({1}, {2})? (internal/sd)	Linux 文件系统要放在哪里：内部存储还是 SD 卡（{1}，{2}）？(internal/sd)
