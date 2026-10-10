@@ -12,7 +12,7 @@ the control-panel OpenWrt is the same router with an extra dashboard for the SIM
 | | Ubuntu | OpenWrt | OpenWrt with the MU300 control panel |
 |---|---|---|---|
 | Installer name | `ubuntu` | `openwrt` | `openwrt-luci` |
-| Version | 24.04 LTS (default) or 26.04 LTS (beta) | 25.12 | 25.12 |
+| Version | 24.04 LTS (default) or 26.04 LTS | 25.12 | 25.12 |
 | RAM in use (installer's figure) | ~500 MiB | ~140 MiB | not stated by the installer |
 | Installed size (measured) | ~580 MiB | ~320 MiB | - |
 | Install software with | `apt` | `apk` | `apk` |
@@ -38,7 +38,7 @@ optional [VPN](VPN) module.
 
 ==> Which Ubuntu?
   1) 24.04 LTS  the longest tested, supported until 2029
-  2) 26.04 LTS  BETA: the newest (systemd 259, newer packages), supported until 2031; tested less
+  2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18 or 7.2
 ```
 
 `MU300_OPENWRT=plain|luci` answers the OpenWrt question without asking.
@@ -51,7 +51,7 @@ The installer asks for room for the system plus a spare copy kept by updates: ab
 ## Ubuntu 24.04 or 26.04?
 
 * **24.04 LTS** is the default and the longest tested. It works with every kernel.
-* **26.04 LTS** is a beta here. Its programs use system calls the 5.4 kernel does not have (`tar`, for one, cannot
+* **26.04 LTS** is the newest, supported until 2031. Its programs use system calls the 5.4 kernel does not have (`tar`, for one, cannot
   unpack folders there), so it **needs kernel 6.18 or 7.2**. The installer will not let you combine it with 5.4.
 
 An installed Ubuntu moves to the other release with `sudo MU300_UBUNTU=26.04 mu300-update apply` (or `24.04`),

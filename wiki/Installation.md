@@ -126,7 +126,7 @@ First it brings your copy of the project up to date from GitHub and restarts its
 | *What should be installed?* 1) Ubuntu LTS 2) OpenWrt 3) both | the system(s); see [Choosing a System](Choosing-a-System) | 3 (both) is the default |
 | *Which OpenWrt?* 1) the standard LuCI web interface 2) with the MU300 control panel | plain OpenWrt, or OpenWrt with the modem panel | see [Control Panel (LuCI)](Control-Panel-(LuCI)) |
 | *Which one should boot* | with two systems: which starts first | either; switch later with `mu300-os` |
-| *Which Ubuntu?* 1) 24.04 LTS 2) 26.04 LTS BETA | Ubuntu release | 24.04 (the longest tested) |
+| *Which Ubuntu?* 1) 24.04 LTS 2) 26.04 LTS | Ubuntu release | 24.04 (the longest tested) |
 | *Boot Linux by default instead of Android?* | yes: Linux starts on every power-on, Android after failed boots | yes |
 | *Failed boots before Android (1-6)* | how many unfinished starts in a row before it gives up and goes to Android | 5 (default) |
 | *Copy Android's hotspot name and password to Linux?* | your Wi-Fi keeps its name and password | yes |

@@ -66,7 +66,7 @@ Every word in plain language first, then what it means for this device. Grouped 
 
 **Distribution:** A complete Linux system: kernel plus programs plus a way to install more. *Here:* Ubuntu and OpenWrt are offered.
 
-**Ubuntu:** A widely used general-purpose Linux distribution, with `apt` for software. *Here:* 24.04 LTS (default) or 26.04 LTS (beta, needs a mainline kernel).
+**Ubuntu:** A widely used general-purpose Linux distribution, with `apt` for software. *Here:* 24.04 LTS (default) or 26.04 LTS (needs a mainline kernel).
 
 **OpenWrt:** A Linux distribution made for routers: small and network-focused. *Here:* 25.12, plain or with the MU300 control panel.
 
