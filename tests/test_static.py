@@ -632,6 +632,41 @@ class Rules(unittest.TestCase):
         self.assertLess(text.index('for e in /*; do'), text.index('apk add patch'))
         self.assertLess(text.index(apply), text.index('apk del patch'))
         self.assertLess(text.index('apk del patch'), text.index('apk list --installed | sort'))
+        # #95: fw4 reload/restart on 5.4 drops the old flowtable first; applied the same way, after the first patch
+        ft = (TOP / 'openwrt' / 'patches' / 'fw4-old-kernel-flowtable.patch').read_text()
+        self.assertIn('+++ b/sbin/fw4', ft)
+        self.assertIn('-v "$FW4FTPATCH":/in/fw4-old-kernel-flowtable.patch:ro', text)
+        apply_ft = 'patch --batch --fuzz=0 -d $R -p1 -i /in/fw4-old-kernel-flowtable.patch'
+        self.assertLess(text.index(apply), text.index(apply_ft))
+        self.assertLess(text.index(apply_ft), text.index('apk del patch'))
+        self.assertIn('grep -q drop_old_flowtable $R/sbin/fw4', text)
+        # the function as patched in: only a kernel before 5.13 deletes - the rules that use the flowtable first (it
+        # cannot be deleted while in use), then the flowtable - and it never fails the reload
+        added = [l[1:] for l in ft.splitlines() if l.startswith('+') and not l.startswith('+++')]
+        func = '\n'.join(added[added.index('drop_old_flowtable() {'):added.index('}') + 1])
+        nft = r'''nft() {
+    echo "nft $*" >> "$LOG"
+    case "$*" in
+        "list flowtables") printf 'table inet fw4 {\n\tflowtable ft {\n' ;;
+        "-a list table inet fw4") printf 'table inet fw4 { # handle 1\n\tchain forward { # handle 2\n\t\tmeta l4proto { tcp, udp } flow add @ft # handle 56\n\t}\n\tchain other { # handle 3\n\t\tct state established accept # handle 7\n\t\tflow offload @ft # handle 9\n\t}\n}\n' ;;
+    esac
+    return 0
+}'''
+        for rel, deletes in (('5.4.254', True), ('5.12.19-x', True), ('4.19.1', True), ('5.13.0', False),
+                             ('6.18.55', False), ('7.2.9', False)):
+            with tempfile.TemporaryDirectory() as d:
+                log = Path(d) / 'log'
+                log.write_text('')
+                r = subprocess.run(['sh', '-c', f'uname() {{ echo {rel}; }}\n{nft}\n{func}\ndrop_old_flowtable; echo rc=$?'],
+                                   capture_output=True, text=True, env=dict(os.environ, LOG=str(log)))
+                self.assertIn('rc=0', r.stdout, (rel, r.stderr))
+                calls = log.read_text().splitlines()
+                if not deletes:
+                    self.assertEqual(calls, [], rel)
+                    continue
+                self.assertEqual(calls[-3:], ['nft delete rule inet fw4 forward handle 56',
+                                              'nft delete rule inet fw4 other handle 9',
+                                              'nft delete flowtable inet fw4 ft'], (rel, calls))
         # software offloading on, hardware off: the SIPA and SC2355 drivers have no nftables hardware offload
         uci = (OPENWRT / 'etc' / 'uci-defaults' / '90-mu300').read_text()
         self.assertIn("uci -q set firewall.@defaults[0].flow_offloading='1'", uci)
@@ -657,7 +692,8 @@ class Rules(unittest.TestCase):
                                       capture_output=True, text=True, timeout=30)
         cell = 'openwrt/overlay/lib/netifd/proto/mu300cell.sh'
         v6 = 'openwrt/luci-overlay/lib/netifd/proto/mu300cell-v6.sh'
-        patch = {'openwrt/patches/fw4-sipa-offload.patch': 'x\n'}
+        patch = {'openwrt/patches/fw4-sipa-offload.patch': 'x\n',
+                 'openwrt/patches/fw4-old-kernel-flowtable.patch': 'x\n'}
         for system in ('openwrt', 'openwrt-luci'):
             with self.subTest(system=system, missing='mu300cell.sh'):
                 r = run(patch, system)

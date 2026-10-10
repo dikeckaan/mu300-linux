@@ -3127,11 +3127,12 @@ Two fixes, both in `openwrt/overlay`:
   reload, under the same conditions 20-firewall reloads on: an ifup of an interface that is in a zone. The reload
   succeeds; the offloaded flows of the moment take the ordinary path until the flowtable is back.
 
-Not covered on 5.4: a reload that is not an ifup's - the firewall saved in LuCI, `fw4 reload` by hand, and
-`mu300-vpn`'s own `/etc/init.d/firewall reload` after it adds the tunnel to the wan zone (the clients get no
-forwarding into the VPN until the next ifup of a zone interface) - still fails while the flowtable is there. Until a cleaner hook is found (the flowtable deleted from fw4's own reload
-path), the way to apply a firewall change on 5.4 is `nft delete flowtable inet fw4 ft; fw4 reload`, or a reboot.
-Turning software flow offloading off would end that, at the cost of the fast path on the one kernel that has
+Not covered by those two on 5.4: a reload that is not an ifup's - the firewall saved in LuCI, `fw4 reload` or
+`fw4 restart` by hand, a package's reload (PassWall2, #95), and `mu300-vpn`'s own `/etc/init.d/firewall reload`
+after it adds the tunnel to the wan zone. Since #95 the flowtable is deleted from fw4's own path:
+`openwrt/patches/fw4-old-kernel-flowtable.patch` makes `/sbin/fw4` delete `inet fw4 ft` in a transaction of its
+own before `start`/`reload` apply the ruleset and before `restart` checks it, on kernels before 5.13 only. Turning
+software flow offloading off is no longer needed for that; it would cost the fast path on the one kernel that has
 none other.
 
 #### 38d. Reports that were already fixed, or are not defects

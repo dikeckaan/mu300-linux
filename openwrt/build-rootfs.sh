@@ -44,6 +44,9 @@ fi
 # sipa_eth0 into fw4's software flowtable (applied below, the build fails when it no longer applies)
 FW4PATCH=$TOP/openwrt/patches/fw4-sipa-offload.patch
 [ -s "$FW4PATCH" ] || { echo "missing $FW4PATCH" >&2; exit 1; }
+# fw4 reload/restart on the 5.4 kernel: its old flowtable goes first, in a transaction of its own (#95, FINDINGS 38)
+FW4FTPATCH=$TOP/openwrt/patches/fw4-old-kernel-flowtable.patch
+[ -s "$FW4FTPATCH" ] || { echo "missing $FW4FTPATCH" >&2; exit 1; }
 # the docker mounts of the panel system, as the positional parameters (OUT is read above): each path stays one
 # argument, spaces and all
 set --
@@ -115,6 +118,7 @@ done
 docker run --rm --platform linux/arm64 \
   -v "$TOP/rootfs/overlay/opt/mu300":/in/opt-mu300:ro -v "$TOP/openwrt/overlay":/in/overlay:ro \
   -v "$FW4PATCH":/in/fw4-sipa-offload.patch:ro \
+  -v "$FW4FTPATCH":/in/fw4-old-kernel-flowtable.patch:ro \
   -v "$TOP/boot/module-order.txt":/in/module-order.txt:ro -v "$IN/out/modules":/in/modules:ro \
   $(opt out/modules.builtin modules.builtin) $(opt out/modules.builtin.modinfo modules.builtin.modinfo) \
   $(opt firmware firmware) $(opt android-subset android-subset) $(opt android-gpu-subset android-gpu-subset) \
@@ -182,6 +186,8 @@ cp -a /in/overlay/. $R/
 apk add patch >/dev/null
 patch --batch --fuzz=0 -d $R -p1 -i /in/fw4-sipa-offload.patch
 grep -q sipa_eth0 $R/usr/share/ucode/fw4.uc || { echo "fw4 patch not applied" >&2; exit 1; }
+patch --batch --fuzz=0 -d $R -p1 -i /in/fw4-old-kernel-flowtable.patch
+grep -q drop_old_flowtable $R/sbin/fw4 || { echo "fw4 flowtable patch not applied" >&2; exit 1; }
 apk del patch >/dev/null   # out of packages.txt below, which lists what the image has
 if [ -d /in/luci-plugin ]; then
     [ -d /in/luci-overlay ] && cp -a /in/luci-overlay/. $R/
