@@ -7,7 +7,7 @@
 # one costs one AT+CMGL. A full sync also runs every MU300_SMS_SYNC_INTERVAL seconds, for an announcement that
 # was missed.
 #
-# Nothing here deletes from the SIM; that is "mu300-sms delete ID --sim", asked for by someone.
+# Each sync moves what it pooled off the SIM (mu300-sms sync), so a full SIM never refuses the next message.
 #
 # Port of the fork's mu300-smsd (kanoqwq/clean-tf-7.2, cd4fb28), with the pool in /etc/mu300/sms-pool (D11).
 set -u

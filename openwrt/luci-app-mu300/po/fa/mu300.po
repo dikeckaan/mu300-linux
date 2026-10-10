@@ -30,6 +30,9 @@ msgstr "مدیریت دستگاه"
 msgid "Languages"
 msgstr "زبان‌ها"
 
+msgid "Power"
+msgstr "توان"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "مرکز کنترل MU300: داشبورد وضعیت، قفل‌های شبکه، ترمینال AT و SMS"
 
@@ -873,6 +876,120 @@ msgstr "خودکار (%d پشتیبانی‌شده)"
 msgid "%d locked: %s"
 msgstr "%d قفل‌شده: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "یک عدد صحیح از 0 تا %d وارد کنید"
+
+msgid "Power status unavailable"
+msgstr "وضعیت توان در دسترس نیست"
+
+msgid "Plugged in"
+msgstr "به برق وصل است"
+
+msgid "On battery"
+msgstr "روی باتری"
+
+msgid "Saver"
+msgstr "صرفه‌جویی"
+
+msgid "Asleep: hotspot off"
+msgstr "خواب: هات‌اسپات خاموش است"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "راه‌اندازی در حال شارژ: برای شروع کلید Wi-Fi را بزنید"
+
+msgid "Awake"
+msgstr "بیدار"
+
+msgid "forced"
+msgstr "اجباری"
+
+msgid "automatic, battery under %d %%"
+msgstr "خودکار، باتری زیر %d %%"
+
+msgid "automatic"
+msgstr "خودکار"
+
+msgid "Nobody connected for %d s"
+msgstr "%d ثانیه است که کسی متصل نیست"
+
+msgid "Power source"
+msgstr "منبع تغذیه"
+
+msgid "Profile"
+msgstr "نمایه"
+
+msgid "Profile in use: %s (%s)"
+msgstr "نمایه در حال استفاده: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "شارژر"
+
+msgid "Charger: %s, %s port"
+msgstr "شارژر: %s، درگاه %s"
+
+msgid "Charging paused: battery temperature"
+msgstr "شارژ متوقف شد: دمای باتری"
+
+msgid "Charging paused: charge limit"
+msgstr "شارژ متوقف شد: حد شارژ"
+
+msgid "Sleep now"
+msgstr "اکنون بخواب"
+
+msgid "Wake"
+msgstr "بیدار کن"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "کسی متصل نیست یعنی نه کلاینت Wi-Fi هست و نه رایانه‌ای روی USB. کلید Wi-Fi، رایانه‌ای روی USB یا شارژر دستگاه را بیدار می‌کند."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "خودکار: به برق وصل / روی باتری"
+
+msgid "Switch to Saver under %"
+msgstr "رفتن به صرفه‌جویی زیر %"
+
+msgid "Stop charging at"
+msgstr "توقف شارژ در"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % سلامت باتری را در دستگاهی که همیشه به برق وصل است بهتر حفظ می‌کند."
+
+msgid "Keep as is"
+msgstr "بدون تغییر"
+
+msgid "LTE only (5G off)"
+msgstr "فقط LTE (5G خاموش)"
+
+msgid "Off"
+msgstr "خاموش"
+
+msgid "On"
+msgstr "روشن"
+
+msgid "Full"
+msgstr "کامل"
+
+msgid "Eco: big core off"
+msgstr "اقتصادی: هسته بزرگ خاموش"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "خاموش شدن هات‌اسپات پس از (دقیقه، 0 = هرگز)"
+
+msgid "Modem when idle"
+msgstr "مودم در حالت بیکاری"
+
+msgid "LEDs when idle"
+msgstr "ال‌ای‌دی‌ها در حالت بیکاری"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "خطوط نادیده‌گرفته‌شده در power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "نحوهٔ اتصال این افزونه به پلتفرم Unisoc OpenWrt فعلی را پیکربندی کنید. تغییرات نیازی به ویرایش صفحه‌های داشبورد، AT، قفل‌ها یا SMS ندارند."
 
@@ -1173,6 +1290,21 @@ msgstr "تنظیم USB نامشخص"
 msgid "Invalid interface name"
 msgstr "نام رابط نامعتبر"
 
+msgid "The power adapter gave no valid reply"
+msgstr "مبدل توان پاسخ معتبری نداد"
+
+msgid "Unknown power operation"
+msgstr "عملیات توان ناشناخته"
+
+msgid "Unknown power setting"
+msgstr "تنظیم توان ناشناخته"
+
+msgid "Invalid power value"
+msgstr "مقدار توان نامعتبر"
+
+msgid "Invalid power request"
+msgstr "درخواست توان نامعتبر"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "آداپتور زبان‌ها پاسخ معتبری نداد"
 
@@ -1323,6 +1455,9 @@ msgstr "حافظهٔ نهان قفل در دسترس نیست"
 msgid "No serving cell to lock to"
 msgstr "سلول سرویس‌دهنده‌ای برای قفل کردن نیست"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "تنظیم TTL خوانده نشد"
 
@@ -1331,3 +1466,27 @@ msgstr "TTL تنظیم نشد"
 
 msgid "Unknown TTL operation"
 msgstr "عملیات TTL ناشناخته"
+
+msgid "Lock Linux"
+msgstr "قفل کردن Linux"
+
+msgid "Unlock Linux"
+msgstr "باز کردن قفل Linux"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "پس از پنج راه‌اندازی ناتمام پشت سر هم، دستگاه دوباره به Android برمی‌گردد."
+
+msgid "Unlock"
+msgstr "باز کردن قفل"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "دستگاه هرگز خودبه‌خود به Android نمی‌رود، حتی پس از راه‌اندازی‌های ناموفق: رفتن به Android فقط از همین صفحه (رفتن به Android) یا با mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "هسته‌ی جدیدی که با به‌روزرسانی می‌آید همچنان ابتدا آزمایشی راه‌اندازی می‌شود و پس از موفقیت یکی از آن‌ها دوباره قفل می‌شود."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "اگر خود سیستم دیگر راه‌اندازی نشود، دستگاه به‌جای رفتن به Android از طریق USB (telnet) منتظر می‌ماند."
+
+msgid "Linux locked"
+msgstr "Linux قفل است"

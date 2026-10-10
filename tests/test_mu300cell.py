@@ -419,6 +419,75 @@ exit 0''')
             self.assertEqual(dels, ['ip -6 route del 240e:388:a:1234::5/128 dev sipa_eth0'], calls)
             self.assertFalse([c for c in calls if 'reboot' in c or ' -x' in c], calls)
 
+    # #87: the old SLAAC address stays on sipa_eth0 beside the new one after a PDP re-activation without ifdown.
+    TWO_PREFIXES = ('240e0388000a12340000000000000001 05 40 00 00 sipa_eth0\n'
+                    '240e0388000a99990000000000000002 05 40 00 00 sipa_eth0\n'
+                    '240e0388000a12340000000000000abc 05 40 00 00 sipa_eth0\n')    # same /64 again: listed once
+
+    def test_ndp_learn_prefix_lists_every_bearer_prefix(self):
+        """#87: --prefix prints each /64 the bearer holds, once and sorted, not only the first if_inet6 lists."""
+        fake = self.tmp / 'if_inet6'
+        fake.write_text('2a0200000db800010000000000000001 03 40 00 80    br-lan\n' + self.TWO_PREFIXES)
+        for shell in self.each_shell():
+            r = self.script(shell, NDP_LEARN, '--prefix', MU300_IF_INET6=fake)
+            self.assertEqual((r.returncode, r.stdout), (0, '240e:388:a:1234::/64\n240e:388:a:9999::/64\n'),
+                             (shell, r.stderr))
+
+    def test_ndp_learn_routes_every_bearer_prefix(self):
+        """#87: with two /64s on sipa_eth0, both go to br-lan (LAN clients may hold addresses in either: odhcpd
+        relayed the RA of each), and stray host routes inside either are removed from sipa_eth0."""
+        fake = self.tmp / 'if_inet6'
+        fake.write_text(self.TWO_PREFIXES)
+        (self.tmp / 'wan').write_text('240e:388:a:1234::5 proto static metric 1024\n'
+                                      '240e:388:a:9999::6 proto static metric 1024\n'
+                                      '2001:4860:4860::8888 proto static metric 1024\n')
+        self.stub('ip', '''echo "ip $*" >> "$STUBLOG/ipcalls"
+case "$*" in "-6 route show dev sipa_eth0") cat "$STUBLOG/wan" ;; esac
+exit 0''')
+        self.stub('logger', 'exit 0')
+        for shell in self.each_shell():
+            (self.tmp / 'ipcalls').write_text('')
+            r = self.script(shell, NDP_LEARN, '--once', MU300_IF_INET6=fake)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            calls = (self.tmp / 'ipcalls').read_text().splitlines()
+            self.assertEqual([c for c in calls if 'replace' in c], [
+                'ip -6 route replace 240e:388:a:1234::/64 dev br-lan metric 128',
+                'ip -6 route replace 240e:388:a:9999::/64 dev br-lan metric 128'], (shell, calls))
+            self.assertEqual([c for c in calls if ' del ' in c and 'sipa_eth0' in c], [
+                'ip -6 route del 240e:388:a:1234::5/128 dev sipa_eth0',
+                'ip -6 route del 240e:388:a:9999::6/128 dev sipa_eth0'], (shell, calls))
+
+    def test_ndp_learn_drops_only_the_prefix_that_left(self):
+        """#87: across rounds of one ndp-learn, a /64 that left the bearer loses its br-lan route (both metrics),
+        the one that stays keeps it, and a new one is logged once; with none left, the last one is dropped too."""
+        text = NDP_LEARN.read_text()
+        funcs = text[:text.index('\ncase ${1:-} in')]
+        fake = self.tmp / 'if_inet6'
+        one = '240e0388000a99990000000000000002 05 40 00 00 sipa_eth0\n'
+        self.stub('ip', 'echo "ip $*" >> "$STUBLOG/ipcalls"; exit 0')
+        self.stub('logger', 'echo "logger $*" >> "$STUBLOG/ipcalls"; exit 0')
+        code = (funcs + '\nround() { cp "$1" "$IF_INET6"; echo "-- round" >> "$STUBLOG/ipcalls"; learn_once; }\n'
+                f'round "$STUBLOG/two"; round "$STUBLOG/one"; round "$STUBLOG/one"; round "$STUBLOG/none"\n')
+        (self.tmp / 'two').write_text(self.TWO_PREFIXES)
+        (self.tmp / 'one').write_text(one)
+        (self.tmp / 'none').write_text('')
+        for shell in self.each_shell():
+            (self.tmp / 'ipcalls').write_text('')
+            r = self.sh(shell, code, MU300_IF_INET6=fake)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            rounds = (self.tmp / 'ipcalls').read_text().split('-- round\n')[1:]
+            changes = [[c for c in rnd.splitlines() if c.startswith('logger') or (' del ' in c and 'br-lan' in c
+                        and 'metric 1024' not in c)] for rnd in rounds]
+            self.assertEqual(changes, [
+                ['logger -t ndp-learn LAN prefix route: 240e:388:a:1234::/64 dev br-lan metric 128',
+                 'logger -t ndp-learn LAN prefix route: 240e:388:a:9999::/64 dev br-lan metric 128'],
+                ['ip -6 route del 240e:388:a:1234::/64 dev br-lan metric 128'],
+                [],
+                ['ip -6 route del 240e:388:a:9999::/64 dev br-lan metric 128']], (shell, rounds))
+            self.assertIn('ip -6 route del 240e:388:a:1234::/64 dev br-lan metric 1024', rounds[1], shell)
+            self.assertIn('ip -6 route replace 240e:388:a:9999::/64 dev br-lan metric 128', rounds[2], shell)
+            self.assertNotIn('replace', rounds[3], shell)
+
     def test_ndp_learn_never_routes_a_bad_prefix(self):
         """A bearer address that is not global unicast (multicast, link-local) gives no prefix, so no route."""
         fake = self.tmp / 'if_inet6'

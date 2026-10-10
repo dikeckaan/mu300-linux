@@ -1,5 +1,6 @@
 #!/bin/sh /etc/rc.common
-# VLESS via Xray (default) or sing-box, on a TUN; settings in /etc/mu300/vpn.conf, see /opt/mu300/bin/mu300-vpn
+# MU300 VPN: the active profile (Xray, sing-box, mihomo, WireGuard or OpenVPN) from /etc/mu300/vpn on a TUN;
+# /etc/mu300/vpn.conf holds the ENABLE switch (mu300-vpn on creates it), see /opt/mu300/bin/mu300-vpn
 START=95
 USE_PROCD=1
 export PATH="$PATH:/opt/mu300/busybox-bin"
@@ -10,6 +11,8 @@ start_service() {
 	procd_set_param command /opt/mu300/bin/mu300-vpn run
 	procd_set_param env PATH="$PATH"
 	procd_set_param respawn 3600 5 0
+	# xray ran out of its 1024 descriptors once while the modem was off (see mu300-vpn.service)
+	procd_set_param limits nofile="65536 65536"
 	procd_set_param stdout 1
 	procd_set_param stderr 1
 	procd_close_instance

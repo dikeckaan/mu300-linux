@@ -466,11 +466,12 @@ class SdErase(ShellTest):
 class Region(ShellTest):
     """storage.sh's region functions, with su_do running the device commands against a fake sysfs and eMMC file."""
 
-    def fake(self, ext4_at=None):
+    def fake(self, ext4_at=None, full=False):
         sysfs = self.tmp / 'sys/block/mmcblk0'
         (sysfs / 'mmcblk0p1').mkdir(parents=True, exist_ok=True)
         (sysfs / 'mmcblk0p1/start').write_text('2048\n')
-        (sysfs / 'mmcblk0p1/size').write_text(f'{4 << 21}\n')          # ends at 8 GiB + 1 MiB
+        # ends at 8 GiB + 1 MiB; full: 2 MiB before the end of the disk, the layout of issue #65
+        (sysfs / 'mmcblk0p1/size').write_text(f'{((16 << 21) - 4096) if full else (4 << 21)}\n')
         (sysfs / 'size').write_text(f'{16 << 21}\n')                   # a 16 GiB eMMC
         emmc = self.tmp / 'mmcblk0'
         with open(emmc, 'wb') as f:
@@ -482,7 +483,8 @@ class Region(ShellTest):
         return emmc
 
     def run_region(self, shell, call):
-        su = (f'su_do() {{ sh -c "$(printf "%s" "$1" | sed -e "s|/sys/block|{self.tmp}/sys/block|g" '
+        su = (f'su_do() {{ printf "%s\\n" "$1" >> "{self.tmp}/su.log"; '
+              f'sh -c "$(printf "%s" "$1" | sed -e "s|/sys/block|{self.tmp}/sys/block|g" '
               f'-e "s|/dev/block/mmcblk0|{self.tmp}/mmcblk0|g")"; }}\n')
         return self.sh(shell, su + f'. "{TOP}/tools/storage.sh"\n{call}\n'
                        'echo "rc=$? OFF=$OFF SIZE=$SIZE existing=${existing:-} DIRTY=${DIRTY:-}"')
@@ -507,6 +509,34 @@ class Region(ShellTest):
         for shell in self.each_shell():
             out = self.run_region(shell, 'region_probe; region_find_existing; region_dirty').stdout
             self.assertIn('existing=no DIRTY=1', out)
+
+
+    def test_a_table_that_ends_at_the_end_of_the_disk_is_an_empty_region_and_is_never_read(self):
+        """Issue #65 (and #43, #52): the last partition ends 2 MiB before the end of the eMMC. The first boundary
+        behind it is the end of the disk and the last one before the backup GPT lies before it: a negative size,
+        and a probe of the region's superblock 2 bytes past the last sector - a dd that never returns on the
+        device. The region is empty, and nothing past the disk's last sector is read; the fixed offset of the
+        first releases (27762098176) lies beyond this 16 GiB disk and is not read either."""
+        self.fake(full=True)
+        disk = 16 << 21
+        for shell in self.each_shell():
+            out = self.run_region(shell, 'region_probe; region_find_existing').stdout
+            self.assertIn(f'rc=0 OFF={disk * 512} SIZE=0 existing=no', out)
+            for cmd in (self.tmp / 'su.log').read_text().splitlines():
+                m = re.search(r'dd if=/dev/block/mmcblk0 bs=1 skip=(\d+) count=(\d+)', cmd)
+                if m:
+                    self.assertLessEqual(int(m.group(1)) + int(m.group(2)), disk * 512, cmd)
+            (self.tmp / 'su.log').unlink()
+
+    def test_the_legacy_offset_is_read_only_on_a_disk_that_holds_it(self):
+        start = ((2048 + (4 << 21)) // 4096 + 1) * 4096 * 512
+        self.fake(ext4_at=start)
+        for shell in self.each_shell():
+            self.run_region(shell, 'region_probe; region_find_existing')
+            log = (self.tmp / 'su.log').read_text()
+            self.assertIn(f'skip={start + 1080}', log)
+            self.assertNotIn('skip=27762099256', log, 'the legacy offset lies beyond a 16 GiB disk')
+            (self.tmp / 'su.log').unlink()
 
 
 class ChooseSystems(ShellTest):

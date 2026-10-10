@@ -742,9 +742,15 @@ network_block() {  # network_block SSID PASS SAE
     printf '}\n'
 }
 
+# The VPN is on with its kill switch. ENABLE is still vpn.conf's (the switch every caller reads); KILL_SWITCH lives
+# in the profile store's settings file now (KEY='VALUE', single-quoted or bare, written by mu300-vpn settings set)
+# and vpn.conf's line is the legacy one, read only when the settings file has none. Anything but 0 is 1, as
+# mu300-vpn counts it. Neither file is sourced: a value is only ever matched, never run.
 vpn_kill_switch() {
-    f=$R/etc/mu300/vpn.conf
-    [ -r "$f" ] && grep -q '^ENABLE=1' "$f" && ! grep -q '^KILL_SWITCH=0' "$f"
+    f=$R/etc/mu300/vpn.conf; s=$R/etc/mu300/vpn/settings
+    [ -r "$f" ] && grep -q '^ENABLE=1' "$f" || return 1
+    if [ -r "$s" ] && grep -q '^KILL_SWITCH=' "$s"; then ! grep -q "^KILL_SWITCH='\{0,1\}0'\{0,1\}\$" "$s"
+    else ! grep -q '^KILL_SWITCH=0' "$f"; fi
 }
 
 # valid_text MIN MAX TEXT: MIN to MAX bytes and no control byte (below 0x20, or 0x7f). The bytes come from od as

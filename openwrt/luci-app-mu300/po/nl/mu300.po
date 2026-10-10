@@ -30,6 +30,9 @@ msgstr "Apparaatbeheer"
 msgid "Languages"
 msgstr "Talen"
 
+msgid "Power"
+msgstr "Voeding"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300-controlecentrum: statusdashboard, netwerkvergrendelingen, AT-terminal en SMS"
 
@@ -873,6 +876,120 @@ msgstr "Automatisch (%d ondersteund)"
 msgid "%d locked: %s"
 msgstr "%d vergrendeld: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Voer een geheel getal van 0 tot %d in"
+
+msgid "Power status unavailable"
+msgstr "Voedingsstatus niet beschikbaar"
+
+msgid "Plugged in"
+msgstr "Aangesloten"
+
+msgid "On battery"
+msgstr "Op batterij"
+
+msgid "Saver"
+msgstr "Zuinig"
+
+msgid "Asleep: hotspot off"
+msgstr "In slaap: hotspot uit"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Oplaadstart: druk op de Wi-Fi-toets om te starten"
+
+msgid "Awake"
+msgstr "Wakker"
+
+msgid "forced"
+msgstr "geforceerd"
+
+msgid "automatic, battery under %d %%"
+msgstr "automatisch, batterij onder %d %%"
+
+msgid "automatic"
+msgstr "automatisch"
+
+msgid "Nobody connected for %d s"
+msgstr "Al %d s niemand verbonden"
+
+msgid "Power source"
+msgstr "Voedingsbron"
+
+msgid "Profile"
+msgstr "Profiel"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Gebruikt profiel: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Lader"
+
+msgid "Charger: %s, %s port"
+msgstr "Lader: %s, %s-poort"
+
+msgid "Charging paused: battery temperature"
+msgstr "Laden gepauzeerd: batterijtemperatuur"
+
+msgid "Charging paused: charge limit"
+msgstr "Laden gepauzeerd: laadlimiet"
+
+msgid "Sleep now"
+msgstr "Nu slapen"
+
+msgid "Wake"
+msgstr "Wakker maken"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Niemand verbonden betekent geen Wi-Fi-client en geen computer op de USB. De Wi-Fi-toets, een computer op de USB of de lader maakt het apparaat wakker."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Automatisch: aangesloten / op batterij"
+
+msgid "Switch to Saver under %"
+msgstr "Overschakelen naar Zuinig onder %"
+
+msgid "Stop charging at"
+msgstr "Stop met laden bij"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % spaart de batterij van een apparaat dat aangesloten blijft."
+
+msgid "Keep as is"
+msgstr "Ongewijzigd laten"
+
+msgid "LTE only (5G off)"
+msgstr "Alleen LTE (5G uit)"
+
+msgid "Off"
+msgstr "Uit"
+
+msgid "On"
+msgstr "Aan"
+
+msgid "Full"
+msgstr "Volledig"
+
+msgid "Eco: big core off"
+msgstr "Eco: grote kern uit"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Hotspot uit na (min, 0 = nooit)"
+
+msgid "Modem when idle"
+msgstr "Modem bij inactiviteit"
+
+msgid "LEDs when idle"
+msgstr "LED's bij inactiviteit"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Genegeerde regels in power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Stel in hoe deze plugin verbinding maakt met het huidige Unisoc-OpenWrt-platform. Wijzigingen vereisen geen aanpassing van de pagina's dashboard, AT, vergrendelingen of SMS."
 
@@ -1173,6 +1290,21 @@ msgstr "Onbekende USB-instelling"
 msgid "Invalid interface name"
 msgstr "Ongeldige interfacenaam"
 
+msgid "The power adapter gave no valid reply"
+msgstr "De voedingsadapter gaf geen geldig antwoord"
+
+msgid "Unknown power operation"
+msgstr "Onbekende voedingsbewerking"
+
+msgid "Unknown power setting"
+msgstr "Onbekende voedingsinstelling"
+
+msgid "Invalid power value"
+msgstr "Ongeldige voedingswaarde"
+
+msgid "Invalid power request"
+msgstr "Ongeldig voedingsverzoek"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "De taaladapter gaf geen geldig antwoord"
 
@@ -1323,6 +1455,9 @@ msgstr "Vergrendelingscache niet beschikbaar"
 msgid "No serving cell to lock to"
 msgstr "Geen serving cell om op te vergrendelen"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "De TTL-instelling kon niet worden gelezen"
 
@@ -1331,3 +1466,27 @@ msgstr "De TTL kon niet worden ingesteld"
 
 msgid "Unknown TTL operation"
 msgstr "Onbekende TTL-bewerking"
+
+msgid "Lock Linux"
+msgstr "Linux vergrendelen"
+
+msgid "Unlock Linux"
+msgstr "Linux ontgrendelen"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "Na vijf onvoltooide opstarts op rij valt het apparaat weer terug op Android."
+
+msgid "Unlock"
+msgstr "Ontgrendelen"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Het apparaat schakelt nooit zelf naar Android, ook niet na mislukte opstarts: naar Android alleen via deze pagina (Overschakelen naar Android) of met mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Een nieuwe kernel uit een update start eerst nog op proef en vergrendelt weer zodra een opstart slaagt."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Start het systeem zelf niet meer, dan wacht het apparaat via USB (telnet) in plaats van naar Android te gaan."
+
+msgid "Linux locked"
+msgstr "Linux vergrendeld"

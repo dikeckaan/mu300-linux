@@ -45,7 +45,7 @@ pacman -Syu --noconfirm --needed \
     systemd systemd-sysvcompat dbus kmod iproute2 iputils net-tools nftables dnsmasq ethtool \
     openssh wpa_supplicant hostapd iw wireless-regdb bluez bluez-utils rfkill \
     ca-certificates curl wget nano less htop sudo bash-completion \
-    e2fsprogs dosfstools file procps-ng psmisc lsof usbutils pciutils python >/dev/null
+    e2fsprogs dosfstools file procps-ng psmisc lsof usbutils pciutils python jq wireguard-tools >/dev/null
 # the generic Arch ARM image carries its own kernel and the full linux-firmware set (about 1.5 GB); this device
 # boots the vendor 5.4 kernel from the boot image and gets its firmware from the Android side
 pacman -Rns --noconfirm linux-aarch64 linux-firmware linux-firmware-whence 2>/dev/null >/dev/null || true

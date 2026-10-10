@@ -30,6 +30,9 @@ msgstr "장치 관리"
 msgid "Languages"
 msgstr "언어"
 
+msgid "Power"
+msgstr "전원"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 제어 센터: 상태 대시보드, 네트워크 잠금, AT 터미널 및 SMS"
 
@@ -873,6 +876,120 @@ msgstr "자동 (%d개 지원)"
 msgid "%d locked: %s"
 msgstr "%d개 잠김: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "0에서 %d 사이의 정수를 입력하세요"
+
+msgid "Power status unavailable"
+msgstr "전원 상태를 확인할 수 없음"
+
+msgid "Plugged in"
+msgstr "전원 연결됨"
+
+msgid "On battery"
+msgstr "배터리 사용 중"
+
+msgid "Saver"
+msgstr "절전"
+
+msgid "Asleep: hotspot off"
+msgstr "절전 상태: 핫스팟 꺼짐"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "충전 부팅: Wi-Fi 키를 눌러 시작하세요"
+
+msgid "Awake"
+msgstr "켜짐"
+
+msgid "forced"
+msgstr "강제"
+
+msgid "automatic, battery under %d %%"
+msgstr "자동, 배터리 %d %% 미만"
+
+msgid "automatic"
+msgstr "자동"
+
+msgid "Nobody connected for %d s"
+msgstr "%d초째 연결된 사용자 없음"
+
+msgid "Power source"
+msgstr "전원 공급원"
+
+msgid "Profile"
+msgstr "프로필"
+
+msgid "Profile in use: %s (%s)"
+msgstr "사용 중인 프로필: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "충전기"
+
+msgid "Charger: %s, %s port"
+msgstr "충전기: %s, %s 포트"
+
+msgid "Charging paused: battery temperature"
+msgstr "충전 일시 중지: 배터리 온도"
+
+msgid "Charging paused: charge limit"
+msgstr "충전 일시 중지: 충전 한도"
+
+msgid "Sleep now"
+msgstr "지금 절전"
+
+msgid "Wake"
+msgstr "깨우기"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "연결된 사용자 없음은 Wi-Fi 클라이언트도 없고 USB에 연결된 컴퓨터도 없다는 뜻입니다. Wi-Fi 키, USB에 연결된 컴퓨터 또는 충전기가 장치를 깨웁니다."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "자동: 전원 연결 / 배터리 사용"
+
+msgid "Switch to Saver under %"
+msgstr "다음 미만이면 절전으로 전환 %"
+
+msgid "Stop charging at"
+msgstr "충전 중단 기준"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 %는 계속 전원에 연결해 두는 장치에서 배터리를 더 건강하게 유지합니다."
+
+msgid "Keep as is"
+msgstr "그대로 유지"
+
+msgid "LTE only (5G off)"
+msgstr "LTE만 (5G 끔)"
+
+msgid "Off"
+msgstr "끔"
+
+msgid "On"
+msgstr "켬"
+
+msgid "Full"
+msgstr "최대 성능"
+
+msgid "Eco: big core off"
+msgstr "에코: 큰 코어 끔"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "핫스팟 끄기까지 시간 (분, 0 = 끄지 않음)"
+
+msgid "Modem when idle"
+msgstr "유휴 시 모뎀"
+
+msgid "LEDs when idle"
+msgstr "유휴 시 LED"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "power.conf에서 무시된 줄: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "이 플러그인이 현재 Unisoc OpenWrt 플랫폼에 연결되는 방식을 설정합니다. 변경해도 대시보드, AT, 잠금, SMS 페이지를 수정할 필요는 없습니다."
 
@@ -1173,6 +1290,21 @@ msgstr "알 수 없는 USB 설정"
 msgid "Invalid interface name"
 msgstr "잘못된 인터페이스 이름"
 
+msgid "The power adapter gave no valid reply"
+msgstr "전원 어댑터가 올바른 응답을 주지 않았습니다"
+
+msgid "Unknown power operation"
+msgstr "알 수 없는 전원 작업"
+
+msgid "Unknown power setting"
+msgstr "알 수 없는 전원 설정"
+
+msgid "Invalid power value"
+msgstr "잘못된 전원 값"
+
+msgid "Invalid power request"
+msgstr "잘못된 전원 요청"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "언어 어댑터에서 유효한 응답이 없습니다"
 
@@ -1323,6 +1455,9 @@ msgstr "잠금 캐시를 사용할 수 없습니다"
 msgid "No serving cell to lock to"
 msgstr "잠글 서빙 셀이 없습니다"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "TTL 설정을 읽을 수 없습니다"
 
@@ -1331,3 +1466,27 @@ msgstr "TTL을 설정할 수 없습니다"
 
 msgid "Unknown TTL operation"
 msgstr "알 수 없는 TTL 작업"
+
+msgid "Lock Linux"
+msgstr "Linux 잠금"
+
+msgid "Unlock Linux"
+msgstr "Linux 잠금 해제"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "완료되지 않은 부팅이 연속 다섯 번 발생하면 기기가 다시 Android로 돌아갑니다."
+
+msgid "Unlock"
+msgstr "잠금 해제"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "부팅에 실패해도 기기가 스스로 Android로 전환되지 않습니다. Android로는 이 페이지(Android로 전환) 또는 mu300-next-boot android로만 전환합니다."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "업데이트로 받은 새 커널은 여전히 처음 부팅을 시험으로 진행하며, 그중 하나가 성공하면 다시 잠깁니다."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "시스템 자체가 더 이상 시작되지 않으면 기기는 Android로 전환하지 않고 USB(telnet)로 대기합니다."
+
+msgid "Linux locked"
+msgstr "Linux 잠김"

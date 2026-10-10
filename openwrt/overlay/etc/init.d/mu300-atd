@@ -53,9 +53,9 @@ start_service() {
 	# in a procd process of its own, so it overlaps the remaining init scripts; the PDP context stays netifd's.
 	# The command fifo is the readiness event (90 s at most). It opens no channel itself, and mobile-data's radio
 	# lock keeps it and the dial from running two CFUN/SFUN sequences at once. No respawn: one round per start;
-	# a failed one is retried by the dial and the watchdog.
+	# a failed one is retried by the dial and the watchdog. Not in a charging boot (init's marker): the radio stays off.
 	procd_open_instance radio-warmup
-	procd_set_param command /bin/sh -c 'n=0; until [ -p /run/mu300-at/cmd ]; do n=$((n+1)); [ "$n" -gt 90 ] && exit 1; sleep 1; done; exec /opt/mu300/bin/mobile-data radio-on'
+	procd_set_param command /bin/sh -c '[ -e /run/mu300/charging-boot ] && exit 0; n=0; until [ -p /run/mu300-at/cmd ]; do n=$((n+1)); [ "$n" -gt 90 ] && exit 1; sleep 1; done; exec /opt/mu300/bin/mobile-data radio-on'
 	procd_set_param stdout 1
 	procd_set_param stderr 1
 	procd_close_instance

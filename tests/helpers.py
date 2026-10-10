@@ -13,6 +13,8 @@ from pathlib import Path
 
 TOP = Path(__file__).resolve().parents[1]
 BIN = TOP / 'rootfs' / 'overlay' / 'opt' / 'mu300' / 'bin'
+# mu300-vpn's engine drivers (MU300_VPN_LIB)
+LIB = BIN.parent / 'lib' / 'vpn'
 # the tests that read what git tracks (file modes, ls-files) skip where there is no git or no checkout of this tree,
 # e.g. a container with the worktree mounted but not the repository it belongs to
 GIT_CHECKOUT = bool(shutil.which('git')) and subprocess.run(['git', '-C', str(TOP), 'rev-parse', '--git-dir'],

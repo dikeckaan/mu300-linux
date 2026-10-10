@@ -410,6 +410,23 @@ class Slot(ShellTest):
             out, _, _ = self.run_slot(shell, cmdline='loglevel=5', bootargs='androidboot.slot_suffix=_b')
             self.assertEqual(out, 'linux=b android=a')
 
+    def test_boot_mode_from_lk_bootargs(self):
+        # LK's "charger" boot (a flat battery plugged in) opens our slot too: init says so for mu300-power
+        for shell in self.each_shell():
+            out, log, run = self.run_slot(shell, cmdline='root=/dev/ram0 loglevel=3',
+                                          bootargs='androidboot.slot_suffix=_b androidboot.mode=charger')
+            self.assertEqual((run / 'mu300' / 'boot-mode').read_text().strip(), 'charger')
+            self.assertTrue((run / 'mu300' / 'charging-boot').exists(), 'charging-boot should exist when mode is charger')
+            self.assertIn('stage=boot-mode mode=charger', log)
+            out, log, run = self.run_slot(shell, cmdline='root=/dev/ram0',
+                                          bootargs='androidboot.slot_suffix=_b androidboot.mode=normal')
+            self.assertEqual((run / 'mu300' / 'boot-mode').read_text().strip(), 'normal')
+            self.assertFalse((run / 'mu300' / 'charging-boot').exists(), 'charging-boot should not exist when mode is normal')
+            out, log, run = self.run_slot(shell, cmdline='root=/dev/ram0', bootargs=None)
+            self.assertEqual((run / 'mu300' / 'boot-mode').read_text().strip(), 'normal')
+            self.assertFalse((run / 'mu300' / 'charging-boot').exists(), 'charging-boot should not exist when mode defaults to normal')
+            self.assertIn('stage=boot-mode mode=normal source=default', log)
+
     def test_image_then_default(self):
         for shell in self.each_shell():
             self.assertEqual(self.run_slot(shell, image='a')[0], 'linux=a android=b')
@@ -909,6 +926,29 @@ class BootTries(ShellTest):
                     self.assertEqual(self.count(), str(n))
                 self.assertEqual(self.boot(shell, slot)[0], 'android')
                 self.assertEqual(self.count(), '0')
+
+    def test_a_locked_slot_is_never_sent_to_android(self):
+        # mu300-next-boot lock: the Linux slot is successful in LK's block and the wish is on the disk - no count, no
+        # backstop, any number of boots (the bit alone keeps the backstop: test_a_successful_slot_keeps_the_backstop)
+        (self.disk / '.mu300/boot-lock').write_text('')
+        for shell in self.each_shell():
+            for slot in ('a', 'b'):
+                (self.disk / '.mu300/boot-tries').write_text('0\n')
+                self.lk(slot, 6, successful=True)
+                for _ in range(8):
+                    out, err = self.boot(shell, slot)
+                    self.assertEqual(out, 'linux')
+                self.assertIn('stage=boot-locked', err)
+                self.assertEqual(self.count(), '0')
+
+    def test_the_standalone_fallback_stays_when_locked(self):
+        tail = INIT[INIT.index('log "stage=rootfs-unavailable'):]
+        tail = tail[:tail.index('ifconfig usb0')]
+        self.assertLess(tail.index('if lk_locked; then'), tail.index('restore_android'))
+        locked = tail[tail.index('if lk_locked; then'):tail.index('else')]
+        self.assertNotIn('restore_android', locked)
+        self.assertIn('touch /run/stay', locked)
+        self.assertIn('/run/to-android', locked)
 
     def test_a_count_lk_already_acted_on_starts_again(self):
         # five boots that never reached mu300-boot-ok: LK went to Android by itself, the count stayed at 5. The

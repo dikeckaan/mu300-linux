@@ -17,7 +17,15 @@ MODULES_REV=4381465ccaf87fcf3215b9cd42f4a685df40e5e0
 docker build -q -t mu300-kbuild "$TOP/kernel" >/dev/null
 docker volume create "$VOL" >/dev/null
 W=$(mktemp -d)
-trap 'rm -rf "$W"' EXIT
+# on a Linux docker the container writes as root: the outputs are handed to the user below, and a cleanup that
+# still cannot remove something does not fail the build that has already copied them out. The config merge logs and
+# the rejected fragment options go with the scratch copy, unless MU300_KBUILD_LOGS names a directory to keep them in
+# (the release workflow does, for a failed build).
+cleanup() {
+    [ -z "${MU300_KBUILD_LOGS:-}" ] || { mkdir -p "$MU300_KBUILD_LOGS" && cp "$W"/*.log "$W"/fragment-rejected.txt "$MU300_KBUILD_LOGS/"; } 2>/dev/null || true
+    rm -rf "$W" 2>/dev/null || true
+}
+trap cleanup EXIT
 # build-linux.sh writes its logs next to the config: give it a scratch copy of kernel/
 cp -R "$TOP/kernel/." "$W/"
 cp "$TOP/kernel/f50-stock-B09.config" "$W/device.config"
@@ -87,6 +95,7 @@ echo "$(ls /work/out/modules | wc -l) modules, $(strings /work/out/Image | grep 
 echo "==> ZTE U30 Air modules"
 bash /work/build-u30air.sh
 '
+docker run --rm -v "$W":/work mu300-kbuild chown -R "$(id -u):$(id -g)" /work/out
 mkdir -p "$OUT"
 rm -rf "$OUT/modules" "$OUT/modules-u30air"
 cp -R "$W/out/." "$OUT/"

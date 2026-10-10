@@ -1203,6 +1203,38 @@ class WifiClient(ShellTest):
                 self.assertNotIn('mu300_vpn', rs)
             self.assertNotIn('ip rule', ev)
 
+    def test_the_kill_switch_setting_comes_from_the_profile_store_first(self):
+        # KILL_SWITCH moved to etc/mu300/vpn/settings (single-quoted or bare); vpn.conf's line is the legacy one
+        # and counts only when the settings file has none. ENABLE stays in vpn.conf. A guard failure is fatal only
+        # with the kill switch on, so the setting decides whether a broken mu300-vpn stops the join.
+        settings = self.root / 'etc/mu300/vpn/settings'
+        settings.parent.mkdir(exist_ok=True)
+        cases = [  # (settings, vpn.conf, fatal)
+            ("KILL_SWITCH='0'\n", 'ENABLE=1\nKILL_SWITCH=1\n', False),
+            ('KILL_SWITCH=0\n', 'ENABLE=1\nKILL_SWITCH=1\n', False),
+            ("KILL_SWITCH='1'\n", 'ENABLE=1\nKILL_SWITCH=0\n', True),
+            ("REMOTE_DNS='9.9.9.9'\n", 'ENABLE=1\nKILL_SWITCH=0\n', False),   # no KILL_SWITCH there: vpn.conf's
+            ("REMOTE_DNS='9.9.9.9'\n", 'ENABLE=1\nKILL_SWITCH=1\n', True),
+            ("KILL_SWITCH='1'\n", 'ENABLE=0\nKILL_SWITCH=1\n', False),        # the switch is still vpn.conf's
+        ]
+        try:
+            for shell in self.each_shell():
+                for stored, conf, fatal in cases:
+                    self.fresh()
+                    self.stub('vpn', 'exit 1')
+                    settings.write_text(stored)
+                    (self.root / 'etc/mu300/vpn.conf').write_text(conf)
+                    r = self.run_wc(shell, 'connect', 'KEDI 5G', '-', stdin='password1\n')
+                    self.assertEqual(r.returncode, 1 if fatal else 0, (stored, conf, r.stderr))
+                    if fatal:
+                        self.assertIn('kill switch', r.stderr)
+                        self.assertNotIn('\nwpa_supplicant', self.events())
+                    else:
+                        self.assertIn('\nwpa_supplicant', self.events())
+        finally:
+            settings.unlink(missing_ok=True)
+            self.stub('vpn', 'echo "$(basename "$0") $*" >> "$STUBLOG/events"')
+
     # ---- one validator, and every name printed as text ---------------------------------------------------------
     def test_the_toolkit_asks_wifi_client(self):
         for shell in self.each_shell():

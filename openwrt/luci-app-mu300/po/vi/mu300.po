@@ -30,6 +30,9 @@ msgstr "Quản lý thiết bị"
 msgid "Languages"
 msgstr "Ngôn ngữ"
 
+msgid "Power"
+msgstr "Nguồn"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Trung tâm điều khiển MU300: bảng trạng thái, khóa mạng, terminal AT và SMS"
 
@@ -873,6 +876,120 @@ msgstr "Tự động (hỗ trợ %d)"
 msgid "%d locked: %s"
 msgstr "%d đã khóa: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Nhập số nguyên từ 0 đến %d"
+
+msgid "Power status unavailable"
+msgstr "Không có trạng thái nguồn"
+
+msgid "Plugged in"
+msgstr "Đang cắm sạc"
+
+msgid "On battery"
+msgstr "Dùng pin"
+
+msgid "Saver"
+msgstr "Tiết kiệm"
+
+msgid "Asleep: hotspot off"
+msgstr "Ngủ: điểm phát sóng đã tắt"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Khởi động khi sạc: nhấn phím Wi-Fi để bắt đầu"
+
+msgid "Awake"
+msgstr "Đang thức"
+
+msgid "forced"
+msgstr "ép buộc"
+
+msgid "automatic, battery under %d %%"
+msgstr "tự động, pin dưới %d %%"
+
+msgid "automatic"
+msgstr "tự động"
+
+msgid "Nobody connected for %d s"
+msgstr "Không có ai kết nối trong %d giây"
+
+msgid "Power source"
+msgstr "Nguồn điện"
+
+msgid "Profile"
+msgstr "Hồ sơ"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Hồ sơ đang dùng: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Bộ sạc"
+
+msgid "Charger: %s, %s port"
+msgstr "Bộ sạc: %s, cổng %s"
+
+msgid "Charging paused: battery temperature"
+msgstr "Tạm dừng sạc: nhiệt độ pin"
+
+msgid "Charging paused: charge limit"
+msgstr "Tạm dừng sạc: giới hạn sạc"
+
+msgid "Sleep now"
+msgstr "Ngủ ngay"
+
+msgid "Wake"
+msgstr "Đánh thức"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Không có ai kết nối nghĩa là không có máy khách Wi-Fi và không có máy tính trên USB. Phím Wi-Fi, máy tính trên USB hoặc bộ sạc sẽ đánh thức thiết bị."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Tự động: cắm sạc / dùng pin"
+
+msgid "Switch to Saver under %"
+msgstr "Chuyển sang Tiết kiệm khi dưới %"
+
+msgid "Stop charging at"
+msgstr "Dừng sạc ở mức"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % giúp pin bền hơn trên thiết bị luôn cắm sạc."
+
+msgid "Keep as is"
+msgstr "Giữ nguyên"
+
+msgid "LTE only (5G off)"
+msgstr "Chỉ LTE (tắt 5G)"
+
+msgid "Off"
+msgstr "Tắt"
+
+msgid "On"
+msgstr "Bật"
+
+msgid "Full"
+msgstr "Đầy đủ"
+
+msgid "Eco: big core off"
+msgstr "Eco: tắt nhân lớn"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Tắt điểm phát sóng sau (phút, 0 = không bao giờ)"
+
+msgid "Modem when idle"
+msgstr "Modem khi rảnh"
+
+msgid "LEDs when idle"
+msgstr "Đèn LED khi rảnh"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Các dòng bị bỏ qua trong power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Cấu hình cách plugin này kết nối với nền tảng Unisoc OpenWrt hiện tại. Thay đổi không cần sửa các trang bảng trạng thái, AT, khóa hay SMS."
 
@@ -1173,6 +1290,21 @@ msgstr "Cài đặt USB không xác định"
 msgid "Invalid interface name"
 msgstr "Tên giao diện không hợp lệ"
 
+msgid "The power adapter gave no valid reply"
+msgstr "Bộ điều hợp nguồn không trả lời hợp lệ"
+
+msgid "Unknown power operation"
+msgstr "Thao tác nguồn không xác định"
+
+msgid "Unknown power setting"
+msgstr "Cài đặt nguồn không xác định"
+
+msgid "Invalid power value"
+msgstr "Giá trị nguồn không hợp lệ"
+
+msgid "Invalid power request"
+msgstr "Yêu cầu nguồn không hợp lệ"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "Bộ điều hợp ngôn ngữ không trả về phản hồi hợp lệ"
 
@@ -1323,6 +1455,9 @@ msgstr "Bộ đệm khóa không khả dụng"
 msgid "No serving cell to lock to"
 msgstr "Không có cell phục vụ để khóa"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "Không đọc được cài đặt TTL"
 
@@ -1331,3 +1466,27 @@ msgstr "Không đặt được TTL"
 
 msgid "Unknown TTL operation"
 msgstr "Thao tác TTL không xác định"
+
+msgid "Lock Linux"
+msgstr "Khóa Linux"
+
+msgid "Unlock Linux"
+msgstr "Mở khóa Linux"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "Sau năm lần khởi động liên tiếp không hoàn tất, thiết bị sẽ quay lại Android."
+
+msgid "Unlock"
+msgstr "Mở khóa"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Thiết bị sẽ không bao giờ tự chuyển sang Android, kể cả sau các lần khởi động thất bại: chỉ chuyển sang Android từ trang này (Chuyển sang Android) hoặc bằng mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Kernel mới từ bản cập nhật vẫn khởi động thử trước, và khóa lại ngay khi một lần khởi động thành công."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Nếu chính hệ thống không còn khởi động được, thiết bị sẽ chờ qua USB (telnet) thay vì chuyển sang Android."
+
+msgid "Linux locked"
+msgstr "Linux đã khóa"

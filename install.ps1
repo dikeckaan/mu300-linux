@@ -424,6 +424,9 @@ if ($parts.Count -ne 2) { Die (T 'could not read the partition table from the de
 [int64]$lastEnd = $parts[0]; [int64]$disk = $parts[1]
 [int64]$start = [math]::Floor($lastEnd / 4096 + 1) * 4096
 [int64]$end = [math]::Floor(($disk - 34) / 4096 - 1) * 4096
+# A partition table that ends at the end of the eMMC (issue #65): the boundaries cross, and a negative size is not
+# a region but an empty one (the card is offered instead), whose start is never read (RegionOnDisk).
+if ($end -le $start) { $end = $start }
 [int64]$OFF = $start * 512
 [int64]$SIZE = ($end - $start) * 512
 function Gib([int64]$b) { '{0:N1} GiB' -f ($b / 1GB) }
@@ -546,8 +549,14 @@ if ($SD_MODE -eq 0 -and $SIZE -lt 700MB) {
     Die ((T 'only {1} MiB of free space after the last partition: this device has a different layout, nothing is changed.' $mib) + "`n" + (T 'Please report the numbers above (eMMC size and where the partitions end); they identify the variant.'))
 }
 
+# Whether the ext4 superblock of a region at BYTES (its second KiB) lies on the eMMC. A read past the end of the disk
+# never returns on this device: the dd spins on one core, survives kill -9 and heats the SoC until a reboot (issues
+# #43, #52, #65: a 32 GB eMMC whose table ends at its end puts the region's start at the disk's end, and the fixed
+# offset of the first releases lies beyond a 32 GB eMMC altogether).
+function RegionOnDisk([int64]$bytes) { [math]::Floor(($bytes + 2048) / 512) -le $disk }
 $existing = 'no'
 foreach ($cand in @($OFF, 27762098176)) {
+    if (-not (RegionOnDisk $cand)) { continue }
     $m = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
     $l = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
     if ($m -eq '53ef' -and $l.Trim() -eq 'mu300root') {

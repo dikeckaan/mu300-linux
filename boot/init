@@ -179,6 +179,23 @@ publish_slot() {
     cp "$_e/misc-bc-slot-$ANDROID_SLOT.bin" "$_r/misc-bc-android.bin"
     cp "$_e/misc-bc-slot-$LINUX_SLOT-trial.bin" "$_r/misc-bc-linux-trial.bin"
     if [ "$LINUX_SLOT" = b ]; then cp "$_e/misc-bc-slot-a.bin" "$_e/misc-bc-slot-b-trial.bin" "$_r/"; fi
+
+    # LK's boot mode, for mu300-power: "charger" is a flat battery plugged in (LK opens our slot in that mode too)
+    _mode= _msrc=default
+    for _f in ${MU300_CMDLINE_SRC:-/proc/cmdline /proc/device-tree/chosen/bootargs}; do
+        [ -r "$_f" ] || continue
+        _mode=$(tr '\000' ' ' < "$_f" | sed -n 's/.*androidboot\.mode=\([a-z]*\).*/\1/p')
+        [ -n "$_mode" ] && { _msrc=$_f; break; }
+    done
+    case $_mode in charger) ;; *) _mode=normal ;; esac
+    echo "$_mode" > "$_r/boot-mode"
+    # Charging boot: create this marker so Ubuntu units with ConditionPathExists=!/run/mu300/charging-boot skip radios
+    if [ "$_mode" = charger ]; then
+        touch "$_r/charging-boot"
+    else
+        rm -f "$_r/charging-boot"
+    fi
+    log "stage=boot-mode mode=$_mode source=$_msrc"
 }
 # --- slot end
 linux_slot_detect
@@ -606,10 +623,23 @@ lk_tries() {
     [ $((_v & 128)) = 0 ] || return 0
     echo $(( (_v >> 4) & 7 ))
 }
+# lk_locked: the Linux slot is marked successful in LK's block - mu300-next-boot lock. Nothing goes to Android by
+# itself then; the bit is in misc, so this holds even when the Linux disk cannot be read.
+lk_locked() {
+    [ -n "$misc" ] || return 1
+    [ "$(dd if="$misc" bs=1 skip=2052 count=4 2>/dev/null)" = BCAB ] || return 1
+    case $LINUX_SLOT in a) _o=2060 ;; *) _o=2062 ;; esac
+    _v=$(dd if="$misc" bs=1 skip=$_o count=1 2>/dev/null | od -An -tu1 | tr -d ' \n')
+    case $_v in ''|*[!0-9]*) return 1 ;; esac
+    [ $((_v & 128)) != 0 ]
+}
 # boot_tries_exceeded ROOTDIR DISK: count this boot; true when the backstop sends it to Android
 boot_tries_exceeded() {
     # only in default-Linux mode: with the one-shot trial every power cut already lands in Android
     [ "$(cat "$1/etc/mu300/default-boot" 2>/dev/null)" = linux ] || return 1
+    # locked (the bit in misc and the wish on the disk, so a slot marked successful by anything else keeps the
+    # backstop): no count, no backstop
+    if lk_locked && [ -f "$2/.mu300/boot-lock" ]; then log "stage=boot-locked (no backstop)"; return 1; fi
     tries=$(cat "$2/.mu300/boot-tries" 2>/dev/null || echo 0)
     case $tries in ''|*[!0-9]*) tries=0 ;; esac
     tries=$((tries + 1))
@@ -697,7 +727,19 @@ if [ "$root_mounted" = 1 ] && rootdir=$(pick_root) && [ -n "$rootdir" ]; then
     exec switch_root /newroot $init
 fi
 log "stage=rootfs-unavailable $(cat /run/rootmount.err)"
-restore_android
+# Locked (mu300-next-boot lock): no system, and still no way to Android by itself - this rescue stays up (telnet)
+# and /run/to-android takes it there by hand. Otherwise Android's slot is restored, and the timer reboots into it.
+if lk_locked; then
+    log "stage=rootfs-unavailable-locked (staying: telnet in and run sh /run/to-android)"
+    touch /run/stay
+    printf '#!/bin/sh\ndd if=%s of=%s bs=1 seek=2048 conv=notrunc && sync && reboot -f\n' \
+        "${MU300_ETC:-/etc}/misc-bc-slot-$ANDROID_SLOT.bin" "$misc" > /run/to-android
+    chmod 755 /run/to-android
+    RESCUE_NOTE="locked: no reboot to Android by itself; run sh /run/to-android to go there"
+else
+    restore_android
+    RESCUE_NOTE="auto reboot to Android after 300s unless /run/stay exists"
+fi
 ifconfig usb0 $NET.1 netmask 255.255.255.0 up
 log "stage=usb0 $(ifconfig usb0 2>&1 | head -1)"
 cat > /etc/udhcpd.conf <<EOF
@@ -716,7 +758,7 @@ touch /run/udhcpd.leases
 udhcpd /etc/udhcpd.conf
 telnetd -b $NET.1 -p 23 -l /bin/sh
 mkdir -p /run/www
-echo "MU300 standalone Linux v5: telnet $NET.1; auto reboot to Android after 300s unless /run/stay exists" > /run/www/index.html
+echo "MU300 standalone Linux v5: telnet $NET.1; $RESCUE_NOTE" > /run/www/index.html
 httpd -p $NET.1:80 -h /run/www
 log "stage=ready"
 

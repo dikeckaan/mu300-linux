@@ -1,5 +1,10 @@
-# MU300 VPN (VLESS). Copy to /etc/mu300/vpn.conf, edit, then: mu300-vpn gen && restart the service
-#   Ubuntu:  sudo systemctl restart mu300-vpn        OpenWrt: /etc/init.d/mu300-vpn restart
+# MU300 VPN, the legacy way: one VLESS link in this file. It still works, and it is the easiest way to keep an older
+# image's VPN: mu300-vpn moves everything below ENABLE into /etc/mu300/vpn (as the profile "legacy", with the keys
+# as its settings) the first time it runs, and again whenever a key here is changed. The new way is a profile:
+#   mu300-vpn profile import 'vless://...'      a share link, or a .conf/.ovpn/.json/.yaml file (- for stdin)
+#   mu300-vpn profile use ID; mu300-vpn on       (on writes ENABLE=1 here; off writes ENABLE=0)
+# ENABLE is the only key read from this file after the migration; it is still THE switch (mu300-update, the
+# installers, wifi-client and the dashboard read it). Copy to /etc/mu300/vpn.conf, edit, then: mu300-vpn on
 ENABLE=1
 # the share link from your server/panel (vless://uuid@host:port?type=...&security=...#name)
 VLESS_URI=""

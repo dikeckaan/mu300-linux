@@ -7,6 +7,7 @@
 #         LuCI app of the images, from the luci-i18n-* packages (apk add in the OpenWrt base image that
 #         openwrt/build-rootfs.sh imports, so apk checks every package against the feed's signed index), plus the
 #         MU300 panel's catalogs (openwrt/luci-app-mu300/po, tools/po2lmo.py). Needs docker with arm64 support.
+#   vpn-mihomo  mihomo (tools/fetch-mihomo.sh), pinned by hash: the engine of mu300-vpn's mihomo (Clash YAML) profiles
 # Layout (what mu300-update's extra_unpack checks): ./name ./release ./components ./manifest (sha256 of every file),
 # then ./bin/<programs>, or for lang
 # ./languages (uci key, tab, name) and ./i18n/<component>.<code>.lmo; owned by root.
@@ -26,6 +27,10 @@ case $NAME in
             printf 'hev-socks5-tunnel %s\n' "$(sed -n 's/^HEV_VER=//p' "$TOP/tools/fetch-xray.sh")"
             printf 'sing-box %s\n' "$(sed -n 's/^VER=//p' "$TOP/tools/fetch-sing-box.sh")"
         } > "$tmp/x/components" ;;
+    vpn-mihomo)
+        mkdir -p "$tmp/x/bin"
+        sh "$TOP/tools/fetch-mihomo.sh" "$tmp/x/bin" >&2
+        printf 'mihomo %s\n' "$(sed -n 's/^VER=//p' "$TOP/tools/fetch-mihomo.sh")" > "$tmp/x/components" ;;
     lang)
         IMG=mu300-openwrt-base:${MU300_WRT_VER:-25.12.5}
         docker image inspect "$IMG" >/dev/null 2>&1 || {
@@ -93,7 +98,7 @@ with open(os.path.join(x, 'components'), 'w', encoding='utf-8') as f:
     f.write('luci-app-mu300 catalogs: ' + ' '.join(ours) + '\n')
 PY
         echo "lang: $(wc -l < "$tmp/x/languages" | tr -d ' ') languages, $(ls "$tmp/x/i18n" | wc -l | tr -d ' ') catalogs" >&2 ;;
-    *) echo "unknown extra '$NAME' (vpn, lang)" >&2; exit 2 ;;
+    *) echo "unknown extra '$NAME' (vpn, lang, vpn-mihomo)" >&2; exit 2 ;;
 esac
 echo "$NAME" > "$tmp/x/name"
 echo "$TAG" > "$tmp/x/release"

@@ -30,6 +30,9 @@ msgstr "Eszközkezelés"
 msgid "Languages"
 msgstr "Nyelvek"
 
+msgid "Power"
+msgstr "Energia"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 vezérlőközpont: állapot-irányítópult, hálózati zárolások, AT-terminál és SMS"
 
@@ -873,6 +876,120 @@ msgstr "Automatikus (%d támogatott)"
 msgid "%d locked: %s"
 msgstr "%d zárolva: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Adjon meg egy egész számot 0 és %d között"
+
+msgid "Power status unavailable"
+msgstr "Az energiaállapot nem érhető el"
+
+msgid "Plugged in"
+msgstr "Hálózaton"
+
+msgid "On battery"
+msgstr "Akkumulátoron"
+
+msgid "Saver"
+msgstr "Takarékos"
+
+msgid "Asleep: hotspot off"
+msgstr "Alvó: hotspot kikapcsolva"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Töltési indítás: indításhoz nyomja meg a Wi-Fi gombot"
+
+msgid "Awake"
+msgstr "Ébren"
+
+msgid "forced"
+msgstr "kényszerített"
+
+msgid "automatic, battery under %d %%"
+msgstr "automatikus, akkumulátor %d %% alatt"
+
+msgid "automatic"
+msgstr "automatikus"
+
+msgid "Nobody connected for %d s"
+msgstr "Már %d másodperce nincs csatlakozva senki"
+
+msgid "Power source"
+msgstr "Tápforrás"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Használt profil: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Töltő"
+
+msgid "Charger: %s, %s port"
+msgstr "Töltő: %s, %s port"
+
+msgid "Charging paused: battery temperature"
+msgstr "Töltés szüneteltetve: akkumulátor hőmérséklete"
+
+msgid "Charging paused: charge limit"
+msgstr "Töltés szüneteltetve: töltési korlát"
+
+msgid "Sleep now"
+msgstr "Altatás most"
+
+msgid "Wake"
+msgstr "Ébresztés"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "A nincs csatlakozva senki azt jelenti: nincs Wi-Fi kliens és nincs számítógép az USB-n. A Wi-Fi gomb, az USB-n lévő számítógép vagy a töltő felébreszti az eszközt."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Automatikus: hálózaton / akkumulátoron"
+
+msgid "Switch to Saver under %"
+msgstr "Váltás Takarékosra ez alatt: %"
+
+msgid "Stop charging at"
+msgstr "Töltés leállítása itt"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "A 80 % kíméli az akkumulátort egy folyamatosan hálózaton lévő eszközben."
+
+msgid "Keep as is"
+msgstr "Változatlanul hagyás"
+
+msgid "LTE only (5G off)"
+msgstr "Csak LTE (5G kikapcsolva)"
+
+msgid "Off"
+msgstr "Ki"
+
+msgid "On"
+msgstr "Be"
+
+msgid "Full"
+msgstr "Teljes"
+
+msgid "Eco: big core off"
+msgstr "Takarékos: nagy mag kikapcsolva"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Hotspot kikapcsolása ennyi idő után (perc, 0 = soha)"
+
+msgid "Modem when idle"
+msgstr "Modem tétlenül"
+
+msgid "LEDs when idle"
+msgstr "LED-ek tétlenül"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Figyelmen kívül hagyott sorok a power.conf fájlban: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Annak beállítása, hogyan csatlakozik ez a bővítmény a jelenlegi Unisoc OpenWrt platformhoz. A változtatásokhoz nem kell szerkeszteni az irányítópult, AT, zárolási vagy SMS oldalakat."
 
@@ -1173,6 +1290,21 @@ msgstr "Ismeretlen USB-beállítás"
 msgid "Invalid interface name"
 msgstr "Érvénytelen csatolónév"
 
+msgid "The power adapter gave no valid reply"
+msgstr "A tápellátás-adapter nem adott érvényes választ"
+
+msgid "Unknown power operation"
+msgstr "Ismeretlen energiaművelet"
+
+msgid "Unknown power setting"
+msgstr "Ismeretlen energiabeállítás"
+
+msgid "Invalid power value"
+msgstr "Érvénytelen energiaérték"
+
+msgid "Invalid power request"
+msgstr "Érvénytelen energiakérés"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "A nyelvi adapter nem adott érvényes választ"
 
@@ -1323,6 +1455,9 @@ msgstr "A zárolási gyorsítótár nem érhető el"
 msgid "No serving cell to lock to"
 msgstr "Nincs kiszolgáló cella a zároláshoz"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "A TTL-beállítás nem olvasható"
 
@@ -1331,3 +1466,27 @@ msgstr "A TTL nem állítható be"
 
 msgid "Unknown TTL operation"
 msgstr "Ismeretlen TTL-művelet"
+
+msgid "Lock Linux"
+msgstr "Linux zárolása"
+
+msgid "Unlock Linux"
+msgstr "Linux zárolásának feloldása"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "Öt egymást követő befejezetlen indítás után az eszköz ismét visszatér az Androidra."
+
+msgid "Unlock"
+msgstr "Feloldás"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Az eszköz soha nem vált magától Androidra, sikertelen indítások után sem: Androidra csak erről az oldalról (Váltás Androidra) vagy a mu300-next-boot android paranccsal."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Egy frissítésből származó új kernel ettől még először próbaindításokkal indul, és újra zárol, amint az egyik sikerül."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Ha maga a rendszer már nem indul el, az eszköz USB-n (telnet) vár ahelyett, hogy Androidra váltana."
+
+msgid "Linux locked"
+msgstr "Linux zárolva"

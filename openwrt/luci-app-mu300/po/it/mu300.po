@@ -30,6 +30,9 @@ msgstr "Gestione dispositivo"
 msgid "Languages"
 msgstr "Lingue"
 
+msgid "Power"
+msgstr "Alimentazione"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Centro di controllo MU300: pannello di stato, blocchi di rete, terminale AT e SMS"
 
@@ -873,6 +876,120 @@ msgstr "Automatico (%d supportate)"
 msgid "%d locked: %s"
 msgstr "%d bloccate: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Inserisci un numero intero da 0 a %d"
+
+msgid "Power status unavailable"
+msgstr "Stato dell'alimentazione non disponibile"
+
+msgid "Plugged in"
+msgstr "Collegato alla rete"
+
+msgid "On battery"
+msgstr "A batteria"
+
+msgid "Saver"
+msgstr "Risparmio"
+
+msgid "Asleep: hotspot off"
+msgstr "In sospensione: hotspot spento"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Avvio in carica: premi il tasto Wi-Fi per avviare"
+
+msgid "Awake"
+msgstr "Attivo"
+
+msgid "forced"
+msgstr "forzato"
+
+msgid "automatic, battery under %d %%"
+msgstr "automatico, batteria sotto il %d %%"
+
+msgid "automatic"
+msgstr "automatico"
+
+msgid "Nobody connected for %d s"
+msgstr "Nessuno connesso da %d s"
+
+msgid "Power source"
+msgstr "Fonte di alimentazione"
+
+msgid "Profile"
+msgstr "Profilo"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Profilo in uso: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Caricabatterie"
+
+msgid "Charger: %s, %s port"
+msgstr "Caricabatterie: %s, porta %s"
+
+msgid "Charging paused: battery temperature"
+msgstr "Carica in pausa: temperatura della batteria"
+
+msgid "Charging paused: charge limit"
+msgstr "Carica in pausa: limite di carica"
+
+msgid "Sleep now"
+msgstr "Sospendi ora"
+
+msgid "Wake"
+msgstr "Riattiva"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Nessuno connesso significa nessun client Wi-Fi e nessun computer sull'USB. Il tasto Wi-Fi, un computer sull'USB o il caricabatterie riattivano il dispositivo."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Automatico: collegato alla rete / a batteria"
+
+msgid "Switch to Saver under %"
+msgstr "Passa a Risparmio sotto il %"
+
+msgid "Stop charging at"
+msgstr "Interrompi la carica al"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "L'80 % protegge meglio la batteria di un dispositivo che resta collegato."
+
+msgid "Keep as is"
+msgstr "Lascia invariato"
+
+msgid "LTE only (5G off)"
+msgstr "Solo LTE (5G spento)"
+
+msgid "Off"
+msgstr "Spento"
+
+msgid "On"
+msgstr "Acceso"
+
+msgid "Full"
+msgstr "Pieno"
+
+msgid "Eco: big core off"
+msgstr "Eco: core grande spento"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Spegni l'hotspot dopo (min, 0 = mai)"
+
+msgid "Modem when idle"
+msgstr "Modem in inattività"
+
+msgid "LEDs when idle"
+msgstr "LED in inattività"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Righe ignorate in power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Configurare il modo in cui questo plugin si collega all'attuale piattaforma OpenWrt Unisoc. Le modifiche non richiedono di modificare le pagine pannello, AT, blocchi o SMS."
 
@@ -1173,6 +1290,21 @@ msgstr "Impostazione USB sconosciuta"
 msgid "Invalid interface name"
 msgstr "Nome interfaccia non valido"
 
+msgid "The power adapter gave no valid reply"
+msgstr "L'adattatore di alimentazione non ha dato una risposta valida"
+
+msgid "Unknown power operation"
+msgstr "Operazione di alimentazione sconosciuta"
+
+msgid "Unknown power setting"
+msgstr "Impostazione di alimentazione sconosciuta"
+
+msgid "Invalid power value"
+msgstr "Valore di alimentazione non valido"
+
+msgid "Invalid power request"
+msgstr "Richiesta di alimentazione non valida"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "L'adattatore delle lingue non ha restituito una risposta valida"
 
@@ -1323,6 +1455,9 @@ msgstr "Cache dei blocchi non disponibile"
 msgid "No serving cell to lock to"
 msgstr "Nessuna cella di servizio da bloccare"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "Impossibile leggere l'impostazione del TTL"
 
@@ -1331,3 +1466,27 @@ msgstr "Impossibile impostare il TTL"
 
 msgid "Unknown TTL operation"
 msgstr "Operazione TTL sconosciuta"
+
+msgid "Lock Linux"
+msgstr "Blocca Linux"
+
+msgid "Unlock Linux"
+msgstr "Sblocca Linux"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "Dopo cinque avvii consecutivi non completati, il dispositivo torna di nuovo ad Android."
+
+msgid "Unlock"
+msgstr "Sblocca"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Il dispositivo non passerà mai ad Android da solo, nemmeno dopo avvii falliti: ad Android solo da questa pagina (Passa ad Android) o con mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Un nuovo kernel da un aggiornamento esegue comunque i primi avvii in prova e si blocca di nuovo appena uno riesce."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Se il sistema stesso non si avvia più, il dispositivo attende via USB (telnet) invece di passare ad Android."
+
+msgid "Linux locked"
+msgstr "Linux bloccato"

@@ -43,6 +43,7 @@ last_end=$1; disk=$2
 OFF=; SIZE=
 start=$(( (last_end / 4096 + 1) * 4096 * 512 ))
 for cand in $start 27762098176; do
+    region_on_disk "$cand" || continue    # never read past the end of the eMMC (storage.sh)
     m=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1080)) count=2 2>/dev/null | od -An -tx1" | tr -d ' ')
     l=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1144)) count=16 2>/dev/null" | tr -d '\000')
     if [ "$m" = 53ef ] && [ "$l" = mu300root ]; then

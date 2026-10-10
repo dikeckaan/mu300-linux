@@ -30,6 +30,9 @@ msgstr "Správa zariadenia"
 msgid "Languages"
 msgstr "Jazyky"
 
+msgid "Power"
+msgstr "Napájanie"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Riadiace centrum MU300: prehľad stavu, zámky siete, terminál AT a SMS"
 
@@ -873,6 +876,120 @@ msgstr "Automaticky (podporované: %d)"
 msgid "%d locked: %s"
 msgstr "Uzamknuté %d: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Zadajte celé číslo od 0 do %d"
+
+msgid "Power status unavailable"
+msgstr "Stav napájania nie je dostupný"
+
+msgid "Plugged in"
+msgstr "Pripojené k sieti"
+
+msgid "On battery"
+msgstr "Na batérii"
+
+msgid "Saver"
+msgstr "Úsporný"
+
+msgid "Asleep: hotspot off"
+msgstr "Spánok: hotspot vypnutý"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Spustenie pri nabíjaní: spustíte klávesom Wi-Fi"
+
+msgid "Awake"
+msgstr "Hore"
+
+msgid "forced"
+msgstr "vynútené"
+
+msgid "automatic, battery under %d %%"
+msgstr "automaticky, batéria pod %d %%"
+
+msgid "automatic"
+msgstr "automaticky"
+
+msgid "Nobody connected for %d s"
+msgstr "Nikto nie je pripojený %d s"
+
+msgid "Power source"
+msgstr "Zdroj napájania"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Používaný profil: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Nabíjačka"
+
+msgid "Charger: %s, %s port"
+msgstr "Nabíjačka: %s, port %s"
+
+msgid "Charging paused: battery temperature"
+msgstr "Nabíjanie pozastavené: teplota batérie"
+
+msgid "Charging paused: charge limit"
+msgstr "Nabíjanie pozastavené: limit nabitia"
+
+msgid "Sleep now"
+msgstr "Uspať teraz"
+
+msgid "Wake"
+msgstr "Prebudiť"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Nikto pripojený znamená žiadny klient Wi-Fi a žiadny počítač na USB. Zariadenie prebudí kláves Wi-Fi, počítač na USB alebo nabíjačka."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Automaticky: v sieti / na batérii"
+
+msgid "Switch to Saver under %"
+msgstr "Prepnúť na Úsporný pod %"
+
+msgid "Stop charging at"
+msgstr "Prestať nabíjať na"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % šetrí batériu zariadenia, ktoré zostáva pripojené k sieti."
+
+msgid "Keep as is"
+msgstr "Ponechať bez zmeny"
+
+msgid "LTE only (5G off)"
+msgstr "Iba LTE (5G vypnuté)"
+
+msgid "Off"
+msgstr "Vypnuté"
+
+msgid "On"
+msgstr "Zapnuté"
+
+msgid "Full"
+msgstr "Plný"
+
+msgid "Eco: big core off"
+msgstr "Eko: veľké jadro vypnuté"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Vypnúť hotspot po (min, 0 = nikdy)"
+
+msgid "Modem when idle"
+msgstr "Modem pri nečinnosti"
+
+msgid "LEDs when idle"
+msgstr "LED pri nečinnosti"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Ignorované riadky v power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Nastavte, ako sa tento plugin pripája k aktuálnej platforme Unisoc OpenWrt. Zmeny nevyžadujú úpravu stránok prehľadu, AT, zámkov ani SMS."
 
@@ -1173,6 +1290,21 @@ msgstr "Neznáme nastavenie USB"
 msgid "Invalid interface name"
 msgstr "Neplatný názov rozhrania"
 
+msgid "The power adapter gave no valid reply"
+msgstr "Napájací adaptér nedal platnú odpoveď"
+
+msgid "Unknown power operation"
+msgstr "Neznáma operácia napájania"
+
+msgid "Unknown power setting"
+msgstr "Neznáme nastavenie napájania"
+
+msgid "Invalid power value"
+msgstr "Neplatná hodnota napájania"
+
+msgid "Invalid power request"
+msgstr "Neplatná požiadavka napájania"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "Adaptér jazykov nevrátil platnú odpoveď"
 
@@ -1323,6 +1455,9 @@ msgstr "Vyrovnávacia pamäť zámkov nie je dostupná"
 msgid "No serving cell to lock to"
 msgstr "Žiadna obsluhujúca bunka na uzamknutie"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "Nastavenie TTL sa nepodarilo prečítať"
 
@@ -1331,3 +1466,27 @@ msgstr "TTL sa nepodarilo nastaviť"
 
 msgid "Unknown TTL operation"
 msgstr "Neznáma operácia TTL"
+
+msgid "Lock Linux"
+msgstr "Zamknúť Linux"
+
+msgid "Unlock Linux"
+msgstr "Odomknúť Linux"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "Po piatich nedokončených spusteniach za sebou sa zariadenie znova vráti do Androidu."
+
+msgid "Unlock"
+msgstr "Odomknúť"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Zariadenie sa nikdy samo neprepne do Androidu, ani po neúspešných spusteniach: do Androidu len z tejto stránky (Prepnúť do Androidu) alebo príkazom mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Nové jadro z aktualizácie sa aj tak najprv spúšťa skúšobne a znova sa zamkne, keď jedno spustenie uspeje."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Ak sa samotný systém prestane spúšťať, zariadenie čaká cez USB (telnet) namiesto prechodu do Androidu."
+
+msgid "Linux locked"
+msgstr "Linux zamknutý"

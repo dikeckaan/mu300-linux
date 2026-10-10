@@ -30,6 +30,9 @@ msgstr "Управление устройством"
 msgid "Languages"
 msgstr "Языки"
 
+msgid "Power"
+msgstr "Питание"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Центр управления MU300: панель состояния, фиксация сети, AT-терминал и SMS"
 
@@ -873,6 +876,120 @@ msgstr "Автоматически (поддерживается: %d)"
 msgid "%d locked: %s"
 msgstr "Зафиксировано %d: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Введите целое число от 0 до %d"
+
+msgid "Power status unavailable"
+msgstr "Состояние питания недоступно"
+
+msgid "Plugged in"
+msgstr "От сети"
+
+msgid "On battery"
+msgstr "От батареи"
+
+msgid "Saver"
+msgstr "Экономия"
+
+msgid "Asleep: hotspot off"
+msgstr "Сон: точка доступа выключена"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Запуск в режиме зарядки: нажмите клавишу Wi-Fi для запуска"
+
+msgid "Awake"
+msgstr "Активно"
+
+msgid "forced"
+msgstr "принудительно"
+
+msgid "automatic, battery under %d %%"
+msgstr "автоматически, заряд ниже %d %%"
+
+msgid "automatic"
+msgstr "автоматически"
+
+msgid "Nobody connected for %d s"
+msgstr "Никто не подключён уже %d с"
+
+msgid "Power source"
+msgstr "Источник питания"
+
+msgid "Profile"
+msgstr "Профиль"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Используемый профиль: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Зарядное устройство"
+
+msgid "Charger: %s, %s port"
+msgstr "Зарядное устройство: %s, порт %s"
+
+msgid "Charging paused: battery temperature"
+msgstr "Зарядка приостановлена: температура батареи"
+
+msgid "Charging paused: charge limit"
+msgstr "Зарядка приостановлена: предел заряда"
+
+msgid "Sleep now"
+msgstr "Усыпить сейчас"
+
+msgid "Wake"
+msgstr "Разбудить"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Никто не подключён означает: нет клиентов Wi-Fi и нет компьютера на USB. Клавиша Wi-Fi, компьютер на USB или зарядное устройство будят устройство."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Автоматически: от сети / от батареи"
+
+msgid "Switch to Saver under %"
+msgstr "Переходить в Экономию при заряде ниже %"
+
+msgid "Stop charging at"
+msgstr "Прекращать зарядку на"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % берегут батарею устройства, которое постоянно включено в сеть."
+
+msgid "Keep as is"
+msgstr "Не менять"
+
+msgid "LTE only (5G off)"
+msgstr "Только LTE (5G выключен)"
+
+msgid "Off"
+msgstr "Выкл."
+
+msgid "On"
+msgstr "Вкл."
+
+msgid "Full"
+msgstr "Полная"
+
+msgid "Eco: big core off"
+msgstr "Эко: большое ядро выключено"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Выключать точку доступа через (мин, 0 = никогда)"
+
+msgid "Modem when idle"
+msgstr "Модем в простое"
+
+msgid "LEDs when idle"
+msgstr "Индикаторы в простое"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Игнорируемые строки в power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Настройка подключения этого плагина к текущей платформе Unisoc OpenWrt. Изменения не требуют правки страниц панели, AT, фиксации или SMS."
 
@@ -1173,6 +1290,21 @@ msgstr "Неизвестная настройка USB"
 msgid "Invalid interface name"
 msgstr "Недопустимое имя интерфейса"
 
+msgid "The power adapter gave no valid reply"
+msgstr "Адаптер питания не дал корректного ответа"
+
+msgid "Unknown power operation"
+msgstr "Неизвестная операция питания"
+
+msgid "Unknown power setting"
+msgstr "Неизвестная настройка питания"
+
+msgid "Invalid power value"
+msgstr "Недопустимое значение питания"
+
+msgid "Invalid power request"
+msgstr "Недопустимый запрос питания"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "Языковой адаптер не вернул корректный ответ"
 
@@ -1323,6 +1455,9 @@ msgstr "Кэш фиксации недоступен"
 msgid "No serving cell to lock to"
 msgstr "Нет обслуживающей соты для фиксации"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "Не удалось прочитать настройку TTL"
 
@@ -1331,3 +1466,27 @@ msgstr "Не удалось задать TTL"
 
 msgid "Unknown TTL operation"
 msgstr "Неизвестная операция TTL"
+
+msgid "Lock Linux"
+msgstr "Закрепить Linux"
+
+msgid "Unlock Linux"
+msgstr "Снять закрепление Linux"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "После пяти незавершённых загрузок подряд устройство снова вернётся в Android."
+
+msgid "Unlock"
+msgstr "Снять закрепление"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Устройство никогда не переключится в Android само, даже после неудачных загрузок: в Android только с этой страницы (Переключиться на Android) или командой mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Новое ядро из обновления всё равно сначала загружается в пробном режиме и снова закрепляется после первой удачной загрузки."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Если сама система больше не запускается, устройство ждёт по USB (telnet), а не переходит в Android."
+
+msgid "Linux locked"
+msgstr "Linux закреплён"

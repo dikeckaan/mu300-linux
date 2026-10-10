@@ -30,6 +30,9 @@ msgstr "Управление на устройството"
 msgid "Languages"
 msgstr "Езици"
 
+msgid "Power"
+msgstr "Захранване"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Контролен център MU300: табло за състоянието, мрежови заключвания, AT терминал и SMS"
 
@@ -873,6 +876,120 @@ msgstr "Автоматично (%d поддържани)"
 msgid "%d locked: %s"
 msgstr "%d заключени: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Въведете цяло число от 0 до %d"
+
+msgid "Power status unavailable"
+msgstr "Състоянието на захранването не е налично"
+
+msgid "Plugged in"
+msgstr "На зарядно"
+
+msgid "On battery"
+msgstr "На батерия"
+
+msgid "Saver"
+msgstr "Икономия"
+
+msgid "Asleep: hotspot off"
+msgstr "Сън: точката за достъп е изключена"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Стартиране при зареждане: натиснете клавиша Wi-Fi за стартиране"
+
+msgid "Awake"
+msgstr "Събудено"
+
+msgid "forced"
+msgstr "принудително"
+
+msgid "automatic, battery under %d %%"
+msgstr "автоматично, батерия под %d %%"
+
+msgid "automatic"
+msgstr "автоматично"
+
+msgid "Nobody connected for %d s"
+msgstr "Никой не е свързан от %d сек"
+
+msgid "Power source"
+msgstr "Източник на захранване"
+
+msgid "Profile"
+msgstr "Профил"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Използван профил: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Зарядно"
+
+msgid "Charger: %s, %s port"
+msgstr "Зарядно: %s, порт %s"
+
+msgid "Charging paused: battery temperature"
+msgstr "Зареждането е спряно: температура на батерията"
+
+msgid "Charging paused: charge limit"
+msgstr "Зареждането е спряно: лимит на зареждане"
+
+msgid "Sleep now"
+msgstr "Приспи сега"
+
+msgid "Wake"
+msgstr "Събуди"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Никой не е свързан означава: няма Wi-Fi клиент и няма компютър на USB. Клавишът Wi-Fi, компютър на USB или зарядното будят устройството."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Автоматично: на зарядно / на батерия"
+
+msgid "Switch to Saver under %"
+msgstr "Превключване към Икономия под %"
+
+msgid "Stop charging at"
+msgstr "Спиране на зареждането при"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % пазят батерията на устройство, което остава на зарядно."
+
+msgid "Keep as is"
+msgstr "Без промяна"
+
+msgid "LTE only (5G off)"
+msgstr "Само LTE (5G изключен)"
+
+msgid "Off"
+msgstr "Изкл."
+
+msgid "On"
+msgstr "Вкл."
+
+msgid "Full"
+msgstr "Пълна"
+
+msgid "Eco: big core off"
+msgstr "Еко: голямото ядро е изключено"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Изключване на точката за достъп след (мин, 0 = никога)"
+
+msgid "Modem when idle"
+msgstr "Модем в покой"
+
+msgid "LEDs when idle"
+msgstr "LED индикатори в покой"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Игнорирани редове в power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Настройте как тази добавка се свързва с текущата платформа Unisoc OpenWrt. Промените не изискват редактиране на страниците на таблото, AT, заключванията или SMS."
 
@@ -1173,6 +1290,21 @@ msgstr "Неизвестна USB настройка"
 msgid "Invalid interface name"
 msgstr "Невалидно име на интерфейс"
 
+msgid "The power adapter gave no valid reply"
+msgstr "Адаптерът за захранване не върна валиден отговор"
+
+msgid "Unknown power operation"
+msgstr "Неизвестна операция за захранване"
+
+msgid "Unknown power setting"
+msgstr "Неизвестна настройка за захранване"
+
+msgid "Invalid power value"
+msgstr "Невалидна стойност за захранване"
+
+msgid "Invalid power request"
+msgstr "Невалидна заявка за захранване"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "Езиковият адаптер не върна валиден отговор"
 
@@ -1323,6 +1455,9 @@ msgstr "Кешът на заключванията е недостъпен"
 msgid "No serving cell to lock to"
 msgstr "Няма обслужваща клетка за заключване"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "Настройката за TTL не можа да бъде прочетена"
 
@@ -1331,3 +1466,27 @@ msgstr "TTL не можа да бъде зададен"
 
 msgid "Unknown TTL operation"
 msgstr "Неизвестна операция с TTL"
+
+msgid "Lock Linux"
+msgstr "Заключи Linux"
+
+msgid "Unlock Linux"
+msgstr "Отключи Linux"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "След пет поредни незавършени стартирания устройството отново се връща към Android."
+
+msgid "Unlock"
+msgstr "Отключи"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Устройството никога няма да превключи само към Android, дори след неуспешни стартирания: към Android само от тази страница (Превключване към Android) или с mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Ново ядро от обновление пак стартира първо на пробен режим и се заключва отново, щом едно стартиране успее."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Ако самата система вече не стартира, устройството чака през USB (telnet), вместо да премине към Android."
+
+msgid "Linux locked"
+msgstr "Linux е заключен"

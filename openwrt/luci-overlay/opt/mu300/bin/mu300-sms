@@ -8,10 +8,15 @@
 #   mu300-sms send --stdin NUMBER      the same, with the text read from stdin (what the panel uses)
 #   mu300-sms delete ID|all [--sim]    from the pool; --sim also deletes the matching message on the SIM
 #   mu300-sms mark ID read|unread
-#   mu300-sms sync                     pull every message on the SIM into the pool
+#   mu300-sms sync                     move every message on the SIM into the pool
+#
+# A received message that lands in the pool runs /etc/mu300/sms-hook (MU300_SMS_HOOK), when that is executable, with
+# SMS_FROM, SMS_DATE, SMS_TEXT and SMS_ID in its environment, in the background (forwarding to a phone, a webhook...).
 #
 # This is not the SMS tool of the system: that is `sms`, on every system, with its own state in /etc/mu300/sms. The
-# pool lives apart from it (/etc/mu300/sms-pool) and never deletes from the SIM unless asked to (--sim).
+# pool lives apart from it (/etc/mu300/sms-pool) and is where received messages live: sync moves them off the SIM
+# (the SIM holds a few dozen, and a full one takes no more, so a message left there costs the next one), and only
+# once the pool's copy is on the disk.
 #
 # The modem is reached only through mu300-atd (mu300-at), in PDU mode, as `sms` does: text mode mangles a sender
 # that is a name and cannot tell the parts of a long message apart (FINDINGS 26c). The frames are decoded and built
@@ -31,6 +36,7 @@ MSGDIR=$POOL/msg
 ATDIR=${MU300_AT_DIR:-/run/mu300-at}
 AWK=${MU300_SMS_AWK:-/opt/mu300/lib/sms-pdu.awk}
 PAGE=${MU300_SMS_PAGE:-10}
+HOOK=${MU300_SMS_HOOK:-/etc/mu300/sms-hook}
 case $PAGE in ''|*[!0-9]*|0) PAGE=10 ;; esac
 TAB=$(printf '\t')
 # The pool lock lives in RAM, not in the pool: the pool is on flash (/etc), and smsd syncs every 30 s. One lock per
@@ -163,7 +169,8 @@ pick_store() {
     [ -n "$_store" ]
 }
 
-# sim_list: every complete message on the SIM, one per line:
+# sim_list: every complete message on the SIM, one per line (and, when SIM_RAW names a file, every slot's
+# "index:stat <TAB> PDU" into it, for sim_move):
 #   indexes <TAB> unread <TAB> sender <TAB> time <TAB> text
 # (indexes: the SIM slots of its parts, comma-separated; unread: 1 when any part is). In PDU mode AT+CMGL=4 is all;
 # each "+CMGL: index,stat,..." line is followed by its PDU, stat 0 being "received unread". sms-pdu.awk keeps the
@@ -176,7 +183,7 @@ sim_list() {
     printf '%s\n' "$_r" | tr -d '\r' | awk '
         /^\+CMGL:/ { h = $0; sub(/^\+CMGL: */, "", h); split(h, f, ","); idx = f[1] ":" f[2]; next }
         /^[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]+$/ { if (idx != "") { print idx "\t" $0; idx = "" } }
-    ' | awk -v mode=decode -F'\t' -f "$AWK" | awk -F'\t' '
+    ' | { if [ -n "${SIM_RAW:-}" ]; then tee "$SIM_RAW"; else cat; fi; } | awk -v mode=decode -F'\t' -f "$AWK" | awk -F'\t' '
         {
             split($1, a, ":")
             key = ($4 == "") ? "single:" a[1] : "multi:" $2 ":" $4
@@ -199,22 +206,44 @@ sim_list() {
         }'
 }
 
+# sim_move SLOTS RAW: delete from the SIM the slots listed in the file SLOTS (one per line), each only when it still
+# holds the PDU the listing saw (RAW, from sim_list): between the listing and here another client may have deleted a
+# slot and a new message landed in it, and that one is not in the pool. Sets _moved and _kept. No pool lock: AT calls.
+sim_move() {
+    _moved=0; _kept=0
+    [ -s "$1" ] || return 0
+    # the pool's copies on the disk before the SIM lets go of anything (a power cut must not lose both)
+    command sync 2>/dev/null || true
+    for _s in $(sort -un "$1"); do
+        _want=$(awk -F'\t' -v s="$_s" '{ split($1, a, ":"); if (a[1] == s) { print toupper($2); exit } }' "$2")
+        _r=$(at "AT+CMGR=$_s" 10 2>/dev/null) || _r=
+        _got=$(printf '%s\n' "$_r" | tr -d '\r' | grep -E '^[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]+$' | head -n 1 |
+            tr 'abcdef' 'ABCDEF')
+        if [ -n "$_want" ] && [ "$_got" = "$_want" ] && at "AT+CMGD=$_s" 10 >/dev/null 2>&1; then
+            _moved=$((_moved + 1))
+        else
+            _kept=$((_kept + 1))
+        fi
+    done
+}
+
 # ------------------------------------------------------------------ commands
 cmd_sync() {
     need_atd
     [ -f "$AWK" ] || die "$AWK is missing"
     pool_init
     _tmp=$(mktemp "${TMPDIR:-/tmp}/mu300-sms.XXXXXX") || die "mktemp failed"
+    SIM_RAW=$_tmp.raw
     sim_list > "$_tmp" 2> "$_tmp.err" || {
-        grep -v '^incomplete ' "$_tmp.err" >&2; rm -f "$_tmp" "$_tmp.err"; die "cannot list the SIM storage"; }
+        grep -v '^incomplete ' "$_tmp.err" >&2; rm -f "$_tmp" "$_tmp.err" "$_tmp.raw"; die "cannot list the SIM storage"; }
     _waiting=$(sed -n 's/^incomplete //p' "$_tmp.err" | head -n 1)
     rm -f "$_tmp.err"
     # The AT conversation is over before the pool lock is taken: a path holding the pool lock makes no AT call, so
     # send (AT lock, then pool lock) and sync can never wait for each other.
     pool_lock
     # the fingerprints the pool holds, so a sync is idempotent and the SIM index of a message that moved is updated
-    _fps=$_tmp.fp; _seen=$_tmp.sim
-    : > "$_fps"; : > "$_seen"
+    _fps=$_tmp.fp; _seen=$_tmp.sim; _move=$_tmp.move
+    : > "$_fps"; : > "$_seen"; : > "$_move"
     for _f in "$MSGDIR"/[0-9]*; do
         case $_f in *.part) continue ;; esac   # a write in progress (or one a crash left behind)
         [ -f "$_f" ] || continue
@@ -226,11 +255,15 @@ cmd_sync() {
         _total=$((_total + 1))
         _fp=$(fingerprint "$_from" "$_ts" "$_text")
         echo "$_fp" >> "$_seen"
-        # a message deleted from the pool stays deleted: its fingerprint is on the tombstone list
-        grep -qxF "$_fp" "$POOL/deleted" 2>/dev/null && continue
+        # a message deleted from the pool stays deleted: its fingerprint is on the tombstone list (and it goes from
+        # the SIM, as everything the pool has dealt with)
+        if grep -qxF "$_fp" "$POOL/deleted" 2>/dev/null; then
+            printf '%s\n' "$_idx" | tr ',' '\n' >> "$_move"; continue
+        fi
         _known=$(sed -n "s|^$_fp ||p" "$_fps" | head -n 1)
         if [ -n "$_known" ]; then
             [ "$(hdr "$_known" sim_index)" = "$_idx" ] || set_hdr "$_known" sim_index "$_idx"
+            printf '%s\n' "$_idx" | tr ',' '\n' >> "$_move"
             continue
         fi
         # the SIM's own read state carries over: a message read before the pool saw it does not arrive as new
@@ -238,8 +271,20 @@ cmd_sync() {
         _coding=gsm
         [ -n "$(printf '%s' "$_text" | LC_ALL=C tr -d '\000-\177')" ] && _coding=ucs2
         _id=$(store_msg mt "$_st" "$_from" "$_ts" "$_idx" "$_coding" "$_text")
+        # leaves the SIM only when the pool really has it (a full or read-only disk keeps it on the SIM)
+        if [ -f "$MSGDIR/$_id" ] && [ "$(hdr "$MSGDIR/$_id" fingerprint)" = "$_fp" ]; then
+            printf '%s\n' "$_idx" | tr ',' '\n' >> "$_move"
+        else
+            echo "mu300-sms: could not write a message into $MSGDIR; it stays on the SIM" >&2
+            continue
+        fi
         printf '%s %s\n' "$_fp" "$MSGDIR/$_id" >> "$_fps"
         _new=$((_new + 1))
+        # the hook gets it from the pool's copy, so it never depends on the SIM still holding it; its output and
+        # its exit do not concern the sync
+        if [ -x "$HOOK" ]; then
+            SMS_FROM=$_from SMS_DATE=$_ts SMS_TEXT=$_text SMS_ID=$_id "$HOOK" </dev/null >/dev/null 2>&1 &
+        fi
         echo "new: $_id from ${_from:-?} ${_ts:-}"
     done < "$_tmp"
     # tombstones of messages no longer on the SIM are not needed any more: nothing can bring those back. The list is
@@ -250,8 +295,13 @@ cmd_sync() {
         cmp -s "$_tmp.del" "$POOL/deleted" || { cat "$_tmp.del" > "$POOL/deleted.part" && mv "$POOL/deleted.part" "$POOL/deleted"; }
     fi
     rm -f "$_tmp" "$_fps" "$_seen" "$_tmp.del"
-    echo "sync: $_new new, $_total on the SIM, $(ids_newest_first | wc -l | tr -d ' ') in the pool${_waiting:+, $_waiting waiting for its other parts}"
+    _inpool=$(ids_newest_first | wc -l | tr -d ' ')
     pool_unlock
+    # off the SIM, after the pool lock (AT calls): what the pool now holds, and what it was told to forget
+    sim_move "$_move" "$_tmp.raw"
+    rm -f "$_move" "$_tmp.raw"
+    _left=; [ "$_kept" -gt 0 ] && _left=", $_kept left there (changed since the listing, or the modem kept it)"
+    echo "sync: $_new new, $_total on the SIM, $_inpool in the pool${_waiting:+, $_waiting waiting for its other parts}, $_moved moved off the SIM$_left"
 }
 
 # preview: the first line, at most 44 bytes, cut back to a whole UTF-8 character (and only when it was cut)

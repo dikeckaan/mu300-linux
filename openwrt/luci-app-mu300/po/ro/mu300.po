@@ -30,6 +30,9 @@ msgstr "Gestionare dispozitiv"
 msgid "Languages"
 msgstr "Limbi"
 
+msgid "Power"
+msgstr "Alimentare"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Centru de control MU300: panou de stare, blocări de rețea, terminal AT și SMS"
 
@@ -873,6 +876,120 @@ msgstr "Automat (%d suportate)"
 msgid "%d locked: %s"
 msgstr "%d blocate: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Introduceți un număr întreg de la 0 la %d"
+
+msgid "Power status unavailable"
+msgstr "Starea alimentării nu este disponibilă"
+
+msgid "Plugged in"
+msgstr "Conectat la priză"
+
+msgid "On battery"
+msgstr "Pe baterie"
+
+msgid "Saver"
+msgstr "Economie"
+
+msgid "Asleep: hotspot off"
+msgstr "Repaus: hotspot oprit"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Pornire în încărcare: apăsați tasta Wi-Fi pentru a porni"
+
+msgid "Awake"
+msgstr "Treaz"
+
+msgid "forced"
+msgstr "forțat"
+
+msgid "automatic, battery under %d %%"
+msgstr "automat, baterie sub %d %%"
+
+msgid "automatic"
+msgstr "automat"
+
+msgid "Nobody connected for %d s"
+msgstr "Nimeni nu este conectat de %d s"
+
+msgid "Power source"
+msgstr "Sursă de alimentare"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Profil utilizat: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Încărcător"
+
+msgid "Charger: %s, %s port"
+msgstr "Încărcător: %s, port %s"
+
+msgid "Charging paused: battery temperature"
+msgstr "Încărcare întreruptă: temperatura bateriei"
+
+msgid "Charging paused: charge limit"
+msgstr "Încărcare întreruptă: limita de încărcare"
+
+msgid "Sleep now"
+msgstr "Repaus acum"
+
+msgid "Wake"
+msgstr "Trezește"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Nimeni conectat înseamnă niciun client Wi-Fi și niciun computer pe USB. Tasta Wi-Fi, un computer pe USB sau încărcătorul trezesc dispozitivul."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Automat: la priză / pe baterie"
+
+msgid "Switch to Saver under %"
+msgstr "Treci la Economie sub %"
+
+msgid "Stop charging at"
+msgstr "Oprește încărcarea la"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % protejează mai bine bateria unui dispozitiv care rămâne la priză."
+
+msgid "Keep as is"
+msgstr "Lasă neschimbat"
+
+msgid "LTE only (5G off)"
+msgstr "Doar LTE (5G oprit)"
+
+msgid "Off"
+msgstr "Oprit"
+
+msgid "On"
+msgstr "Pornit"
+
+msgid "Full"
+msgstr "Complet"
+
+msgid "Eco: big core off"
+msgstr "Eco: nucleul mare oprit"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Oprește hotspotul după (min, 0 = niciodată)"
+
+msgid "Modem when idle"
+msgstr "Modem în repaus"
+
+msgid "LEDs when idle"
+msgstr "LED-uri în repaus"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Linii ignorate în power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Configurați modul în care acest plugin se conectează la platforma OpenWrt Unisoc curentă. Modificările nu necesită editarea paginilor de panou, AT, blocări sau SMS."
 
@@ -1173,6 +1290,21 @@ msgstr "Setare USB necunoscută"
 msgid "Invalid interface name"
 msgstr "Nume de interfață invalid"
 
+msgid "The power adapter gave no valid reply"
+msgstr "Adaptorul de alimentare nu a dat un răspuns valid"
+
+msgid "Unknown power operation"
+msgstr "Operație de alimentare necunoscută"
+
+msgid "Unknown power setting"
+msgstr "Setare de alimentare necunoscută"
+
+msgid "Invalid power value"
+msgstr "Valoare de alimentare nevalidă"
+
+msgid "Invalid power request"
+msgstr "Cerere de alimentare nevalidă"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "Adaptorul de limbi nu a dat un răspuns valid"
 
@@ -1323,6 +1455,9 @@ msgstr "Cache-ul blocărilor nu este disponibil"
 msgid "No serving cell to lock to"
 msgstr "Nicio celulă de servire pe care să se blocheze"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "Setarea TTL nu a putut fi citită"
 
@@ -1331,3 +1466,27 @@ msgstr "TTL-ul nu a putut fi setat"
 
 msgid "Unknown TTL operation"
 msgstr "Operație TTL necunoscută"
+
+msgid "Lock Linux"
+msgstr "Blochează Linux"
+
+msgid "Unlock Linux"
+msgstr "Deblochează Linux"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "După cinci porniri consecutive neterminate, dispozitivul revine din nou la Android."
+
+msgid "Unlock"
+msgstr "Deblochează"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Dispozitivul nu va trece niciodată singur la Android, nici după porniri eșuate: la Android doar din această pagină (Comută la Android) sau cu mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Un kernel nou dintr-o actualizare pornește totuși mai întâi de probă și se blochează din nou când una dintre porniri reușește."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Dacă sistemul însuși nu mai pornește, dispozitivul așteaptă prin USB (telnet) în loc să treacă la Android."
+
+msgid "Linux locked"
+msgstr "Linux blocat"

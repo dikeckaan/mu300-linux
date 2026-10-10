@@ -128,8 +128,18 @@ case "${1:-}:${2:-}" in
             fail "os android" "mu300-next-boot failed" "$out"
         fi
         ;;
+    os:lock|os:unlock)
+        # mu300-next-boot lock: Linux never goes to Android by itself; unlock: back to the failed-boot attempts
+        if [ ! -x /opt/mu300/bin/mu300-next-boot ]; then
+            fail "os $2" "Dual-boot integration is not provided by this platform"
+        elif out=$(/opt/mu300/bin/mu300-next-boot "$2" 2>&1); then
+            ok "os $2"
+        else
+            fail "os $2" "mu300-next-boot failed" "$out"
+        fi
+        ;;
     *)
-        echo "usage: $0 radio on|off | data up|down | wifi on|off | modem-reset | vpn start|stop | reboot | os android" >&2
+        echo "usage: $0 radio on|off | data up|down | wifi on|off | modem-reset | vpn start|stop | reboot | os android|lock|unlock" >&2
         printf '{"ok":0,"error":"Unknown op"}\n'
         exit 2
         ;;

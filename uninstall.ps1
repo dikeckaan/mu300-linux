@@ -178,7 +178,11 @@ if ($parts.Count -ne 2) { Die 'could not read the partition table from the devic
 [int64]$lastEnd = $parts[0]; [int64]$disk = $parts[1]
 [int64]$OFF = 0; [int64]$SIZE = 0
 [int64]$start = [math]::Floor($lastEnd / 4096 + 1) * 4096 * 512
+# a candidate past the end of the eMMC (a table that reaches the disk's end, issues #52/#65) is never read: that dd
+# never returns on the device
+function RegionOnDisk([int64]$bytes) { [math]::Floor(($bytes + 2048) / 512) -le $disk }
 foreach ($cand in @($start, 27762098176)) {
+    if (-not (RegionOnDisk $cand)) { continue }
     $m = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
     $l = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
     if ($m -eq '53ef' -and $l.Trim() -eq 'mu300root') {

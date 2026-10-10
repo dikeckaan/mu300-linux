@@ -287,13 +287,30 @@ CONNS=$(cat /proc/net/nf_conntrack 2>/dev/null | wc -l)
 
 # --------------------------------------------------------------------- VPN
 VPN_ENABLED=0; VPN_ENGINE=""; VPN_UP=0
+# ENABLE is still vpn.conf's. The engine is the active profile's TYPE (/etc/mu300/vpn/active names the profile,
+# its meta holds TYPE='...'); a device that has not been migrated yet, or runs an older mu300-vpn, has only
+# vpn.conf's ENGINE. The id is checked before it becomes a path and meta is read with sed, never sourced.
 if [ -r /etc/mu300/vpn.conf ]; then
     grep -q '^ENABLE=1' /etc/mu300/vpn.conf && VPN_ENABLED=1
-    VPN_ENGINE=$(sed -n 's/^ENGINE=//p' /etc/mu300/vpn.conf | tail -n1)
 fi
-if ip link show xtun >/dev/null 2>&1 || ip link show sbtun >/dev/null 2>&1; then VPN_UP=1; fi
+VPN_ACTIVE=$(head -c 64 /etc/mu300/vpn/active 2>/dev/null | head -n1)
+case $VPN_ACTIVE in
+    *[!a-z0-9-]*|'') ;;
+    *) [ ${#VPN_ACTIVE} -le 32 ] && VPN_ENGINE=$(sed -n "s/^TYPE=//p" "/etc/mu300/vpn/profiles/$VPN_ACTIVE/meta" 2>/dev/null \
+                                                     | tail -n1 | sed "s/^'//; s/'\$//") ;;
+esac
+[ -n "$VPN_ENGINE" ] || VPN_ENGINE=$(sed -n 's/^ENGINE=//p' /etc/mu300/vpn.conf 2>/dev/null | tail -n1)
+# up: the interface the last run brought up (/run/mu300-vpn/iface, any driver), or the two legacy engines' own
+# names; a name is only given to ip when it looks like one
+VPN_IF=$(head -c 32 /run/mu300-vpn/iface 2>/dev/null | head -n1)
+case $VPN_IF in *[!A-Za-z0-9_.-]*|'') VPN_IF="" ;; esac
+if { [ -n "$VPN_IF" ] && ip link show "$VPN_IF" >/dev/null 2>&1; } \
+    || ip link show xtun >/dev/null 2>&1 || ip link show sbtun >/dev/null 2>&1; then VPN_UP=1; fi
 CAP_VPN=0; [ -x /etc/init.d/mu300-vpn ] && CAP_VPN=1
 CAP_DUALBOOT=0; [ -x /opt/mu300/bin/mu300-next-boot ] && CAP_DUALBOOT=1
+# mu300-next-boot lock: the wish on the Linux disk (the panel shows it; the slot itself is in misc)
+BOOT_LOCK=0
+for _d in /mnt/mu300-disk ""; do [ -f "$_d/.mu300/boot-lock" ] && { BOOT_LOCK=1; break; }; done
 
 # ------------------------------------------------------------------ output
 printf '{"ts":%d,"uptime":%d,"host":%s,"model":%s,"fw":%s,"kernel":%s,' \
@@ -314,6 +331,6 @@ printf '"wifi":{"up":%d,"ssid":%s,"channel":%s,"band":%s,"width":%s,"country":%s
     "$W_UP" "$(qs "$W_SSID")" "$(qs "$W_CH")" "$(qs "$W_BAND")" "$(qs "$W_WIDTH")" "$(qs "$W_COUNTRY")" "$(qs "$W_ENC")" "$(n_or_null "$W_HIDDEN")" "$W_HOSTAPD" "${W_CLIST:-}" "$W_CN"
 printf '"lan":{"leases":%s,"ip":%s,"list":[%s]},' "$(n_or_null "$LAN_LEASES")" "$(qs "$LAN_IP")" "${LEASES:-}"
 printf '"modem":{"alive":%d,"atd":%d,"data_paused":%d},' "$MODEM_ALIVE" "$ATD_OK" "$DATA_PAUSED"
-printf '"capabilities":{"vpn":%d,"dualboot":%d},' "$CAP_VPN" "$CAP_DUALBOOT"
+printf '"capabilities":{"vpn":%d,"dualboot":%d,"bootlock":%d},' "$CAP_VPN" "$CAP_DUALBOOT" "$BOOT_LOCK"
 printf '"conns":%s,' "$(n_or_null "$CONNS")"
 printf '"vpn":{"enabled":%d,"engine":%s,"up":%d}}\n' "$VPN_ENABLED" "$(qs "$VPN_ENGINE")" "$VPN_UP"

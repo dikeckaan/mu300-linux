@@ -851,6 +851,275 @@ at() {
         self.assertNotIn('hook replay early', cmds)
         self.assertTrue(pending.exists())
 
+    # suspend/resume: mu300-power takes the modem down while nobody uses the device. radio_on and up are replaced by a
+    # line in the AT log (their own sequences are tested elsewhere); down is the real one, on the scratch run/.
+    # radio_on also notes whether the mode file is still there; AT+SPENDC? answers "+ENDC: $ENDC" (1 by default).
+    SUSPEND_STUBS = ('radio_on() { at RADIO_ON; [ ! -e "$SUSPEND" ] || at SUSPEND_FILE_STILL_THERE; }\n'
+                     'up() { at UP; [ ! -e "$SUSPEND" ] || at SUSPEND_FILE_STILL_THERE; }\n')
+
+    def suspend_lib(self, code, **env):
+        modem = self.MODEM.replace("        'AT+COPS?')",
+                                   "        'AT+SPENDC?') printf '+ENDC: %s\\nOK\\n' \"${ENDC:-1}\" ;;\n        'AT+COPS?')")
+        return self.lib(self.SUSPEND_STUBS + code, modem=modem, MU300_AT_DEV='/dev/null', **env)
+
+    def test_suspend_off_takes_the_radio_down_and_stops_the_watcher(self):
+        r, sent = self.suspend_lib('do_suspend off; do_suspend off')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        run = self.tmp / 'run'
+        self.assertEqual((run / 'mu300-mobile-data.suspend').read_text().strip(), 'off')
+        self.assertTrue((run / 'mu300-mobile-data-down').exists())
+        # the second call found the file and did nothing more
+        self.assertEqual(len([c for c in sent if 'AT+SFUN=5' in c]), 1, sent)
+        self.assertFalse((run / 'mu300-radio-on.owner').exists())   # the radio lock is released
+
+    def test_suspend_lte_switches_endc_off_and_resume_restores(self):
+        """EN-DC off is AT+SPENDC=2 and on is 1 (the lock adapter's values); no stack restart, radio_on or dial."""
+        r, sent = self.suspend_lib('do_suspend lte\n'
+                                   f'cat "{self.tmp}/run/mu300-mobile-data.suspend"; ls "{self.tmp}/run"\n'
+                                   'echo ---; resume; echo resumed')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        out = r.stdout.split('---')[0]
+        self.assertIn('lte\nmu300-mobile-data.suspend', out)
+        self.assertNotIn('mu300-mobile-data-down', out)   # data stays up on LTE
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data.suspend').exists())
+        cmds = [c.split(' ', 1)[1] for c in sent]
+        self.assertEqual(cmds, ['AT+SPENDC?', 'AT+SPENDC=2', 'AT+SPENDC=1'])
+        self.assertFalse((self.tmp / 'run' / 'mu300-radio-on.owner').exists())
+
+    def test_resume_lte_leaves_endc_off_when_the_user_had_it_off(self):
+        r, sent = self.suspend_lib('do_suspend lte; ls "$SUSPEND_ENDC" >/dev/null && echo noted; resume; echo resumed', ENDC='2')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('noted', r.stdout)
+        cmds = [c.split(' ', 1)[1] for c in sent]
+        self.assertEqual(cmds, ['AT+SPENDC?'])   # already off: nothing written, nothing restored
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data.suspend-endc').exists())
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data.suspend').exists())
+
+    def test_resume_off_brings_radio_and_data_back_and_drops_the_mode_file_last(self):
+        r, sent = self.suspend_lib('do_suspend off; resume')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        cmds = [c.split(' ', 1)[1] for c in sent]
+        self.assertEqual(cmds[-4:], ['RADIO_ON', 'SUSPEND_FILE_STILL_THERE', 'UP', 'SUSPEND_FILE_STILL_THERE'])
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data.suspend').exists())
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data-down').exists())
+
+    def test_suspend_waits_for_a_radio_dial_in_flight(self):
+        """The raw AT sequence takes the radio lock: with it held (and no wait) nothing is sent and no mode is left."""
+        r, sent = self.suspend_lib(f'ln -s $$ "{self.tmp}/run/mu300-radio-on.owner"; rc=0; do_suspend lte || rc=$?; echo rc=$rc',
+                                   MU300_RADIO_LOCK_WAIT='0')
+        self.assertIn('rc=1', r.stdout, r.stderr)
+        self.assertEqual(sent, [])
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data.suspend').exists())
+
+    # netifd (OpenWrt, MU300_NETIFD=1) owns the WAN's address, routes, DNS and firewall: suspend off takes it down
+    # with ifdown and resume brings it back with ifup; neither touches sipa_eth0 itself. ifdown/ifup are stubs.
+    def netifd_stubs(self):
+        for name in ('ifdown', 'ifup', 'ip', 'nft'):
+            self.stub(name, f'echo "{name} $* suspend=$([ -e "$MU300_RUN_DIR/mu300-mobile-data.suspend" ] && echo yes || echo no)" >> "$STUBLOG/calls"')
+
+    def test_suspend_off_under_netifd_is_ifdown(self):
+        self.netifd_stubs()
+        r, sent = self.suspend_lib('do_suspend off', MU300_NETIFD='1', MU300_RUN_DIR=self.tmp / 'run')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        calls = (self.tmp / 'calls').read_text()
+        self.assertIn('ifdown wan', calls)
+        self.assertNotIn('ip ', calls); self.assertNotIn('nft', calls)   # down() was not run
+        cmds = [c.split(' ', 1)[1] for c in sent]
+        self.assertEqual(cmds, ['AT+SFUN=5'])
+        self.assertEqual((self.tmp / 'run' / 'mu300-mobile-data.suspend').read_text().strip(), 'off')
+
+    def test_resume_under_netifd_redials_with_ifup(self):
+        self.netifd_stubs()
+        r, sent = self.suspend_lib('do_suspend off; resume', MU300_NETIFD='1', MU300_RUN_DIR=self.tmp / 'run')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        calls = (self.tmp / 'calls').read_text()
+        # netifd's dial runs `mobile-data up` in a process of its own: the mode file is gone before the ifup
+        self.assertIn('ifup wan suspend=no', calls)
+        cmds = [c.split(' ', 1)[1] for c in sent]
+        self.assertIn('RADIO_ON', cmds); self.assertNotIn('UP', cmds)
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data.suspend').exists())
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data-down').exists())
+
+    def test_resume_nodial_switches_the_radio_on_and_leaves_the_dial_to_the_watcher(self):
+        self.netifd_stubs()
+        (self.tmp / 'run').mkdir(exist_ok=True)
+        (self.tmp / 'run' / 'mu300-mobile-data-down').touch()
+        r, sent = self.suspend_lib('do_suspend off; resume nodial', MU300_RUN_DIR=self.tmp / 'run')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        cmds = [c.split(' ', 1)[1] for c in sent]
+        self.assertIn('RADIO_ON', cmds); self.assertNotIn('UP', cmds)
+        self.assertNotIn('ifup', (self.tmp / 'calls').read_text() if (self.tmp / 'calls').exists() else '')
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data.suspend').exists())
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data-down').exists())
+        # lte: EN-DC back on, the files gone, still no dial
+        r, sent = self.suspend_lib('do_suspend lte; resume nodial')
+        self.assertEqual([c.split(' ', 1)[1] for c in sent][-1], 'AT+SPENDC=1')
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data.suspend').exists())
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data.suspend-endc').exists())
+
+    def test_up_refuses_while_suspended_off_except_from_resume(self):
+        (self.tmp / 'run').mkdir(exist_ok=True)
+        (self.tmp / 'run' / 'mu300-mobile-data.suspend').write_text('off\n')
+        # the real up; up_locked stands for the dial
+        code = 'up_locked() { at DIAL; }\n'
+        for env in ({}, {'MU300_NETIFD': '1'}):
+            r, sent = self.lib(code + 'rc=0; up || rc=$?; echo rc=$rc', MU300_AT_DEV='/dev/null', **env)
+            self.assertIn('rc=1', r.stdout, r.stderr)
+            self.assertIn('suspended', r.stderr)
+            self.assertEqual(sent, [])
+        r, sent = self.lib(code + 'rc=0; ( _resuming=1; up ) || rc=$?; echo rc=$rc', MU300_AT_DEV='/dev/null')
+        self.assertIn('rc=0', r.stdout, r.stderr)
+        self.assertEqual([c.split(' ', 1)[1] for c in sent], ['DIAL'])
+        # resume's own dial passes (redial sets the flag); suspend lte leaves up alone
+        r, sent = self.lib(code + 'radio_on() { at RADIO_ON; }; resume', MU300_AT_DEV='/dev/null')
+        self.assertEqual([c.split(' ', 1)[1] for c in sent], ['RADIO_ON', 'DIAL'], r.stderr)
+        (self.tmp / 'run' / 'mu300-mobile-data.suspend').write_text('lte\n')
+        r, sent = self.lib(code + 'up', MU300_AT_DEV='/dev/null')
+        self.assertEqual([c.split(' ', 1)[1] for c in sent], ['DIAL'], r.stderr)
+
+    def test_watch_skips_rounds_while_suspended(self):
+        (self.tmp / 'run').mkdir(exist_ok=True)
+        (self.tmp / 'run' / 'mu300-mobile-data.suspend').write_text('off\n')
+        r, sent = self.lib('watch', MU300_AT_DEV='/dev/null', MU300_WATCH_INTERVAL='0', MU300_WATCH_ROUNDS='2')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(sent, [])
+
+    # 2026-10-07: `mobile-data suspend off` after `suspend lte` never returned on the U30 Air, and the device stayed dark
+    # for hours. suspend/resume now end within MU300_SUSPEND_DEADLINE whatever the modem does. Here the real at() talks
+    # to an nr2 daemon whose client never answers (a mu300-at that sleeps): the whole command must come back in time,
+    # non-zero, every process it started gone, and the files must hand the modem back to the watcher.
+    def silent_modem(self):
+        hang = self.tmp / 'hang'
+        hang.mkdir(exist_ok=True)
+        (hang / 'mu300-at').write_text('#!/bin/sh\necho "$* lockwait=$MU300_AT_LOCK_WAIT budget=$MU300_AT_BUDGET" >> "$STUBLOG/hangat"\n'
+                                       'echo $$ >> "$STUBLOG/hung.pids"\nexec sleep 1000\n')
+        (hang / 'mu300-at').chmod(0o755)
+        (self.tmp / 'run' / 'mu300-at2').mkdir(parents=True, exist_ok=True)
+        if not (self.tmp / 'run' / 'mu300-at2' / 'cmd').exists():
+            os.mkfifo(self.tmp / 'run' / 'mu300-at2' / 'cmd')
+        return 'unset -f at; . "$STUBLOG/mobile-data.lib"; PATH="$STUBLOG/hang:$PATH"\n'
+
+    def assert_all_killed(self):
+        import time
+        pids = [int(p) for p in (self.tmp / 'hung.pids').read_text().split()]
+        for pid in pids:
+            for _ in range(50):
+                try:
+                    os.kill(pid, 0)
+                except ProcessLookupError:
+                    break
+                time.sleep(0.1)
+            else:
+                self.fail(f'pid {pid} still runs')
+
+    def test_suspend_and_resume_end_in_time_with_a_modem_that_never_answers(self):
+        cases = [('', 'suspend off', {}),
+                 ('lte', 'suspend off', {}),                 # the incident: suspend lte, then suspend off
+                 ('', 'suspend lte', {}),
+                 ('off', 'resume', {}),
+                 ('lte', 'resume', {}),
+                 ('off', 'resume nodial', {}),
+                 ('', 'suspend off', {'MU300_NETIFD': '1'})]
+        for before, cmd, env in cases:
+            with self.subTest(before=before, cmd=cmd, **env):
+                run = self.tmp / 'run'
+                for f in ('mu300-mobile-data.suspend', 'mu300-mobile-data-down', 'mu300-mobile-data.endc-restore',
+                          'hung.pids', 'hangat'):
+                    (run / f).unlink(missing_ok=True); (self.tmp / f).unlink(missing_ok=True)
+                code = self.silent_modem()
+                if before:
+                    (run / 'mu300-mobile-data.suspend').write_text(before + '\n')
+                if 'netifd' in str(env) or env:
+                    self.stub('ifdown', 'exit 0'); self.stub('ifup', 'exit 0')
+                r, _ = self.lib(code + f'SECONDS=0; rc=0; bounded {cmd} || rc=$?; echo "rc=$rc took=$SECONDS"',
+                                MU300_SUSPEND_DEADLINE='3', MU300_MD_STEP_DEADLINE='2', MU300_CFUN_WAIT='0',
+                                MU300_URC_LOG=str(self.tmp / 'urc.log'), **env)
+                m = re.search(r'rc=(\d+) took=(\d+)', r.stdout)
+                self.assertTrue(m, r.stdout + r.stderr)
+                self.assertNotEqual(m.group(1), '0', r.stderr)
+                self.assertLessEqual(int(m.group(2)), 8, r.stderr)
+                self.assertIn('the modem is left to the watcher', r.stderr)
+                # consistent: no mode file and no "down" flag, so the watcher restores whatever is off
+                self.assertFalse((run / 'mu300-mobile-data.suspend').exists())
+                self.assertFalse((run / 'mu300-mobile-data-down').exists())
+                # EN-DC may be off by our hand after a failed lte step: noted, so a later resume switches it back on
+                self.assertEqual((run / 'mu300-mobile-data.endc-restore').exists(), 'lte' in (before, cmd.split()[-1]))
+                self.assert_all_killed()
+                # every AT went through mu300-at with a short timeout, client-lock wait and budget
+                for line in (self.tmp / 'hangat').read_text().splitlines():
+                    m = re.match(r'-t (\d+) .* lockwait=(\d+) budget=(\d+)$', line)
+                    self.assertTrue(m, line)
+                    self.assertLessEqual(int(m.group(1)), 20, line)
+                    self.assertLessEqual(int(m.group(2)), 10, line)
+                    self.assertLessEqual(int(m.group(3)), 22, line)
+                    self.assertGreaterEqual(int(m.group(3)), int(m.group(1)) + 2, line)   # budget >= T + 2
+
+    def test_endc_left_off_by_a_failed_lte_step_is_restored_by_the_next_resume(self):
+        run = self.tmp / 'run'
+        run.mkdir(exist_ok=True)
+        marker = run / 'mu300-mobile-data.endc-restore'
+        # the modem says ERROR: the marker stays and resume fails, so mu300-power tries again
+        marker.touch()
+        err = self.MODEM.replace("        *) printf 'OK\\n' ;;", "        'AT+SPENDC=1') printf 'ERROR\\n' ;;\n        *) printf 'OK\\n' ;;")
+        r, sent = self.lib(self.SUSPEND_STUBS + 'rc=0; resume || rc=$?; echo rc=$rc', modem=err, MU300_AT_DEV='/dev/null')
+        self.assertIn('rc=1', r.stdout, r.stderr)
+        self.assertTrue(marker.exists())
+        # OK: EN-DC back on, the marker gone; no mode file was needed for it
+        r, sent = self.suspend_lib('rc=0; resume || rc=$?; echo rc=$rc')
+        self.assertIn('rc=0', r.stdout, r.stderr)
+        self.assertEqual([c.split(' ', 1)[1] for c in sent], ['AT+SPENDC=1'])
+        self.assertFalse(marker.exists())
+        # the watcher does not stand aside for it
+        marker.touch()
+        r, sent = self.lib('watch', MU300_AT_DEV='/dev/null', MU300_WATCH_INTERVAL='0', MU300_WATCH_ROUNDS='1')
+        self.assertTrue(sent, r.stderr)
+
+    def test_an_error_to_endc_on_leaves_the_restore_marker(self):
+        """Re-review D4: mu300-at exits 0 on ERROR. A resume lte whose AT+SPENDC=1 is answered ERROR must leave the
+        restore marker (the files go, the watcher keeps working) and fail, so the next resume tries again."""
+        run = self.tmp / 'run'
+        run.mkdir(exist_ok=True)
+        stubdir = self.tmp / 'errat'
+        stubdir.mkdir(exist_ok=True)
+        (stubdir / 'mu300-at').write_text('#!/bin/sh\n[ "$1" = -t ] && shift 2\necho "$1" >> "$STUBLOG/errat.log"\n'
+                                          'case $1 in AT+SPENDC=1) echo ERROR ;; esac\nexit 0\n')
+        (stubdir / 'mu300-at').chmod(0o755)
+        (run / 'mu300-at2').mkdir(parents=True, exist_ok=True)
+        if not (run / 'mu300-at2' / 'cmd').exists():
+            os.mkfifo(run / 'mu300-at2' / 'cmd')
+        (run / 'mu300-mobile-data.suspend').write_text('lte\n')
+        r, _ = self.lib('unset -f at; . "$STUBLOG/mobile-data.lib"; PATH="$STUBLOG/errat:$PATH"\n'
+                        'rc=0; bounded resume || rc=$?; echo rc=$rc', MU300_URC_LOG=str(self.tmp / 'urc.log'))
+        self.assertNotIn('rc=0', r.stdout, r.stderr)
+        self.assertIn('AT+SPENDC=1', (self.tmp / 'errat.log').read_text())
+        self.assertTrue((run / 'mu300-mobile-data.endc-restore').exists())
+        self.assertFalse((run / 'mu300-mobile-data.suspend').exists())
+
+    def test_a_failed_suspend_keeps_a_down_flag_that_was_there_before(self):
+        run = self.tmp / 'run'
+        run.mkdir(exist_ok=True)
+        (run / 'mu300-mobile-data-down').touch()   # `mobile-data down` by hand: the watcher stays aside
+        code = self.silent_modem()
+        r, _ = self.lib(code + 'rc=0; bounded suspend off || rc=$?; echo rc=$rc', MU300_SUSPEND_DEADLINE='3',
+                        MU300_MD_STEP_DEADLINE='1', MU300_URC_LOG=str(self.tmp / 'urc.log'))
+        self.assertNotIn('rc=0', r.stdout)
+        self.assertTrue((run / 'mu300-mobile-data-down').exists())
+        self.assertFalse((run / 'mu300-mobile-data.suspend').exists())
+
+    def test_bounded_suspend_succeeds_and_ignores_a_hangup(self):
+        """The command outlives the terminal that started it (an SSH session over the Wi-Fi it took down)."""
+        r, sent = self.suspend_lib('( sleep 0.3; kill -HUP $$ ) & at() { sleep 1; echo "$SECONDS $1" >> "$STUBLOG/at"; echo OK; }\n'
+                                   'rc=0; bounded suspend off || rc=$?; echo "rc=$rc"')
+        self.assertIn('rc=0', r.stdout, r.stderr)
+        self.assertIn('modem suspended (off)', r.stderr)
+        self.assertEqual((self.tmp / 'run' / 'mu300-mobile-data.suspend').read_text().strip(), 'off')
+
+    def test_the_commands_go_through_the_deadline(self):
+        text = (BIN / 'mobile-data').read_text()
+        case = text[text.index('\ncase "${1:-status}" in'):]
+        self.assertIn('suspend) bounded suspend', case)
+        self.assertIn('bounded resume', case)
+
     def test_radio_on_subcommand(self):
         """K66: `mobile-data radio-on` switches the radio on and asks for the IMS bearer (K58), nothing more."""
         text = (BIN / 'mobile-data').read_text()
@@ -1283,6 +1552,72 @@ class Led(ShellTest):
             self.led(shell, 'u30air', 'sleep', '--if-due')
             self.assertEqual(self.state()['sc27xx:green'], '0')
 
+    def test_idle_darkens_everything_but_a_key_still_shows_them(self):
+        """2026-10-07: under the idle flag a key press lit nothing, and the device looked powered off for hours. A
+        key's wake now shows the LEDs for LED_TIMEOUT (a minute when it is 0) in idle too; then dark again."""
+        for shell in self.each_shell():
+            for timeout, lit_for in (('', 60), ('LED_TIMEOUT=0\n', 60), ('LED_TIMEOUT=20\n', 20)):
+                self.reset()
+                self.uptime(100)
+                if timeout:
+                    self.conf.write_text(timeout)
+                self.led(shell, 'u30air', 'power', 'on')
+                self.led(shell, 'u30air', 'data', 'on')
+                self.assertEqual(self.state()['net_blue'], '255')
+                self.assertEqual(self.led(shell, 'u30air', 'idle', 'on').returncode, 0)
+                self.assertEqual((self.state()['sc27xx:green'], self.state()['net_blue']), ('0', '0'))
+                self.led(shell, 'u30air', 'data', '5g')                    # remembered, not shown
+                self.led(shell, 'u30air', 'power', 'on')
+                self.assertEqual(set(self.state().values()), {'0'}, timeout)
+                self.led(shell, 'u30air', 'sleep', '--if-due')             # nothing to put out
+                self.assertEqual(set(self.state().values()), {'0'}, timeout)
+                # a key: lit, idle or not
+                self.uptime(200)
+                self.led(shell, 'u30air', 'wake')
+                s = self.state()
+                self.assertEqual((s['sc27xx:green'], s['zte-ldo0'], s['net_blue']), ('255', '255', '0'), timeout)
+                self.led(shell, 'u30air', 'data', 'on')                    # a change meanwhile shows too
+                self.assertEqual(self.state()['net_blue'], '255', timeout)
+                self.uptime(200 + lit_for - 1)
+                self.led(shell, 'u30air', 'sleep', '--if-due')
+                self.assertEqual(self.state()['sc27xx:green'], '255', timeout)
+                self.uptime(200 + lit_for + 1)
+                self.led(shell, 'u30air', 'sleep', '--if-due')
+                self.assertEqual(set(self.state().values()), {'0'}, timeout)   # still idle: dark again
+                self.led(shell, 'u30air', 'data', 'on')
+                self.assertEqual(self.state()['net_blue'], '0', timeout)
+                # idle off: as LED_TIMEOUT says (0: always on; else from the last wake)
+                self.led(shell, 'u30air', 'wake')
+                self.led(shell, 'u30air', 'idle', 'off')
+                s = self.state()
+                self.assertEqual((s['sc27xx:green'], s['net_blue']), ('255', '255'), timeout)
+
+    def test_idle_off_after_the_timeout_stays_dark(self):
+        for shell in self.each_shell():
+            self.reset()
+            self.uptime(100)
+            self.led(shell, 'u30air', 'power', 'on')
+            self.led(shell, 'u30air', 'idle', 'on')
+            self.uptime(100 + 120)
+            self.led(shell, 'u30air', 'idle', 'off')
+            self.assertEqual(set(self.state().values()), {'0'})
+            self.led(shell, 'u30air', 'wake')
+            self.assertEqual(self.state()['sc27xx:green'], '255')
+
+    def test_charge_blinks_the_power_led(self):
+        for shell in self.each_shell():
+            self.reset()
+            d = self.root / 'sys/class/leds/sc27xx:green'
+            self.assertEqual(self.led(shell, 'u30air', 'charge', 'on').returncode, 0)
+            self.assertEqual((d / 'trigger').read_text().strip(), 'timer')
+            self.assertEqual((d / 'delay_on').read_text().strip(), '1000')
+            self.assertEqual((d / 'delay_off').read_text().strip(), '1000')
+            self.assertEqual(self.led(shell, 'u30air', 'charge', 'off').returncode, 0)
+            self.assertEqual((d / 'trigger').read_text().strip(), 'none')
+            self.assertEqual(self.state()['sc27xx:green'], '0')
+            # a device without a power LED: nothing to blink, no error
+            self.assertEqual(self.led(shell, 'f50', 'charge', 'on').returncode, 0)
+
     def test_no_timeout(self):
         for shell in self.each_shell():
             for device, conf in (('u30air', 'LED_TIMEOUT=0\n'), ('f50', '')):
@@ -1480,22 +1815,187 @@ class WifiBand(ShellTest):
 class Buttons(ShellTest):
     def test_actions(self):
         self.stub('mu300-keys', 'cat "$STUBLOG/keys.in"')
-        for name in ('mu300-led', 'mu300-wifi-band', 'systemctl', 'logger', 'poweroff'):
+        for name in ('mu300-led', 'mu300-wifi-band', 'systemctl', 'logger', 'poweroff', 'mu300-power'):
             self.stub(name, f'echo "{name} $*" >> "$STUBLOG/calls"; [ "{name} $*" != "systemctl is-active --quiet mu300-hotspot" ]')
-        cases = [('116 short', ['mu300-led wake']),
-                 ('138 short', ['mu300-led wake', 'mu300-wifi-band toggle']),
-                 ('138 long', ['mu300-led wake', 'systemctl is-active --quiet mu300-hotspot', 'systemctl start mu300-hotspot']),
-                 ('0 tick', ['mu300-led sleep --if-due']),
-                 ('116 long', ['mu300-led wake', 'systemctl poweroff']),
-                 ('115 short', [])]
+        # Every press lights the LEDs first (a key always shows life, whatever the state), then wakes mu300-power with
+        # the key's name in the background (only wifi ends a charging boot; other keys count as power), which the
+        # rest does not wait for: its order against the band and hotspot toggles is free.
+        WP, WW = 'mu300-power wake power', 'mu300-power wake wifi'
+        cases = [('116 short', [WP]),
+                 ('138 short', [WW, 'mu300-wifi-band toggle']),
+                 ('138 long', [WW, 'systemctl is-active --quiet mu300-hotspot', 'systemctl start mu300-hotspot']),
+                 ('0 tick', None),   # a tick is no press: it must not wake, only let the LEDs time out
+                 # held power: no mu300-power wake (the radios would come back on the way down); the shutdown marker
+                 ('116 long', ['systemctl poweroff']),
+                 ('115 short', [WP])]
+        marker = self.tmp / 'run/mu300/power/shutdown'
         for shell in self.each_shell():
             for event, want in cases:
                 (self.tmp / 'keys.in').write_text(event + '\n')
                 (self.tmp / 'calls').unlink(missing_ok=True)
-                r = self.script(shell, BIN / 'mu300-buttons')
+                marker.unlink(missing_ok=True)
+                r = self.script(shell, BIN / 'mu300-buttons', MU300_RUN=self.tmp / 'run')
                 self.assertEqual(r.returncode, 0, r.stderr)
                 calls = (self.tmp / 'calls').read_text().splitlines() if (self.tmp / 'calls').exists() else []
-                self.assertEqual([c for c in calls if not c.startswith('logger')], want, event)
+                calls = [c for c in calls if not c.startswith('logger')]
+                if want is None:
+                    self.assertEqual(calls, ['mu300-led sleep --if-due'], event)
+                else:
+                    self.assertEqual(calls[0], 'mu300-led wake', event)
+                    self.assertEqual(sorted(calls[1:]), sorted(want), event)
+                    if 'systemctl is-active --quiet mu300-hotspot' in want:
+                        self.assertLess(calls.index('systemctl is-active --quiet mu300-hotspot'),
+                                        calls.index('systemctl start mu300-hotspot'))
+                self.assertEqual(marker.exists(), event == '116 long', event)
+
+    def test_keys_light_the_leds_in_idle_without_any_daemon(self):
+        """2026-10-07: the LEDs held dark by `mu300-led idle on`, the state file "active", and every key lit nothing.
+        With the real mu300-led and a mu300-power that hangs, each press still lights them, at once."""
+        import time
+        root = self.tmp / 'root'
+        for n in ('sc27xx:green', 'net_blue'):
+            d = root / 'sys/class/leds' / n
+            d.mkdir(parents=True, exist_ok=True)
+            (d / 'brightness').write_text('0\n'); (d / 'max_brightness').write_text('255\n'); (d / 'trigger').write_text('none\n')
+        (root / 'proc').mkdir(parents=True, exist_ok=True)
+        (root / 'proc/uptime').write_text('500.00 0.00\n')
+        (root / 'run/mu300/led').mkdir(parents=True, exist_ok=True)
+        (root / 'run/mu300/device').write_text('u30air\n')
+        (root / 'run/mu300/led/sc27xx:green').write_text('1\n'); (root / 'run/mu300/led/net_blue').write_text('1\n')
+        (root / 'run/mu300/led/.idle').touch()
+        (self.tmp / 'run/mu300/power').mkdir(parents=True, exist_ok=True)
+        (self.tmp / 'run/mu300/power/state').write_text('active\n')
+        self.stub('mu300-keys', 'cat "$STUBLOG/keys.in"')
+        self.stub('mu300-power', 'echo "mu300-power $*" >> "$STUBLOG/calls"; sleep 3')   # no daemon, a slow wake
+        for name in ('mu300-wifi-band', 'systemctl', 'logger'):
+            self.stub(name, f'echo "{name} $*" >> "$STUBLOG/calls"')
+        (self.tmp / 'keys.in').write_text('116 short\n138 short\n')
+        for shell in self.each_shell():
+            for n in ('sc27xx:green', 'net_blue'):
+                (root / 'sys/class/leds' / n / 'brightness').write_text('0\n')
+            (self.tmp / 'calls').unlink(missing_ok=True)
+            env = self.env(MU300_RUN=self.tmp / 'run', MU300_SYSROOT=root, MU300_BIN=BIN, MU300_LED_CONF=self.tmp / 'none')
+            env['PATH'] = f'{self.stubs}{os.pathsep}{BIN}{os.pathsep}{env["PATH"]}'
+            p = subprocess.Popen(shell + [str(BIN / 'mu300-buttons')], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            time.sleep(1.5)   # well inside the slow wake
+            lit = {n: (root / 'sys/class/leds' / n / 'brightness').read_text().strip() for n in ('sc27xx:green', 'net_blue')}
+            p.communicate(timeout=30)
+            self.assertEqual(lit, {'sc27xx:green': '255', 'net_blue': '255'})
+            calls = (self.tmp / 'calls').read_text()
+            # the Wi-Fi press on a device held dark only wakes it: no band toggle
+            self.assertNotIn('mu300-wifi-band', calls)
+            self.assertIn('mu300-power wake power', calls); self.assertIn('mu300-power wake wifi', calls)
+
+    def test_a_hung_direction_probe_is_bounded(self):
+        """Ubuntu's systemctl is-active can hang: the hold's direction is decided within the probe deadline."""
+        import time
+        self.stub('mu300-keys', 'cat "$STUBLOG/keys.in"')
+        for name in ('mu300-led', 'logger', 'mu300-power'):
+            self.stub(name, f'echo "{name} $*" >> "$STUBLOG/calls"')
+        self.stub('systemctl', 'echo "systemctl $*" >> "$STUBLOG/calls"; [ "$1" != is-active ] || exec sleep 60')
+        (self.tmp / 'keys.in').write_text('138 long\n')
+        for shell in self.each_shell():
+            (self.tmp / 'calls').unlink(missing_ok=True)
+            t0 = time.time()
+            r = self.script(shell, BIN / 'mu300-buttons', MU300_RUN=self.tmp / 'run', MU300_BUTTONS_PROBE_DEADLINE=1)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertLess(time.time() - t0, 10)
+            self.assertIn('systemctl start mu300-hotspot', (self.tmp / 'calls').read_text())   # no answer: not up
+
+    def test_the_hold_marker_is_there_before_the_wake_of_the_same_press(self):
+        """Review D2: the wake started by a Wi-Fi hold must find the user's marker already, or its restore sees the
+        hotspot still up (or deactivating) and starts it again."""
+        self.stub('mu300-keys', 'cat "$STUBLOG/keys.in"')
+        for name in ('mu300-led', 'logger'):
+            self.stub(name, f'echo "{name} $*" >> "$STUBLOG/calls"')
+        self.stub('mu300-power', 'echo "mu300-power $* marker=$([ -e "$MU300_RUN/mu300/power/hotspot-off" ] && echo yes || echo no)" >> "$STUBLOG/calls"')
+        self.stub('systemctl', 'echo "systemctl $*" >> "$STUBLOG/calls"')   # active: the hold turns it off
+        (self.tmp / 'keys.in').write_text('138 long\n')
+        for shell in self.each_shell():
+            (self.tmp / 'calls').unlink(missing_ok=True)
+            self.script(shell, BIN / 'mu300-buttons', MU300_RUN=self.tmp / 'run')
+            calls = (self.tmp / 'calls').read_text()
+            self.assertIn('mu300-power wake wifi marker=yes', calls)
+            self.assertIn('systemctl stop mu300-hotspot', calls)
+
+    def test_a_hung_toggle_does_not_hold_the_next_press(self):
+        """The hotspot toggle runs in the background under a deadline: the next press shows life at once."""
+        import time
+        self.stub('mu300-keys', 'echo "138 long"; sleep 1; echo "116 short"; sleep 2')
+        for name in ('logger', 'mu300-power'):
+            self.stub(name, f'echo "{name} $*" >> "$STUBLOG/calls"')
+        self.stub('mu300-led', 'echo "mu300-led $* $(date +%s)" >> "$STUBLOG/calls"')
+        self.stub('systemctl', 'echo "systemctl $*" >> "$STUBLOG/calls"; [ "$1" != stop ] || { sleep 30; echo "stop done" >> "$STUBLOG/calls"; }')
+        for shell in self.each_shell():
+            (self.tmp / 'calls').unlink(missing_ok=True)
+            t0 = time.time()
+            r = self.script(shell, BIN / 'mu300-buttons', MU300_RUN=self.tmp / 'run', MU300_BUTTONS_DEADLINE=2)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertLess(time.time() - t0, 15)
+            calls = (self.tmp / 'calls').read_text()
+            self.assertEqual(calls.count('mu300-led wake'), 2, calls)
+            self.assertNotIn('stop done', calls)   # killed at its deadline
+
+    def test_the_hotspot_toggle_leaves_a_marker_while_off(self):
+        """mu300-power's wake and self-check leave a hotspot alone that the user turned off with the key."""
+        self.stub('mu300-keys', 'cat "$STUBLOG/keys.in"')
+        for name in ('mu300-led', 'logger', 'mu300-power'):
+            self.stub(name, f'echo "{name} $*" >> "$STUBLOG/calls"')
+        (self.tmp / 'keys.in').write_text('138 long\n')
+        marker = self.tmp / 'run/mu300/power/hotspot-off'
+        for shell in self.each_shell():
+            self.stub('systemctl', 'echo "systemctl $*" >> "$STUBLOG/calls"')   # active: the hold stops it
+            self.script(shell, BIN / 'mu300-buttons', MU300_RUN=self.tmp / 'run')
+            self.assertTrue(marker.exists())
+            self.stub('systemctl', 'echo "systemctl $*" >> "$STUBLOG/calls"; [ "$1" != is-active ]')
+            self.script(shell, BIN / 'mu300-buttons', MU300_RUN=self.tmp / 'run')
+            self.assertFalse(marker.exists())
+
+    def test_first_wifi_press_while_asleep_only_wakes(self):
+        self.stub('mu300-keys', 'cat "$STUBLOG/keys.in"')
+        for name in ('mu300-led', 'mu300-wifi-band', 'systemctl', 'logger', 'mu300-power'):
+            self.stub(name, f'echo "{name} $*" >> "$STUBLOG/calls"')
+        (self.tmp / 'run/mu300/power').mkdir(parents=True)
+        for state, acts in (('idle', False), ('charging-boot', False), ('active', True)):
+            (self.tmp / 'run/mu300/power/state').write_text(state + '\n')
+            for shell in self.each_shell():
+                for event in ('138 short', '138 long'):
+                    (self.tmp / 'keys.in').write_text(event + '\n')
+                    (self.tmp / 'calls').unlink(missing_ok=True)
+                    r = self.script(shell, BIN / 'mu300-buttons', MU300_RUN=self.tmp / 'run')
+                    self.assertEqual(r.returncode, 0, r.stderr)
+                    calls = (self.tmp / 'calls').read_text()
+                    self.assertIn('mu300-power wake', calls, (state, event))
+                    self.assertEqual(acts, ('mu300-wifi-band toggle' in calls or 'systemctl start' in calls or 'systemctl is-active' in calls), (state, event))
+
+
+class TreeKill(ShellTest):
+    """tree_kill (mu300-power, mu300-buttons, mobile-data): a process seen in the tree by one look and gone from it by
+    the next (reparented: its parent exited meanwhile) is killed too - the union of every look, not the last one."""
+
+    @staticmethod
+    def func(path):
+        m = re.search(r'^tree_kill\(\) \{.*?^\}$', path.read_text(), re.S | re.M)
+        assert m, path
+        return m.group(0)
+
+    def test_every_process_seen_is_killed(self):
+        # the first look sees 100 -> 101 -> 102; every later one finds 102 reparented to 1 (out of the tree)
+        fake = ('proc_table() { n=$(cat "$STUBLOG/n" 2>/dev/null || echo 0); echo $((n + 1)) > "$STUBLOG/n"\n'
+                '  if [ "$n" = 0 ]; then printf "100 1\\n101 100\\n102 101\\n"; else printf "100 1\\n101 100\\n102 1\\n"; fi; }\n'
+                'kill() { echo "$*" >> "$STUBLOG/kills"; }\n')
+        bash = shutil.which('bash')
+        for name in ('mu300-power', 'mu300-buttons', 'mobile-data'):
+            if name == 'mobile-data' and not bash:
+                continue
+            for shell in ([[bash]] if name == 'mobile-data' else self.each_shell()):
+                for f in ('n', 'kills'):
+                    (self.tmp / f).unlink(missing_ok=True)
+                r = self.sh(shell, self.func(BIN / name) + '\n' + fake + 'tree_kill 100\n')
+                self.assertEqual(r.returncode, 0, (name, r.stderr))
+                kills = (self.tmp / 'kills').read_text().split('\n')
+                for pid in ('100', '101', '102'):
+                    self.assertIn(f'-KILL {pid}', kills, (name, shell))
 
 
 class ThermalGuard(ShellTest):
@@ -2137,6 +2637,45 @@ class NextBoot(ShellTest):
         self.assertEqual(self.bc(), bytes(want))
         self.nb('android')
         self.assertEqual(self.bc(), android_b)
+
+    def test_lock_unlock_and_the_trial_of_a_new_image(self):
+        android_a, linux_b, _, _ = self.blocks
+        (self.run_dir / 'linux-slot').write_text('b\n')
+        (self.run_dir / 'misc-bc-android.bin').write_bytes(android_a)
+        (self.run_dir / 'misc-bc-linux-trial.bin').write_bytes(linux_b)
+        disk = self.tmp / 'disk'
+        (disk / '.mu300').mkdir(parents=True)
+        def nb(*a):
+            if not shutil.which('bash'):
+                self.skipTest('no bash')
+            return subprocess.run(['bash', str(BIN / 'mu300-next-boot'), *a], capture_output=True, text=True,
+                                  env=self.env(MU300_RUN=self.run_dir, MU300_CONF=self.tmp / 'default-boot',
+                                               MU300_CMDLINE_SRC=self.tmp / 'cmdline', MU300_DISK=disk))
+        def want(info):
+            w = bytearray(linux_b); w[14] = info
+            w[28:32] = struct.pack('<I', zlib.crc32(bytes(w[:28])))
+            return bytes(w)
+        r = nb('lock')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        # successful=1, prio 15, tries 6: LK never counts it down, never rolls back
+        self.assertEqual(self.bc(), want(0xef))
+        self.assertTrue((disk / '.mu300/boot-lock').exists())
+        self.assertIn('locked: yes', nb('status').stdout)
+        # a good boot keeps it locked
+        nb('--rearm'); self.assertEqual(self.bc(), want(0xef))
+        # mu300-update before a new boot image: the usual attempts, the lock wish kept for the next good boot
+        r = nb('--trial'); self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.bc(), want(0x6f))
+        self.assertTrue((disk / '.mu300/boot-lock').exists())
+        nb('--rearm'); self.assertEqual(self.bc(), want(0xef))
+        # Android by hand: its block, and the wish stays for when Linux is chosen again
+        nb('android'); self.assertEqual(self.bc(), android_a)
+        self.assertTrue((disk / '.mu300/boot-lock').exists())
+        (self.tmp / 'default-boot').write_text('linux\n')
+        r = nb('unlock'); self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.bc(), want(0x6f))
+        self.assertFalse((disk / '.mu300/boot-lock').exists())
+        self.assertIn('locked: no', nb('status').stdout)
 
     def test_slot_b_as_before(self):
         android_a, linux_b, _, _ = self.blocks

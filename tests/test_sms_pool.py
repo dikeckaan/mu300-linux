@@ -226,6 +226,117 @@ class Pool(ShellTest):
             [(h, body)] = self.msgs().values()
             self.assertEqual((h['sim_index'], body), ('1,2', 'hello world\n'))
 
+    # ------------------------------------------------------------------ off the SIM
+    def cmgr(self, slot, pdu):
+        """What AT+CMGR=slot answers: the slot still holding PDU."""
+        self.answer(f'CMGR{slot}', f'+CMGR: 1,,{len(pdu) // 2}\n{pdu}\nOK\n')
+
+    def cmgd(self):
+        return [c for c in self.at_log() if c.startswith('AT+CMGD')]
+
+    def test_sync_moves_what_it_pooled_off_the_sim(self):
+        # a full SIM takes no more messages: what the pool holds leaves the SIM, after the pool has it on the disk
+        for shell in self.each_shell():
+            self.fresh()
+            self.cmgr(3, PDU_GSM)
+            self.cmgr(7, PDU_UCS2)
+            r = self.run_sms(shell, 'sync')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn('sync: 2 new, 2 on the SIM, 2 in the pool, 2 moved off the SIM\n', r.stdout)
+            log = self.at_log()
+            self.assertEqual(self.cmgd(), ['AT+CMGD=3', 'AT+CMGD=7'])
+            # each slot read back right before it goes, after the listing
+            self.assertLess(log.index('AT+CMGL=4'), log.index('AT+CMGR=3'))
+            self.assertLess(log.index('AT+CMGR=3'), log.index('AT+CMGD=3'))
+            self.assertEqual(sorted(h['from'] for h, _ in self.msgs().values()), ['+31641600986', 'ADANA BLD'])
+            # the SIM is empty now: the pool keeps both, unread stays unread
+            self.answer('CMGL4', 'OK\n')
+            r = self.run_sms(shell, 'sync')
+            self.assertIn('sync: 0 new, 0 on the SIM, 2 in the pool, 0 moved off the SIM\n', r.stdout)
+            self.assertEqual(sorted(h['status'] for h, _ in self.msgs().values()), ['read', 'unread'])
+
+    def test_a_slot_that_changed_since_the_listing_stays(self):
+        # slot 7 holds another message by the time it would go (deleted by `sms`, a new one landed): not touched
+        for shell in self.each_shell():
+            self.fresh()
+            self.cmgr(3, PDU_GSM)
+            self.cmgr(7, PDU_GSM)
+            r = self.run_sms(shell, 'sync')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(self.cmgd(), ['AT+CMGD=3'])
+            self.assertIn('1 moved off the SIM, 1 left there', r.stdout)
+            # a slot that does not answer (busy channel, CMS error) stays too
+            self.fresh()
+            self.cmgr(3, PDU_GSM)
+            self.answer('CMGR7', '+CMS ERROR: 321\n')
+            self.run_sms(shell, 'sync')
+            self.assertEqual(self.cmgd(), ['AT+CMGD=3'])
+
+    def test_a_message_the_pool_could_not_take_stays_on_the_sim(self):
+        if os.geteuid() == 0:
+            self.skipTest('root writes into a read-only directory')
+        for shell in self.each_shell():
+            self.fresh()
+            self.cmgr(3, PDU_GSM)
+            self.cmgr(7, PDU_UCS2)
+            self.run_sms(shell, 'list')                 # the pool directory, then made read-only
+            os.chmod(self.pool / 'msg', 0o500)
+            try:
+                r = self.run_sms(shell, 'sync')
+            finally:
+                os.chmod(self.pool / 'msg', 0o700)
+            self.assertIn('it stays on the SIM', r.stderr)
+            self.assertEqual(self.cmgd(), [])
+            self.assertEqual(self.msgs(), {})
+
+    def test_the_parts_of_an_incomplete_message_stay_until_it_is_whole(self):
+        def part(ref, total, n, text):
+            ud = bytes([5, 0, 3, ref, total, n]).hex().upper() + text.encode('utf-16-be').hex().upper()
+            return f'00440B911346610089F6000820806291731448{len(ud) // 2:02X}{ud}'
+        p1, p2, half = part(0x42, 2, 1, 'hello'), part(0x42, 2, 2, ' world'), part(0x43, 2, 1, 'half')
+        for shell in self.each_shell():
+            self.fresh()
+            self.answer('CMGL4', f'+CMGL: 1,1,,30\n{p2}\n+CMGL: 2,1,,30\n{p1}\n+CMGL: 4,1,,30\n{half}\nOK\n')
+            for slot, pdu in ((1, p2), (2, p1), (4, half)):
+                self.cmgr(slot, pdu)
+            r = self.run_sms(shell, 'sync')
+            self.assertIn('1 waiting for its other parts, 2 moved off the SIM', r.stdout)
+            self.assertEqual(self.cmgd(), ['AT+CMGD=1', 'AT+CMGD=2'])
+
+    def test_a_message_deleted_from_the_pool_goes_from_the_sim_too(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.run_sms(shell, 'sync')                 # no CMGR answers: both stay on the SIM this time
+            self.assertEqual(self.cmgd(), [])
+            ids = {h['from']: i for i, (h, _) in self.msgs().items()}
+            self.run_sms(shell, 'delete', ids['ADANA BLD'])
+            self.cmgr(7, PDU_UCS2)
+            self.run_sms(shell, 'sync')
+            self.assertEqual(self.cmgd(), ['AT+CMGD=7'])
+            self.assertEqual([h['from'] for h, _ in self.msgs().values()], ['+31641600986'])
+
+    def test_a_new_message_runs_the_hook_once(self):
+        hook = self.tmp / 'hook'
+        out = self.tmp / 'hook.out'
+        hook.write_text(f'#!/bin/sh\nprintf "%s|%s|%s|%s\\n" "$SMS_ID" "$SMS_FROM" "$SMS_DATE" "$SMS_TEXT" >> "{out}"\n')
+        hook.chmod(0o755)
+        for shell in self.each_shell():
+            self.fresh()
+            out.unlink(missing_ok=True)
+            r = self.run_sms(shell, 'sync', MU300_SMS_HOOK=hook)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            for _ in range(50):
+                if out.exists() and len(out.read_text().splitlines()) == 2:
+                    break
+                time.sleep(0.1)
+            got = sorted(out.read_text().splitlines())
+            self.assertEqual([g.split('|', 1)[1] for g in got],
+                             ['+31641600986|2002-08-26 19:37:41|How are you?', 'ADANA BLD|2026-09-15 17:18:00|Kargonuz yolda ğüş'])
+            # a sync that finds nothing new runs it no more; a hook that is not executable is not run
+            self.run_sms(shell, 'sync', MU300_SMS_HOOK=hook)
+            time.sleep(0.3)
+            self.assertEqual(len(out.read_text().splitlines()), 2)
+
     def test_a_deleted_message_stays_deleted(self):
         for shell in self.each_shell():
             self.fresh()
@@ -235,7 +346,7 @@ class Pool(ShellTest):
             self.assertEqual((r.returncode, r.stdout), (0, f'deleted {ids["ADANA BLD"]}\n'), r.stderr)
             self.run_sms(shell, 'sync')
             self.assertEqual([h['from'] for h, _ in self.msgs().values()], ['+31641600986'])
-            # the pool only: nothing was deleted from the SIM
+            # delete itself touches the pool only; a slot that does not read back (no CMGR answer here) stays
             self.assertFalse([c for c in self.at_log() if c.startswith('AT+CMGD')])
             # gone from the SIM too: its tombstone goes with it
             self.answer('CMGL4', f'+CMGL: 3,0,,40\n{PDU_GSM}\nOK\n')

@@ -30,6 +30,9 @@ msgstr "裝置管理"
 msgid "Languages"
 msgstr "語言"
 
+msgid "Power"
+msgstr "電源"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 控制中心：狀態儀表板、網路鎖定、AT 終端機與簡訊"
 
@@ -873,6 +876,120 @@ msgstr "自動（支援 %d 個）"
 msgid "%d locked: %s"
 msgstr "已鎖定 %d 個：%s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "請輸入 0 到 %d 之間的整數"
+
+msgid "Power status unavailable"
+msgstr "無法取得電源狀態"
+
+msgid "Plugged in"
+msgstr "已接上電源"
+
+msgid "On battery"
+msgstr "電池供電"
+
+msgid "Saver"
+msgstr "省電"
+
+msgid "Asleep: hotspot off"
+msgstr "休眠：熱點已關閉"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "充電開機：按 Wi-Fi 鍵啟動"
+
+msgid "Awake"
+msgstr "已喚醒"
+
+msgid "forced"
+msgstr "強制"
+
+msgid "automatic, battery under %d %%"
+msgstr "自動，電量低於 %d %%"
+
+msgid "automatic"
+msgstr "自動"
+
+msgid "Nobody connected for %d s"
+msgstr "已有 %d 秒無人連線"
+
+msgid "Power source"
+msgstr "電源來源"
+
+msgid "Profile"
+msgstr "方案"
+
+msgid "Profile in use: %s (%s)"
+msgstr "目前方案：%s（%s）"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "充電器"
+
+msgid "Charger: %s, %s port"
+msgstr "充電器：%s，%s 連接埠"
+
+msgid "Charging paused: battery temperature"
+msgstr "充電已暫停：電池溫度"
+
+msgid "Charging paused: charge limit"
+msgstr "充電已暫停：充電上限"
+
+msgid "Sleep now"
+msgstr "立即休眠"
+
+msgid "Wake"
+msgstr "喚醒"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "無人連線是指沒有 Wi-Fi 用戶端，USB 上也沒有電腦。Wi-Fi 鍵、USB 上的電腦或充電器都會喚醒裝置。"
+
+msgid "Automatic: plugged in / on battery"
+msgstr "自動：接上電源 / 電池供電"
+
+msgid "Switch to Saver under %"
+msgstr "電量低於以下值時切換到省電方案 %"
+
+msgid "Stop charging at"
+msgstr "充電上限"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % 可讓長期插著電源的裝置電池更健康。"
+
+msgid "Keep as is"
+msgstr "維持不變"
+
+msgid "LTE only (5G off)"
+msgstr "僅 LTE（關閉 5G）"
+
+msgid "Off"
+msgstr "關"
+
+msgid "On"
+msgstr "開"
+
+msgid "Full"
+msgstr "全速"
+
+msgid "Eco: big core off"
+msgstr "節能：關閉大核心"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "熱點在此時間後關閉（分鐘，0 = 永不）"
+
+msgid "Modem when idle"
+msgstr "閒置時的數據機"
+
+msgid "LEDs when idle"
+msgstr "閒置時的指示燈"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "power.conf 中被忽略的行：%s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "設定此外掛程式如何介接目前的紫光展銳（Unisoc）OpenWrt 平台。變更後不需修改儀表板、AT、鎖定或簡訊頁面。"
 
@@ -1173,6 +1290,21 @@ msgstr "未知的 USB 設定"
 msgid "Invalid interface name"
 msgstr "介面名稱無效"
 
+msgid "The power adapter gave no valid reply"
+msgstr "電源配接器沒有傳回有效回應"
+
+msgid "Unknown power operation"
+msgstr "未知的電源操作"
+
+msgid "Unknown power setting"
+msgstr "未知的電源設定"
+
+msgid "Invalid power value"
+msgstr "無效的電源值"
+
+msgid "Invalid power request"
+msgstr "無效的電源要求"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "語言轉接程式未傳回有效回應"
 
@@ -1323,6 +1455,9 @@ msgstr "鎖定快取無法使用"
 msgid "No serving cell to lock to"
 msgstr "沒有可鎖定的服務基地台"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "無法讀取 TTL 設定"
 
@@ -1331,3 +1466,27 @@ msgstr "無法設定 TTL"
 
 msgid "Unknown TTL operation"
 msgstr "未知的 TTL 操作"
+
+msgid "Lock Linux"
+msgstr "鎖定 Linux"
+
+msgid "Unlock Linux"
+msgstr "解除 Linux 鎖定"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "連續五次開機未完成後，裝置將再次回退到 Android。"
+
+msgid "Unlock"
+msgstr "解除鎖定"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "裝置永遠不會自行切換到 Android，即使開機失敗也不會：只能透過本頁面（切換到 Android）或 mu300-next-boot android 進入 Android。"
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "更新帶來的新核心仍會先以試用方式開機，其中一次成功後會再次鎖定。"
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "如果系統本身無法啟動，裝置會透過 USB（telnet）等待，而不是進入 Android。"
+
+msgid "Linux locked"
+msgstr "Linux 已鎖定"

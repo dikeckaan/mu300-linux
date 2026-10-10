@@ -25,7 +25,7 @@ jobs:
           node-version: 22
       - name: shells and lz4
         run: |
-          if [ "$RUNNER_OS" = Linux ]; then sudo apt-get install -y -qq dash busybox lz4 zip unzip cpio >/dev/null; fi
+          if [ "$RUNNER_OS" = Linux ]; then sudo apt-get install -y -qq dash busybox lz4 zip unzip cpio jq >/dev/null; fi
           python3 -m pip install -q lz4 || python3 -m pip install -q --break-system-packages lz4
       - name: tests
         run: |

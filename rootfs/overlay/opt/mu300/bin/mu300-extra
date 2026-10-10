@@ -13,11 +13,12 @@
 #
 # Extras live on the Linux partition (/mnt/mu300-disk/extra/NAME), not in a system: Ubuntu and OpenWrt share one
 # copy, and an update or reinstall of a system keeps it. mu300-update apply brings them to the new release.
-# There are two:
-#   vpn   Xray-core, hev-socks5-tunnel and sing-box, the engines of mu300-vpn
-#   lang  LuCI's own catalogs in every language of the OpenWrt feed, and the MU300 panel's (OpenWrt only: Ubuntu has
-#         no LuCI). install enables every language; which ones a system offers is its own (/etc/mu300/languages,
-#         kept by updates; no file: all of them).
+# There are three:
+#   vpn         Xray-core, hev-socks5-tunnel and sing-box, the engines of mu300-vpn
+#   lang        LuCI's own catalogs in every language of the OpenWrt feed, and the MU300 panel's (OpenWrt only:
+#               Ubuntu has no LuCI). install enables every language; which ones a system offers is its own
+#               (/etc/mu300/languages, kept by updates; no file: all of them).
+#   vpn-mihomo  mihomo (Clash.Meta), the engine of mu300-vpn's mihomo profiles (Clash/mihomo YAML subscriptions)
 #
 # MU300_RELEASE=TAG takes another release, MU300_RELEASE_URL=URL another server with the same files and SHA256SUMS,
 # MU300_EXTRA_FILE=FILE a mu300-extra-NAME.tar.gz on this device (not checked: you chose it).

@@ -30,6 +30,9 @@ msgstr "डिवाइस प्रबंधन"
 msgid "Languages"
 msgstr "भाषाएँ"
 
+msgid "Power"
+msgstr "पावर"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 नियंत्रण केंद्र: स्थिति डैशबोर्ड, नेटवर्क लॉक, AT टर्मिनल और SMS"
 
@@ -873,6 +876,120 @@ msgstr "स्वचालित (%d समर्थित)"
 msgid "%d locked: %s"
 msgstr "%d लॉक: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "0 से %d के बीच की पूर्ण संख्या दर्ज करें"
+
+msgid "Power status unavailable"
+msgstr "पावर स्थिति उपलब्ध नहीं है"
+
+msgid "Plugged in"
+msgstr "बिजली से जुड़ा"
+
+msgid "On battery"
+msgstr "बैटरी पर"
+
+msgid "Saver"
+msgstr "बचत"
+
+msgid "Asleep: hotspot off"
+msgstr "नींद: हॉटस्पॉट बंद"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "चार्जिंग बूट: शुरू करने के लिए Wi-Fi कुंजी दबाएँ"
+
+msgid "Awake"
+msgstr "जागृत"
+
+msgid "forced"
+msgstr "ज़बरदस्ती"
+
+msgid "automatic, battery under %d %%"
+msgstr "स्वचालित, बैटरी %d %% से कम"
+
+msgid "automatic"
+msgstr "स्वचालित"
+
+msgid "Nobody connected for %d s"
+msgstr "%d सेकंड से कोई जुड़ा नहीं है"
+
+msgid "Power source"
+msgstr "पावर स्रोत"
+
+msgid "Profile"
+msgstr "प्रोफ़ाइल"
+
+msgid "Profile in use: %s (%s)"
+msgstr "उपयोग में प्रोफ़ाइल: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "चार्जर"
+
+msgid "Charger: %s, %s port"
+msgstr "चार्जर: %s, %s पोर्ट"
+
+msgid "Charging paused: battery temperature"
+msgstr "चार्जिंग रुकी: बैटरी का तापमान"
+
+msgid "Charging paused: charge limit"
+msgstr "चार्जिंग रुकी: चार्ज सीमा"
+
+msgid "Sleep now"
+msgstr "अभी सुलाएँ"
+
+msgid "Wake"
+msgstr "जगाएँ"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "कोई जुड़ा नहीं का मतलब है कोई Wi-Fi क्लाइंट नहीं और USB पर कोई कंप्यूटर नहीं। Wi-Fi कुंजी, USB पर कंप्यूटर या चार्जर डिवाइस को जगाते हैं।"
+
+msgid "Automatic: plugged in / on battery"
+msgstr "स्वचालित: बिजली से जुड़ा / बैटरी पर"
+
+msgid "Switch to Saver under %"
+msgstr "इससे कम पर बचत में जाएँ %"
+
+msgid "Stop charging at"
+msgstr "चार्जिंग यहाँ रोकें"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % हमेशा बिजली से जुड़े रहने वाले डिवाइस में बैटरी को स्वस्थ रखता है।"
+
+msgid "Keep as is"
+msgstr "जैसा है वैसा रखें"
+
+msgid "LTE only (5G off)"
+msgstr "केवल LTE (5G बंद)"
+
+msgid "Off"
+msgstr "बंद"
+
+msgid "On"
+msgstr "चालू"
+
+msgid "Full"
+msgstr "पूर्ण"
+
+msgid "Eco: big core off"
+msgstr "इको: बड़ा कोर बंद"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "हॉटस्पॉट इतनी देर बाद बंद (मिनट, 0 = कभी नहीं)"
+
+msgid "Modem when idle"
+msgstr "निष्क्रिय होने पर मोडेम"
+
+msgid "LEDs when idle"
+msgstr "निष्क्रिय होने पर LED"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "power.conf में अनदेखी की गई पंक्तियाँ: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "कॉन्फ़िगर करें कि यह प्लगइन वर्तमान Unisoc OpenWrt प्लेटफ़ॉर्म से कैसे जुड़ता है। बदलावों के लिए डैशबोर्ड, AT, लॉक या SMS पेजों को संपादित करने की ज़रूरत नहीं है।"
 
@@ -1173,6 +1290,21 @@ msgstr "अज्ञात USB सेटिंग"
 msgid "Invalid interface name"
 msgstr "अमान्य इंटरफ़ेस नाम"
 
+msgid "The power adapter gave no valid reply"
+msgstr "पावर अडैप्टर ने मान्य उत्तर नहीं दिया"
+
+msgid "Unknown power operation"
+msgstr "अज्ञात पावर संचालन"
+
+msgid "Unknown power setting"
+msgstr "अज्ञात पावर सेटिंग"
+
+msgid "Invalid power value"
+msgstr "अमान्य पावर मान"
+
+msgid "Invalid power request"
+msgstr "अमान्य पावर अनुरोध"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "भाषा एडेप्टर से कोई मान्य उत्तर नहीं मिला"
 
@@ -1323,6 +1455,9 @@ msgstr "लॉक कैश उपलब्ध नहीं"
 msgid "No serving cell to lock to"
 msgstr "लॉक करने के लिए कोई सर्विंग सेल नहीं"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "TTL सेटिंग पढ़ी नहीं जा सकी"
 
@@ -1331,3 +1466,27 @@ msgstr "TTL सेट नहीं किया जा सका"
 
 msgid "Unknown TTL operation"
 msgstr "अज्ञात TTL कार्रवाई"
+
+msgid "Lock Linux"
+msgstr "Linux लॉक करें"
+
+msgid "Unlock Linux"
+msgstr "Linux अनलॉक करें"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "लगातार पाँच अधूरे बूट के बाद डिवाइस फिर से Android पर लौट आता है।"
+
+msgid "Unlock"
+msgstr "अनलॉक करें"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "डिवाइस अपने आप कभी Android पर नहीं जाएगा, असफल बूट के बाद भी नहीं: Android पर केवल इस पेज (Android पर जाएँ) से या mu300-next-boot android से।"
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "अपडेट से आया नया कर्नेल फिर भी पहले परीक्षण के रूप में बूट होता है, और उनमें से एक सफल होते ही फिर से लॉक हो जाता है।"
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "यदि सिस्टम स्वयं शुरू नहीं होता, तो डिवाइस Android पर जाने के बजाय USB (telnet) पर प्रतीक्षा करता है।"
+
+msgid "Linux locked"
+msgstr "Linux लॉक है"

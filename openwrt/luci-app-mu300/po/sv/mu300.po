@@ -30,6 +30,9 @@ msgstr "Enhetshantering"
 msgid "Languages"
 msgstr "Språk"
 
+msgid "Power"
+msgstr "Ström"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300-kontrollcenter: statuspanel, nätverkslås, AT-terminal och SMS"
 
@@ -873,6 +876,120 @@ msgstr "Automatiskt (%d stöds)"
 msgid "%d locked: %s"
 msgstr "%d låsta: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Ange ett heltal från 0 till %d"
+
+msgid "Power status unavailable"
+msgstr "Strömstatus otillgänglig"
+
+msgid "Plugged in"
+msgstr "Inkopplad"
+
+msgid "On battery"
+msgstr "På batteri"
+
+msgid "Saver"
+msgstr "Sparläge"
+
+msgid "Asleep: hotspot off"
+msgstr "Viloläge: hotspot av"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Laddstart: tryck på Wi-Fi-knappen för att starta"
+
+msgid "Awake"
+msgstr "Vaken"
+
+msgid "forced"
+msgstr "påtvingad"
+
+msgid "automatic, battery under %d %%"
+msgstr "automatiskt, batteri under %d %%"
+
+msgid "automatic"
+msgstr "automatiskt"
+
+msgid "Nobody connected for %d s"
+msgstr "Ingen ansluten på %d s"
+
+msgid "Power source"
+msgstr "Strömkälla"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Använd profil: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Laddare"
+
+msgid "Charger: %s, %s port"
+msgstr "Laddare: %s, %s-port"
+
+msgid "Charging paused: battery temperature"
+msgstr "Laddningen pausad: batteritemperatur"
+
+msgid "Charging paused: charge limit"
+msgstr "Laddningen pausad: laddningsgräns"
+
+msgid "Sleep now"
+msgstr "Sov nu"
+
+msgid "Wake"
+msgstr "Väck"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Ingen ansluten betyder ingen Wi-Fi-klient och ingen dator på USB. Wi-Fi-knappen, en dator på USB eller laddaren väcker enheten."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Automatiskt: inkopplad / på batteri"
+
+msgid "Switch to Saver under %"
+msgstr "Byt till Sparläge under %"
+
+msgid "Stop charging at"
+msgstr "Sluta ladda vid"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % skonar batteriet i en enhet som sitter inkopplad."
+
+msgid "Keep as is"
+msgstr "Lämna som det är"
+
+msgid "LTE only (5G off)"
+msgstr "Endast LTE (5G av)"
+
+msgid "Off"
+msgstr "Av"
+
+msgid "On"
+msgstr "På"
+
+msgid "Full"
+msgstr "Full"
+
+msgid "Eco: big core off"
+msgstr "Eco: stor kärna av"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Hotspot av efter (min, 0 = aldrig)"
+
+msgid "Modem when idle"
+msgstr "Modem vid inaktivitet"
+
+msgid "LEDs when idle"
+msgstr "LED vid inaktivitet"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Ignorerade rader i power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Ställ in hur detta plugin ansluter till den aktuella Unisoc OpenWrt-plattformen. Ändringar kräver ingen redigering av sidorna för panel, AT, lås eller SMS."
 
@@ -1173,6 +1290,21 @@ msgstr "Okänd USB-inställning"
 msgid "Invalid interface name"
 msgstr "Ogiltigt gränssnittsnamn"
 
+msgid "The power adapter gave no valid reply"
+msgstr "Strömadaptern gav inget giltigt svar"
+
+msgid "Unknown power operation"
+msgstr "Okänd strömåtgärd"
+
+msgid "Unknown power setting"
+msgstr "Okänd ströminställning"
+
+msgid "Invalid power value"
+msgstr "Ogiltigt strömvärde"
+
+msgid "Invalid power request"
+msgstr "Ogiltig strömbegäran"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "Språkadaptern gav inget giltigt svar"
 
@@ -1323,6 +1455,9 @@ msgstr "Låscache inte tillgänglig"
 msgid "No serving cell to lock to"
 msgstr "Ingen betjänande cell att låsa till"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "TTL-inställningen kunde inte läsas"
 
@@ -1331,3 +1466,27 @@ msgstr "TTL kunde inte sättas"
 
 msgid "Unknown TTL operation"
 msgstr "Okänd TTL-åtgärd"
+
+msgid "Lock Linux"
+msgstr "Lås Linux"
+
+msgid "Unlock Linux"
+msgstr "Lås upp Linux"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "Efter fem ofullbordade starter i rad faller enheten tillbaka till Android igen."
+
+msgid "Unlock"
+msgstr "Lås upp"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Enheten byter aldrig till Android av sig själv, inte ens efter misslyckade starter: Android bara från den här sidan (Byt till Android) eller med mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "En ny kärna från en uppdatering startar ändå först på prov och låses igen när en start lyckas."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Om själva systemet inte startar längre väntar enheten via USB (telnet) i stället för att gå till Android."
+
+msgid "Linux locked"
+msgstr "Linux låst"

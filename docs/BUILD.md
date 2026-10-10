@@ -33,7 +33,21 @@ One step, from the pinned public sources (kernel tree, realme Wi-Fi/Bluetooth/Ma
 kernel/build-all.sh    # -> out/Image, out/modules/*.ko, out/modules.builtin*  (about 10 minutes on Apple silicon)
 ```
 Maintainers publish the prebuilt images with `tools/make-release.sh TAG --publish` (it refuses to publish if an image
-contains firmware, Android files, host keys or local settings). The manual steps behind `build-all.sh`:
+contains firmware, Android files, host keys or local settings).
+
+**Releasing from GitHub Actions.** The same release, built on a GitHub arm64 runner: Actions > Release > Run workflow,
+with the ref `main` (the job refuses any other ref, and a tag or release that already exists), the tag, and prerelease
+left on. It builds the 5.4 kernel, the mainline 6.18 and 7.2 kernels and their modules (about an hour the first time;
+about five minutes while the kernel outputs are still in the Actions cache, which they are until `kernel/`, `upstream/`
+or the newest kernel.org version changes), runs `tools/make-release.sh --publish --prerelease` and dispatches the Magisk
+zips. Then try the prerelease on a device, edit its notes, and promote it with
+`gh release edit TAG --prerelease=false --latest`: only then do the installers and `mu300-update` offer it. A release the
+workflow made has no `tools/gpu/cltest` (it is built locally against Android's libraries and is not in the repository;
+`make-release.sh` includes it only when it is there), so `mu300-toolkit`'s GPU stress item is absent on such a release;
+a release made by hand on a machine with the binary has it. A hand-run `tools/make-release.sh TAG --publish` still works
+as before and does not start the workflow, which only runs when asked for.
+
+The manual steps behind `build-all.sh`:
 ```sh
 git clone https://github.com/dikeckaan/zte-ums9620-kernel-5.4.254   # or the Enceka U30 Air repo
 docker build -t mu300-kbuild kernel/

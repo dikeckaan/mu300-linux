@@ -1,4 +1,6 @@
 [Unit]
+# a charging boot (a flat battery on the charger) keeps the radios off until the Wi-Fi key (see mu300-power)
+ConditionPathExists=!/run/mu300/charging-boot
 # the vendor modem loader exists only in the 5.4 kernel
 # the modem driver, not its device node: the driver is loaded in the initramfs on both kernels, but the node
 # appears later on mainline (+18 s, after sysinit), and a condition checked before that dropped these units

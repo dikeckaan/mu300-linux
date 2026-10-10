@@ -290,6 +290,7 @@ class Extras(ExtrasBase):
             r = self.ex(shell, 'list')
             self.assertEqual(r.returncode, 0)
             self.assertIn('vpn', r.stdout)
+            self.assertIn('vpn-mihomo', r.stdout)
             self.assertIn('not installed', r.stdout)
 
     def test_link_puts_the_system_commands_on_the_path(self):

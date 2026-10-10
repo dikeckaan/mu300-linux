@@ -1,5 +1,6 @@
 #!/bin/sh
-# SMS on the MU300, straight from the modem - no Android, no RIL.
+# SMS on the MU300, straight from the modem - no Android, no RIL. (On openwrt-luci the panel's pool, mu300-sms, moves
+# received messages off the SIM within seconds: use its hook, /etc/mu300/sms-hook, rather than "sms watch" there.)
 #
 #   sms list                       every message, long ones joined back together
 #   sms read INDEX                 one message in full

@@ -30,6 +30,9 @@ msgstr "Διαχείριση συσκευής"
 msgid "Languages"
 msgstr "Γλώσσες"
 
+msgid "Power"
+msgstr "Ισχύς"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Κέντρο ελέγχου MU300: πίνακας κατάστασης, κλειδώματα δικτύου, τερματικό AT και SMS"
 
@@ -873,6 +876,120 @@ msgstr "Αυτόματο (%d υποστηριζόμενες)"
 msgid "%d locked: %s"
 msgstr "%d κλειδωμένες: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Εισαγάγετε έναν ακέραιο από 0 έως %d"
+
+msgid "Power status unavailable"
+msgstr "Η κατάσταση ισχύος δεν είναι διαθέσιμη"
+
+msgid "Plugged in"
+msgstr "Στην πρίζα"
+
+msgid "On battery"
+msgstr "Με μπαταρία"
+
+msgid "Saver"
+msgstr "Εξοικονόμηση"
+
+msgid "Asleep: hotspot off"
+msgstr "Αναστολή: το hotspot είναι σβηστό"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Εκκίνηση φόρτισης: πατήστε το πλήκτρο Wi-Fi για εκκίνηση"
+
+msgid "Awake"
+msgstr "Ενεργή"
+
+msgid "forced"
+msgstr "εξαναγκασμένο"
+
+msgid "automatic, battery under %d %%"
+msgstr "αυτόματο, μπαταρία κάτω από %d %%"
+
+msgid "automatic"
+msgstr "αυτόματο"
+
+msgid "Nobody connected for %d s"
+msgstr "Κανείς δεν είναι συνδεδεμένος εδώ και %d δ"
+
+msgid "Power source"
+msgstr "Πηγή ισχύος"
+
+msgid "Profile"
+msgstr "Προφίλ"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Προφίλ σε χρήση: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Φορτιστής"
+
+msgid "Charger: %s, %s port"
+msgstr "Φορτιστής: %s, θύρα %s"
+
+msgid "Charging paused: battery temperature"
+msgstr "Η φόρτιση σταμάτησε προσωρινά: θερμοκρασία μπαταρίας"
+
+msgid "Charging paused: charge limit"
+msgstr "Η φόρτιση σταμάτησε προσωρινά: όριο φόρτισης"
+
+msgid "Sleep now"
+msgstr "Αναστολή τώρα"
+
+msgid "Wake"
+msgstr "Αφύπνιση"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Κανείς συνδεδεμένος σημαίνει κανένας πελάτης Wi-Fi και κανένας υπολογιστής στο USB. Το πλήκτρο Wi-Fi, ένας υπολογιστής στο USB ή ο φορτιστής ξυπνούν τη συσκευή."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Αυτόματο: στην πρίζα / με μπαταρία"
+
+msgid "Switch to Saver under %"
+msgstr "Μετάβαση σε Εξοικονόμηση κάτω από %"
+
+msgid "Stop charging at"
+msgstr "Διακοπή φόρτισης στο"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "Το 80 % προστατεύει την μπαταρία μιας συσκευής που μένει στην πρίζα."
+
+msgid "Keep as is"
+msgstr "Να μείνει ως έχει"
+
+msgid "LTE only (5G off)"
+msgstr "Μόνο LTE (5G κλειστό)"
+
+msgid "Off"
+msgstr "Ανενεργό"
+
+msgid "On"
+msgstr "Ενεργό"
+
+msgid "Full"
+msgstr "Πλήρες"
+
+msgid "Eco: big core off"
+msgstr "Eco: μεγάλος πυρήνας κλειστός"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Απενεργοποίηση hotspot μετά από (λεπτά, 0 = ποτέ)"
+
+msgid "Modem when idle"
+msgstr "Modem σε αδράνεια"
+
+msgid "LEDs when idle"
+msgstr "LED σε αδράνεια"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Αγνοημένες γραμμές στο power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Ρυθμίστε πώς συνδέεται αυτό το πρόσθετο με την τρέχουσα πλατφόρμα Unisoc OpenWrt. Οι αλλαγές δεν απαιτούν επεξεργασία των σελίδων πίνακα κατάστασης, AT, κλειδωμάτων ή SMS."
 
@@ -1173,6 +1290,21 @@ msgstr "Άγνωστη ρύθμιση USB"
 msgid "Invalid interface name"
 msgstr "Μη έγκυρο όνομα διεπαφής"
 
+msgid "The power adapter gave no valid reply"
+msgstr "Ο προσαρμογέας ισχύος δεν έδωσε έγκυρη απάντηση"
+
+msgid "Unknown power operation"
+msgstr "Άγνωστη λειτουργία ισχύος"
+
+msgid "Unknown power setting"
+msgstr "Άγνωστη ρύθμιση ισχύος"
+
+msgid "Invalid power value"
+msgstr "Μη έγκυρη τιμή ισχύος"
+
+msgid "Invalid power request"
+msgstr "Μη έγκυρο αίτημα ισχύος"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "Ο προσαρμογέας γλωσσών δεν έδωσε έγκυρη απάντηση"
 
@@ -1323,6 +1455,9 @@ msgstr "Η κρυφή μνήμη κλειδωμάτων δεν είναι δια
 msgid "No serving cell to lock to"
 msgstr "Δεν υπάρχει κυψέλη εξυπηρέτησης για κλείδωμα"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "Δεν ήταν δυνατή η ανάγνωση της ρύθμισης TTL"
 
@@ -1331,3 +1466,27 @@ msgstr "Δεν ήταν δυνατός ο ορισμός του TTL"
 
 msgid "Unknown TTL operation"
 msgstr "Άγνωστη λειτουργία TTL"
+
+msgid "Lock Linux"
+msgstr "Κλείδωμα Linux"
+
+msgid "Unlock Linux"
+msgstr "Ξεκλείδωμα Linux"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "Μετά από πέντε συνεχόμενες ημιτελείς εκκινήσεις, η συσκευή επιστρέφει ξανά στο Android."
+
+msgid "Unlock"
+msgstr "Ξεκλείδωμα"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Η συσκευή δεν θα μεταβεί ποτέ μόνη της στο Android, ούτε μετά από αποτυχημένες εκκινήσεις: στο Android μόνο από αυτή τη σελίδα (Μετάβαση σε Android) ή με mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Ένας νέος πυρήνας από ενημέρωση εξακολουθεί να κάνει τις πρώτες εκκινήσεις δοκιμαστικά και κλειδώνει ξανά μόλις μία πετύχει."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Αν το ίδιο το σύστημα δεν ξεκινά πλέον, η συσκευή περιμένει μέσω USB (telnet) αντί να μεταβεί στο Android."
+
+msgid "Linux locked"
+msgstr "Το Linux κλειδώθηκε"

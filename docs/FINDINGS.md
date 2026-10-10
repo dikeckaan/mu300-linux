@@ -95,6 +95,12 @@ what replaced it. The table below gives each section's state.
 | 33k | Vendor driver fixes from the U30 Air test, measured | current |
 | 34 | LEDs, and the defects from a second board's test | current |
 | 35 | kanoqwq's fixes, measured | current (panel languages: PR #48) |
+| 36 | Power profiles: idle radios, the charging boot, the charge guard | current; power table and device questions open (PR #62) |
+| 37 | System suspend | current (fixes on branch `suspend-drivers`); power not measured |
+| 38 | Three defects from users' reports, 2026-10-07 | current |
+| 38a | A read past the end of the eMMC never returns | current (fixed) |
+| 38b | RNDIS: the port kept the bridge's address | current (fixed) |
+| 38c | fw4 on 5.4: the boot ruleset without the LAN, and a reload that always fails | current (fixed at boot; a reload by hand still needs the flowtable deleted first) |
 
 ## Hardware and firmware facts
 
@@ -862,6 +868,67 @@ with `wget -T` or `curl -m`, check the tool's own exit status rather than a pipe
 something that must succeed before believing a failure. To test the bearer while a tunnel runs, route a single
 address around it: `ip rule add pref 8999 to <addr> lookup main`, test, delete the rule.
 
+### 26f. One VPN command for every protocol: profiles and engine drivers
+`mu300-vpn` spoke one protocol: a VLESS link in `vpn.conf`. People have WireGuard configs, OpenVPN files,
+Clash/mihomo subscriptions and raw Xray/sing-box JSON from their panels, so it now keeps named profiles under
+`/etc/mu300/vpn` (`profile import|add|edit|use|remove|export|show|list`, `settings`, `engines`, `check`) and runs
+the active one through a driver per engine (`/opt/mu300/lib/vpn/<type>.sh`: `drv_check`, `drv_gen`, `drv_start`,
+`drv_alive`, `drv_stop`, `drv_import`...). The core owns what the drivers must not differ in: the kill switch, the
+routing (rules 9000-9010, table 2022), the DNS nat and the Tailscale rules. The decisions:
+
+* **ENABLE stays in `vpn.conf`.** Everything else moved, but the switch has too many readers to move with it:
+  `mu300-update` and `android-install.sh` (a VPN in use keeps its engines across an update), `wifi-client` (the kill
+  switch is fatal only when the VPN is on), `mu300-extra` (refuses to remove the vpn extra while ENABLE=1), the
+  dashboard, and every older image, which must find a working VLESS VPN after a downgrade. So `on`/`off` write that
+  one line and `vpn.conf` keeps its legacy keys; `wifi-client` and the dashboard read `KILL_SWITCH` and the engine
+  from the store first and fall back to `vpn.conf`.
+* **Migration by snapshot diff.** At every start (any command, as root) the legacy keys of `vpn.conf` are compared
+  with `legacy.snapshot`, the keys as last migrated; only a key whose value changed since is applied (a setting
+  set, or profile `legacy` updated). The first run moves everything, a later run does nothing, and a later edit of
+  `vpn.conf` - the old README's way, or an older image's `save_pin` after a downgrade and upgrade - wins for the
+  keys it touched while settings made with the new commands are kept otherwise. A plain "vpn.conf wins" would undo
+  every `settings set`; "the store wins" would ignore the edit the old instructions tell people to make.
+* **Marks per engine.** The kill switch lets only traffic marked `0x2d0` (720) out on an uplink, and rule 9000
+  keeps marked traffic off the tunnel, so each driver marks its engine's own sockets: Xray's `sockopt.mark` on every
+  outbound (and on every dialer nested inside one - xhttp's `downloadSettings`, a `dialerProxy`), sing-box's
+  `route.default_mark`, mihomo's `routing-mark`, WireGuard's `wg set fwmark`, OpenVPN's `--mark`. No engine needs an
+  exception in the kill switch, which is unchanged.
+* **The resolve window.** A server name (WireGuard's Endpoint, OpenVPN's remote, a link's host, the `vnext`
+  servers of raw JSON) has to be resolved before the tunnel exists, and with the kill switch up the device's own DNS
+  is dropped too (26e's reason Xray needed the sing-box substitute). The core opens the download window's ruleset
+  with only the DNS sets filled, resolves, and puts the full kill switch back - one nft transaction each way, never
+  a gap. VLESS on Xray behind the kill switch still runs on sing-box, as before, so the existing tests hold.
+* **Raw configs are parsed once, strictly, and rebuilt from an allowlist.** A panel's JSON runs as root and could
+  open a listener on the LAN, expose an API, bind another interface or write a file. It is read by `jq` once
+  (`json_strict`: one object, no duplicate keys, no two keys equal under Go's case folding, since the engines'
+  decoders match field names without regard to case and jq keeps the last duplicate silently) and the engine gets a
+  new document built from what the allowlist accepts, with the inbound, the log, the mark and the bootstrap DNS
+  written last so they always win. An allowlist, not a denylist, because each engine release adds features (some of
+  which listen) faster than a denylist would follow. No jq regex (OpenWrt's jq may lack it) and jq's own errors are
+  never shown (they quote the file); refusals name a key from our own lists, never a value. What a config may do -
+  pick outbounds, route between them, name its DNS - is also its exposure: a `direct`/`freedom` outbound goes past
+  the kill switch with the engine's mark, by the config's own choice.
+* **OpenVPN never reads the user's file.** The `.ovpn` is tokenized with openvpn's own lexical rules (what the two
+  could read differently is refused: a backslash, a quote inside a word, a `</` prefix inside a key block), held to
+  an allowlist of directives and key blocks, and openvpn runs only `$RUN/openvpn.conf`, which we write, with our
+  options after it: `--route-noexec` and pull-filters for `redirect-gateway`, `route`, `setenv`,
+  `block-outside-dns`, and only our own `--up` script. Not `--route-nopull`: it would also drop the pushed
+  `dhcp-option DNS`, which is the one thing from the server the up script wants.
+* **sing-box keeps `auto_route`.** Its own routing does exactly what the core does (same prefs, same table), so the
+  driver says `DRV_ROUTES=self` and the core only adds the Tailscale rules and the DNS nat, as before.
+* **jq is in the images** (Ubuntu, OpenWrt, Arch): the raw-JSON drivers need it, and `wireguard-tools` goes into
+  Ubuntu and Arch (OpenWrt has it). Nothing else grows; mihomo is the new `vpn-mihomo` extra.
+
+Measured on the U30 Air (OpenWrt, mainline), stated as what was seen and no more: the migration of the device's
+working legacy VLESS `vpn.conf` produced profile `legacy` with the same exit IP, without the link ever being read
+or printed. Import from stdin, `check`, and switching `legacy` -> a WireGuard profile -> `legacy` worked, with the
+routes and rules of the previous profile cleaned up each time and the tunnel up. Then the carrier: on the U30 Air's
+SIM, UDP to the WireGuard port never reaches the server - `tcpdump` on `sipa_eth0` shows the marked packets leaving
+the device, and the same UDP sent from a Mac on another network arrives at the server - and OpenVPN over TCP
+connects but the TLS handshake times out, while the same `.ovpn` completes from the home network. The carrier
+drops that UDP and DPI-blocks OpenVPN's TLS; the VLESS profile goes through. The WireGuard and OpenVPN drivers were
+verified on the device up to that point, no further.
+
 ## Default boot
 
 ### 17. Linux as default without losing the Android fallback
@@ -891,6 +958,15 @@ later with `mu300-next-boot attempts N`), and slot b is re-armed with `tries = N
 and rolls back at 1, so N boots in a row that never reach boot-ok are allowed and the next one is Android. The
 field is three bits, hence the upper limit. The initramfs counter now reads the same N and fires on the same
 boot, as a backstop.
+
+**Update 2026-10-09: locked Linux.** `mu300-next-boot lock` arms the Linux slot `successful = 1` (byte `0xEF` for
+slot b: prio 15, tries 6, successful). LK never counts a successful slot down, so it never rolls back; the initramfs
+skips its backstop when it sees the bit in misc and `.mu300/boot-lock` on the disk (the bit alone, set by anything
+else, keeps the backstop), and its standalone fallback (no system to start) stays on telnet with `/run/to-android`
+instead of restoring Android's slot. `mu300-update` arms the usual attempts (`--trial`, `0x6F`) before it writes a
+boot image or rolls one back, and `mu300-boot-ok` locks again after the first good boot. Verified on the U30 Air
+(7.2.9): lock -> `ef`; a new boot image -> `6f`; its first boot -> `ef` again; a boot with `.mu300/boot-tries` at 9
+stayed in Linux with `stage=boot-locked (no backstop)`.
 
 * The block is rebuilt at run time from the initramfs' `tries = 2` block, because `mu300-update` does not replace
   the boot image and an older one carries only that block. Byte 14 is slot b's `prio | tries << 4 |
@@ -2616,7 +2692,11 @@ Air, ten `ifdown wan; ifup wan` gave the WAN back in
 * **SMS (K58, K69)**: sending failed on both lines whatever `AT+CAVIMS` was (`+CMS ERROR: 28` on the U30 Air,
   `313` on the F50, the same with 0 and 1): the lines have no credit, so `AT+CAVIMS=1` is kept (no difference
   measured) and receiving was not tried. `AT+CMGL=4` marks messages read on this modem: on F50 #1's SIM the first
-  listing showed 35 as REC UNREAD, the second 35 as REC READ. The pool never deletes from the SIM.
+  listing showed 35 as REC UNREAD, the second 35 as REC READ. Since 2026-10-09 the pool moves what it holds off
+  the SIM (each slot read back with `AT+CMGR` and deleted only while it still holds the PDU that was pooled, after
+  the pool's file is on the disk): a full SIM (35/35 on the U30 Air's) took no more messages, and the second part of
+  a long reply then never arrived, so the pool never saw it. On that SIM one sync moved 34 slots off, and the
+  missing part of the waiting message arrived within a minute.
 * **Update keeps the user's settings (I3)**: on openwrt-luci with the language, theme, `pdptype` and `ipv6` changed,
   mu300-update's `apply_one` with a newer image and a reboot kept all four, and `dhcp` had no NDP option. The device
   check covered those four (91-mu300-luci). The update now keeps the user's network settings too: 90-mu300 is split
@@ -2657,6 +2737,164 @@ Air, ten `ifdown wan; ifup wan` gave the WAN back in
 * **LEDs (K38, K39, K68)**: not ported here. The F50's lamp states were measured with someone watching and are
   implemented by the f50-leds-fixes work (FINDINGS 34); the fork's boot chase, lamp switches and LED page
   follow that branch.
+
+### 36. Power profiles: idle radios, the charging boot, the charge guard
+
+The U30 Air ran flat in a day or two of hotspot use. Two causes, both seen before: the charger IC charged on its
+power-on defaults and was never told anything (33d; the bq256xx driver of PR #55 now drives it, so the guard below has
+a node to write), and a boot that Android's LK started because a charger was plugged in ("charger mode") came up as a
+full hotspot with the modem dialling, in a pocket. `mu300-power` (one `/bin/sh` script, `mu300-power.service` or
+`/etc/init.d/mu300-power`) answers both. Design: `docs/superpowers/specs/2026-10-06-power-profiles-design.md`.
+
+What was built:
+
+* **Profiles** `plugged`, `battery`, `saver`, picked automatically (saver below `SAVER_BELOW` % on battery, by the
+  fuel gauge's `capacity` only) or forced with `mu300-power profile NAME`. Each has four knobs: `WIFI_IDLE` (minutes
+  without a client, 0 never), `RADIO_IDLE` `keep|lte|off`, `LEDS_IDLE` `on|off`, `CPU` `full|eco`. Defaults: plugged
+  `0 keep on full`, battery `10 off off full`, saver `5 off off eco`. A bad value in `/etc/mu300/power.conf` counts as
+  the default and `status` names it.
+* **Idle** is "no Wi-Fi station, no USB host, no key press" for `WIFI_IDLE` minutes. Then the hotspot goes down, the
+  LEDs follow `LEDS_IDLE`, and the modem follows `RADIO_IDLE`: `mobile-data suspend lte` only switches EN-DC off with
+  `AT+SPENDC=2` (the lock adapter's measured "off" value; no stack restart, the data connection is untouched) and
+  `resume` restores `AT+SPENDC=1` only if EN-DC was on before; `suspend off` is the radio off (`AT+SFUN=5`) with data
+  down, and `resume` runs `radio_on` and redials itself; `mobile-data up` refuses to dial while the modem is
+  suspended `off`, except from `resume`. On OpenWrt the daemon runs with `MU300_NETIFD=1`, so `suspend off` is
+  `ifdown wan` before `AT+SFUN=5` and `resume` redials with `ifup wan`: netifd keeps owning the WAN's address,
+  route, firewall, DNS and IPv6. Idle wakes on a key, a computer on USB, a Wi-Fi station, or plugging in (the edge
+  battery -> plugged, not being plugged: idle on the charger, a forced profile and the battery-less F50 stay idle).
+  Every wake brings the hotspot up first, then the LEDs and the CPU, then the modem, whose dial can take minutes.
+* **State** is kept across daemon restarts within a boot. The daemon's TERM trap wakes the radios without a dial
+  (`mobile-data resume nodial`: the radio on, the watcher redials) and does nothing during a shutdown (the held
+  power key and the low-battery poweroff leave `/run/mu300/power/shutdown`; Ubuntu also says `stopping`). The
+  units keep a 150 s stop timeout (`TimeoutStopSec=150`, procd `term_timeout 150`) for the radio lock. A failed
+  action is logged and retried by the following loops.
+* **Charging boot**: `init` writes `/run/mu300/boot-mode` and, in a charger boot, `/run/mu300/charging-boot`. The
+  Ubuntu hotspot and mobile-data units skip on that file; the daemon enters the charging boot only on its first start
+  of a boot, and leaves it only by the Wi-Fi key (`mu300-power wake wifi`; a computer on USB or the power key does
+  not). It powers the device off only unplugged (no charger online, no extcon `USB=1`, the battery not `Charging`),
+  below 5 % for three loops in a row, never on one sample. OpenWrt's early radio warm-up skips a charging boot.
+* **Charge guard**: charging off at battery `temp` above 45.0 C or below 0 C, on again below 40.0 C and above 3.0 C;
+  with `CHARGE_TO=80` off at 80 % and on below 75 %. It writes the bq256xx charger's `charge_type` (`N/A` off,
+  `Fast` on). bq256xx reads `N/A` whenever it is not charging, so `Fast` is written only when the guard itself turned
+  charging off (`/run/mu300/power/charge-off`); the driver resets its switch at probe, so a marker lost with `/run`
+  leaves nothing off. It logs only when that marker changes, and a failed write turns the guard off for the boot
+  with one log line. No reading means no change.
+* **Panel**: System -> Power on `openwrt-luci` (state, profile, knobs, charge limit), catalogs in all 31 languages.
+
+Method for the numbers: `mu300-power log 5 /tmp/power.csv` writes `epoch,mV,mA,mW,capacity,temp,state,profile` every 5 s.
+Each row is a 3-minute run unplugged, the hotspot idle (a client associated, no traffic) unless the row says
+otherwise, `mu300-power set` or the verbs between runs. The fuel gauge's `current_now` is negative when
+discharging; the draw is the mean of the run's mA (and W) after the first 30 s. Android's own idle figure comes from
+`dumpsys battery` / the same gauge on the Android side for the target line.
+
+| Row | What is on | Measured (mean W) | Measured on |
+|---|---|---|---|
+| baseline | everything, as before the profiles | pending | pending |
+| LEDs off | baseline with the LEDs dark (`mu300-led idle`) | pending | pending |
+| hotspot off | modem on, Wi-Fi off | pending | pending |
+| LTE only | EN-DC off (`mobile-data suspend lte`), hotspot on | pending | pending |
+| modem off | `AT+SFUN=5`, hotspot on | pending | pending |
+| all off | idle: hotspot, modem and LEDs off, the floor | pending | pending |
+| eco | `CPU=eco` on the baseline | pending | pending |
+| Android idle | the stock firmware at rest (the target) | pending | pending |
+
+What the defaults rest on: not on these numbers (there are none yet) but on the design. Radios are what drains a
+hotspot with nobody connected, so `battery` and `saver` switch them off after a few minutes; `plugged` keeps
+everything because the supply covers it; saver is the profile with the CPU in `eco`. The thresholds (45/40 C, 0/3 C,
+5 % for three loops) follow the spec; the fuel gauge reports `capacity=100` at 3.88 V today (33d), which is why
+nothing acts on the voltage. The table is filled in by the device series, with the date of each run.
+
+Open questions for the device:
+
+* Does `AT+SPENDC=2` without a stack restart really drop the NR leg (check `AT+SPENDC?` and the band readings), or
+  only after the next attach?
+* Does procd's `term_timeout` apply on this OpenWrt build (that `/etc/init.d/mu300-power stop` waits for the wake
+  rather than being killed at the default timeout)?
+* What the bq256xx `charge_type` node does on writes: `N/A` stops charging, `Fast` resumes it, or the driver
+  rewrites it from its own state.
+* The unit tests ran under dash and bash on the dev host; busybox ash (the shell on OpenWrt) has not run them there.
+
+**The device-test incident (2026-10-07, U30 Air, OpenWrt).** A measurement script took the device down with the raw
+actions while `mu300-power`'s state still said `active`: `mu300-led idle on`, `wifi down`, `mobile-data suspend lte`,
+`mobile-data suspend off`. The last one never returned and the script's later steps never ran; `mu300-power log`
+stopped writing at the same moment. Every key press then did nothing: `mu300-power wake` only left a flag for the
+daemon, which saw `active` and had nothing to do, and `mu300-led wake` lit nothing under the idle flag. Every LED
+dark, no reaction to any key, for hours - a device that looks powered off. xray meanwhile ran out of its 1024
+descriptors (`accept4: too many open files`) with the modem off and needed a restart.
+
+Why `suspend off` did not return, from the code (no device access for the analysis; the steps of `suspend off` after
+`suspend lte`, as of 4e62326): `do_suspend off` first resumes `lte` (`resume` -> `under_radio_lock resume_lte_raw`),
+then `down` (the script ran by hand, so without `MU300_NETIFD=1`: the systemd path, `ip`/`nft` on `sipa_eth0`
+behind netifd's back), then `under_radio_lock suspend_off_raw`, then one line to stderr. Every wait in it is bounded
+but long: the radio lock 120 s twice, each `mu300-at` call up to 90 s for the client lock plus `T + 31` s of budget
+(`AT+SPENDC=1` 126 s, `AT+CGACT=0` 41 s with its 5 s lock wait, `AT+SFUN=5` 131 s) - about 9 minutes at worst, not
+hours. What is not bounded: the direct-tty path when no AT daemon runs (the `open` and `write` of the SIPC tty block
+in the driver; the drain loops of `mobile-data`'s `at()` and of `mu300-at` read for as long as the channel talks);
+`ip`, `nft` and the `disable_ipv6` write, which wait on the RTNL lock behind an OpenWrt `wifi down` (it returns at
+once and netifd tears the AP down afterwards; a Wi-Fi driver stuck in that teardown holds RTNL); and the write of the
+final message to a terminal that is gone. The last fits all three symptoms: the script ran in an SSH session, and an
+SSH session over the hotspot dies with `wifi down` (over the WAN, with `suspend off`). The server side notices only
+when TCP gives up (~15 min of retransmissions with dropbear's defaults), and until then a write that fills the pty
+blocks; then it hangs up, and SIGHUP stops the script and every job of the session - `log` among them - wherever they
+are. A `suspend off` stopped that way leaves the mode file `off` and the "down" flag, so the watcher stands aside
+for good, and nothing else ever looked. The most likely cause is therefore the dead session, with the RTNL wait as
+the second candidate; which one it was can be read on the device next time (`ps` for a `mobile-data` still there,
+its `/proc/PID/stack` and `wchan`; `logread` for the session's end).
+
+What changed (the design: bootability and "a key always shows life" over everything else):
+
+* **Keys always show life.** `mu300-buttons` runs `mu300-led wake` first on every press, before it looks at any
+  state, and `mu300-power wake` after it in the background. `mu300-led wake` lights the LEDs for `LED_TIMEOUT`
+  (a minute when it is 0) under the idle flag too; `sleep --if-due` puts them out again while idle. No daemon is
+  involved.
+* **Wake by inspection.** `mu300-power wake` restores whatever is down by looking, not by the state file, and
+  needs no daemon: the AP down (no `hostapd.wlan0` on ubus / `mu300-hotspot` not active) and wanted -> up; the
+  modem's mode file -> `mobile-data resume`; the LED idle flag -> `mu300-led idle off`; `cpu7` offline -> online,
+  and eco's own 1.5 GHz cap on `policy4` -> `cpuinfo_max_freq` (another cap is the toolkit's or thermal-guard's and
+  is left, and nothing is lifted under thermal-guard's alarm); the VPN if mu300-power stopped it; then `active`.
+  The daemon's own wake is the same function. One idle entry or restore runs at a time (`/run/mu300/power/busy`,
+  a dead or stale holder is taken over); a second wake while one restores returns at once. The panel's wake runs it
+  in the background (rpcd ends a call at 30 s).
+* **Nothing can hang.** Every external step of `mu300-power` runs under a deadline (a background job, a watchdog
+  that kills the job's whole process tree, and a USR1 to the waiting shell for a child stuck in the kernel; busybox
+  has no `timeout` in `/bin`): probes 5 s, LEDs 10 s, wifi/systemctl/VPN 30 s, the modem 90 s, the background LED
+  sync 150 s (`MU300_POWER_*_DEADLINE`). The tree is stopped until a look finds nothing new, then every process
+  any look saw is killed (one reparented between two looks too). `mobile-data suspend|resume` end within
+  `MU300_SUSPEND_DEADLINE` (60 s) whatever the modem does: AT through `mu300-at` with `-t` <= 20, a 10 s
+  client-lock wait and a 22 s budget (`MU300_AT_LOCK_WAIT`, `MU300_AT_BUDGET`), the radio lock 20 s, each external
+  step 15 s; HUP ignored; their output goes through a file and a bounded write. On a failure or a timeout they
+  leave the files consistent - no mode file, no "down" flag of their own - so the watcher restores whatever is off,
+  and they exit non-zero. An `lte` step that failed (also an `AT+SPENDC=1` answered ERROR or not at all: only OK
+  counts, as `mu300-at` exits 0 on ERROR) leaves `/run/mu300-mobile-data.endc-restore` (unless EN-DC was off
+  before): every `resume` sends `AT+SPENDC=1` until it answers OK, and mu300-power's wake and self-check call
+  `resume` while it is there; the watcher ignores it. The Wi-Fi key's toggles run in the background under a
+  deadline too, and the hold's direction (is the hotspot up?) is asked within 5 s
+  (`MU300_BUTTONS_PROBE_DEADLINE`): no answer counts as down, and the key turns it on. On OpenWrt they go through
+  netifd (`ifdown`/`ifup wan`) also when run by hand.
+* **The VPN while the modem is off.** `RADIO_IDLE=off` stops `mu300-vpn` (systemd or procd) once the modem is off,
+  if it was running (`/run/mu300/power/vpn-stopped`; a suspend that keeps failing never touches it, and a Wi-Fi
+  client uplink keeps it), and the wake starts it again before the modem, so a `KILL_SWITCH=0` dial is never ahead
+  of it - unless the service was disabled or `ENABLE=0` meanwhile (asked through `mu300-vpn enabled`, which prints
+  `ENABLE` and touches no network; a probe that fails or times out counts as wanted); a start that failed is
+  retried by the self-check at most every 120 s; `lte` leaves it alone. The service stop keeps the kill switch
+  (`nft table inet mu300_vpn` stays; only `ENABLE=0` and `mu300-vpn off` remove it), and the engine's routes
+  go with the engine: with `KILL_SWITCH=1` nothing unmarked leaves on `sipa_eth*` or the Wi-Fi client while it is
+  stopped; with `KILL_SWITCH=0` nothing holds traffic back, as on any stop, and the bearer is down anyway. Both
+  service definitions raise the descriptor limit to 65536 (`LimitNOFILE`, procd `limits nofile`).
+* **Self-check.** Each loop, while the state says `active`: a modem mode file, or (with `WIFI_IDLE=0`) the hotspot
+  down although nobody turned it off on purpose, is logged and restored. On purpose means the Wi-Fi key's hold
+  (`mu300-buttons` writes `/run/mu300/power/hotspot-off` with the hold's uptime before the wake of that press
+  starts, until the next hold; a marker older than the toggle's deadline + 30 s (180 s) is dropped once the hotspot
+  is seen up), UCI (`wireless.@wifi-iface[0].disabled` or `wireless.@wifi-device[0].disabled` = 1: the panel,
+  `wifi-client`), the unit disabled on Ubuntu, a Wi-Fi client (`/run/mu300-wifi-client.active`) or the scan-mode
+  boot. A hotspot that idle took down (`hotspot-idled`) comes back whatever a hold marker says, but not for a Wi-Fi
+  client or in scan mode. The hotspot is not looked at in the first 120 s of a boot nor within 120 s of any
+  `hotspot on`; one that does not stay up is retried at a doubling interval up to 30 min, logged once per step. A
+  modem left with EN-DC off is resumed too, and a VPN left stopped is started (see above).
+
+For measurements this means: the raw actions by hand are undone by the daemon's next loop (the modem) and by any key.
+Use `mu300-power idle` and the profiles, or stop the daemon first, and run long measurements under `nohup` or
+`setsid` with the output in a file, never through the session the hotspot carries.
 
 ### 37. System suspend
 
@@ -2786,3 +3024,138 @@ Logs of every run stayed on F50-B under `/root/susp/` (the spike: `*.log`, dmesg
 the two panic records) and `/root/susp2/` (the follow-up, with the scripts that ran them). F50-B was left on the
 6.18.55 build of branch `suspend-drivers` (radio on, Wi-Fi client, one more 20 s `mem` checked). The 7.2.9
 build of the branch compiles, kernel and all modules; it has not been booted yet.
+
+## Users' reports
+
+### 38. Three defects from users' reports, 2026-10-07
+
+Three issues came in with their own measurements, two of them with the fix; what follows is what was taken from
+them, checked against the code, and what the release carries.
+
+#### 38a. A read past the end of the eMMC never returns (#43, #52, #65)
+
+Every installer probes the free region for an existing `mu300root` with three tiny reads of its superblock:
+`dd if=/dev/block/mmcblk0 bs=1 skip=$((OFF + 1080)) count=2`, where `OFF` is the first 2 MiB boundary behind
+the last partition, and once more at the fixed offset of the first releases, 27762098176. On the F50 of #65 the
+partition table ends 2 MiB before the end of the eMMC (61079552 sectors, the last partition ends at 61075456), so
+the first boundary behind it *is* the end of the disk, the last boundary before the backup GPT lies before it,
+and `region_probe`'s arithmetic gave a region of -4 MiB (the same number issue #32 had seen) whose superblock
+starts 2 bytes past the last sector. The eMMC driver of this device never completes a read past its end: the
+`dd` stays runnable at 100 % of one core, survives `kill -9`, and every retry adds another one - four of them
+held the SoC at 97 °C in #65 until a reboot. #52 (the Magisk installer, OpenWrt to the card) showed the same
+`dd` at byte 31272731704, which is that very offset; #43 had pinned the installer's silence to
+`region_find_existing` without seeing why. The legacy offset is the same trap on the 32 GB variant: it lies
+beyond that eMMC altogether and was read all the same.
+
+Fixed in `tools/storage.sh` (`region_find_existing`, which `install.sh` and the Magisk installer share, and
+`region_on_disk`, which the probe loops of `uninstall.sh` and `tools/reset-password.sh` call), in `install.ps1` and
+in `uninstall.ps1` (`RegionOnDisk`): a region whose boundaries cross is an empty one (`SIZE=0`; the installers
+then offer the card or the repartitioning, as they do for any region that is too small), and a candidate
+superblock is read only when it lies on the disk. The SD-card installation of
+#52 and #65 goes through without a single read past the end. `tests/test_installer.py` (`Region`) runs the
+layout of #65 against the functions and checks that no `dd` crosses the disk's last byte.
+
+Not taken from #65: a wall-clock limit around every device command in `install.ps1`, and a port of
+`sd_release` to the host side. The card is released on the device, by `tools/android-install.sh`, before
+anything is written to it (both installers run that script); the reads before it only look at the card. The
+limit is worth having for the day another request is lost, but it is the larger change and is not needed once
+nothing is read past the end.
+
+#### 38b. RNDIS: the port kept the bridge's address (#45)
+
+An OpenWrt system installed with NCM (the default) and switched to RNDIS later has `usb0` in its bridge section
+and not `rndis0`; the LAN hook (`hotplug.d/iface/10-mu300-usb`, K9/K27) puts `rndis0` into `br-lan` on every LAN
+ifup. It did that *after* the loop that takes the early server's address off the bridge's ports, and that loop
+only looks at ports: `rndis0` was not one yet, kept `192.168.77.1/24`, and then became a port - the bridge and
+one of its ports with the same address, two equal routes, and the device could not reach its own Wi-Fi client
+nor the USB host, with the serial console the only way in. MRWOODEN measured it on an F50 (6.18, `openwrt-luci`,
+Windows without `UsbNcm.sys`) and sent the fix: join first, then take the address off; and after the hook's own
+re-enumeration of the gadget (K10) put the gadget netdevs back into the bridge, in case the rebind left one bare
+(with a configfs gadget the netdev is made with the function and should survive an UDC rebind, so this is a
+guard, not a mechanism that was seen; netifd would re-add a port it has in its configuration, `usb0`, and never
+one it never had). Applied as sent, except that only a netdev that was a port before the rebind is made one
+again: a user who took `usb0` out of `br-lan` for an interface of its own keeps it that way. With the regression
+tests (`test_early_dhcp`: the RNDIS netdev that is not a port yet; the `usb0` that is not a port stays out). Verified on the reporter's device: `br-lan` the only holder of the address, both the Wi-Fi client and the
+USB host served by the one `dnsmasq`, `rndis0` still a port after the rebind.
+
+#### 38c. fw4 on 5.4: the boot ruleset without the LAN, and a reload that always fails (#67, #61)
+
+AgentFan0315 took a fresh `openwrt-luci` on 5.4 (v2026.10.11) apart layer by layer: Wi-Fi and USB clients
+associate, their DHCP requests enter the kernel (an ingress counter on `wlan0` climbs), and die before any rule:
+the live `inet fw4` table has no `iifname "br-lan" jump input_lan` and no `srcnat_wan` jump, while `fw4 print`
+renders both. Two things stack:
+
+1. fw4 renders a zone's rules from the devices its networks have *at the time*. S19 `firewall` runs before S20
+   `network`, so at boot neither `br-lan` nor the modem's `sipa_eth0` exists, and the LAN's input rules and
+   the wan's masquerade are left out of the first ruleset - to be filled in by the reload that every ifup
+   triggers (`hotplug.d/iface/20-firewall`). That is how plain OpenWrt works too.
+2. On 5.4 that reload fails. fw4 replaces its ruleset in one transaction (`flush table inet fw4`, or `delete
+   flowtable inet fw4 ft`, then the table again with its flowtable `ft`). The 5.4 kernel refuses a flowtable that
+   names a device another flowtable of the same table has, and it counts the one the same transaction has just
+   deleted: that one leaves the table's list only at the commit, and 5.4's `nf_tables_newflowtable` walks the
+   list without regard to the pending deletion (the check skips inactive entries from 5.13 on). `flowtable ft {
+   ... } Error: Resource busy`, the whole transaction is rejected, and the S19 ruleset stays. The flowtable exists
+   from S19 on because the `earlyusb` zone names `usb0`, which init has made by then, and fw4 puts every zone
+   device that exists into `ft` (a device without a `/sys/class/net` entry is left out, see
+   `openwrt/patches/fw4-sipa-offload.patch`; that is what makes naming `br-lan` and `sipa_eth0` in the zones
+   safe at S19). The first ruleset is therefore the one with the flowtable and without the LAN, and nothing
+   after it can replace it. Deleting the flowtable on its own (`nft delete flowtable inet fw4 ft`), in a
+   transaction that is committed before the reload, is enough: the reload then creates it afresh.
+
+So the LAN had no DHCP, no LuCI and no NAT on every boot of a 5.4 `openwrt-luci`, which is also what #61 reports
+(installed with 5.4 and the panel: detected as a USB network, "no ssh and no webui", Wi-Fi visible but nothing
+connects; the serial console at `ttyGS0` is the way to `mu300-next-boot android` in that state). The mainline
+kernels update a flowtable in place and were never affected, which is why the maintainer's own tests (31, 35,
+on 6.18 and 7.2) did not see it.
+
+Two fixes, both in `openwrt/overlay`:
+
+* `uci-defaults/90-mu300` names the devices of the `lan` and `wan` zones (`br-lan`, `sipa_eth0`) next to their
+  networks, once, on every system (the reporter's workaround, the pattern of the `earlyusb` zone): the S19
+  ruleset is complete whatever the reloads do. Verified by the reporter across reboots.
+* `hotplug.d/iface/19-mu300-fw4`, on a 5.4 kernel only, deletes the stale flowtable right before 20-firewall's
+  reload, under the same conditions 20-firewall reloads on: an ifup of an interface that is in a zone. The reload
+  succeeds; the offloaded flows of the moment take the ordinary path until the flowtable is back.
+
+Not covered on 5.4: a reload that is not an ifup's - the firewall saved in LuCI, `fw4 reload` by hand, and
+`mu300-vpn`'s own `/etc/init.d/firewall reload` after it adds the tunnel to the wan zone (the clients get no
+forwarding into the VPN until the next ifup of a zone interface) - still fails while the flowtable is there. Until a cleaner hook is found (the flowtable deleted from fw4's own reload
+path), the way to apply a firewall change on 5.4 is `nft delete flowtable inet fw4 ft; fw4 reload`, or a reboot.
+Turning software flow offloading off would end that, at the cost of the fast path on the one kernel that has
+none other.
+
+#### 38d. Reports that were already fixed, or are not defects
+
+* #20 (soft lockup in `sipa_dele`, `get pd fail ret = 1` at 149 lines a second, 6.18.54 of 2026-09-28): the
+  vendor loop that retried `pm_runtime_get_sync()` every millisecond and took its `1` (already active) for a
+  failure - §31f, fixed on 2026-10-05 and in v2026.10.11's 6.18 bundle.
+* #64 (IPv6: relay or NAT66?): both, on purpose. The `openwrt-luci` system relays the carrier's RA and DHCPv6 to
+  the LAN (clients get public addresses from the bearer's /64) *and* masquerades v6 egress through the device's
+  own address (`masq6`, `91-mu300-luci`, K30), because the carrier routes one address per bearer and replies to a
+  client's public address would otherwise not come back; `ndp-learn` routes the /64 to `br-lan` for the same
+  reason. The `masq '1'` of the wan zone is IPv4 only (fw4's `masq6` is the v6 one). Plain OpenWrt keeps `extend`
+  and neither.
+
+#### 38e. Relay IPv6 after the carrier renumbers (#87)
+
+Reported on a carrier that gives one /64 by RA on `sipa_eth0` (`dhcp.lan` ra and dhcpv6 relay, a second OpenWrt
+relaying behind the device): after the carrier's /64 changes, LAN clients keep addresses from every earlier /64, and
+IPv6 over the relayed public addresses fails (connections hang) while NAT66 from the ULA works; `ifdown`/`ifup` of wan
+brings it back for a while. Read in the code, not measured on a device:
+
+* `ndp-learn` routed one /64 to `br-lan`: the first sipa_eth0 global address `/proc/net/if_inet6` listed. A PDP
+  re-activation that `mu300cell-v6.sh` rides out without an ifdown (+CGEV, `refresh_bearer`) leaves the old SLAAC
+  address on `sipa_eth0` beside the new one (only setup and teardown flush; the carrier measured in `mu300cell.sh`
+  gives infinite lifetimes), so after such a renumber the LAN route could stay on the old /64 while odhcpd relays the
+  new RA and clients SLAAC in the new one: every NAT66 reply to them left by the bearer. A wan restart flushes the old
+  address, which matches the report. Fixed: `ndp-learn` routes every /64 the bearer holds and drops the route of one
+  that left.
+* Nothing withdraws an old /64 from the LAN. odhcpd in relay mode forwards the upstream RA's prefix options with their
+  lifetimes as they are (it only rewrites the L, A and P flags, the source link-layer address, DNS and MTU;
+  `forward_router_advertisement` in `src/router.c`) and keeps no prefix state, and the carrier sends nothing for a
+  prefix of a previous PDP context. Clients keep such addresses for the lifetime the carrier gave, and a client that
+  picks one as its source gets no NAT66 replies once the /64 has left the bearer (no route to `br-lan`). A deprecating
+  RA (preferred lifetime 0) for the old /64 would have to be sent by the device itself; there is no tool on the image
+  for that today. Open, to measure on a device: `ip -6 addr show dev sipa_eth0` and `ip -6 route show dev br-lan`
+  before and after a renumber (with and without a wan restart), and on the LAN `tcpdump -i br-lan -vv icmp6 and
+  ip6[40]=134` for the prefix options and lifetimes the relayed RA carries.

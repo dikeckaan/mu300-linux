@@ -4,7 +4,16 @@
 #   mu300-next-boot android        next reboot (and later ones) go to Android
 #   mu300-next-boot attempts [N]   show, or set, how many boots in a row may fail before Android takes over (1-6)
 #   mu300-next-boot --rearm        used by mu300-boot-ok.service after a successful boot
+#   mu300-next-boot lock           Linux stays, whatever happens: no failed boot ever sends it to Android by itself
+#   mu300-next-boot unlock         back to the attempts above
+#   mu300-next-boot --trial        used by mu300-update before it writes a boot image: locked or not, the next boots
+#                                  are the attempts above until one of them gets to mu300-boot-ok (which locks again)
 #   mu300-next-boot status
+# Locked: the Linux slot is armed successful=1. LK never counts a successful slot down, so it never rolls back; the
+# initramfs' backstop and its standalone fallback see the bit in misc and do not go to Android either (the fallback
+# waits on telnet with /run/to-android). Android then only by hand (android here, or the panel). A new kernel is the
+# one thing that could leave a locked device with no Linux at all, so every boot image write unlocks for its first
+# boot (--trial). The wish to stay locked is .mu300/boot-lock on the Linux disk.
 # The Linux slot (b, or a when Android runs from b) is armed with tries=N+1 and successful=0. LK decrements tries on
 # every boot and rolls back to Android's slot when it finds tries=1, so N boots that never reach mu300-boot-ok land
 # in Android on the next one. A boot that does reach it arms N+1 again. N lives in .mu300/boot-attempts on the Linux
@@ -34,9 +43,11 @@ MISC=$(cat "$RUN/misc-dev" 2>/dev/null || readlink -f /dev/block/by-name/misc)
 DEFAULT_ATTEMPTS=5
 
 disk_dir() {
-    for d in /mnt/mu300-disk ""; do [ -d "$d/.mu300" ] && { printf '%s/.mu300' "$d"; return; }; done
+    for d in "${MU300_DISK:-/mnt/mu300-disk}" ""; do [ -d "$d/.mu300" ] && { printf '%s/.mu300' "$d"; return; }; done
     return 1
 }
+
+lock_wanted() { d=$(disk_dir) && [ -f "$d/boot-lock" ]; }
 
 attempts() {
     n=$(cat "$(disk_dir)/boot-attempts" 2>/dev/null || true)
@@ -46,13 +57,13 @@ attempts() {
 hex_of() { od -An -tx1 -v "$1" | tr -d ' \n'; }
 bytes_of() { printf "$(printf '%s' "$1" | sed 's/../\\x&/g')"; }
 
-# The Linux slot's block with tries=$1, made from the initramfs' tries=2 block: byte 12 (slot a) or 14 (slot b) is
+# The Linux slot's block with tries=$1 (and successful=$2, default 0), made from the initramfs' tries=2 block: byte 12 (slot a) or 14 (slot b) is
 # that slot's priority | tries << 4 | successful << 7, and the last four bytes are the CRC-32 of the first 28 - the same
 # CRC-32 gzip ends every stream with, which saves needing anything that computes one.
 make_bc_b() {
     b=$(hex_of "$BC_B")
     [ ${#b} = 64 ] || return 1
-    body="${b:0:$((BYTE * 2))}$(printf '%02x' $(( 0x0f | ($1 << 4) )))${b:$((BYTE * 2 + 2)):$((54 - BYTE * 2))}"
+    body="${b:0:$((BYTE * 2))}$(printf '%02x' $(( 0x0f | ($1 << 4) | (${2:-0} << 7) )))${b:$((BYTE * 2 + 2)):$((54 - BYTE * 2))}"
     crc=$(bytes_of "$body" | gzip -c | tail -c 8 | head -c 4 | od -An -tx1 -v | tr -d ' \n')
     [ ${#crc} = 8 ] || return 1
     printf '%s%s' "$body" "$crc"
@@ -72,8 +83,10 @@ clear_boot_tries() {
     echo 0 > "$d/boot-tries" 2>/dev/null && sync
 }
 
-arm_linux() {
+arm_linux() {  # arm_linux [trial]: locked when that is wanted, unless this is the trial of a new boot image
     n=$(attempts)
+    succ=0
+    if lock_wanted && [ "${1:-}" != trial ]; then succ=1; fi
     # a new arm starts a new count (like --rearm): a count left from before would let the initramfs' backstop send
     # an early boot of this arm to Android, before the N failed boots it now promises
     clear_boot_tries
@@ -81,11 +94,16 @@ arm_linux() {
     # above is wrong for this misc and nothing it makes gets written.
     if [ "$(make_bc_b 2 2>/dev/null)" != "$(hex_of "$BC_B")" ]; then
         echo "cannot rebuild the slot $LINUX_SLOT block on this system; arming with 1 attempt" >&2
-        write_bc "$BC_B"; return
+        write_bc "$BC_B"; [ "$succ" = 0 ] || { echo "not locked: the slot block cannot be built here" >&2; exit 1; }
+        return
     fi
-    tmp=$(mktemp); bytes_of "$(make_bc_b $((n + 1)))" > "$tmp"
+    tmp=$(mktemp); bytes_of "$(make_bc_b $((n + 1)) "$succ")" > "$tmp"
     write_bc "$tmp"; rm -f "$tmp"
-    echo "slot $LINUX_SLOT armed: $n failed boot(s) in a row before Android"
+    if [ "$succ" = 1 ]; then
+        echo "slot $LINUX_SLOT locked: Linux boots until you choose Android (mu300-next-boot android)"
+    else
+        echo "slot $LINUX_SLOT armed: $n failed boot(s) in a row before Android"
+    fi
 }
 
 slot_state() {
@@ -103,11 +121,21 @@ case "${1:-status}" in
         d=$(disk_dir) || { echo "cannot find the MU300 disk area" >&2; exit 1; }
         echo "$2" > "$d/boot-attempts.tmp" && mv "$d/boot-attempts.tmp" "$d/boot-attempts" && sync
         [ "$(cat "$CONF" 2>/dev/null)" = linux ] && arm_linux || echo "saved; used once Linux is the default boot" ;;
+    lock)    d=$(disk_dir) || { echo "cannot find the MU300 disk area" >&2; exit 1; }
+             mkdir -p "$(dirname "$CONF")"; echo linux > "$CONF"
+             : > "$d/boot-lock" && sync
+             arm_linux; echo "default boot: linux (locked)" ;;
+    unlock)  d=$(disk_dir) && rm -f "$d/boot-lock" && sync
+             if [ "$(cat "$CONF" 2>/dev/null)" = linux ]; then arm_linux; fi
+             echo "unlocked: $(attempts) failed boot(s) in a row before Android" ;;
+    --trial) [ "$(cat "$CONF" 2>/dev/null)" = linux ] && arm_linux trial || echo "default boot is not linux, nothing to do" ;;
     --rearm) clear_boot_tries
              [ "$(cat "$CONF" 2>/dev/null)" = linux ] && arm_linux || echo "default boot is not linux, nothing to do" ;;
     status)  echo "default boot: $(cat "$CONF" 2>/dev/null || echo android)"
-             echo "failed boots in a row before Android: $(attempts)"
+             if lock_wanted; then echo "locked: yes (Android only by hand)"; else echo "locked: no"; fi
+             if lock_wanted; then echo "failed boots in a row before Android: $(attempts) (only while a new boot image is on trial)"
+             else echo "failed boots in a row before Android: $(attempts)"; fi
              d=$(disk_dir) && [ -f "$d/boot-tries" ] && echo "boots since the last good one: $(cat "$d/boot-tries")"
              slot_state ;;
-    *) echo "usage: $0 linux|android|attempts [N]|status" >&2; exit 2 ;;
+    *) echo "usage: $0 linux|android|lock|unlock|attempts [N]|status" >&2; exit 2 ;;
 esac

@@ -213,6 +213,7 @@ return view.extend({
     <button class="mud-btn warn" id="mud-btn-modem">${_('Restart modem')}</button>
     <button class="mud-btn warn" id="mud-btn-reboot">${_('Restart device')}</button>
     <button class="mud-btn warn" id="mud-btn-android">${_('Switch to Android')}</button>
+    <button class="mud-btn" id="mud-btn-bootlock">${_('Lock Linux')}</button>
   </div>
 </div>
 <div class="mud-sec">
@@ -281,6 +282,20 @@ return view.extend({
 				  _('Or do nothing: after five boots that do not finish, it falls back automatically.') ].join('\n'),
 				{ danger: true, okText: _('Switch and reboot') })
 				.then(function(go) { if (go) act('os', 'android', _('Preparing Android boot and rebooting…'), btn); });
+		};
+		q('btn-bootlock').onclick = function() {
+			var btn = this;
+			var locked = !!(self.lastInfo && self.lastInfo.capabilities && self.lastInfo.capabilities.bootlock);
+			(locked
+				? M.confirmBox(_('Unlock Linux'),
+					_('After five boots in a row that do not finish, the device falls back to Android again.'),
+					{ okText: _('Unlock') })
+				: M.confirmBox(_('Lock Linux'),
+					[ _('The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android.'),
+					  _('A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds.'),
+					  _('If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android.') ].join('\n'),
+					{ danger: true, okText: _('Lock') })
+			).then(function(go) { if (go) act('os', locked ? 'unlock' : 'lock', null, btn); });
 		};
 		q('reveal').onclick = function() {
 			self.identShown = !self.identShown;
@@ -573,6 +588,13 @@ return view.extend({
 		M.set('modem', (i.modem && i.modem.alive ? _('Online') : _('No response')) + (i.modem && i.modem.atd ? '' : ' · ' + _('AT adapter unavailable')));
 		var androidBtn = M.v('btn-android');
 		if (androidBtn) androidBtn.style.display = i.capabilities && i.capabilities.dualboot ? '' : 'none';
+		var lockBtn = M.v('btn-bootlock');
+		if (lockBtn) {
+			lockBtn.style.display = i.capabilities && i.capabilities.dualboot ? '' : 'none';
+			var lk = !!(i.capabilities && i.capabilities.bootlock);
+			lockBtn.className = 'mud-btn' + (lk ? ' on' : '');
+			lockBtn.textContent = lk ? _('Linux locked') : _('Lock Linux');
+		}
 
 		var b;
 		b = M.v('btn-data'); b.className = 'mud-btn' + (w.up ? ' on' : ''); b.textContent = _('Data connection');

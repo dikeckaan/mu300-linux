@@ -1,12 +1,15 @@
 # Stock firmware images
 
-Files in this directory are **stock ZTE firmware**, not part of the MIT-licensed project code.
+Stock ZTE firmware is **not part of this repository** (it is not covered by the MIT licence of the project code; all
+rights remain with ZTE/Unisoc). The one image the project keeps available, as a last-resort repair, is hosted on the
+Internet Archive instead:
 
 ## trustos-F50_FLYMODEM_ZYV1.0.0B09.img
 
-The Trusty TEE image (`trustos`) as read from a ZTE F50 / MU300 running stock firmware
-`F50_FLYMODEM_ZYV1.0.0B09`. It is not covered by the MIT licence of the rest of this repository; all rights remain
-with ZTE/Unisoc.
+**https://archive.org/details/zte-f50-mu300-trustos-ZYV1.0.0B09**
+(direct file: https://archive.org/download/zte-f50-mu300-trustos-ZYV1.0.0B09/trustos-F50_FLYMODEM_ZYV1.0.0B09.img)
+
+The Trusty TEE image (`trustos`) as read from a ZTE F50 / MU300 running stock firmware `F50_FLYMODEM_ZYV1.0.0B09`.
 
 | | |
 |---|---|
@@ -20,7 +23,7 @@ image, which is why both slots are identical.
 
 > **⚠️ This may not match your device.** `trustos` is verified together with `sml`, `uboot` and `vbmeta` as one
 > chain, for one firmware version. Writing this image onto a device running a different firmware build can leave it
-> unable to boot at all, which then needs BROM/SPD recovery. It is here as a last resort for devices whose own TEE
+> unable to boot at all, which then needs BROM/SPD recovery. It exists as a last resort for devices whose own TEE
 > is already damaged — **not** as something to flash "just in case".
 
 ### Before you ever need it
@@ -36,11 +39,13 @@ against the device.
 
 ### Restoring
 
-Only with the device in rooted Android (adb + su), and only if you understand the warning above:
+Only with the device in rooted Android (adb + su), and only if you understand the warning above. Download the file,
+check its hash, then:
 
 ```sh
-adb push stock/trustos-F50_FLYMODEM_ZYV1.0.0B09.img /data/local/tmp/trustos.img
-adb shell "su -c 'sha256sum /data/local/tmp/trustos.img'"   # must match the hash in the table
+sha256sum trustos-F50_FLYMODEM_ZYV1.0.0B09.img                     # must match the hash in the table
+adb push trustos-F50_FLYMODEM_ZYV1.0.0B09.img /data/local/tmp/trustos.img
+adb shell "su -c 'sha256sum /data/local/tmp/trustos.img'"           # and again on the device
 adb shell "su -c 'dd if=/data/local/tmp/trustos.img of=/dev/block/by-name/trustos_a bs=1M && sync'"
 ```
 

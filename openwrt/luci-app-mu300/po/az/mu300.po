@@ -30,6 +30,9 @@ msgstr "Cihazın idarəsi"
 msgid "Languages"
 msgstr "Dillər"
 
+msgid "Power"
+msgstr "Enerji"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 idarəetmə mərkəzi: status paneli, şəbəkə kilidləri, AT terminalı və SMS"
 
@@ -873,6 +876,120 @@ msgstr "Avtomatik (%d dəstəklənir)"
 msgid "%d locked: %s"
 msgstr "%d kilidlənib: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "0 ilə %d arasında tam ədəd daxil edin"
+
+msgid "Power status unavailable"
+msgstr "Enerji vəziyyəti əlçatan deyil"
+
+msgid "Plugged in"
+msgstr "Şəbəkəyə qoşulub"
+
+msgid "On battery"
+msgstr "Batareyada"
+
+msgid "Saver"
+msgstr "Qənaət"
+
+msgid "Asleep: hotspot off"
+msgstr "Yuxu: hotspot söndürülüb"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Şarj yükləməsi: başlatmaq üçün Wi-Fi düyməsini basın"
+
+msgid "Awake"
+msgstr "Oyaq"
+
+msgid "forced"
+msgstr "məcburi"
+
+msgid "automatic, battery under %d %%"
+msgstr "avtomatik, batareya %d %% altında"
+
+msgid "automatic"
+msgstr "avtomatik"
+
+msgid "Nobody connected for %d s"
+msgstr "%d saniyədir heç kim qoşulmayıb"
+
+msgid "Power source"
+msgstr "Enerji mənbəyi"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Profile in use: %s (%s)"
+msgstr "İstifadə olunan profil: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Şarj cihazı"
+
+msgid "Charger: %s, %s port"
+msgstr "Şarj cihazı: %s, %s portu"
+
+msgid "Charging paused: battery temperature"
+msgstr "Şarj dayandırıldı: batareya temperaturu"
+
+msgid "Charging paused: charge limit"
+msgstr "Şarj dayandırıldı: şarj həddi"
+
+msgid "Sleep now"
+msgstr "İndi yat"
+
+msgid "Wake"
+msgstr "Oyat"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Heç kim qoşulmayıb o deməkdir ki, nə Wi-Fi müştərisi, nə də USB-də kompüter var. Wi-Fi düyməsi, USB-dəki kompüter və ya şarj cihazı cihazı oyadır."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Avtomatik: şəbəkəyə qoşulu / batareyada"
+
+msgid "Switch to Saver under %"
+msgstr "Bundan aşağı olanda Qənaətə keç %"
+
+msgid "Stop charging at"
+msgstr "Şarjı burada dayandır"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % daim şəbəkədə qalan cihazda batareyanı daha sağlam saxlayır."
+
+msgid "Keep as is"
+msgstr "Olduğu kimi saxla"
+
+msgid "LTE only (5G off)"
+msgstr "Yalnız LTE (5G söndürülüb)"
+
+msgid "Off"
+msgstr "Söndürülüb"
+
+msgid "On"
+msgstr "Aktiv"
+
+msgid "Full"
+msgstr "Tam"
+
+msgid "Eco: big core off"
+msgstr "Eko: böyük nüvə söndürülüb"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Hotspotu bu müddətdən sonra söndür (dəq, 0 = heç vaxt)"
+
+msgid "Modem when idle"
+msgstr "Boşdayanda modem"
+
+msgid "LEDs when idle"
+msgstr "Boşdayanda LED-lər"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "power.conf-da nəzərə alınmayan sətirlər: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Bu plaginin cari Unisoc OpenWrt platformasına necə qoşulduğunu konfiqurasiya edin. Dəyişikliklər panel, AT, kilid və ya SMS səhifələrinin redaktəsini tələb etmir."
 
@@ -1173,6 +1290,21 @@ msgstr "Naməlum USB parametri"
 msgid "Invalid interface name"
 msgstr "Yanlış interfeys adı"
 
+msgid "The power adapter gave no valid reply"
+msgstr "Enerji adapteri etibarlı cavab vermədi"
+
+msgid "Unknown power operation"
+msgstr "Naməlum enerji əməliyyatı"
+
+msgid "Unknown power setting"
+msgstr "Naməlum enerji ayarı"
+
+msgid "Invalid power value"
+msgstr "Yanlış enerji dəyəri"
+
+msgid "Invalid power request"
+msgstr "Yanlış enerji sorğusu"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "Dil adapteri etibarlı cavab vermədi"
 
@@ -1323,6 +1455,9 @@ msgstr "Kilid keşi əlçatan deyil"
 msgid "No serving cell to lock to"
 msgstr "Kilidlənəcək xidmət edən hüceyrə yoxdur"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "TTL ayarı oxuna bilmədi"
 
@@ -1331,3 +1466,27 @@ msgstr "TTL təyin edilə bilmədi"
 
 msgid "Unknown TTL operation"
 msgstr "Naməlum TTL əməliyyatı"
+
+msgid "Lock Linux"
+msgstr "Linux-u kilidlə"
+
+msgid "Unlock Linux"
+msgstr "Linux kilidini aç"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "Ardıcıl beş tamamlanmamış açılışdan sonra cihaz yenidən Android-ə qayıdır."
+
+msgid "Unlock"
+msgstr "Kilidi aç"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Cihaz uğursuz açılışlardan sonra belə heç vaxt özbaşına Android-ə keçməyəcək: Android-ə yalnız bu səhifədən (Android-ə keç) və ya mu300-next-boot android ilə keçilir."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Yeniləmədən gələn yeni nüvə yenə də ilk açılışlarını sınaq kimi edir və onlardan biri uğurlu olan kimi yenidən kilidlənir."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Sistemin özü artıq açılmırsa, cihaz Android-ə keçmək əvəzinə USB (telnet) üzərindən gözləyir."
+
+msgid "Linux locked"
+msgstr "Linux kilidlənib"

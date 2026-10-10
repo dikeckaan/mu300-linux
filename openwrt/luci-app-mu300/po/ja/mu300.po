@@ -30,6 +30,9 @@ msgstr "デバイス管理"
 msgid "Languages"
 msgstr "言語"
 
+msgid "Power"
+msgstr "電源"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 コントロールセンター: ステータスダッシュボード、ネットワークロック、AT ターミナル、SMS"
 
@@ -873,6 +876,120 @@ msgstr "自動 (%d 個対応)"
 msgid "%d locked: %s"
 msgstr "%d 件ロック中: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "0 から %d までの整数を入力してください"
+
+msgid "Power status unavailable"
+msgstr "電源の状態を取得できません"
+
+msgid "Plugged in"
+msgstr "電源接続中"
+
+msgid "On battery"
+msgstr "バッテリー駆動"
+
+msgid "Saver"
+msgstr "節電"
+
+msgid "Asleep: hotspot off"
+msgstr "スリープ中：ホットスポットはオフ"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "充電起動：Wi-Fi キーを押すと開始します"
+
+msgid "Awake"
+msgstr "起動中"
+
+msgid "forced"
+msgstr "強制"
+
+msgid "automatic, battery under %d %%"
+msgstr "自動、バッテリー %d %% 未満"
+
+msgid "automatic"
+msgstr "自動"
+
+msgid "Nobody connected for %d s"
+msgstr "%d 秒間、誰も接続していません"
+
+msgid "Power source"
+msgstr "電源の種類"
+
+msgid "Profile"
+msgstr "プロファイル"
+
+msgid "Profile in use: %s (%s)"
+msgstr "使用中のプロファイル：%s（%s）"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "充電器"
+
+msgid "Charger: %s, %s port"
+msgstr "充電器：%s、%s ポート"
+
+msgid "Charging paused: battery temperature"
+msgstr "充電を一時停止：バッテリー温度"
+
+msgid "Charging paused: charge limit"
+msgstr "充電を一時停止：充電上限"
+
+msgid "Sleep now"
+msgstr "今すぐスリープ"
+
+msgid "Wake"
+msgstr "スリープ解除"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "誰も接続していないとは、Wi-Fi クライアントがなく、USB にコンピューターもない状態です。Wi-Fi キー、USB のコンピューター、または充電器でデバイスが復帰します。"
+
+msgid "Automatic: plugged in / on battery"
+msgstr "自動：電源接続 / バッテリー駆動"
+
+msgid "Switch to Saver under %"
+msgstr "次の値未満で節電に切り替え %"
+
+msgid "Stop charging at"
+msgstr "充電を止める残量"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % にすると、常時電源につないだままの機器でバッテリーが長持ちします。"
+
+msgid "Keep as is"
+msgstr "そのまま"
+
+msgid "LTE only (5G off)"
+msgstr "LTE のみ（5G オフ）"
+
+msgid "Off"
+msgstr "オフ"
+
+msgid "On"
+msgstr "オン"
+
+msgid "Full"
+msgstr "フルパワー"
+
+msgid "Eco: big core off"
+msgstr "エコ：大コアをオフ"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "ホットスポットをオフにするまでの時間（分、0 = オフにしない）"
+
+msgid "Modem when idle"
+msgstr "アイドル時のモデム"
+
+msgid "LEDs when idle"
+msgstr "アイドル時の LED"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "power.conf で無視された行：%s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "このプラグインが現在の Unisoc OpenWrt プラットフォームに接続する方法を設定します。変更してもダッシュボード、AT、ロック、SMS の各ページを編集する必要はありません。"
 
@@ -1173,6 +1290,21 @@ msgstr "不明な USB 設定"
 msgid "Invalid interface name"
 msgstr "無効なインターフェース名"
 
+msgid "The power adapter gave no valid reply"
+msgstr "電源アダプターから有効な応答がありませんでした"
+
+msgid "Unknown power operation"
+msgstr "不明な電源操作"
+
+msgid "Unknown power setting"
+msgstr "不明な電源設定"
+
+msgid "Invalid power value"
+msgstr "無効な電源値"
+
+msgid "Invalid power request"
+msgstr "無効な電源リクエスト"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "言語アダプタから有効な応答がありませんでした"
 
@@ -1323,6 +1455,9 @@ msgstr "ロックキャッシュを利用できません"
 msgid "No serving cell to lock to"
 msgstr "ロックできるサービングセルがありません"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "TTL 設定を読み取れませんでした"
 
@@ -1331,3 +1466,27 @@ msgstr "TTL を設定できませんでした"
 
 msgid "Unknown TTL operation"
 msgstr "不明な TTL 操作"
+
+msgid "Lock Linux"
+msgstr "Linuxをロック"
+
+msgid "Unlock Linux"
+msgstr "Linuxのロックを解除"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "完了しない起動が5回続くと、デバイスは再びAndroidに戻ります。"
+
+msgid "Unlock"
+msgstr "ロック解除"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "起動に失敗しても、デバイスが自動でAndroidに切り替わることはありません。Androidへはこのページ（Androidに切り替え）または mu300-next-boot android からのみ切り替えます。"
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "アップデートによる新しいカーネルは最初の起動を試行として行い、いずれかが成功すると再びロックされます。"
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "システム自体が起動しなくなった場合、デバイスはAndroidに切り替わらずUSB（telnet）で待機します。"
+
+msgid "Linux locked"
+msgstr "Linuxロック中"

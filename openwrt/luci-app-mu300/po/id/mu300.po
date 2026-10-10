@@ -30,6 +30,9 @@ msgstr "Manajemen perangkat"
 msgid "Languages"
 msgstr "Bahasa"
 
+msgid "Power"
+msgstr "Daya"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Pusat kontrol MU300: dasbor status, kunci jaringan, terminal AT, dan SMS"
 
@@ -873,6 +876,120 @@ msgstr "Otomatis (%d didukung)"
 msgid "%d locked: %s"
 msgstr "%d terkunci: %s"
 
+msgid "Enter a whole number from 0 to %d"
+msgstr "Masukkan bilangan bulat dari 0 hingga %d"
+
+msgid "Power status unavailable"
+msgstr "Status daya tidak tersedia"
+
+msgid "Plugged in"
+msgstr "Terhubung ke listrik"
+
+msgid "On battery"
+msgstr "Memakai baterai"
+
+msgid "Saver"
+msgstr "Hemat"
+
+msgid "Asleep: hotspot off"
+msgstr "Tidur: hotspot mati"
+
+msgid "Charging boot: press the Wi-Fi key to start"
+msgstr "Boot pengisian: tekan tombol Wi-Fi untuk memulai"
+
+msgid "Awake"
+msgstr "Aktif"
+
+msgid "forced"
+msgstr "dipaksa"
+
+msgid "automatic, battery under %d %%"
+msgstr "otomatis, baterai di bawah %d %%"
+
+msgid "automatic"
+msgstr "otomatis"
+
+msgid "Nobody connected for %d s"
+msgstr "Tidak ada yang terhubung selama %d dtk"
+
+msgid "Power source"
+msgstr "Sumber daya"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Profile in use: %s (%s)"
+msgstr "Profil yang dipakai: %s (%s)"
+
+msgid "%d %%, %s, %d mV, %d mA, %.1f °C"
+msgstr "%d %%, %s, %d mV, %d mA, %.1f °C"
+
+msgid "Charger"
+msgstr "Pengisi daya"
+
+msgid "Charger: %s, %s port"
+msgstr "Pengisi daya: %s, port %s"
+
+msgid "Charging paused: battery temperature"
+msgstr "Pengisian dijeda: suhu baterai"
+
+msgid "Charging paused: charge limit"
+msgstr "Pengisian dijeda: batas pengisian"
+
+msgid "Sleep now"
+msgstr "Tidurkan sekarang"
+
+msgid "Wake"
+msgstr "Bangunkan"
+
+msgid "Nobody connected means no Wi-Fi client and no computer on USB. The Wi-Fi key, a computer on USB or the charger wake the device."
+msgstr "Tidak ada yang terhubung berarti tidak ada klien Wi-Fi dan tidak ada komputer di USB. Tombol Wi-Fi, komputer di USB, atau pengisi daya membangunkan perangkat."
+
+msgid "Automatic: plugged in / on battery"
+msgstr "Otomatis: terhubung ke listrik / memakai baterai"
+
+msgid "Switch to Saver under %"
+msgstr "Beralih ke Hemat di bawah %"
+
+msgid "Stop charging at"
+msgstr "Hentikan pengisian pada"
+
+msgid "80 % keeps the battery healthier on a device that stays plugged in."
+msgstr "80 % menjaga baterai tetap sehat pada perangkat yang terus tercolok."
+
+msgid "Keep as is"
+msgstr "Biarkan apa adanya"
+
+msgid "LTE only (5G off)"
+msgstr "Hanya LTE (5G mati)"
+
+msgid "Off"
+msgstr "Mati"
+
+msgid "On"
+msgstr "Hidup"
+
+msgid "Full"
+msgstr "Penuh"
+
+msgid "Eco: big core off"
+msgstr "Eco: inti besar mati"
+
+msgid "Hotspot off after (min, 0 = never)"
+msgstr "Matikan hotspot setelah (menit, 0 = tidak pernah)"
+
+msgid "Modem when idle"
+msgstr "Modem saat siaga"
+
+msgid "LEDs when idle"
+msgstr "LED saat siaga"
+
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Ignored lines in power.conf: %s"
+msgstr "Baris yang diabaikan di power.conf: %s"
+
 msgid "Configure how this plugin connects to the current Unisoc OpenWrt platform. Changes do not require editing the dashboard, AT, locks or SMS pages."
 msgstr "Atur cara plugin ini terhubung ke platform OpenWrt Unisoc saat ini. Perubahan tidak memerlukan pengeditan halaman dasbor, AT, kunci, atau SMS."
 
@@ -1173,6 +1290,21 @@ msgstr "Pengaturan USB tidak diketahui"
 msgid "Invalid interface name"
 msgstr "Nama antarmuka tidak valid"
 
+msgid "The power adapter gave no valid reply"
+msgstr "Adaptor daya tidak memberi balasan yang valid"
+
+msgid "Unknown power operation"
+msgstr "Operasi daya tidak dikenal"
+
+msgid "Unknown power setting"
+msgstr "Pengaturan daya tidak dikenal"
+
+msgid "Invalid power value"
+msgstr "Nilai daya tidak valid"
+
+msgid "Invalid power request"
+msgstr "Permintaan daya tidak valid"
+
 msgid "The languages adapter gave no valid reply"
 msgstr "Adaptor bahasa tidak memberikan balasan yang valid"
 
@@ -1323,6 +1455,9 @@ msgstr "Cache kunci tidak tersedia"
 msgid "No serving cell to lock to"
 msgstr "Tidak ada sel layanan untuk dikunci"
 
+msgid "usage: power get|set KEY VALUE|wake|idle"
+msgstr "usage: power get|set KEY VALUE|wake|idle"
+
 msgid "The TTL setting could not be read"
 msgstr "Pengaturan TTL tidak dapat dibaca"
 
@@ -1331,3 +1466,27 @@ msgstr "TTL tidak dapat diatur"
 
 msgid "Unknown TTL operation"
 msgstr "Operasi TTL tidak dikenal"
+
+msgid "Lock Linux"
+msgstr "Kunci Linux"
+
+msgid "Unlock Linux"
+msgstr "Buka kunci Linux"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "Setelah lima kali boot berturut-turut yang tidak selesai, perangkat kembali lagi ke Android."
+
+msgid "Unlock"
+msgstr "Buka kunci"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Perangkat tidak akan pernah beralih ke Android dengan sendirinya, bahkan setelah boot gagal: ke Android hanya dari halaman ini (Beralih ke Android) atau dengan mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Kernel baru dari pembaruan tetap menjalani boot pertamanya sebagai percobaan, lalu terkunci lagi begitu salah satunya berhasil."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Jika sistem itu sendiri tidak lagi berjalan, perangkat menunggu lewat USB (telnet) alih-alih beralih ke Android."
+
+msgid "Linux locked"
+msgstr "Linux terkunci"

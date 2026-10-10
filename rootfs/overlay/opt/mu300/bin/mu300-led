@@ -5,8 +5,12 @@
 #                               registered)
 #   mu300-led wifi on|off|sync [S]  the Wi-Fi hotspot is up (U30 Air: blue on 5 GHz, white on 2.4 GHz); sync: whatever
 #                               wlan0 is now, and again every 2 s for S seconds (OpenWrt: LuCI or the button)
-#   mu300-led wake              show the LEDs again, for LED_TIMEOUT seconds (the power button, mu300-buttons)
+#   mu300-led wake              show the LEDs again, for LED_TIMEOUT seconds (every key press, mu300-buttons); also
+#                               in mu300-power's idle, for LED_TIMEOUT (60 s when it is 0): a key always shows life
 #   mu300-led sleep [--if-due]  dark now (--if-due: only once the timeout has passed; mu300-buttons asks)
+#   mu300-led idle on|off       mu300-power's idle: everything dark whatever LED_TIMEOUT says, except for a key's wake;
+#                               state changes are remembered and shown on the next wake or at idle off
+#   mu300-led charge on|off     the charging boot: the power LED blinks (1 s on, 1 s off)
 #   mu300-led test              each LED in turn, 2 s each, with its name (to tell which one is where)
 #   mu300-led alarm on|off      too hot (thermal-guard): the PMIC's RGB LED flashes red, white, blue one at a time
 #                               like a siren, also while the others are dark
@@ -47,16 +51,21 @@ TIMEOUT=$(sed -n 's/^LED_TIMEOUT=\([0-9][0-9]*\)$/\1/p' "${MU300_LED_CONF:-/etc/
 TIMEOUT=${TIMEOUT:-$DEFAULT_TIMEOUT}
 
 uptime_s() { cut -d. -f1 "$R/proc/uptime" 2>/dev/null || echo 0; }
-awake() {
-    [ "$TIMEOUT" = 0 ] && return 0
-    until=$(cat "$STATE/.awake-until" 2>/dev/null) || return 1
-    [ "$(uptime_s)" -lt "${until:-0}" ]
+before() {  # before FILE: the uptime in FILE has not come yet
+    until=$(cat "$1" 2>/dev/null) || return 1
+    case $until in ''|*[!0-9]*) return 1 ;; esac
+    [ "$(uptime_s)" -lt "$until" ]
 }
+awake() { [ "$TIMEOUT" = 0 ] || before "$STATE/.awake-until"; }
 vendor_ldo() {  # vendor_ldo zte-ldoN: the 5.4 kernel's switch for that LDO, if there
     case $1 in zte-ldo[0-9]) ;; *) return 1 ;; esac
     for f in "$R"/sys/devices/platform/*zte*ldo*leds*/vddcama${1#zte-ldo}_status; do [ -e "$f" ] && { echo "$f"; return 0; }; done
     return 1
 }
+idle() { [ -e "$STATE/.idle" ]; }   # mu300-power's idle: dark, whatever the timeout
+# Lit now? Awake as usual; in idle only for a key's wake (.peek-until). The incident of 2026-10-07: idle on, and every
+# key press was swallowed by it - a device dark for hours that looked powered off. A key must always show life.
+shown() { if idle; then before "$STATE/.peek-until"; else awake; fi; }
 has_led() { [ -e "$LEDS/$1" ] || vendor_ldo "$1" >/dev/null; }
 level() {  # level NAME: its brightness when lit (ZTE lights the F50's Wi-Fi LED at 48: a low-current sink)
     case $DEVICE:$1 in f50:keyboard-backlight) echo 48 ;; *) cat "$LEDS/$1/max_brightness" 2>/dev/null ;; esac
@@ -72,14 +81,15 @@ set_led() {  # set_led NAME 0|1: what it should show; lit only while awake
     [ -n "$1" ] || return 0
     has_led "$1" || return 0
     mkdir -p "$STATE" 2>/dev/null && echo "$2" > "$STATE/$1" 2>/dev/null
-    if [ "$2" = 1 ] && ! awake; then write "$1" 0; else write "$1" "$2"; fi
+    if [ "$2" = 1 ] && ! shown; then write "$1" 0; else write "$1" "$2"; fi
 }
 wifi_band() {  # 5 or 2.4: the channel the hotspot runs on, else (it has none yet, just started) its setting
     ch=$(iw dev wlan0 info 2>/dev/null | sed -n 's/.*channel \([0-9]*\).*/\1/p' | head -n1)
     if [ -n "$ch" ]; then [ "$ch" -gt 14 ] && echo 5 || echo 2.4
     else "${MU300_BIN:-/opt/mu300/bin}/mu300-wifi-band" 2>/dev/null | sed -n 's/^hotspot: \([0-9.]*\) GHz$/\1/p'; fi
 }
-show_all() {  # every LED as it should be
+show_all() {  # every LED as it should be (none while idle, unless a key woke them)
+    shown || return 0
     for f in "$STATE"/*; do
         [ -f "$f" ] || continue
         write "${f##*/}" "$(cat "$f")"
@@ -89,7 +99,7 @@ siren_running() { p=$(cat "$SIREN_PID" 2>/dev/null) && [ -n "$p" ] && kill -0 "$
 nap() { sleep "$1" 2>/dev/null || sleep 1; }   # (a busybox without fractional sleep)
 
 case "$1 ${2:-}" in
-    "power on")   set_led "$POWER" 1; [ "$TIMEOUT" = 0 ] || exec "$0" wake ;;
+    "power on")   set_led "$POWER" 1; [ "$TIMEOUT" = 0 ] || idle || exec "$0" wake ;;   # (a boot, not a key)
     "power off")  set_led "$POWER" 0 ;;
     "data on")    set_led "$NODATA" 0; [ "$DATA5G" = "$DATA" ] || set_led "$DATA5G" 0; set_led "$DATA" 1 ;;
     "data 5g")    set_led "$NODATA" 0; [ "$DATA5G" = "$DATA" ] || set_led "$DATA" 0; set_led "$DATA5G" 1 ;;
@@ -112,16 +122,45 @@ case "$1 ${2:-}" in
             nap 2; n=$((n - 2))
         done ;;
     "wake "*)
-        [ "$TIMEOUT" = 0 ] && exit 0
         mkdir -p "$STATE" 2>/dev/null
-        echo $(( $(uptime_s) + TIMEOUT )) > "$STATE/.awake-until"
+        now=$(uptime_s)
+        if idle; then   # idle: lit for the timeout all the same (a minute where there is none), then dark again
+            t=$TIMEOUT; [ "$t" != 0 ] || t=60
+            echo $((now + t)) > "$STATE/.peek-until"
+        fi
+        [ "$TIMEOUT" = 0 ] || echo $((now + TIMEOUT)) > "$STATE/.awake-until"
         show_all ;;
     "sleep "*)
-        [ "$TIMEOUT" = 0 ] && exit 0
-        if [ "${2:-}" = --if-due ] && awake; then exit 0; fi
-        [ -e "$STATE/.awake-until" ] || [ "${2:-}" != --if-due ] || exit 0   # dark already
+        if idle; then   # a key's wake in idle: dark again once it is over
+            if [ "${2:-}" = --if-due ] && shown; then exit 0; fi
+            [ -e "$STATE/.peek-until" ] || [ "${2:-}" != --if-due ] || exit 0   # dark already
+            rm -f "$STATE/.peek-until"
+        else
+            [ "$TIMEOUT" = 0 ] && exit 0
+            if [ "${2:-}" = --if-due ] && awake; then exit 0; fi
+            [ -e "$STATE/.awake-until" ] || [ "${2:-}" != --if-due ] || exit 0   # dark already
+        fi
         rm -f "$STATE/.awake-until"
         for f in "$STATE"/*; do [ -f "$f" ] && write "${f##*/}" 0; done ;;
+    "idle on")
+        mkdir -p "$STATE" 2>/dev/null
+        : > "$STATE/.idle"
+        rm -f "$STATE/.peek-until"
+        for f in "$STATE"/*; do [ -f "$f" ] && write "${f##*/}" 0; done
+        [ -z "$POWER" ] || write "$POWER" 0 ;;
+    "idle off")
+        rm -f "$STATE/.idle" "$STATE/.peek-until"
+        if awake; then show_all; fi ;;   # past the timeout they stay dark until the next wake
+    "charge on")
+        [ -n "$POWER" ] && [ -w "$LEDS/$POWER/trigger" ] || exit 0
+        echo timer > "$LEDS/$POWER/trigger" 2>/dev/null
+        echo 1000 > "$LEDS/$POWER/delay_on" 2>/dev/null
+        echo 1000 > "$LEDS/$POWER/delay_off" 2>/dev/null ;;
+    "charge off")
+        [ -n "$POWER" ] && [ -w "$LEDS/$POWER/trigger" ] || exit 0
+        echo none > "$LEDS/$POWER/trigger" 2>/dev/null
+        write "$POWER" 0
+        if awake; then show_all; fi ;;
     "alarm on")
         siren_running && exit 0
         mkdir -p "${SIREN_PID%/*}" 2>/dev/null
