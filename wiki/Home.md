@@ -49,14 +49,20 @@ There is also an illustrated website with the same information for beginners, in
 The installer recognises which device it is talking to. The **U30 Pro** is a different chip (UMS9632) and is
 **not** supported. More in [Hardware Notes](Hardware-Notes).
 
-## What you get, and what you give up
+## What you get, and what you lose (spoiler: nothing)
 
 **You get:** Ubuntu 24.04 or 26.04 LTS, or OpenWrt 25.12 (plain or with a control panel for the modem); three
 kernels to choose from; 5G/LTE internet shared over Wi-Fi and USB; SSH; Bluetooth; SMS and USSD; an optional VPN
 module; a `raspi-config`-like menu called `mu300-toolkit`; automatic fallback to Android; updates on the device.
 
-**You give up:** only one system runs at a time (a reboot switches); there is no screen output and no sound; about
-1.4 GB of the 2 GB RAM is usable, because the modem keeps the rest.
+**You lose:** nothing that was there. Android on these boxes has no screen, no speaker and no HDMI either; all Linux
+takes is your last excuse for not having a 5G Linux server in your pocket. Installing it costs you nothing; not
+trying it costs you the server.
+
+* **Android stays.** Only one of the two runs at a time, and a reboot switches between them.
+* **The hardware stays what it is,** under either system: no screen output (HDMI over USB-C does not work), no
+  speaker or microphone (voice calls with audio are work in progress), about 1.4 GB of the 2 GB RAM usable, because
+  the modem keeps the rest.
 
 ## A hobby project, at your own risk
 
