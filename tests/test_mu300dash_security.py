@@ -213,7 +213,7 @@ class Inventory(Mu300Dash):
     METHODS = {'sysinfo', 'status', 'signal', 'act', 'at', 'at_history', 'lock_get', 'lock_set', 'sms_list',
                'sms_show', 'sms_send', 'sms_delete', 'sms_sync', 'usb_get', 'usb_set', 'usb_net_list', 'usb_net_add',
                'lang_get', 'lang_set', 'power_get', 'power_set',
-               'ttl_get', 'ttl_set'}
+               'ttl_get', 'ttl_set', 'cpu_get', 'cpu_set'}
 
     def test_list_declares_every_method(self):
         for shell in self.each_shell():
@@ -235,7 +235,7 @@ class Inventory(Mu300Dash):
     def test_the_changed_scripts_parse(self):
         for shell in self.each_shell():
             for p in [DASH, LIB] + [ADAPTERS / n for n in ('action', 'at', 'boot-replay', 'cell', 'dashboard-info',
-                                                         'device-usb', 'lock', 'languages', 'power', 'ttl')]:
+                                                         'device-usb', 'lock', 'languages', 'power', 'ttl', 'cpu')]:
                 with self.subTest(p=p.name):
                     r = subprocess.run(shell + ['-n', str(p)], capture_output=True, text=True)
                     self.assertEqual(r.returncode, 0, r.stderr)
@@ -356,6 +356,9 @@ class Refusals(Mu300Dash):
             ('power op format', 'power_set', {'op': 'format'}),
             ('power wake with key', 'power_set', {'op': 'wake', 'key': 'PROFILE', 'value': 'saver'}),
             ('power set no value', 'power_set', {'op': 'set', 'key': 'PROFILE', 'value': ''}),
+            ('cpu unknown profile', 'cpu_set', {'profile': 'turbo'}),
+            ('cpu profile chained', 'cpu_set', {'profile': 'saving; reboot'}),
+            ('cpu profile empty', 'cpu_set', {'profile': ''}),
             ('ttl zero', 'ttl_set', {'value': '0'}),
             ('ttl 256', 'ttl_set', {'value': '256'}),
             ('ttl 999', 'ttl_set', {'value': '999'}),
@@ -798,9 +801,10 @@ class TtlAdapter(ShellTest):
 
 class Acl(unittest.TestCase):
     # SMS bodies (one-time codes) and the AT history (AT+CPIN PINs) are not for read-only users (ruling R14)
-    READ = {'sysinfo', 'status', 'signal', 'lock_get', 'usb_get', 'usb_net_list', 'lang_get', 'power_get', 'ttl_get'}
+    READ = {'sysinfo', 'status', 'signal', 'lock_get', 'usb_get', 'usb_net_list', 'lang_get', 'power_get', 'ttl_get',
+            'cpu_get'}
     WRITE = {'act', 'at', 'at_history', 'lock_set', 'sms_list', 'sms_show', 'sms_send', 'sms_delete', 'sms_sync',
-             'usb_set', 'usb_net_add', 'lang_set', 'power_set', 'ttl_set'}
+             'usb_set', 'usb_net_add', 'lang_set', 'power_set', 'ttl_set', 'cpu_set'}
 
     def test_actions_need_write_access(self):
         acl = json.loads(ACL.read_text())['luci-app-mu300']

@@ -36,6 +36,8 @@ var callPowerGet = rpc.declare({ object: 'mu300dash', method: 'power_get', expec
 var callPowerSet = rpc.declare({ object: 'mu300dash', method: 'power_set', params: [ 'op', 'key', 'value' ], expect: { '': {} } });
 var callTtlGet = rpc.declare({ object: 'mu300dash', method: 'ttl_get', expect: { '': {} } });
 var callTtlSet = rpc.declare({ object: 'mu300dash', method: 'ttl_set', params: [ 'value' ], expect: { '': {} } });
+var callCpuGet = rpc.declare({ object: 'mu300dash', method: 'cpu_get', expect: { '': {} } });
+var callCpuSet = rpc.declare({ object: 'mu300dash', method: 'cpu_set', params: [ 'profile' ], expect: { '': {} } });
 
 /* Mainland carriers by PLMN, for when COPS gives the numeric format. The names are messages: translated once, when
  * the module loads (a page's language does not change without a reload). */
@@ -611,6 +613,7 @@ return baseclass.extend({
 	callLangGet: callLangGet, callLangSet: callLangSet,
 	callPowerGet: callPowerGet, callPowerSet: callPowerSet,
 	callTtlGet: callTtlGet, callTtlSet: callTtlSet,
+	callCpuGet: callCpuGet, callCpuSet: callCpuSet,
 	carrierName: carrierName, qLevel: qLevel, qLevelLabel: qLevelLabel, qLabel: qLabel, qCol: qCol, qScore: qScore,
 	esc: esc, fmtBytes: fmtBytes, fmtRate: fmtRate, fmtUptime: fmtUptime, PLMN_CN: PLMN_CN,
 	injectCss: injectCss, v: v, set: set, spark: spark, neighborRows: neighborRows,

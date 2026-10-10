@@ -1,0 +1,32 @@
+#!/bin/sh
+# CPU adapter: mu300-cpu for the panel's CPU page (mu300dash cpu_get, cpu_set). Every reply is one JSON object.
+#   cpu get             {"ok":1,"profile":...,"profiles":[...],"throttling":0|1,"policies":[...]}
+#   cpu set NAME        {"ok":1,...} (the new status), or {"ok":0,"error":...}; NAME checked here again
+set -u
+export PATH="$PATH:/opt/mu300/bin:/usr/sbin:/sbin"
+LIB=${0%/*}/../../share/unisoc-modem/lib.sh
+[ -f "$LIB" ] || LIB=/usr/share/unisoc-modem/lib.sh
+. "$LIB"
+
+CPU_CMD=${MU300_CPU_BIN:-/opt/mu300/bin/mu300-cpu}
+
+error() { printf '{"ok":0,"error":%s}\n' "$(json_str "$1")"; exit 0; }
+
+do_get() {
+    out=$("$CPU_CMD" status --json 2>/dev/null) || error 'The CPU profile could not be read'
+    case $out in '{'*) printf '%s\n' "$out" ;; *) error 'The CPU profile could not be read' ;; esac
+}
+
+do_set() {
+    case ${1:-} in saving|balanced|performance) ;; *) error 'Invalid CPU profile' ;; esac
+    if out=$("$CPU_CMD" profile "$1" --json 2>/dev/null); then
+        case $out in '{'*) printf '%s\n' "$out"; return ;; esac
+    fi
+    error 'The CPU profile could not be set'
+}
+
+case ${1:-} in
+    get) do_get ;;
+    set) do_set "${2:-}" ;;
+    *) error 'Unknown CPU operation' ;;
+esac

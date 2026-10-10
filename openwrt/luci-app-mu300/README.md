@@ -9,6 +9,11 @@ The Device Management page controls USB role and gadget network policy, and
 lists host-side USB network adapters for optional attachment to the LAN bridge.
 The TTL page (Cellular) sets the TTL of everything that leaves through mobile data
 (`mu300-ttl`, through the `unisoc-modem/ttl` adapter).
+The CPU page (System) picks a performance profile - power saving, balanced or
+performance - which sets the CPU governor and the per-cluster frequency limits
+(`mu300-cpu`, through the `unisoc-modem/cpu` adapter). It stays inside the hardware
+frequency table and never changes voltage, so the kernel keeps throttling at its
+thermal limit in every profile.
 
 The dashboard follows LuCI's selected language. Its colors follow Aurora's existing
 tokens when present, or the official Bootstrap theme's light/dark tokens.
