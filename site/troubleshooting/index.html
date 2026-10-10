@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem("mu300-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <title>Troubleshooting MU300 Linux on the ZTE F50 / MU300 and U30 Air</title>
 <meta name="description" content="Fixes for common problems with Linux on the ZTE F50 / MU300 and U30 Air: the installer, no USB address, no internet, falling back to Android, OpenWrt on kernel 5.4, slow downloads and known issues.">
 <link rel="canonical" href="https://kaandikec.com/mu300-linux/troubleshooting/">
@@ -54,7 +55,6 @@
 <header class="site-header">
 <div class="wrap">
 <a class="brand" href="../"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="8" width="52" height="50" rx="12" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="22" cy="20" r="3.5" fill="#2259d6"/><circle cx="32" cy="20" r="3.5" fill="currentColor"/><circle cx="42" cy="20" r="3.5" fill="#f2b23a"/><path d="M17 32 l9 7 l-9 7" fill="none" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 47 h15" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round"/></svg>MU300 Linux</a>
-<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
 <nav class="site-nav" id="site-nav" aria-label="Main">
 <a href="../install/">Install</a>
 <a href="../choose/">Choose a system</a>
@@ -64,6 +64,8 @@
 <a href="https://github.com/dikeckaan/mu300-linux">GitHub</a>
 <span class="langs" role="group" aria-label="Language"><a href="../" hreflang="en" lang="en" aria-current="true">English</a><a href="../tr/" hreflang="tr" lang="tr">Türkçe</a><a href="../zh/" hreflang="zh-Hans" lang="zh-Hans">中文</a></span>
 </nav>
+<button class="theme-btn" type="button" hidden data-labels="Theme|Auto|Light|Dark|follows your system|Change the colour theme"><svg class="i-auto" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg><svg class="i-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="i-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span class="theme-name"></span></button>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
 </div>
 </header>
 <main id="content">

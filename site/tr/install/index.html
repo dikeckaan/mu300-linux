@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem("mu300-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <title>ZTE F50 Linux kurulumu: MU300 ve U30 Air için adım adım rehber</title>
 <meta name="description" content="ZTE F50 / MU300 ve U30 Air'e Ubuntu veya OpenWrt kurulumu, yeni başlayanlar için: kontrol, kurulum soruları, USB ve SSH ile giriş.">
 <link rel="canonical" href="https://kaandikec.com/mu300-linux/tr/install/">
@@ -104,7 +105,6 @@
 <header class="site-header">
 <div class="wrap">
 <a class="brand" href="../../tr/"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="8" width="52" height="50" rx="12" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="22" cy="20" r="3.5" fill="#2259d6"/><circle cx="32" cy="20" r="3.5" fill="currentColor"/><circle cx="42" cy="20" r="3.5" fill="#f2b23a"/><path d="M17 32 l9 7 l-9 7" fill="none" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 47 h15" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round"/></svg>MU300 Linux</a>
-<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menü</button>
 <nav class="site-nav" id="site-nav" aria-label="Main">
 <a href="../../tr/install/" aria-current="page">Kurulum</a>
 <a href="../../choose/" hreflang="en">Sistem seçimi <span class="en-tag">EN</span></a>
@@ -114,6 +114,8 @@
 <a href="https://github.com/dikeckaan/mu300-linux">GitHub</a>
 <span class="langs" role="group" aria-label="Dil"><a href="../../install/" hreflang="en" lang="en">English</a><a href="../../tr/install/" hreflang="tr" lang="tr" aria-current="true">Türkçe</a><a href="../../zh/install/" hreflang="zh-Hans" lang="zh-Hans">中文</a></span>
 </nav>
+<button class="theme-btn" type="button" hidden data-labels="Tema|Otomatik|Açık|Koyu|sisteminizi izler|Renk temasını değiştir"><svg class="i-auto" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg><svg class="i-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="i-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span class="theme-name"></span></button>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menü</button>
 </div>
 </header>
 <main id="content">

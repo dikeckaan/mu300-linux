@@ -6,10 +6,12 @@
 writes site/assets/img/<name>.svg (English) and <name>.tr.svg, <name>.zh.svg. The files are committed, so the
 site itself has no build step; run this again after changing a label or a shape here. Standard library only.
 
-Every picture carries its own light and dark colours (prefers-color-scheme inside the SVG), so it fits both
-themes of the site when it is shown with <img>.
+Every picture carries its own light and dark colours. As a file (an <img>, the wiki) it follows the system's
+prefers-color-scheme; written into a page, it follows the site's theme switch too (data-theme on <html>). Its
+classes all hang under .mu-dg and its ids carry the picture's name, so several of them can share one page.
 """
 import os
+import re
 from xml.sax.saxutils import escape
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "img")
@@ -17,7 +19,7 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "
 FONT = ('"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", '
         '"Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif')
 
-STYLE = """
+LIGHT = """
 text { font-family: %s; fill: #142133; }
 .t-muted { fill: #526276; }
 .t-white { fill: #ffffff; }
@@ -30,27 +32,50 @@ text { font-family: %s; fill: #142133; }
 .rd { fill: #c4302f; } .rd-soft { fill: #fbe3e2; } .rd-stroke { stroke: #c4302f; } .t-rd { fill: #a12625; }
 .body-top { fill: #fdfdfe; } .body-side { fill: #dde4ee; } .body-edge { stroke: #b6c2d2; }
 .led-white { fill: #ffffff; stroke: #b6c2d2; }
-@media (prefers-color-scheme: dark) {
-  text { fill: #e3ebf5; }
-  .t-muted { fill: #9cabbe; }
-  .ink { fill: #e3ebf5; } .stroke-ink { stroke: #e3ebf5; }
-  .paper { fill: #142031; } .soft { fill: #1a283b; } .line { stroke: #34465f; } .fill-line { fill: #34465f; }
-  .lx-soft { fill: #33290f; } .lx-stroke { stroke: #f2b740; } .t-lx { fill: #f2c060; }
-  .an-soft { fill: #12301f; } .an-stroke { stroke: #5ccf8a; } .t-an { fill: #7ddba3; }
-  .bl { fill: #5b88f0; } .bl-soft { fill: #1a2a48; } .bl-stroke { stroke: #7ea6ff; } .t-bl { fill: #9dbbff; }
-  .rd-soft { fill: #3a1a1a; } .rd-stroke { stroke: #ff7b72; } .t-rd { fill: #ff9b94; }
-  .body-top { fill: #2a3a52; } .body-side { fill: #1c2a3d; } .body-edge { stroke: #44587a; }
-  .led-white { fill: #f4f7fb; stroke: #44587a; }
-}
 """ % FONT
 
+DARK = """
+text { fill: #e3ebf5; }
+.t-muted { fill: #9cabbe; }
+.ink { fill: #e3ebf5; } .stroke-ink { stroke: #e3ebf5; }
+.paper { fill: #142031; } .soft { fill: #1a283b; } .line { stroke: #34465f; } .fill-line { fill: #34465f; }
+.lx-soft { fill: #33290f; } .lx-stroke { stroke: #f2b740; } .t-lx { fill: #f2c060; }
+.an-soft { fill: #12301f; } .an-stroke { stroke: #5ccf8a; } .t-an { fill: #7ddba3; }
+.bl { fill: #5b88f0; } .bl-soft { fill: #1a2a48; } .bl-stroke { stroke: #7ea6ff; } .t-bl { fill: #9dbbff; }
+.rd-soft { fill: #3a1a1a; } .rd-stroke { stroke: #ff7b72; } .t-rd { fill: #ff9b94; }
+.body-top { fill: #2a3a52; } .body-side { fill: #1c2a3d; } .body-edge { stroke: #44587a; }
+.led-white { fill: #f4f7fb; stroke: #44587a; }
+"""
 
-def svg(w, h, title, desc, body, lang):
+
+def rules(css):
+    return re.findall(r"([^{}]+?)\s*\{([^{}]*)\}", css)
+
+
+def style():
+    """The colours, scoped under .mu-dg. Dark applies when the system asks for it and the page has not been set to
+    light (:root is <html> in a page, the <svg> itself as a file), or when the page has been set to dark."""
+    out = []
+    for sel, decl in rules(LIGHT):
+        out.append(".mu-dg %s {%s}" % (sel.strip(), decl))
+    auto, forced = [], []
+    for sel, decl in rules(DARK):
+        sel = sel.strip()
+        auto.append('  :root:not([data-theme="light"]) .mu-dg %s, .mu-dg:root %s {%s}' % (sel, sel, decl))
+        forced.append(':root[data-theme="dark"] .mu-dg %s {%s}' % (sel, decl))
+    return "\n".join(out + ["@media (prefers-color-scheme: dark) {"] + auto + ["}"] + forced)
+
+
+STYLE = style()
+
+
+def svg(w, h, title, desc, body, lang, uid):
+    body = body.replace('id="ah"', 'id="%s-ah"' % uid).replace("url(#ah)", "url(#%s-ah)" % uid)
     return (
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" width="%d" height="%d" role="img" '
-        'aria-labelledby="t d" xml:lang="%s">\n'
-        '<title id="t">%s</title>\n<desc id="d">%s</desc>\n<style>%s</style>\n%s\n</svg>\n'
-        % (w, h, w, h, lang, escape(title), escape(desc), STYLE, body)
+        '<svg xmlns="http://www.w3.org/2000/svg" class="mu-dg" viewBox="0 0 %d %d" width="%d" height="%d" role="img" '
+        'aria-labelledby="%s-t %s-d" xml:lang="%s">\n'
+        '<title id="%s-t">%s</title>\n<desc id="%s-d">%s</desc>\n<style>\n%s\n</style>\n%s\n</svg>\n'
+        % (w, h, w, h, uid, uid, lang, uid, escape(title), uid, escape(desc), STYLE, body)
     )
 
 
@@ -250,8 +275,8 @@ def device_body(x, y, s=1.0, leds=True, led_class=True):
 
 LED_MOTION = """<style>
 @media (prefers-reduced-motion: no-preference) {
-  .led { animation: led-on .5s ease-out both; }
-  .led-2 { animation-delay: .5s; } .led-3 { animation-delay: 1s; }
+  .mu-dg .led { animation: led-on .5s ease-out both; }
+  .mu-dg .led-2 { animation-delay: .5s; } .mu-dg .led-3 { animation-delay: 1s; }
   @keyframes led-on { from { opacity: .25; } to { opacity: 1; } }
 }
 </style>"""
@@ -262,7 +287,7 @@ def make_device():
     body = LED_MOTION + device_body(78, 64)
     return svg(440, 440, "A 5G pocket hotspot running Linux",
                "A drawing of a small 5G hotspot with three status LEDs. Its face shows two rooms: a green one "
-               "for Android and an amber one for Linux.", body, "en")
+               "for Android and an amber one for Linux.", body, "en", "device")
 
 
 def make_two(lang):
@@ -311,7 +336,7 @@ def make_two(lang):
     for i in range(4):
         b.append('<rect x="%d" y="%d" width="7" height="16" rx="2" class="bl"/>' % (sx + 14 + i * 12, sy + 40))
     b.append(lines(sx + 84, sy + 64, t["sd"], 16, cls="t-bl"))
-    return svg(W, H, t["two_title"], t["two_desc"], "\n".join(b), lang)
+    return svg(W, H, t["two_title"], t["two_desc"], "\n".join(b), lang, "two-" + lang)
 
 
 def box(x, y, w, h, rows, cls="paper line", tcls="", size=17, rx=14, weight=None):
@@ -374,7 +399,7 @@ def make_boot(lang):
     b.append(text(cx + 160, 688, t["no"], 18, cls="t-muted", weight=700))
     b.append(box(602, 660, 330, 80, t["b_android"], "an-soft an-stroke", size=20, weight=700))
     b.append(lines(40, 806, t["b_note"], 17, cls="t-muted"))
-    return svg(W, H, t["boot_title"], t["boot_desc"], "\n".join(b), lang)
+    return svg(W, H, t["boot_title"], t["boot_desc"], "\n".join(b), lang, "boot-" + lang)
 
 
 def person_icon(x, y, kind):
@@ -425,7 +450,7 @@ def make_net(lang):
     b.append(text(ix, 204, t["n_net"], 19, cls="t-bl", anchor="middle", weight=700))
     b.append(path("M 650 140 C 700 140 730 160 772 175"))
     b.append(path("M 650 312 C 720 312 770 280 800 238", dash=True))
-    return svg(W, H, t["net_title"], t["net_desc"], "\n".join(b), lang)
+    return svg(W, H, t["net_title"], t["net_desc"], "\n".join(b), lang, "net-" + lang)
 
 
 def main():
