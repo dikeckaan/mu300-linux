@@ -399,7 +399,9 @@ function spark(el, arr, min, max, win) {
  * lockedCell is lock_get's cell field (e.g. "nr:627264,501"); a matching row shows a grey "Locked".
  * Pages bind the clicks by event delegation ([data-lock] attribute: "<rat>:<arfcn>,<pci>"). */
 function neighborRows(c, lockedCell) {
-	var nb = (c && c.neigh) || [];
+	var nb = (c && Array.isArray(c.neigh) ? c.neigh : []).filter(function(n) {
+        return n && typeof n === 'object' && (n.rat === 'nr' || n.rat === 'lte');
+    });
 	nb.sort(function(a, b) {
 		if ((a.rat == 'nr') != (b.rat == 'nr')) return a.rat == 'nr' ? -1 : 1;
 		return (b.rsrp || -999) - (a.rsrp || -999);

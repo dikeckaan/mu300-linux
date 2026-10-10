@@ -19,6 +19,10 @@ wait_and_exec() {
 }
 
 start_service() {
+    local slot=0
+    [ ! -x /opt/mu300/bin/mu300-sim ] || slot=$(/opt/mu300/bin/mu300-sim active) || return 1
+    # nr6/nr7 are verified only for slot 0; slot 1 shares its general nr4 daemon.
+    [ "$slot" = 0 ] || return 0
 	local n
 	for n in 6 7; do
 		procd_open_instance atd$n

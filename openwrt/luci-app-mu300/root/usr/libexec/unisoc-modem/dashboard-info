@@ -70,13 +70,17 @@ DATA_IFACE=$(safe_iface "$(cfg data_interface)" wan)
 DATA_IFACE6=$(safe_iface "$(cfg data_interface_v6)" wan6)
 WANJSON=$(t3 ubus call "network.interface.$DATA_IFACE" status)
 WAN6JSON=$(t3 ubus call "network.interface.$DATA_IFACE6" status)
+SIM_SLOT=0
+if [ -x /opt/mu300/bin/mu300-sim ]; then
+    SIM_SLOT=$(/opt/mu300/bin/mu300-sim active) || exit 1
+fi
 DATA_DEVICE=$(safe_iface "$(cfg data_device)" '')
-[ -n "$DATA_DEVICE" ] || DATA_DEVICE=$(safe_iface "$(jval "$WANJSON" l3_device)" sipa_eth0)
+[ -n "$DATA_DEVICE" ] || DATA_DEVICE=$(safe_iface "$(jval "$WANJSON" l3_device)" sipa_eth$((SIM_SLOT * 8)))
 LAN_DEVICE=$(safe_iface "$(cfg lan_device)" br-lan)
 WIFI_DEVICE=$(safe_iface "$(cfg wifi_device)" wlan0)
 USB_DEVICE=$(safe_iface "$(cfg usb_device)" usb0)
 jaddr4() { printf '%s' "$1" | sed -n 's/.*"address": *"\([^"]*\)".*/\1/p' | head -n1; }
-jarr_dns() { printf '%s' "$1" | sed -n 's/.*"dns-server": *\[\([^]]*\)\].*/\1/p' | tr -d '"' ; }
+jarr_dns() { printf '%s' "$1" | jsonfilter -e '@["dns-server"][*]' 2>/dev/null | awk 'BEGIN{s=""} NF{printf "%s%s",s,$0;s=", "} END{print ""}'; }
 
 wan_up=$(jval "$WANJSON" up)
 [ "$wan_up" = "true" ] && wan_up=1 || wan_up=0
@@ -87,7 +91,9 @@ wan6_up=$(jval "$WAN6JSON" up)
 [ "$wan6_up" = "true" ] && wan6_up=1 || wan6_up=0
 wan6_ip=$(t2 ip -6 addr show "$DATA_DEVICE" 2>/dev/null | awk '/inet6 [23]/{split($2,s,"/"); print s[1]; exit}')
 wan_dns=$(jarr_dns "$WANJSON")
-apn=$(t3 uci -q get "network.$DATA_IFACE.apn")
+apn_option=apn
+[ "$SIM_SLOT" != 1 ] || apn_option=apn_internal
+apn=$(t3 uci -q get "network.$DATA_IFACE.$apn_option")
 [ -n "$apn" ] || apn="(SIM default)"
 
 # ------------------------------------------------------------------- system
@@ -267,7 +273,7 @@ LAN_IP=$(t2 ip -4 addr show "$LAN_DEVICE" 2>/dev/null | awk '/inet /{split($2,a,
 # ---------------------------------------------------------------- modem/path
 # the same liveness rule mu300-atd uses: the URC log on nr0 is written to as
 # long as the modem is running, whatever it thinks of our commands
-URCLOG=/run/mu300-at/urc/stty_nr0.log
+URCLOG=/run/mu300-at/urc/stty_nr$((SIM_SLOT * 3)).log
 if [ -f "$URCLOG" ]; then
     AGE=$(( NOW - $(date -r "$URCLOG" +%s 2>/dev/null || echo 0) ))
     [ "$AGE" -lt 240 ] && MODEM_ALIVE=1 || MODEM_ALIVE=0

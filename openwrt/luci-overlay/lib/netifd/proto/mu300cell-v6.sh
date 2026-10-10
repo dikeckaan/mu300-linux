@@ -37,7 +37,11 @@ prefix4=$4
 dns1=$5
 dns2=$6
 peerdns=$7
-urclog=${MU300_URC_LOG:-/run/mu300-at/urc/stty_nr0.log}
+SIM_SLOT=0
+if [ -x /opt/mu300/bin/mu300-sim ]; then
+    SIM_SLOT=$(/opt/mu300/bin/mu300-sim active) || exit 1
+fi
+urclog=${MU300_URC_LOG:-/run/mu300-at/urc/stty_nr$((SIM_SLOT * 3)).log}
 logtag=mu300cell-renew
 
 mask2prefix() {
@@ -210,7 +214,7 @@ exec 3<>"$events"
 	while IFS= read -r _; do printf 'v6\n'; done > "$events" ) & addrmon=$!
 ( ip -6 monitor route dev "$ifname" 2>/dev/null |
 	while IFS= read -r _; do printf 'v6\n'; done > "$events" ) & routemon=$!
-( while [ ! -f "$urclog" ]; do sleep 0.2; done
+( while [ ! -f "$urclog" ]; do sleep 1; done
 	tail -n 0 -F "$urclog" 2>/dev/null |
 	while IFS= read -r line; do
 		case $line in

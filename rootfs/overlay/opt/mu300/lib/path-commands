@@ -15,6 +15,7 @@ mu300-led
 mu300-usb
 mu300-nfc
 mu300-device
+mu300-sim
 mu300-power
 mu300-cpu
 mu300-traffic

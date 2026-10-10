@@ -12,9 +12,13 @@
 # OpenWrt: od/timeout come from the static busybox in /opt/mu300/busybox-bin
 export PATH="$PATH:/opt/mu300/busybox-bin"
 set -euo pipefail
-DEV=${MU300_AT_DEV:-/dev/stty_nr1}
+SIM_SLOT=0
+if [ -x /opt/mu300/bin/mu300-sim ]; then
+    SIM_SLOT=$(/opt/mu300/bin/mu300-sim active) || exit 1
+fi
+DEV=${MU300_AT_DEV:-/dev/stty_nr$((SIM_SLOT * 3 + 1))}
 CID=1
-IFACE=sipa_eth$((CID - 1))
+IFACE=sipa_eth$((SIM_SLOT * 8 + CID - 1))
 
 # The blue LED only reports whether data is up. The PMIC rejects a brightness write now and then (seen as
 # "write error: Invalid argument"), and under `set -e` that killed up() one line before it could report the
@@ -233,7 +237,7 @@ v6_up() {  # v6_up IID
     echo 1 > "$c/accept_ra_pinfo"
     # 3GPP has the UE build its link-local address from the identifier the network assigned (Android does the
     # same); the kernel's own EUI-64 one would come from sipa_eth0's made-up MAC
-    echo 1 > "$c/addr_gen_mode"
+    echo 1 > "$c/addr_gen_mode" 2>/dev/null || true
     echo 0 > "$c/disable_ipv6"
     ip -6 addr add "fe80::$1/64" dev "$IFACE" 2>/dev/null || true
     for n in $(seq 1 20); do
@@ -488,7 +492,7 @@ is_registered() {
 # announces nothing; it replaces the old query every 2 s. When the modem's last word before the start was "not
 # registered", the change will be announced, so the first query waits 5 s too; otherwise (no log, nothing heard,
 # or registered) it is sent at once - a reconnect after a lost context is registered all along.
-URCLOG=${MU300_URC_LOG:-/run/mu300-at/urc/stty_nr0.log}
+URCLOG=${MU300_URC_LOG:-/run/mu300-at/urc/stty_nr$((SIM_SLOT * 3)).log}
 wait_registered() {
     local deadline=$((SECONDS + ${MU300_REGISTER_WAIT:-60})) next=$SECONDS seen size last
     seen=$(fsize "$URCLOG")   # bytes of the log that were there before the start
@@ -629,12 +633,16 @@ up_locked() {
     # the OpenWrt protocol handler uses.
     set -- "${1:-${MU300_APN:-}}"
     if [ -n "${1:-}" ]; then
-        # "IP", not "IPV4V6", because that is what Android's RIL asks this modem for. Measured on the same
-        # device with data working, its sipa_eth0 carries one IPv4 address and has IPv6 switched off outright
-        # (/proc/sys/net/ipv6/conf/sipa_eth0/disable_ipv6 = 1). A dual-stack context is the one part of our
-        # bring-up the working system never performs, and downlink is what we are missing (FINDINGS 13f).
-        # MU300_PDP_TYPE=IPV4V6 asks for both again, for a carrier that needs it.
+        # Keep the external card's established definition; internal F50 stock RIL uses
+        # dual stack with the extended context, PCO and QoS fields below.
+        if [ "$SIM_SLOT" = 1 ]; then
+            at 'AT+CDEFMP=1,"0"' >/dev/null
+            at "AT+CGDCONT=$CID,\"${MU300_PDP_TYPE:-IPV4V6}\",\"$1\",\"\",0,0,0,0,1,,,,,,,,,,,,,0" >/dev/null
+            at 'AT+CGPCO=0,"","",1,0' >/dev/null
+            at 'AT+CGEQREQ=1,2,0,0,0,0,2,0,"1e4","0e0",3,0,0' >/dev/null
+        else
         at "AT+CGDCONT=$CID,\"${MU300_PDP_TYPE:-IP}\",\"$1\"" >/dev/null
+        fi
     fi
     # No AT+CGACT? first: at boot the context is always off, the question costs a whole AT round trip, and
     # CGACT=1 on an active context (a reconnect) changes nothing. mu300-at exits 0 on any final result code,
@@ -666,7 +674,18 @@ up_locked() {
     # AT+CGDATA takes its time on this modem: measured, it answers "^ORIG: <cid>,<n>" and then CONNECT about
     # ten to twenty seconds later. With the old eight-second budget the reply arrived after we had given up, so
     # the next command read it instead of its own and the whole channel looked dead for a while.
-    at "AT+CGDATA=\"M-ETHER\",$CID" 45 | grep -q CONNECT || echo "AT+CGDATA did not answer CONNECT" >&2
+    if ! at "AT+CGDATA=\"M-ETHER\",$CID" 45 | grep -q CONNECT; then
+        echo "AT+CGDATA did not answer CONNECT" >&2
+        [ "$SIM_SLOT" != 1 ] || return 1
+    fi
+    # On the F50's internal SIM, CONNECT can succeed while all packets are lost.
+    # Stock RIL selects the packet-data route with SPSWDATA. Keep slot 0 unchanged.
+    if [ "$SIM_SLOT" = 1 ]; then
+        at 'AT+SPSWDATA' 8 | grep -x OK >/dev/null || {
+            echo 'Could not select the internal SIM packet-data route' >&2
+            return 1
+        }
+    fi
     prefix=$(mask2prefix "$mask")
     iid=$(v6_iid)
     # Without an IPv6 address from the network, switch IPv6 off on this interface, as Android does: otherwise it

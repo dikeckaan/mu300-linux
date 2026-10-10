@@ -24,6 +24,9 @@ wait_and_exec() {
 }
 
 start_service() {
+	local slot=0 cmddev datadev
+	[ ! -x /opt/mu300/bin/mu300-sim ] || slot=$(/opt/mu300/bin/mu300-sim active) || return 1
+	cmddev=/dev/stty_nr$((slot * 3 + 1)); datadev=/dev/stty_nr$((slot * 3 + 2))
 	# boot timeline mark; harmless without bootmark
 	[ -x /opt/mu300/bin/bootmark ] && /opt/mu300/bin/bootmark S19-atd-init || true
 	# Optional plugin handshake: it does nothing without the unisoc-modem panel (the file it tests for is the
@@ -31,7 +34,7 @@ start_service() {
 	[ ! -x /usr/libexec/unisoc-modem/lock ] || : > /run/unisoc-modem-early-hook-pending
 
 	procd_open_instance atd
-	procd_set_param command /bin/sh -c "$(wait_and_exec /dev/stty_nr1 /opt/mu300/bin/mu300-atd)"
+	procd_set_param command /bin/sh -c "$(wait_and_exec "$cmddev" /opt/mu300/bin/mu300-atd)"
 	procd_set_param respawn 3600 10 0
 	procd_set_param stdout 1
 	procd_set_param stderr 1
@@ -39,8 +42,8 @@ start_service() {
 
 	# second instance on nr2 (mobile-data's channel); no URC channel, nr1's daemon reads the URCs
 	procd_open_instance atd2
-	procd_set_param command /bin/sh -c "$(wait_and_exec /dev/stty_nr2 /opt/mu300/bin/mu300-atd)"
-	procd_set_param env MU300_AT_DEV=/dev/stty_nr2 MU300_AT_DIR=/run/mu300-at2 MU300_AT_URC_CHANNELS=
+	procd_set_param command /bin/sh -c "$(wait_and_exec "$datadev" /opt/mu300/bin/mu300-atd)"
+	procd_set_param env MU300_AT_DEV="$datadev" MU300_AT_DIR=/run/mu300-at2 MU300_AT_URC_CHANNELS=
 	procd_set_param respawn 3600 10 0
 	procd_set_param stdout 1
 	procd_set_param stderr 1
