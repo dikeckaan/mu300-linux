@@ -231,8 +231,13 @@ return view.extend({
 					}
 					/* show prints the header + "---" + the body (single newlines, no blank line): splitting at \n\n
 					 * gave an empty string -- which used to empty the bubble */
-					var body = (r.text || '').split('\n---\n').slice(1).join('\n---\n').trim();
+					var parts = (r.text || '').split('\n---\n');
+					var body = parts.slice(1).join('\n---\n').trim();
 					if (!body) return;
+					/* a long message pooled without all its parts (mu300-sms: "incomplete:  2 of 3 parts arrived");
+					 * the gaps are "[...]" in the text */
+					var inc = /^incomplete: +([0-9]+) of ([0-9]+)/m.exec(parts[0]);
+					if (inc) body += '\n' + _('Incomplete: %d of %d parts arrived').format(+inc[1], +inc[2]);
 					self.cache[m.id] = body;
 					var bd = div.querySelector('.bd');
 					if (bd && document.contains(div)) {

@@ -15,6 +15,9 @@ msgstr "Blocări de rețea"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Redirecționare SMS"
+
 msgid "AT terminal"
 msgstr "Terminal AT"
 
@@ -359,6 +362,159 @@ msgstr "Se adaugă adaptorul USB…"
 
 msgid "Add failed: %s"
 msgstr "Adăugarea a eșuat: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Lăsați gol pentru a păstra valoarea salvată"
+
+msgid "Saved: %s"
+msgstr "Salvat: %s"
+
+msgid "Remove the saved value"
+msgstr "Eliminați valoarea salvată"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Mesajele primite sunt redirecționate imediat ce ajung în fondul de SMS. O livrare eșuată este reîncercată după 30 s, apoi de fiecare dată după un timp de două ori mai lung (cel mult o oră), de zece ori în total."
+
+msgid "Forward received messages"
+msgstr "Redirecționează mesajele primite"
+
+msgid "Message template"
+msgstr "Șablonul mesajului"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Substituenți: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Doar acești expeditori"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Unul pe linie; gol: toți expeditorii. Un * la final se potrivește cu începutul unui expeditor."
+
+msgid "Never these senders"
+msgstr "Niciodată acești expeditori"
+
+msgid "Only messages containing one of these words"
+msgstr "Doar mesajele care conțin unul dintre aceste cuvinte"
+
+msgid "One per line; empty: every message."
+msgstr "Unul pe linie; gol: toate mesajele."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Activat"
+
+msgid "Address (http:// or https://)"
+msgstr "Adresă (http:// sau https://)"
+
+msgid "Body"
+msgstr "Corp"
+
+msgid "Form (URL-encoded)"
+msgstr "Formular (codificat URL)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Câmpuri: sender, time, text, device, message (șablonul completat)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Antete suplimentare (un \"Nume: valoare\" pe linie)"
+
+msgid "Bot token"
+msgstr "Tokenul botului"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "ID-ul chatului (un număr sau @canal)"
+
+msgid "E-mail"
+msgstr "E-mail"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "E-mailul are nevoie de msmtp, pe care această imagine nu îl are"
+
+msgid "Mail server"
+msgstr "Server de e-mail"
+
+msgid "Port"
+msgstr "Port"
+
+msgid "Security"
+msgstr "Securitate"
+
+msgid "None"
+msgstr "Niciuna"
+
+msgid "User name"
+msgstr "Nume de utilizator"
+
+msgid "Password"
+msgstr "Parolă"
+
+msgid "From"
+msgstr "De la"
+
+msgid "To"
+msgstr "Către"
+
+msgid "SMS to another phone"
+msgstr "SMS către alt telefon"
+
+msgid "Phone number"
+msgstr "Număr de telefon"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Se trimite ca un singur SMS: un mesaj mai lung este scurtat."
+
+msgid "Send test"
+msgstr "Trimite test"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Tokenurile, parolele și adresa și antetele webhookului rămân pe dispozitiv și nu mai sunt afișate niciodată."
+
+msgid "Delivered"
+msgstr "Livrat"
+
+msgid "Will retry"
+msgstr "Se va reîncerca"
+
+msgid "Failed"
+msgstr "Eșuat"
+
+msgid "Filtered out"
+msgstr "Filtrat"
+
+msgid "Dropped"
+msgstr "Abandonat"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Delivery log"
+msgstr "Jurnal de livrare"
+
+msgid "Waiting to be delivered"
+msgstr "În așteptarea livrării"
+
+msgid "Time"
+msgstr "Oră"
+
+msgid "Message"
+msgstr "Mesaj"
+
+msgid "Target"
+msgstr "Țintă"
+
+msgid "Result"
+msgstr "Rezultat"
+
+msgid "Detail"
+msgstr "Detaliu"
+
+msgid "No deliveries yet"
+msgstr "Încă nicio livrare"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Testul a pornit cu setările salvate; rezultatul apare în jurnalul de livrare."
 
 msgid "4G only"
 msgstr "Doar 4G"
@@ -803,9 +959,6 @@ msgstr "LuCI și acest panou"
 
 msgid "LuCI only"
 msgstr "Doar LuCI"
-
-msgid "Enabled"
-msgstr "Activat"
 
 msgid "Disabled"
 msgstr "Dezactivat"
@@ -1254,6 +1407,9 @@ msgstr "Pool-ul este gol. Mesajele primite și trimise apar aici, sau selectați
 msgid "Me: %s"
 msgstr "Eu: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Incomplet: au sosit %d din %d părți"
+
 msgid "Delete"
 msgstr "Ștergere"
 
@@ -1440,6 +1596,9 @@ msgstr "Adaptorul TTL nu a dat un răspuns valid"
 msgid "Invalid TTL"
 msgstr "TTL nevalid"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Adaptorul de redirecționare nu a dat un răspuns valid"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1556,6 +1715,51 @@ msgstr "Reîncărcarea rețelei a eșuat"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Nu se poate atașa interfața USB la puntea LAN"
+
+msgid "Invalid forwarding setting"
+msgstr "Setare de redirecționare nevalidă"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Șablonul mesajului este prea lung sau conține un caracter de control"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Listă de filtre nevalidă (cel mult 50 de linii)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Adresa webhookului trebuie să fie un URL http:// sau https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Antet nevalid (un \"Nume: valoare\" pe linie; Host, Content-Type, Content-Length, Transfer-Encoding și Connection sunt setate de dispozitiv)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Token de bot Telegram nevalid"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Chat Telegram nevalid (un număr sau @canal)"
+
+msgid "Invalid e-mail setting"
+msgstr "Setare de e-mail nevalidă"
+
+msgid "The webhook needs an address"
+msgstr "Webhookul are nevoie de o adresă"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram are nevoie de un token de bot și de un chat"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "E-mailul are nevoie de un server, un expeditor și un destinatar"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Redirecționarea prin SMS are nevoie de un număr de telefon"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Setările de redirecționare nu au putut fi salvate"
+
+msgid "SMS forwarding is not installed"
+msgstr "Redirecționarea SMS nu este instalată"
+
+msgid "Unknown forwarding operation"
+msgstr "Operațiune de redirecționare necunoscută"
 
 msgid "The language pack is not installed"
 msgstr "Pachetul de limbi nu este instalat"

@@ -15,6 +15,9 @@ msgstr "Zámky sítě"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Přeposílání SMS"
+
 msgid "AT terminal"
 msgstr "Terminál AT"
 
@@ -359,6 +362,159 @@ msgstr "Přidávání adaptéru USB…"
 
 msgid "Add failed: %s"
 msgstr "Přidání selhalo: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Ponechte prázdné, aby zůstala uložená hodnota"
+
+msgid "Saved: %s"
+msgstr "Uloženo: %s"
+
+msgid "Remove the saved value"
+msgstr "Odebrat uloženou hodnotu"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Přijaté zprávy se přeposílají, jakmile dorazí do fondu SMS. Neúspěšné doručení se zopakuje po 30 s a pak pokaždé po dvojnásobné době (nejvýše hodina), celkem desetkrát."
+
+msgid "Forward received messages"
+msgstr "Přeposílat přijaté zprávy"
+
+msgid "Message template"
+msgstr "Šablona zprávy"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Zástupné symboly: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Jen tito odesílatelé"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Jeden na řádek; prázdné: všichni odesílatelé. * na konci odpovídá začátku odesílatele."
+
+msgid "Never these senders"
+msgstr "Nikdy tito odesílatelé"
+
+msgid "Only messages containing one of these words"
+msgstr "Jen zprávy obsahující některé z těchto slov"
+
+msgid "One per line; empty: every message."
+msgstr "Jedno na řádek; prázdné: všechny zprávy."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Povoleno"
+
+msgid "Address (http:// or https://)"
+msgstr "Adresa (http:// nebo https://)"
+
+msgid "Body"
+msgstr "Tělo"
+
+msgid "Form (URL-encoded)"
+msgstr "Formulář (kódování URL)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Pole: sender, time, text, device, message (vyplněná šablona)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Další hlavičky (jedna \"Název: hodnota\" na řádek)"
+
+msgid "Bot token"
+msgstr "Token bota"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "ID chatu (číslo nebo @kanál)"
+
+msgid "E-mail"
+msgstr "E-mail"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "E-mail vyžaduje msmtp, který tento obraz nemá"
+
+msgid "Mail server"
+msgstr "Poštovní server"
+
+msgid "Port"
+msgstr "Port"
+
+msgid "Security"
+msgstr "Zabezpečení"
+
+msgid "None"
+msgstr "Žádné"
+
+msgid "User name"
+msgstr "Uživatelské jméno"
+
+msgid "Password"
+msgstr "Heslo"
+
+msgid "From"
+msgstr "Od"
+
+msgid "To"
+msgstr "Komu"
+
+msgid "SMS to another phone"
+msgstr "SMS na jiný telefon"
+
+msgid "Phone number"
+msgstr "Telefonní číslo"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Odesílá se jako jedna SMS: delší zpráva se zkrátí."
+
+msgid "Send test"
+msgstr "Odeslat test"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Tokeny, hesla a adresa a hlavičky webhooku zůstávají v zařízení a už se nikdy nezobrazí."
+
+msgid "Delivered"
+msgstr "Doručeno"
+
+msgid "Will retry"
+msgstr "Bude opakováno"
+
+msgid "Failed"
+msgstr "Selhalo"
+
+msgid "Filtered out"
+msgstr "Odfiltrováno"
+
+msgid "Dropped"
+msgstr "Zahozeno"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Delivery log"
+msgstr "Protokol doručení"
+
+msgid "Waiting to be delivered"
+msgstr "Čeká na doručení"
+
+msgid "Time"
+msgstr "Čas"
+
+msgid "Message"
+msgstr "Zpráva"
+
+msgid "Target"
+msgstr "Cíl"
+
+msgid "Result"
+msgstr "Výsledek"
+
+msgid "Detail"
+msgstr "Podrobnosti"
+
+msgid "No deliveries yet"
+msgstr "Zatím žádná doručení"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Test spuštěn s uloženým nastavením; výsledek se zobrazí v protokolu doručení."
 
 msgid "4G only"
 msgstr "Pouze 4G"
@@ -803,9 +959,6 @@ msgstr "LuCI a tento panel"
 
 msgid "LuCI only"
 msgstr "Pouze LuCI"
-
-msgid "Enabled"
-msgstr "Povoleno"
 
 msgid "Disabled"
 msgstr "Zakázáno"
@@ -1254,6 +1407,9 @@ msgstr "Fond je prázdný. Zobrazí se zde příchozí a odeslané zprávy, nebo
 msgid "Me: %s"
 msgstr "Já: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Neúplná: dorazilo %d z %d částí"
+
 msgid "Delete"
 msgstr "Smazat"
 
@@ -1440,6 +1596,9 @@ msgstr "Adaptér TTL nevrátil platnou odpověď"
 msgid "Invalid TTL"
 msgstr "Neplatné TTL"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Adaptér přeposílání nedal platnou odpověď"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1556,6 +1715,51 @@ msgstr "Opětovné načtení sítě selhalo"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Nelze připojit rozhraní USB k mostu LAN"
+
+msgid "Invalid forwarding setting"
+msgstr "Neplatné nastavení přeposílání"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Šablona zprávy je příliš dlouhá nebo obsahuje řídicí znak"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Neplatný seznam filtrů (nejvýše 50 řádků)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Adresa webhooku musí být URL http:// nebo https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Neplatná hlavička (jedna \"Název: hodnota\" na řádek; Host, Content-Type, Content-Length, Transfer-Encoding a Connection nastavuje zařízení)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Neplatný token bota Telegram"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Neplatný chat Telegram (číslo nebo @kanál)"
+
+msgid "Invalid e-mail setting"
+msgstr "Neplatné nastavení e-mailu"
+
+msgid "The webhook needs an address"
+msgstr "Webhook potřebuje adresu"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram potřebuje token bota a chat"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "E-mail potřebuje server, odesílatele a příjemce"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Přeposílání přes SMS potřebuje telefonní číslo"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Nastavení přeposílání se nepodařilo uložit"
+
+msgid "SMS forwarding is not installed"
+msgstr "Přeposílání SMS není nainstalováno"
+
+msgid "Unknown forwarding operation"
+msgstr "Neznámá operace přeposílání"
 
 msgid "The language pack is not installed"
 msgstr "Jazykový balíček není nainstalován"

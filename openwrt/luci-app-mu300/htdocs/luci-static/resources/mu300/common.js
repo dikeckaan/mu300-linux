@@ -36,6 +36,12 @@ var callPowerGet = rpc.declare({ object: 'mu300dash', method: 'power_get', expec
 var callPowerSet = rpc.declare({ object: 'mu300dash', method: 'power_set', params: [ 'op', 'key', 'value' ], expect: { '': {} } });
 var callTtlGet = rpc.declare({ object: 'mu300dash', method: 'ttl_get', expect: { '': {} } });
 var callTtlSet = rpc.declare({ object: 'mu300dash', method: 'ttl_set', params: [ 'value' ], expect: { '': {} } });
+var callFwdGet = rpc.declare({ object: 'mu300dash', method: 'forward_get', expect: { '': {} } });
+var callFwdSet = rpc.declare({ object: 'mu300dash', method: 'forward_set', params: [ 'enabled', 'template', 'allow',
+	'deny', 'keywords', 'clear', 'webhook', 'webhook_url', 'webhook_format', 'webhook_headers', 'telegram',
+	'telegram_token', 'telegram_chat', 'email', 'email_host', 'email_port', 'email_tls', 'email_user', 'email_password',
+	'email_from', 'email_to', 'sms', 'sms_number' ], expect: { '': {} } });
+var callFwdTest = rpc.declare({ object: 'mu300dash', method: 'forward_test', expect: { '': {} } });
 var callCpuGet = rpc.declare({ object: 'mu300dash', method: 'cpu_get', expect: { '': {} } });
 var callCpuSet = rpc.declare({ object: 'mu300dash', method: 'cpu_set', params: [ 'profile' ], expect: { '': {} } });
 
@@ -613,6 +619,7 @@ return baseclass.extend({
 	callLangGet: callLangGet, callLangSet: callLangSet,
 	callPowerGet: callPowerGet, callPowerSet: callPowerSet,
 	callTtlGet: callTtlGet, callTtlSet: callTtlSet,
+	callFwdGet: callFwdGet, callFwdSet: callFwdSet, callFwdTest: callFwdTest,
 	callCpuGet: callCpuGet, callCpuSet: callCpuSet,
 	carrierName: carrierName, qLevel: qLevel, qLevelLabel: qLevelLabel, qLabel: qLabel, qCol: qCol, qScore: qScore,
 	esc: esc, fmtBytes: fmtBytes, fmtRate: fmtRate, fmtUptime: fmtUptime, PLMN_CN: PLMN_CN,

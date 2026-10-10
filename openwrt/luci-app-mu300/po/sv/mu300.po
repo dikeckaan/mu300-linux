@@ -15,6 +15,9 @@ msgstr "Nätverkslås"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Vidarebefordran av SMS"
+
 msgid "AT terminal"
 msgstr "AT-terminal"
 
@@ -359,6 +362,159 @@ msgstr "Lägger till USB-adapter…"
 
 msgid "Add failed: %s"
 msgstr "Tillägg misslyckades: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Lämna tomt för att behålla det sparade värdet"
+
+msgid "Saved: %s"
+msgstr "Sparat: %s"
+
+msgid "Remove the saved value"
+msgstr "Ta bort det sparade värdet"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Mottagna meddelanden vidarebefordras när de når SMS-poolen. En misslyckad leverans försöks igen efter 30 s och sedan efter dubbelt så lång tid varje gång (högst en timme), tio gånger totalt."
+
+msgid "Forward received messages"
+msgstr "Vidarebefordra mottagna meddelanden"
+
+msgid "Message template"
+msgstr "Meddelandemall"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Platshållare: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Endast dessa avsändare"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "En per rad; tomt: alla avsändare. En * i slutet matchar början av en avsändare."
+
+msgid "Never these senders"
+msgstr "Aldrig dessa avsändare"
+
+msgid "Only messages containing one of these words"
+msgstr "Endast meddelanden som innehåller något av dessa ord"
+
+msgid "One per line; empty: every message."
+msgstr "Ett per rad; tomt: alla meddelanden."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Aktiverad"
+
+msgid "Address (http:// or https://)"
+msgstr "Adress (http:// eller https://)"
+
+msgid "Body"
+msgstr "Innehåll"
+
+msgid "Form (URL-encoded)"
+msgstr "Formulär (URL-kodat)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Fält: sender, time, text, device, message (den ifyllda mallen)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Extra rubriker (en \"Namn: värde\" per rad)"
+
+msgid "Bot token"
+msgstr "Bottoken"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "Chatt-ID (ett nummer eller @kanal)"
+
+msgid "E-mail"
+msgstr "E-post"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "E-post kräver msmtp, som den här avbildningen saknar"
+
+msgid "Mail server"
+msgstr "E-postserver"
+
+msgid "Port"
+msgstr "Port"
+
+msgid "Security"
+msgstr "Säkerhet"
+
+msgid "None"
+msgstr "Ingen"
+
+msgid "User name"
+msgstr "Användarnamn"
+
+msgid "Password"
+msgstr "Lösenord"
+
+msgid "From"
+msgstr "Från"
+
+msgid "To"
+msgstr "Till"
+
+msgid "SMS to another phone"
+msgstr "SMS till en annan telefon"
+
+msgid "Phone number"
+msgstr "Telefonnummer"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Skickas som ett SMS: ett längre meddelande kortas av."
+
+msgid "Send test"
+msgstr "Skicka test"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Token, lösenord samt webhookens adress och rubriker stannar på enheten och visas aldrig igen."
+
+msgid "Delivered"
+msgstr "Levererat"
+
+msgid "Will retry"
+msgstr "Försöks igen"
+
+msgid "Failed"
+msgstr "Misslyckades"
+
+msgid "Filtered out"
+msgstr "Bortfiltrerat"
+
+msgid "Dropped"
+msgstr "Kasserat"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Delivery log"
+msgstr "Leveranslogg"
+
+msgid "Waiting to be delivered"
+msgstr "Väntar på leverans"
+
+msgid "Time"
+msgstr "Tid"
+
+msgid "Message"
+msgstr "Meddelande"
+
+msgid "Target"
+msgstr "Mål"
+
+msgid "Result"
+msgstr "Resultat"
+
+msgid "Detail"
+msgstr "Detalj"
+
+msgid "No deliveries yet"
+msgstr "Inga leveranser ännu"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Testet startades med de sparade inställningarna; resultatet visas i leveransloggen."
 
 msgid "4G only"
 msgstr "Endast 4G"
@@ -803,9 +959,6 @@ msgstr "LuCI och denna panel"
 
 msgid "LuCI only"
 msgstr "Endast LuCI"
-
-msgid "Enabled"
-msgstr "Aktiverad"
 
 msgid "Disabled"
 msgstr "Inaktiverad"
@@ -1254,6 +1407,9 @@ msgstr "Poolen är tom. Inkommande och skickade meddelanden visas här, eller v�
 msgid "Me: %s"
 msgstr "Jag: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Ofullständigt: %d av %d delar kom fram"
+
 msgid "Delete"
 msgstr "Radera"
 
@@ -1440,6 +1596,9 @@ msgstr "TTL-adaptern gav inget giltigt svar"
 msgid "Invalid TTL"
 msgstr "Ogiltig TTL"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Vidarebefordringsadaptern gav inget giltigt svar"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1556,6 +1715,51 @@ msgstr "Omläsning av nätverket misslyckades"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Kan inte ansluta USB-gränssnittet till LAN-bryggan"
+
+msgid "Invalid forwarding setting"
+msgstr "Ogiltig inställning för vidarebefordran"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Meddelandemallen är för lång eller innehåller ett styrtecken"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Ogiltig filterlista (högst 50 rader)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Webhookens adress måste vara en http://- eller https://-URL"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Ogiltig rubrik (en \"Namn: värde\" per rad; Host, Content-Type, Content-Length, Transfer-Encoding och Connection sätts av enheten)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Ogiltig Telegram-bottoken"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Ogiltig Telegram-chatt (ett nummer eller @kanal)"
+
+msgid "Invalid e-mail setting"
+msgstr "Ogiltig e-postinställning"
+
+msgid "The webhook needs an address"
+msgstr "Webhooken behöver en adress"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram behöver en bottoken och en chatt"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "E-post behöver en server, en avsändare och en mottagare"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Vidarebefordran via SMS behöver ett telefonnummer"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Inställningarna för vidarebefordran kunde inte sparas"
+
+msgid "SMS forwarding is not installed"
+msgstr "Vidarebefordran av SMS är inte installerad"
+
+msgid "Unknown forwarding operation"
+msgstr "Okänd åtgärd för vidarebefordran"
 
 msgid "The language pack is not installed"
 msgstr "Språkpaketet är inte installerat"

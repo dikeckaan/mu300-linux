@@ -82,6 +82,7 @@ RECORDER = r'''#!/bin/sh
 f=$(mktemp "$STUB_CALLS/call.XXXXXX")
 printf '%s\0' "{name}" "$@" > "$f"
 [ "{name}" = sms ] && [ "${{1:-}}" = send ] && cat > "$f.stdin"
+[ "{name}" = forward ] && [ "${{1:-}}" = set ] && cat > "$f.stdin"
 if [ "{name}" = cell ] && [ -f "$STUB_OUT/sig.json" ]; then cp "$STUB_OUT/sig.json" "$MU300_DASH_DIR/sig.json"; fi
 if [ -f "$STUB_OUT/{name}" ]; then cat "$STUB_OUT/{name}"; else printf '%s\n' '{default}'; fi
 [ -f "$STUB_OUT/{name}.rc" ] && exit "$(cat "$STUB_OUT/{name}.rc")"
@@ -91,7 +92,7 @@ exit 0
 DEFAULTS = {
     'dashboard-info': '{"ok":1,"host":"f50"}', 'cell': '{"ok":1}', 'action': '{"ok":1,"op":"x"}',
     'lock': '{"ok":1,"mode":{"label":"auto"}}', 'device-usb': '{"ok":1}', 'at': 'OK', 'sms': 'sent (12)',
-    'languages': '{"ok":1}', 'power': '{"ok":1}', 'ttl': '{"ok":1}',
+    'languages': '{"ok":1}', 'power': '{"ok":1}', 'ttl': '{"ok":1}', 'forward': '{"ok":1}',
 }
 
 # The methods that start something with setsid (in the background of mu300dash)
@@ -213,7 +214,7 @@ class Inventory(Mu300Dash):
     METHODS = {'sysinfo', 'status', 'signal', 'act', 'at', 'at_history', 'lock_get', 'lock_set', 'sms_list',
                'sms_show', 'sms_send', 'sms_delete', 'sms_sync', 'usb_get', 'usb_set', 'usb_net_list', 'usb_net_add',
                'lang_get', 'lang_set', 'power_get', 'power_set',
-               'ttl_get', 'ttl_set', 'cpu_get', 'cpu_set'}
+               'ttl_get', 'ttl_set', 'cpu_get', 'cpu_set', 'forward_get', 'forward_set', 'forward_test'}
 
     def test_list_declares_every_method(self):
         for shell in self.each_shell():
@@ -235,7 +236,8 @@ class Inventory(Mu300Dash):
     def test_the_changed_scripts_parse(self):
         for shell in self.each_shell():
             for p in [DASH, LIB] + [ADAPTERS / n for n in ('action', 'at', 'boot-replay', 'cell', 'dashboard-info',
-                                                         'device-usb', 'lock', 'languages', 'power', 'ttl', 'cpu')]:
+                                                         'device-usb', 'lock', 'languages', 'power', 'ttl',
+                                                         'cpu', 'forward')]:
                 with self.subTest(p=p.name):
                     r = subprocess.run(shell + ['-n', str(p)], capture_output=True, text=True)
                     self.assertEqual(r.returncode, 0, r.stderr)
@@ -431,6 +433,9 @@ class Passthrough(Mu300Dash):
         ('ttl_set', {'value': '255'}, [['ttl', 'set', '255']]),
         ('ttl_set', {'value': '1'}, [['ttl', 'set', '1']]),
         ('ttl_set', {'value': 'off'}, [['ttl', 'set', 'off']]),
+        ('forward_get', {}, [['forward', 'get']]),
+        ('forward_set', {'enabled': '1', 'telegram_token': 'x'}, [['forward', 'set']]),
+        ('forward_test', {}, [['forward', 'test']]),
     ]
 
     def test_valid_values_reach_the_adapter(self):
@@ -478,6 +483,16 @@ class Passthrough(Mu300Dash):
             self.assertEqual(recs, [['sms', 'send', '--stdin', '123']])
             self.assertEqual(json.loads(stdins[0]), {'a': '$(id)'})
 
+    def test_forwarding_secrets_go_on_stdin(self):
+        # the settings carry a bot token and a password: the adapter gets the request on stdin, never in an argument
+        req = {'enabled': '1', 'telegram_token': '123456789:AAHsecretTokenValue_0123456789',
+               'email_password': "pa$(reboot)'ss", 'template': '{text}\n-- {sender}'}
+        for shell in self.each_shell():
+            r, recs, stdins = self.call(shell, 'forward_set', req)
+            self.assertEqual(self.reply(r)['ok'], 1, r.stdout)
+            self.assertEqual(recs, [['forward', 'set']])
+            self.assertEqual(json.loads(stdins[0]), req)
+
 
 NASTY = 'he said "hi" \\ back\\slash\nnew line\ttab\rcr \x01 \x1f end'
 NASTY_JSON = json.dumps({'ok': 1, 'op': NASTY, 'name': NASTY, 'nested': {'k': [NASTY]}}, ensure_ascii=False)
@@ -493,6 +508,7 @@ class Replies(Mu300Dash):
         ('sms_show', {'id': '1'}), ('sms_send', {'num': '123', 'text': 'x'}), ('sms_delete', {'id': '1'}),
         ('sms_sync', {}), ('usb_get', {}), ('usb_set', {'kind': 'role', 'value': 'device', 'auto': '0'}),
         ('usb_net_list', {}), ('usb_net_add', {'iface': 'eth1'}), ('ttl_get', {}), ('ttl_set', {'value': '64'}),
+        ('forward_get', {}), ('forward_set', {'enabled': '0'}), ('forward_test', {}),
     ]
     OUTPUTS = {
         'garbage': NASTY,
@@ -804,7 +820,8 @@ class Acl(unittest.TestCase):
     READ = {'sysinfo', 'status', 'signal', 'lock_get', 'usb_get', 'usb_net_list', 'lang_get', 'power_get', 'ttl_get',
             'cpu_get'}
     WRITE = {'act', 'at', 'at_history', 'lock_set', 'sms_list', 'sms_show', 'sms_send', 'sms_delete', 'sms_sync',
-             'usb_set', 'usb_net_add', 'lang_set', 'power_set', 'ttl_set', 'cpu_set'}
+             'usb_set', 'usb_net_add', 'lang_set', 'power_set', 'ttl_set', 'cpu_set', 'forward_get',
+             'forward_set', 'forward_test'}
 
     def test_actions_need_write_access(self):
         acl = json.loads(ACL.read_text())['luci-app-mu300']

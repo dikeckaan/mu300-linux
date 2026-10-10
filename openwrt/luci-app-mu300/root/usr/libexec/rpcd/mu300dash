@@ -24,6 +24,8 @@
 #   lang_get, lang_set  LuCI's languages and the lang extra (unisoc-modem/languages, mu300-extra)
 #   power_get, power_set  the power profiles (unisoc-modem/power, mu300-power)
 #   ttl_get, ttl_set value  the TTL of mobile data (unisoc-modem/ttl, mu300-ttl); value off or 1-255
+#   forward_get, forward_set ..., forward_test  SMS forwarding (unisoc-modem/forward, mu300-sms-forward); the
+#                     settings go to the adapter on stdin, as sent: they hold secrets, never an argument
 #   cpu_get, cpu_set profile  the CPU performance profile (unisoc-modem/cpu, mu300-cpu); saving|balanced|performance
 #
 # The AT terminal's whole wait is capped below the 30 s endpoint limit (AT_LOCK_WAIT
@@ -552,6 +554,16 @@ m_ttl_set() {
     reply_obj "$("$TTLA" set "$value" 2>/dev/null)" 'The TTL adapter gave no valid reply'
 }
 
+# ---------------------------------------------------------- SMS forwarding
+# The adapter checks every field itself (it writes a root-only file from them); the request reaches it on stdin only,
+# since it carries the secrets (a bot token, a password), and nothing of it is logged: the method log keeps replies,
+# and the adapter's replies never hold a secret.
+FWDA=${MU300_FWD_ADAPTER:-$DASH/forward}
+m_forward_get() { reply_obj "$("$FWDA" get 2>/dev/null)" 'The forwarding adapter gave no valid reply'; }
+m_forward_set() {
+    reply_obj "$(printf '%s' "$INPUT" | "$FWDA" set 2>/dev/null)" 'The forwarding adapter gave no valid reply'
+}
+m_forward_test() { reply_obj "$("$FWDA" test 2>/dev/null)" 'The forwarding adapter gave no valid reply'; }
 # The CPU page: mu300-cpu through the adapter, which checks the profile name again
 CPUA=${MU300_CPU_ADAPTER:-$DASH/cpu}
 m_cpu_get() { reply_obj "$("$CPUA" get 2>/dev/null)" 'The CPU adapter gave no valid reply'; }
@@ -588,6 +600,14 @@ do_list() {
 	"power_set": { "op": "String", "key": "String", "value": "String" },
 	"ttl_get": { },
 	"ttl_set": { "value": "String" },
+	"forward_get": { },
+	"forward_set": { "enabled": "String", "template": "String", "allow": "String", "deny": "String",
+		"keywords": "String", "clear": "String", "webhook": "String", "webhook_url": "String",
+		"webhook_format": "String", "webhook_headers": "String", "telegram": "String", "telegram_token": "String",
+		"telegram_chat": "String", "email": "String", "email_host": "String", "email_port": "String",
+		"email_tls": "String", "email_user": "String", "email_password": "String", "email_from": "String",
+		"email_to": "String", "sms": "String", "sms_number": "String" },
+	"forward_test": { },
 	"cpu_get": { },
 	"cpu_set": { "profile": "String" }
 }
@@ -645,6 +665,9 @@ call)
         power_set)    run_m power_set    m_power_set ;;
         ttl_get)      run_m ttl_get      m_ttl_get ;;
         ttl_set)      run_m ttl_set      m_ttl_set ;;
+        forward_get)  run_m forward_get  m_forward_get ;;
+        forward_set)  run_m forward_set  m_forward_set ;;
+        forward_test) run_m forward_test m_forward_test ;;
         cpu_get)      run_m cpu_get      m_cpu_get ;;
         cpu_set)      run_m cpu_set      m_cpu_set ;;
         *)            refuse 'No such method' ;;

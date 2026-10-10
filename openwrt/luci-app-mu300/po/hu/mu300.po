@@ -15,6 +15,9 @@ msgstr "Hálózati zárolások"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "SMS-továbbítás"
+
 msgid "AT terminal"
 msgstr "AT-terminál"
 
@@ -359,6 +362,159 @@ msgstr "USB-adapter hozzáadása…"
 
 msgid "Add failed: %s"
 msgstr "A hozzáadás sikertelen: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Hagyja üresen a mentett érték megtartásához"
+
+msgid "Saved: %s"
+msgstr "Mentve: %s"
+
+msgid "Remove the saved value"
+msgstr "A mentett érték törlése"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "A fogadott üzenetek továbbítása azonnal megtörténik, amint az SMS-tárba érnek. A sikertelen kézbesítést 30 mp után, majd minden alkalommal kétszer annyi idő után (legfeljebb egy óra) újra megpróbálja, összesen tízszer."
+
+msgid "Forward received messages"
+msgstr "Fogadott üzenetek továbbítása"
+
+msgid "Message template"
+msgstr "Üzenetsablon"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Helyőrzők: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Csak ezek a feladók"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Soronként egy; üres: minden feladó. A végén álló * a feladó elejére illeszkedik."
+
+msgid "Never these senders"
+msgstr "Soha ezek a feladók"
+
+msgid "Only messages containing one of these words"
+msgstr "Csak az ezen szavak egyikét tartalmazó üzenetek"
+
+msgid "One per line; empty: every message."
+msgstr "Soronként egy; üres: minden üzenet."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Engedélyezve"
+
+msgid "Address (http:// or https://)"
+msgstr "Cím (http:// vagy https://)"
+
+msgid "Body"
+msgstr "Törzs"
+
+msgid "Form (URL-encoded)"
+msgstr "Űrlap (URL-kódolt)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Mezők: sender, time, text, device, message (a kitöltött sablon)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "További fejlécek (soronként egy \"Név: érték\")"
+
+msgid "Bot token"
+msgstr "Bot token"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "Csevegésazonosító (szám vagy @csatorna)"
+
+msgid "E-mail"
+msgstr "E-mail"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "Az e-mailhez msmtp kell, ami ebben a képfájlban nincs"
+
+msgid "Mail server"
+msgstr "Levelezőkiszolgáló"
+
+msgid "Port"
+msgstr "Port"
+
+msgid "Security"
+msgstr "Biztonság"
+
+msgid "None"
+msgstr "Nincs"
+
+msgid "User name"
+msgstr "Felhasználónév"
+
+msgid "Password"
+msgstr "Jelszó"
+
+msgid "From"
+msgstr "Feladó"
+
+msgid "To"
+msgstr "Címzett"
+
+msgid "SMS to another phone"
+msgstr "SMS egy másik telefonra"
+
+msgid "Phone number"
+msgstr "Telefonszám"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Egy SMS-ként megy el: a hosszabb üzenet lerövidül."
+
+msgid "Send test"
+msgstr "Teszt küldése"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "A tokenek, jelszavak, valamint a webhook címe és fejlécei az eszközön maradnak, és soha többé nem jelennek meg."
+
+msgid "Delivered"
+msgstr "Kézbesítve"
+
+msgid "Will retry"
+msgstr "Újrapróbálás"
+
+msgid "Failed"
+msgstr "Sikertelen"
+
+msgid "Filtered out"
+msgstr "Kiszűrve"
+
+msgid "Dropped"
+msgstr "Eldobva"
+
+msgid "Test"
+msgstr "Teszt"
+
+msgid "Delivery log"
+msgstr "Kézbesítési napló"
+
+msgid "Waiting to be delivered"
+msgstr "Kézbesítésre vár"
+
+msgid "Time"
+msgstr "Idő"
+
+msgid "Message"
+msgstr "Üzenet"
+
+msgid "Target"
+msgstr "Cél"
+
+msgid "Result"
+msgstr "Eredmény"
+
+msgid "Detail"
+msgstr "Részletek"
+
+msgid "No deliveries yet"
+msgstr "Még nincs kézbesítés"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "A teszt elindult a mentett beállításokkal; az eredmény a kézbesítési naplóban jelenik meg."
 
 msgid "4G only"
 msgstr "Csak 4G"
@@ -803,9 +959,6 @@ msgstr "LuCI és ez a panel"
 
 msgid "LuCI only"
 msgstr "Csak LuCI"
-
-msgid "Enabled"
-msgstr "Engedélyezve"
 
 msgid "Disabled"
 msgstr "Letiltva"
@@ -1254,6 +1407,9 @@ msgstr "A tároló üres. A bejövő és elküldött üzenetek itt jelennek meg,
 msgid "Me: %s"
 msgstr "Én: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Hiányos: %d / %d rész érkezett meg"
+
 msgid "Delete"
 msgstr "Törlés"
 
@@ -1440,6 +1596,9 @@ msgstr "A TTL-adapter nem adott érvényes választ"
 msgid "Invalid TTL"
 msgstr "Érvénytelen TTL"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "A továbbító adapter nem adott érvényes választ"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1556,6 +1715,51 @@ msgstr "A hálózat újratöltése sikertelen"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Az USB-csatoló nem kapcsolható a LAN-hídhoz"
+
+msgid "Invalid forwarding setting"
+msgstr "Érvénytelen továbbítási beállítás"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Az üzenetsablon túl hosszú vagy vezérlőkaraktert tartalmaz"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Érvénytelen szűrőlista (legfeljebb 50 sor)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "A webhook címének http:// vagy https:// URL-nek kell lennie"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Érvénytelen fejléc (soronként egy \"Név: érték\"; a Host, Content-Type, Content-Length, Transfer-Encoding és Connection fejlécet az eszköz állítja be)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Érvénytelen Telegram bot token"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Érvénytelen Telegram csevegés (szám vagy @csatorna)"
+
+msgid "Invalid e-mail setting"
+msgstr "Érvénytelen e-mail beállítás"
+
+msgid "The webhook needs an address"
+msgstr "A webhookhoz cím kell"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "A Telegramhoz bot token és csevegés kell"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "Az e-mailhez kiszolgáló, feladó és címzett kell"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Az SMS-továbbításhoz telefonszám kell"
+
+msgid "The forwarding settings could not be saved"
+msgstr "A továbbítási beállításokat nem sikerült menteni"
+
+msgid "SMS forwarding is not installed"
+msgstr "Az SMS-továbbítás nincs telepítve"
+
+msgid "Unknown forwarding operation"
+msgstr "Ismeretlen továbbítási művelet"
 
 msgid "The language pack is not installed"
 msgstr "A nyelvi csomag nincs telepítve"

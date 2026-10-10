@@ -15,6 +15,9 @@ msgstr "नेटवर्क लॉक"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "SMS अग्रेषण"
+
 msgid "AT terminal"
 msgstr "AT टर्मिनल"
 
@@ -359,6 +362,159 @@ msgstr "USB एडेप्टर जोड़ा जा रहा है…"
 
 msgid "Add failed: %s"
 msgstr "जोड़ना विफल: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "सहेजा गया मान रखने के लिए खाली छोड़ें"
+
+msgid "Saved: %s"
+msgstr "सहेजा गया: %s"
+
+msgid "Remove the saved value"
+msgstr "सहेजा गया मान हटाएँ"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "प्राप्त संदेश SMS पूल में पहुँचते ही आगे भेजे जाते हैं। विफल डिलीवरी 30 सेकंड बाद फिर आज़माई जाती है, फिर हर बार दोगुने समय बाद (अधिकतम एक घंटा), कुल दस बार।"
+
+msgid "Forward received messages"
+msgstr "प्राप्त संदेश आगे भेजें"
+
+msgid "Message template"
+msgstr "संदेश टेम्पलेट"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "प्लेसहोल्डर: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "केवल ये प्रेषक"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "प्रति पंक्ति एक; खाली: सभी प्रेषक। अंत में * प्रेषक की शुरुआत से मेल खाता है।"
+
+msgid "Never these senders"
+msgstr "ये प्रेषक कभी नहीं"
+
+msgid "Only messages containing one of these words"
+msgstr "केवल वे संदेश जिनमें इनमें से कोई शब्द हो"
+
+msgid "One per line; empty: every message."
+msgstr "प्रति पंक्ति एक; खाली: सभी संदेश।"
+
+msgid "Webhook"
+msgstr "वेबहुक"
+
+msgid "Enabled"
+msgstr "सक्षम"
+
+msgid "Address (http:// or https://)"
+msgstr "पता (http:// या https://)"
+
+msgid "Body"
+msgstr "बॉडी"
+
+msgid "Form (URL-encoded)"
+msgstr "फ़ॉर्म (URL-एन्कोडेड)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "फ़ील्ड: sender, time, text, device, message (भरा हुआ टेम्पलेट)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "अतिरिक्त हेडर (प्रति पंक्ति एक \"Name: value\")"
+
+msgid "Bot token"
+msgstr "बॉट टोकन"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "चैट ID (एक संख्या या @चैनल)"
+
+msgid "E-mail"
+msgstr "ईमेल"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "ईमेल के लिए msmtp चाहिए, जो इस इमेज में नहीं है"
+
+msgid "Mail server"
+msgstr "मेल सर्वर"
+
+msgid "Port"
+msgstr "पोर्ट"
+
+msgid "Security"
+msgstr "सुरक्षा"
+
+msgid "None"
+msgstr "कोई नहीं"
+
+msgid "User name"
+msgstr "उपयोगकर्ता नाम"
+
+msgid "Password"
+msgstr "पासवर्ड"
+
+msgid "From"
+msgstr "प्रेषक"
+
+msgid "To"
+msgstr "प्राप्तकर्ता"
+
+msgid "SMS to another phone"
+msgstr "दूसरे फ़ोन पर SMS"
+
+msgid "Phone number"
+msgstr "फ़ोन नंबर"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "एक SMS के रूप में भेजा जाता है: लंबा संदेश छोटा कर दिया जाता है।"
+
+msgid "Send test"
+msgstr "परीक्षण भेजें"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "टोकन, पासवर्ड और वेबहुक का पता व हेडर डिवाइस पर ही रहते हैं और फिर कभी नहीं दिखाए जाते।"
+
+msgid "Delivered"
+msgstr "डिलीवर हुआ"
+
+msgid "Will retry"
+msgstr "फिर प्रयास होगा"
+
+msgid "Failed"
+msgstr "विफल"
+
+msgid "Filtered out"
+msgstr "फ़िल्टर किया गया"
+
+msgid "Dropped"
+msgstr "छोड़ा गया"
+
+msgid "Test"
+msgstr "परीक्षण"
+
+msgid "Delivery log"
+msgstr "डिलीवरी लॉग"
+
+msgid "Waiting to be delivered"
+msgstr "डिलीवरी की प्रतीक्षा में"
+
+msgid "Time"
+msgstr "समय"
+
+msgid "Message"
+msgstr "संदेश"
+
+msgid "Target"
+msgstr "लक्ष्य"
+
+msgid "Result"
+msgstr "परिणाम"
+
+msgid "Detail"
+msgstr "विवरण"
+
+msgid "No deliveries yet"
+msgstr "अभी तक कोई डिलीवरी नहीं"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "सहेजी गई सेटिंग्स से परीक्षण शुरू हुआ; परिणाम डिलीवरी लॉग में दिखेगा।"
 
 msgid "4G only"
 msgstr "केवल 4G"
@@ -803,9 +959,6 @@ msgstr "LuCI और यह पैनल"
 
 msgid "LuCI only"
 msgstr "केवल LuCI"
-
-msgid "Enabled"
-msgstr "सक्षम"
 
 msgid "Disabled"
 msgstr "अक्षम"
@@ -1254,6 +1407,9 @@ msgstr "पूल खाली है। आने वाले और भेज
 msgid "Me: %s"
 msgstr "मैं: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "अधूरा: %d / %d भाग पहुँचे"
+
 msgid "Delete"
 msgstr "हटाएँ"
 
@@ -1440,6 +1596,9 @@ msgstr "TTL एडेप्टर ने कोई मान्य उत्त�
 msgid "Invalid TTL"
 msgstr "अमान्य TTL"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "अग्रेषण एडैप्टर ने कोई मान्य उत्तर नहीं दिया"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1556,6 +1715,51 @@ msgstr "नेटवर्क पुनः लोड करना विफल"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "USB इंटरफ़ेस को LAN ब्रिज से नहीं जोड़ा जा सकता"
+
+msgid "Invalid forwarding setting"
+msgstr "अमान्य अग्रेषण सेटिंग"
+
+msgid "The message template is too long or contains a control character"
+msgstr "संदेश टेम्पलेट बहुत लंबा है या उसमें नियंत्रण वर्ण है"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "अमान्य फ़िल्टर सूची (अधिकतम 50 पंक्तियाँ)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "वेबहुक का पता http:// या https:// URL होना चाहिए"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "अमान्य हेडर (प्रति पंक्ति एक \"Name: value\"; Host, Content-Type, Content-Length, Transfer-Encoding और Connection डिवाइस सेट करता है)"
+
+msgid "Invalid Telegram bot token"
+msgstr "अमान्य Telegram बॉट टोकन"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "अमान्य Telegram चैट (एक संख्या या @चैनल)"
+
+msgid "Invalid e-mail setting"
+msgstr "अमान्य ईमेल सेटिंग"
+
+msgid "The webhook needs an address"
+msgstr "वेबहुक को एक पता चाहिए"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram को बॉट टोकन और एक चैट चाहिए"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "ईमेल को सर्वर, प्रेषक और प्राप्तकर्ता चाहिए"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "SMS द्वारा अग्रेषण के लिए फ़ोन नंबर चाहिए"
+
+msgid "The forwarding settings could not be saved"
+msgstr "अग्रेषण सेटिंग्स सहेजी नहीं जा सकीं"
+
+msgid "SMS forwarding is not installed"
+msgstr "SMS अग्रेषण इंस्टॉल नहीं है"
+
+msgid "Unknown forwarding operation"
+msgstr "अज्ञात अग्रेषण कार्रवाई"
 
 msgid "The language pack is not installed"
 msgstr "भाषा पैक इंस्टॉल नहीं है"

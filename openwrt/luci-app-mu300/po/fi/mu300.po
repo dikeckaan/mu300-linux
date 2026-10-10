@@ -15,6 +15,9 @@ msgstr "Verkkolukitukset"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Tekstiviestien edelleenlähetys"
+
 msgid "AT terminal"
 msgstr "AT-pääte"
 
@@ -359,6 +362,159 @@ msgstr "Lisätään USB-sovitinta…"
 
 msgid "Add failed: %s"
 msgstr "Lisäys epäonnistui: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Jätä tyhjäksi, niin tallennettu arvo säilyy"
+
+msgid "Saved: %s"
+msgstr "Tallennettu: %s"
+
+msgid "Remove the saved value"
+msgstr "Poista tallennettu arvo"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Vastaanotetut viestit lähetetään edelleen heti, kun ne saapuvat SMS-pooliin. Epäonnistunut toimitus yritetään uudelleen 30 s kuluttua ja sen jälkeen aina kaksinkertaisen ajan päästä (enintään tunti), yhteensä kymmenen kertaa."
+
+msgid "Forward received messages"
+msgstr "Lähetä vastaanotetut viestit edelleen"
+
+msgid "Message template"
+msgstr "Viestipohja"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Paikkamerkit: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Vain nämä lähettäjät"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Yksi riviä kohden; tyhjä: kaikki lähettäjät. Lopussa oleva * vastaa lähettäjän alkua."
+
+msgid "Never these senders"
+msgstr "Ei koskaan näitä lähettäjiä"
+
+msgid "Only messages containing one of these words"
+msgstr "Vain viestit, joissa on jokin näistä sanoista"
+
+msgid "One per line; empty: every message."
+msgstr "Yksi riviä kohden; tyhjä: kaikki viestit."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Käytössä"
+
+msgid "Address (http:// or https://)"
+msgstr "Osoite (http:// tai https://)"
+
+msgid "Body"
+msgstr "Sisältö"
+
+msgid "Form (URL-encoded)"
+msgstr "Lomake (URL-koodattu)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Kentät: sender, time, text, device, message (täytetty pohja)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Lisäotsakkeet (yksi \"Nimi: arvo\" riviä kohden)"
+
+msgid "Bot token"
+msgstr "Botin tunnus"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "Keskustelun tunnus (numero tai @kanava)"
+
+msgid "E-mail"
+msgstr "Sähköposti"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "Sähköposti vaatii msmtp:n, jota tässä levykuvassa ei ole"
+
+msgid "Mail server"
+msgstr "Sähköpostipalvelin"
+
+msgid "Port"
+msgstr "Portti"
+
+msgid "Security"
+msgstr "Suojaus"
+
+msgid "None"
+msgstr "Ei mitään"
+
+msgid "User name"
+msgstr "Käyttäjänimi"
+
+msgid "Password"
+msgstr "Salasana"
+
+msgid "From"
+msgstr "Lähettäjä"
+
+msgid "To"
+msgstr "Vastaanottaja"
+
+msgid "SMS to another phone"
+msgstr "Tekstiviesti toiseen puhelimeen"
+
+msgid "Phone number"
+msgstr "Puhelinnumero"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Lähetetään yhtenä tekstiviestinä: pidempi viesti lyhennetään."
+
+msgid "Send test"
+msgstr "Lähetä testi"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Tunnukset, salasanat sekä webhookin osoite ja otsakkeet pysyvät laitteessa eikä niitä näytetä enää koskaan."
+
+msgid "Delivered"
+msgstr "Toimitettu"
+
+msgid "Will retry"
+msgstr "Yritetään uudelleen"
+
+msgid "Failed"
+msgstr "Epäonnistui"
+
+msgid "Filtered out"
+msgstr "Suodatettu pois"
+
+msgid "Dropped"
+msgstr "Hylätty"
+
+msgid "Test"
+msgstr "Testi"
+
+msgid "Delivery log"
+msgstr "Toimitusloki"
+
+msgid "Waiting to be delivered"
+msgstr "Odottaa toimitusta"
+
+msgid "Time"
+msgstr "Aika"
+
+msgid "Message"
+msgstr "Viesti"
+
+msgid "Target"
+msgstr "Kohde"
+
+msgid "Result"
+msgstr "Tulos"
+
+msgid "Detail"
+msgstr "Lisätieto"
+
+msgid "No deliveries yet"
+msgstr "Ei vielä toimituksia"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Testi käynnistettiin tallennetuilla asetuksilla; tulos näkyy toimituslokissa."
 
 msgid "4G only"
 msgstr "Vain 4G"
@@ -803,9 +959,6 @@ msgstr "LuCI ja tämä paneeli"
 
 msgid "LuCI only"
 msgstr "Vain LuCI"
-
-msgid "Enabled"
-msgstr "Käytössä"
 
 msgid "Disabled"
 msgstr "Ei käytössä"
@@ -1254,6 +1407,9 @@ msgstr "Varasto on tyhjä. Saapuneet ja lähetetyt viestit näkyvät tässä, ta
 msgid "Me: %s"
 msgstr "Minä: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Puutteellinen: %d / %d osaa saapui"
+
 msgid "Delete"
 msgstr "Poista"
 
@@ -1440,6 +1596,9 @@ msgstr "TTL-sovitin ei antanut kelvollista vastausta"
 msgid "Invalid TTL"
 msgstr "Virheellinen TTL"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Edelleenlähetyksen sovitin ei antanut kelvollista vastausta"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1556,6 +1715,51 @@ msgstr "Verkon uudelleenlataus epäonnistui"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "USB-liitäntää ei voi liittää LAN-siltaan"
+
+msgid "Invalid forwarding setting"
+msgstr "Virheellinen edelleenlähetyksen asetus"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Viestipohja on liian pitkä tai sisältää ohjausmerkin"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Virheellinen suodatinluettelo (enintään 50 riviä)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Webhookin osoitteen on oltava http://- tai https://-URL"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Virheellinen otsake (yksi \"Nimi: arvo\" riviä kohden; laite asettaa Host-, Content-Type-, Content-Length-, Transfer-Encoding- ja Connection-otsakkeet)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Virheellinen Telegram-botin tunnus"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Virheellinen Telegram-keskustelu (numero tai @kanava)"
+
+msgid "Invalid e-mail setting"
+msgstr "Virheellinen sähköpostiasetus"
+
+msgid "The webhook needs an address"
+msgstr "Webhook tarvitsee osoitteen"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram tarvitsee botin tunnuksen ja keskustelun"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "Sähköposti tarvitsee palvelimen, lähettäjän ja vastaanottajan"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Tekstiviestin edelleenlähetys tarvitsee puhelinnumeron"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Edelleenlähetyksen asetuksia ei voitu tallentaa"
+
+msgid "SMS forwarding is not installed"
+msgstr "Tekstiviestien edelleenlähetystä ei ole asennettu"
+
+msgid "Unknown forwarding operation"
+msgstr "Tuntematon edelleenlähetyksen toiminto"
 
 msgid "The language pack is not installed"
 msgstr "Kielipakettia ei ole asennettu"

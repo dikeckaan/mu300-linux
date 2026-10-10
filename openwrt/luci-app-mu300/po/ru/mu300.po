@@ -15,6 +15,9 @@ msgstr "Фиксация сети"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Пересылка SMS"
+
 msgid "AT terminal"
 msgstr "AT-терминал"
 
@@ -359,6 +362,159 @@ msgstr "Добавление USB-адаптера…"
 
 msgid "Add failed: %s"
 msgstr "Ошибка добавления: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Оставьте пустым, чтобы сохранить прежнее значение"
+
+msgid "Saved: %s"
+msgstr "Сохранено: %s"
+
+msgid "Remove the saved value"
+msgstr "Удалить сохранённое значение"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Полученные сообщения пересылаются, как только попадают в пул SMS. Неудачная отправка повторяется через 30 с, затем каждый раз через вдвое больший интервал (не более часа), всего десять раз."
+
+msgid "Forward received messages"
+msgstr "Пересылать полученные сообщения"
+
+msgid "Message template"
+msgstr "Шаблон сообщения"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Подстановки: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Только эти отправители"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "По одному в строке; пусто: все отправители. * в конце совпадает с началом отправителя."
+
+msgid "Never these senders"
+msgstr "Никогда эти отправители"
+
+msgid "Only messages containing one of these words"
+msgstr "Только сообщения, содержащие одно из этих слов"
+
+msgid "One per line; empty: every message."
+msgstr "По одному в строке; пусто: все сообщения."
+
+msgid "Webhook"
+msgstr "Вебхук"
+
+msgid "Enabled"
+msgstr "Включён"
+
+msgid "Address (http:// or https://)"
+msgstr "Адрес (http:// или https://)"
+
+msgid "Body"
+msgstr "Тело"
+
+msgid "Form (URL-encoded)"
+msgstr "Форма (URL-кодирование)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Поля: sender, time, text, device, message (заполненный шаблон)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Дополнительные заголовки (по одному \"Имя: значение\" в строке)"
+
+msgid "Bot token"
+msgstr "Токен бота"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "ID чата (число или @канал)"
+
+msgid "E-mail"
+msgstr "Эл. почта"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "Для почты нужен msmtp, которого нет в этом образе"
+
+msgid "Mail server"
+msgstr "Почтовый сервер"
+
+msgid "Port"
+msgstr "Порт"
+
+msgid "Security"
+msgstr "Защита"
+
+msgid "None"
+msgstr "Нет"
+
+msgid "User name"
+msgstr "Имя пользователя"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "From"
+msgstr "От"
+
+msgid "To"
+msgstr "Кому"
+
+msgid "SMS to another phone"
+msgstr "SMS на другой телефон"
+
+msgid "Phone number"
+msgstr "Номер телефона"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Отправляется одним SMS: более длинное сообщение обрезается."
+
+msgid "Send test"
+msgstr "Отправить тест"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Токены, пароли, адрес и заголовки вебхука остаются на устройстве и больше никогда не показываются."
+
+msgid "Delivered"
+msgstr "Доставлено"
+
+msgid "Will retry"
+msgstr "Будет повторено"
+
+msgid "Failed"
+msgstr "Ошибка"
+
+msgid "Filtered out"
+msgstr "Отфильтровано"
+
+msgid "Dropped"
+msgstr "Отброшено"
+
+msgid "Test"
+msgstr "Тест"
+
+msgid "Delivery log"
+msgstr "Журнал доставки"
+
+msgid "Waiting to be delivered"
+msgstr "Ожидают доставки"
+
+msgid "Time"
+msgstr "Время"
+
+msgid "Message"
+msgstr "Сообщение"
+
+msgid "Target"
+msgstr "Цель"
+
+msgid "Result"
+msgstr "Результат"
+
+msgid "Detail"
+msgstr "Подробности"
+
+msgid "No deliveries yet"
+msgstr "Доставок пока нет"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Тест запущен с сохранёнными настройками; результат появится в журнале доставки."
 
 msgid "4G only"
 msgstr "Только 4G"
@@ -803,9 +959,6 @@ msgstr "LuCI и эта панель"
 
 msgid "LuCI only"
 msgstr "Только LuCI"
-
-msgid "Enabled"
-msgstr "Включён"
 
 msgid "Disabled"
 msgstr "Выключен"
@@ -1254,6 +1407,9 @@ msgstr "Хранилище пусто. Здесь появятся входящ�
 msgid "Me: %s"
 msgstr "Я: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Неполное: получено частей %d из %d"
+
 msgid "Delete"
 msgstr "Удалить"
 
@@ -1440,6 +1596,9 @@ msgstr "Адаптер TTL не дал корректного ответа"
 msgid "Invalid TTL"
 msgstr "Недопустимый TTL"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Адаптер пересылки не дал корректного ответа"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1556,6 +1715,51 @@ msgstr "Ошибка перезагрузки сети"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Не удаётся подключить интерфейс USB к мосту LAN"
+
+msgid "Invalid forwarding setting"
+msgstr "Неверная настройка пересылки"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Шаблон сообщения слишком длинный или содержит управляющий символ"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Неверный список фильтров (не более 50 строк)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Адрес вебхука должен быть URL http:// или https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Неверный заголовок (по одному \"Имя: значение\" в строке; Host, Content-Type, Content-Length, Transfer-Encoding и Connection задаёт устройство)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Неверный токен бота Telegram"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Неверный чат Telegram (число или @канал)"
+
+msgid "Invalid e-mail setting"
+msgstr "Неверная настройка почты"
+
+msgid "The webhook needs an address"
+msgstr "Вебхуку нужен адрес"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram нужны токен бота и чат"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "Почте нужны сервер, отправитель и получатель"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Для пересылки по SMS нужен номер телефона"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Не удалось сохранить настройки пересылки"
+
+msgid "SMS forwarding is not installed"
+msgstr "Пересылка SMS не установлена"
+
+msgid "Unknown forwarding operation"
+msgstr "Неизвестная операция пересылки"
 
 msgid "The language pack is not installed"
 msgstr "Языковой пакет не установлен"
