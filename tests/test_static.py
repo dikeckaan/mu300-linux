@@ -692,7 +692,8 @@ class Rules(unittest.TestCase):
                                       capture_output=True, text=True, timeout=30)
         cell = 'openwrt/overlay/lib/netifd/proto/mu300cell.sh'
         v6 = 'openwrt/luci-overlay/lib/netifd/proto/mu300cell-v6.sh'
-        patch = {'openwrt/patches/fw4-sipa-offload.patch': 'x\n'}
+        patch = {'openwrt/patches/fw4-sipa-offload.patch': 'x\n',
+                 'openwrt/patches/fw4-old-kernel-flowtable.patch': 'x\n'}
         for system in ('openwrt', 'openwrt-luci'):
             with self.subTest(system=system, missing='mu300cell.sh'):
                 r = run(patch, system)
