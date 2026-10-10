@@ -632,6 +632,23 @@ class Rules(unittest.TestCase):
         self.assertLess(text.index('for e in /*; do'), text.index('apk add patch'))
         self.assertLess(text.index(apply), text.index('apk del patch'))
         self.assertLess(text.index('apk del patch'), text.index('apk list --installed | sort'))
+        # #95: fw4 reload/restart on 5.4 drops the old flowtable first; applied the same way, after the first patch
+        ft = (TOP / 'openwrt' / 'patches' / 'fw4-old-kernel-flowtable.patch').read_text()
+        self.assertIn('+++ b/sbin/fw4', ft)
+        self.assertIn('-v "$FW4FTPATCH":/in/fw4-old-kernel-flowtable.patch:ro', text)
+        apply_ft = 'patch --batch --fuzz=0 -d $R -p1 -i /in/fw4-old-kernel-flowtable.patch'
+        self.assertLess(text.index(apply), text.index(apply_ft))
+        self.assertLess(text.index(apply_ft), text.index('apk del patch'))
+        self.assertIn('grep -q drop_old_flowtable $R/sbin/fw4', text)
+        # the function as patched in: only a kernel before 5.13 deletes, and it never fails the reload
+        added = [l[1:] for l in ft.splitlines() if l.startswith('+') and not l.startswith('+++')]
+        func = '\n'.join(added[added.index('drop_old_flowtable() {'):added.index('}') + 1])
+        for rel, deletes in (('5.4.254', True), ('5.12.19-x', True), ('4.19.1', True), ('5.13.0', False),
+                             ('6.18.55', False), ('7.2.9', False)):
+            r = subprocess.run(['sh', '-c', f'uname() {{ echo {rel}; }}\nnft() {{ echo "nft $*"; return 1; }}\n'
+                                f'{func}\ndrop_old_flowtable; echo rc=$?'], capture_output=True, text=True)
+            self.assertIn('rc=0', r.stdout, rel)
+            self.assertEqual('nft delete flowtable inet fw4 ft' in r.stdout, deletes, (rel, r.stdout))
         # software offloading on, hardware off: the SIPA and SC2355 drivers have no nftables hardware offload
         uci = (OPENWRT / 'etc' / 'uci-defaults' / '90-mu300').read_text()
         self.assertIn("uci -q set firewall.@defaults[0].flow_offloading='1'", uci)

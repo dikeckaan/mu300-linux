@@ -1,0 +1,38 @@
+--- a/sbin/fw4
++++ b/sbin/fw4
+@@ -16,6 +16,18 @@
+ 	exit 1
+ }
+ 
++# MU300: a kernel before 5.13 refuses a flowtable that names a device the table's old flowtable still has, even when
++# the same transaction deletes the old one (it counts entries pending deletion): the reload then fails with "flowtable
++# ft: Resource busy" and "flow offload @ft: No such file or directory". The old one goes first, in a transaction of
++# its own; the ruleset that follows creates it again (docs/FINDINGS.md 38).
++drop_old_flowtable() {
++	local v=$(uname -r) maj min
++	maj=${v%%.*}; min=${v#*.}; min=${min%%[!0-9]*}
++	[ "$maj" -lt 5 ] 2>/dev/null || { [ "$maj" = 5 ] && [ "${min:-0}" -lt 13 ]; } || return 0
++	nft delete flowtable inet fw4 ft 2>/dev/null
++	return 0
++}
++
+ start() {
+ 	{
+ 		flock -x 1000
+@@ -32,6 +44,8 @@
+ 			;;
+ 		esac
+ 
++		drop_old_flowtable
++
+ 		ACTION=start \
+ 			utpl -S $MAIN | nft $VERBOSE -f $STDIN
+ 
+@@ -105,6 +119,7 @@
+ 		flush
+ 	;;
+ 	restart)
++		drop_old_flowtable
+ 		QUIET=1 print | nft ${VERBOSE} -c -f $STDIN || die "The rendered ruleset contains errors, not doing firewall restart."
+ 		stop || rm -f $STATE
+ 		start
