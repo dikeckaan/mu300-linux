@@ -28,7 +28,8 @@ mu300-sim status
 For callers that share the dual-SIM command vocabulary, `mu300-sim default 1`
 selects the external card and `mu300-sim default 2` selects the internal card.
 `mu300-sim status --json` reports physical card numbers (`active` and `default`)
-along with `hot: 0` and `available: 0`; F50 selection is boot-time only. The
+and whether the detected device supports slot 1 (`slot1_supported`), along with
+`hot: 0` and `available: 0`; F50 selection is boot-time only. The
 `hot` and `switch` commands fail explicitly instead of attempting a live SIPC
 channel switch.
 

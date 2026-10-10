@@ -33,6 +33,15 @@ esac''')
             self.assertNotEqual(r.returncode, 0)
             self.assertIn('F50 only', r.stderr)
             self.assertEqual(self.choice.read_text().strip(), '0')
+            status = self.script(shell, BIN / 'mu300-sim', 'status', '--json',
+                                 MU300_SIM_ROOT=self.tmp, MU300_DEVICE_CMD=device)
+            self.assertEqual(status.returncode, 0, status.stderr)
+            self.assertEqual(json.loads(status.stdout)['slot1_supported'], 0)
+            self.state.write_text('1\n')
+            active = self.script(shell, BIN / 'mu300-sim', 'active',
+                                 MU300_SIM_ROOT=self.tmp, MU300_DEVICE_CMD=device)
+            self.assertEqual(active.returncode, 0, active.stderr)
+            self.assertEqual(active.stdout.strip(), '0')
 
     def test_common_default_and_json_status_interface(self):
         for shell in self.each_shell():
@@ -44,7 +53,7 @@ esac''')
             status = self.sim(shell, 'status', '--json')
             self.assertEqual(status.returncode, 0, status.stderr)
             self.assertEqual(json.loads(status.stdout), {
-                'ok': 1, 'active': 1, 'default': 2, 'hot': 0,
+                'ok': 1, 'active': 1, 'default': 2, 'slot1_supported': 1, 'hot': 0,
                 'available': 0, 'result': 'reboot_required',
             })
             hot = self.sim(shell, 'hot', '1')

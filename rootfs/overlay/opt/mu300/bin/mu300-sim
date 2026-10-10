@@ -19,6 +19,14 @@ ensure_f50() {
         return 1
     }
 }
+slot1_supported() {
+    local device
+    device=$(device_name)
+    [ -z "$device" ] || [ "$device" = f50 ]
+}
+ensure_slot_supported() {
+    [ "$1" != 1 ] || ensure_f50
+}
 valid() { case "$1" in 0|1) return 0 ;; *) echo 'SIM slot must be 0 (external) or 1 (internal)' >&2; return 1 ;; esac; }
 configured() {
     local slot
@@ -44,28 +52,33 @@ active() {
     fi
     slot=$(cat "$state")
     valid "$slot" || return 1
+    if [ "$slot" = 1 ] && ! slot1_supported; then
+        echo 'mu300-sim: ignoring unsupported slot 1; using external slot 0' >&2
+        slot=0
+    fi
     printf '%s\n' "$slot"
 }
 case ${1:-status} in
     active) active ;;
     configured) configured ;;
     status)
-        ensure_f50 || exit 1
         old=$(active) || exit 1
         next=$(configured) || exit 1
+        supported=0
+        slot1_supported && supported=1
         if [ "${2:-}" = --json ]; then
-            printf '{"ok":1,"active":%s,"default":%s,"hot":0,"available":0,"result":"reboot_required"}\n' "$((old + 1))" "$((next + 1))"
+            printf '{"ok":1,"active":%s,"default":%s,"slot1_supported":%s,"hot":0,"available":0,"result":"reboot_required"}\n' "$((old + 1))" "$((next + 1))" "$supported"
         else
             printf 'active slot: %s\nnext boot slot: %s\n' "$old" "$next"
         fi
         ;;
     select|default)
-        ensure_f50 || exit 1
         if [ "$1" = default ]; then
             case ${2:-} in 1) next=0 ;; 2) next=1 ;; *) valid invalid; exit 2 ;; esac
         else
             case ${2:-} in external|0) next=0 ;; internal|1) next=1 ;; *) valid invalid; exit 2 ;; esac
         fi
+        ensure_slot_supported "$next" || exit 1
         # Pin the current slot before changing the next-boot setting.
         old=$(active) || exit 1
         if command -v uci >/dev/null 2>&1; then
