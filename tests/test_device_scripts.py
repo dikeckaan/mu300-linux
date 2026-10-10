@@ -1998,6 +1998,59 @@ class TreeKill(ShellTest):
                     self.assertIn(f'-KILL {pid}', kills, (name, shell))
 
 
+class WcnReopen(ShellTest):
+    """wcn-reopen (the WCN chip was reset, #94): Wi-Fi reopened in whichever mode it was in."""
+    def setUp(self):
+        super().setUp()
+        self.root = self.tmp / 'root'
+        (self.root / 'sys/class/net/wlan0').mkdir(parents=True)
+        (self.root / 'run').mkdir()
+        # systemctl: is-active answers from $STUBLOG/active-UNIT; every other call is recorded
+        self.stub('systemctl', 'if [ "$1" = -q ] && [ "$2" = is-active ]; then [ -e "$STUBLOG/active-$3" ]; exit; fi\n'
+                               'echo "systemctl $*" >> "$STUBLOG/calls"')
+        self.stub('ip', 'case "$*" in "link show wlan0") cat "$STUBLOG/link" ;; *) echo "ip $*" >> "$STUBLOG/calls" ;; esac')
+
+    def run_reopen(self, shell, hotspot=False, client=False, up=True):
+        for f in ('calls', 'active-mu300-hotspot.service'):
+            (self.tmp / f).unlink(missing_ok=True)
+        (self.root / 'run/mu300-wifi-client.active').unlink(missing_ok=True)
+        if hotspot:
+            (self.tmp / 'active-mu300-hotspot.service').write_text('')
+        if client:
+            (self.root / 'run/mu300-wifi-client.active').write_text('')
+        flags = 'BROADCAST,MULTICAST,UP,LOWER_UP' if up else 'BROADCAST,MULTICAST'
+        (self.tmp / 'link').write_text(f'5: wlan0: <{flags}> mtu 1500 qdisc mq state UP\n')
+        r = self.script(shell, BIN / 'wcn-reopen', MU300_SYSROOT=self.root)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        calls = self.tmp / 'calls'
+        return calls.read_text().splitlines() if calls.exists() else []
+
+    def test_hotspot_is_restarted(self):
+        for shell in self.each_shell():
+            self.assertEqual(self.run_reopen(shell, hotspot=True), ['systemctl restart mu300-hotspot.service'])
+
+    def test_a_client_gets_wlan0_down_and_up_and_joins_again(self):
+        # restarting the client alone left the chip off (wifi-client never takes wlan0 down): the watchdog rebooted
+        for shell in self.each_shell():
+            self.assertEqual(self.run_reopen(shell, client=True),
+                             ['systemctl stop mu300-wifi-client.service', 'ip link set wlan0 down',
+                              'ip link set wlan0 up', 'systemctl start mu300-wifi-client.service'])
+
+    def test_neither_up_powers_the_chip_on_and_starts_nothing(self):
+        for shell in self.each_shell():
+            with self.subTest(wlan0='up'):
+                self.assertEqual(self.run_reopen(shell), ['ip link set wlan0 down', 'ip link set wlan0 up'])
+            with self.subTest(wlan0='down'):
+                self.assertEqual(self.run_reopen(shell, up=False),
+                                 ['ip link set wlan0 down', 'ip link set wlan0 up', 'ip link set wlan0 down'])
+
+    def test_the_udev_rule_starts_the_service(self):
+        rule = (TOP / 'rootfs/overlay/etc/udev/rules.d/70-mu300-wcn.rules').read_text()
+        self.assertIn('ENV{EVENT}=="FW_ERROR", RUN+="/bin/systemctl --no-block start mu300-wcn-reopen.service"', rule)
+        unit = (TOP / 'rootfs/overlay/etc/systemd/system/mu300-wcn-reopen.service').read_text()
+        self.assertIn('ExecStart=/opt/mu300/bin/wcn-reopen\n', unit)
+
+
 class ThermalGuard(ShellTest):
     """thermal-guard's LED alarm (one round against a fake /: MU300_SYSROOT)."""
     def setUp(self):
