@@ -3166,7 +3166,12 @@ brings it back for a while. Read in the code, not measured on a device:
   `forward_router_advertisement` in `src/router.c`) and keeps no prefix state, and the carrier sends nothing for a
   prefix of a previous PDP context. Clients keep such addresses for the lifetime the carrier gave, and a client that
   picks one as its source gets no NAT66 replies once the /64 has left the bearer (no route to `br-lan`). A deprecating
-  RA (preferred lifetime 0) for the old /64 would have to be sent by the device itself; there is no tool on the image
-  for that today. Open, to measure on a device: `ip -6 addr show dev sipa_eth0` and `ip -6 route show dev br-lan`
-  before and after a renumber (with and without a wan restart), and on the LAN `tcpdump -i br-lan -vv icmp6 and
-  ip6[40]=134` for the prefix options and lifetimes the relayed RA carries.
+  RA (preferred lifetime 0) for the old /64 has to come from the device itself. Fixed: `ndp-learn` sends one with
+  `ra-deprecate` (ucode, raw ICMPv6 socket; `ucode-mod-socket` in the panel image) on br-lan, valid lifetime 2 h
+  (the floor RFC 4862 lets a host apply), router lifetime what is left of the carrier's router, in three rounds 10 s
+  apart. It waits until a different /64 is on the bearer: a WAN restart flushes the bearer and usually gets the same
+  /64 back, which must not be deprecated. Measured on an F50 (openwrt-luci, 6.18; a macOS client on the USB LAN): a
+  /64 that left the bearer was withdrawn within one round and the client marked its addresses `deprecated`
+  (`ndp -p`: pltime 0, vltime 7200) while the live /64 stayed preferred and the default router stayed; a WAN restart
+  that got the same /64 back withdrew nothing. Not measured: a real carrier renumber (the carrier here kept its /64
+  across WAN restarts), and a second relay behind the device, which forwards the RA like any other.
