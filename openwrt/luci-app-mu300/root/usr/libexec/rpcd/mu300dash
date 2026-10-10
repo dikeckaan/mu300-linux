@@ -26,6 +26,7 @@
 #   ttl_get, ttl_set value  the TTL of mobile data (unisoc-modem/ttl, mu300-ttl); value off or 1-255
 #   forward_get, forward_set ..., forward_test  SMS forwarding (unisoc-modem/forward, mu300-sms-forward); the
 #                     settings go to the adapter on stdin, as sent: they hold secrets, never an argument
+#   cpu_get, cpu_set profile  the CPU performance profile (unisoc-modem/cpu, mu300-cpu); saving|balanced|performance
 #
 # The AT terminal's whole wait is capped below the 30 s endpoint limit (AT_LOCK_WAIT
 # for the channel lock plus AT_BUDGET for the answer, mu300-at's MU300_AT_BUDGET),
@@ -563,6 +564,15 @@ m_forward_set() {
     reply_obj "$(printf '%s' "$INPUT" | "$FWDA" set 2>/dev/null)" 'The forwarding adapter gave no valid reply'
 }
 m_forward_test() { reply_obj "$("$FWDA" test 2>/dev/null)" 'The forwarding adapter gave no valid reply'; }
+# The CPU page: mu300-cpu through the adapter, which checks the profile name again
+CPUA=${MU300_CPU_ADAPTER:-$DASH/cpu}
+m_cpu_get() { reply_obj "$("$CPUA" get 2>/dev/null)" 'The CPU adapter gave no valid reply'; }
+m_cpu_set() {
+    local profile
+    inp '@.profile'; profile=$V
+    allowed "$profile" '(saving|balanced|performance)' || { refuse 'Invalid CPU profile'; return; }
+    reply_obj "$("$CPUA" set "$profile" 2>/dev/null)" 'The CPU adapter gave no valid reply'
+}
 
 do_list() {
     cat <<EOF
@@ -597,7 +607,9 @@ do_list() {
 		"telegram_chat": "String", "email": "String", "email_host": "String", "email_port": "String",
 		"email_tls": "String", "email_user": "String", "email_password": "String", "email_from": "String",
 		"email_to": "String", "sms": "String", "sms_number": "String" },
-	"forward_test": { }
+	"forward_test": { },
+	"cpu_get": { },
+	"cpu_set": { "profile": "String" }
 }
 EOF
 }
@@ -656,6 +668,8 @@ call)
         forward_get)  run_m forward_get  m_forward_get ;;
         forward_set)  run_m forward_set  m_forward_set ;;
         forward_test) run_m forward_test m_forward_test ;;
+        cpu_get)      run_m cpu_get      m_cpu_get ;;
+        cpu_set)      run_m cpu_set      m_cpu_set ;;
         *)            refuse 'No such method' ;;
     esac
     ;;

@@ -235,8 +235,9 @@ class Forwarder(ShellTest):
             t0 = time.monotonic()
             r = self.fwd(shell, 'run', MU300_FWD_ATTEMPTS=3)
             self.assertEqual(r.returncode, 0, r.stderr)
-            # 1 s, then 2 s between the three attempts
-            self.assertGreaterEqual(time.monotonic() - t0, 3)
+            # 1 s, then 2 s between the three attempts; the worker's clock counts whole seconds (date +%s), so the
+            # waits it really makes can be up to a second shorter each: only that it did wait is timed here
+            self.assertGreaterEqual(time.monotonic() - t0, 1)
             got = [l[3:] for l in self.log()]
             self.assertEqual(got, [['retry', 'HTTP 500, attempt 1, next in 1 s'], ['retry', 'connect, attempt 2, next in 2 s'],
                                    ['failed', 'HTTP 429, gave up after 3 attempts']])

@@ -42,6 +42,8 @@ var callFwdSet = rpc.declare({ object: 'mu300dash', method: 'forward_set', param
 	'telegram_token', 'telegram_chat', 'email', 'email_host', 'email_port', 'email_tls', 'email_user', 'email_password',
 	'email_from', 'email_to', 'sms', 'sms_number' ], expect: { '': {} } });
 var callFwdTest = rpc.declare({ object: 'mu300dash', method: 'forward_test', expect: { '': {} } });
+var callCpuGet = rpc.declare({ object: 'mu300dash', method: 'cpu_get', expect: { '': {} } });
+var callCpuSet = rpc.declare({ object: 'mu300dash', method: 'cpu_set', params: [ 'profile' ], expect: { '': {} } });
 
 /* Mainland carriers by PLMN, for when COPS gives the numeric format. The names are messages: translated once, when
  * the module loads (a page's language does not change without a reload). */
@@ -618,6 +620,7 @@ return baseclass.extend({
 	callPowerGet: callPowerGet, callPowerSet: callPowerSet,
 	callTtlGet: callTtlGet, callTtlSet: callTtlSet,
 	callFwdGet: callFwdGet, callFwdSet: callFwdSet, callFwdTest: callFwdTest,
+	callCpuGet: callCpuGet, callCpuSet: callCpuSet,
 	carrierName: carrierName, qLevel: qLevel, qLevelLabel: qLevelLabel, qLabel: qLabel, qCol: qCol, qScore: qScore,
 	esc: esc, fmtBytes: fmtBytes, fmtRate: fmtRate, fmtUptime: fmtUptime, PLMN_CN: PLMN_CN,
 	injectCss: injectCss, v: v, set: set, spark: spark, neighborRows: neighborRows,

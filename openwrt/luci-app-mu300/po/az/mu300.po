@@ -36,6 +36,9 @@ msgstr "Dillər"
 msgid "Power"
 msgstr "Enerji"
 
+msgid "CPU"
+msgstr "CPU"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 idarəetmə mərkəzi: status paneli, şəbəkə kilidləri, AT terminalı və SMS"
 
@@ -143,6 +146,72 @@ msgstr "Sorğu uğursuz oldu"
 
 msgid "(empty)"
 msgstr "(boş)"
+
+msgid "Failed: %s"
+msgstr "Uğursuz oldu: %s"
+
+msgid "Saved"
+msgstr "Saxlanıldı"
+
+msgid "Management connection lost"
+msgstr "İdarəetmə bağlantısı itdi"
+
+msgid "CPU profile unavailable"
+msgstr "CPU profile unavailable"
+
+msgid "Power saving"
+msgstr "Power saving"
+
+msgid "Balanced"
+msgstr "Balanced"
+
+msgid "Performance"
+msgstr "Performance"
+
+msgid "Cores capped at about 60 %% of their maximum (cooler, less power)."
+msgstr "Cores capped at about 60 %% of their maximum (cooler, less power)."
+
+msgid "Schedutil across the full hardware range (the stock behaviour)."
+msgstr "Schedutil across the full hardware range (the stock behaviour)."
+
+msgid "Every cluster pinned at its hardware maximum."
+msgstr "Every cluster pinned at its hardware maximum."
+
+msgid "CPU profile"
+msgstr "CPU profile"
+
+msgid "A profile sets the CPU governor and the per-cluster frequency limits. It stays within the hardware frequency table and never changes the voltage, so it cannot overclock this SoC. The kernel keeps throttling at its thermal limit in every profile."
+msgstr "A profile sets the CPU governor and the per-cluster frequency limits. It stays within the hardware frequency table and never changes the voltage, so it cannot overclock this SoC. The kernel keeps throttling at its thermal limit in every profile."
+
+msgid "Saved profile: %s"
+msgstr "Saved profile: %s"
+
+msgid "Thermal throttling is active right now: the frequencies below are below the profile ceiling."
+msgstr "Thermal throttling is active right now: the frequencies below are below the profile ceiling."
+
+msgid "Clusters"
+msgstr "Clusters"
+
+msgid "Cores"
+msgstr "Cores"
+
+msgid "Governor"
+msgstr "Governor"
+
+msgid "Now"
+msgstr "Now"
+
+msgid "Min"
+msgstr "Min"
+
+msgid "Max"
+msgstr "Max"
+
+msgid "Hardware max"
+msgstr "Hardware max"
+
+msgid "Frequencies in MHz."
+msgstr "Frequencies in MHz."
 
 msgid "USB role"
 msgstr "USB rolu"
@@ -443,15 +512,6 @@ msgstr "Ətraflı"
 
 msgid "No deliveries yet"
 msgstr "Hələ çatdırılma yoxdur"
-
-msgid "Failed: %s"
-msgstr "Uğursuz oldu: %s"
-
-msgid "Saved"
-msgstr "Saxlanıldı"
-
-msgid "Management connection lost"
-msgstr "İdarəetmə bağlantısı itdi"
 
 msgid "Test started with the saved settings; the result appears in the delivery log."
 msgstr "Test saxlanmış ayarlarla başladı; nəticə çatdırılma jurnalında görünəcək."
@@ -1194,9 +1254,6 @@ msgstr "Boşdayanda modem"
 msgid "LEDs when idle"
 msgstr "Boşdayanda LED-lər"
 
-msgid "CPU"
-msgstr "CPU"
-
 msgid "Ignored lines in power.conf: %s"
 msgstr "power.conf-da nəzərə alınmayan sətirlər: %s"
 
@@ -1542,6 +1599,12 @@ msgstr "Yanlış TTL"
 msgid "The forwarding adapter gave no valid reply"
 msgstr "Yönləndirmə adapteri etibarlı cavab vermədi"
 
+msgid "The CPU adapter gave no valid reply"
+msgstr "The CPU adapter gave no valid reply"
+
+msgid "Invalid CPU profile"
+msgstr "Invalid CPU profile"
+
 msgid "Request too large"
 msgstr "Sorğu çox böyükdür"
 
@@ -1568,6 +1631,15 @@ msgstr "mu300-next-boot uğursuz oldu"
 
 msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
 msgstr "AT backend-i cavab vermədi (radio söndürülüb, modem yenidən başlayır və ya adapter əlçatan deyil)"
+
+msgid "The CPU profile could not be read"
+msgstr "The CPU profile could not be read"
+
+msgid "The CPU profile could not be set"
+msgstr "The CPU profile could not be set"
+
+msgid "Unknown CPU operation"
+msgstr "Unknown CPU operation"
 
 msgid "USB role adapter is not executable"
 msgstr "USB rol adapteri icra oluna bilmir"

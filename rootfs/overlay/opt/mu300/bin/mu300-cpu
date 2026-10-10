@@ -1,0 +1,145 @@
+#!/bin/sh
+# CPU performance profiles for the MU300 (Ubuntu and OpenWrt, POSIX sh). A profile is a governor and a per-cluster
+# scaling_min/max; it moves only inside the hardware frequency table (cpuinfo_min_freq..cpuinfo_max_freq) and never
+# touches voltage or the kernel thermal trips - thermal-guard keeps throttling in every profile.
+#   mu300-cpu status [--json]        per-policy governor, cur/min/max, hw max, saved profile, throttling
+#   mu300-cpu profile [NAME]         apply NAME and save it; no NAME shows the saved one
+#   mu300-cpu apply                  apply the saved profile (the boot service)
+# Profiles: saving (cores capped at ~60 % of the maximum, schedutil - cooler, less power), balanced (schedutil over
+# the full range, the stock behaviour), performance (every cluster pinned at its hardware maximum).
+# Why it never fights the rest: mu300-power's idle "eco" drops the big core and caps policy4 to 1.5 GHz and brings
+# it back by looking; it wins while the device is asleep and restores to whatever this profile set. thermal-guard
+# caps a hot policy a step lower and lifts it on cool-down, but not above the ceiling this profile wrote
+# (/run/mu300/cpu-ceiling), so "saving" stays capped. Configuration: /etc/mu300/cpu.conf (KEY=VALUE), kept across
+# updates with the rest of etc/mu300; a missing key is its default.
+set -u
+export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/sbin:/sbin"
+R=${MU300_SYSROOT:-}
+RUNROOT=${MU300_RUN:-/run}
+CPUFREQ=$R/sys/devices/system/cpu/cpufreq
+CONF=${MU300_CPU_CONF:-/etc/mu300/cpu.conf}
+CEIL=$RUNROOT/mu300/cpu-ceiling          # one "policyN=HZ" line per cluster: the max a profile set, for thermal-guard
+PROFILES="saving balanced performance"
+SAVING_PERCENT=${MU300_CPU_SAVING_PERCENT:-60}
+
+say() { echo "mu300-cpu: $*" >&2; logger -t mu300-cpu -- "$*" 2>/dev/null || true; }
+
+# --- configuration (as mu300-power reads power.conf)
+default() { case $1 in PROFILE) echo balanced ;; *) return 1 ;; esac; }
+valid() { case $1 in PROFILE) case $2 in saving|balanced|performance) return 0 ;; esac ;; esac; return 1; }
+conf_raw() { sed -n "s/^$1=\(.*\)\$/\1/p" "$CONF" 2>/dev/null | tail -n1; }
+conf_get() {
+    _v=$(conf_raw "$1")
+    if [ -n "$_v" ] && valid "$1" "$_v"; then echo "$_v"; return 0; fi
+    default "$1"
+}
+conf_set() {
+    default "$1" >/dev/null || { echo "mu300-cpu: no such key: $1" >&2; return 2; }
+    valid "$1" "$2" || { echo "mu300-cpu: bad value for $1: $2" >&2; return 2; }
+    mkdir -p "${CONF%/*}" 2>/dev/null
+    [ -f "$CONF" ] || : > "$CONF"
+    if grep -q "^$1=" "$CONF"; then
+        sed "s/^$1=.*\$/$1=$2/" "$CONF" > "$CONF.tmp" && mv "$CONF.tmp" "$CONF"
+    else
+        [ -z "$(tail -c1 "$CONF")" ] || echo >> "$CONF"
+        echo "$1=$2" >> "$CONF"
+    fi
+}
+
+num() { case ${1#-} in ''|*[!0-9]*) echo 0 ;; *) echo "${1#-}" ;; esac; }
+rd() { cat "$1" 2>/dev/null; }
+policies() { for p in "$CPUFREQ"/policy*; do [ -d "$p" ] && echo "$p"; done; }
+
+# a governor the policy has, else its first available one (schedutil is the mainline default; the 5.4 vendor kernel
+# may not have it; powersave is only a fallback we never choose on purpose)
+pick_gov() {  # pick_gov POLICY WANT
+    if grep -qw "$2" "$1/scaling_available_governors" 2>/dev/null; then echo "$2"; else cut -d' ' -f1 "$1/scaling_available_governors" 2>/dev/null; fi
+}
+
+# ceil_write / ceil_get: the per-policy ceiling a profile set, so thermal-guard does not lift a capped policy past it
+ceil_write() {  # ceil_write POLICYNAME HZ
+    mkdir -p "${CEIL%/*}" 2>/dev/null
+    { grep -v "^$1=" "$CEIL" 2>/dev/null; echo "$1=$2"; } > "$CEIL.tmp" 2>/dev/null && mv "$CEIL.tmp" "$CEIL" 2>/dev/null
+}
+
+apply() {  # apply PROFILE
+    _p=$1
+    case " $PROFILES " in *" $_p "*) ;; *) echo "mu300-cpu: unknown profile '$_p' ($PROFILES)" >&2; return 1 ;; esac
+    _any=
+    for pol in $(policies); do
+        _any=1
+        _name=${pol##*/}
+        read -r _hwmin < "$pol/cpuinfo_min_freq" 2>/dev/null || _hwmin=
+        read -r _hwmax < "$pol/cpuinfo_max_freq" 2>/dev/null || _hwmax=
+        [ -n "$_hwmin" ] && [ -n "$_hwmax" ] || { say "$_name: no hardware frequency range, left alone"; continue; }
+        case $_p in
+            saving)
+                # highest table step at or below SAVING_PERCENT % of the maximum (never below the hardware minimum)
+                _cap=$(tr ' ' '\n' < "$pol/scaling_available_frequencies" 2>/dev/null | \
+                    awk -v lim=$(( _hwmax * SAVING_PERCENT / 100 )) -v lo="$_hwmin" '$1 != "" && $1 <= lim && $1 >= lo && $1 > c {c = $1} END {print c}')
+                [ -n "$_cap" ] && [ "$_cap" -gt 0 ] 2>/dev/null || _cap=$_hwmax
+                _gov=$(pick_gov "$pol" schedutil); _min=$_hwmin; _max=$_cap ;;
+            balanced)    _gov=$(pick_gov "$pol" schedutil);  _min=$_hwmin; _max=$_hwmax ;;
+            performance) _gov=$(pick_gov "$pol" performance); _min=$_hwmin; _max=$_hwmax ;;
+        esac
+        # order matters: never set min above the current max, nor max below the current min
+        echo "$_min" > "$pol/scaling_min_freq" 2>/dev/null || true
+        echo "$_max" > "$pol/scaling_max_freq" 2>/dev/null || true
+        [ -n "$_gov" ] && echo "$_gov" > "$pol/scaling_governor" 2>/dev/null || true
+        ceil_write "$_name" "$_max"
+    done
+    [ -n "$_any" ] || { say "no cpufreq policies (this kernel has no CPU scaling): nothing to apply"; return 0; }
+    return 0
+}
+
+khz() { case $1 in ''|*[!0-9]*) echo null ;; *) echo $(( $1 / 1000 )) ;; esac; }
+jstr() { printf '"%s"' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')"; }
+
+# cooling devices currently capping a cpufreq policy ("cpufreq ..."), for the throttling line
+throttling() {
+    for c in "$R"/sys/class/thermal/cooling_device*; do
+        [ -r "$c/type" ] || continue
+        case $(rd "$c/type") in *cpufreq*|*thermal-cpufreq*) [ "$(num "$(rd "$c/cur_state")")" -gt 0 ] && { echo 1; return; } ;; esac
+    done
+    [ -e "$RUNROOT/mu300/thermal-alarm" ] && echo 1 || echo 0
+}
+
+status_json() {
+    _saved=$(conf_get PROFILE)
+    printf '{"ok":1,"profile":%s,"profiles":["saving","balanced","performance"],"throttling":%s,"policies":[' \
+        "$(jstr "$_saved")" "$(throttling)"
+    _sep=
+    for pol in $(policies); do
+        _rel=$(rd "$pol/related_cpus")
+        _lo=${_rel%% *}; _hi=${_rel##* }
+        printf '%s{"name":%s,"cpus":%s,"governor":%s,"cur":%s,"min":%s,"max":%s,"hwmin":%s,"hwmax":%s}' \
+            "$_sep" "$(jstr "${pol##*/}")" "$(jstr "$_lo-$_hi")" "$(jstr "$(rd "$pol/scaling_governor")")" \
+            "$(khz "$(rd "$pol/scaling_cur_freq")")" "$(khz "$(rd "$pol/scaling_min_freq")")" \
+            "$(khz "$(rd "$pol/scaling_max_freq")")" "$(khz "$(rd "$pol/cpuinfo_min_freq")")" "$(khz "$(rd "$pol/cpuinfo_max_freq")")"
+        _sep=,
+    done
+    printf ']}\n'
+}
+
+status_human() {
+    echo "saved profile: $(conf_get PROFILE)"
+    printf '  %-10s %-12s %10s %10s %10s %10s\n' policy governor cur min max hw-max
+    for pol in $(policies); do
+        _rel=$(rd "$pol/related_cpus"); _lo=${_rel%% *}; _hi=${_rel##* }
+        printf '  %-10s %-12s %10s %10s %10s %10s\n' "cpu$_lo-$_hi" "$(rd "$pol/scaling_governor")" \
+            "$(khz "$(rd "$pol/scaling_cur_freq")")" "$(khz "$(rd "$pol/scaling_min_freq")")" \
+            "$(khz "$(rd "$pol/scaling_max_freq")")" "$(khz "$(rd "$pol/cpuinfo_max_freq")")"
+    done
+    echo "  (MHz)"
+    [ "$(throttling)" = 1 ] && echo "thermal throttling: active" || echo "thermal throttling: none"
+}
+
+case ${1:-status} in
+    status) if [ "${2:-}" = --json ]; then status_json; else status_human; fi ;;
+    profile)
+        if [ -z "${2:-}" ]; then echo "$(conf_get PROFILE)"; exit 0; fi
+        apply "$2" && conf_set PROFILE "$2" && { [ "${3:-}" = --json ] && status_json || status_human; } ;;
+    apply) apply "$(conf_get PROFILE)" ;;
+    -h|--help|help) sed -n '2,8s/^# \{0,1\}//p' "$0" ;;
+    *) echo "usage: mu300-cpu [status [--json]|profile [saving|balanced|performance]|apply]" >&2; exit 2 ;;
+esac
