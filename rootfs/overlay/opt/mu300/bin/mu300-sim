@@ -6,6 +6,19 @@ set -eu
 root=${MU300_SIM_ROOT:-}
 state=$root/run/mu300/sim-slot
 conf=$root/etc/mu300/sim-slot
+device_cmd=${MU300_DEVICE_CMD:-/opt/mu300/bin/mu300-device}
+device_name() {
+    [ -x "$device_cmd" ] || return 0
+    "$device_cmd" 2>/dev/null || true
+}
+ensure_f50() {
+    local device
+    device=$(device_name)
+    [ -z "$device" ] || [ "$device" = f50 ] || {
+        echo "mu300-sim: SIM selection is supported on F50 only (detected $device)" >&2
+        return 1
+    }
+}
 valid() { case "$1" in 0|1) return 0 ;; *) echo 'SIM slot must be 0 (external) or 1 (internal)' >&2; return 1 ;; esac; }
 configured() {
     local slot
@@ -37,11 +50,13 @@ case ${1:-status} in
     active) active ;;
     configured) configured ;;
     status)
+        ensure_f50 || exit 1
         old=$(active) || exit 1
         next=$(configured) || exit 1
         printf 'active slot: %s\nnext boot slot: %s\n' "$old" "$next"
         ;;
     select)
+        ensure_f50 || exit 1
         case ${2:-} in external|0) next=0 ;; internal|1) next=1 ;; *) valid invalid; exit 2 ;; esac
         # Pin the current slot before changing the next-boot setting.
         old=$(active) || exit 1
