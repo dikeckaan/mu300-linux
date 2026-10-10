@@ -15,6 +15,9 @@ msgstr "נעילות רשת"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "העברת SMS"
+
 msgid "AT terminal"
 msgstr "מסוף AT"
 
@@ -291,6 +294,168 @@ msgstr "מוסיף מתאם USB…"
 msgid "Add failed: %s"
 msgstr "ההוספה נכשלה: %s"
 
+msgid "Leave empty to keep the saved value"
+msgstr "השאירו ריק כדי לשמור את הערך השמור"
+
+msgid "Saved: %s"
+msgstr "נשמר: %s"
+
+msgid "Remove the saved value"
+msgstr "הסרת הערך השמור"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "הודעות שהתקבלו מועברות ברגע שהן מגיעות למאגר ה-SMS. מסירה שנכשלה מנוסה שוב אחרי 30 שניות, ואז בכל פעם אחרי זמן כפול (שעה לכל היותר), עשר פעמים בסך הכול."
+
+msgid "Forward received messages"
+msgstr "העברת הודעות שהתקבלו"
+
+msgid "Message template"
+msgstr "תבנית הודעה"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "ממלאי מקום: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "רק השולחים האלה"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "אחד בכל שורה; ריק: כל השולחים. * בסוף מתאים לתחילת שם השולח."
+
+msgid "Never these senders"
+msgstr "אף פעם לא השולחים האלה"
+
+msgid "Only messages containing one of these words"
+msgstr "רק הודעות שמכילות אחת מהמילים האלה"
+
+msgid "One per line; empty: every message."
+msgstr "אחת בכל שורה; ריק: כל ההודעות."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "מופעל"
+
+msgid "Address (http:// or https://)"
+msgstr "כתובת (http:// או https://)"
+
+msgid "Body"
+msgstr "גוף"
+
+msgid "Form (URL-encoded)"
+msgstr "טופס (קידוד URL)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "שדות: sender, time, text, device, message (התבנית המלאה)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "כותרות נוספות (\"Name: value\" אחת בכל שורה)"
+
+msgid "Bot token"
+msgstr "אסימון בוט"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "מזהה צ'אט (מספר או @ערוץ)"
+
+msgid "E-mail"
+msgstr "דואר אלקטרוני"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "דואר אלקטרוני דורש msmtp, שאין בתמונה הזאת"
+
+msgid "Mail server"
+msgstr "שרת דואר"
+
+msgid "Port"
+msgstr "פורט"
+
+msgid "Security"
+msgstr "אבטחה"
+
+msgid "None"
+msgstr "ללא"
+
+msgid "User name"
+msgstr "שם משתמש"
+
+msgid "Password"
+msgstr "סיסמה"
+
+msgid "From"
+msgstr "מאת"
+
+msgid "To"
+msgstr "אל"
+
+msgid "SMS to another phone"
+msgstr "SMS לטלפון אחר"
+
+msgid "Phone number"
+msgstr "מספר טלפון"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "נשלח כ-SMS אחד: הודעה ארוכה יותר מקוצרת."
+
+msgid "Send test"
+msgstr "שליחת בדיקה"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "אסימונים, סיסמאות וכתובת ה-webhook והכותרות שלו נשארים במכשיר ולא מוצגים שוב לעולם."
+
+msgid "Delivered"
+msgstr "נמסר"
+
+msgid "Will retry"
+msgstr "ינוסה שוב"
+
+msgid "Failed"
+msgstr "נכשל"
+
+msgid "Filtered out"
+msgstr "סונן"
+
+msgid "Dropped"
+msgstr "נזרק"
+
+msgid "Test"
+msgstr "בדיקה"
+
+msgid "Delivery log"
+msgstr "יומן מסירה"
+
+msgid "Waiting to be delivered"
+msgstr "ממתין למסירה"
+
+msgid "Time"
+msgstr "זמן"
+
+msgid "Message"
+msgstr "הודעה"
+
+msgid "Target"
+msgstr "יעד"
+
+msgid "Result"
+msgstr "תוצאה"
+
+msgid "Detail"
+msgstr "פרטים"
+
+msgid "No deliveries yet"
+msgstr "אין מסירות עדיין"
+
+msgid "Failed: %s"
+msgstr "נכשל: %s"
+
+msgid "Saved"
+msgstr "נשמר"
+
+msgid "Management connection lost"
+msgstr "חיבור הניהול אבד"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "הבדיקה החלה עם ההגדרות השמורות; התוצאה תופיע ביומן המסירה."
+
 msgid "4G only"
 msgstr "4G בלבד"
 
@@ -455,9 +620,6 @@ msgstr "הופעל ברקע: %s"
 
 msgid "Done: %s"
 msgstr "בוצע: %s"
-
-msgid "Failed: %s"
-msgstr "נכשל: %s"
 
 msgid "Disconnecting data…"
 msgstr "מנתק נתונים…"
@@ -669,12 +831,6 @@ msgstr "מתאם AT אינו זמין"
 msgid "Linux locked"
 msgstr "Linux נעול"
 
-msgid "Saved"
-msgstr "נשמר"
-
-msgid "Management connection lost"
-msgstr "חיבור הניהול אבד"
-
 msgid "Installing the language pack…"
 msgstr "מתקין את חבילת השפות…"
 
@@ -743,9 +899,6 @@ msgstr "LuCI והלוח הזה"
 
 msgid "LuCI only"
 msgstr "LuCI בלבד"
-
-msgid "Enabled"
-msgstr "מופעל"
 
 msgid "Disabled"
 msgstr "מושבת"
@@ -1197,6 +1350,9 @@ msgstr "המאגר ריק. הודעות נכנסות ויוצאות מופיעו
 msgid "Me: %s"
 msgstr "אני: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "לא שלמה: הגיעו %d מתוך %d חלקים"
+
 msgid "Delete"
 msgstr "מחיקה"
 
@@ -1383,6 +1539,9 @@ msgstr "מתאם ה-TTL לא החזיר תשובה תקינה"
 msgid "Invalid TTL"
 msgstr "TTL לא תקין"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "מתאם ההעברה לא החזיר תשובה תקינה"
+
 msgid "Request too large"
 msgstr "הבקשה גדולה מדי"
 
@@ -1484,6 +1643,51 @@ msgstr "טעינת הרשת מחדש נכשלה"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "לא ניתן לחבר את ממשק ה-USB לגשר ה-LAN"
+
+msgid "Invalid forwarding setting"
+msgstr "הגדרת העברה לא תקינה"
+
+msgid "The message template is too long or contains a control character"
+msgstr "תבנית ההודעה ארוכה מדי או מכילה תו בקרה"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "רשימת סינון לא תקינה (50 שורות לכל היותר)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "כתובת ה-webhook חייבת להיות כתובת URL של http:// או https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "כותרת לא תקינה (\"Name: value\" אחת בכל שורה; את Host, Content-Type, Content-Length, Transfer-Encoding ו-Connection המכשיר קובע)"
+
+msgid "Invalid Telegram bot token"
+msgstr "אסימון בוט Telegram לא תקין"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "צ'אט Telegram לא תקין (מספר או @ערוץ)"
+
+msgid "Invalid e-mail setting"
+msgstr "הגדרת דואר אלקטרוני לא תקינה"
+
+msgid "The webhook needs an address"
+msgstr "ה-webhook צריך כתובת"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram צריך אסימון בוט וצ'אט"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "דואר אלקטרוני צריך שרת, שולח ונמען"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "העברה ב-SMS צריכה מספר טלפון"
+
+msgid "The forwarding settings could not be saved"
+msgstr "לא ניתן היה לשמור את הגדרות ההעברה"
+
+msgid "SMS forwarding is not installed"
+msgstr "העברת SMS אינה מותקנת"
+
+msgid "Unknown forwarding operation"
+msgstr "פעולת העברה לא ידועה"
 
 msgid "The language pack is not installed"
 msgstr "חבילת השפות אינה מותקנת"

@@ -251,7 +251,14 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
   the radio comes on where the modem allows it.
 * **Cellular > SMS:** read, send and delete messages. A pool daemon syncs the SIM every 30 s with `AT+CMGL`, which marks
   unread messages on the SIM as read (measured, FINDINGS 35; the panel keeps its own unread state). Do not run
-  `sms delete read` on this system.
+  `sms delete read` on this system. A message leaves the SIM only once the pool's copy is on the disk (an fsync of
+  that file and its directory, never a global sync). A long message whose other parts never come is shown after an
+  hour with what did arrive, marked incomplete.
+* **Cellular > SMS forwarding:** off until turned on. Received messages go on to a webhook (JSON or form, extra
+  headers), a Telegram chat, an e-mail address (only when the image has `msmtp`) and/or another phone by SMS, through a
+  template (`{sender}`, `{time}`, `{text}`, `{device}`), with sender allow/deny lists and keywords. Failed deliveries
+  are retried (30 s, doubling, an hour at most, ten times); a delivery log and a "Send test" button. Tokens, passwords
+  and the webhook address and headers stay in `/etc/mu300/sms-forward.conf` (root only) and are never shown again.
 * **Cellular > AT terminal:** guarded AT commands over the same channel daemons the system uses.
 * **Cellular > Device management:** USB role (device or host), the USB network mode (NCM, ECM or RNDIS, applied at the next boot) and
   adapters in host mode that can join the LAN bridge.

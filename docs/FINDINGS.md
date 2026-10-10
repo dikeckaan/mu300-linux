@@ -97,6 +97,7 @@ what replaced it. The table below gives each section's state.
 | 35 | kanoqwq's fixes, measured | current (panel languages: PR #48) |
 | 36 | Power profiles: idle radios, the charging boot, the charge guard | current; power table and device questions open (PR #62) |
 | 37 | System suspend | current (fixes on branch `suspend-drivers`); power not measured |
+| 39 | The SMS pool: durable before the SIM lets go, long messages that never complete, forwarding | current |
 | 38 | Three defects from users' reports, 2026-10-07 | current |
 | 38a | A read past the end of the eMMC never returns | current (fixed) |
 | 38b | RNDIS: the port kept the bridge's address | current (fixed) |
@@ -3034,6 +3035,44 @@ Logs of every run stayed on F50-B under `/root/susp/` (the spike: `*.log`, dmesg
 the two panic records) and `/root/susp2/` (the follow-up, with the scripts that ran them). F50-B was left on the
 6.18.55 build of branch `suspend-drivers` (radio on, Wi-Fi client, one more 20 s `mem` checked). The 7.2.9
 build of the branch compiles, kernel and all modules; it has not been booted yet.
+
+### 39. The SMS pool: durable before the SIM lets go, long messages that never complete, forwarding
+
+**Where a message can be lost.** This modem is told `AT+CNMI=2,1` (mu300-smsd): it stores a new message on the SIM
+(or ME) and announces it with `+CMTI`, it does not hand over a `+CMT` that the host must acknowledge. The SIM is the
+safe copy, and the only "acknowledgement" is the pool's `AT+CMGD` once the message is pooled. That used to follow a
+global `sync`, which on this device flushes the SD card's loop image too and can stall for seconds. Now each new
+message file is fsynced before its rename, and the pool directory, `next_id` and the pool's parent before the first
+`AT+CMGD` (busybox's `fsync` applet on OpenWrt; coreutils `sync FILE...` elsewhere; the global sync only with
+neither). `next_id` is written aside and renamed, and the highest id in the pool counts too: an id file a power cut
+left empty would have restarted the ids and overwritten message 1.
+
+**Parts that never come.** A long message waited on the SIM until all its parts were there - for ever, if one was
+lost. `$POOL/partial` now remembers when each waiting message was first seen and whether it was unread then
+(`AT+CMGL` marks what it lists read, §35); after `MU300_SMS_PARTIAL_WAIT` (an hour) the parts that did arrive are
+pooled with `[...]` for each missing one and an `incomplete: HAVE/TOTAL` header (the panel says so under the text). A
+part that turns up later is pooled at once as a message of its own. `sms watch` (every system) holds a long message
+back the same way.
+
+**Forwarding** (Cellular > SMS forwarding, `mu300-sms-forward`): driven by the pool (mu300-sms hands over new ids),
+never by the modem. HTTP goes through ucode's `uclient` module in a helper that reads the whole request on stdin, so
+the bot token in Telegram's URL and the webhook's headers are never in a command line; uclient sends a POST body
+chunked. Found on the device: `uclient.connect()` to a refused port returns null, and calling `request()` after it
+segfaults ucode, so the helper checks connect first; a timeout ends with `data_eof` and status 0. `ssl_init({verify:
+true})` refused self-signed, expired and wrong-host certificates (badssl.com: errors 3 and 4).
+
+Checked on the U30 Air (7.2.9, openwrt-luci, v2026.10.17 with these files copied over, then restored): sending to the
+SIM's own number failed (`+CMS ERROR: 28`, the line has no credit, as in §35), so received messages were stored with
+`AT+CMGW=<len>,0` (SMS-DELIVER PDUs, received-unread) and went through the same listing, pooling and `AT+CMGD` as a
+real one. A single message: pooled, off the SIM, forwarded to a webhook on the Mac (JSON, the custom header) within the
+30 s sync. With wrapped `fsync`/`sync`/`mu300-at`: fsync of the file, then of the directory and `next_id`, then
+`AT+CMGR`/`AT+CMGD`, and no global sync. Parts 1 and 3 of 3: waiting (state written once), pooled with the wait
+lowered as `first [...] third`, `incomplete: 2/3`; part 2 injected afterwards was pooled by the next periodic sync as
+`[...]second[...]`. Webhook down: `connect, attempt 1, next in 30 s`, `attempt 2, next in 60 s`, delivered when it
+came back; the queue file left `/etc` when empty. A fake Telegram token: `HTTP 401`, not retried. Every process's
+command line sampled ~45 000 times during deliveries: no token, URL or header. The keyword filter skipped a message
+without the keyword. The page in English and Turkish (save, a refusal translated, the test button, the log). Not
+tested: e-mail (the image has no msmtp), the SMS target (no credit), a real incoming SMS from the network.
 
 ## Users' reports
 

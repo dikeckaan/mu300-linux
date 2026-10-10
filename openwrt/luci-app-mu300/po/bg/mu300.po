@@ -15,6 +15,9 @@ msgstr "Мрежови заключвания"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Препращане на SMS"
+
 msgid "AT terminal"
 msgstr "AT терминал"
 
@@ -291,6 +294,168 @@ msgstr "Добавяне на USB адаптер…"
 msgid "Add failed: %s"
 msgstr "Добавянето е неуспешно: %s"
 
+msgid "Leave empty to keep the saved value"
+msgstr "Оставете празно, за да запазите записаната стойност"
+
+msgid "Saved: %s"
+msgstr "Записано: %s"
+
+msgid "Remove the saved value"
+msgstr "Премахване на записаната стойност"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Получените съобщения се препращат веднага щом стигнат до SMS пула. Неуспешна доставка се повтаря след 30 s, после всеки път след двойно по-дълго време (най-много час), общо десет пъти."
+
+msgid "Forward received messages"
+msgstr "Препращане на получените съобщения"
+
+msgid "Message template"
+msgstr "Шаблон на съобщението"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Заместители: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Само тези податели"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "По един на ред; празно: всички податели. * в края съвпада с началото на подател."
+
+msgid "Never these senders"
+msgstr "Никога тези податели"
+
+msgid "Only messages containing one of these words"
+msgstr "Само съобщения, съдържащи някоя от тези думи"
+
+msgid "One per line; empty: every message."
+msgstr "По една на ред; празно: всички съобщения."
+
+msgid "Webhook"
+msgstr "Уебкука"
+
+msgid "Enabled"
+msgstr "Включен"
+
+msgid "Address (http:// or https://)"
+msgstr "Адрес (http:// или https://)"
+
+msgid "Body"
+msgstr "Тяло"
+
+msgid "Form (URL-encoded)"
+msgstr "Формуляр (URL кодиран)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Полета: sender, time, text, device, message (попълненият шаблон)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Допълнителни заглавки (по една \"Име: стойност\" на ред)"
+
+msgid "Bot token"
+msgstr "Токен на бота"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "ID на чата (число или @канал)"
+
+msgid "E-mail"
+msgstr "Имейл"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "Имейлът изисква msmtp, който този образ няма"
+
+msgid "Mail server"
+msgstr "Пощенски сървър"
+
+msgid "Port"
+msgstr "Порт"
+
+msgid "Security"
+msgstr "Защита"
+
+msgid "None"
+msgstr "Няма"
+
+msgid "User name"
+msgstr "Потребителско име"
+
+msgid "Password"
+msgstr "Парола"
+
+msgid "From"
+msgstr "От"
+
+msgid "To"
+msgstr "До"
+
+msgid "SMS to another phone"
+msgstr "SMS до друг телефон"
+
+msgid "Phone number"
+msgstr "Телефонен номер"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Изпраща се като един SMS: по-дълго съобщение се съкращава."
+
+msgid "Send test"
+msgstr "Изпращане на тест"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Токените, паролите и адресът и заглавките на уебкуката остават на устройството и никога не се показват отново."
+
+msgid "Delivered"
+msgstr "Доставено"
+
+msgid "Will retry"
+msgstr "Ще се опита отново"
+
+msgid "Failed"
+msgstr "Неуспешно"
+
+msgid "Filtered out"
+msgstr "Филтрирано"
+
+msgid "Dropped"
+msgstr "Отхвърлено"
+
+msgid "Test"
+msgstr "Тест"
+
+msgid "Delivery log"
+msgstr "Дневник на доставките"
+
+msgid "Waiting to be delivered"
+msgstr "Чакащи доставка"
+
+msgid "Time"
+msgstr "Време"
+
+msgid "Message"
+msgstr "Съобщение"
+
+msgid "Target"
+msgstr "Цел"
+
+msgid "Result"
+msgstr "Резултат"
+
+msgid "Detail"
+msgstr "Подробности"
+
+msgid "No deliveries yet"
+msgstr "Все още няма доставки"
+
+msgid "Failed: %s"
+msgstr "Неуспешно: %s"
+
+msgid "Saved"
+msgstr "Запазено"
+
+msgid "Management connection lost"
+msgstr "Връзката за управление е загубена"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Тестът е стартиран със записаните настройки; резултатът се появява в дневника на доставките."
+
 msgid "4G only"
 msgstr "Само 4G"
 
@@ -455,9 +620,6 @@ msgstr "Стартирано във фонов режим: %s"
 
 msgid "Done: %s"
 msgstr "Готово: %s"
-
-msgid "Failed: %s"
-msgstr "Неуспешно: %s"
 
 msgid "Disconnecting data…"
 msgstr "Прекъсване на данните…"
@@ -669,12 +831,6 @@ msgstr "AT адаптерът е недостъпен"
 msgid "Linux locked"
 msgstr "Linux е заключен"
 
-msgid "Saved"
-msgstr "Запазено"
-
-msgid "Management connection lost"
-msgstr "Връзката за управление е загубена"
-
 msgid "Installing the language pack…"
 msgstr "Инсталиране на езиковия пакет…"
 
@@ -743,9 +899,6 @@ msgstr "LuCI и този панел"
 
 msgid "LuCI only"
 msgstr "Само LuCI"
-
-msgid "Enabled"
-msgstr "Включен"
 
 msgid "Disabled"
 msgstr "Изключен"
@@ -1197,6 +1350,9 @@ msgstr "Хранилището е празно. Входящите и изпра
 msgid "Me: %s"
 msgstr "Аз: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Непълно: пристигнаха %d от %d части"
+
 msgid "Delete"
 msgstr "Изтриване"
 
@@ -1383,6 +1539,9 @@ msgstr "Адаптерът за TTL не върна валиден отгово�
 msgid "Invalid TTL"
 msgstr "Невалиден TTL"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Адаптерът за препращане не даде валиден отговор"
+
 msgid "Request too large"
 msgstr "Заявката е твърде голяма"
 
@@ -1484,6 +1643,51 @@ msgstr "Презареждането на мрежата е неуспешно"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Не може да се свърже USB интерфейсът към LAN моста"
+
+msgid "Invalid forwarding setting"
+msgstr "Невалидна настройка за препращане"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Шаблонът на съобщението е твърде дълъг или съдържа управляващ знак"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Невалиден списък с филтри (най-много 50 реда)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Адресът на уебкуката трябва да е URL с http:// или https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Невалидна заглавка (по една \"Име: стойност\" на ред; Host, Content-Type, Content-Length, Transfer-Encoding и Connection се задават от устройството)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Невалиден токен на Telegram бот"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Невалиден Telegram чат (число или @канал)"
+
+msgid "Invalid e-mail setting"
+msgstr "Невалидна настройка за имейл"
+
+msgid "The webhook needs an address"
+msgstr "Уебкуката се нуждае от адрес"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram се нуждае от токен на бот и чат"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "Имейлът се нуждае от сървър, подател и получател"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Препращането чрез SMS се нуждае от телефонен номер"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Настройките за препращане не можаха да бъдат записани"
+
+msgid "SMS forwarding is not installed"
+msgstr "Препращането на SMS не е инсталирано"
+
+msgid "Unknown forwarding operation"
+msgstr "Неизвестна операция за препращане"
 
 msgid "The language pack is not installed"
 msgstr "Езиковият пакет не е инсталиран"

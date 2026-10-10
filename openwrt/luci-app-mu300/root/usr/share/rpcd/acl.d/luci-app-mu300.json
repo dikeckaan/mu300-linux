@@ -11,7 +11,7 @@
   },
   "write": {
    "ubus": {
-    "mu300dash": [ "act", "at", "at_history", "lock_set", "sms_list", "sms_show", "sms_send", "sms_delete", "sms_sync", "usb_set", "usb_net_add", "lang_set", "power_set", "ttl_set" ]
+    "mu300dash": [ "act", "at", "at_history", "lock_set", "sms_list", "sms_show", "sms_send", "sms_delete", "sms_sync", "usb_set", "usb_net_add", "lang_set", "power_set", "ttl_set", "forward_get", "forward_set", "forward_test" ]
    },
    "uci": {
     "unisoc_modem": [ "*" ]

@@ -15,6 +15,9 @@ msgstr "Kunci jaringan"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Penerusan SMS"
+
 msgid "AT terminal"
 msgstr "Terminal AT"
 
@@ -291,6 +294,168 @@ msgstr "Menambahkan adaptor USB…"
 msgid "Add failed: %s"
 msgstr "Gagal menambahkan: %s"
 
+msgid "Leave empty to keep the saved value"
+msgstr "Biarkan kosong untuk mempertahankan nilai yang tersimpan"
+
+msgid "Saved: %s"
+msgstr "Tersimpan: %s"
+
+msgid "Remove the saved value"
+msgstr "Hapus nilai yang tersimpan"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Pesan yang diterima diteruskan begitu sampai di pool SMS. Pengiriman yang gagal dicoba lagi setelah 30 dtk, lalu setiap kali setelah waktu dua kali lebih lama (paling lama satu jam), sepuluh kali seluruhnya."
+
+msgid "Forward received messages"
+msgstr "Teruskan pesan yang diterima"
+
+msgid "Message template"
+msgstr "Templat pesan"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Placeholder: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Hanya pengirim ini"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Satu per baris; kosong: semua pengirim. Tanda * di akhir cocok dengan awal pengirim."
+
+msgid "Never these senders"
+msgstr "Jangan pernah pengirim ini"
+
+msgid "Only messages containing one of these words"
+msgstr "Hanya pesan yang memuat salah satu kata ini"
+
+msgid "One per line; empty: every message."
+msgstr "Satu per baris; kosong: semua pesan."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Aktif"
+
+msgid "Address (http:// or https://)"
+msgstr "Alamat (http:// atau https://)"
+
+msgid "Body"
+msgstr "Isi"
+
+msgid "Form (URL-encoded)"
+msgstr "Formulir (dienkode URL)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Kolom: sender, time, text, device, message (templat yang sudah diisi)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Header tambahan (satu \"Nama: nilai\" per baris)"
+
+msgid "Bot token"
+msgstr "Token bot"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "ID obrolan (angka atau @kanal)"
+
+msgid "E-mail"
+msgstr "Email"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "Email memerlukan msmtp, yang tidak ada di image ini"
+
+msgid "Mail server"
+msgstr "Server email"
+
+msgid "Port"
+msgstr "Port"
+
+msgid "Security"
+msgstr "Keamanan"
+
+msgid "None"
+msgstr "Tidak ada"
+
+msgid "User name"
+msgstr "Nama pengguna"
+
+msgid "Password"
+msgstr "Kata sandi"
+
+msgid "From"
+msgstr "Dari"
+
+msgid "To"
+msgstr "Kepada"
+
+msgid "SMS to another phone"
+msgstr "SMS ke ponsel lain"
+
+msgid "Phone number"
+msgstr "Nomor telepon"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Dikirim sebagai satu SMS: pesan yang lebih panjang dipotong."
+
+msgid "Send test"
+msgstr "Kirim uji"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Token, kata sandi, serta alamat dan header webhook tetap di perangkat dan tidak pernah ditampilkan lagi."
+
+msgid "Delivered"
+msgstr "Terkirim"
+
+msgid "Will retry"
+msgstr "Akan dicoba lagi"
+
+msgid "Failed"
+msgstr "Gagal"
+
+msgid "Filtered out"
+msgstr "Tersaring"
+
+msgid "Dropped"
+msgstr "Dibuang"
+
+msgid "Test"
+msgstr "Uji"
+
+msgid "Delivery log"
+msgstr "Log pengiriman"
+
+msgid "Waiting to be delivered"
+msgstr "Menunggu dikirim"
+
+msgid "Time"
+msgstr "Waktu"
+
+msgid "Message"
+msgstr "Pesan"
+
+msgid "Target"
+msgstr "Tujuan"
+
+msgid "Result"
+msgstr "Hasil"
+
+msgid "Detail"
+msgstr "Rincian"
+
+msgid "No deliveries yet"
+msgstr "Belum ada pengiriman"
+
+msgid "Failed: %s"
+msgstr "Gagal: %s"
+
+msgid "Saved"
+msgstr "Disimpan"
+
+msgid "Management connection lost"
+msgstr "Koneksi manajemen terputus"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Uji dimulai dengan pengaturan tersimpan; hasilnya muncul di log pengiriman."
+
 msgid "4G only"
 msgstr "Hanya 4G"
 
@@ -455,9 +620,6 @@ msgstr "Dimulai di latar belakang: %s"
 
 msgid "Done: %s"
 msgstr "Selesai: %s"
-
-msgid "Failed: %s"
-msgstr "Gagal: %s"
 
 msgid "Disconnecting data…"
 msgstr "Memutus data…"
@@ -669,12 +831,6 @@ msgstr "Adaptor AT tidak tersedia"
 msgid "Linux locked"
 msgstr "Linux terkunci"
 
-msgid "Saved"
-msgstr "Disimpan"
-
-msgid "Management connection lost"
-msgstr "Koneksi manajemen terputus"
-
 msgid "Installing the language pack…"
 msgstr "Memasang paket bahasa…"
 
@@ -743,9 +899,6 @@ msgstr "LuCI dan panel ini"
 
 msgid "LuCI only"
 msgstr "Hanya LuCI"
-
-msgid "Enabled"
-msgstr "Aktif"
 
 msgid "Disabled"
 msgstr "Nonaktif"
@@ -1197,6 +1350,9 @@ msgstr "Pool kosong. Pesan masuk dan terkirim muncul di sini, atau pilih “Sink
 msgid "Me: %s"
 msgstr "Saya: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Tidak lengkap: %d dari %d bagian tiba"
+
 msgid "Delete"
 msgstr "Hapus"
 
@@ -1383,6 +1539,9 @@ msgstr "Adaptor TTL tidak memberi balasan yang valid"
 msgid "Invalid TTL"
 msgstr "TTL tidak valid"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Adaptor penerusan tidak memberi balasan yang valid"
+
 msgid "Request too large"
 msgstr "Permintaan terlalu besar"
 
@@ -1484,6 +1643,51 @@ msgstr "Gagal memuat ulang jaringan"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Tidak dapat memasang antarmuka USB ke bridge LAN"
+
+msgid "Invalid forwarding setting"
+msgstr "Pengaturan penerusan tidak valid"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Templat pesan terlalu panjang atau berisi karakter kontrol"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Daftar filter tidak valid (paling banyak 50 baris)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Alamat webhook harus berupa URL http:// atau https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Header tidak valid (satu \"Nama: nilai\" per baris; Host, Content-Type, Content-Length, Transfer-Encoding, dan Connection diatur oleh perangkat)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Token bot Telegram tidak valid"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Obrolan Telegram tidak valid (angka atau @kanal)"
+
+msgid "Invalid e-mail setting"
+msgstr "Pengaturan email tidak valid"
+
+msgid "The webhook needs an address"
+msgstr "Webhook memerlukan alamat"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram memerlukan token bot dan obrolan"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "Email memerlukan server, pengirim, dan penerima"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Penerusan lewat SMS memerlukan nomor telepon"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Pengaturan penerusan tidak dapat disimpan"
+
+msgid "SMS forwarding is not installed"
+msgstr "Penerusan SMS tidak terpasang"
+
+msgid "Unknown forwarding operation"
+msgstr "Operasi penerusan tidak dikenal"
 
 msgid "The language pack is not installed"
 msgstr "Paket bahasa tidak terpasang"

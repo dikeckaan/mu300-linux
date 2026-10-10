@@ -15,6 +15,9 @@ msgstr "Желіні бекіту"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "SMS қайта жіберу"
+
 msgid "AT terminal"
 msgstr "AT терминалы"
 
@@ -291,6 +294,168 @@ msgstr "USB адаптері қосылуда…"
 msgid "Add failed: %s"
 msgstr "Қосу сәтсіз: %s"
 
+msgid "Leave empty to keep the saved value"
+msgstr "Сақталған мәнді қалдыру үшін бос қалдырыңыз"
+
+msgid "Saved: %s"
+msgstr "Сақталды: %s"
+
+msgid "Remove the saved value"
+msgstr "Сақталған мәнді жою"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Алынған хабарлар SMS пулына түскен бойда қайта жіберіледі. Сәтсіз жіберу 30 с кейін, содан кейін әр жолы екі есе ұзақ уақыттан соң (ең көбі бір сағат) қайталанады, барлығы он рет."
+
+msgid "Forward received messages"
+msgstr "Алынған хабарларды қайта жіберу"
+
+msgid "Message template"
+msgstr "Хабар үлгісі"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Толтырғыштар: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Тек осы жіберушілер"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Әр жолда біреу; бос: барлық жіберушілер. Соңындағы * жіберушінің басына сәйкес келеді."
+
+msgid "Never these senders"
+msgstr "Ешқашан осы жіберушілер"
+
+msgid "Only messages containing one of these words"
+msgstr "Тек осы сөздердің бірі бар хабарлар"
+
+msgid "One per line; empty: every message."
+msgstr "Әр жолда біреу; бос: барлық хабарлар."
+
+msgid "Webhook"
+msgstr "Вебхук"
+
+msgid "Enabled"
+msgstr "Қосулы"
+
+msgid "Address (http:// or https://)"
+msgstr "Мекенжай (http:// немесе https://)"
+
+msgid "Body"
+msgstr "Мазмұны"
+
+msgid "Form (URL-encoded)"
+msgstr "Пішін (URL кодталған)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Өрістер: sender, time, text, device, message (толтырылған үлгі)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Қосымша тақырыптар (әр жолда бір \"Аты: мәні\")"
+
+msgid "Bot token"
+msgstr "Бот токені"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "Чат ID (сан немесе @арна)"
+
+msgid "E-mail"
+msgstr "Эл. пошта"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "Эл. поштаға msmtp керек, бұл бейнеде ол жоқ"
+
+msgid "Mail server"
+msgstr "Пошта сервері"
+
+msgid "Port"
+msgstr "Порт"
+
+msgid "Security"
+msgstr "Қауіпсіздік"
+
+msgid "None"
+msgstr "Жоқ"
+
+msgid "User name"
+msgstr "Пайдаланушы аты"
+
+msgid "Password"
+msgstr "Құпиясөз"
+
+msgid "From"
+msgstr "Кімнен"
+
+msgid "To"
+msgstr "Кімге"
+
+msgid "SMS to another phone"
+msgstr "Басқа телефонға SMS"
+
+msgid "Phone number"
+msgstr "Телефон нөмірі"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Бір SMS ретінде жіберіледі: ұзынырақ хабар қысқартылады."
+
+msgid "Send test"
+msgstr "Сынақ жіберу"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Токендер, құпиясөздер, вебхук мекенжайы мен тақырыптары құрылғыда қалады және енді ешқашан көрсетілмейді."
+
+msgid "Delivered"
+msgstr "Жеткізілді"
+
+msgid "Will retry"
+msgstr "Қайталанады"
+
+msgid "Failed"
+msgstr "Сәтсіз"
+
+msgid "Filtered out"
+msgstr "Сүзілді"
+
+msgid "Dropped"
+msgstr "Тасталды"
+
+msgid "Test"
+msgstr "Сынақ"
+
+msgid "Delivery log"
+msgstr "Жеткізу журналы"
+
+msgid "Waiting to be delivered"
+msgstr "Жеткізуді күтуде"
+
+msgid "Time"
+msgstr "Уақыт"
+
+msgid "Message"
+msgstr "Хабар"
+
+msgid "Target"
+msgstr "Мақсат"
+
+msgid "Result"
+msgstr "Нәтиже"
+
+msgid "Detail"
+msgstr "Толығырақ"
+
+msgid "No deliveries yet"
+msgstr "Әзірге жеткізу жоқ"
+
+msgid "Failed: %s"
+msgstr "Сәтсіз: %s"
+
+msgid "Saved"
+msgstr "Сақталды"
+
+msgid "Management connection lost"
+msgstr "Басқару байланысы үзілді"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Сынақ сақталған баптаулармен басталды; нәтиже жеткізу журналында көрінеді."
+
 msgid "4G only"
 msgstr "Тек 4G"
 
@@ -455,9 +620,6 @@ msgstr "Фонда іске қосылды: %s"
 
 msgid "Done: %s"
 msgstr "Дайын: %s"
-
-msgid "Failed: %s"
-msgstr "Сәтсіз: %s"
 
 msgid "Disconnecting data…"
 msgstr "Деректер байланысы ажыратылуда…"
@@ -669,12 +831,6 @@ msgstr "AT адаптері қолжетімсіз"
 msgid "Linux locked"
 msgstr "Linux құлыпталған"
 
-msgid "Saved"
-msgstr "Сақталды"
-
-msgid "Management connection lost"
-msgstr "Басқару байланысы үзілді"
-
 msgid "Installing the language pack…"
 msgstr "Тіл бумасы орнатылуда…"
 
@@ -743,9 +899,6 @@ msgstr "LuCI және осы панель"
 
 msgid "LuCI only"
 msgstr "Тек LuCI"
-
-msgid "Enabled"
-msgstr "Қосулы"
 
 msgid "Disabled"
 msgstr "Өшірулі"
@@ -1197,6 +1350,9 @@ msgstr "Қойма бос. Кіріс және жіберілген хабарл
 msgid "Me: %s"
 msgstr "Мен: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Толық емес: %d / %d бөлік келді"
+
 msgid "Delete"
 msgstr "Жою"
 
@@ -1383,6 +1539,9 @@ msgstr "TTL адаптері жарамды жауап бермеді"
 msgid "Invalid TTL"
 msgstr "Жарамсыз TTL"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Қайта жіберу адаптері дұрыс жауап бермеді"
+
 msgid "Request too large"
 msgstr "Сұрау тым үлкен"
 
@@ -1484,6 +1643,51 @@ msgstr "Желіні қайта жүктеу сәтсіз"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "USB интерфейсін LAN көпіріне қосу мүмкін емес"
+
+msgid "Invalid forwarding setting"
+msgstr "Қайта жіберудің жарамсыз баптауы"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Хабар үлгісі тым ұзын немесе басқару таңбасы бар"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Сүзгілер тізімі жарамсыз (ең көбі 50 жол)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Вебхук мекенжайы http:// немесе https:// URL болуы керек"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Жарамсыз тақырып (әр жолда бір \"Аты: мәні\"; Host, Content-Type, Content-Length, Transfer-Encoding және Connection құрылғымен орнатылады)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Telegram бот токені жарамсыз"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Telegram чаты жарамсыз (сан немесе @арна)"
+
+msgid "Invalid e-mail setting"
+msgstr "Эл. пошта баптауы жарамсыз"
+
+msgid "The webhook needs an address"
+msgstr "Вебхукқа мекенжай керек"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram үшін бот токені мен чат керек"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "Эл. поштаға сервер, жіберуші және алушы керек"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "SMS арқылы қайта жіберуге телефон нөмірі керек"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Қайта жіберу баптауларын сақтау мүмкін болмады"
+
+msgid "SMS forwarding is not installed"
+msgstr "SMS қайта жіберу орнатылмаған"
+
+msgid "Unknown forwarding operation"
+msgstr "Белгісіз қайта жіберу әрекеті"
 
 msgid "The language pack is not installed"
 msgstr "Тіл бумасы орнатылмаған"

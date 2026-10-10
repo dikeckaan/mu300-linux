@@ -15,6 +15,9 @@ msgstr "Netwerkvergrendelingen"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "SMS doorsturen"
+
 msgid "AT terminal"
 msgstr "AT-terminal"
 
@@ -291,6 +294,168 @@ msgstr "USB-adapter wordt toegevoegd…"
 msgid "Add failed: %s"
 msgstr "Toevoegen mislukt: %s"
 
+msgid "Leave empty to keep the saved value"
+msgstr "Leeg laten om de opgeslagen waarde te behouden"
+
+msgid "Saved: %s"
+msgstr "Opgeslagen: %s"
+
+msgid "Remove the saved value"
+msgstr "Opgeslagen waarde verwijderen"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Ontvangen berichten worden doorgestuurd zodra ze in de SMS-pool aankomen. Een mislukte levering wordt na 30 s opnieuw geprobeerd, daarna telkens na twee keer zo lang (hooguit een uur), in totaal tien keer."
+
+msgid "Forward received messages"
+msgstr "Ontvangen berichten doorsturen"
+
+msgid "Message template"
+msgstr "Berichtsjabloon"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Plaatshouders: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Alleen deze afzenders"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Eén per regel; leeg: alle afzenders. Een * aan het eind komt overeen met het begin van een afzender."
+
+msgid "Never these senders"
+msgstr "Nooit deze afzenders"
+
+msgid "Only messages containing one of these words"
+msgstr "Alleen berichten met een van deze woorden"
+
+msgid "One per line; empty: every message."
+msgstr "Eén per regel; leeg: alle berichten."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Ingeschakeld"
+
+msgid "Address (http:// or https://)"
+msgstr "Adres (http:// of https://)"
+
+msgid "Body"
+msgstr "Inhoud"
+
+msgid "Form (URL-encoded)"
+msgstr "Formulier (URL-gecodeerd)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Velden: sender, time, text, device, message (het ingevulde sjabloon)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Extra headers (één \"Naam: waarde\" per regel)"
+
+msgid "Bot token"
+msgstr "Bot-token"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "Chat-ID (een getal of @kanaal)"
+
+msgid "E-mail"
+msgstr "E-mail"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "E-mail heeft msmtp nodig, dat deze image niet heeft"
+
+msgid "Mail server"
+msgstr "Mailserver"
+
+msgid "Port"
+msgstr "Poort"
+
+msgid "Security"
+msgstr "Beveiliging"
+
+msgid "None"
+msgstr "Geen"
+
+msgid "User name"
+msgstr "Gebruikersnaam"
+
+msgid "Password"
+msgstr "Wachtwoord"
+
+msgid "From"
+msgstr "Van"
+
+msgid "To"
+msgstr "Aan"
+
+msgid "SMS to another phone"
+msgstr "SMS naar een andere telefoon"
+
+msgid "Phone number"
+msgstr "Telefoonnummer"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Verzonden als één SMS: een langer bericht wordt ingekort."
+
+msgid "Send test"
+msgstr "Test verzenden"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Tokens, wachtwoorden en het adres en de headers van de webhook blijven op het apparaat en worden nooit meer getoond."
+
+msgid "Delivered"
+msgstr "Afgeleverd"
+
+msgid "Will retry"
+msgstr "Wordt opnieuw geprobeerd"
+
+msgid "Failed"
+msgstr "Mislukt"
+
+msgid "Filtered out"
+msgstr "Weggefilterd"
+
+msgid "Dropped"
+msgstr "Verworpen"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Delivery log"
+msgstr "Afleverlog"
+
+msgid "Waiting to be delivered"
+msgstr "Wacht op aflevering"
+
+msgid "Time"
+msgstr "Tijd"
+
+msgid "Message"
+msgstr "Bericht"
+
+msgid "Target"
+msgstr "Doel"
+
+msgid "Result"
+msgstr "Resultaat"
+
+msgid "Detail"
+msgstr "Detail"
+
+msgid "No deliveries yet"
+msgstr "Nog geen afleveringen"
+
+msgid "Failed: %s"
+msgstr "Mislukt: %s"
+
+msgid "Saved"
+msgstr "Opgeslagen"
+
+msgid "Management connection lost"
+msgstr "Beheerverbinding verloren"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Test gestart met de opgeslagen instellingen; het resultaat verschijnt in het afleverlog."
+
 msgid "4G only"
 msgstr "Alleen 4G"
 
@@ -455,9 +620,6 @@ msgstr "Op de achtergrond gestart: %s"
 
 msgid "Done: %s"
 msgstr "Klaar: %s"
-
-msgid "Failed: %s"
-msgstr "Mislukt: %s"
 
 msgid "Disconnecting data…"
 msgstr "Dataverbinding wordt verbroken…"
@@ -669,12 +831,6 @@ msgstr "AT-adapter niet beschikbaar"
 msgid "Linux locked"
 msgstr "Linux vergrendeld"
 
-msgid "Saved"
-msgstr "Opgeslagen"
-
-msgid "Management connection lost"
-msgstr "Beheerverbinding verloren"
-
 msgid "Installing the language pack…"
 msgstr "Taalpakket wordt geïnstalleerd…"
 
@@ -743,9 +899,6 @@ msgstr "LuCI en dit paneel"
 
 msgid "LuCI only"
 msgstr "Alleen LuCI"
-
-msgid "Enabled"
-msgstr "Ingeschakeld"
 
 msgid "Disabled"
 msgstr "Uitgeschakeld"
@@ -1197,6 +1350,9 @@ msgstr "De pool is leeg. Ontvangen en verzonden berichten verschijnen hier, of k
 msgid "Me: %s"
 msgstr "Ik: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Onvolledig: %d van %d delen aangekomen"
+
 msgid "Delete"
 msgstr "Verwijderen"
 
@@ -1383,6 +1539,9 @@ msgstr "De TTL-adapter gaf geen geldig antwoord"
 msgid "Invalid TTL"
 msgstr "Ongeldige TTL"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "De doorstuuradapter gaf geen geldig antwoord"
+
 msgid "Request too large"
 msgstr "Verzoek te groot"
 
@@ -1484,6 +1643,51 @@ msgstr "Herladen van netwerk mislukt"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Kan USB-interface niet aan LAN-bridge koppelen"
+
+msgid "Invalid forwarding setting"
+msgstr "Ongeldige doorstuurinstelling"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Het berichtsjabloon is te lang of bevat een stuurteken"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Ongeldige filterlijst (hooguit 50 regels)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Het webhookadres moet een http://- of https://-URL zijn"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Ongeldige header (één \"Naam: waarde\" per regel; Host, Content-Type, Content-Length, Transfer-Encoding en Connection stelt het apparaat in)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Ongeldig Telegram-bottoken"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Ongeldige Telegram-chat (een getal of @kanaal)"
+
+msgid "Invalid e-mail setting"
+msgstr "Ongeldige e-mailinstelling"
+
+msgid "The webhook needs an address"
+msgstr "De webhook heeft een adres nodig"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram heeft een bottoken en een chat nodig"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "E-mail heeft een server, een afzender en een ontvanger nodig"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "SMS doorsturen heeft een telefoonnummer nodig"
+
+msgid "The forwarding settings could not be saved"
+msgstr "De doorstuurinstellingen konden niet worden opgeslagen"
+
+msgid "SMS forwarding is not installed"
+msgstr "SMS doorsturen is niet geïnstalleerd"
+
+msgid "Unknown forwarding operation"
+msgstr "Onbekende doorstuurbewerking"
 
 msgid "The language pack is not installed"
 msgstr "Het taalpakket is niet geïnstalleerd"

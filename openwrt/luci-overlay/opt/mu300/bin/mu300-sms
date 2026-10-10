@@ -12,6 +12,18 @@
 #
 # A received message that lands in the pool runs /etc/mu300/sms-hook (MU300_SMS_HOOK), when that is executable, with
 # SMS_FROM, SMS_DATE, SMS_TEXT and SMS_ID in its environment, in the background (forwarding to a phone, a webhook...).
+# It is also handed to the panel's SMS forwarding (mu300-sms-forward enqueue, MU300_SMS_FORWARD), which does nothing
+# unless forwarding is on.
+#
+# The SIM is where a received message is safe until the pool has it: the modem stores it there and announces it
+# (+CMTI), and the only "acknowledgement" this side gives is deleting it from the SIM. That happens only once the
+# pool's file, its directory entry and next_id are on the disk - an fsync of exactly those (busybox fsync, coreutils
+# sync FILE...), never a global sync, which flushes the whole SD card and can stall for seconds.
+#
+# The parts of a long message wait on the SIM until the last one is there. Parts whose siblings never come (a part the
+# network lost) would wait for ever, and hold SIM slots: after MU300_SMS_PARTIAL_WAIT seconds (an hour) the parts that
+# did arrive are pooled as one message, "[...]" where a part is missing, with an "incomplete: HAVE/TOTAL" header. A
+# part that arrives after that is pooled at once, as a message of its own.
 #
 # This is not the SMS tool of the system: that is `sms`, on every system, with its own state in /etc/mu300/sms. The
 # pool lives apart from it (/etc/mu300/sms-pool) and is where received messages live: sync moves them off the SIM
@@ -47,6 +59,23 @@ RUNDIR=${MU300_SMS_RUN:-/run}
 LOCK=$RUNDIR/mu300-sms-pool.$(printf '%s' "$POOL" | { md5sum 2>/dev/null || cksum; } | cut -d' ' -f1).lock
 
 die() { echo "mu300-sms: $*" >&2; exit 1; }
+
+FORWARD=${MU300_SMS_FORWARD:-/opt/mu300/bin/mu300-sms-forward}
+PARTIAL_WAIT=${MU300_SMS_PARTIAL_WAIT:-3600}
+case $PARTIAL_WAIT in ''|*[!0-9]*) PARTIAL_WAIT=3600 ;; esac
+
+# durable FILE...: FILE on the disk (its data, or a directory's entries) before going on. busybox's fsync applet
+# (OpenWrt), else coreutils' "sync FILE..." (8.24 and later: an fsync per file); busybox's own sync takes no FILE and
+# would flush everything, so it is told apart by its help. Only with neither is it the global sync.
+durable() {
+    if command -v fsync >/dev/null 2>&1; then
+        fsync "$@" 2>/dev/null && return 0
+    fi
+    if sync --help 2>&1 | grep -q 'FILE'; then
+        sync -- "$@" 2>/dev/null && return 0
+    fi
+    command sync 2>/dev/null || true
+}
 
 # at CMD [SECONDS]: one command through mu300-atd. Its stderr is passed on: "mu300-at: busy" is how the panel learns
 # that the channel was busy.
@@ -110,13 +139,21 @@ fingerprint() {
     printf '%s|%s|%s' "$1" "$2" "$3" | { md5sum 2>/dev/null || cksum; } | cut -d' ' -f1
 }
 
+# next_id is replaced whole (written aside and renamed): an id file a power cut left empty would start the ids over,
+# and the next message would overwrite message 1. The highest id in the pool counts too, for one lost some other way.
 next_id() {
-    _id=$(($(cat "$POOL/next_id" 2>/dev/null || echo 0) + 1))
-    echo "$_id" > "$POOL/next_id"
+    _id=$(cat "$POOL/next_id" 2>/dev/null)
+    case $_id in ''|*[!0-9]*) _id=0 ;; esac
+    _top=$(ids_newest_first | head -n 1 | sed 's/^0*//')
+    [ "${_top:-0}" -gt "$_id" ] && _id=$_top
+    _id=$((_id + 1))
+    echo "$_id" > "$POOL/next_id.part" && mv "$POOL/next_id.part" "$POOL/next_id"
     printf '%06d' "$_id"
 }
 
-# store_msg DIR STATUS PEER TIME SIM_INDEX CODING TEXT -> the new id. Call with the pool lock held.
+# store_msg DIR STATUS PEER TIME SIM_INDEX CODING TEXT [HEADERS] -> the new id. Call with the pool lock held. HEADERS:
+# more "field: value" lines. The file is on the disk before it gets its name, so a power cut leaves the whole message
+# or none, never an empty file under a real id.
 store_msg() {
     _id=$(next_id)
     _f=$MSGDIR/$_id
@@ -131,9 +168,10 @@ store_msg() {
         printf 'coding: %s\n' "$6"
         printf 'fingerprint: %s\n' "$(fingerprint "$3" "$4" "$7")"
         printf 'length: %s\n' "$(printf '%s' "$7" | wc -c | tr -d ' ')"
+        [ -n "${8:-}" ] && printf '%s\n' "$8"
         printf '\n'
         printf '%s\n' "$7"
-    } > "$_f.part" && mv "$_f.part" "$_f"
+    } > "$_f.part" && durable "$_f.part" && mv "$_f.part" "$_f"
     echo "$_id"
 }
 
@@ -175,7 +213,9 @@ pick_store() {
 # (indexes: the SIM slots of its parts, comma-separated; unread: 1 when any part is). In PDU mode AT+CMGL=4 is all;
 # each "+CMGL: index,stat,..." line is followed by its PDU, stat 0 being "received unread". sms-pdu.awk keeps the
 # index field as it is given, so the stat travels in it ("3:0"). A long message whose parts are not all there yet is
-# left for a later sync (its other parts may still be arriving) and counted on stderr as "incomplete N".
+# left for a later sync (its other parts may still be arriving) and counted on stderr as "incomplete N"; when
+# SIM_PARTIAL names a file, it goes there as
+#   key <TAB> indexes <TAB> unread <TAB> sender <TAB> time <TAB> HAVE/TOTAL <TAB> text, "[...]" for each missing part
 sim_list() {
     pick_store || { echo "mu300-sms: the modem accepted neither SM nor ME storage" >&2; return 1; }
     _r=$(at 'AT+CMGF=0' 6) || { echo "mu300-sms: the modem refused PDU mode: $(echo "$_r" | head -n 1)" >&2; return 1; }
@@ -196,10 +236,20 @@ sim_list() {
             if ($5 + 0 > parts[key]) parts[key] = $5 + 0
         }
         END {
+            out = ENVIRON["SIM_PARTIAL"]
             for (j = 1; j <= k; j++) {
-                key = order[j]; t = ""; ok = 1
-                for (p = 1; p <= parts[key]; p++) { if ((key, p) in body) t = t body[key, p]; else ok = 0 }
-                if (!ok) { incomplete++; continue }
+                key = order[j]; t = ""; g = ""; ok = 1; n = 0
+                for (p = 1; p <= parts[key]; p++) {
+                    if ((key, p) in body) { t = t body[key, p]; g = g body[key, p]; n++ }
+                    else { ok = 0; g = g "[...]" }
+                }
+                if (!ok) {
+                    incomplete++
+                    if (out != "")
+                        printf "%s:%d\t%s\t%s\t%s\t%s\t%d/%d\t%s\n", key, parts[key], idxs[key], unread[key], snd[key],
+                            ts[key], n, parts[key], g > out
+                    continue
+                }
                 printf "%s\t%s\t%s\t%s\t%s\n", idxs[key], unread[key], snd[key], ts[key], t
             }
             if (incomplete) printf "incomplete %d\n", incomplete > "/dev/stderr"
@@ -209,11 +259,10 @@ sim_list() {
 # sim_move SLOTS RAW: delete from the SIM the slots listed in the file SLOTS (one per line), each only when it still
 # holds the PDU the listing saw (RAW, from sim_list): between the listing and here another client may have deleted a
 # slot and a new message landed in it, and that one is not in the pool. Sets _moved and _kept. No pool lock: AT calls.
+# The caller has made the pool's copies durable first (a power cut must not lose both).
 sim_move() {
     _moved=0; _kept=0
     [ -s "$1" ] || return 0
-    # the pool's copies on the disk before the SIM lets go of anything (a power cut must not lose both)
-    command sync 2>/dev/null || true
     for _s in $(sort -un "$1"); do
         _want=$(awk -F'\t' -v s="$_s" '{ split($1, a, ":"); if (a[1] == s) { print toupper($2); exit } }' "$2")
         _r=$(at "AT+CMGR=$_s" 10 2>/dev/null) || _r=
@@ -227,6 +276,48 @@ sim_move() {
     done
 }
 
+# known_or_dead FP SLOTS: the pool already dealt with the message of fingerprint FP (it holds it, or deleted it and
+# keeps its tombstone): its SLOTS go from the SIM, and the SIM index the pool knew is brought up to date. Uses the
+# lists cmd_sync keeps ($_fps, $_move).
+known_or_dead() {
+    # a message deleted from the pool stays deleted: its fingerprint is on the tombstone list (and it goes from the
+    # SIM, as everything the pool has dealt with)
+    if grep -qxF "$1" "$POOL/deleted" 2>/dev/null; then
+        printf '%s\n' "$2" | tr ',' '\n' >> "$_move"; return 0
+    fi
+    _known=$(sed -n "s|^$1 ||p" "$_fps" | head -n 1)
+    [ -n "$_known" ] || return 1
+    [ "$(hdr "$_known" sim_index)" = "$2" ] || set_hdr "$_known" sim_index "$2"
+    printf '%s\n' "$2" | tr ',' '\n' >> "$_move"
+    return 0
+}
+
+# take SLOTS UNREAD FROM TIME TEXT [HEADERS]: a message the pool does not have yet, into the pool; its slots leave the
+# SIM, and the hook and the forwarding get it. Uses the lists cmd_sync keeps.
+take() {
+    # the SIM's own read state carries over: a message read before the pool saw it does not arrive as new
+    if [ "$2" = 1 ]; then _st=unread; else _st=read; fi
+    _coding=gsm
+    [ -n "$(printf '%s' "$5" | LC_ALL=C tr -d '\000-\177')" ] && _coding=ucs2
+    _id=$(store_msg mt "$_st" "$3" "$4" "$1" "$_coding" "$5" "${6:-}")
+    # leaves the SIM only when the pool really has it (a full or read-only disk keeps it on the SIM)
+    if [ -f "$MSGDIR/$_id" ] && [ "$(hdr "$MSGDIR/$_id" fingerprint)" = "$_fp" ]; then
+        printf '%s\n' "$1" | tr ',' '\n' >> "$_move"
+    else
+        echo "mu300-sms: could not write a message into $MSGDIR; it stays on the SIM" >&2
+        return 1
+    fi
+    printf '%s %s\n' "$_fp" "$MSGDIR/$_id" >> "$_fps"
+    echo "$_id" >> "$_newids"
+    _new=$((_new + 1))
+    # the hook gets it from the pool's copy, so it never depends on the SIM still holding it; its output and its exit
+    # do not concern the sync
+    if [ -x "$HOOK" ]; then
+        SMS_FROM=$3 SMS_DATE=$4 SMS_TEXT=$5 SMS_ID=$_id "$HOOK" </dev/null >/dev/null 2>&1 &
+    fi
+    echo "new: $_id from ${3:-?} ${4:-}"
+}
+
 # ------------------------------------------------------------------ commands
 cmd_sync() {
     need_atd
@@ -234,16 +325,18 @@ cmd_sync() {
     pool_init
     _tmp=$(mktemp "${TMPDIR:-/tmp}/mu300-sms.XXXXXX") || die "mktemp failed"
     SIM_RAW=$_tmp.raw
+    SIM_PARTIAL=$_tmp.partial
+    export SIM_PARTIAL
     sim_list > "$_tmp" 2> "$_tmp.err" || {
-        grep -v '^incomplete ' "$_tmp.err" >&2; rm -f "$_tmp" "$_tmp.err" "$_tmp.raw"; die "cannot list the SIM storage"; }
-    _waiting=$(sed -n 's/^incomplete //p' "$_tmp.err" | head -n 1)
+        grep -v '^incomplete ' "$_tmp.err" >&2; rm -f "$_tmp" "$_tmp.err" "$_tmp.raw" "$_tmp.partial"
+        die "cannot list the SIM storage"; }
     rm -f "$_tmp.err"
     # The AT conversation is over before the pool lock is taken: a path holding the pool lock makes no AT call, so
     # send (AT lock, then pool lock) and sync can never wait for each other.
     pool_lock
     # the fingerprints the pool holds, so a sync is idempotent and the SIM index of a message that moved is updated
-    _fps=$_tmp.fp; _seen=$_tmp.sim; _move=$_tmp.move
-    : > "$_fps"; : > "$_seen"; : > "$_move"
+    _fps=$_tmp.fp; _seen=$_tmp.sim; _move=$_tmp.move; _newids=$_tmp.new
+    : > "$_fps"; : > "$_seen"; : > "$_move"; : > "$_newids"
     for _f in "$MSGDIR"/[0-9]*; do
         case $_f in *.part) continue ;; esac   # a write in progress (or one a crash left behind)
         [ -f "$_f" ] || continue
@@ -255,38 +348,47 @@ cmd_sync() {
         _total=$((_total + 1))
         _fp=$(fingerprint "$_from" "$_ts" "$_text")
         echo "$_fp" >> "$_seen"
-        # a message deleted from the pool stays deleted: its fingerprint is on the tombstone list (and it goes from
-        # the SIM, as everything the pool has dealt with)
-        if grep -qxF "$_fp" "$POOL/deleted" 2>/dev/null; then
-            printf '%s\n' "$_idx" | tr ',' '\n' >> "$_move"; continue
-        fi
-        _known=$(sed -n "s|^$_fp ||p" "$_fps" | head -n 1)
-        if [ -n "$_known" ]; then
-            [ "$(hdr "$_known" sim_index)" = "$_idx" ] || set_hdr "$_known" sim_index "$_idx"
-            printf '%s\n' "$_idx" | tr ',' '\n' >> "$_move"
-            continue
-        fi
-        # the SIM's own read state carries over: a message read before the pool saw it does not arrive as new
-        if [ "$_unread" = 1 ]; then _st=unread; else _st=read; fi
-        _coding=gsm
-        [ -n "$(printf '%s' "$_text" | LC_ALL=C tr -d '\000-\177')" ] && _coding=ucs2
-        _id=$(store_msg mt "$_st" "$_from" "$_ts" "$_idx" "$_coding" "$_text")
-        # leaves the SIM only when the pool really has it (a full or read-only disk keeps it on the SIM)
-        if [ -f "$MSGDIR/$_id" ] && [ "$(hdr "$MSGDIR/$_id" fingerprint)" = "$_fp" ]; then
-            printf '%s\n' "$_idx" | tr ',' '\n' >> "$_move"
-        else
-            echo "mu300-sms: could not write a message into $MSGDIR; it stays on the SIM" >&2
-            continue
-        fi
-        printf '%s %s\n' "$_fp" "$MSGDIR/$_id" >> "$_fps"
-        _new=$((_new + 1))
-        # the hook gets it from the pool's copy, so it never depends on the SIM still holding it; its output and
-        # its exit do not concern the sync
-        if [ -x "$HOOK" ]; then
-            SMS_FROM=$_from SMS_DATE=$_ts SMS_TEXT=$_text SMS_ID=$_id "$HOOK" </dev/null >/dev/null 2>&1 &
-        fi
-        echo "new: $_id from ${_from:-?} ${_ts:-}"
+        known_or_dead "$_fp" "$_idx" && continue
+        take "$_idx" "$_unread" "$_from" "$_ts" "$_text"
     done < "$_tmp"
+    # The parts of long messages that are not whole yet. $POOL/partial keeps when each was first seen, and whether it
+    # was unread then ("key <TAB> epoch <TAB> 0|1": AT+CMGL marks what it lists read on this modem, FINDINGS 35, so
+    # the next listing would say read); one that has waited PARTIAL_WAIT seconds is taken as it is. So is one whose
+    # earlier parts the pool already took that way (a header "partial: <md5 of its key>"): the rest of a message that
+    # is in the pool already.
+    _now=$(date +%s)
+    _waiting=0
+    : > "$_tmp.pstate"
+    [ -f "$_tmp.partial" ] || : > "$_tmp.partial"
+    while IFS="$TAB" read -r _key _idx _unread _from _ts _have _text; do
+        [ -n "$_key" ] || continue
+        _fp=$(fingerprint "$_from" "$_ts" "$_text")
+        echo "$_fp" >> "$_seen"
+        known_or_dead "$_fp" "$_idx" && continue
+        _was=$(K=$_key awk -F'\t' '$1 == ENVIRON["K"] { print $2 " " $3; exit }' "$POOL/partial" 2>/dev/null)
+        _first=${_was% *}
+        case $_first in ''|*[!0-9]*) _first=$_now ;; esac
+        [ "${_was#* }" = 1 ] && _unread=1
+        _ph=$(printf '%s' "$_key" | { md5sum 2>/dev/null || cksum; } | cut -d' ' -f1)
+        if [ $((_now - _first)) -ge "$PARTIAL_WAIT" ] ||
+            grep -lx "partial: $_ph" "$MSGDIR"/[0-9]* >/dev/null 2>&1; then
+            take "$_idx" "$_unread" "$_from" "$_ts" "$_text" "$(printf 'incomplete: %s\npartial: %s' "$_have" "$_ph")" &&
+                continue
+        fi
+        printf '%s\t%s\t%s\n' "$_key" "$_first" "$_unread" >> "$_tmp.pstate"
+        _waiting=$((_waiting + 1))
+    done < "$_tmp.partial"
+    # rewritten only when it changes (it is on flash); after a listing that skipped a store, the keys it did not see
+    # are kept, as the tombstones are
+    if [ -n "$_store_unsure" ] && [ -s "$POOL/partial" ]; then
+        awk -F'\t' 'NR == FNR { k[$1] = 1; print; next } !($1 in k)' "$_tmp.pstate" "$POOL/partial" > "$_tmp.pst2"
+        mv "$_tmp.pst2" "$_tmp.pstate"
+    fi
+    if [ -s "$_tmp.pstate" ]; then
+        cmp -s "$_tmp.pstate" "$POOL/partial" || { cat "$_tmp.pstate" > "$POOL/partial.part" && mv "$POOL/partial.part" "$POOL/partial"; }
+    else
+        rm -f "$POOL/partial"
+    fi
     # tombstones of messages no longer on the SIM are not needed any more: nothing can bring those back. The list is
     # rewritten only when that drops something (it is on flash), and only after a listing that saw every store: one
     # that skipped a store that did not answer would drop the tombstones of what is still there.
@@ -294,14 +396,25 @@ cmd_sync() {
         if [ -s "$_seen" ]; then grep -xFf "$_seen" "$POOL/deleted" > "$_tmp.del"; else : > "$_tmp.del"; fi
         cmp -s "$_tmp.del" "$POOL/deleted" || { cat "$_tmp.del" > "$POOL/deleted.part" && mv "$POOL/deleted.part" "$POOL/deleted"; }
     fi
-    rm -f "$_tmp" "$_fps" "$_seen" "$_tmp.del"
+    rm -f "$_tmp" "$_fps" "$_seen" "$_tmp.del" "$_tmp.partial" "$_tmp.pstate"
     _inpool=$(ids_newest_first | wc -l | tr -d ' ')
     pool_unlock
+    # what this sync took is on the disk before any of it leaves the SIM: each file was (store_msg), now the names
+    # in the pool directory and next_id
+    [ "$_new" -gt 0 ] && durable "$MSGDIR" "$POOL/next_id" "$POOL"
+    # forwarding (when it is on) queues what is new and delivers in the background; with nothing new, a delivery
+    # waiting for its retry is resumed (after a reboot, say)
+    if [ -x "$FORWARD" ]; then
+        # shellcheck disable=SC2046 -- ids: digits only
+        if [ -s "$_newids" ]; then "$FORWARD" enqueue $(cat "$_newids"); else "$FORWARD" kick; fi </dev/null >/dev/null 2>&1
+    fi
+    rm -f "$_newids"
     # off the SIM, after the pool lock (AT calls): what the pool now holds, and what it was told to forget
     sim_move "$_move" "$_tmp.raw"
     rm -f "$_move" "$_tmp.raw"
     _left=; [ "$_kept" -gt 0 ] && _left=", $_kept left there (changed since the listing, or the modem kept it)"
-    echo "sync: $_new new, $_total on the SIM, $_inpool in the pool${_waiting:+, $_waiting waiting for its other parts}, $_moved moved off the SIM$_left"
+    _wait=; [ "$_waiting" -gt 0 ] && _wait=", $_waiting waiting for its other parts"
+    echo "sync: $_new new, $_total on the SIM, $_inpool in the pool$_wait, $_moved moved off the SIM$_left"
 }
 
 # preview: the first line, at most 44 bytes, cut back to a whole UTF-8 character (and only when it was cut)
@@ -365,6 +478,9 @@ cmd_show() {
     echo "time:        $(hdr "$_f" scts)"
     _idx=$(hdr "$_f" sim_index)
     echo "sim index:   ${_idx:-not on the SIM}"
+    # a long message pooled without all its parts (the panel reads this line)
+    _inc=$(hdr "$_f" incomplete)
+    [ -n "$_inc" ] && echo "incomplete:  ${_inc%/*} of ${_inc#*/} parts arrived"
     [ -n "$_recv" ] && echo "pooled:      $(date -u -d "@$_recv" 2>/dev/null || date -u -r "$_recv" 2>/dev/null || echo "$_recv")"
     echo "---"
     body_of "$_f"
