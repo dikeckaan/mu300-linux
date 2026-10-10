@@ -183,14 +183,14 @@ section { scroll-margin-top: 5rem; }
   border-bottom: 1px solid var(--line);
 }
 .site-header .wrap {
-  display: flex; align-items: center; gap: 1rem; min-height: 3.75rem; flex-wrap: wrap;
+  display: flex; align-items: center; gap: .9rem; min-height: 3.75rem; flex-wrap: nowrap;
 }
 .brand {
-  display: inline-flex; align-items: center; gap: .55rem;
+  flex: none; display: inline-flex; align-items: center; gap: .55rem;
   color: var(--ink); text-decoration: none; font-family: var(--font-display); font-weight: 700; font-size: 1.1rem;
 }
 .brand svg { width: 30px; height: 30px; flex: none; }
-.site-nav { display: flex; gap: .2rem 1.1rem; flex-wrap: wrap; align-items: center; margin-left: auto; }
+.site-nav { display: flex; gap: .2rem .95rem; flex-wrap: nowrap; align-items: center; margin-left: auto; white-space: nowrap; }
 .site-nav a { color: var(--ink); text-decoration: none; font-size: .97rem; padding: .3rem 0; }
 .site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--blue); }
 .site-nav a[aria-current="page"] { box-shadow: inset 0 -2px 0 var(--blue); }
@@ -205,12 +205,12 @@ section { scroll-margin-top: 5rem; }
 }
 .langs a[aria-current="true"] { border-color: var(--line); color: var(--ink); background: var(--surface); }
 .theme-btn {
-  display: inline-flex; align-items: center; gap: .35rem;
-  font: inherit; font-size: .85rem; color: var(--ink); background: var(--surface);
-  border: 1px solid var(--line); border-radius: 999px; padding: .2rem .65rem .2rem .45rem; cursor: pointer;
+  flex: none; display: inline-grid; place-items: center; width: 2.1rem; height: 2.1rem; padding: 0;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 50%; cursor: pointer;
 }
 .theme-btn[hidden] { display: none; }
-@media (max-width: 420px) { .theme-name { display: none; } }
+/* the name of the theme is in the button's label and tooltip; on screen the icon says it */
+.theme-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .theme-btn:hover { border-color: var(--blue); }
 .theme-btn svg { width: 18px; height: 18px; display: none; }
 .theme-btn[data-mode="auto"] .i-auto, .theme-btn[data-mode="light"] .i-light, .theme-btn[data-mode="dark"] .i-dark { display: block; }
@@ -220,7 +220,11 @@ section { scroll-margin-top: 5rem; }
   border: 1px solid var(--line); border-radius: var(--radius-s); padding: .3rem .8rem; cursor: pointer;
 }
 
-@media (max-width: 860px) {
+/* Below this width the longest menu (Turkish, about 1150 px with the logo and the theme button) no longer fits on
+   one row, so every language switches to the menu button instead of wrapping. */
+@media (max-width: 1180px) {
+  .site-header .wrap { flex-wrap: wrap; }
+  .site-nav { flex-wrap: wrap; }   /* without JavaScript the links simply wrap */
   .js .menu-btn { display: inline-block; margin-left: 0; }
   .js .theme-btn { margin-left: auto; }
   .js .site-nav { order: 3; display: none; width: 100%; flex-direction: column; align-items: flex-start; padding: .4rem 0 1rem; }
