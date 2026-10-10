@@ -34,6 +34,23 @@ esac''')
             self.assertIn('F50 only', r.stderr)
             self.assertEqual(self.choice.read_text().strip(), '0')
 
+    def test_common_default_and_json_status_interface(self):
+        for shell in self.each_shell():
+            self.state.unlink(missing_ok=True)
+            self.choice.write_text('0\n')
+            r = self.sim(shell, 'default', '2')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(self.choice.read_text().strip(), '1')
+            status = self.sim(shell, 'status', '--json')
+            self.assertEqual(status.returncode, 0, status.stderr)
+            self.assertEqual(json.loads(status.stdout), {
+                'ok': 1, 'active': 1, 'default': 2, 'hot': 0,
+                'available': 0, 'result': 'reboot_required',
+            })
+            hot = self.sim(shell, 'hot', '1')
+            self.assertNotEqual(hot.returncode, 0)
+            self.assertIn('live SIM switching', hot.stderr)
+
     def test_selection_requires_reboot_and_is_idempotent(self):
         for shell in self.each_shell():
             self.state.unlink(missing_ok=True)

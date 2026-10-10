@@ -53,11 +53,19 @@ case ${1:-status} in
         ensure_f50 || exit 1
         old=$(active) || exit 1
         next=$(configured) || exit 1
-        printf 'active slot: %s\nnext boot slot: %s\n' "$old" "$next"
+        if [ "${2:-}" = --json ]; then
+            printf '{"ok":1,"active":%s,"default":%s,"hot":0,"available":0,"result":"reboot_required"}\n' "$((old + 1))" "$((next + 1))"
+        else
+            printf 'active slot: %s\nnext boot slot: %s\n' "$old" "$next"
+        fi
         ;;
-    select)
+    select|default)
         ensure_f50 || exit 1
-        case ${2:-} in external|0) next=0 ;; internal|1) next=1 ;; *) valid invalid; exit 2 ;; esac
+        if [ "$1" = default ]; then
+            case ${2:-} in 1) next=0 ;; 2) next=1 ;; *) valid invalid; exit 2 ;; esac
+        else
+            case ${2:-} in external|0) next=0 ;; internal|1) next=1 ;; *) valid invalid; exit 2 ;; esac
+        fi
         # Pin the current slot before changing the next-boot setting.
         old=$(active) || exit 1
         if command -v uci >/dev/null 2>&1; then
@@ -71,5 +79,9 @@ case ${1:-status} in
         fi
         echo "SIM slot $next saved. Active slot remains $old until reboot."
         ;;
-    *) echo 'usage: mu300-sim status|active|configured|select external|internal' >&2; exit 2 ;;
+    hot|switch)
+        echo 'mu300-sim: live SIM switching is not supported on F50; select a slot and reboot' >&2
+        exit 1
+        ;;
+    *) echo 'usage: mu300-sim status [--json]|active|configured|select external|internal|default 1|2' >&2; exit 2 ;;
 esac
