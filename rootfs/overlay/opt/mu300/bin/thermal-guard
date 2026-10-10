@@ -38,14 +38,26 @@ battery() {  # the battery's temperature in tenths of a degree; the U30 Air only
     done
 }
 
-# step POLICY DIR (-1 lower, +1 higher): move scaling_max_freq to the neighbouring available frequency
+# A cap a CPU profile asked for (mu300-cpu writes one "policyN=HZ" line per cluster): on cool-down this guard lifts
+# scaling_max_freq a step at a time, but never above that ceiling, so a user's "saving" profile is not undone by the
+# cooling path. No line, or no file, means the hardware maximum (cpuinfo_max_freq), the old behaviour.
+CEILING=$R/run/mu300/cpu-ceiling
+ceiling() {  # ceiling POLICYDIR: the user ceiling in Hz for this policy, or its cpuinfo_max_freq
+    local name=${1##*/} v=
+    [ -r "$CEILING" ] && v=$(sed -n "s/^$name=//p" "$CEILING" | tail -n1)
+    case $v in ''|*[!0-9]*) cat "$1/cpuinfo_max_freq" 2>/dev/null ;; *) echo "$v" ;; esac
+}
+
+# step POLICY DIR (-1 lower, +1 higher): move scaling_max_freq to the neighbouring available frequency, never above
+# the user ceiling when raising
 step() {
-    local p=$1 dir=$2 cur prev= f next=
+    local p=$1 dir=$2 cur prev= f next= ceil
     read -r cur < "$p/scaling_max_freq"
+    ceil=$(ceiling "$p")
     for f in $(tr ' ' '\n' < "$p/scaling_available_frequencies" | sort -n); do
         if [ "$dir" -lt 0 ]; then
             [ "$f" -lt "$cur" ] && next=$f
-        elif [ -z "$next" ] && [ "$f" -gt "$cur" ]; then
+        elif [ -z "$next" ] && [ "$f" -gt "$cur" ] && [ -z "$ceil" -o "$f" -le "${ceil:-$f}" ]; then
             next=$f
         fi
     done

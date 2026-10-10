@@ -96,7 +96,7 @@ Which kernel?	选择哪个内核？
 This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2	之后可以在设备上更改：sudo mu300-update kernel 5.4|6.18|7.2
 Which Ubuntu?	选择哪个 Ubuntu？
 1) 24.04 LTS  the longest tested, supported until 2029	1) 24.04 LTS  测试时间最长，支持到 2029 年
-2) 26.04 LTS  BETA: the newest (systemd 259, newer packages), supported until 2031; tested less	2) 26.04 LTS  测试版（BETA）：最新版本（systemd 259，更新的软件包），支持到 2031 年；测试较少
+2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18 or 7.2	2) 26.04 LTS  最新版本（systemd 259，更新的软件包），支持到 2031 年；需要 6.18 或 7.2 内核
 Ubuntu	Ubuntu
 Ubuntu 26.04 needs a mainline kernel (6.18 or 7.2): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).	Ubuntu 26.04 需要主线内核（6.18 或 7.2）：它的程序使用了 5.4 没有的系统调用（例如 tar 在 5.4 上无法解压包含文件夹的归档）。
 this copy has changes of its own, so {1} files were left as they are	此副本有自己的修改，因此 {1} 个文件保持原样

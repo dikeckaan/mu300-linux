@@ -96,7 +96,7 @@ Which kernel?	Hangi çekirdek?
 This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2	Bu seçim sonradan cihazda değiştirilebilir: sudo mu300-update kernel 5.4|6.18|7.2
 Which Ubuntu?	Hangi Ubuntu?
 1) 24.04 LTS  the longest tested, supported until 2029	1) 24.04 LTS  en uzun süre test edilen, 2029'a kadar destekleniyor
-2) 26.04 LTS  BETA: the newest (systemd 259, newer packages), supported until 2031; tested less	2) 26.04 LTS  BETA: en yenisi (systemd 259, daha yeni paketler), 2031'e kadar destekleniyor; daha az test edildi
+2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18 or 7.2	2) 26.04 LTS  en yenisi (systemd 259, daha yeni paketler), 2031'e kadar destekleniyor; kernel 6.18 veya 7.2
 Ubuntu	Ubuntu
 Ubuntu 26.04 needs a mainline kernel (6.18 or 7.2): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).	Ubuntu 26.04 ana hat (mainline) bir çekirdek gerektirir (6.18 ya da 7.2): programları 5.4'te olmayan sistem çağrılarını kullanıyor (örneğin tar orada klasör içeren arşivleri açamıyor).
 this copy has changes of its own, so {1} files were left as they are	bu kopyanın kendi değişiklikleri var, {1} dosya olduğu gibi bırakıldı

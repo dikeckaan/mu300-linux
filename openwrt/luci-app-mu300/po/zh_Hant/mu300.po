@@ -36,6 +36,9 @@ msgstr "語言"
 msgid "Power"
 msgstr "電源"
 
+msgid "CPU"
+msgstr "CPU"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 控制中心：狀態儀表板、網路鎖定、AT 終端機與簡訊"
 
@@ -143,6 +146,72 @@ msgstr "請求失敗"
 
 msgid "(empty)"
 msgstr "（空）"
+
+msgid "Failed: %s"
+msgstr "失敗：%s"
+
+msgid "Saved"
+msgstr "已儲存"
+
+msgid "Management connection lost"
+msgstr "管理連線已中斷"
+
+msgid "CPU profile unavailable"
+msgstr "CPU profile unavailable"
+
+msgid "Power saving"
+msgstr "Power saving"
+
+msgid "Balanced"
+msgstr "Balanced"
+
+msgid "Performance"
+msgstr "Performance"
+
+msgid "Cores capped at about 60 %% of their maximum (cooler, less power)."
+msgstr "Cores capped at about 60 %% of their maximum (cooler, less power)."
+
+msgid "Schedutil across the full hardware range (the stock behaviour)."
+msgstr "Schedutil across the full hardware range (the stock behaviour)."
+
+msgid "Every cluster pinned at its hardware maximum."
+msgstr "Every cluster pinned at its hardware maximum."
+
+msgid "CPU profile"
+msgstr "CPU profile"
+
+msgid "A profile sets the CPU governor and the per-cluster frequency limits. It stays within the hardware frequency table and never changes the voltage, so it cannot overclock this SoC. The kernel keeps throttling at its thermal limit in every profile."
+msgstr "A profile sets the CPU governor and the per-cluster frequency limits. It stays within the hardware frequency table and never changes the voltage, so it cannot overclock this SoC. The kernel keeps throttling at its thermal limit in every profile."
+
+msgid "Saved profile: %s"
+msgstr "Saved profile: %s"
+
+msgid "Thermal throttling is active right now: the frequencies below are below the profile ceiling."
+msgstr "Thermal throttling is active right now: the frequencies below are below the profile ceiling."
+
+msgid "Clusters"
+msgstr "Clusters"
+
+msgid "Cores"
+msgstr "Cores"
+
+msgid "Governor"
+msgstr "Governor"
+
+msgid "Now"
+msgstr "Now"
+
+msgid "Min"
+msgstr "Min"
+
+msgid "Max"
+msgstr "Max"
+
+msgid "Hardware max"
+msgstr "Hardware max"
+
+msgid "Frequencies in MHz."
+msgstr "Frequencies in MHz."
 
 msgid "USB role"
 msgstr "USB 角色"
@@ -474,9 +543,6 @@ msgstr "已在背景啟動：%s"
 msgid "Done: %s"
 msgstr "完成：%s"
 
-msgid "Failed: %s"
-msgstr "失敗：%s"
-
 msgid "Disconnecting data…"
 msgstr "正在中斷數據連線…"
 
@@ -686,12 +752,6 @@ msgstr "AT 轉接器無法使用"
 
 msgid "Linux locked"
 msgstr "Linux 已鎖定"
-
-msgid "Saved"
-msgstr "已儲存"
-
-msgid "Management connection lost"
-msgstr "管理連線已中斷"
 
 msgid "Installing the language pack…"
 msgstr "正在安裝語言套件…"
@@ -1058,9 +1118,6 @@ msgstr "閒置時的數據機"
 
 msgid "LEDs when idle"
 msgstr "閒置時的指示燈"
-
-msgid "CPU"
-msgstr "CPU"
 
 msgid "Ignored lines in power.conf: %s"
 msgstr "power.conf 中被忽略的行：%s"
@@ -1509,6 +1566,12 @@ msgstr "未知的流量統計設定"
 msgid "Invalid value for this setting"
 msgstr "此設定的值無效"
 
+msgid "The CPU adapter gave no valid reply"
+msgstr "The CPU adapter gave no valid reply"
+
+msgid "Invalid CPU profile"
+msgstr "Invalid CPU profile"
+
 msgid "Request too large"
 msgstr "請求過大"
 
@@ -1535,6 +1598,15 @@ msgstr "mu300-next-boot 執行失敗"
 
 msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
 msgstr "AT 後端無回應（射頻已關閉、數據機重新啟動中或轉接器無法使用）"
+
+msgid "The CPU profile could not be read"
+msgstr "The CPU profile could not be read"
+
+msgid "The CPU profile could not be set"
+msgstr "The CPU profile could not be set"
+
+msgid "Unknown CPU operation"
+msgstr "Unknown CPU operation"
 
 msgid "USB role adapter is not executable"
 msgstr "USB 角色轉接程式不可執行"

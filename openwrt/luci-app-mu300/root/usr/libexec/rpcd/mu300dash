@@ -26,6 +26,7 @@
 #   ttl_get, ttl_set value  the TTL of mobile data (unisoc-modem/ttl, mu300-ttl); value off or 1-255
 #   traffic_get, traffic_set op value  the mobile data count, its billing cycle and cap (unisoc-modem/traffic,
 #                     mu300-traffic)
+#   cpu_get, cpu_set profile  the CPU performance profile (unisoc-modem/cpu, mu300-cpu); saving|balanced|performance
 #
 # The AT terminal's whole wait is capped below the 30 s endpoint limit (AT_LOCK_WAIT
 # for the channel lock plus AT_BUDGET for the answer, mu300-at's MU300_AT_BUDGET),
@@ -572,6 +573,16 @@ m_traffic_set() {
     reply_obj "$("$TRAFA" set "$op" "$value" 2>/dev/null)" 'The data usage adapter gave no valid reply'
 }
 
+# The CPU page: mu300-cpu through the adapter, which checks the profile name again
+CPUA=${MU300_CPU_ADAPTER:-$DASH/cpu}
+m_cpu_get() { reply_obj "$("$CPUA" get 2>/dev/null)" 'The CPU adapter gave no valid reply'; }
+m_cpu_set() {
+    local profile
+    inp '@.profile'; profile=$V
+    allowed "$profile" '(saving|balanced|performance)' || { refuse 'Invalid CPU profile'; return; }
+    reply_obj "$("$CPUA" set "$profile" 2>/dev/null)" 'The CPU adapter gave no valid reply'
+}
+
 do_list() {
     cat <<EOF
 {
@@ -599,7 +610,9 @@ do_list() {
 	"ttl_get": { },
 	"ttl_set": { "value": "String" },
 	"traffic_get": { },
-	"traffic_set": { "op": "String", "value": "String" }
+	"traffic_set": { "op": "String", "value": "String" },
+	"cpu_get": { },
+	"cpu_set": { "profile": "String" }
 }
 EOF
 }
@@ -657,6 +670,8 @@ call)
         ttl_set)      run_m ttl_set      m_ttl_set ;;
         traffic_get)  run_m traffic_get  m_traffic_get ;;
         traffic_set)  run_m traffic_set  m_traffic_set ;;
+        cpu_get)      run_m cpu_get      m_cpu_get ;;
+        cpu_set)      run_m cpu_set      m_cpu_set ;;
         *)            refuse 'No such method' ;;
     esac
     ;;

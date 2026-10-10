@@ -2160,6 +2160,38 @@ class ThermalGuard(ShellTest):
             self.device('u30air')
             self.assertEqual(self.round(shell, 110000), ['poweroff', 'mu300-led alarm on'])   # mainline: critical
 
+    def policy(self, name, freqs, cur_max):
+        p = self.root / 'sys/devices/system/cpu/cpufreq' / name
+        p.mkdir(parents=True, exist_ok=True)
+        (p / 'scaling_available_frequencies').write_text(' '.join(str(f) for f in freqs) + ' \n')
+        (p / 'cpuinfo_max_freq').write_text(f'{max(freqs)}\n')
+        (p / 'scaling_max_freq').write_text(f'{cur_max}\n')
+        return p
+
+    def test_cooldown_does_not_raise_a_policy_above_the_mu300_cpu_ceiling(self):
+        # mu300-cpu's "saving" profile caps a cluster and records the cap in /run/mu300/cpu-ceiling; on cool-down
+        # thermal-guard steps scaling_max up a notch at a time but never past that ceiling, so the profile stays.
+        freqs = [614400, 768000, 936000, 1105000, 1228800, 1404000, 2002000]
+        for shell in self.each_shell():
+            shutil.rmtree(self.root, ignore_errors=True)
+            self.device('u30air')
+            p = self.policy('policy0', freqs, 936000)   # capped below hw max (2002000)
+            (self.root / 'run/mu300/cpu-ceiling').write_text('policy0=1105000\n')
+            self.round(shell, 60000)                     # cool: one step up, but clamped to the ceiling
+            self.assertEqual((p / 'scaling_max_freq').read_text().strip(), '1105000')
+            self.round(shell, 60000)                     # at the ceiling now: no further rise
+            self.assertEqual((p / 'scaling_max_freq').read_text().strip(), '1105000')
+
+    def test_cooldown_without_a_ceiling_rises_to_the_hardware_maximum(self):
+        freqs = [614400, 936000, 1105000, 2002000]
+        for shell in self.each_shell():
+            shutil.rmtree(self.root, ignore_errors=True)
+            self.device('u30air')
+            p = self.policy('policy0', freqs, 936000)
+            for _ in range(5):
+                self.round(shell, 60000)
+            self.assertEqual((p / 'scaling_max_freq').read_text().strip(), '2002000')
+
 
 class Nfc(ShellTest):
     """mu300-nfc against a fake FM11NT08: 1 KiB behind a stub i2ctransfer, which answers only while a stub gpioset

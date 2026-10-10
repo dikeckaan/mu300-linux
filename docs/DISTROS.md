@@ -18,7 +18,7 @@ What a distribution has to bring:
 | Distribution | Build | Notes |
 |---|---|---|
 | Ubuntu 24.04 LTS | `rootfs/` (default) | the tested default, systemd 255 |
-| Ubuntu 26.04 LTS | `docker build --build-arg BASE=ubuntu:26.04 -t mu300-ubuntu:26.04 rootfs/` then `rootfs/assemble.sh` | released (beta); needs kernel 6.18 or 7.2 |
+| Ubuntu 26.04 LTS | `docker build --build-arg BASE=ubuntu:26.04 -t mu300-ubuntu:26.04 rootfs/` then `rootfs/assemble.sh` | released; needs kernel 6.18 or 7.2 |
 | OpenWrt 25.12 | `openwrt/build-rootfs.sh` | router use, LuCI, ~140 MiB RAM |
 | OpenWrt 25.12 with the MU300 panel | `MU300_SYSTEM=openwrt-luci openwrt/build-rootfs.sh` | released as `openwrt-luci`, see [BUILD.md](BUILD.md) |
 | ImmortalWrt 25.12 | `MU300_FLAVOUR=immortalwrt openwrt/build-rootfs.sh` | OpenWrt fork with more drivers and LuCI apps |
@@ -67,7 +67,7 @@ syscalls 5.4 does not have — `openat2` (5.6) in `tar` is the one that bit us w
 | Void Linux | — | — | ✅ rootfs tarball exists; runit, so the services need porting |
 | Raspberry Pi OS arm64 | Debian | no | ✅ Debian underneath; take the rootfs out of its image |
 | openSUSE Tumbleweed | 4.3 | **yes** | ⚠️ works only after replacing `tar` (same trap as Ubuntu 26.04) |
-| Ubuntu 26.04+ | 3.7 | **yes** | ⚠️ same on 5.4; fine on 6.18 and 7.2, where it is released (beta) |
+| Ubuntu 26.04+ | 3.7 | **yes** | ⚠️ same on 5.4; fine on 6.18 and 7.2, where it is released |
 | Arch (official image), Void (official image), Clear Linux | — | — | ❌ no arm64 container image (Arch: use Arch Linux ARM) |
 
 No glibc on this list demands a kernel newer than 5.4, so the kernel is rarely the blocker; what breaks is individual

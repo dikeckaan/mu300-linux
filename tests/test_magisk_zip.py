@@ -90,7 +90,7 @@ class Customize(ShellTest):
 ALLOWED = {'META-INF/com/google/android/update-binary', 'META-INF/com/google/android/updater-script',
            'module.prop', 'customize.sh', 'action.sh', 'switch.sh', 'system/bin/mu300-linux'} | set(MU300_FILES)
 ASSETS = ('mu300-kernel.tar.gz', 'mu300-kernel-6.18.tar.gz', 'mu300-kernel-7.2.tar.gz', 'mu300-openwrt-rootfs.tar.gz',
-          'mu300-ubuntu-rootfs.tar.gz', 'mu300-ubuntu-26.04-rootfs.tar.gz')
+          'mu300-openwrt-luci-rootfs.tar.gz', 'mu300-ubuntu-rootfs.tar.gz', 'mu300-ubuntu-26.04-rootfs.tar.gz')
 
 
 def tar_with(members):
@@ -128,15 +128,18 @@ class Builder(unittest.TestCase):
         return subprocess.run(['sh', str(TOP / 'tools/make-magisk-zips.sh'), str(rel or self.rel), str(self.tmp / 'out'),
                                *extra], capture_output=True, text=True)
 
-    def test_eight_zips(self):
+    def test_eleven_zips(self):
         r = self.build()
         self.assertEqual(r.returncode, 0, r.stderr)
         names = sorted(p.name for p in (self.tmp / 'out').glob('*.zip'))
-        self.assertEqual(len(names), 8)
+        self.assertEqual(len(names), 11)
         self.assertNotIn('mu300-magisk-v2026.10.06-ubuntu-26.04-k5.4.zip', names)
         self.assertIn('mu300-magisk-v2026.10.06-openwrt-k6.18.zip', names)
+        # OpenWrt with the control panel, on every kernel
+        for k in ('5.4', '6.18', '7.2'):
+            self.assertIn(f'mu300-magisk-v2026.10.06-openwrt-luci-k{k}.zip', names)
         sums = (self.tmp / 'out/SHA256SUMS-magisk').read_text().split('\n')
-        self.assertEqual(len([s for s in sums if s]), 8)
+        self.assertEqual(len([s for s in sums if s]), 11)
         for line in sums:
             if line:
                 h, n = line.split('  ')

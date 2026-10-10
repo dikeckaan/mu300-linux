@@ -7,6 +7,8 @@
 [![Issues](https://img.shields.io/github/issues/dikeckaan/mu300-linux?logo=github)](https://github.com/dikeckaan/mu300-linux/issues)
 [![License](https://img.shields.io/badge/license-MIT%20%2F%20GPL--2.0-blue)](LICENSE)
 
+New here? The [website](https://kaandikec.com/mu300-linux/) explains it step by step, with pictures (English, Türkçe, 中文), and the [wiki](https://github.com/dikeckaan/mu300-linux/wiki) has a glossary and deeper pages.
+
 The ZTE F50 is a pocket 5G router. This project turns it into a small Linux computer: **Ubuntu** (24.04 or
 26.04 LTS) or **OpenWrt** (plain, or with a control panel for the modem), with SSH, Wi-Fi, Bluetooth and its 5G
 modem working. Android stays on the device, and you can go back to it at any time.
@@ -91,14 +93,20 @@ LEDs and the default address follow. The U30 **Pro** is a different chip (UMS963
   profiles, stress tests, VPN and services.
 * **Android stays installed.** One command switches back.
 
-## What it costs you
+## What you lose (spoiler: nothing)
 
-* **Android and Linux share the device.** Only one runs at a time; a reboot switches between them.
-* **No screen output.** HDMI over USB-C does not work (the power-delivery chip never answers), so this is a headless
-  machine you use over SSH or the web interface.
-* **No sound.** The board has no speaker and no microphone. Voice calls with audio, through the modem's audio DSP,
-  are work in progress and do not carry sound yet (see [What works](#what-works-and-what-does-not)).
-* **About 1.4 GB of RAM.** Most of the rest is reserved for the modem firmware.
+Android on these boxes has no screen, no speaker and no HDMI either, so Linux takes nothing away that was there. All
+it takes is your last excuse for not having a 5G Linux server in your pocket. Installing it costs you nothing; not
+trying it costs you the server.
+
+* **Android stays.** Only one of the two runs at a time, and a reboot switches between them (`mu300-next-boot
+  android`, or `su -c mu300-linux` from Android).
+* **The hardware stays what it is**, under either system:
+  * no screen output: HDMI over USB-C does not work (the power-delivery chip never answers), so it is a headless
+    machine you use over SSH or the web interface;
+  * no speaker or microphone: voice calls with audio, through the modem's audio DSP, are work in progress and carry
+    no sound yet (see [What works](#what-works-and-what-does-not));
+  * about 1.4 GB of RAM, because the modem firmware reserves most of the rest.
 
 ## Before you start
 
@@ -193,8 +201,8 @@ or `.\install.ps1 -Lang zh` skips the question). Adding a language is one file: 
 with GitHub - a `git clone` is fast-forwarded, a downloaded zip gets the files that changed - and restarts itself if
 there was anything new; without GitHub it simply continues (`MU300_NO_SELF_UPDATE=1` / `-NoSelfUpdate` skips it).
 
-With Ubuntu it asks for the release: **24.04 LTS** (the default, the longest tested) or **26.04 LTS (beta)** - the
-newest, with systemd 259; tested on the device for a shorter time. An installed Ubuntu moves
+With Ubuntu it asks for the release: **24.04 LTS** (the default, the longest tested) or **26.04 LTS** - the
+newest, with systemd 259, on kernel 6.18 or 7.2. An installed Ubuntu moves
 to the other release with `sudo MU300_UBUNTU=26.04 mu300-update apply` (or `24.04`), keeping settings and data.
 
 It also asks for the **kernel**:
@@ -644,7 +652,7 @@ Like the installer, it offers to reboot the device from Linux into Android first
 | | |
 |---|---|
 | Ubuntu 24.04 LTS, OpenWrt 25.12, OpenWrt with the control panel | ✅ |
-| Ubuntu 26.04 LTS | 🚧 beta: kernel 6.18 or 7.2 only, tested for a shorter time than 24.04 |
+| Ubuntu 26.04 LTS | ✅ kernel 6.18 or 7.2 (its programs need system calls 5.4 does not have) |
 | Kernels | ✅ vendor 5.4, mainline 6.18 LTS and 7.2, with the same functions (USB host on the U30 Air: mainline only); the mainline bundles carry about 360 modules (WireGuard, SQM, tunnels, USB adapters and modems, NTFS/exFAT/btrfs/NFS/CIFS, dm-crypt, containers). 6.18 hangs at boot about once in 20 boots and the device goes back to Android ([FINDINGS 31m](docs/FINDINGS.md)) |
 | KVM | ✅ `/dev/kvm` on all three kernels |
 | Mobile data (5G NSA / LTE) | ✅ shared with Wi-Fi and USB clients; reconnects by itself after modem resets |

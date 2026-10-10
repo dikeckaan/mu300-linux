@@ -211,6 +211,7 @@ manifest_load() {  # the zip's manifest, read like the conf file: only these key
     case $TAG in *[!0-9A-Za-z._-]*|*..*) _ok= ;; esac
     case $SYSTEM:$OS:$UBUNTU:$ROOTFS_ASSET in
         openwrt:openwrt::mu300-openwrt-rootfs.tar.gz) ;;
+        openwrt-luci:openwrt-luci::mu300-openwrt-luci-rootfs.tar.gz) ;;
         ubuntu-24.04:ubuntu:24.04:mu300-ubuntu-rootfs.tar.gz) ;;
         ubuntu-26.04:ubuntu:26.04:mu300-ubuntu-26.04-rootfs.tar.gz) ;;
         *) _ok= ;;
@@ -295,7 +296,7 @@ mount_target() {  # mount_target DIR [ro]: the Linux filesystem of the plan, wit
 # MOUNTED is cleared only after the helper said it unmounted; under set -e a bare failing call would end the
 # function before that line
 umount_target() { asw "$ANDROID_SH" "$W/android-mount-mu300root.sh" -u "$1" >/dev/null 2>&1 || return 1; MOUNTED=; }
-need_for() { case $1 in openwrt) echo $NEED_OPENWRT ;; ubuntu) echo $NEED_UBUNTU ;; *) echo $NEED_BOTH ;; esac; }
+need_for() { case $1 in openwrt|openwrt-luci) echo $NEED_OPENWRT ;; ubuntu) echo $NEED_UBUNTU ;; *) echo $NEED_BOTH ;; esac; }
 no_room_inside() {  # the refusal when Linux does not fit inside, with the way out this device has
     if [ -n "$SD_DEV" ] && [ "$sd_ex" = foreign ]; then
         die "$(t 'There is too little free space inside for Linux, and the SD card ({1}) holds another Linux (ext4) filesystem, which the installer never formats. Copy off what you need and format the card elsewhere, or use another card.' "$SD_DEV")"
@@ -634,7 +635,7 @@ pw_text() {
     # from the file this one replaces), or the first zip's password would be lost with its output. Not after a
     # wipe (HAVE_SYSTEMS is empty then), and never a block of this run's user.
     case $OS in ubuntu) _ou=root _os=openwrt ;; *) _ou=ubuntu _os=ubuntu ;; esac
-    case " $HAVE_SYSTEMS " in *" $_os "*) ;; *) return 0 ;; esac
+    case " $HAVE_SYSTEMS " in *" $_os "*|*" $_os-luci "*) ;; *) return 0 ;; esac
     [ -f "$PW_FILE" ] && [ ! -L "$PW_FILE" ] || return 0
     awk -v u="user: $_ou" '
         /^MU300 Linux / { if (keep) printf "\n%s", b; b = ""; keep = 0 }

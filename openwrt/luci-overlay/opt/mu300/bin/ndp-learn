@@ -40,6 +40,11 @@
 # a prefix the carrier stopped announcing (odhcpd forwards the upstream RA's PIOs as they are and keeps no prefix
 # state), so clients keep their old-prefix addresses for those prefixes' lifetimes either way.
 #
+# So this script withdraws such a prefix itself (ra-deprecate): an RA on br-lan with preferred lifetime 0 for the old
+# /64, sent once a different /64 is on the bearer, in three rounds (an RA is a multicast that a client can miss).
+# Not as soon as it leaves: a WAN restart flushes the bearer's address and the carrier usually gives the same /64
+# back, and deprecating that one would take the live prefix from every client until the carrier's next RA.
+#
 # Relay mode of mu300cell only (K37, spec D9; openwrt-luci): init.d/mu300-ndp starts this when network.wan.ipv6 is
 # relay. Ported from kanoqwq/clean-tf-7.2 (cd4fb28, 89b376d), without the neighbour pins.
 # ndp-learn --prefix: print the bearer's /64s, one per line (nothing when it has none), and exit.
@@ -99,6 +104,52 @@ has() {
     return 1
 }
 
+# router_lifetime: what is left of the carrier's default router on the bearer, in seconds (1-9000), for the
+# withdrawing RA; 1800 when the route shows no expiry
+router_lifetime() {
+    ip -6 route show default dev sipa_eth0 2>/dev/null | awk '{
+        for (i = 1; i < NF; i++) if ($i == "expires") { v = $(i + 1); sub(/sec$/, "", v) }
+    } END {
+        if (v !~ /^[0-9]+$/ || v + 0 < 1) v = 1800; else if (v + 0 > 9000) v = 9000
+        print v + 0
+    }'
+}
+
+# Prefixes that left the bearer (gone), and the ones being withdrawn from the LAN with the rounds left (withdraw,
+# withdraw_rounds). See the top for why a prefix waits in gone until another one is there.
+WITHDRAW_ROUNDS=3
+RA_DEPRECATE=${MU300_RA_DEPRECATE:-/opt/mu300/bin/ra-deprecate}
+gone=
+withdraw=
+withdraw_rounds=0
+withdraw_old() {
+    local p g= w=
+    for p in $last_prefixes; do
+        has "$p" "$prefixes" || gone="$gone $p"
+    done
+    # one that came back (a WAN restart that got the same /64) is neither waiting nor withdrawn any more
+    for p in $gone; do
+        has "$p" "$prefixes" || has "$p" "$g" || g="$g $p"
+    done
+    for p in $withdraw; do
+        has "$p" "$prefixes" || w="$w $p"
+    done
+    gone=$(echo $g); withdraw=$(echo $w)
+    [ -n "$prefixes" ] || return 0
+    if [ -n "$gone" ]; then
+        for p in $gone; do
+            has "$p" "$withdraw" || withdraw="$withdraw $p"
+        done
+        withdraw=$(echo $withdraw); withdraw_rounds=$WITHDRAW_ROUNDS; gone=
+        logger -t ndp-learn "withdrawing from the LAN: $withdraw"
+    fi
+    [ -n "$withdraw" ] && [ "$withdraw_rounds" -gt 0 ] || return 0
+    withdraw_rounds=$((withdraw_rounds - 1))
+    # shellcheck disable=SC2086
+    "$RA_DEPRECATE" br-lan "$(router_lifetime)" $withdraw ||
+        logger -t ndp-learn "could not withdraw $withdraw (ra-deprecate)"
+}
+
 # The prefixes routed last round (space-separated). A prefix that left the bearer loses its br-lan route.
 last_prefixes=
 learn_once() {
@@ -106,6 +157,7 @@ learn_once() {
     for p in $last_prefixes; do
         has "$p" "$prefixes" || drop_old_prefix "$p"
     done
+    withdraw_old
     for p in $prefixes; do
         has "$p" "$last_prefixes" || logger -t ndp-learn "LAN prefix route: $p dev br-lan metric $LAN_METRIC"
         # every round, so a route someone or something removed comes back within one round
