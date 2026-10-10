@@ -15,6 +15,9 @@ msgstr "網路鎖定"
 msgid "SMS"
 msgstr "簡訊"
 
+msgid "SMS forwarding"
+msgstr "簡訊轉寄"
+
 msgid "AT terminal"
 msgstr "AT 終端機"
 
@@ -362,6 +365,159 @@ msgstr "正在加入 USB 網路卡…"
 
 msgid "Add failed: %s"
 msgstr "加入失敗：%s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "留空以保留已儲存的值"
+
+msgid "Saved: %s"
+msgstr "已儲存：%s"
+
+msgid "Remove the saved value"
+msgstr "刪除已儲存的值"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "收到的簡訊進入簡訊池後即被轉寄。傳送失敗時 30 秒後重試，之後每次間隔加倍（最長一小時），共十次。"
+
+msgid "Forward received messages"
+msgstr "轉寄收到的簡訊"
+
+msgid "Message template"
+msgstr "訊息範本"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "預留位置：{sender}、{time}、{text}、{device}"
+
+msgid "Only these senders"
+msgstr "僅限這些寄件者"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "每行一個；留空：所有寄件者。結尾的 * 比對寄件者的開頭。"
+
+msgid "Never these senders"
+msgstr "排除這些寄件者"
+
+msgid "Only messages containing one of these words"
+msgstr "僅限包含以下任一字詞的簡訊"
+
+msgid "One per line; empty: every message."
+msgstr "每行一個；留空：所有簡訊。"
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "已啟用"
+
+msgid "Address (http:// or https://)"
+msgstr "位址（http:// 或 https://）"
+
+msgid "Body"
+msgstr "內容"
+
+msgid "Form (URL-encoded)"
+msgstr "表單（URL 編碼）"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "欄位：sender、time、text、device、message（填好的範本）"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "額外標頭（每行一個 \"Name: value\"）"
+
+msgid "Bot token"
+msgstr "機器人權杖"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "聊天 ID（數字或 @頻道）"
+
+msgid "E-mail"
+msgstr "電子郵件"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "電子郵件需要 msmtp，此映像中沒有"
+
+msgid "Mail server"
+msgstr "郵件伺服器"
+
+msgid "Port"
+msgstr "連接埠"
+
+msgid "Security"
+msgstr "安全性"
+
+msgid "None"
+msgstr "無"
+
+msgid "User name"
+msgstr "使用者名稱"
+
+msgid "Password"
+msgstr "密碼"
+
+msgid "From"
+msgstr "寄件者"
+
+msgid "To"
+msgstr "收件者"
+
+msgid "SMS to another phone"
+msgstr "簡訊轉寄到另一支手機"
+
+msgid "Phone number"
+msgstr "電話號碼"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "以一則簡訊傳送：較長的訊息會被截斷。"
+
+msgid "Send test"
+msgstr "傳送測試"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "權杖、密碼以及 webhook 位址和標頭只保存在裝置上，不會再次顯示。"
+
+msgid "Delivered"
+msgstr "已送達"
+
+msgid "Will retry"
+msgstr "將重試"
+
+msgid "Failed"
+msgstr "失敗"
+
+msgid "Filtered out"
+msgstr "已過濾"
+
+msgid "Dropped"
+msgstr "已捨棄"
+
+msgid "Test"
+msgstr "測試"
+
+msgid "Delivery log"
+msgstr "傳送記錄"
+
+msgid "Waiting to be delivered"
+msgstr "等待傳送"
+
+msgid "Time"
+msgstr "時間"
+
+msgid "Message"
+msgstr "訊息"
+
+msgid "Target"
+msgstr "目標"
+
+msgid "Result"
+msgstr "結果"
+
+msgid "Detail"
+msgstr "詳細資訊"
+
+msgid "No deliveries yet"
+msgstr "尚無傳送記錄"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "已使用儲存的設定開始測試；結果會顯示在傳送記錄中。"
 
 msgid "4G only"
 msgstr "僅 4G"
@@ -822,9 +978,6 @@ msgstr "LuCI 與本面板"
 msgid "LuCI only"
 msgstr "僅 LuCI"
 
-msgid "Enabled"
-msgstr "已啟用"
-
 msgid "Disabled"
 msgstr "已停用"
 
@@ -1272,6 +1425,9 @@ msgstr "簡訊池是空的。收到與傳送的訊息會顯示在這裡，或選
 msgid "Me: %s"
 msgstr "我：%s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "不完整：收到 %d / %d 個分段"
+
 msgid "Delete"
 msgstr "刪除"
 
@@ -1298,9 +1454,6 @@ msgstr "每月上限"
 
 msgid "%s, warning at %d%%"
 msgstr "%s，%d%% 時提醒"
-
-msgid "None"
-msgstr "無"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "已達到每月流量上限：行動數據已關閉，下一個週期開始時自動恢復。"
@@ -1566,6 +1719,9 @@ msgstr "未知的流量統計設定"
 msgid "Invalid value for this setting"
 msgstr "此設定的值無效"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "轉寄配接器沒有傳回有效的回覆"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1682,6 +1838,51 @@ msgstr "網路重新載入失敗"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "無法將 USB 介面接入 LAN 橋接"
+
+msgid "Invalid forwarding setting"
+msgstr "無效的轉寄設定"
+
+msgid "The message template is too long or contains a control character"
+msgstr "訊息範本過長或包含控制字元"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "無效的過濾清單（最多 50 行）"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "webhook 位址必須是 http:// 或 https:// 開頭的 URL"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "無效的標頭（每行一個 \"Name: value\"；Host、Content-Type、Content-Length、Transfer-Encoding 和 Connection 由裝置設定）"
+
+msgid "Invalid Telegram bot token"
+msgstr "無效的 Telegram 機器人權杖"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "無效的 Telegram 聊天（數字或 @頻道）"
+
+msgid "Invalid e-mail setting"
+msgstr "無效的電子郵件設定"
+
+msgid "The webhook needs an address"
+msgstr "webhook 需要一個位址"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram 需要機器人權杖和聊天"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "電子郵件需要伺服器、寄件者和收件者"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "簡訊轉寄需要一個電話號碼"
+
+msgid "The forwarding settings could not be saved"
+msgstr "無法儲存轉寄設定"
+
+msgid "SMS forwarding is not installed"
+msgstr "未安裝簡訊轉寄"
+
+msgid "Unknown forwarding operation"
+msgstr "未知的轉寄操作"
 
 msgid "The language pack is not installed"
 msgstr "語言套件未安裝"

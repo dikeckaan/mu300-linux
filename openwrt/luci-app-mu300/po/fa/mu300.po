@@ -15,6 +15,9 @@ msgstr "قفل‌های شبکه"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "بازارسال پیامک"
+
 msgid "AT terminal"
 msgstr "ترمینال AT"
 
@@ -362,6 +365,159 @@ msgstr "در حال افزودن آداپتور USB…"
 
 msgid "Add failed: %s"
 msgstr "افزودن ناموفق بود: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "برای نگه داشتن مقدار ذخیره‌شده خالی بگذارید"
+
+msgid "Saved: %s"
+msgstr "ذخیره‌شده: %s"
+
+msgid "Remove the saved value"
+msgstr "حذف مقدار ذخیره‌شده"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "پیام‌های دریافتی به‌محض رسیدن به مخزن پیامک بازارسال می‌شوند. ارسال ناموفق پس از ۳۰ ثانیه و سپس هر بار پس از دو برابر زمان قبل (حداکثر یک ساعت) دوباره تلاش می‌شود، در مجموع ده بار."
+
+msgid "Forward received messages"
+msgstr "بازارسال پیام‌های دریافتی"
+
+msgid "Message template"
+msgstr "الگوی پیام"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "جای‌نگهدارها: {sender}، {time}، {text}، {device}"
+
+msgid "Only these senders"
+msgstr "فقط این فرستندگان"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "هر سطر یکی؛ خالی: همه فرستندگان. * در پایان با ابتدای نام فرستنده مطابقت دارد."
+
+msgid "Never these senders"
+msgstr "هرگز این فرستندگان"
+
+msgid "Only messages containing one of these words"
+msgstr "فقط پیام‌هایی که یکی از این واژه‌ها را دارند"
+
+msgid "One per line; empty: every message."
+msgstr "هر سطر یکی؛ خالی: همه پیام‌ها."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "فعال"
+
+msgid "Address (http:// or https://)"
+msgstr "نشانی (http:// یا https://)"
+
+msgid "Body"
+msgstr "بدنه"
+
+msgid "Form (URL-encoded)"
+msgstr "فرم (کدگذاری URL)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "فیلدها: sender، time، text، device، message (الگوی پرشده)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "سرآیندهای اضافی (هر سطر یک \"Name: value\")"
+
+msgid "Bot token"
+msgstr "توکن ربات"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "شناسه گفتگو (عدد یا @کانال)"
+
+msgid "E-mail"
+msgstr "ایمیل"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "ایمیل به msmtp نیاز دارد که این ایمیج ندارد"
+
+msgid "Mail server"
+msgstr "سرور ایمیل"
+
+msgid "Port"
+msgstr "درگاه"
+
+msgid "Security"
+msgstr "امنیت"
+
+msgid "None"
+msgstr "هیچ"
+
+msgid "User name"
+msgstr "نام کاربری"
+
+msgid "Password"
+msgstr "گذرواژه"
+
+msgid "From"
+msgstr "از"
+
+msgid "To"
+msgstr "به"
+
+msgid "SMS to another phone"
+msgstr "پیامک به تلفن دیگر"
+
+msgid "Phone number"
+msgstr "شماره تلفن"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "به‌صورت یک پیامک فرستاده می‌شود: پیام بلندتر کوتاه می‌شود."
+
+msgid "Send test"
+msgstr "ارسال آزمایشی"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "توکن‌ها، گذرواژه‌ها و نشانی و سرآیندهای webhook روی دستگاه می‌مانند و دیگر هرگز نمایش داده نمی‌شوند."
+
+msgid "Delivered"
+msgstr "تحویل شد"
+
+msgid "Will retry"
+msgstr "دوباره تلاش می‌شود"
+
+msgid "Failed"
+msgstr "ناموفق"
+
+msgid "Filtered out"
+msgstr "فیلتر شد"
+
+msgid "Dropped"
+msgstr "کنار گذاشته شد"
+
+msgid "Test"
+msgstr "آزمایش"
+
+msgid "Delivery log"
+msgstr "گزارش تحویل"
+
+msgid "Waiting to be delivered"
+msgstr "در انتظار تحویل"
+
+msgid "Time"
+msgstr "زمان"
+
+msgid "Message"
+msgstr "پیام"
+
+msgid "Target"
+msgstr "مقصد"
+
+msgid "Result"
+msgstr "نتیجه"
+
+msgid "Detail"
+msgstr "جزئیات"
+
+msgid "No deliveries yet"
+msgstr "هنوز تحویلی نیست"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "آزمایش با تنظیمات ذخیره‌شده آغاز شد؛ نتیجه در گزارش تحویل نمایش داده می‌شود."
 
 msgid "4G only"
 msgstr "فقط 4G"
@@ -822,9 +978,6 @@ msgstr "LuCI و این پنل"
 msgid "LuCI only"
 msgstr "فقط LuCI"
 
-msgid "Enabled"
-msgstr "فعال"
-
 msgid "Disabled"
 msgstr "غیرفعال"
 
@@ -1272,6 +1425,9 @@ msgstr "مخزن خالی است. پیام‌های دریافتی و ارسال
 msgid "Me: %s"
 msgstr "من: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "ناقص: %d از %d بخش رسید"
+
 msgid "Delete"
 msgstr "حذف"
 
@@ -1298,9 +1454,6 @@ msgstr "سقف ماهانه"
 
 msgid "%s, warning at %d%%"
 msgstr "%s، هشدار در %d%%"
-
-msgid "None"
-msgstr "هیچ"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "سقف ماهانه پر شد: داده همراه خاموش شد. با شروع دوره بعد دوباره روشن می‌شود."
@@ -1566,6 +1719,9 @@ msgstr "تنظیم ناشناخته مصرف داده"
 msgid "Invalid value for this setting"
 msgstr "مقدار نامعتبر برای این تنظیم"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "آداپتور بازارسال پاسخ معتبری نداد"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1682,6 +1838,51 @@ msgstr "بارگذاری دوبارهٔ شبکه ناموفق بود"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "اتصال رابط USB به پل LAN ممکن نیست"
+
+msgid "Invalid forwarding setting"
+msgstr "تنظیم بازارسال نامعتبر"
+
+msgid "The message template is too long or contains a control character"
+msgstr "الگوی پیام خیلی بلند است یا نویسه کنترلی دارد"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "فهرست فیلتر نامعتبر (حداکثر ۵۰ سطر)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "نشانی webhook باید یک URL با http:// یا https:// باشد"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "سرآیند نامعتبر (هر سطر یک \"Name: value\"؛ Host، Content-Type، Content-Length، Transfer-Encoding و Connection را دستگاه تنظیم می‌کند)"
+
+msgid "Invalid Telegram bot token"
+msgstr "توکن ربات تلگرام نامعتبر"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "گفتگوی تلگرام نامعتبر (عدد یا @کانال)"
+
+msgid "Invalid e-mail setting"
+msgstr "تنظیم ایمیل نامعتبر"
+
+msgid "The webhook needs an address"
+msgstr "webhook به یک نشانی نیاز دارد"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "تلگرام به توکن ربات و یک گفتگو نیاز دارد"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "ایمیل به سرور، فرستنده و گیرنده نیاز دارد"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "بازارسال با پیامک به شماره تلفن نیاز دارد"
+
+msgid "The forwarding settings could not be saved"
+msgstr "تنظیمات بازارسال ذخیره نشد"
+
+msgid "SMS forwarding is not installed"
+msgstr "بازارسال پیامک نصب نشده است"
+
+msgid "Unknown forwarding operation"
+msgstr "عملیات بازارسال ناشناخته"
 
 msgid "The language pack is not installed"
 msgstr "بستهٔ زبان نصب نشده است"

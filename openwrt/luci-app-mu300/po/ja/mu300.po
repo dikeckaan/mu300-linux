@@ -15,6 +15,9 @@ msgstr "ネットワークロック"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "SMS 転送"
+
 msgid "AT terminal"
 msgstr "AT ターミナル"
 
@@ -362,6 +365,159 @@ msgstr "USB アダプタを追加しています…"
 
 msgid "Add failed: %s"
 msgstr "追加に失敗しました: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "保存済みの値を残すには空欄のままにします"
+
+msgid "Saved: %s"
+msgstr "保存済み: %s"
+
+msgid "Remove the saved value"
+msgstr "保存済みの値を削除"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "受信したメッセージは SMS プールに届きしだい転送されます。送信に失敗すると 30 秒後に再試行し、その後は毎回 2 倍の間隔（最大 1 時間）で、合計 10 回試みます。"
+
+msgid "Forward received messages"
+msgstr "受信したメッセージを転送する"
+
+msgid "Message template"
+msgstr "メッセージテンプレート"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "プレースホルダー: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "これらの送信者のみ"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "1 行に 1 つ。空欄: すべての送信者。末尾の * は送信者の先頭部分に一致します。"
+
+msgid "Never these senders"
+msgstr "これらの送信者は除外"
+
+msgid "Only messages containing one of these words"
+msgstr "これらの語のいずれかを含むメッセージのみ"
+
+msgid "One per line; empty: every message."
+msgstr "1 行に 1 つ。空欄: すべてのメッセージ。"
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "有効"
+
+msgid "Address (http:// or https://)"
+msgstr "アドレス（http:// または https://）"
+
+msgid "Body"
+msgstr "本文"
+
+msgid "Form (URL-encoded)"
+msgstr "フォーム（URL エンコード）"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "フィールド: sender, time, text, device, message（埋め込み済みテンプレート）"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "追加ヘッダー（1 行に 1 つの \"Name: value\"）"
+
+msgid "Bot token"
+msgstr "ボットトークン"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "チャット ID（数値または @チャンネル）"
+
+msgid "E-mail"
+msgstr "メール"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "メールには msmtp が必要ですが、このイメージにはありません"
+
+msgid "Mail server"
+msgstr "メールサーバー"
+
+msgid "Port"
+msgstr "ポート"
+
+msgid "Security"
+msgstr "セキュリティ"
+
+msgid "None"
+msgstr "なし"
+
+msgid "User name"
+msgstr "ユーザー名"
+
+msgid "Password"
+msgstr "パスワード"
+
+msgid "From"
+msgstr "差出人"
+
+msgid "To"
+msgstr "宛先"
+
+msgid "SMS to another phone"
+msgstr "別の電話へ SMS"
+
+msgid "Phone number"
+msgstr "電話番号"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "1 通の SMS として送信: 長いメッセージは切り詰められます。"
+
+msgid "Send test"
+msgstr "テスト送信"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "トークン、パスワード、Webhook のアドレスとヘッダーはデバイス内にのみ保存され、二度と表示されません。"
+
+msgid "Delivered"
+msgstr "配信済み"
+
+msgid "Will retry"
+msgstr "再試行予定"
+
+msgid "Failed"
+msgstr "失敗"
+
+msgid "Filtered out"
+msgstr "フィルターで除外"
+
+msgid "Dropped"
+msgstr "破棄"
+
+msgid "Test"
+msgstr "テスト"
+
+msgid "Delivery log"
+msgstr "配信ログ"
+
+msgid "Waiting to be delivered"
+msgstr "配信待ち"
+
+msgid "Time"
+msgstr "時刻"
+
+msgid "Message"
+msgstr "メッセージ"
+
+msgid "Target"
+msgstr "宛先種別"
+
+msgid "Result"
+msgstr "結果"
+
+msgid "Detail"
+msgstr "詳細"
+
+msgid "No deliveries yet"
+msgstr "配信はまだありません"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "保存済みの設定でテストを開始しました。結果は配信ログに表示されます。"
 
 msgid "4G only"
 msgstr "4G のみ"
@@ -822,9 +978,6 @@ msgstr "LuCI とこのパネル"
 msgid "LuCI only"
 msgstr "LuCI のみ"
 
-msgid "Enabled"
-msgstr "有効"
-
 msgid "Disabled"
 msgstr "無効"
 
@@ -1272,6 +1425,9 @@ msgstr "プールは空です。受信・送信したメッセージがここに
 msgid "Me: %s"
 msgstr "自分: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "不完全: %d / %d 部分が届きました"
+
 msgid "Delete"
 msgstr "削除"
 
@@ -1298,9 +1454,6 @@ msgstr "月間上限"
 
 msgid "%s, warning at %d%%"
 msgstr "%s、%d%% で警告"
-
-msgid "None"
-msgstr "なし"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "月間上限に達しました: モバイルデータをオフにしました。次の期間が始まるとオンに戻ります。"
@@ -1566,6 +1719,9 @@ msgstr "不明なデータ使用量の設定"
 msgid "Invalid value for this setting"
 msgstr "この設定には無効な値です"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "転送アダプターが有効な応答を返しませんでした"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1682,6 +1838,51 @@ msgstr "ネットワークの再読み込みに失敗しました"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "USB インターフェースを LAN ブリッジに接続できません"
+
+msgid "Invalid forwarding setting"
+msgstr "無効な転送設定"
+
+msgid "The message template is too long or contains a control character"
+msgstr "メッセージテンプレートが長すぎるか、制御文字を含んでいます"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "無効なフィルター一覧（最大 50 行）"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Webhook のアドレスは http:// または https:// の URL である必要があります"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "無効なヘッダー（1 行に 1 つの \"Name: value\"。Host、Content-Type、Content-Length、Transfer-Encoding、Connection はデバイスが設定します）"
+
+msgid "Invalid Telegram bot token"
+msgstr "無効な Telegram ボットトークン"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "無効な Telegram チャット（数値または @チャンネル）"
+
+msgid "Invalid e-mail setting"
+msgstr "無効なメール設定"
+
+msgid "The webhook needs an address"
+msgstr "Webhook にはアドレスが必要です"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram にはボットトークンとチャットが必要です"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "メールにはサーバー、差出人、宛先が必要です"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "SMS 転送には電話番号が必要です"
+
+msgid "The forwarding settings could not be saved"
+msgstr "転送設定を保存できませんでした"
+
+msgid "SMS forwarding is not installed"
+msgstr "SMS 転送はインストールされていません"
+
+msgid "Unknown forwarding operation"
+msgstr "不明な転送操作"
 
 msgid "The language pack is not installed"
 msgstr "言語パックがインストールされていません"

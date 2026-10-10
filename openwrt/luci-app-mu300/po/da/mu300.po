@@ -15,6 +15,9 @@ msgstr "Netværkslåse"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Videresendelse af SMS"
+
 msgid "AT terminal"
 msgstr "AT-terminal"
 
@@ -362,6 +365,159 @@ msgstr "Tilføjer USB-adapter…"
 
 msgid "Add failed: %s"
 msgstr "Tilføjelse mislykkedes: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Lad feltet stå tomt for at beholde den gemte værdi"
+
+msgid "Saved: %s"
+msgstr "Gemt: %s"
+
+msgid "Remove the saved value"
+msgstr "Fjern den gemte værdi"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Modtagne beskeder videresendes, så snart de når SMS-puljen. En mislykket levering forsøges igen efter 30 s og derefter hver gang efter dobbelt så lang tid (højst en time), ti gange i alt."
+
+msgid "Forward received messages"
+msgstr "Videresend modtagne beskeder"
+
+msgid "Message template"
+msgstr "Beskedskabelon"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Pladsholdere: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Kun disse afsendere"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Én pr. linje; tom: alle afsendere. En * til sidst matcher begyndelsen af en afsender."
+
+msgid "Never these senders"
+msgstr "Aldrig disse afsendere"
+
+msgid "Only messages containing one of these words"
+msgstr "Kun beskeder, der indeholder et af disse ord"
+
+msgid "One per line; empty: every message."
+msgstr "Ét pr. linje; tom: alle beskeder."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Aktiveret"
+
+msgid "Address (http:// or https://)"
+msgstr "Adresse (http:// eller https://)"
+
+msgid "Body"
+msgstr "Indhold"
+
+msgid "Form (URL-encoded)"
+msgstr "Formular (URL-kodet)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Felter: sender, time, text, device, message (den udfyldte skabelon)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Ekstra headere (én \"Navn: værdi\" pr. linje)"
+
+msgid "Bot token"
+msgstr "Bot-token"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "Chat-ID (et tal eller @kanal)"
+
+msgid "E-mail"
+msgstr "E-mail"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "E-mail kræver msmtp, som dette image ikke har"
+
+msgid "Mail server"
+msgstr "Mailserver"
+
+msgid "Port"
+msgstr "Port"
+
+msgid "Security"
+msgstr "Sikkerhed"
+
+msgid "None"
+msgstr "Ingen"
+
+msgid "User name"
+msgstr "Brugernavn"
+
+msgid "Password"
+msgstr "Adgangskode"
+
+msgid "From"
+msgstr "Fra"
+
+msgid "To"
+msgstr "Til"
+
+msgid "SMS to another phone"
+msgstr "SMS til en anden telefon"
+
+msgid "Phone number"
+msgstr "Telefonnummer"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Sendes som én SMS: en længere besked forkortes."
+
+msgid "Send test"
+msgstr "Send test"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Tokens, adgangskoder samt webhookens adresse og headere bliver på enheden og vises aldrig igen."
+
+msgid "Delivered"
+msgstr "Leveret"
+
+msgid "Will retry"
+msgstr "Forsøges igen"
+
+msgid "Failed"
+msgstr "Mislykkedes"
+
+msgid "Filtered out"
+msgstr "Frafiltreret"
+
+msgid "Dropped"
+msgstr "Kasseret"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Delivery log"
+msgstr "Leveringslog"
+
+msgid "Waiting to be delivered"
+msgstr "Venter på levering"
+
+msgid "Time"
+msgstr "Tid"
+
+msgid "Message"
+msgstr "Besked"
+
+msgid "Target"
+msgstr "Mål"
+
+msgid "Result"
+msgstr "Resultat"
+
+msgid "Detail"
+msgstr "Detalje"
+
+msgid "No deliveries yet"
+msgstr "Ingen leveringer endnu"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Testen er startet med de gemte indstillinger; resultatet vises i leveringsloggen."
 
 msgid "4G only"
 msgstr "Kun 4G"
@@ -822,9 +978,6 @@ msgstr "LuCI og dette panel"
 msgid "LuCI only"
 msgstr "Kun LuCI"
 
-msgid "Enabled"
-msgstr "Aktiveret"
-
 msgid "Disabled"
 msgstr "Deaktiveret"
 
@@ -1272,6 +1425,9 @@ msgstr "Puljen er tom. Modtagne og sendte beskeder vises her, eller vælg “Syn
 msgid "Me: %s"
 msgstr "Mig: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Ufuldstændig: %d af %d dele ankom"
+
 msgid "Delete"
 msgstr "Slet"
 
@@ -1298,9 +1454,6 @@ msgstr "Månedsgrænse"
 
 msgid "%s, warning at %d%%"
 msgstr "%s, advarsel ved %d%%"
-
-msgid "None"
-msgstr "Ingen"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Månedsgrænsen er nået: mobildata blev slået fra. Det tændes igen, når næste periode begynder."
@@ -1566,6 +1719,9 @@ msgstr "Ukendt indstilling for dataforbrug"
 msgid "Invalid value for this setting"
 msgstr "Ugyldig værdi for denne indstilling"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Videresendelsesadapteren gav intet gyldigt svar"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1682,6 +1838,51 @@ msgstr "Genindlæsning af netværket mislykkedes"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Kan ikke tilknytte USB-grænsefladen til LAN-broen"
+
+msgid "Invalid forwarding setting"
+msgstr "Ugyldig indstilling for videresendelse"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Beskedskabelonen er for lang eller indeholder et kontroltegn"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Ugyldig filterliste (højst 50 linjer)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Webhookens adresse skal være en http://- eller https://-URL"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Ugyldig header (én \"Navn: værdi\" pr. linje; Host, Content-Type, Content-Length, Transfer-Encoding og Connection sættes af enheden)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Ugyldigt Telegram-bot-token"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Ugyldig Telegram-chat (et tal eller @kanal)"
+
+msgid "Invalid e-mail setting"
+msgstr "Ugyldig e-mailindstilling"
+
+msgid "The webhook needs an address"
+msgstr "Webhooken skal have en adresse"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram skal have et bot-token og en chat"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "E-mail skal have en server, en afsender og en modtager"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Videresendelse via SMS skal have et telefonnummer"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Indstillingerne for videresendelse kunne ikke gemmes"
+
+msgid "SMS forwarding is not installed"
+msgstr "Videresendelse af SMS er ikke installeret"
+
+msgid "Unknown forwarding operation"
+msgstr "Ukendt handling for videresendelse"
 
 msgid "The language pack is not installed"
 msgstr "Sprogpakken er ikke installeret"

@@ -15,6 +15,9 @@ msgstr "Κλειδώματα δικτύου"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Προώθηση SMS"
+
 msgid "AT terminal"
 msgstr "Τερματικό AT"
 
@@ -362,6 +365,159 @@ msgstr "Προσθήκη προσαρμογέα USB…"
 
 msgid "Add failed: %s"
 msgstr "Η προσθήκη απέτυχε: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Αφήστε κενό για να κρατήσετε την αποθηκευμένη τιμή"
+
+msgid "Saved: %s"
+msgstr "Αποθηκεύτηκε: %s"
+
+msgid "Remove the saved value"
+msgstr "Αφαίρεση της αποθηκευμένης τιμής"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Τα ληφθέντα μηνύματα προωθούνται μόλις φτάσουν στη δεξαμενή SMS. Μια αποτυχημένη αποστολή επαναλαμβάνεται μετά από 30 s και μετά κάθε φορά σε διπλάσιο χρόνο (έως μία ώρα), δέκα φορές συνολικά."
+
+msgid "Forward received messages"
+msgstr "Προώθηση ληφθέντων μηνυμάτων"
+
+msgid "Message template"
+msgstr "Πρότυπο μηνύματος"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Σύμβολα κράτησης: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Μόνο αυτοί οι αποστολείς"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Ένας ανά γραμμή· κενό: όλοι οι αποστολείς. Ένα * στο τέλος ταιριάζει με την αρχή ενός αποστολέα."
+
+msgid "Never these senders"
+msgstr "Ποτέ αυτοί οι αποστολείς"
+
+msgid "Only messages containing one of these words"
+msgstr "Μόνο μηνύματα που περιέχουν μία από αυτές τις λέξεις"
+
+msgid "One per line; empty: every message."
+msgstr "Μία ανά γραμμή· κενό: όλα τα μηνύματα."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Ενεργοποιημένο"
+
+msgid "Address (http:// or https://)"
+msgstr "Διεύθυνση (http:// ή https://)"
+
+msgid "Body"
+msgstr "Σώμα"
+
+msgid "Form (URL-encoded)"
+msgstr "Φόρμα (κωδικοποίηση URL)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Πεδία: sender, time, text, device, message (το συμπληρωμένο πρότυπο)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Επιπλέον κεφαλίδες (μία \"Όνομα: τιμή\" ανά γραμμή)"
+
+msgid "Bot token"
+msgstr "Διακριτικό bot"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "ID συνομιλίας (αριθμός ή @κανάλι)"
+
+msgid "E-mail"
+msgstr "Email"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "Το email χρειάζεται το msmtp, που δεν υπάρχει σε αυτή την εικόνα"
+
+msgid "Mail server"
+msgstr "Διακομιστής αλληλογραφίας"
+
+msgid "Port"
+msgstr "Θύρα"
+
+msgid "Security"
+msgstr "Ασφάλεια"
+
+msgid "None"
+msgstr "Καμία"
+
+msgid "User name"
+msgstr "Όνομα χρήστη"
+
+msgid "Password"
+msgstr "Κωδικός πρόσβασης"
+
+msgid "From"
+msgstr "Από"
+
+msgid "To"
+msgstr "Προς"
+
+msgid "SMS to another phone"
+msgstr "SMS σε άλλο τηλέφωνο"
+
+msgid "Phone number"
+msgstr "Αριθμός τηλεφώνου"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Στέλνεται ως ένα SMS: ένα μεγαλύτερο μήνυμα περικόπτεται."
+
+msgid "Send test"
+msgstr "Αποστολή δοκιμής"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Τα διακριτικά, οι κωδικοί και η διεύθυνση και οι κεφαλίδες του webhook μένουν στη συσκευή και δεν εμφανίζονται ποτέ ξανά."
+
+msgid "Delivered"
+msgstr "Παραδόθηκε"
+
+msgid "Will retry"
+msgstr "Θα επαναληφθεί"
+
+msgid "Failed"
+msgstr "Απέτυχε"
+
+msgid "Filtered out"
+msgstr "Φιλτραρίστηκε"
+
+msgid "Dropped"
+msgstr "Απορρίφθηκε"
+
+msgid "Test"
+msgstr "Δοκιμή"
+
+msgid "Delivery log"
+msgstr "Αρχείο παράδοσης"
+
+msgid "Waiting to be delivered"
+msgstr "Αναμένουν παράδοση"
+
+msgid "Time"
+msgstr "Ώρα"
+
+msgid "Message"
+msgstr "Μήνυμα"
+
+msgid "Target"
+msgstr "Προορισμός"
+
+msgid "Result"
+msgstr "Αποτέλεσμα"
+
+msgid "Detail"
+msgstr "Λεπτομέρεια"
+
+msgid "No deliveries yet"
+msgstr "Καμία παράδοση ακόμη"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Η δοκιμή ξεκίνησε με τις αποθηκευμένες ρυθμίσεις· το αποτέλεσμα εμφανίζεται στο αρχείο παράδοσης."
 
 msgid "4G only"
 msgstr "Μόνο 4G"
@@ -822,9 +978,6 @@ msgstr "LuCI και αυτός ο πίνακας"
 msgid "LuCI only"
 msgstr "Μόνο LuCI"
 
-msgid "Enabled"
-msgstr "Ενεργοποιημένο"
-
 msgid "Disabled"
 msgstr "Απενεργοποιημένο"
 
@@ -1272,6 +1425,9 @@ msgstr "Η αποθήκη είναι κενή. Τα εισερχόμενα κα�
 msgid "Me: %s"
 msgstr "Εγώ: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Ελλιπές: έφτασαν %d από %d τμήματα"
+
 msgid "Delete"
 msgstr "Διαγραφή"
 
@@ -1298,9 +1454,6 @@ msgstr "Μηνιαίο όριο"
 
 msgid "%s, warning at %d%%"
 msgstr "%s, προειδοποίηση στο %d%%"
-
-msgid "None"
-msgstr "Κανένα"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Το μηνιαίο όριο εξαντλήθηκε: τα δεδομένα κινητής απενεργοποιήθηκαν. Ενεργοποιούνται ξανά όταν αρχίσει η επόμενη περίοδος."
@@ -1566,6 +1719,9 @@ msgstr "Άγνωστη ρύθμιση χρήσης δεδομένων"
 msgid "Invalid value for this setting"
 msgstr "Μη έγκυρη τιμή για αυτή τη ρύθμιση"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Ο προσαρμογέας προώθησης δεν έδωσε έγκυρη απάντηση"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1682,6 +1838,51 @@ msgstr "Η επαναφόρτωση δικτύου απέτυχε"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Δεν είναι δυνατή η σύνδεση διεπαφής USB στη γέφυρα LAN"
+
+msgid "Invalid forwarding setting"
+msgstr "Μη έγκυρη ρύθμιση προώθησης"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Το πρότυπο μηνύματος είναι πολύ μεγάλο ή περιέχει χαρακτήρα ελέγχου"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Μη έγκυρη λίστα φίλτρων (έως 50 γραμμές)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Η διεύθυνση του webhook πρέπει να είναι URL http:// ή https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Μη έγκυρη κεφαλίδα (μία \"Όνομα: τιμή\" ανά γραμμή· τα Host, Content-Type, Content-Length, Transfer-Encoding και Connection τα ορίζει η συσκευή)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Μη έγκυρο διακριτικό bot του Telegram"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Μη έγκυρη συνομιλία Telegram (αριθμός ή @κανάλι)"
+
+msgid "Invalid e-mail setting"
+msgstr "Μη έγκυρη ρύθμιση email"
+
+msgid "The webhook needs an address"
+msgstr "Το webhook χρειάζεται διεύθυνση"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Το Telegram χρειάζεται διακριτικό bot και συνομιλία"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "Το email χρειάζεται διακομιστή, αποστολέα και παραλήπτη"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Η προώθηση με SMS χρειάζεται αριθμό τηλεφώνου"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Δεν ήταν δυνατή η αποθήκευση των ρυθμίσεων προώθησης"
+
+msgid "SMS forwarding is not installed"
+msgstr "Η προώθηση SMS δεν είναι εγκατεστημένη"
+
+msgid "Unknown forwarding operation"
+msgstr "Άγνωστη λειτουργία προώθησης"
 
 msgid "The language pack is not installed"
 msgstr "Το πακέτο γλωσσών δεν είναι εγκατεστημένο"

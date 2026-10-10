@@ -15,6 +15,9 @@ msgstr "Khóa mạng"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Chuyển tiếp SMS"
+
 msgid "AT terminal"
 msgstr "Terminal AT"
 
@@ -362,6 +365,159 @@ msgstr "Đang thêm bộ điều hợp USB…"
 
 msgid "Add failed: %s"
 msgstr "Thêm thất bại: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Để trống để giữ giá trị đã lưu"
+
+msgid "Saved: %s"
+msgstr "Đã lưu: %s"
+
+msgid "Remove the saved value"
+msgstr "Xóa giá trị đã lưu"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Tin nhắn nhận được sẽ được chuyển tiếp ngay khi vào kho SMS. Lần gửi thất bại được thử lại sau 30 giây, sau đó mỗi lần cách gấp đôi (tối đa một giờ), tổng cộng mười lần."
+
+msgid "Forward received messages"
+msgstr "Chuyển tiếp tin nhắn nhận được"
+
+msgid "Message template"
+msgstr "Mẫu tin nhắn"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Biến thay thế: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Chỉ những người gửi này"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Mỗi dòng một mục; để trống: mọi người gửi. Dấu * ở cuối khớp với phần đầu của người gửi."
+
+msgid "Never these senders"
+msgstr "Không bao giờ những người gửi này"
+
+msgid "Only messages containing one of these words"
+msgstr "Chỉ tin nhắn chứa một trong các từ này"
+
+msgid "One per line; empty: every message."
+msgstr "Mỗi dòng một mục; để trống: mọi tin nhắn."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Đã bật"
+
+msgid "Address (http:// or https://)"
+msgstr "Địa chỉ (http:// hoặc https://)"
+
+msgid "Body"
+msgstr "Nội dung"
+
+msgid "Form (URL-encoded)"
+msgstr "Biểu mẫu (mã hóa URL)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Các trường: sender, time, text, device, message (mẫu đã điền)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Tiêu đề bổ sung (mỗi dòng một \"Tên: giá trị\")"
+
+msgid "Bot token"
+msgstr "Token bot"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "ID cuộc trò chuyện (một số hoặc @kênh)"
+
+msgid "E-mail"
+msgstr "Email"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "Email cần msmtp, nhưng bản cài này không có"
+
+msgid "Mail server"
+msgstr "Máy chủ thư"
+
+msgid "Port"
+msgstr "Cổng"
+
+msgid "Security"
+msgstr "Bảo mật"
+
+msgid "None"
+msgstr "Không"
+
+msgid "User name"
+msgstr "Tên người dùng"
+
+msgid "Password"
+msgstr "Mật khẩu"
+
+msgid "From"
+msgstr "Từ"
+
+msgid "To"
+msgstr "Đến"
+
+msgid "SMS to another phone"
+msgstr "SMS tới điện thoại khác"
+
+msgid "Phone number"
+msgstr "Số điện thoại"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Gửi thành một SMS: tin nhắn dài hơn sẽ bị cắt bớt."
+
+msgid "Send test"
+msgstr "Gửi thử"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Token, mật khẩu cùng địa chỉ và tiêu đề webhook chỉ lưu trên thiết bị và không bao giờ hiển thị lại."
+
+msgid "Delivered"
+msgstr "Đã gửi"
+
+msgid "Will retry"
+msgstr "Sẽ thử lại"
+
+msgid "Failed"
+msgstr "Thất bại"
+
+msgid "Filtered out"
+msgstr "Bị lọc"
+
+msgid "Dropped"
+msgstr "Bị bỏ"
+
+msgid "Test"
+msgstr "Thử nghiệm"
+
+msgid "Delivery log"
+msgstr "Nhật ký gửi"
+
+msgid "Waiting to be delivered"
+msgstr "Đang chờ gửi"
+
+msgid "Time"
+msgstr "Thời gian"
+
+msgid "Message"
+msgstr "Tin nhắn"
+
+msgid "Target"
+msgstr "Đích"
+
+msgid "Result"
+msgstr "Kết quả"
+
+msgid "Detail"
+msgstr "Chi tiết"
+
+msgid "No deliveries yet"
+msgstr "Chưa có lần gửi nào"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Đã bắt đầu thử với cài đặt đã lưu; kết quả sẽ hiện trong nhật ký gửi."
 
 msgid "4G only"
 msgstr "Chỉ 4G"
@@ -822,9 +978,6 @@ msgstr "LuCI và bảng điều khiển này"
 msgid "LuCI only"
 msgstr "Chỉ LuCI"
 
-msgid "Enabled"
-msgstr "Đã bật"
-
 msgid "Disabled"
 msgstr "Đã tắt"
 
@@ -1272,6 +1425,9 @@ msgstr "Kho trống. Tin nhắn đến và đã gửi sẽ hiện ở đây, ho�
 msgid "Me: %s"
 msgstr "Tôi: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Không đầy đủ: đã nhận %d / %d phần"
+
 msgid "Delete"
 msgstr "Xóa"
 
@@ -1298,9 +1454,6 @@ msgstr "Hạn mức hằng tháng"
 
 msgid "%s, warning at %d%%"
 msgstr "%s, cảnh báo ở %d%%"
-
-msgid "None"
-msgstr "Không có"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Đã đạt hạn mức hằng tháng: dữ liệu di động đã bị tắt. Nó sẽ bật lại khi chu kỳ tiếp theo bắt đầu."
@@ -1566,6 +1719,9 @@ msgstr "Thiết lập lưu lượng dữ liệu không xác định"
 msgid "Invalid value for this setting"
 msgstr "Giá trị không hợp lệ cho thiết lập này"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Bộ điều hợp chuyển tiếp không trả lời hợp lệ"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1682,6 +1838,51 @@ msgstr "Tải lại mạng thất bại"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Không thể gắn giao diện USB vào cầu nối LAN"
+
+msgid "Invalid forwarding setting"
+msgstr "Cài đặt chuyển tiếp không hợp lệ"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Mẫu tin nhắn quá dài hoặc chứa ký tự điều khiển"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Danh sách bộ lọc không hợp lệ (tối đa 50 dòng)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Địa chỉ webhook phải là URL http:// hoặc https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Tiêu đề không hợp lệ (mỗi dòng một \"Tên: giá trị\"; Host, Content-Type, Content-Length, Transfer-Encoding và Connection do thiết bị đặt)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Token bot Telegram không hợp lệ"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Cuộc trò chuyện Telegram không hợp lệ (một số hoặc @kênh)"
+
+msgid "Invalid e-mail setting"
+msgstr "Cài đặt email không hợp lệ"
+
+msgid "The webhook needs an address"
+msgstr "Webhook cần một địa chỉ"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram cần token bot và một cuộc trò chuyện"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "Email cần máy chủ, người gửi và người nhận"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Chuyển tiếp qua SMS cần một số điện thoại"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Không thể lưu cài đặt chuyển tiếp"
+
+msgid "SMS forwarding is not installed"
+msgstr "Chưa cài đặt chuyển tiếp SMS"
+
+msgid "Unknown forwarding operation"
+msgstr "Thao tác chuyển tiếp không xác định"
 
 msgid "The language pack is not installed"
 msgstr "Gói ngôn ngữ chưa được cài đặt"

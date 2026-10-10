@@ -15,6 +15,9 @@ msgstr "网络锁定"
 msgid "SMS"
 msgstr "短信"
 
+msgid "SMS forwarding"
+msgstr "短信转发"
+
 msgid "AT terminal"
 msgstr "AT 终端"
 
@@ -362,6 +365,159 @@ msgstr "正在添加 USB 网卡…"
 
 msgid "Add failed: %s"
 msgstr "添加失败：%s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "留空以保留已保存的值"
+
+msgid "Saved: %s"
+msgstr "已保存：%s"
+
+msgid "Remove the saved value"
+msgstr "删除已保存的值"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "收到的短信进入短信池后即被转发。发送失败时 30 秒后重试，之后每次间隔加倍（最长一小时），共十次。"
+
+msgid "Forward received messages"
+msgstr "转发收到的短信"
+
+msgid "Message template"
+msgstr "消息模板"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "占位符：{sender}、{time}、{text}、{device}"
+
+msgid "Only these senders"
+msgstr "仅限这些发件人"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "每行一个；留空：所有发件人。末尾的 * 匹配发件人的开头。"
+
+msgid "Never these senders"
+msgstr "排除这些发件人"
+
+msgid "Only messages containing one of these words"
+msgstr "仅限包含以下任一词语的短信"
+
+msgid "One per line; empty: every message."
+msgstr "每行一个；留空：所有短信。"
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "已启用"
+
+msgid "Address (http:// or https://)"
+msgstr "地址（http:// 或 https://）"
+
+msgid "Body"
+msgstr "正文"
+
+msgid "Form (URL-encoded)"
+msgstr "表单（URL 编码）"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "字段：sender、time、text、device、message（填好的模板）"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "附加请求头（每行一个 \"Name: value\"）"
+
+msgid "Bot token"
+msgstr "机器人令牌"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "聊天 ID（数字或 @频道）"
+
+msgid "E-mail"
+msgstr "电子邮件"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "电子邮件需要 msmtp，此镜像中没有"
+
+msgid "Mail server"
+msgstr "邮件服务器"
+
+msgid "Port"
+msgstr "端口"
+
+msgid "Security"
+msgstr "安全"
+
+msgid "None"
+msgstr "无"
+
+msgid "User name"
+msgstr "用户名"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "From"
+msgstr "发件人"
+
+msgid "To"
+msgstr "收件人"
+
+msgid "SMS to another phone"
+msgstr "短信转发到另一部手机"
+
+msgid "Phone number"
+msgstr "手机号码"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "作为一条短信发送：较长的消息会被截断。"
+
+msgid "Send test"
+msgstr "发送测试"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "令牌、密码以及 webhook 地址和请求头只保存在设备上，不会再次显示。"
+
+msgid "Delivered"
+msgstr "已送达"
+
+msgid "Will retry"
+msgstr "将重试"
+
+msgid "Failed"
+msgstr "失败"
+
+msgid "Filtered out"
+msgstr "已过滤"
+
+msgid "Dropped"
+msgstr "已丢弃"
+
+msgid "Test"
+msgstr "测试"
+
+msgid "Delivery log"
+msgstr "发送日志"
+
+msgid "Waiting to be delivered"
+msgstr "等待发送"
+
+msgid "Time"
+msgstr "时间"
+
+msgid "Message"
+msgstr "消息"
+
+msgid "Target"
+msgstr "目标"
+
+msgid "Result"
+msgstr "结果"
+
+msgid "Detail"
+msgstr "详情"
+
+msgid "No deliveries yet"
+msgstr "暂无发送记录"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "已使用保存的设置开始测试；结果会显示在发送日志中。"
 
 msgid "4G only"
 msgstr "仅 4G"
@@ -822,9 +978,6 @@ msgstr "LuCI 和本面板"
 msgid "LuCI only"
 msgstr "仅 LuCI"
 
-msgid "Enabled"
-msgstr "已启用"
-
 msgid "Disabled"
 msgstr "已禁用"
 
@@ -1272,6 +1425,9 @@ msgstr "池子是空的：收到/发出的短信会出现在这里，或点「�
 msgid "Me: %s"
 msgstr "我: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "不完整：收到 %d / %d 个分段"
+
 msgid "Delete"
 msgstr "删除"
 
@@ -1298,9 +1454,6 @@ msgstr "每月上限"
 
 msgid "%s, warning at %d%%"
 msgstr "%s，%d%% 时提醒"
-
-msgid "None"
-msgstr "无"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "已达到每月流量上限：移动数据已关闭，下一个周期开始时自动恢复。"
@@ -1566,6 +1719,9 @@ msgstr "未知的流量统计设置"
 msgid "Invalid value for this setting"
 msgstr "此设置的值无效"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "转发适配器没有返回有效的回复"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "CPU 适配器未返回有效响应"
 
@@ -1682,6 +1838,51 @@ msgstr "网络重新加载失败"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "无法把 USB 接口接入 LAN 网桥"
+
+msgid "Invalid forwarding setting"
+msgstr "无效的转发设置"
+
+msgid "The message template is too long or contains a control character"
+msgstr "消息模板过长或包含控制字符"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "无效的过滤列表（最多 50 行）"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "webhook 地址必须是 http:// 或 https:// 开头的 URL"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "无效的请求头（每行一个 \"Name: value\"；Host、Content-Type、Content-Length、Transfer-Encoding 和 Connection 由设备设置）"
+
+msgid "Invalid Telegram bot token"
+msgstr "无效的 Telegram 机器人令牌"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "无效的 Telegram 聊天（数字或 @频道）"
+
+msgid "Invalid e-mail setting"
+msgstr "无效的电子邮件设置"
+
+msgid "The webhook needs an address"
+msgstr "webhook 需要一个地址"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram 需要机器人令牌和聊天"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "电子邮件需要服务器、发件人和收件人"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "短信转发需要一个手机号码"
+
+msgid "The forwarding settings could not be saved"
+msgstr "无法保存转发设置"
+
+msgid "SMS forwarding is not installed"
+msgstr "未安装短信转发"
+
+msgid "Unknown forwarding operation"
+msgstr "未知的转发操作"
 
 msgid "The language pack is not installed"
 msgstr "语言包未安装"

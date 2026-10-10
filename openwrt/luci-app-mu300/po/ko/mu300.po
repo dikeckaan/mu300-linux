@@ -15,6 +15,9 @@ msgstr "네트워크 잠금"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "SMS 전달"
+
 msgid "AT terminal"
 msgstr "AT 터미널"
 
@@ -362,6 +365,159 @@ msgstr "USB 어댑터 추가 중…"
 
 msgid "Add failed: %s"
 msgstr "추가 실패: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "저장된 값을 유지하려면 비워 두세요"
+
+msgid "Saved: %s"
+msgstr "저장됨: %s"
+
+msgid "Remove the saved value"
+msgstr "저장된 값 삭제"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "받은 메시지는 SMS 풀에 도착하는 즉시 전달됩니다. 전송에 실패하면 30초 후 다시 시도하고, 이후 매번 두 배 간격(최대 1시간)으로 모두 열 번 시도합니다."
+
+msgid "Forward received messages"
+msgstr "받은 메시지 전달"
+
+msgid "Message template"
+msgstr "메시지 템플릿"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "자리표시자: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "이 발신자만"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "한 줄에 하나씩; 비우면 모든 발신자. 끝의 *는 발신자의 앞부분과 일치합니다."
+
+msgid "Never these senders"
+msgstr "이 발신자는 제외"
+
+msgid "Only messages containing one of these words"
+msgstr "다음 단어 중 하나를 포함한 메시지만"
+
+msgid "One per line; empty: every message."
+msgstr "한 줄에 하나씩; 비우면 모든 메시지."
+
+msgid "Webhook"
+msgstr "웹훅"
+
+msgid "Enabled"
+msgstr "사용 중"
+
+msgid "Address (http:// or https://)"
+msgstr "주소(http:// 또는 https://)"
+
+msgid "Body"
+msgstr "본문"
+
+msgid "Form (URL-encoded)"
+msgstr "양식(URL 인코딩)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "필드: sender, time, text, device, message(채워진 템플릿)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "추가 헤더(한 줄에 하나의 \"Name: value\")"
+
+msgid "Bot token"
+msgstr "봇 토큰"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "채팅 ID(숫자 또는 @채널)"
+
+msgid "E-mail"
+msgstr "이메일"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "이메일에는 msmtp가 필요하지만 이 이미지에는 없습니다"
+
+msgid "Mail server"
+msgstr "메일 서버"
+
+msgid "Port"
+msgstr "포트"
+
+msgid "Security"
+msgstr "보안"
+
+msgid "None"
+msgstr "없음"
+
+msgid "User name"
+msgstr "사용자 이름"
+
+msgid "Password"
+msgstr "비밀번호"
+
+msgid "From"
+msgstr "보낸 사람"
+
+msgid "To"
+msgstr "받는 사람"
+
+msgid "SMS to another phone"
+msgstr "다른 휴대폰으로 SMS"
+
+msgid "Phone number"
+msgstr "전화번호"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "SMS 한 통으로 보냅니다: 더 긴 메시지는 잘립니다."
+
+msgid "Send test"
+msgstr "테스트 보내기"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "토큰, 비밀번호, 웹훅 주소와 헤더는 기기에만 남으며 다시 표시되지 않습니다."
+
+msgid "Delivered"
+msgstr "전달됨"
+
+msgid "Will retry"
+msgstr "다시 시도 예정"
+
+msgid "Failed"
+msgstr "실패"
+
+msgid "Filtered out"
+msgstr "필터링됨"
+
+msgid "Dropped"
+msgstr "버려짐"
+
+msgid "Test"
+msgstr "테스트"
+
+msgid "Delivery log"
+msgstr "전달 기록"
+
+msgid "Waiting to be delivered"
+msgstr "전달 대기 중"
+
+msgid "Time"
+msgstr "시간"
+
+msgid "Message"
+msgstr "메시지"
+
+msgid "Target"
+msgstr "대상"
+
+msgid "Result"
+msgstr "결과"
+
+msgid "Detail"
+msgstr "세부 정보"
+
+msgid "No deliveries yet"
+msgstr "아직 전달 내역이 없습니다"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "저장된 설정으로 테스트를 시작했습니다. 결과는 전달 기록에 표시됩니다."
 
 msgid "4G only"
 msgstr "4G만"
@@ -822,9 +978,6 @@ msgstr "LuCI 및 이 패널"
 msgid "LuCI only"
 msgstr "LuCI만"
 
-msgid "Enabled"
-msgstr "사용 중"
-
 msgid "Disabled"
 msgstr "사용 안 함"
 
@@ -1272,6 +1425,9 @@ msgstr "풀이 비어 있습니다. 받은 메시지와 보낸 메시지가 여�
 msgid "Me: %s"
 msgstr "나: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "불완전: %d / %d 부분 도착"
+
 msgid "Delete"
 msgstr "삭제"
 
@@ -1298,9 +1454,6 @@ msgstr "월 한도"
 
 msgid "%s, warning at %d%%"
 msgstr "%s, %d%%에서 경고"
-
-msgid "None"
-msgstr "없음"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "월 한도에 도달했습니다: 모바일 데이터를 껐습니다. 다음 기간이 시작되면 다시 켜집니다."
@@ -1566,6 +1719,9 @@ msgstr "알 수 없는 데이터 사용량 설정"
 msgid "Invalid value for this setting"
 msgstr "이 설정에 잘못된 값입니다"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "전달 어댑터가 올바른 응답을 주지 않았습니다"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1682,6 +1838,51 @@ msgstr "네트워크 다시 불러오기 실패"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "USB 인터페이스를 LAN 브리지에 연결할 수 없습니다"
+
+msgid "Invalid forwarding setting"
+msgstr "잘못된 전달 설정"
+
+msgid "The message template is too long or contains a control character"
+msgstr "메시지 템플릿이 너무 길거나 제어 문자가 들어 있습니다"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "잘못된 필터 목록(최대 50줄)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "웹훅 주소는 http:// 또는 https:// URL이어야 합니다"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "잘못된 헤더(한 줄에 하나의 \"Name: value\"; Host, Content-Type, Content-Length, Transfer-Encoding, Connection은 기기가 설정합니다)"
+
+msgid "Invalid Telegram bot token"
+msgstr "잘못된 Telegram 봇 토큰"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "잘못된 Telegram 채팅(숫자 또는 @채널)"
+
+msgid "Invalid e-mail setting"
+msgstr "잘못된 이메일 설정"
+
+msgid "The webhook needs an address"
+msgstr "웹훅에 주소가 필요합니다"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram에는 봇 토큰과 채팅이 필요합니다"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "이메일에는 서버, 보낸 사람, 받는 사람이 필요합니다"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "SMS 전달에는 전화번호가 필요합니다"
+
+msgid "The forwarding settings could not be saved"
+msgstr "전달 설정을 저장할 수 없습니다"
+
+msgid "SMS forwarding is not installed"
+msgstr "SMS 전달이 설치되어 있지 않습니다"
+
+msgid "Unknown forwarding operation"
+msgstr "알 수 없는 전달 작업"
 
 msgid "The language pack is not installed"
 msgstr "언어 팩이 설치되어 있지 않습니다"

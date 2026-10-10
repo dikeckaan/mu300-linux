@@ -15,6 +15,9 @@ msgstr "Netzsperren"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "SMS-Weiterleitung"
+
 msgid "AT terminal"
 msgstr "AT-Terminal"
 
@@ -362,6 +365,159 @@ msgstr "USB-Adapter wird hinzugefügt…"
 
 msgid "Add failed: %s"
 msgstr "Hinzufügen fehlgeschlagen: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Leer lassen, um den gespeicherten Wert zu behalten"
+
+msgid "Saved: %s"
+msgstr "Gespeichert: %s"
+
+msgid "Remove the saved value"
+msgstr "Gespeicherten Wert entfernen"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Empfangene Nachrichten werden weitergeleitet, sobald sie im SMS-Pool ankommen. Eine fehlgeschlagene Zustellung wird nach 30 s wiederholt, danach jeweils nach doppelt so langer Zeit (höchstens eine Stunde), insgesamt zehnmal."
+
+msgid "Forward received messages"
+msgstr "Empfangene Nachrichten weiterleiten"
+
+msgid "Message template"
+msgstr "Nachrichtenvorlage"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Platzhalter: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Nur diese Absender"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Einer pro Zeile; leer: alle Absender. Ein * am Ende passt auf den Anfang eines Absenders."
+
+msgid "Never these senders"
+msgstr "Nie diese Absender"
+
+msgid "Only messages containing one of these words"
+msgstr "Nur Nachrichten, die eines dieser Wörter enthalten"
+
+msgid "One per line; empty: every message."
+msgstr "Eines pro Zeile; leer: alle Nachrichten."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Aktiviert"
+
+msgid "Address (http:// or https://)"
+msgstr "Adresse (http:// oder https://)"
+
+msgid "Body"
+msgstr "Inhalt"
+
+msgid "Form (URL-encoded)"
+msgstr "Formular (URL-kodiert)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Felder: sender, time, text, device, message (die ausgefüllte Vorlage)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Zusätzliche Header (ein \"Name: Wert\" pro Zeile)"
+
+msgid "Bot token"
+msgstr "Bot-Token"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "Chat-ID (eine Zahl oder @Kanal)"
+
+msgid "E-mail"
+msgstr "E-Mail"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "E-Mail braucht msmtp, das dieses Image nicht hat"
+
+msgid "Mail server"
+msgstr "Mailserver"
+
+msgid "Port"
+msgstr "Port"
+
+msgid "Security"
+msgstr "Sicherheit"
+
+msgid "None"
+msgstr "Keine"
+
+msgid "User name"
+msgstr "Benutzername"
+
+msgid "Password"
+msgstr "Passwort"
+
+msgid "From"
+msgstr "Von"
+
+msgid "To"
+msgstr "An"
+
+msgid "SMS to another phone"
+msgstr "SMS an ein anderes Telefon"
+
+msgid "Phone number"
+msgstr "Telefonnummer"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Als eine SMS gesendet: eine längere Nachricht wird gekürzt."
+
+msgid "Send test"
+msgstr "Test senden"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Tokens, Passwörter sowie Adresse und Header des Webhooks bleiben auf dem Gerät und werden nie wieder angezeigt."
+
+msgid "Delivered"
+msgstr "Zugestellt"
+
+msgid "Will retry"
+msgstr "Wird wiederholt"
+
+msgid "Failed"
+msgstr "Fehlgeschlagen"
+
+msgid "Filtered out"
+msgstr "Herausgefiltert"
+
+msgid "Dropped"
+msgstr "Verworfen"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Delivery log"
+msgstr "Zustellprotokoll"
+
+msgid "Waiting to be delivered"
+msgstr "Warten auf Zustellung"
+
+msgid "Time"
+msgstr "Zeit"
+
+msgid "Message"
+msgstr "Nachricht"
+
+msgid "Target"
+msgstr "Ziel"
+
+msgid "Result"
+msgstr "Ergebnis"
+
+msgid "Detail"
+msgstr "Detail"
+
+msgid "No deliveries yet"
+msgstr "Noch keine Zustellungen"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Test mit den gespeicherten Einstellungen gestartet; das Ergebnis erscheint im Zustellprotokoll."
 
 msgid "4G only"
 msgstr "Nur 4G"
@@ -822,9 +978,6 @@ msgstr "LuCI und dieses Panel"
 msgid "LuCI only"
 msgstr "Nur LuCI"
 
-msgid "Enabled"
-msgstr "Aktiviert"
-
 msgid "Disabled"
 msgstr "Deaktiviert"
 
@@ -1272,6 +1425,9 @@ msgstr "Der Pool ist leer. Eingehende und gesendete Nachrichten erscheinen hier,
 msgid "Me: %s"
 msgstr "Ich: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Unvollständig: %d von %d Teilen angekommen"
+
 msgid "Delete"
 msgstr "Löschen"
 
@@ -1298,9 +1454,6 @@ msgstr "Monatliches Limit"
 
 msgid "%s, warning at %d%%"
 msgstr "%s, Warnung bei %d%%"
-
-msgid "None"
-msgstr "Keines"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Das monatliche Limit ist erreicht: Mobile Daten wurden ausgeschaltet. Sie gehen zu Beginn des nächsten Zeitraums wieder an."
@@ -1566,6 +1719,9 @@ msgstr "Unbekannte Einstellung des Datenverbrauchs"
 msgid "Invalid value for this setting"
 msgstr "Ungültiger Wert für diese Einstellung"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Der Weiterleitungsadapter gab keine gültige Antwort"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1682,6 +1838,51 @@ msgstr "Neuladen des Netzwerks fehlgeschlagen"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "USB-Schnittstelle kann nicht an die LAN-Bridge angebunden werden"
+
+msgid "Invalid forwarding setting"
+msgstr "Ungültige Weiterleitungseinstellung"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Die Nachrichtenvorlage ist zu lang oder enthält ein Steuerzeichen"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Ungültige Filterliste (höchstens 50 Zeilen)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Die Webhook-Adresse muss eine http://- oder https://-URL sein"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Ungültiger Header (ein \"Name: Wert\" pro Zeile; Host, Content-Type, Content-Length, Transfer-Encoding und Connection setzt das Gerät)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Ungültiges Telegram-Bot-Token"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Ungültiger Telegram-Chat (eine Zahl oder @Kanal)"
+
+msgid "Invalid e-mail setting"
+msgstr "Ungültige E-Mail-Einstellung"
+
+msgid "The webhook needs an address"
+msgstr "Der Webhook braucht eine Adresse"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram braucht ein Bot-Token und einen Chat"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "E-Mail braucht einen Server, einen Absender und einen Empfänger"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Die SMS-Weiterleitung braucht eine Telefonnummer"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Die Weiterleitungseinstellungen konnten nicht gespeichert werden"
+
+msgid "SMS forwarding is not installed"
+msgstr "Die SMS-Weiterleitung ist nicht installiert"
+
+msgid "Unknown forwarding operation"
+msgstr "Unbekannte Weiterleitungsoperation"
 
 msgid "The language pack is not installed"
 msgstr "Das Sprachpaket ist nicht installiert"

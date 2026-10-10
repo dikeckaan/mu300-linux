@@ -15,6 +15,9 @@ msgstr "Фіксація мережі"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Пересилання SMS"
+
 msgid "AT terminal"
 msgstr "AT-термінал"
 
@@ -362,6 +365,159 @@ msgstr "Додавання USB-адаптера…"
 
 msgid "Add failed: %s"
 msgstr "Помилка додавання: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Залиште порожнім, щоб зберегти попереднє значення"
+
+msgid "Saved: %s"
+msgstr "Збережено: %s"
+
+msgid "Remove the saved value"
+msgstr "Видалити збережене значення"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Отримані повідомлення пересилаються, щойно потрапляють до пулу SMS. Невдале надсилання повторюється через 30 с, далі щоразу через удвічі довший інтервал (не більше години), усього десять разів."
+
+msgid "Forward received messages"
+msgstr "Пересилати отримані повідомлення"
+
+msgid "Message template"
+msgstr "Шаблон повідомлення"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Підстановки: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Лише ці відправники"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "По одному в рядку; порожньо: усі відправники. * в кінці збігається з початком відправника."
+
+msgid "Never these senders"
+msgstr "Ніколи ці відправники"
+
+msgid "Only messages containing one of these words"
+msgstr "Лише повідомлення, що містять одне з цих слів"
+
+msgid "One per line; empty: every message."
+msgstr "По одному в рядку; порожньо: усі повідомлення."
+
+msgid "Webhook"
+msgstr "Вебхук"
+
+msgid "Enabled"
+msgstr "Увімкнено"
+
+msgid "Address (http:// or https://)"
+msgstr "Адреса (http:// або https://)"
+
+msgid "Body"
+msgstr "Тіло"
+
+msgid "Form (URL-encoded)"
+msgstr "Форма (URL-кодування)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Поля: sender, time, text, device, message (заповнений шаблон)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Додаткові заголовки (по одному \"Ім'я: значення\" в рядку)"
+
+msgid "Bot token"
+msgstr "Токен бота"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "ID чату (число або @канал)"
+
+msgid "E-mail"
+msgstr "Ел. пошта"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "Для пошти потрібен msmtp, якого немає в цьому образі"
+
+msgid "Mail server"
+msgstr "Поштовий сервер"
+
+msgid "Port"
+msgstr "Порт"
+
+msgid "Security"
+msgstr "Захист"
+
+msgid "None"
+msgstr "Немає"
+
+msgid "User name"
+msgstr "Ім'я користувача"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "From"
+msgstr "Від"
+
+msgid "To"
+msgstr "Кому"
+
+msgid "SMS to another phone"
+msgstr "SMS на інший телефон"
+
+msgid "Phone number"
+msgstr "Номер телефону"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Надсилається одним SMS: довше повідомлення обрізається."
+
+msgid "Send test"
+msgstr "Надіслати тест"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Токени, паролі, адреса й заголовки вебхука залишаються на пристрої й більше ніколи не показуються."
+
+msgid "Delivered"
+msgstr "Доставлено"
+
+msgid "Will retry"
+msgstr "Буде повторено"
+
+msgid "Failed"
+msgstr "Помилка"
+
+msgid "Filtered out"
+msgstr "Відфільтровано"
+
+msgid "Dropped"
+msgstr "Відкинуто"
+
+msgid "Test"
+msgstr "Тест"
+
+msgid "Delivery log"
+msgstr "Журнал доставки"
+
+msgid "Waiting to be delivered"
+msgstr "Очікують доставки"
+
+msgid "Time"
+msgstr "Час"
+
+msgid "Message"
+msgstr "Повідомлення"
+
+msgid "Target"
+msgstr "Ціль"
+
+msgid "Result"
+msgstr "Результат"
+
+msgid "Detail"
+msgstr "Подробиці"
+
+msgid "No deliveries yet"
+msgstr "Доставок поки немає"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Тест запущено зі збереженими налаштуваннями; результат з'явиться в журналі доставки."
 
 msgid "4G only"
 msgstr "Лише 4G"
@@ -822,9 +978,6 @@ msgstr "LuCI і ця панель"
 msgid "LuCI only"
 msgstr "Лише LuCI"
 
-msgid "Enabled"
-msgstr "Увімкнено"
-
 msgid "Disabled"
 msgstr "Вимкнено"
 
@@ -1272,6 +1425,9 @@ msgstr "Сховище порожнє. Тут з'являться вхідні �
 msgid "Me: %s"
 msgstr "Я: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Неповне: отримано частин %d з %d"
+
 msgid "Delete"
 msgstr "Видалити"
 
@@ -1298,9 +1454,6 @@ msgstr "Місячний ліміт"
 
 msgid "%s, warning at %d%%"
 msgstr "%s, попередження при %d%%"
-
-msgid "None"
-msgstr "Немає"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Місячний ліміт вичерпано: мобільні дані вимкнено. Вони ввімкнуться знову на початку наступного періоду."
@@ -1566,6 +1719,9 @@ msgstr "Невідомий параметр використання даних"
 msgid "Invalid value for this setting"
 msgstr "Неприпустиме значення для цього параметра"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Адаптер пересилання не дав коректної відповіді"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1682,6 +1838,51 @@ msgstr "Помилка перезавантаження мережі"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Не вдається приєднати інтерфейс USB до мосту LAN"
+
+msgid "Invalid forwarding setting"
+msgstr "Неправильне налаштування пересилання"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Шаблон повідомлення задовгий або містить керівний символ"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Неправильний список фільтрів (не більше 50 рядків)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Адреса вебхука має бути URL http:// або https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Неправильний заголовок (по одному \"Ім'я: значення\" в рядку; Host, Content-Type, Content-Length, Transfer-Encoding і Connection задає пристрій)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Неправильний токен бота Telegram"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Неправильний чат Telegram (число або @канал)"
+
+msgid "Invalid e-mail setting"
+msgstr "Неправильне налаштування пошти"
+
+msgid "The webhook needs an address"
+msgstr "Вебхуку потрібна адреса"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram потрібні токен бота й чат"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "Пошті потрібні сервер, відправник і одержувач"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Для пересилання через SMS потрібен номер телефону"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Не вдалося зберегти налаштування пересилання"
+
+msgid "SMS forwarding is not installed"
+msgstr "Пересилання SMS не встановлено"
+
+msgid "Unknown forwarding operation"
+msgstr "Невідома операція пересилання"
 
 msgid "The language pack is not installed"
 msgstr "Мовний пакет не встановлено"

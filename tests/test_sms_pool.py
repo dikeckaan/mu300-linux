@@ -592,6 +592,180 @@ class Pool(ShellTest):
                     self.assertEqual(r['total'], 0)
                     self.assertEqual((self.tmp / 'pool').read_text(), want + '\n')
 
+    # ------------------------------------------------------------------ durable before the SIM lets go
+    def test_the_pool_is_fsynced_before_any_slot_leaves_the_sim_and_never_globally(self):
+        # fsync (busybox's applet on OpenWrt) and a global sync both write into the AT log, so the order is one list
+        self.stub('fsync', 'echo "FSYNC $*" >> "$STUBLOG/at.log"')
+        self.stub('sync', 'echo "GLOBAL SYNC $*" >> "$STUBLOG/at.log"')
+        for shell in self.each_shell():
+            self.fresh()
+            self.cmgr(3, PDU_GSM)
+            self.cmgr(7, PDU_UCS2)
+            r = self.run_sms(shell, 'sync')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            log = self.at_log()
+            self.assertFalse([l for l in log if l.startswith('GLOBAL SYNC')], log)
+            fs = [l for l in log if l.startswith('FSYNC')]
+            msg = self.pool / 'msg'
+            # each message file before its rename, then the directory entries and next_id
+            self.assertEqual(sorted(fs[:2]), [f'FSYNC {msg}/000001.part', f'FSYNC {msg}/000002.part'])
+            self.assertEqual(fs[2], f'FSYNC {msg} {self.pool}/next_id {self.pool}')
+            self.assertLess(log.index(fs[2]), log.index('AT+CMGD=3'))
+            # a sync that takes nothing new syncs nothing
+            (self.tmp / 'at.log').unlink()
+            self.run_sms(shell, 'sync')
+            self.assertFalse([l for l in self.at_log() if 'SYNC' in l])
+
+    def test_without_fsync_coreutils_sync_takes_the_files(self):
+        # Ubuntu: no fsync applet, but coreutils' sync FILE...; busybox's sync (no FILE in its help) is never given files
+        for shell in self.each_shell():
+            for helptext, want in (('Usage: sync [OPTION] [FILE]...', 'SYNC -- '), ('Usage: sync', 'SYNC ')):
+                self.fresh()
+                self.stub('fsync', 'exit 127')
+                self.stub('sync', f'[ "$1" = --help ] && {{ echo "{helptext}"; exit 0; }}; echo "SYNC $*" >> "$STUBLOG/at.log"')
+                os.unlink(self.stubs / 'fsync')
+                self.cmgr(3, PDU_GSM)
+                self.run_sms(shell, 'sync')
+                syncs = [l for l in self.at_log() if l.startswith('SYNC')]
+                if want == 'SYNC ':
+                    self.assertTrue(syncs and all(l == 'SYNC ' for l in syncs), syncs)
+                else:
+                    self.assertTrue(syncs and all(l.startswith('SYNC -- ') for l in syncs), syncs)
+
+    def test_next_id_survives_an_empty_id_file(self):
+        # a power cut that left next_id empty must not start the ids over and overwrite message 1
+        for shell in self.each_shell():
+            self.fresh()
+            self.put(5, 'read', 'mt', '+905551112233', '26/10/01,10:00:00+12', 'old')
+            (self.pool / 'next_id').write_text('')
+            r = self.run_sms(shell, 'sync')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(sorted(self.msgs()), ['000005', '000006', '000007'])
+            self.assertEqual(self.msgs()['000005'][1], 'old\n')
+            self.assertEqual((self.pool / 'next_id').read_text(), '7\n')
+            self.assertFalse((self.pool / 'next_id.part').exists())
+
+    @staticmethod
+    def part(ref, total, n, text):
+        ud = bytes([5, 0, 3, ref, total, n]).hex().upper() + text.encode('utf-16-be').hex().upper()
+        return f'00440B911346610089F6000820806291731448{len(ud) // 2:02X}{ud}'
+
+    def test_parts_that_never_complete_are_pooled_after_the_wait(self):
+        p1, p3 = self.part(0x43, 3, 1, 'first '), self.part(0x43, 3, 3, ' third')
+        cmgl = f'+CMGL: 4,0,,30\n{p1}\n+CMGL: 5,1,,30\n{p3}\nOK\n'
+        for shell in self.each_shell():
+            self.fresh()
+            self.answer('CMGL4', cmgl)
+            self.cmgr(4, p1)
+            self.cmgr(5, p3)
+            r = self.run_sms(shell, 'sync')
+            self.assertIn('sync: 0 new, 0 on the SIM, 0 in the pool, 1 waiting for its other parts, 0 moved', r.stdout)
+            key, first, unread = (self.pool / 'partial').read_text().rstrip('\n').split('\t')
+            self.assertEqual((key, unread), ('multi:+31641600986:67:3', '1'))
+            # unchanged while it waits: the state file is not written again, though the modem now lists the parts
+            # as read (AT+CMGL marks what it lists read)
+            self.answer('CMGL4', cmgl.replace('+CMGL: 4,0,', '+CMGL: 4,1,'))
+            before = self.stat_tree(self.pool)
+            time.sleep(0.05)
+            self.run_sms(shell, 'sync')
+            self.assertEqual(self.stat_tree(self.pool), before)
+            # an hour later (the state says so): pooled as it is, unread as first seen, its slots off the SIM, the
+            # state gone
+            (self.pool / 'partial').write_text(f'{key}\t{int(first) - 3600}\t1\n')
+            r = self.run_sms(shell, 'sync')
+            self.assertIn('sync: 1 new, 0 on the SIM, 1 in the pool, 2 moved off the SIM', r.stdout)
+            [(h, body)] = self.msgs().values()
+            self.assertEqual((h['incomplete'], h['sim_index'], h['status'], body),
+                             ('2/3', '4,5', 'unread', 'first [...] third\n'))
+            self.assertRegex(h['partial'], r'^[0-9a-f]{32}$|^[0-9]+$')
+            self.assertFalse((self.pool / 'partial').exists())
+            show = self.run_sms(shell, 'show', '1').stdout
+            self.assertIn('\nincomplete:  2 of 3 parts arrived\n', show.split('\n---\n')[0] + '\n')
+            self.assertEqual(show.split('\n---\n')[1], 'first [...] third\n')
+            # the missing part, late: pooled at once, as a message of its own
+            p2 = self.part(0x43, 3, 2, 'second')
+            self.answer('CMGL4', f'+CMGL: 1,0,,30\n{p2}\nOK\n')
+            self.cmgr(1, p2)
+            r = self.run_sms(shell, 'sync')
+            self.assertIn('sync: 1 new, 0 on the SIM, 2 in the pool, 1 moved off the SIM', r.stdout)
+            late = [m for m in self.msgs().values() if m[0]['sim_index'] == '1']
+            self.assertEqual((late[0][0]['incomplete'], late[0][1]), ('1/3', '[...]second[...]\n'))
+
+    def test_partial_wait_zero_pools_at_once(self):
+        half = self.part(0x44, 2, 2, 'only the end')
+        for shell in self.each_shell():
+            self.fresh()
+            self.answer('CMGL4', f'+CMGL: 9,1,,30\n{half}\nOK\n')
+            r = self.run_sms(shell, 'sync', MU300_SMS_PARTIAL_WAIT=0)
+            self.assertIn('1 new', r.stdout)
+            [(h, body)] = self.msgs().values()
+            self.assertEqual((h['incomplete'], h['status'], body), ('1/2', 'read', '[...]only the end\n'))
+
+    def test_new_messages_go_to_the_forwarding(self):
+        fwd = self.tmp / 'fwd'
+        fwd.write_text('#!/bin/sh\necho "$*" >> "$STUBLOG/fwd.log"\n')
+        fwd.chmod(0o755)
+        for shell in self.each_shell():
+            self.fresh()
+            (self.tmp / 'fwd.log').unlink(missing_ok=True)
+            self.run_sms(shell, 'sync', MU300_SMS_FORWARD=fwd)
+            self.run_sms(shell, 'sync', MU300_SMS_FORWARD=fwd)
+            self.assertEqual((self.tmp / 'fwd.log').read_text().splitlines(), ['enqueue 000001 000002', 'kick'])
+
+
+class Watch(ShellTest):
+    """`sms watch` (every system): a long message waits for its other parts, MU300_SMS_PARTIAL_WAIT at most."""
+
+    def setUp(self):
+        super().setUp()
+        self.stub('mu300-at', AT_STUB)
+        (self.tmp / 'at').mkdir()
+        (self.tmp / 'at' / 'CPMS').write_text('+CPMS: 2,50,2,50,2,50\nOK\n')
+        # one round of the loop: the second sleep ends the script
+        self.stub('sleep', 'n=$(cat "$STUBLOG/rounds" 2>/dev/null || echo 0); n=$((n + 1)); echo $n > "$STUBLOG/rounds"; '
+                           '[ "$n" -ge "${ROUNDS:-1}" ] && kill $PPID; exit 0')
+
+    def watch(self, shell, cmgl, **env):
+        (self.tmp / 'at' / 'CMGL4').write_text(cmgl)
+        (self.tmp / 'rounds').unlink(missing_ok=True)
+        hook = f'printf "%s|%s\\n" "$SMS_FROM" "$SMS_TEXT" >> "{self.tmp}/hook.out"'
+        # A busybox that runs sleep as its own applet never calls the stub, so the loop sleeps for real: one round
+        # takes well under the timeout, which then ends it.
+        try:
+            return subprocess.run(shell + [str(TOP / 'rootfs/overlay/opt/mu300/bin/sms'), 'watch', hook],
+                                  capture_output=True, text=True, timeout=8,
+                                  env=self.env(MU300_SMS_AWK=AWK, MU300_SMS_STATE=self.tmp / 'state', **env))
+        except subprocess.TimeoutExpired as e:
+            return e
+
+    def test_an_incomplete_message_waits_then_is_reported(self):
+        part = Pool.part
+        p1 = part(0x45, 2, 1, 'hello')
+        for shell in self.each_shell():
+            for f in ('hook.out', 'state'):
+                subprocess.run(['rm', '-rf', str(self.tmp / f)])
+            self.watch(shell, f'+CMGL: 1,0,,30\n{p1}\nOK\n')
+            time.sleep(0.3)
+            self.assertFalse((self.tmp / 'hook.out').exists())
+            key, first = (self.tmp / 'state' / 'partial').read_text().rstrip('\n').split('\t')
+            (self.tmp / 'state' / 'partial').write_text(f'{key}\t{int(first) - 3600}\n')
+            self.watch(shell, f'+CMGL: 1,0,,30\n{p1}\nOK\n')
+            for _ in range(30):
+                if (self.tmp / 'hook.out').exists():
+                    break
+                time.sleep(0.1)
+            self.assertEqual((self.tmp / 'hook.out').read_text(), '+31641600986|hello[missing part 2]\n')
+            # the whole message, once the rest comes: reported again, and the waiting state is gone
+            p2 = part(0x45, 2, 2, ' world')
+            self.watch(shell, f'+CMGL: 1,0,,30\n{p1}\n+CMGL: 2,0,,30\n{p2}\nOK\n')
+            for _ in range(30):
+                if len((self.tmp / 'hook.out').read_text().splitlines()) == 2:
+                    break
+                time.sleep(0.1)
+            self.assertEqual((self.tmp / 'hook.out').read_text().splitlines()[1], '+31641600986|hello world')
+            self.assertFalse((self.tmp / 'state' / 'partial').exists() and
+                             (self.tmp / 'state' / 'partial').read_text())
+
 
 @unittest.skipUnless(os.path.isdir('/proc/self'), 'mu300-smsd tells a live holder by /proc/PID/cmdline')
 class Daemon(ShellTest):

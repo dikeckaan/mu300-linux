@@ -67,9 +67,11 @@ reassemble() {
                 if (tot[i] + 0 > parts[key]) parts[key] = tot[i] + 0
             }
             for (j = 1; j <= k; j++) {
-                key = order[j]; i = first[key]; t = ""
-                for (p = 1; p <= parts[key]; p++) t = t ((key, p) in body ? body[key, p] : "[missing part " p "]")
-                printf "%s\t%s\t%s\t%s\t%s\n", idxs[key], snd[i], ts[i], parts[key], t
+                key = order[j]; i = first[key]; t = ""; have = 0
+                for (p = 1; p <= parts[key]; p++) {
+                    if ((key, p) in body) { t = t body[key, p]; have++ } else t = t "[missing part " p "]"
+                }
+                printf "%s\t%s\t%s\t%s\t%s\t%d\t%s\n", idxs[key], snd[i], ts[i], parts[key], t, have, key
             }
         }'
 }
@@ -145,9 +147,24 @@ watch)
     # Asking the modem how many messages it holds is more dependable here than waiting for a +CMTI URC: the
     # daemon owns the channel and throws away unsolicited lines between commands, and a message that arrives
     # while the modem is busy would be missed entirely. Polling cannot miss one.
+    # A long message whose other parts have not come yet waits, up to MU300_SMS_PARTIAL_WAIT seconds (an hour) from
+    # when this first saw it ($STATE/partial, "key <TAB> epoch"): a part the network lost would otherwise hold it back
+    # for ever. Then the parts that did arrive are reported, "[missing part N]" in place of the others; the whole
+    # message is reported again if the rest still comes (its slots, and so its key, differ).
+    wait=${MU300_SMS_PARTIAL_WAIT:-3600}
+    case $wait in ''|*[!0-9]*) wait=3600 ;; esac
+    partial=$STATE/partial
     echo "watching $store for new messages${hook:+, running: $hook}" >&2
     while :; do
-        fetch_all | decode | reassemble | while IFS="$(printf '\t')" read -r idxs sender ts parts text; do
+        now=$(date +%s)
+        : > "$partial.new"
+        fetch_all | decode | reassemble | while IFS="$(printf '\t')" read -r idxs sender ts parts text have mkey; do
+            if [ "${have:-0}" -lt "${parts:-0}" ]; then
+                first=$(K=$mkey awk -F'\t' '$1 == ENVIRON["K"] { print $2; exit }' "$partial" 2>/dev/null)
+                case $first in ''|*[!0-9]*) first=$now ;; esac
+                printf '%s\t%s\n' "$mkey" "$first" >> "$partial.new"
+                [ $((now - first)) -ge "$wait" ] || continue
+            fi
             key=$(printf '%s|%s|%s' "$sender" "$ts" "$idxs")
             grep -qxF "$key" "$seen" 2>/dev/null && continue
             printf '%s\n' "$key" >> "$seen"
@@ -155,6 +172,11 @@ watch)
             [ -n "$hook" ] && SMS_FROM=$sender SMS_DATE=$ts SMS_TEXT=$text SMS_INDEX=$idxs \
                 sh -c "$hook" </dev/null >/dev/null 2>&1 &
         done
+        # on flash: rewritten only when it changes
+        if [ -s "$partial.new" ] || [ -s "$partial" ]; then
+            cmp -s "$partial.new" "$partial" || mv "$partial.new" "$partial"
+        fi
+        rm -f "$partial.new"
         sleep "${MU300_SMS_POLL:-20}"
     done
     ;;

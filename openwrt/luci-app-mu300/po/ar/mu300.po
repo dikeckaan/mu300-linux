@@ -15,6 +15,9 @@ msgstr "أقفال الشبكة"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "إعادة توجيه الرسائل القصيرة"
+
 msgid "AT terminal"
 msgstr "طرفية AT"
 
@@ -362,6 +365,159 @@ msgstr "جارٍ إضافة محوّل USB…"
 
 msgid "Add failed: %s"
 msgstr "فشلت الإضافة: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "اتركه فارغًا للإبقاء على القيمة المحفوظة"
+
+msgid "Saved: %s"
+msgstr "محفوظ: %s"
+
+msgid "Remove the saved value"
+msgstr "إزالة القيمة المحفوظة"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "تُعاد توجيه الرسائل المستلمة فور وصولها إلى مجمّع الرسائل القصيرة. يُعاد إرسال التسليم الفاشل بعد 30 ثانية، ثم في كل مرة بعد ضعف المدة (ساعة على الأكثر)، عشر مرات إجمالًا."
+
+msgid "Forward received messages"
+msgstr "إعادة توجيه الرسائل المستلمة"
+
+msgid "Message template"
+msgstr "قالب الرسالة"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "العناصر النائبة: {sender}، {time}، {text}، {device}"
+
+msgid "Only these senders"
+msgstr "هؤلاء المرسلون فقط"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "واحد في كل سطر؛ فارغ: كل المرسلين. علامة * في النهاية تطابق بداية اسم المرسل."
+
+msgid "Never these senders"
+msgstr "ليس هؤلاء المرسلين أبدًا"
+
+msgid "Only messages containing one of these words"
+msgstr "الرسائل التي تحتوي إحدى هذه الكلمات فقط"
+
+msgid "One per line; empty: every message."
+msgstr "واحدة في كل سطر؛ فارغ: كل الرسائل."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "مفعّل"
+
+msgid "Address (http:// or https://)"
+msgstr "العنوان (http:// أو https://)"
+
+msgid "Body"
+msgstr "المحتوى"
+
+msgid "Form (URL-encoded)"
+msgstr "نموذج (ترميز URL)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "الحقول: sender، time، text، device، message (القالب بعد ملئه)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "ترويسات إضافية (واحدة \"Name: value\" في كل سطر)"
+
+msgid "Bot token"
+msgstr "رمز البوت"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "معرّف المحادثة (رقم أو @قناة)"
+
+msgid "E-mail"
+msgstr "البريد الإلكتروني"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "يحتاج البريد الإلكتروني إلى msmtp، وهو غير موجود في هذه الصورة"
+
+msgid "Mail server"
+msgstr "خادم البريد"
+
+msgid "Port"
+msgstr "المنفذ"
+
+msgid "Security"
+msgstr "الأمان"
+
+msgid "None"
+msgstr "بلا"
+
+msgid "User name"
+msgstr "اسم المستخدم"
+
+msgid "Password"
+msgstr "كلمة المرور"
+
+msgid "From"
+msgstr "من"
+
+msgid "To"
+msgstr "إلى"
+
+msgid "SMS to another phone"
+msgstr "رسالة قصيرة إلى هاتف آخر"
+
+msgid "Phone number"
+msgstr "رقم الهاتف"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "تُرسل كرسالة قصيرة واحدة: تُقصّ الرسالة الأطول."
+
+msgid "Send test"
+msgstr "إرسال تجربة"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "تبقى الرموز وكلمات المرور وعنوان webhook وترويساته على الجهاز ولا تُعرض مرة أخرى."
+
+msgid "Delivered"
+msgstr "تم التسليم"
+
+msgid "Will retry"
+msgstr "ستُعاد المحاولة"
+
+msgid "Failed"
+msgstr "فشل"
+
+msgid "Filtered out"
+msgstr "مُستبعَد بالتصفية"
+
+msgid "Dropped"
+msgstr "مُهمَل"
+
+msgid "Test"
+msgstr "تجربة"
+
+msgid "Delivery log"
+msgstr "سجل التسليم"
+
+msgid "Waiting to be delivered"
+msgstr "بانتظار التسليم"
+
+msgid "Time"
+msgstr "الوقت"
+
+msgid "Message"
+msgstr "الرسالة"
+
+msgid "Target"
+msgstr "الوجهة"
+
+msgid "Result"
+msgstr "النتيجة"
+
+msgid "Detail"
+msgstr "التفاصيل"
+
+msgid "No deliveries yet"
+msgstr "لا توجد عمليات تسليم بعد"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "بدأت التجربة بالإعدادات المحفوظة؛ تظهر النتيجة في سجل التسليم."
 
 msgid "4G only"
 msgstr "4G فقط"
@@ -822,9 +978,6 @@ msgstr "LuCI وهذه اللوحة"
 msgid "LuCI only"
 msgstr "LuCI فقط"
 
-msgid "Enabled"
-msgstr "مفعّل"
-
 msgid "Disabled"
 msgstr "معطّل"
 
@@ -1272,6 +1425,9 @@ msgstr "المخزن فارغ. تظهر هنا الرسائل الواردة و�
 msgid "Me: %s"
 msgstr "أنا: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "غير مكتملة: وصل %d من %d أجزاء"
+
 msgid "Delete"
 msgstr "حذف"
 
@@ -1298,9 +1454,6 @@ msgstr "الحد الشهري"
 
 msgid "%s, warning at %d%%"
 msgstr "%s، تنبيه عند %d%%"
-
-msgid "None"
-msgstr "لا يوجد"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "تم بلوغ الحد الشهري: أُوقفت بيانات الجوال. ستعود عند بدء الدورة التالية."
@@ -1566,6 +1719,9 @@ msgstr "إعداد استهلاك بيانات غير معروف"
 msgid "Invalid value for this setting"
 msgstr "قيمة غير صالحة لهذا الإعداد"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "لم يُعطِ محوّل إعادة التوجيه ردًا صالحًا"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1682,6 +1838,51 @@ msgstr "فشلت إعادة تحميل الشبكة"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "تعذّر ربط واجهة USB بجسر LAN"
+
+msgid "Invalid forwarding setting"
+msgstr "إعداد إعادة توجيه غير صالح"
+
+msgid "The message template is too long or contains a control character"
+msgstr "قالب الرسالة طويل جدًا أو يحتوي على حرف تحكم"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "قائمة تصفية غير صالحة (50 سطرًا على الأكثر)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "يجب أن يكون عنوان webhook عنوان URL يبدأ بـ http:// أو https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "ترويسة غير صالحة (واحدة \"Name: value\" في كل سطر؛ يضبط الجهاز Host وContent-Type وContent-Length وTransfer-Encoding وConnection)"
+
+msgid "Invalid Telegram bot token"
+msgstr "رمز بوت Telegram غير صالح"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "محادثة Telegram غير صالحة (رقم أو @قناة)"
+
+msgid "Invalid e-mail setting"
+msgstr "إعداد بريد إلكتروني غير صالح"
+
+msgid "The webhook needs an address"
+msgstr "يحتاج webhook إلى عنوان"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "يحتاج Telegram إلى رمز بوت ومحادثة"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "يحتاج البريد الإلكتروني إلى خادم ومرسل ومستلم"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "تحتاج إعادة التوجيه عبر الرسائل القصيرة إلى رقم هاتف"
+
+msgid "The forwarding settings could not be saved"
+msgstr "تعذّر حفظ إعدادات إعادة التوجيه"
+
+msgid "SMS forwarding is not installed"
+msgstr "إعادة توجيه الرسائل القصيرة غير مثبّتة"
+
+msgid "Unknown forwarding operation"
+msgstr "عملية إعادة توجيه غير معروفة"
 
 msgid "The language pack is not installed"
 msgstr "حزمة اللغات غير مثبتة"

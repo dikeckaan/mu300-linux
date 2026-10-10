@@ -15,6 +15,9 @@ msgstr "Ağ kilitleri"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "SMS yönlendirme"
+
 msgid "AT terminal"
 msgstr "AT terminali"
 
@@ -362,6 +365,159 @@ msgstr "USB bağdaştırıcısı ekleniyor…"
 
 msgid "Add failed: %s"
 msgstr "Ekleme başarısız: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Kayıtlı değeri korumak için boş bırakın"
+
+msgid "Saved: %s"
+msgstr "Kayıtlı: %s"
+
+msgid "Remove the saved value"
+msgstr "Kayıtlı değeri sil"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Gelen mesajlar SMS havuzuna ulaştıkça iletilir. Başarısız bir gönderim 30 sn sonra, ardından her seferinde iki kat sonra (en fazla bir saat) yeniden denenir; toplam on kez."
+
+msgid "Forward received messages"
+msgstr "Gelen mesajları ilet"
+
+msgid "Message template"
+msgstr "Mesaj şablonu"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Yer tutucular: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Yalnızca bu gönderenler"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Satır başına bir tane; boş: tüm gönderenler. Sondaki * gönderenin başıyla eşleşir."
+
+msgid "Never these senders"
+msgstr "Asla bu gönderenler"
+
+msgid "Only messages containing one of these words"
+msgstr "Yalnızca bu sözcüklerden birini içeren mesajlar"
+
+msgid "One per line; empty: every message."
+msgstr "Satır başına bir tane; boş: tüm mesajlar."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Etkin"
+
+msgid "Address (http:// or https://)"
+msgstr "Adres (http:// veya https://)"
+
+msgid "Body"
+msgstr "Gövde"
+
+msgid "Form (URL-encoded)"
+msgstr "Form (URL kodlu)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Alanlar: sender, time, text, device, message (doldurulmuş şablon)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Ek başlıklar (satır başına bir \"Ad: değer\")"
+
+msgid "Bot token"
+msgstr "Bot belirteci"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "Sohbet kimliği (bir sayı veya @kanal)"
+
+msgid "E-mail"
+msgstr "E-posta"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "E-posta için msmtp gerekir; bu imajda yok"
+
+msgid "Mail server"
+msgstr "Posta sunucusu"
+
+msgid "Port"
+msgstr "Bağlantı noktası"
+
+msgid "Security"
+msgstr "Güvenlik"
+
+msgid "None"
+msgstr "Yok"
+
+msgid "User name"
+msgstr "Kullanıcı adı"
+
+msgid "Password"
+msgstr "Parola"
+
+msgid "From"
+msgstr "Gönderen"
+
+msgid "To"
+msgstr "Alıcı"
+
+msgid "SMS to another phone"
+msgstr "Başka bir telefona SMS"
+
+msgid "Phone number"
+msgstr "Telefon numarası"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Tek SMS olarak gönderilir: daha uzun bir mesaj kısaltılır."
+
+msgid "Send test"
+msgstr "Test gönder"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Belirteçler, parolalar ve webhook adresi ile başlıkları cihazda kalır ve bir daha gösterilmez."
+
+msgid "Delivered"
+msgstr "İletildi"
+
+msgid "Will retry"
+msgstr "Yeniden denenecek"
+
+msgid "Failed"
+msgstr "Başarısız"
+
+msgid "Filtered out"
+msgstr "Filtrelendi"
+
+msgid "Dropped"
+msgstr "Atıldı"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Delivery log"
+msgstr "Gönderim günlüğü"
+
+msgid "Waiting to be delivered"
+msgstr "İletilmeyi bekleyen"
+
+msgid "Time"
+msgstr "Zaman"
+
+msgid "Message"
+msgstr "Mesaj"
+
+msgid "Target"
+msgstr "Hedef"
+
+msgid "Result"
+msgstr "Sonuç"
+
+msgid "Detail"
+msgstr "Ayrıntı"
+
+msgid "No deliveries yet"
+msgstr "Henüz gönderim yok"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Test kayıtlı ayarlarla başlatıldı; sonuç gönderim günlüğünde görünür."
 
 msgid "4G only"
 msgstr "Yalnızca 4G"
@@ -822,9 +978,6 @@ msgstr "LuCI ve bu panel"
 msgid "LuCI only"
 msgstr "Yalnızca LuCI"
 
-msgid "Enabled"
-msgstr "Etkin"
-
 msgid "Disabled"
 msgstr "Devre dışı"
 
@@ -1272,6 +1425,9 @@ msgstr "Havuz boş. Gelen ve gönderilen mesajlar burada görünür veya “SIM�
 msgid "Me: %s"
 msgstr "Ben: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Eksik: %d / %d parça ulaştı"
+
 msgid "Delete"
 msgstr "Sil"
 
@@ -1298,9 +1454,6 @@ msgstr "Aylık kota"
 
 msgid "%s, warning at %d%%"
 msgstr "%s, uyarı %d%% seviyesinde"
-
-msgid "None"
-msgstr "Yok"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Aylık kotaya ulaşıldı: mobil veri kapatıldı. Bir sonraki dönem başlayınca yeniden açılır."
@@ -1566,6 +1719,9 @@ msgstr "Bilinmeyen veri kullanımı ayarı"
 msgid "Invalid value for this setting"
 msgstr "Bu ayar için geçersiz değer"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Yönlendirme bağdaştırıcısı geçerli bir yanıt vermedi"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "İşlemci bağdaştırıcısı geçerli bir yanıt vermedi"
 
@@ -1682,6 +1838,51 @@ msgstr "Ağ yeniden yüklenemedi"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "USB arayüzü LAN köprüsüne bağlanamıyor"
+
+msgid "Invalid forwarding setting"
+msgstr "Geçersiz yönlendirme ayarı"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Mesaj şablonu çok uzun veya bir denetim karakteri içeriyor"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Geçersiz filtre listesi (en fazla 50 satır)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Webhook adresi http:// veya https:// ile başlayan bir URL olmalı"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Geçersiz başlık (satır başına bir \"Ad: değer\"; Host, Content-Type, Content-Length, Transfer-Encoding ve Connection cihaz tarafından ayarlanır)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Geçersiz Telegram bot belirteci"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Geçersiz Telegram sohbeti (bir sayı veya @kanal)"
+
+msgid "Invalid e-mail setting"
+msgstr "Geçersiz e-posta ayarı"
+
+msgid "The webhook needs an address"
+msgstr "Webhook için bir adres gerekir"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram için bir bot belirteci ve bir sohbet gerekir"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "E-posta için bir sunucu, bir gönderen ve bir alıcı gerekir"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "SMS yönlendirme için bir telefon numarası gerekir"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Yönlendirme ayarları kaydedilemedi"
+
+msgid "SMS forwarding is not installed"
+msgstr "SMS yönlendirme kurulu değil"
+
+msgid "Unknown forwarding operation"
+msgstr "Bilinmeyen yönlendirme işlemi"
 
 msgid "The language pack is not installed"
 msgstr "Dil paketi kurulu değil"

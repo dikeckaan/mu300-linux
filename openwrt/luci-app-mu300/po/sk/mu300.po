@@ -15,6 +15,9 @@ msgstr "Zámky siete"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Preposielanie SMS"
+
 msgid "AT terminal"
 msgstr "Terminál AT"
 
@@ -362,6 +365,159 @@ msgstr "Pridávanie adaptéra USB…"
 
 msgid "Add failed: %s"
 msgstr "Pridanie zlyhalo: %s"
+
+msgid "Leave empty to keep the saved value"
+msgstr "Nechajte prázdne, aby zostala uložená hodnota"
+
+msgid "Saved: %s"
+msgstr "Uložené: %s"
+
+msgid "Remove the saved value"
+msgstr "Odstrániť uloženú hodnotu"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Prijaté správy sa preposielajú hneď, ako prídu do fondu SMS. Neúspešné doručenie sa zopakuje po 30 s a potom zakaždým po dvojnásobnom čase (najviac hodina), celkovo desaťkrát."
+
+msgid "Forward received messages"
+msgstr "Preposielať prijaté správy"
+
+msgid "Message template"
+msgstr "Šablóna správy"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Zástupné symboly: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Len títo odosielatelia"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Jeden na riadok; prázdne: všetci odosielatelia. * na konci zodpovedá začiatku odosielateľa."
+
+msgid "Never these senders"
+msgstr "Nikdy títo odosielatelia"
+
+msgid "Only messages containing one of these words"
+msgstr "Len správy obsahujúce niektoré z týchto slov"
+
+msgid "One per line; empty: every message."
+msgstr "Jedno na riadok; prázdne: všetky správy."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Povolené"
+
+msgid "Address (http:// or https://)"
+msgstr "Adresa (http:// alebo https://)"
+
+msgid "Body"
+msgstr "Telo"
+
+msgid "Form (URL-encoded)"
+msgstr "Formulár (kódovanie URL)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Polia: sender, time, text, device, message (vyplnená šablóna)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Ďalšie hlavičky (jedna \"Názov: hodnota\" na riadok)"
+
+msgid "Bot token"
+msgstr "Token bota"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "ID četu (číslo alebo @kanál)"
+
+msgid "E-mail"
+msgstr "E-mail"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "E-mail vyžaduje msmtp, ktorý tento obraz nemá"
+
+msgid "Mail server"
+msgstr "Poštový server"
+
+msgid "Port"
+msgstr "Port"
+
+msgid "Security"
+msgstr "Zabezpečenie"
+
+msgid "None"
+msgstr "Žiadne"
+
+msgid "User name"
+msgstr "Používateľské meno"
+
+msgid "Password"
+msgstr "Heslo"
+
+msgid "From"
+msgstr "Od"
+
+msgid "To"
+msgstr "Komu"
+
+msgid "SMS to another phone"
+msgstr "SMS na iný telefón"
+
+msgid "Phone number"
+msgstr "Telefónne číslo"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Odosiela sa ako jedna SMS: dlhšia správa sa skráti."
+
+msgid "Send test"
+msgstr "Odoslať test"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Tokeny, heslá a adresa a hlavičky webhooku zostávajú v zariadení a už sa nikdy nezobrazia."
+
+msgid "Delivered"
+msgstr "Doručené"
+
+msgid "Will retry"
+msgstr "Bude zopakované"
+
+msgid "Failed"
+msgstr "Zlyhalo"
+
+msgid "Filtered out"
+msgstr "Odfiltrované"
+
+msgid "Dropped"
+msgstr "Zahodené"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Delivery log"
+msgstr "Záznam doručení"
+
+msgid "Waiting to be delivered"
+msgstr "Čaká na doručenie"
+
+msgid "Time"
+msgstr "Čas"
+
+msgid "Message"
+msgstr "Správa"
+
+msgid "Target"
+msgstr "Cieľ"
+
+msgid "Result"
+msgstr "Výsledok"
+
+msgid "Detail"
+msgstr "Podrobnosti"
+
+msgid "No deliveries yet"
+msgstr "Zatiaľ žiadne doručenia"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Test spustený s uloženými nastaveniami; výsledok sa zobrazí v zázname doručení."
 
 msgid "4G only"
 msgstr "Iba 4G"
@@ -822,9 +978,6 @@ msgstr "LuCI a tento panel"
 msgid "LuCI only"
 msgstr "Iba LuCI"
 
-msgid "Enabled"
-msgstr "Povolené"
-
 msgid "Disabled"
 msgstr "Zakázané"
 
@@ -1272,6 +1425,9 @@ msgstr "Zásobník je prázdny. Zobrazia sa tu prichádzajúce a odoslané sprá
 msgid "Me: %s"
 msgstr "Ja: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Neúplná: prišlo %d z %d častí"
+
 msgid "Delete"
 msgstr "Odstrániť"
 
@@ -1298,9 +1454,6 @@ msgstr "Mesačný limit"
 
 msgid "%s, warning at %d%%"
 msgstr "%s, varovanie pri %d%%"
-
-msgid "None"
-msgstr "Žiadny"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Mesačný limit je vyčerpaný: mobilné dáta boli vypnuté. Znova sa zapnú na začiatku ďalšieho obdobia."
@@ -1566,6 +1719,9 @@ msgstr "Neznáme nastavenie spotreby dát"
 msgid "Invalid value for this setting"
 msgstr "Neplatná hodnota pre toto nastavenie"
 
+msgid "The forwarding adapter gave no valid reply"
+msgstr "Adaptér preposielania nedal platnú odpoveď"
+
 msgid "The CPU adapter gave no valid reply"
 msgstr "The CPU adapter gave no valid reply"
 
@@ -1682,6 +1838,51 @@ msgstr "Opätovné načítanie siete zlyhalo"
 
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Nemožno pripojiť rozhranie USB k mostu LAN"
+
+msgid "Invalid forwarding setting"
+msgstr "Neplatné nastavenie preposielania"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Šablóna správy je príliš dlhá alebo obsahuje riadiaci znak"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Neplatný zoznam filtrov (najviac 50 riadkov)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "Adresa webhooku musí byť URL http:// alebo https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Neplatná hlavička (jedna \"Názov: hodnota\" na riadok; Host, Content-Type, Content-Length, Transfer-Encoding a Connection nastavuje zariadenie)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Neplatný token bota Telegram"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Neplatný čet Telegram (číslo alebo @kanál)"
+
+msgid "Invalid e-mail setting"
+msgstr "Neplatné nastavenie e-mailu"
+
+msgid "The webhook needs an address"
+msgstr "Webhook potrebuje adresu"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram potrebuje token bota a čet"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "E-mail potrebuje server, odosielateľa a príjemcu"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "Preposielanie cez SMS potrebuje telefónne číslo"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Nastavenia preposielania sa nepodarilo uložiť"
+
+msgid "SMS forwarding is not installed"
+msgstr "Preposielanie SMS nie je nainštalované"
+
+msgid "Unknown forwarding operation"
+msgstr "Neznáma operácia preposielania"
 
 msgid "The language pack is not installed"
 msgstr "Jazykový balík nie je nainštalovaný"
