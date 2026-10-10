@@ -27,6 +27,9 @@ msgstr "Adapterbeállítások"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "Adatforgalom"
+
 msgid "Device management"
 msgstr "Eszközkezelés"
 
@@ -546,6 +549,18 @@ msgstr "MCS DL/UL"
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
+msgid "%s of %s"
+msgstr "%s / %s"
+
+msgid "The monthly cap is reached"
+msgstr "A havi keret elfogyott"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "A havi keret %d%%-a elhasználva"
+
+msgid "This billing cycle"
+msgstr "Ez a számlázási időszak"
+
 msgid "Link & traffic"
 msgstr "Kapcsolat és forgalom"
 
@@ -560,6 +575,9 @@ msgstr "Összes fogadott"
 
 msgid "Total sent"
 msgstr "Összes küldött"
+
+msgid "Used today"
+msgstr "Ma felhasznált"
 
 msgid "Session duration"
 msgstr "Munkamenet időtartama"
@@ -1413,6 +1431,105 @@ msgstr "Hiányos: %d / %d rész érkezett meg"
 msgid "Delete"
 msgstr "Törlés"
 
+msgid "The data usage could not be read"
+msgstr "Az adatforgalom nem olvasható"
+
+msgid "Today"
+msgstr "Ma"
+
+msgid "Days left in this cycle"
+msgstr "Hátralévő napok az időszakban"
+
+msgid "Received"
+msgstr "Fogadott"
+
+msgid "Sent"
+msgstr "Küldött"
+
+msgid "Corrected by"
+msgstr "Korrekció"
+
+msgid "Monthly cap"
+msgstr "Havi keret"
+
+msgid "%s, warning at %d%%"
+msgstr "%s, figyelmeztetés %d%%-nál"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "A havi keret elfogyott: a mobilinternet ki lett kapcsolva. A következő időszak kezdetén újra bekapcsol."
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s az órára vár: még nem lett beállítva a hálózatról. Már beleszámít ebbe az időszakba, és az óra beállítása után a saját napjára kerül."
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "A(z) %s interfész most nincs jelen: amíg vissza nem tér, semmi sem számít."
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "Számolva ezen: %s, mindkét irányban, ahogy a szolgáltató számolja (a VPN többletével együtt)."
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "A számláló a memóriában van, és 30 percenként, valamint leállításkor a lemezre íródik: áramszünetnél legfeljebb az utolsó fél óra vész el."
+
+msgid "Counting since %s."
+msgstr "Számolás kezdete: %s."
+
+msgid "Per day"
+msgstr "Naponta"
+
+msgid "Date"
+msgstr "Dátum"
+
+msgid "Total"
+msgstr "Összesen"
+
+msgid "Per billing cycle"
+msgstr "Számlázási időszakonként"
+
+msgid "Billing cycle"
+msgstr "Számlázási időszak"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "Adjon meg egy méretet GB-ban, például 50 vagy 2.5"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "Adjon meg egy százalékot 1 és 100 között"
+
+msgid "Turn mobile data off at the cap"
+msgstr "Mobilinternet kikapcsolása a keretnél"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Ha ez az időszak eléri a keretet, a mobilinternet kikapcsol: nincs internet a szolgáltatón keresztül, amíg a következő időszak el nem kezdődik, a keretet meg nem emelik, vagy ezt újra ki nem kapcsolják. A kézzel újra bekapcsolt mobilinternet a következő újraindításig bekapcsolva marad."
+
+msgid "Set"
+msgstr "Beállítás"
+
+msgid "Clear the count"
+msgstr "Számláló törlése"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "Minden eddig számolt nap és számlázási időszak törlődik. A számolás mostantól folytatódik."
+
+msgid "Billing cycle and cap"
+msgstr "Számlázási időszak és keret"
+
+msgid "A billing cycle starts on day"
+msgstr "A számlázási időszak kezdőnapja"
+
+msgid "31: on the last day of each month"
+msgstr "31: minden hónap utolsó napján"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "Havi keret (GB, 0: nincs)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "Figyelmeztetés a keret ennyi százalékánál"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "Eddig felhasznált ebben az időszakban (GB)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "Amit a szolgáltató erre az időszakra mutat (például ha a számolás az időszak közepén kezdődött); a számláló ehhez igazodik."
+
 msgid "Current setting"
 msgstr "Jelenlegi beállítás"
 
@@ -1439,9 +1556,6 @@ msgstr "Ezen a kernelen a tűzfal gyorsútja ki van kapcsolva, amíg TTL van be�
 
 msgid "Set %d"
 msgstr "Legyen %d"
-
-msgid "Set"
-msgstr "Beállítás"
 
 msgid "Enter a number from 1 to 255"
 msgstr "Adjon meg egy számot 1 és 255 között"
@@ -1595,6 +1709,15 @@ msgstr "A TTL-adapter nem adott érvényes választ"
 
 msgid "Invalid TTL"
 msgstr "Érvénytelen TTL"
+
+msgid "The data usage adapter gave no valid reply"
+msgstr "Az adatforgalom-adapter nem adott érvényes választ"
+
+msgid "Unknown data usage setting"
+msgstr "Ismeretlen adatforgalom-beállítás"
+
+msgid "Invalid value for this setting"
+msgstr "Érvénytelen érték ehhez a beállításhoz"
 
 msgid "The forwarding adapter gave no valid reply"
 msgstr "A továbbító adapter nem adott érvényes választ"
@@ -1790,6 +1913,15 @@ msgstr "Nincs kiszolgáló cella a zároláshoz"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "Az adatforgalom ezen a rendszeren nem érhető el"
+
+msgid "The setting could not be saved"
+msgstr "A beállítás nem menthető"
+
+msgid "Unknown data usage operation"
+msgstr "Ismeretlen adatforgalom-művelet"
 
 msgid "The TTL setting could not be read"
 msgstr "A TTL-beállítás nem olvasható"

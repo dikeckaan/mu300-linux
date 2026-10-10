@@ -17,6 +17,7 @@
 
 var DEFAULT_POLL_S = 1.5;
 var RATE_WIN = 40;
+var RATE_MS = 1000;
 
 function pollSeconds(value) {
 	var seconds = Number(value);
@@ -118,11 +119,70 @@ return view.extend({
 		Promise.all([first, config]).then(function() {
 			self._refreshTimer = setTimeout(refresh, intervalMs);
 		});
+		/* The live rates have a lane of their own, every second: one read of /proc/net/dev in rpcd, no process and
+		 * no AT. The time is the browser's, taken halfway through the request (the status snapshot's whole seconds made
+		 * the rates jump by half at a 1.5 s poll). */
+		var clock = function() { return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now(); };
+		function rates() {
+			if (!document.documentElement.contains(root)) return;
+			var t0 = clock();
+			L.resolveDefault(M.callNetDev(), null).then(function(text) {
+				self.rate(text, (t0 + clock()) / 2);
+			}).finally(function() {
+				if (document.documentElement.contains(root))
+					self._rateTimer = setTimeout(rates, RATE_MS);
+			});
+		}
+		/* (render() runs before the page is in the document: the lane starts once the first snapshot is in) */
+		first.then(function() { self._rateTimer = setTimeout(rates, 0); });
 		return root;
 	},
 
 	unload: function() {
 		clearTimeout(this._refreshTimer);
+		clearTimeout(this._rateTimer);
+	},
+
+	/* One reading of the fast lane: rates over the time since the last one (a counter that went down - the interface
+	 * was made again - starts over), the sparklines and the totals since the interface came up. */
+	rate: function(text, t) {
+		var dev = this.dataDev || 'sipa_eth0', c = text ? M.netDev(text, dev) : null;
+		if (!c || !isFinite(c.rx) || !isFinite(c.tx)) return;
+		this.fastNet = true;
+		var last = this.lastRate;
+		this.lastRate = { dev: dev, t: t, rx: c.rx, tx: c.tx };
+		M.set('rx', M.fmtBytes(c.rx)); M.set('tx', M.fmtBytes(c.tx));
+		if (!last || last.dev !== dev || t - last.t < 200 || c.rx < last.rx || c.tx < last.tx) return;
+		var dt = (t - last.t) / 1000;
+		this.pushRate((c.rx - last.rx) / dt, (c.tx - last.tx) / dt);
+	},
+
+	pushRate: function(dl, ul) {
+		M.set('dl', M.fmtRate(dl)); M.set('ul', M.fmtRate(ul));
+		this.dlHist.push(dl); this.ulHist.push(ul);
+		if (this.dlHist.length > RATE_WIN) { this.dlHist.shift(); this.ulHist.shift(); }
+		var peak = Math.max(1, Math.max.apply(null, this.dlHist.concat(this.ulHist)));
+		M.spark(M.v('spark-dl'), this.dlHist, 0, peak, RATE_WIN);
+		M.spark(M.v('spark-ul'), this.ulHist, 0, peak, RATE_WIN);
+	},
+
+	/* Today's and this billing cycle's mobile data (mu300-traffic's summary in the status snapshot), against the cap */
+	paintUsage: function(u) {
+		var box = M.v('usage');
+		if (!box) return;
+		box.style.display = u ? '' : 'none';
+		if (!u) return;
+		M.set('usage-today', M.fmtBytes(u.today));
+		var cap = u.cap > 0 ? u.cap : 0, pct = cap ? Math.min(100, Math.round(u.used * 100 / cap)) : null;
+		M.set('usage-cycle', cap ? _('%s of %s').format(M.fmtBytes(u.used), M.fmtBytes(cap)) : M.fmtBytes(u.used));
+		var col = u.level === 'over' ? 'var(--danger,#E25555)' : u.level === 'warn' ? 'var(--warning,#f59e0b)' : '';
+		M.v('usage-cycle').style.color = col;
+		var bar = M.v('usage-bar');
+		M.v('usage-meter').style.display = cap ? '' : 'none';
+		bar.style.width = (pct || 0) + '%';
+		bar.style.background = col || 'var(--brand,var(--primary,#3b82f6))';
+		M.set('usage-note', u.level === 'over' ? _('The monthly cap is reached') :
+			u.level === 'warn' ? _('%d%% of the monthly cap is used').format(pct) : _('This billing cycle'));
 	},
 
 	html: function() {
@@ -160,6 +220,10 @@ return view.extend({
     <div class="mud-kpi"><b id="mud-rx">--</b><span>${_('Total received')}</span></div>
     <div class="mud-kpi"><b id="mud-tx">--</b><span>${_('Total sent')}</span></div>
   </div>
+  <a class="mud-kpis" id="mud-usage" href="${L.url('admin/modem/traffic')}" style="display:none;color:inherit;text-decoration:none">
+    <div class="mud-kpi"><b id="mud-usage-today">--</b><span>${_('Used today')}</span></div>
+    <div class="mud-kpi"><b id="mud-usage-cycle">--</b><span id="mud-usage-note">${_('This billing cycle')}</span><div class="mud-meter" id="mud-usage-meter"><i id="mud-usage-bar"></i></div></div>
+  </a>
   <div class="mud-cols">
     <div>
       <div class="mud-rows">
@@ -262,6 +326,7 @@ return view.extend({
 		this.identShown = false;
 		this.dlHist = []; this.ulHist = [];
 		this.lastNet = null; this.lastCpu = null; this.lastFullTs = 0;
+		this.lastRate = null; this.fastNet = false;
 		this.lockedCell = '';
 		/* render() runs before the node is in the document, so look up relative to root (update, once mounted, looks in the whole document) */
 		var q = function(id) { return root.querySelector('#mud-' + id); };
@@ -526,23 +591,17 @@ return view.extend({
 		M.set('qci', qos && qos.qci != null ? qos.qci : '--');
 		M.set('ambr', qos && qos.dl != null ? qos.dl + ' / ' + qos.ul + ' Mbps' : '--');
 
+		/* the rates and totals are the fast lane's (rate); only while it has nothing (a panel whose ACL predates it),
+		 * the snapshot's counters stand in, over its whole seconds */
+		if (i.data_device) this.dataDev = i.data_device;
 		var net = (i.net && (i.net.mobile || i.net.sipa_eth0)) || null;
-		if (net && this.lastNet && i.ts && this.lastNet.ts) {
-			var dt = i.ts - this.lastNet.ts;
-			if (dt > 0) {
-				var dl = (net.rx - this.lastNet.rx) / dt, ul = (net.tx - this.lastNet.tx) / dt;
-				M.set('dl', M.fmtRate(dl)); M.set('ul', M.fmtRate(ul));
-				this.dlHist.push(dl); this.ulHist.push(ul);
-				if (this.dlHist.length > RATE_WIN) { this.dlHist.shift(); this.ulHist.shift(); }
-				var peak = Math.max(1, Math.max.apply(null, this.dlHist.concat(this.ulHist)));
-				M.spark(M.v('spark-dl'), this.dlHist, 0, peak, RATE_WIN);
-				M.spark(M.v('spark-ul'), this.ulHist, 0, peak, RATE_WIN);
-			}
-		}
-		if (net) {
+		if (net && !this.fastNet) {
+			if (this.lastNet && i.ts && this.lastNet.ts && i.ts > this.lastNet.ts && net.rx >= this.lastNet.rx && net.tx >= this.lastNet.tx)
+				this.pushRate((net.rx - this.lastNet.rx) / (i.ts - this.lastNet.ts), (net.tx - this.lastNet.tx) / (i.ts - this.lastNet.ts));
 			M.set('rx', M.fmtBytes(net.rx)); M.set('tx', M.fmtBytes(net.tx));
 			this.lastNet = { ts: i.ts, rx: net.rx, tx: net.tx };
 		}
+		this.paintUsage(i.traffic || null);
 		var w = i.wan || {};
 		M.v('ip').innerHTML = M.esc(w.ip4 || '--') + (w.ip6 ? '<br>' + M.esc(w.ip6) : '');
 		M.set('dns', w.dns || '--');

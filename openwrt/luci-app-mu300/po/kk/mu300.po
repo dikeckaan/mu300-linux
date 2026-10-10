@@ -27,6 +27,9 @@ msgstr "Адаптер параметрлері"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "Деректер шығыны"
+
 msgid "Device management"
 msgstr "Құрылғыны басқару"
 
@@ -546,6 +549,18 @@ msgstr "MCS DL/UL"
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
+msgid "%s of %s"
+msgstr "%s / %s"
+
+msgid "The monthly cap is reached"
+msgstr "Айлық лимитке жетті"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "Айлық лимиттің %d%% пайдаланылды"
+
+msgid "This billing cycle"
+msgstr "Ағымдағы есеп кезеңі"
+
 msgid "Link & traffic"
 msgstr "Байланыс және трафик"
 
@@ -560,6 +575,9 @@ msgstr "Барлығы алынды"
 
 msgid "Total sent"
 msgstr "Барлығы жіберілді"
+
+msgid "Used today"
+msgstr "Бүгін пайдаланылды"
 
 msgid "Session duration"
 msgstr "Сеанс ұзақтығы"
@@ -1413,6 +1431,105 @@ msgstr "Толық емес: %d / %d бөлік келді"
 msgid "Delete"
 msgstr "Жою"
 
+msgid "The data usage could not be read"
+msgstr "Деректер шығынын оқу мүмкін болмады"
+
+msgid "Today"
+msgstr "Бүгін"
+
+msgid "Days left in this cycle"
+msgstr "Кезеңде қалған күндер"
+
+msgid "Received"
+msgstr "Алынды"
+
+msgid "Sent"
+msgstr "Жіберілді"
+
+msgid "Corrected by"
+msgstr "Түзету"
+
+msgid "Monthly cap"
+msgstr "Айлық лимит"
+
+msgid "%s, warning at %d%%"
+msgstr "%s, ескерту %d%% кезінде"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "Айлық лимитке жетті: мобильді деректер өшірілді. Келесі кезең басталғанда қайта қосылады."
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s сағатты күтуде: уақыт әлі желіден орнатылмаған. Ол осы кезеңге есептеліп қойған және сағат орнатылғанда өз күніне жазылады."
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "%s интерфейсі қазір жоқ: ол қайтып келгенше ештеңе есептелмейді."
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "%s арқылы, екі бағытта, оператор есептейтіндей есептеледі (VPN үстеме шығыны қоса)."
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "Есептегіш жадта сақталады және әр 30 минут сайын және өшіргенде дискіге жазылады: электр өшкенде ең көбі соңғы жарты сағат жоғалады."
+
+msgid "Counting since %s."
+msgstr "%s бастап есептелуде."
+
+msgid "Per day"
+msgstr "Күн бойынша"
+
+msgid "Date"
+msgstr "Күні"
+
+msgid "Total"
+msgstr "Барлығы"
+
+msgid "Per billing cycle"
+msgstr "Есеп кезеңдері бойынша"
+
+msgid "Billing cycle"
+msgstr "Есеп кезеңі"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "Өлшемді ГБ-пен енгізіңіз, мысалы 50 немесе 2.5"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "1-ден 100-ге дейінгі пайызды енгізіңіз"
+
+msgid "Turn mobile data off at the cap"
+msgstr "Лимитке жеткенде мобильді деректерді өшіру"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Бұл кезең лимитке жеткенде мобильді деректер өшіріледі: келесі кезең басталғанша, лимит көтерілгенше немесе бұл параметр қайта өшірілгенше оператор арқылы интернет болмайды. Мобильді деректерді қолмен қайта қоссаңыз, келесі қайта жүктелгенге дейін қосулы қалады."
+
+msgid "Set"
+msgstr "Орнату"
+
+msgid "Clear the count"
+msgstr "Есептегішті тазалау"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "Осы уақытқа дейін есептелген барлық күндер мен есеп кезеңдері ұмытылады. Есептеу қазірден бастап жалғасады."
+
+msgid "Billing cycle and cap"
+msgstr "Есеп кезеңі және лимит"
+
+msgid "A billing cycle starts on day"
+msgstr "Есеп кезеңі басталатын күн"
+
+msgid "31: on the last day of each month"
+msgstr "31: әр айдың соңғы күні"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "Айлық лимит (ГБ, 0: жоқ)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "Лимиттің осы пайызында ескерту"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "Осы кезеңде осы уақытқа дейін пайдаланылғаны (ГБ)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "Оператор осы кезең үшін көрсететін мән (мысалы, есептеу кезеңнің ортасында басталса); есептегіш осыған түзетіледі."
+
 msgid "Current setting"
 msgstr "Ағымдағы баптау"
 
@@ -1439,9 +1556,6 @@ msgstr "Бұл ядрода TTL орнатылып тұрғанда брандм
 
 msgid "Set %d"
 msgstr "%d орнату"
-
-msgid "Set"
-msgstr "Орнату"
 
 msgid "Enter a number from 1 to 255"
 msgstr "1 мен 255 аралығындағы санды енгізіңіз"
@@ -1595,6 +1709,15 @@ msgstr "TTL адаптері жарамды жауап бермеді"
 
 msgid "Invalid TTL"
 msgstr "Жарамсыз TTL"
+
+msgid "The data usage adapter gave no valid reply"
+msgstr "Деректер шығыны адаптері дұрыс жауап бермеді"
+
+msgid "Unknown data usage setting"
+msgstr "Белгісіз деректер шығыны параметрі"
+
+msgid "Invalid value for this setting"
+msgstr "Бұл параметр үшін жарамсыз мән"
 
 msgid "The forwarding adapter gave no valid reply"
 msgstr "Қайта жіберу адаптері дұрыс жауап бермеді"
@@ -1790,6 +1913,15 @@ msgstr "Бекітетін қызмет көрсететін ұяшық жоқ"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "Бұл жүйеде деректер шығыны қолжетімсіз"
+
+msgid "The setting could not be saved"
+msgstr "Параметрді сақтау мүмкін болмады"
+
+msgid "Unknown data usage operation"
+msgstr "Белгісіз деректер шығыны әрекеті"
 
 msgid "The TTL setting could not be read"
 msgstr "TTL баптауын оқу мүмкін болмады"

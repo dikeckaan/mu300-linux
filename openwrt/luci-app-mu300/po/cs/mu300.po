@@ -27,6 +27,9 @@ msgstr "Nastavení adaptéru"
 msgid "TTL"
 msgstr "TTL"
 
+msgid "Data usage"
+msgstr "Spotřeba dat"
+
 msgid "Device management"
 msgstr "Správa zařízení"
 
@@ -546,6 +549,18 @@ msgstr "MCS DL/UL"
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
 
+msgid "%s of %s"
+msgstr "%s z %s"
+
+msgid "The monthly cap is reached"
+msgstr "Měsíční limit je vyčerpán"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "Využito %d%% měsíčního limitu"
+
+msgid "This billing cycle"
+msgstr "Toto zúčtovací období"
+
 msgid "Link & traffic"
 msgstr "Linka a provoz"
 
@@ -560,6 +575,9 @@ msgstr "Celkem přijato"
 
 msgid "Total sent"
 msgstr "Celkem odesláno"
+
+msgid "Used today"
+msgstr "Dnes spotřebováno"
 
 msgid "Session duration"
 msgstr "Doba relace"
@@ -1413,6 +1431,105 @@ msgstr "Neúplná: dorazilo %d z %d částí"
 msgid "Delete"
 msgstr "Smazat"
 
+msgid "The data usage could not be read"
+msgstr "Spotřebu dat nelze načíst"
+
+msgid "Today"
+msgstr "Dnes"
+
+msgid "Days left in this cycle"
+msgstr "Zbývající dny v období"
+
+msgid "Received"
+msgstr "Přijato"
+
+msgid "Sent"
+msgstr "Odesláno"
+
+msgid "Corrected by"
+msgstr "Opraveno o"
+
+msgid "Monthly cap"
+msgstr "Měsíční limit"
+
+msgid "%s, warning at %d%%"
+msgstr "%s, varování při %d%%"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "Měsíční limit je vyčerpán: mobilní data byla vypnuta. Znovu se zapnou na začátku dalšího období."
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s čeká na hodiny: ještě nebyly nastaveny ze sítě. Už se započítává do tohoto období a přejde ke svému dni, jakmile budou hodiny nastaveny."
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "Rozhraní %s teď neexistuje: dokud se nevrátí, nic se nepočítá."
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "Počítáno na %s, v obou směrech, jak počítá operátor (včetně režie VPN)."
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "Počet je držen v paměti a zapisován na disk každých 30 minut a při vypnutí: výpadek proudu ztratí nejvýše poslední půlhodinu."
+
+msgid "Counting since %s."
+msgstr "Počítáno od %s."
+
+msgid "Per day"
+msgstr "Po dnech"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Total"
+msgstr "Celkem"
+
+msgid "Per billing cycle"
+msgstr "Po zúčtovacích obdobích"
+
+msgid "Billing cycle"
+msgstr "Zúčtovací období"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "Zadejte velikost v GB, například 50 nebo 2.5"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "Zadejte procento od 1 do 100"
+
+msgid "Turn mobile data off at the cap"
+msgstr "Vypnout mobilní data při dosažení limitu"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Když toto období dosáhne limitu, mobilní data se vypnou: žádný internet přes operátora, dokud nezačne další období, nezvýší se limit nebo se tato volba znovu nevypne. Ručně znovu zapnutá mobilní data zůstanou zapnutá do dalšího restartu."
+
+msgid "Set"
+msgstr "Nastavit"
+
+msgid "Clear the count"
+msgstr "Vymazat počet"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "Všechny dosud započtené dny a zúčtovací období budou zapomenuty. Počítání pokračuje od teď."
+
+msgid "Billing cycle and cap"
+msgstr "Zúčtovací období a limit"
+
+msgid "A billing cycle starts on day"
+msgstr "Zúčtovací období začíná dne"
+
+msgid "31: on the last day of each month"
+msgstr "31: poslední den každého měsíce"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "Měsíční limit (GB, 0: žádný)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "Varovat při tomto procentu limitu"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "Dosud spotřebováno v tomto období (GB)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "Co operátor ukazuje pro toto období (například když počítání začalo uprostřed); počet se na to opraví."
+
 msgid "Current setting"
 msgstr "Aktuální nastavení"
 
@@ -1439,9 +1556,6 @@ msgstr "Na tomto jádře je rychlá cesta firewallu vypnutá, dokud je nastaveno
 
 msgid "Set %d"
 msgstr "Nastavit %d"
-
-msgid "Set"
-msgstr "Nastavit"
 
 msgid "Enter a number from 1 to 255"
 msgstr "Zadejte číslo od 1 do 255"
@@ -1595,6 +1709,15 @@ msgstr "Adaptér TTL nevrátil platnou odpověď"
 
 msgid "Invalid TTL"
 msgstr "Neplatné TTL"
+
+msgid "The data usage adapter gave no valid reply"
+msgstr "Adaptér spotřeby dat nedal platnou odpověď"
+
+msgid "Unknown data usage setting"
+msgstr "Neznámé nastavení spotřeby dat"
+
+msgid "Invalid value for this setting"
+msgstr "Neplatná hodnota pro toto nastavení"
 
 msgid "The forwarding adapter gave no valid reply"
 msgstr "Adaptér přeposílání nedal platnou odpověď"
@@ -1790,6 +1913,15 @@ msgstr "Žádná obsluhující buňka k uzamčení"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "Spotřeba dat není v tomto systému k dispozici"
+
+msgid "The setting could not be saved"
+msgstr "Nastavení nelze uložit"
+
+msgid "Unknown data usage operation"
+msgstr "Neznámá operace spotřeby dat"
 
 msgid "The TTL setting could not be read"
 msgstr "Nastavení TTL nelze přečíst"

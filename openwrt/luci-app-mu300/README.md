@@ -31,6 +31,21 @@ The package does not start or own the modem. Platform-specific access is behind
 small command adapters, so the LuCI and RPC code does not need to change for a
 different Unisoc OpenWrt firmware.
 
+## Data usage and live rates
+
+Cellular > Data usage shows mobile data per day and per billing cycle (a configurable reset day), with an optional
+monthly cap: a warning at a set percentage, and, only when turned on, mobile data off at the cap until the next
+cycle. The page talks to `unisoc-modem/traffic` (mu300dash `traffic_get`/`traffic_set`), which runs the platform's
+`mu300-traffic` (`MU300_TRAFFIC_CMD`); without it the page says data usage is not available. The count is that
+command's, so the panel and its CLI always agree; on MU300 it samples the interface counters once a minute into
+RAM and writes the disk rarely (see `mu300-traffic`).
+
+The dashboard's download/upload rates come from a lane of their own: one rpcd `file` read of `/proc/net/dev` every
+second (no process, no AT), timed in the browser. That is the only file the read grant names, with
+`/proc/[0-9]*/net/dev` beside it because rpcd checks the path it resolved (`/proc/net` is `/proc/self/net`). The
+status snapshot names the interface (`data_device`) and carries mu300-traffic's summary for the dashboard's usage
+tiles.
+
 ## AT adapters
 
 Configure `/etc/config/unisoc_modem`:

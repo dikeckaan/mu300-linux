@@ -5,6 +5,8 @@
 #                               registered)
 #   mu300-led wifi on|off|sync [S]  the Wi-Fi hotspot is up (U30 Air: blue on 5 GHz, white on 2.4 GHz); sync: whatever
 #                               wlan0 is now, and again every 2 s for S seconds (OpenWrt: LuCI or the button)
+#   mu300-led events            OpenWrt: the Wi-Fi LED follows hostapd on ubus as it comes and goes (a service, no
+#                               polling: wifi down/up, LuCI, the panel, a WCN reset, a hostapd that died)
 #   mu300-led wake              show the LEDs again, for LED_TIMEOUT seconds (every key press, mu300-buttons); also
 #                               in mu300-power's idle, for LED_TIMEOUT (60 s when it is 0): a key always shows life
 #   mu300-led sleep [--if-due]  dark now (--if-due: only once the timeout has passed; mu300-buttons asks)
@@ -88,6 +90,13 @@ wifi_band() {  # 5 or 2.4: the channel the hotspot runs on, else (it has none ye
     if [ -n "$ch" ]; then [ "$ch" -gt 14 ] && echo 5 || echo 2.4
     else "${MU300_BIN:-/opt/mu300/bin}/mu300-wifi-band" 2>/dev/null | sed -n 's/^hotspot: \([0-9.]*\) GHz$/\1/p'; fi
 }
+# hostapd's access point on wlan0, as ubus has it: on while its object is there and not DISABLED (one still setting
+# up, ACS or a DFS wait, is on its way). iw is no help at that moment: when hostapd's object goes away, iw still
+# shows the SSID of the access point being torn down.
+hostapd_state() {
+    st=$(ubus call hostapd.wlan0 get_status 2>/dev/null | sed -n 's/.*"status": *"\([A-Z_]*\)".*/\1/p' | head -n1)
+    case $st in ''|DISABLED) echo off ;; *) echo on ;; esac
+}
 show_all() {  # every LED as it should be (none while idle, unless a key woke them)
     shown || return 0
     for f in "$STATE"/*; do
@@ -121,6 +130,19 @@ case "$1 ${2:-}" in
             [ "$n" -gt 0 ] || break
             nap 2; n=$((n - 2))
         done ;;
+    "events "*)
+        # ubusd announces every object it adds and removes, and hostapd.wlan0 is there exactly while hostapd runs
+        # the access point. The state is read once the listener is up (nothing in between is missed), then at each
+        # of its events. The data LED stays mobile-data's (the dial, the hang-up, its watchdog).
+        command -v ubus >/dev/null 2>&1 || { echo "mu300-led events: needs ubus (OpenWrt)" >&2; exit 1; }
+        ubus listen ubus.object.add ubus.object.remove | {
+            last=$(hostapd_state); "$0" wifi "$last"
+            while IFS= read -r ev; do
+                case $ev in *'"hostapd.wlan0"'*) ;; *) continue ;; esac
+                s=$(hostapd_state)
+                [ "$s" = "$last" ] || { "$0" wifi "$s"; last=$s; }
+            done
+        } ;;
     "wake "*)
         mkdir -p "$STATE" 2>/dev/null
         now=$(uptime_s)
@@ -195,6 +217,6 @@ case "$1 ${2:-}" in
             old=$(cat "$l/brightness" 2>/dev/null)
             echo "$n"; write "$n" 1; sleep 2; echo "${old:-0}" > "$l/brightness" 2>/dev/null
         done ;;
-    *) sed -n '2,10s/^# \{0,1\}//p' "$0" >&2; exit 2 ;;
+    *) sed -n '2,12s/^# \{0,1\}//p' "$0" >&2; exit 2 ;;
 esac
 exit 0

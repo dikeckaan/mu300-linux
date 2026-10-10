@@ -5,17 +5,6 @@ START=99
 USE_PROCD=1
 export PATH="$PATH:/opt/mu300/busybox-bin"
 
-# LuCI (or "uci commit wireless; reload_config") turning the hotspot off or on: no hostapd hook tells mu300-led,
-# so the Wi-Fi LED follows what wlan0 is for two minutes: Wi-Fi turned off and on again at once took hostapd 63 s
-# to come back on F50 #1 (6.18). (A reload only runs this.)
-service_triggers() {
-	procd_add_reload_trigger wireless
-}
-
-reload_service() {
-	( sleep 5; /opt/mu300/bin/mu300-led wifi sync 120 ) >/dev/null 2>&1 &
-}
-
 start_service() {
 	# the commands on the PATH (/usr/bin): new ones on a system installed before they existed, and the extras'
 	/opt/mu300/bin/mu300-extra link >/dev/null 2>&1
@@ -33,6 +22,14 @@ start_service() {
 	procd_set_param command /opt/mu300/bin/mobile-data watch
 	procd_set_param env MU300_NETIFD=1 PATH="$PATH"
 	procd_set_param respawn 3600 30 0
+	procd_close_instance
+	# the Wi-Fi LED follows hostapd's ubus object, whoever starts or stops the access point (LuCI's wireless page,
+	# the panel, "wifi down", a WCN reset, a hostapd that died): no hook of hostapd's tells mu300-led, and this
+	# replaced two minutes of looking at wlan0 after every wireless reload (and missed everything else)
+	procd_open_instance ledevents
+	procd_set_param command /opt/mu300/bin/mu300-led events
+	procd_set_param env PATH="$PATH"
+	procd_set_param respawn 3600 5 0
 	procd_close_instance
 	procd_open_instance thermalguard
 	procd_set_param command /opt/mu300/bin/thermal-guard
