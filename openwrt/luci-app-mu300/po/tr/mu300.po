@@ -33,6 +33,9 @@ msgstr "Diller"
 msgid "Power"
 msgstr "Güç"
 
+msgid "CPU"
+msgstr "CPU"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 kontrol merkezi: durum paneli, ağ kilitleri, AT terminali ve SMS"
 
@@ -140,6 +143,72 @@ msgstr "İstek başarısız"
 
 msgid "(empty)"
 msgstr "(boş)"
+
+msgid "Failed: %s"
+msgstr "Başarısız: %s"
+
+msgid "Saved"
+msgstr "Kaydedildi"
+
+msgid "Management connection lost"
+msgstr "Yönetim bağlantısı kesildi"
+
+msgid "CPU profile unavailable"
+msgstr "İşlemci profili kullanılamıyor"
+
+msgid "Power saving"
+msgstr "Güç tasarrufu"
+
+msgid "Balanced"
+msgstr "Dengeli"
+
+msgid "Performance"
+msgstr "Performans"
+
+msgid "Cores capped at about 60 %% of their maximum (cooler, less power)."
+msgstr "Çekirdekler en yüksek hızının yaklaşık %%60'ında sınırlanır (daha serin, daha az güç)."
+
+msgid "Schedutil across the full hardware range (the stock behaviour)."
+msgstr "Tüm donanım aralığında schedutil (fabrika davranışı)."
+
+msgid "Every cluster pinned at its hardware maximum."
+msgstr "Her küme donanım azamisine sabitlenir."
+
+msgid "CPU profile"
+msgstr "İşlemci profili"
+
+msgid "A profile sets the CPU governor and the per-cluster frequency limits. It stays within the hardware frequency table and never changes the voltage, so it cannot overclock this SoC. The kernel keeps throttling at its thermal limit in every profile."
+msgstr "Bir profil, işlemci yöneticisini ve küme başına frekans sınırlarını belirler. Donanım frekans tablosu içinde kalır ve voltajı asla değiştirmez, bu yüzden bu yonga aşırı hızlandırılamaz. Çekirdek her profilde sıcaklık sınırında kısmaya devam eder."
+
+msgid "Saved profile: %s"
+msgstr "Kayıtlı profil: %s"
+
+msgid "Thermal throttling is active right now: the frequencies below are below the profile ceiling."
+msgstr "Şu anda sıcaklık kısması etkin: aşağıdaki frekanslar profil tavanının altında."
+
+msgid "Clusters"
+msgstr "Kümeler"
+
+msgid "Cores"
+msgstr "Çekirdekler"
+
+msgid "Governor"
+msgstr "Yönetici"
+
+msgid "Now"
+msgstr "Şimdi"
+
+msgid "Min"
+msgstr "En düşük"
+
+msgid "Max"
+msgstr "En yüksek"
+
+msgid "Hardware max"
+msgstr "Donanım azamisi"
+
+msgid "Frequencies in MHz."
+msgstr "Frekanslar MHz cinsinden."
 
 msgid "USB role"
 msgstr "USB rolü"
@@ -456,9 +525,6 @@ msgstr "Arka planda başlatıldı: %s"
 msgid "Done: %s"
 msgstr "Tamamlandı: %s"
 
-msgid "Failed: %s"
-msgstr "Başarısız: %s"
-
 msgid "Disconnecting data…"
 msgstr "Veri bağlantısı kesiliyor…"
 
@@ -668,12 +734,6 @@ msgstr "AT bağdaştırıcısı kullanılamıyor"
 
 msgid "Linux locked"
 msgstr "Linux kilitli"
-
-msgid "Saved"
-msgstr "Kaydedildi"
-
-msgid "Management connection lost"
-msgstr "Yönetim bağlantısı kesildi"
 
 msgid "Installing the language pack…"
 msgstr "Dil paketi kuruluyor…"
@@ -1041,9 +1101,6 @@ msgstr "Boştayken modem"
 msgid "LEDs when idle"
 msgstr "Boştayken LED'ler"
 
-msgid "CPU"
-msgstr "CPU"
-
 msgid "Ignored lines in power.conf: %s"
 msgstr "power.conf içindeki yok sayılan satırlar: %s"
 
@@ -1383,6 +1440,12 @@ msgstr "TTL bağdaştırıcısı geçerli bir yanıt vermedi"
 msgid "Invalid TTL"
 msgstr "Geçersiz TTL"
 
+msgid "The CPU adapter gave no valid reply"
+msgstr "İşlemci bağdaştırıcısı geçerli bir yanıt vermedi"
+
+msgid "Invalid CPU profile"
+msgstr "Geçersiz işlemci profili"
+
 msgid "Request too large"
 msgstr "İstek çok büyük"
 
@@ -1409,6 +1472,15 @@ msgstr "mu300-next-boot başarısız oldu"
 
 msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
 msgstr "AT arka ucu yanıt vermedi (radyo kapalı, modem yeniden başlıyor veya bağdaştırıcı kullanılamıyor)"
+
+msgid "The CPU profile could not be read"
+msgstr "İşlemci profili okunamadı"
+
+msgid "The CPU profile could not be set"
+msgstr "İşlemci profili ayarlanamadı"
+
+msgid "Unknown CPU operation"
+msgstr "Bilinmeyen işlemci işlemi"
 
 msgid "USB role adapter is not executable"
 msgstr "USB rol bağdaştırıcısı çalıştırılabilir değil"

@@ -24,6 +24,7 @@
 #   lang_get, lang_set  LuCI's languages and the lang extra (unisoc-modem/languages, mu300-extra)
 #   power_get, power_set  the power profiles (unisoc-modem/power, mu300-power)
 #   ttl_get, ttl_set value  the TTL of mobile data (unisoc-modem/ttl, mu300-ttl); value off or 1-255
+#   cpu_get, cpu_set profile  the CPU performance profile (unisoc-modem/cpu, mu300-cpu); saving|balanced|performance
 #
 # The AT terminal's whole wait is capped below the 30 s endpoint limit (AT_LOCK_WAIT
 # for the channel lock plus AT_BUDGET for the answer, mu300-at's MU300_AT_BUDGET),
@@ -551,6 +552,16 @@ m_ttl_set() {
     reply_obj "$("$TTLA" set "$value" 2>/dev/null)" 'The TTL adapter gave no valid reply'
 }
 
+# The CPU page: mu300-cpu through the adapter, which checks the profile name again
+CPUA=${MU300_CPU_ADAPTER:-$DASH/cpu}
+m_cpu_get() { reply_obj "$("$CPUA" get 2>/dev/null)" 'The CPU adapter gave no valid reply'; }
+m_cpu_set() {
+    local profile
+    inp '@.profile'; profile=$V
+    allowed "$profile" '(saving|balanced|performance)' || { refuse 'Invalid CPU profile'; return; }
+    reply_obj "$("$CPUA" set "$profile" 2>/dev/null)" 'The CPU adapter gave no valid reply'
+}
+
 do_list() {
     cat <<EOF
 {
@@ -576,7 +587,9 @@ do_list() {
 	"power_get": { },
 	"power_set": { "op": "String", "key": "String", "value": "String" },
 	"ttl_get": { },
-	"ttl_set": { "value": "String" }
+	"ttl_set": { "value": "String" },
+	"cpu_get": { },
+	"cpu_set": { "profile": "String" }
 }
 EOF
 }
@@ -632,6 +645,8 @@ call)
         power_set)    run_m power_set    m_power_set ;;
         ttl_get)      run_m ttl_get      m_ttl_get ;;
         ttl_set)      run_m ttl_set      m_ttl_set ;;
+        cpu_get)      run_m cpu_get      m_cpu_get ;;
+        cpu_set)      run_m cpu_set      m_cpu_set ;;
         *)            refuse 'No such method' ;;
     esac
     ;;
