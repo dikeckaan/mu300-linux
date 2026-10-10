@@ -119,14 +119,14 @@ return view.extend({
 		Promise.all([first, config]).then(function() {
 			self._refreshTimer = setTimeout(refresh, intervalMs);
 		});
-		/* The live rates have a lane of their own, every second: one rpcd file read of /proc/net/dev, no process and
+		/* The live rates have a lane of their own, every second: one read of /proc/net/dev in rpcd, no process and
 		 * no AT. The time is the browser's, taken halfway through the request (the status snapshot's whole seconds made
 		 * the rates jump by half at a 1.5 s poll). */
 		var clock = function() { return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now(); };
 		function rates() {
 			if (!document.documentElement.contains(root)) return;
 			var t0 = clock();
-			L.resolveDefault(M.callNetDev('/proc/net/dev'), null).then(function(text) {
+			L.resolveDefault(M.callNetDev(), null).then(function(text) {
 				self.rate(text, (t0 + clock()) / 2);
 			}).finally(function() {
 				if (document.documentElement.contains(root))

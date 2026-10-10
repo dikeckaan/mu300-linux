@@ -888,10 +888,14 @@ class Acl(unittest.TestCase):
         self.assertEqual(acl['write'].get('cgi-io'), ['upload'])
         self.assertEqual(acl['write'].get('file'), {'/tmp/mu300-extra-lang.tar.gz': ['write']})
         self.assertNotIn('cgi-io', acl['read'])
-        # the dashboard's live rates read the interface counters through rpcd's file read, and nothing else: rpcd
-        # checks the path it resolved, and /proc/net is the link /proc/self/net (rpcd's own pid)
-        self.assertEqual(acl['read'].get('file'), {'/proc/net/dev': ['read'], '/proc/[0-9]*/net/dev': ['read']})
-        self.assertEqual(acl['read']['ubus'].get('file'), ['read'])
+        # the dashboard's live rates come from one fixed method that takes no argument: no file read access at all
+        # (a /proc/<pid> glob would have matched paths far beyond the interface counters)
+        self.assertEqual(acl['read']['ubus'].get('mu300rates'), ['netdev'])
+        self.assertNotIn('file', acl['read'])
+        self.assertNotIn('file', acl['read']['ubus'])
+        plugin = (APP / 'usr' / 'share' / 'rpcd' / 'ucode' / 'mu300rates.uc').read_text()
+        self.assertIn("readfile('/proc/net/dev')", plugin)
+        self.assertNotIn('args', plugin)
 
 
 LIB = APP / 'usr' / 'share' / 'unisoc-modem' / 'lib.sh'

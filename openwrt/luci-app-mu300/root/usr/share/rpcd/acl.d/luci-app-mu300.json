@@ -4,11 +4,7 @@
   "read": {
    "ubus": {
     "mu300dash": [ "sysinfo", "status", "signal", "lock_get", "usb_get", "usb_net_list", "lang_get", "power_get", "ttl_get", "traffic_get" ],
-    "file": [ "read" ]
-   },
-   "file": {
-    "/proc/net/dev": [ "read" ],
-    "/proc/[0-9]*/net/dev": [ "read" ]
+    "mu300rates": [ "netdev" ]
    },
    "uci": {
     "unisoc_modem": [ "*" ]

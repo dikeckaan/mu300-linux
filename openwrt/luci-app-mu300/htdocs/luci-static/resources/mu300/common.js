@@ -38,18 +38,18 @@ var callTtlGet = rpc.declare({ object: 'mu300dash', method: 'ttl_get', expect: {
 var callTtlSet = rpc.declare({ object: 'mu300dash', method: 'ttl_set', params: [ 'value' ], expect: { '': {} } });
 var callTrafficGet = rpc.declare({ object: 'mu300dash', method: 'traffic_get', expect: { '': {} } });
 var callTrafficSet = rpc.declare({ object: 'mu300dash', method: 'traffic_set', params: [ 'op', 'value' ], expect: { '': {} } });
-/* The live rates' one read: rpcd's own file read of /proc/net/dev (no process started, no AT), every second. Sent on
- * its own (nobatch): a declared call is batched with whatever else is pending, and then waits for the status
- * snapshot, which takes a few hundred milliseconds and made the rates come every two seconds. Resolves to the text,
- * rejects on any failure. */
-function callNetDev(path) {
+/* The live rates' one read: the mu300rates object (rpcd's ucode plugin) returns /proc/net/dev, in rpcd itself (no
+ * process started, no AT), every second. Sent on its own (nobatch): a declared call is batched with whatever else is
+ * pending, and then waits for the status snapshot, which takes a few hundred milliseconds and made the rates come
+ * every two seconds. Resolves to the text, rejects on any failure. */
+function callNetDev() {
 	return new Promise(function(resolve, reject) {
 		rpc.call({ jsonrpc: '2.0', id: Date.now(), method: 'call',
-			params: [ rpc.getSessionID(), 'file', 'read', { path: path } ] }, function(res) {
+			params: [ rpc.getSessionID(), 'mu300rates', 'netdev', {} ] }, function(res) {
 			try {
 				var r = res && res.ok ? res.json().result : null;
 				if (Array.isArray(r) && r[0] === 0 && r[1] && typeof r[1].data === 'string') resolve(r[1].data);
-				else reject(new Error('file read failed'));
+				else reject(new Error('mu300rates.netdev failed'));
 			} catch (e) { reject(e); }
 		}, true);
 	});
