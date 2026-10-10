@@ -83,7 +83,7 @@ vendor_overlay() {
     rm -rf "$_o" "$5.gpu"
 }
 _vendor_overlay() {
-    case $1 in ubuntu) _fw=usr/lib/firmware ;; openwrt) _fw=lib/firmware ;; *) return 1 ;; esac
+    case $1 in ubuntu) _fw=usr/lib/firmware ;; openwrt|openwrt-luci) _fw=lib/firmware ;; *) return 1 ;; esac
     mkdir -p "$_o/$_fw" "$_o/opt/mu300/android" || return 1
     cp "$2"/* "$_o/$_fw/" && cp -a "$3"/. "$_o/opt/mu300/android/" || return 1
     mv "$_o/opt/mu300/android/dev/__properties__" "$_o/opt/mu300/android/dev-properties" &&
