@@ -91,14 +91,20 @@ LEDs and the default address follow. The U30 **Pro** is a different chip (UMS963
   profiles, stress tests, VPN and services.
 * **Android stays installed.** One command switches back.
 
-## What it costs you
+## What you lose (spoiler: nothing)
 
-* **Android and Linux share the device.** Only one runs at a time; a reboot switches between them.
-* **No screen output.** HDMI over USB-C does not work (the power-delivery chip never answers), so this is a headless
-  machine you use over SSH or the web interface.
-* **No sound.** The board has no speaker and no microphone. Voice calls with audio, through the modem's audio DSP,
-  are work in progress and do not carry sound yet (see [What works](#what-works-and-what-does-not)).
-* **About 1.4 GB of RAM.** Most of the rest is reserved for the modem firmware.
+Android on these boxes has no screen, no speaker and no HDMI either, so Linux takes nothing away that was there. All
+it takes is your last excuse for not having a 5G Linux server in your pocket. Installing it costs you nothing; not
+trying it costs you the server.
+
+* **Android stays.** Only one of the two runs at a time, and a reboot switches between them (`mu300-next-boot
+  android`, or `su -c mu300-linux` from Android).
+* **The hardware stays what it is**, under either system:
+  * no screen output: HDMI over USB-C does not work (the power-delivery chip never answers), so it is a headless
+    machine you use over SSH or the web interface;
+  * no speaker or microphone: voice calls with audio, through the modem's audio DSP, are work in progress and carry
+    no sound yet (see [What works](#what-works-and-what-does-not));
+  * about 1.4 GB of RAM, because the modem firmware reserves most of the rest.
 
 ## Before you start
 
