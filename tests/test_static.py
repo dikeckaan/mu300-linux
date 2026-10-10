@@ -225,7 +225,7 @@ class Rules(unittest.TestCase):
         self.assertIn('/lib/path-commands', (BIN / 'mu300-extra').read_text())
         self.assertIn('mu300-extra link', (BIN / 'rootfs-fixups').read_text())
         self.assertIn('mu300-extra link', (OPENWRT / 'etc/init.d/mu300-post').read_text())
-        for c in ('mu300-device', 'mu300-led', 'mobile-data', 'mu300-update', 'mu300-ussd', 'sms', 'mu300-extra'):
+        for c in ('mu300-device', 'mu300-sim', 'mu300-led', 'mobile-data', 'mu300-update', 'mu300-ussd', 'sms', 'mu300-extra'):
             self.assertIn(c, lst)
         self.assertEqual(len(lst), len(set(lst)))
         for c in lst:
@@ -577,14 +577,14 @@ class Rules(unittest.TestCase):
         self.assertLess(warm.index('[ -e /run/mu300/charging-boot ] && exit 0'), warm.index('mobile-data radio-on'))
         self.assertNotIn('stty_nr', warm)
         self.assertNotIn('respawn', warm)   # one round per start; netifd's dial and watch retry
-        self.assertIn('wait_and_exec /dev/stty_nr1 /opt/mu300/bin/mu300-atd', f)
-        self.assertIn('wait_and_exec /dev/stty_nr2 /opt/mu300/bin/mu300-atd', f)
-        self.assertIn('procd_set_param env MU300_AT_DEV=/dev/stty_nr2 MU300_AT_DIR=/run/mu300-at2 '
+        self.assertIn('wait_and_exec "$cmddev" /opt/mu300/bin/mu300-atd', f)
+        self.assertIn('wait_and_exec "$datadev" /opt/mu300/bin/mu300-atd', f)
+        self.assertIn('procd_set_param env MU300_AT_DEV="$datadev" MU300_AT_DIR=/run/mu300-at2 '
                       'MU300_AT_URC_CHANNELS=\n', f)
         self.assertNotRegex(f, r'stty_nr[3-7]')
         self.assertIn('[ ! -x /usr/libexec/unisoc-modem/lock ] || : > /run/unisoc-modem-early-hook-pending', f)
         u = (TOP / 'rootfs' / 'overlay' / 'etc' / 'systemd' / 'system' / 'mu300-atd2.service').read_text()
-        for line in ('Environment=MU300_AT_DEV=/dev/stty_nr2', 'Environment=MU300_AT_DIR=/run/mu300-at2',
+        for line in ('Environment=MU300_AT_ROLE=data', 'Environment=MU300_AT_DIR=/run/mu300-at2',
                      'Environment=MU300_AT_URC_CHANNELS=\n', 'ConditionPathExists=|/dev/stty_nr2'):
             self.assertIn(line, u)
         self.assertIn('mu300-atd2.service:multi-user.target', (TOP / 'rootfs' / 'assemble.sh').read_text())

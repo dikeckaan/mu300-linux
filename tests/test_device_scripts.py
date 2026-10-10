@@ -1226,6 +1226,8 @@ class SipaDele(ShellTest):
 
     def copy(self, name):
         text = (BIN / name).read_text()
+        if name == 'sipa-dele-start':
+            text = text.replace('/dev/stty_nr$((SIM_SLOT * 3 + 1))', '/dev/null')
         for a, b in (('/lib/modules/', f'{self.tmp}/lib/modules/'), ('/proc/modules', f'{self.tmp}/proc-modules'),
                      ('/opt/mu300/bin/', f'{self.stubs}/'), ('/dev/stty_nr1', '/dev/null')):
             text = text.replace(a, b)
