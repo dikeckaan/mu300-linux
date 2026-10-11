@@ -151,6 +151,9 @@ apk add wireguard-tools luci-proto-wireguard ppp-mod-pptp xl2tpd 6in4 6rd ds-lit
 apk del procd-ujail procd-seccomp >/dev/null 2>&1 || true
 # online firmware upgrades flash whole-disk armsr images: that would overwrite the eMMC, so remove them
 apk del luci-app-attendedsysupgrade attendedsysupgrade-common owut >/dev/null 2>&1 || true
+# what those leave in /etc/config, and the .apk-new copies the upgrade above writes beside a changed config: an update
+# adds every config file of the image the device does not have yet (mu300-update), and these belong to no package
+rm -f /etc/config/attendedsysupgrade /etc/config/*.apk-new
 # LuCI in Turkish and Simplified Chinese besides English, in both systems: the translation of luci-base and of
 # every LuCI app the image has that the feed translates (apk checks each package against the signed index). Their
 # own uci-defaults, run by apk here, register the languages in luci.languages; the other languages are the lang

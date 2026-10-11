@@ -441,6 +441,21 @@ class Systems(ShellTest):
             self.run_install(shell, UPDATE='1', PWHASH='$6$salt$hash')
             self.assertEqual((self.M / 'openwrt-luci' / 'etc' / 'config' / 'network').read_text(), 'mine\n')
 
+    def test_update_adds_the_config_files_of_the_images_new_packages(self):
+        # the old settings stay; a package the image brings keeps its own config file (the old etc/config copied
+        # whole dropped /etc/config/sqm, and LuCI's SQM page failed)
+        for shell in self.each_shell():
+            old = self.M / 'openwrt-luci' / 'etc' / 'config'
+            old.mkdir(parents=True, exist_ok=True)
+            (old / 'network').write_text('mine\n')
+            (old / 'sqm').unlink(missing_ok=True)
+            self.tarball('openwrt-luci', {'etc/config/sqm': 'image sqm\n'})
+            self.run_install(shell, UPDATE='1', PWHASH='$6$salt$hash')
+            cfg = self.M / 'openwrt-luci' / 'etc' / 'config'
+            self.assertEqual((cfg / 'network').read_text(), 'mine\n')
+            self.assertEqual((cfg / 'sqm').read_text(), 'image sqm\n')
+            self.assertFalse((self.M / 'openwrt-luci' / 'etc' / 'config.image').exists())
+
     IMAGE = {'etc/passwd': 'root:x:0:0:root:/root:/bin/bash\nubuntu:x:1000:1000::/home/ubuntu:/bin/bash\n'
                            'newsvc:x:120:120::/:/usr/sbin/nologin\n',
              'etc/group': 'root:x:0:\nsudo:x:27:ubuntu\nubuntu:x:1000:\nnewsvc:x:120:\n',

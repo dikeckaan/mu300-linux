@@ -321,8 +321,19 @@ for os in $OSES; do
         for k in $keep; do
             [ -e "$M/$os/$k" ] || continue
             mkdir -p "$M/$os.new/$(dirname $k)"
+            rm -rf "$M/$os.new/$k.image"
+            [ "$k" = etc/config ] && [ -d "$M/$os.new/$k" ] && mv "$M/$os.new/$k" "$M/$os.new/$k.image"
             rm -rf "$M/$os.new/$k"
             cp -a "$M/$os/$k" "$M/$os.new/$k" && kept="$kept $k"
+            # OpenWrt: the old settings, plus the config files of the image's packages the old system did not have
+            # (as mu300-update does; the old etc/config alone dropped e.g. /etc/config/sqm)
+            if [ -d "$M/$os.new/$k.image" ]; then
+                for f in "$M/$os.new/$k.image"/* "$M/$os.new/$k.image"/.[!.]*; do
+                    [ -e "$f" ] || [ -L "$f" ] || continue
+                    [ -e "$M/$os.new/$k/${f##*/}" ] || [ -L "$M/$os.new/$k/${f##*/}" ] || cp -a "$f" "$M/$os.new/$k/"
+                done
+                rm -rf "$M/$os.new/$k.image"
+            fi
         done
         # services the user enabled or disabled themselves: copy the extra symlinks over, but only when the unit
         # they point at exists in the new system (stale units from an older release must not come back)
