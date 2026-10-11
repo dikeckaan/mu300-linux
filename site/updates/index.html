@@ -125,6 +125,10 @@ mu300-update apply</code></pre>
 </div>
 <p>A computer works too: run the installer again and answer <code>update</code>. It reinstalls the systems, writes a
 fresh boot image and keeps your settings and data.</p>
+<p><strong>Packages you installed yourself</strong> (<code>apk add</code>, <code>apt install</code>) are not in the
+release's image. The update lists them, keeps their OpenWrt settings aside so they cannot act without their program,
+and the new system installs them again at its first boot once it is online. <code>mu300-user-packages status</code>
+shows what came back; <code>mu300-update apply --no-reinstall</code> skips it.</p>
 </section>
 
 <section id="rollback">

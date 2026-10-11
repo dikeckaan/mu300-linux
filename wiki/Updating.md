@@ -28,7 +28,22 @@ never installs one by itself.**
 * your settings (`/etc/mu300`: hotspot, VPN, toolkit), users and home directories, `/usr/local`, SSH host keys,
   OpenWrt's UCI configuration and services you enabled yourself;
 * the vendor files copied from your device (Wi-Fi firmware, the Android modem userspace);
-* the installed extras: the lang extra is brought to the new release, the [VPN](VPN) module to its latest release.
+* the installed extras: the lang extra is brought to the new release, the [VPN](VPN) module to its latest release;
+* packages you installed yourself (`apk add`, `apt install`): see below.
+
+## Packages you installed yourself
+
+The release's image has only its own packages. `apply` lists the ones you added before it switches, and the new
+system installs them again at its first boot, once it is online (an hour of tries, then again at the next boots, five
+at most). Until they are back their OpenWrt settings (`/etc/config/<name>`) wait in `/etc/mu300/orphaned-config/`:
+settings without their program used to stay active - OpenClash's left the device without DNS. A package the feeds do
+not have (installed from a `.apk` file) cannot come back by itself; its settings stay aside.
+
+```sh
+mu300-user-packages status    # what came back, what failed and why, how to put settings back
+mu300-user-packages retry     # try again now
+mu300-update apply --no-reinstall   # update without installing them again (MU300_KEEP_PACKAGES=0 does the same)
+```
 
 ## Why it is safe
 

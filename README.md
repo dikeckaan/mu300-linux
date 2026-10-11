@@ -227,7 +227,7 @@ If Linux is already installed it asks whether to **update** or **wipe**:
 
 * **update** — reinstalls the systems but keeps your settings and data: `/etc/mu300` (hotspot, VPN, toolkit), user
   accounts and home directories, `/usr/local`, SSH host keys, OpenWrt's UCI config, and the services you enabled
-  yourself.
+  yourself. Packages you installed yourself are installed again at the first boot (see [Updating](#updating)).
 * **wipe** — erases the Linux filesystem and installs from scratch.
 
 If the device is running Linux rather than Android when you start, the installer notices and offers to reboot it
@@ -600,6 +600,14 @@ to the new release, the [VPN](#vpn) module to its latest one), and the previous 
 
 a rollback until you run `mu300-update clean`. The new filesystem is unpacked beside the old one and only swapped in
 at the end, so an interrupted download cannot leave a half-updated system.
+
+**Packages you installed yourself** (`apk add` on OpenWrt, `apt install` on Ubuntu) are not part of the release's
+image. `apply` lists them before the switch, sets their OpenWrt settings (`/etc/config/<name>`) aside in
+`/etc/mu300/orphaned-config/` so a missing package cannot leave e.g. a proxy's routing or DNS behind, and the new
+system installs them again at its first boot once it is online, with their settings put back. A package the feeds do
+not have (installed from a file) stays out, with its settings aside: `mu300-user-packages status` says what came back
+and how to restore the rest; `mu300-update apply --no-reinstall` (or `MU300_KEEP_PACKAGES=0`) skips the reinstall.
+The installers' **update** does the same.
 
 The kernel and the boot image are updated too. The boot image keeps your device's own part (its Android files and
 the stock header) as it is and gets the release's kernel and the generic part of its ramdisk, so no computer and
