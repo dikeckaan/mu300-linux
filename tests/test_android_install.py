@@ -396,6 +396,7 @@ class Systems(ShellTest):
                          'else exec "$S" -i "" "$@"; fi; fi; exec "$S" "$@"')
         self.wipe = self.block('legacy-wipe')
         self.install = self.block('install-os')
+        self.upk = self.block('user-packages')
 
     def block(self, name):
         m = re.search(rf'# --- {name} begin\n(.*?)# --- {name} end', SRC, re.S)
@@ -412,7 +413,7 @@ class Systems(ShellTest):
         e.update(env)
         # sd_unmark and extra_keep_vpn are other blocks of the script (SdCard and Extras test them)
         pre = ('set -e\nsay() { echo "[device] $*"; }\nsd_unmark() { :; }\nextra_keep_vpn() { :; }\nssid=; psk=\n'
-               + f'T="{self.T}"; M="{self.M}"\n')
+               + f'T="{self.T}"; M="{self.M}"\n' + self.upk)
         r = self.sh(shell, pre + self.install, **e)
         if fails:
             self.assertNotEqual(r.returncode, 0, r.stderr + r.stdout)

@@ -252,6 +252,151 @@ if [ "$IMPORT_HOTSPOT" = 1 ]; then
     [ -n "$ssid" ] && [ ${#psk} -ge 8 ] || { say "no usable Android hotspot config, a random password will be generated"; ssid=; psk=; }
 fi
 
+# --- user-packages begin
+# Packages installed on the device are not in the release's image, and an update puts the image in place while it
+# keeps /etc/config (OpenWrt) and /etc/mu300: their programs were gone and their settings stayed - OpenClash's left
+# the device without DNS (#116). So before the switch the update writes down what was added - the packages asked for
+# by hand (OpenWrt: /etc/apk/world; Ubuntu: dpkg's packages that apt did not pull in by itself) less the image's
+# own set (etc/mu300/image-packages, written when the image is built) - into etc/mu300/user-packages/ of the new
+# system, and sets the UCI files of those packages aside (etc/mu300/orphaned-config/): a package that is not there
+# leaves no settings behind. At its first boot the new system installs them again (mu300-user-packages, a service)
+# and puts their settings back. tools/android-install.sh (the installers' update) has a copy of this block; tests
+# hold the two to one text. It runs on Android too: sh, awk, sed, grep, sort - nothing else, and safe under set -e.
+UPK_DIR=etc/mu300/user-packages
+UPK_ORPH=etc/mu300/orphaned-config
+# what is never installed again: kernel modules (the feed's are for another kernel), and what the images take out on
+# purpose (sysupgrade would flash the eMMC; ujail crash-loops services on 5.4)
+upk_skip() {
+    case $1 in
+        kmod-*|kernel|procd-ujail|procd-seccomp|luci-app-attendedsysupgrade|attendedsysupgrade-common|owut) return 0 ;;
+        linux-image-*|linux-modules-*|linux-headers-*|linux-generic*|linux-firmware) return 0 ;;
+    esac
+    return 1
+}
+upk_kind() { case $1 in ubuntu) echo ubuntu ;; *) echo openwrt ;; esac; }
+# upk_dpkg ROOT [manual]: dpkg's installed packages in ROOT; with manual, less those apt installed as dependencies
+# (what apt-mark showmanual says, read from the files: ROOT need not be the running system)
+upk_dpkg() {
+    [ -f "$1/var/lib/dpkg/status" ] || return 0
+    { [ "${2:-}" != manual ] || cat "$1/var/lib/apt/extended_states" 2>/dev/null || :; echo '@dpkg'; cat "$1/var/lib/dpkg/status"; } |
+        awk '$0 == "@dpkg" { s = 1; next }
+             $1 == "Package:" { p = $2; next }
+             !s && $1 == "Auto-Installed:" && $2 == 1 { auto[p] = 1; next }
+             s && $1 == "Status:" && $3 == "ok" && $4 == "installed" { inst[p] = 1 }
+             END { for (p in inst) if (!(p in auto)) print p }' | sort
+}
+# upk_manual ROOT KIND: the packages asked for by name (OpenWrt: the world file, versions and pins taken off)
+upk_manual() {
+    if [ "$2" = ubuntu ]; then upk_dpkg "$1" manual; return 0; fi
+    [ -f "$1/etc/apk/world" ] || return 0
+    sed 's/[<>=~@ ].*//' "$1/etc/apk/world" | awk 'NF' | sort -u
+}
+# upk_installed ROOT KIND: every installed package
+upk_installed() {
+    if [ "$2" = ubuntu ]; then upk_dpkg "$1"; return 0; fi
+    [ -f "$1/lib/apk/db/installed" ] || return 0
+    sed -n 's/^P://p' "$1/lib/apk/db/installed" | sort -u
+}
+# upk_txt_names FILE: the names in etc/mu300/packages.txt ("apk list --installed": name-version-rN arch ...)
+upk_txt_names() {
+    [ -f "$1" ] || return 0
+    awk '{print $1}' "$1" | sed 's/-r[0-9][0-9]*$//; s/-[^-]*$//'
+}
+# upk_pending DIR: the packages of a record not installed again yet (nor given up on)
+upk_pending() {
+    [ -f "$1/wanted" ] || return 0
+    { for _uf in done failed; do [ ! -f "$1/$_uf" ] || sed 's/^/x /' "$1/$_uf"; done; sed 's/^/w /' "$1/wanted"; } |
+        awk '$1 == "x" { d[$2] = 1; next } NF > 1 && !($2 in d) { print $2 }'
+}
+# What belongs to the new image, not to the device, in the directories an update keeps: its version and package
+# lists in etc/mu300 (an update carried the old ones over: every update then reported the version it replaced), and
+# the names of its own files in etc/config (never set aside). image_own_save NEW before the settings are copied,
+# image_own_restore NEW after; upk_record removes what they keep in NEW/.mu300-image.
+image_own_save() {
+    rm -rf "$1/.mu300-image"; mkdir -p "$1/.mu300-image" || return 1
+    for _uf in image-version image-packages packages.txt; do
+        [ ! -f "$1/etc/mu300/$_uf" ] || cp "$1/etc/mu300/$_uf" "$1/.mu300-image/$_uf" || return 1
+    done
+    for _uf in "$1"/etc/config/*; do [ ! -e "$_uf" ] || echo "${_uf##*/}"; done > "$1/.mu300-image/config"
+}
+image_own_restore() {
+    [ -d "$1/.mu300-image" ] || return 0
+    mkdir -p "$1/etc/mu300" || return 1
+    for _uf in image-version image-packages packages.txt; do
+        if [ -f "$1/.mu300-image/$_uf" ]; then cp "$1/.mu300-image/$_uf" "$1/etc/mu300/$_uf" || return 1
+        # a list of the old image would describe the wrong one (the version stays: "unknown" says less)
+        elif [ "$_uf" != image-version ]; then rm -f "$1/etc/mu300/$_uf"; fi
+    done
+}
+# upk_record OLD NEW OS: after the settings are in NEW, before the switch. Writes NEW/etc/mu300/user-packages/
+# (wanted: the names; files: "package path" of their files in etc/; rc.d: the services enabled in OLD; from; state)
+# and moves their etc/config files out of the way. MU300_KEEP_PACKAGES=0: they are not installed again (state
+# skipped; mu300-user-packages retry does it later), their settings are set aside all the same.
+upk_record() {
+    _uo=$1 _un=$2 _uk=$(upk_kind "$3")
+    _ut=$2/.mu300-image _ud=$2/$UPK_DIR
+    mkdir -p "$_ut" || return 1
+    # the old image's own set; a system from before that list: the new image's and the one packages.txt names
+    if [ -s "$_uo/etc/mu300/image-packages" ]; then cat "$_uo/etc/mu300/image-packages"
+    else
+        cat "$_ut/image-packages" 2>/dev/null || :
+        upk_manual "$_un" "$_uk"
+        upk_txt_names "$_uo/etc/mu300/packages.txt"
+    fi > "$_ut/not"
+    upk_installed "$_un" "$_uk" >> "$_ut/not"
+    # what an earlier update recorded and the device never got back (offline since, or skipped) stays wanted
+    { upk_manual "$_uo" "$_uk"; upk_pending "$_uo/$UPK_DIR"; } > "$_ut/had"
+    { sed 's/^/x /' "$_ut/not"; sed 's/^/w /' "$_ut/had"; } |
+        awk '$1 == "x" { n[$2] = 1; next } NF > 1 && !($2 in n) { print $2 }' | sort -u > "$_ut/added"
+    rm -rf "$_ud"
+    : > "$_ut/wanted"
+    while read -r _up; do upk_skip "$_up" || echo "$_up" >> "$_ut/wanted"; done < "$_ut/added"
+    if [ ! -s "$_ut/wanted" ]; then
+        echo "  none: everything installed is part of the new image"
+        rm -rf "$_ut"
+        return 0
+    fi
+    mkdir -p "$_ud" || return 1
+    mv "$_ut/wanted" "$_ud/wanted"
+    : > "$_ud/done"; : > "$_ud/failed"
+    cat "$_uo/etc/mu300/image-version" > "$_ud/from" 2>/dev/null || echo unknown > "$_ud/from"
+    # their files in etc/, from the package database of OLD (and of the record a pending one came from)
+    if [ "$_uk" = openwrt ]; then
+        { cat "$_uo/$UPK_DIR/files" 2>/dev/null || :
+          [ ! -f "$_uo/lib/apk/db/installed" ] || awk '
+            $0 ~ /^P:/ { p = substr($0, 3); next }
+            $0 ~ /^F:/ { d = substr($0, 3); next }
+            $0 ~ /^R:/ && (d == "etc" || d ~ /^etc\//) { print p " " d "/" substr($0, 3) }' "$_uo/lib/apk/db/installed"
+        } | { sed 's/^/w /' "$_ud/wanted"; sed 's/^/f /'; } |
+            awk '$1 == "w" { w[$2] = 1; next } ($2 in w) && NF > 2 { print substr($0, 3) }' | sort -u > "$_ud/files"
+        for _uf in "$_uo"/etc/rc.d/*; do { [ -L "$_uf" ] || [ -e "$_uf" ]; } && echo "${_uf##*/}"; done > "$_ud/rc.d" || :
+    else
+        : > "$_ud/files"; : > "$_ud/rc.d"
+    fi
+    if [ "${MU300_KEEP_PACKAGES:-1}" = 0 ]; then echo skipped > "$_ud/state"; else echo pending > "$_ud/state"; fi
+    echo "  $(tr '\n' ' ' < "$_ud/wanted")"
+    if [ "$(cat "$_ud/state")" = skipped ]; then
+        echo "  The new system does not have them, and they are not installed again (MU300_KEEP_PACKAGES=0 or"
+        echo "  --no-reinstall; later: mu300-user-packages retry)."
+    else
+        echo "  The new system does not have them: its first boot installs them again once the device is online"
+        echo "  (the result: mu300-user-packages status)."
+    fi
+    # their UCI files: a package that is not there must leave nothing behind that acts on the network. Only a file
+    # its package owns, in etc/config, that the new image does not have itself (dhcp, firewall, luci: never).
+    _um=
+    while read -r _up _uf; do
+        case $_uf in etc/config/?*) ;; *) continue ;; esac
+        { [ -f "$_un/$_uf" ] && [ ! -L "$_un/$_uf" ]; } || continue
+        ! grep -qxF "${_uf#etc/config/}" "$_ut/config" 2>/dev/null || continue
+        mkdir -p "$_un/$UPK_ORPH/etc/config" && mv -f "$_un/$_uf" "$_un/$UPK_ORPH/$_uf" || return 1
+        [ -n "$_um" ] || echo "  Their settings are set aside until they are back, so that they cannot act without them:"
+        echo "    /$_uf -> /$UPK_ORPH/$_uf ($_up)"
+        _um=1
+    done < "$_ud/files"
+    rm -rf "$_ut"
+}
+# --- user-packages end
 # --- install-os begin
 # Accounts are settings too, and etc/shadow is not in keep: an update carries them over the way mu300-update does,
 # with its own function (copied here: this runs on Android and cannot source the new system's mu300-update; tests
@@ -313,6 +458,8 @@ for os in $OSES; do
     fi
     # update: carry the settings and user data of the previous installation over to the new system
     if [ "${UPDATE:-0}" = 1 ] && [ -d $M/$os ]; then
+        # the new image's version and package lists, and the names of its own etc/config files (upk_record)
+        image_own_save "$M/$os.new"
         case $os in
             ubuntu) keep="etc/mu300 etc/ssh etc/hostname etc/localtime etc/timezone etc/fstab home root srv usr/local var/lib/bluetooth" ;;
             openwrt|openwrt-*) keep="etc/config etc/mu300 etc/dropbear etc/rc.local root" ;;
@@ -353,6 +500,14 @@ for os in $OSES; do
                 done ;;
         esac
         say "kept from the previous $os:$kept"
+        image_own_restore "$M/$os.new"
+        # the packages installed on the device: written down, their settings set aside, put back at the first boot
+        # (mu300-user-packages), as mu300-update apply does
+        say "packages installed on the device in the previous $os:"
+        upk=$(upk_record "$M/$os" "$M/$os.new" "$os") ||
+            { rm -rf $M/$os.new; say "$upk"; say "$os: could not write down the packages installed on the device; $os was not replaced"; exit 1; }
+        printf '%s\n' "$upk" | while IFS= read -r l; do say "$l"; done
+        rm -rf "$M/$os.new/.mu300-image"
         if [ -f "$M/$os/etc/shadow" ]; then
             merge_accounts "$M/$os" "$M/$os.new" || { say "could not carry the accounts of $os over; nothing was replaced"; exit 1; }
             carried=1
