@@ -27,6 +27,11 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = Linux ]; then sudo apt-get install -y -qq dash busybox lz4 zip unzip cpio jq >/dev/null; fi
           python3 -m pip install -q lz4 || python3 -m pip install -q --break-system-packages lz4
+      - name: SAE parser and SDK regressions with UBSan (Linux)
+        if: runner.os == 'Linux'
+        env:
+          MU300_TEST_UBSAN: '1'
+        run: python3 -m unittest discover -s tests -p test_u30_sae.py -v
       - name: tests
         run: |
           cd tests

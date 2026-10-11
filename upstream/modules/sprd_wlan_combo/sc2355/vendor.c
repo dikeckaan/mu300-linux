@@ -545,8 +545,6 @@ static int vendor_parse_sae_entry(struct sae_entry *entry,
 #else
 				nla_strlcpy(entry->password, pos, data_len + 1);
 #endif
-				pr_info("entry->passwd: %s, entry->len:%d\n",
-					entry->password, entry->passwd_len);
 			} else {
 				pr_err("entry->passwd_len(%d) is more than expected\n", data_len);
 				return -ENOEXEC;
@@ -615,8 +613,6 @@ static int vendor_softap_convert_para(struct sprd_vif *vif,
 			tlv->len = tmp->passwd_len;
 
 			memcpy(tlv->data, tmp->password, tmp->passwd_len);
-			pr_info("%s password: %s, len:%d\n", __func__,
-				tmp->password, tmp->passwd_len);
 			pos += (header_len + tmp->passwd_len);
 			data_len += (header_len + tmp->passwd_len);
 		}
@@ -668,8 +664,6 @@ static int vendor_softap_convert_para(struct sprd_vif *vif,
 		tlv->type = VENDOR_SAE_PWD - 1;
 		tlv->len = setting->passphrase_len;
 		memcpy(tlv->data, setting->passphrase, setting->passphrase_len);
-		pr_info("%s passphrase: %s, len: %d\n", __func__,
-			setting->passphrase, setting->passphrase_len);
 		pos += (header_len + setting->passphrase_len);
 		data_len += (header_len + setting->passphrase_len);
 	}
@@ -3252,8 +3246,6 @@ static int vendor_set_sae_password(struct wiphy *wiphy,
 				nla_strlcpy(sae_para.passphrase, pos,
 					    sae_para.passphrase_len + 1);
 #endif
-				pr_info("pwd is :%s, len :%d\n", sae_para.passphrase,
-					sae_para.passphrase_len);
 			} else {
 				pr_err("%s %d error.\n", __func__, __LINE__);
 				return -EINVAL;

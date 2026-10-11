@@ -1,0 +1,79 @@
+Do not log SAE credentials or key-bearing command/event payloads.
+
+--- a/sc2355/vendor.c
++++ b/sc2355/vendor.c
+@@ -545,8 +545,6 @@
+ #else
+ 				nla_strlcpy(entry->password, pos, data_len + 1);
+ #endif
+-				pr_info("entry->passwd: %s, entry->len:%d\n",
+-					entry->password, entry->passwd_len);
+ 			} else {
+ 				pr_err("entry->passwd_len(%d) is more than expected\n", data_len);
+ 				return -ENOEXEC;
+@@ -615,8 +613,6 @@
+ 			tlv->len = tmp->passwd_len;
+ 
+ 			memcpy(tlv->data, tmp->password, tmp->passwd_len);
+-			pr_info("%s password: %s, len:%d\n", __func__,
+-				tmp->password, tmp->passwd_len);
+ 			pos += (header_len + tmp->passwd_len);
+ 			data_len += (header_len + tmp->passwd_len);
+ 		}
+@@ -668,8 +664,6 @@
+ 		tlv->type = VENDOR_SAE_PWD - 1;
+ 		tlv->len = setting->passphrase_len;
+ 		memcpy(tlv->data, setting->passphrase, setting->passphrase_len);
+-		pr_info("%s passphrase: %s, len: %d\n", __func__,
+-			setting->passphrase, setting->passphrase_len);
+ 		pos += (header_len + setting->passphrase_len);
+ 		data_len += (header_len + setting->passphrase_len);
+ 	}
+@@ -3252,8 +3246,6 @@
+ 				nla_strlcpy(sae_para.passphrase, pos,
+ 					    sae_para.passphrase_len + 1);
+ #endif
+-				pr_info("pwd is :%s, len :%d\n", sae_para.passphrase,
+-					sae_para.passphrase_len);
+ 			} else {
+ 				pr_err("%s %d error.\n", __func__, __LINE__);
+ 				return -EINVAL;
+--- a/sc2355/cmdevt.c
++++ b/sc2355/cmdevt.c
+@@ -463,7 +463,9 @@
+ 		le32_to_cpu(hdr->mstime),
+ 		hdr->common.mode, cmdevt_cmd2str(hdr->cmd_id));
+ 
+-	if (sprd_get_debug_level() >= L_DBG)
++	if (sprd_get_debug_level() >= L_DBG &&
++	    hdr->cmd_id != CMD_SET_SAE_PARAM && hdr->cmd_id != CMD_KEY &&
++	    hdr->cmd_id != CMD_SET_PMKSA)
+ 		print_hex_dump_debug("CMD: ", DUMP_PREFIX_OFFSET, 16, 1,
+ 				     (u8 *)hdr, hdr->plen, 0);
+ 
+@@ -3948,8 +3950,10 @@
+ 		return plen;
+ 	}
+ 
+-	print_hex_dump_debug("EVENT: ", DUMP_PREFIX_OFFSET, 16, 1,
+-			     (u8 *)hdr, hdr->plen, 0);
++	/* NEW_STATION can contain the firmware SAE PMK/PMKID. */
++	if (hdr->cmd_id != EVT_NEW_STATION)
++		print_hex_dump_debug("EVENT: ", DUMP_PREFIX_OFFSET, 16, 1,
++				     (u8 *)hdr, hdr->plen, 0);
+ 
+ 	len = plen - sizeof(*hdr);
+ 	vif = sc2355_ctxid_to_vif(priv, ctx_id);
+@@ -4103,8 +4107,10 @@
+ 	hdr = (struct sprd_cmd_hdr *)msg;
+ 	plen = SPRD_GET_LE16(hdr->plen);
+ 
+-	print_hex_dump_debug("CMD RSP: ", DUMP_PREFIX_OFFSET, 16, 1,
+-			     (u8 *)hdr, hdr->plen, 0);
++	if (hdr->cmd_id != CMD_SET_SAE_PARAM && hdr->cmd_id != CMD_KEY &&
++	    hdr->cmd_id != CMD_SET_PMKSA)
++		print_hex_dump_debug("CMD RSP: ", DUMP_PREFIX_OFFSET, 16, 1,
++				     (u8 *)hdr, hdr->plen, 0);
+ 
+ 	/* 2048 use mac */
+ 	/*TODO here ctx_id range*/

@@ -9,6 +9,7 @@
 #   tools/logdw/logdw  tools/bt-init/mu300-bt-init  tools/keys/mu300-keys  tools/gpu/cltest  busybox (static, full)
 #   upstream/out/modules/*.ko (optional: out-of-tree WCN modules for the mainline 6.18 kernel)
 # openwrt-luci only: MU300_LUCI_THEME_APK, a local copy of the pinned Aurora .apk (offline builds; else downloaded)
+# Optional MU300_SAE_APK_DIR: local hostapd-common + wpad-basic-openssl APKs from build-u30-sae.sh.
 set -eu
 FLAVOUR=${MU300_FLAVOUR:-openwrt}
 case $FLAVOUR in
@@ -86,6 +87,18 @@ if [ "$SYSTEM" = openwrt-luci ]; then
         -v "$TOP/openwrt/luci-overlay:/in/luci-overlay:ro" -v "$CAT:/in/catalogs:ro"
 fi
 TARBALL=$FLAVOUR-$VER-armsr-armv8-rootfs.tar.gz
+if [ -n "${MU300_SAE_APK_DIR:-}" ]; then
+    [ "$FLAVOUR:$VER" = openwrt:25.12.5 ] || {
+        echo "U30 SAE packages require OpenWrt 25.12.5" >&2; exit 1;
+    }
+    SAE_APKS=$(cd "$MU300_SAE_APK_DIR" && pwd)
+    for name in hostapd-common wpad-basic-openssl; do
+        count=0
+        for package in "$SAE_APKS"/"$name"-*.apk; do [ ! -s "$package" ] || count=$((count + 1)); done
+        [ "$count" = 1 ] || { echo "expected exactly one $name APK in $SAE_APKS" >&2; exit 1; }
+    done
+    set -- "$@" -v "$SAE_APKS:/in/u30-sae:ro"
+fi
 URL=$BASEURL/$VER/targets/armsr/armv8
 
 cd "$TOP"
@@ -135,7 +148,12 @@ apk upgrade >/dev/null
 # with it to pin, for links that ask for allowInsecure;
 # i2c-tools, gpiod-tools: mu300-usb (the charger of the U30 Air) and mu300-nfc (its NFC tag);
 # jq: the VPN module reads vmess links and raw Xray/sing-box configs with it, and rewrites those configs at every start
-apk add wpad-basic-mbedtls wifi-scripts iwinfo wireless-regdb iw bash ip-full coreutils-stty openssl-util \
+if [ -d /in/u30-sae ]; then
+    apk add --allow-untrusted /in/u30-sae/hostapd-common-*.apk /in/u30-sae/wpad-basic-openssl-*.apk >/dev/null
+else
+    apk add wpad-basic-mbedtls >/dev/null
+fi
+apk add wifi-scripts iwinfo wireless-regdb iw bash ip-full coreutils-stty openssl-util \
     i2c-tools gpiod-tools jq >/dev/null
 # the router protocols LuCI offers, with their tools: WireGuard, PPTP/L2TP (PPPoE is in the base), 6in4/6rd/DS-Lite,
 # GRE and VXLAN, ipset, and SQM (cake). Their kmod-* dependencies install the 6.12 modules of the feed, removed below like
