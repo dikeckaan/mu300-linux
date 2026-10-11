@@ -118,7 +118,7 @@ cihaz SIM kartın söylediğini kullanır.</p>
 <p>Cihaz mobil veriyi günlük ve fatura dönemi başına, iki yönde de, operatörün saydığı gibi sayar. Dönemin başladığı
 günü ve uyarılı bir aylık kotayı ayarlayabilirsiniz; kotada mobil veriyi kapatmak isteğe bağlıdır ve veri, yeni dönem
 başlayınca kendiliğinden açılır. Sayım yeniden başlatmalarda ve sistemler arası geçişlerde korunur, hiçbir şey iki kez
-sayılmaz. Kontrol panelli OpenWrt'de bu Cellular &gt; Data usage sayfasıdır; durum panosu da anlık indirme ve yükleme
+sayılmaz. Kontrol panelli OpenWrt'de bu Hücresel &gt; Veri kullanımı (Cellular &gt; Data usage) sayfasıdır; durum paneli (Status dashboard) de anlık indirme ve yükleme
 hızını her saniye gösterir.</p>
 <pre><code>mu300-traffic                       <span class="c"># bugün, bu fatura dönemi ve kota</span>
 sudo mu300-traffic set reset-day 1  <span class="c"># fatura döneminin başladığı gün</span>
@@ -190,15 +190,15 @@ kablo bir seri konsol da taşır (<code>ttyGS0</code>): ağ çalışmadığında
 sudo sms send NUMBER TEXT...
 sudo sms delete INDEX
 sudo mu300-ussd '*101#'                  <span class="c"># bir USSD kodu, örneğin bakiye sorgusu</span></code></pre>
-<p>Kontrol panelli OpenWrt'de SMS'ler Cellular &gt; SMS altındadır. Bu sistem SIM'i 30 saniyede bir eşitler ve bu,
+<p>Kontrol panelli OpenWrt'de SMS'ler Hücresel &gt; SMS altındadır. Bu sistem SIM'i 30 saniyede bir eşitler ve bu,
 SIM'deki okunmamış mesajları okunmuş yapar; panel kendi okunmamış durumunu tutar. Orada <code>sms delete read</code>
 çalıştırmayın. Bir mesaj SIM'den ancak kopyası diske güvenle yazıldıktan sonra silinir, yani elektrik kesintisinde hiç
 mesaj kaybolmaz; diğer parçaları hiç gelmeyen uzun bir mesaj bir saat sonra "eksik" işaretiyle gösterilir.</p>
 <h3 id="sms-forwarding">SMS yönlendirme</h3>
-<p>Kontrol panelli OpenWrt'de Cellular &gt; SMS forwarding gelen mesajları iletir: bir webhook'a (JSON ya da form),
+<p>Kontrol panelli OpenWrt'de Hücresel &gt; SMS yönlendirme (SMS forwarding) gelen mesajları iletir: bir webhook'a (JSON ya da form),
 bir Telegram sohbetine ya da SMS olarak başka bir telefona. Siz açana kadar kapalıdır. Her hedefin bir şablonu vardır
 (<code>{sender}</code>, <code>{time}</code>, <code>{text}</code>, <code>{device}</code>) ve gönderene ya da
-anahtar kelimeye göre süzebilir. Bir "Send test" düğmesi ve bir teslim günlüğü vardır; başarısız teslimler giderek
+anahtar kelimeye göre süzebilir. Bir "Test gönder" ("Send test") düğmesi ve bir teslim günlüğü vardır; başarısız teslimler giderek
 uzayan aralıklarla yeniden denenir. Token'lar, şifreler ve webhook adresi yalnızca root'un okuyabildiği
 <code>/etc/mu300/sms-forward.conf</code>'ta durur ve hiçbir günlükte görünmez. E-posta ile yönlendirme
 <code>msmtp</code> ister; imajda olmadığı için o hedef kapalı kalır.</p>
@@ -255,7 +255,7 @@ sudo mu300-extra remove vpn</code></pre>
 <pre><code>sudo mu300-led test            <span class="c"># hangi LED hangisi, öğrenin</span></code></pre>
 <p>U30 Air'de <code>mu300-power</code> pilden tasarruf eder: profiller (<code>plugged</code>, <code>battery</code>,
 <code>saver</code> ya da <code>auto</code>), kimse bağlı değilken boşa alınan radyolar ve %80 şarj sınırı. Kontrol
-panelli OpenWrt'de bu System &gt; Power sayfasıdır.</p>
+panelli OpenWrt'de bu Sistem &gt; Güç (System &gt; Power) sayfasıdır.</p>
 <pre><code>mu300-power status
 sudo mu300-power profile battery         <span class="c"># plugged, battery, saver ya da auto</span>
 sudo mu300-power set battery.WIFI_IDLE 10</code></pre>
@@ -263,7 +263,7 @@ sudo mu300-power set battery.WIFI_IDLE 10</code></pre>
 <p>Üç profil işlemcinin ne kadar hızlı çalışabileceğini belirler: <strong>saving</strong> (çekirdekler azamilerinin
 yaklaşık %60'ıyla sınırlı: daha serin, daha az güç), <strong>balanced</strong> (varsayılan, fabrika davranışı) ve
 <strong>performance</strong> (her çekirdek kümesi azamide). Voltaja hiç dokunmazlar ve ısı koruması her profilde
-işini yapmaya devam eder. Kontrol panelinde: System &gt; CPU.</p>
+işini yapmaya devam eder. Kontrol panelinde: Sistem &gt; CPU.</p>
 <pre><code>mu300-cpu status
 sudo mu300-cpu profile saving            <span class="c"># ya da balanced (varsayılan), performance</span></code></pre>
 <p>Şarj cihazı takıldığı için başlamış bir açılış, Wi-Fi tuşuna basana kadar şarj açılışı olarak kalır (LED yanıp
@@ -295,7 +295,7 @@ sudo mu300-usb device          <span class="c"># bilgisayara dönüş (her açı
 <li><strong>Bellek:</strong> yaklaşık 1.4 GB kullanılabilir, artı RAM'de sıkıştırılmış takas (zram).</li>
 <li><strong>Web arayüzü dilleri (OpenWrt):</strong> kutudan çıktığı gibi İngilizce, Türkçe ve Basitleştirilmiş Çince;
 <code>lang</code> eklentisiyle LuCI için 40, kontrol paneli için 29 dil daha. System &gt; System &gt; Language and
-Style'dan ya da kontrol panelinde System &gt; Languages'tan değiştirin. Panelin diğer çevirileri makine çevirisidir;
+Style'dan ya da kontrol panelinde Sistem &gt; Diller'den (Languages) değiştirin. Panelin diğer çevirileri makine çevirisidir;
 <a href="https://github.com/dikeckaan/mu300-linux#languages" hreflang="en">düzeltmeler memnuniyetle karşılanır</a>.</li>
 </ul>
 </section>

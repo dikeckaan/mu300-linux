@@ -278,7 +278,7 @@ alabileceği en büyük değerdir.</li>
 <li><strong>Kilitli Linux</strong> paraşütü bilerek kapatır: cihaz hiçbir zaman kendiliğinden Android'e gitmez; ne
 başarısız açılışlardan sonra ne de sistem açılmadığında (o zaman USB'de bir telnet kabuğuyla bekler; orada
 <code>sh /run/to-android</code> Android'e götürür). Tek istisna <code>mu300-update</code>'ten gelen yeni bir
-çekirdektir: ilk açılışlarında yine her zamanki deneme hakları vardır. Kontrol panelinin ana sayfasındaki "Lock Linux"
+çekirdektir: ilk açılışlarında yine her zamanki deneme hakları vardır. Kontrol panelinin ana sayfasındaki "Linux'u kilitle" ("Lock Linux")
 de aynı işi yapar.</li>
 </ul>
 <pre><code>sudo mu300-next-boot attempts 3  <span class="c"># Android'den önceki başarısız açılış sayısı, 1-6</span>
@@ -294,7 +294,7 @@ sudo mu300-next-boot status</code></pre>
 <h3>Linux'tan Android'e</h3>
 <pre><code>sudo mu300-next-boot android
 sudo reboot</code></pre>
-<p>Ya da kontrol panelinde "Switch to Android". Bilgisayar ya da giriş olmadan: açılış sırasında, deneme hakkınız
+<p>Ya da kontrol panelinde "Android’e geç" ("Switch to Android"). Bilgisayar ya da giriş olmadan: açılış sırasında, deneme hakkınız
 kadar arka arkaya elektriği kesin (bkz. <a href="#password">aşağıda</a>).</p>
 </div>
 <div class="card linux">
@@ -306,7 +306,7 @@ programının yazdığı <code>misc</code>'in aynı 32 baytından başka bir şe
 </div>
 </div>
 <p>Kontrol paneli, Android'e geçmeden önce hâlâ bant ya da hücre kilidi varsa uyarır; çünkü modem bunları kendi
-belleğinde tutar ve Android de kullanır. Locks sayfasındaki "Reset all to automatic"
+belleğinde tutar ve Android de kullanır. Ağ kilitleri sayfasındaki "Tümünü otomatiğe sıfırla" ("Reset all to automatic")
 (<code>unisoc-modem lock reset</code>) bunları temizler.</p>
 <p>Linux sistemlerinin kendi aralarında geçiş: <code>sudo mu300-os ubuntu</code>, <code>openwrt</code> ya da
 <code>openwrt-luci</code>, sonra yeniden başlatın.</p>

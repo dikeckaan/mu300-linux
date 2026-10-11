@@ -262,7 +262,7 @@ sudo mu300-update clean           <span class="c"># 删掉保留的旧版本</sp
 <ul>
 <li>次数在安装时选，<strong>1 到 6，默认 5</strong>；6 是引导程序计数器能存下的最大值。</li>
 <li>如果 Linux 根本起不来，设备也会自己回到 Android。</li>
-<li><strong>锁定 Linux</strong> 就是故意把降落伞关掉：设备永远不会自己回到 Android，失败多少次都不会，系统起不来也不会（这时它会在 USB 上等着，提供一个 telnet shell，在里面运行 <code>sh /run/to-android</code> 就能去 Android）。唯一的例外是 <code>mu300-update</code> 装的新内核，它的头几次启动仍按通常的次数计算。控制面板首页上也有“锁定 Linux”。</li>
+<li><strong>锁定 Linux</strong> 就是故意把降落伞关掉：设备永远不会自己回到 Android，失败多少次都不会，系统起不来也不会（这时它会在 USB 上等着，提供一个 telnet shell，在里面运行 <code>sh /run/to-android</code> 就能去 Android）。唯一的例外是 <code>mu300-update</code> 装的新内核，它的头几次启动仍按通常的次数计算。控制面板首页上也有“锁定 Linux”（Lock Linux）。</li>
 </ul>
 <pre><code>sudo mu300-next-boot attempts 3  <span class="c"># 回到 Android 前允许失败几次，1 到 6</span>
 sudo mu300-next-boot lock        <span class="c"># 无论如何都留在 Linux</span>
@@ -277,7 +277,7 @@ sudo mu300-next-boot status</code></pre>
 <h3>从 Linux 到 Android</h3>
 <pre><code>sudo mu300-next-boot android
 sudo reboot</code></pre>
-<p>或者用控制面板上的“切换到 Android”。手边没有电脑、也登录不了：在开机过程中断电，连续断的次数等于你设的失败次数（见<a href="#password">下文</a>）。</p>
+<p>或者用控制面板上的“切换到 Android”（Switch to Android）。手边没有电脑、也登录不了：在开机过程中断电，连续断的次数等于你设的失败次数（见<a href="#password">下文</a>）。</p>
 </div>
 <div class="card linux">
 <h3>从 Android 到 Linux</h3>
@@ -286,7 +286,7 @@ su -c 'mu300-linux status'       <span class="c"># 哪个系统在哪个槽位</
 <p>或者用 Magisk 应用里“MU300 Linux”模块的操作（Action）按钮。这个模块是安装程序装上的；它只写入和安装程序相同的那 32 个字节的 <code>misc</code>。</p>
 </div>
 </div>
-<p>切换到 Android 之前，如果还设着频段或小区锁定，控制面板会提醒你，因为基带把它们存在自己的存储里，Android 也会照用。锁定页面上的“全部重置为自动”（<code>unisoc-modem lock reset</code>）可以清除它们。</p>
+<p>切换到 Android 之前，如果还设着频段或小区锁定，控制面板会提醒你，因为基带把它们存在自己的存储里，Android 也会照用。网络锁定页面上的“全部重置为自动”（Reset all to automatic）（<code>unisoc-modem lock reset</code>）可以清除它们。</p>
 <p>在几个 Linux 系统之间切换：<code>sudo mu300-os ubuntu</code>、<code>openwrt</code> 或 <code>openwrt-luci</code>，然后重启。</p>
 </section>
 

@@ -112,7 +112,7 @@
 </tbody></table></div>
 <pre><code>uci set network.wan.apn='your.apn'; uci commit network; ifup wan</code></pre>
 <h3 id="data-usage">用了多少流量</h3>
-<p>设备按天、按账单周期统计移动数据，上下行都算，算法和运营商一致。你可以设定账单周期从哪天开始，以及带提醒的每月上限；到上限时关闭移动数据是可选的，下个周期开始时会自动恢复。统计在重启和切换系统后都不会丢，也不会重复计数。在带控制面板的 OpenWrt 上，这就是“蜂窝 &gt; 流量统计”页面，状态看板还会每秒显示当前的下载和上传速度。</p>
+<p>设备按天、按账单周期统计移动数据，上下行都算，算法和运营商一致。你可以设定账单周期从哪天开始，以及带提醒的每月上限；到上限时关闭移动数据是可选的，下个周期开始时会自动恢复。统计在重启和切换系统后都不会丢，也不会重复计数。在带控制面板的 OpenWrt 上，这就是“蜂窝 &gt; 流量统计”（Cellular &gt; Data usage）页面，状态看板（Status dashboard）还会每秒显示当前的下载和上传速度。</p>
 <pre><code>mu300-traffic                       <span class="c"># 今天、本账单周期和上限</span>
 sudo mu300-traffic set reset-day 1  <span class="c"># 账单周期从每月哪一天开始</span>
 sudo mu300-traffic set cap 50G      <span class="c"># 每月上限（默认用到 90 % 时提醒，可以改）</span>
@@ -170,7 +170,7 @@ sudo sms delete INDEX
 sudo mu300-ussd '*101#'                  <span class="c"># USSD 代码，比如查余额</span></code></pre>
 <p>在带控制面板的 OpenWrt 上，短信在“蜂窝 &gt; 短信”里。这个系统每 30 秒同步一次 SIM 卡，这会把 SIM 卡上的未读短信标成已读；面板自己记录未读状态。不要在那个系统上运行 <code>sms delete read</code>。短信只有在副本安全写到磁盘之后才会从 SIM 卡上删掉，所以断电也不会丢；长短信如果其余部分一直没到，一小时后会把收到的部分标为不完整显示出来。</p>
 <h3 id="sms-forwarding">短信转发</h3>
-<p>在带控制面板的 OpenWrt 上，“蜂窝 &gt; 短信转发”会把收到的短信转出去：转给 webhook（JSON 或表单）、Telegram 聊天，或者用短信转给另一部手机。默认关闭，打开后才生效。每个目标都有模板（<code>{sender}</code>、<code>{time}</code>、<code>{text}</code>、<code>{device}</code>），并可以按发件人和关键词过滤。页面上有“发送测试”按钮和投递日志；投递失败会以越来越长的间隔重试。令牌、密码和 webhook 地址保存在只有 root 能读的 <code>/etc/mu300/sms-forward.conf</code> 里，绝不会出现在日志中。邮件转发需要 <code>msmtp</code>，而镜像里没有它，所以这个目标保持关闭。</p>
+<p>在带控制面板的 OpenWrt 上，“蜂窝 &gt; 短信转发”（SMS forwarding）会把收到的短信转出去：转给 webhook（JSON 或表单）、Telegram 聊天，或者用短信转给另一部手机。默认关闭，打开后才生效。每个目标都有模板（<code>{sender}</code>、<code>{time}</code>、<code>{text}</code>、<code>{device}</code>），并可以按发件人和关键词过滤。页面上有“发送测试”（Send test）按钮和投递日志；投递失败会以越来越长的间隔重试。令牌、密码和 webhook 地址保存在只有 root 能读的 <code>/etc/mu300/sms-forward.conf</code> 里，绝不会出现在日志中。邮件转发需要 <code>msmtp</code>，而镜像里没有它，所以这个目标保持关闭。</p>
 </section>
 
 <section id="vpn">
@@ -214,7 +214,7 @@ sudo mu300-extra remove vpn</code></pre>
 <tr><th scope="row">过热报警</th><td>网络灯轮流闪红、白、蓝：芯片到了 85 °C</td><td>电池灯轮流闪红、白、蓝：芯片到了 85 °C 或电池到了 50 °C</td></tr>
 </tbody></table></div>
 <pre><code>sudo mu300-led test            <span class="c"># 看看哪个灯是哪个</span></code></pre>
-<p>在 U30 Air 上，<code>mu300-power</code> 帮你省电：电源模式（<code>plugged</code>、<code>battery</code>、<code>saver</code> 或 <code>auto</code>）、没人连接时让无线进入空闲，以及 80 % 的充电上限。在带控制面板的 OpenWrt 上，这就是“系统 &gt; 电源”页面。</p>
+<p>在 U30 Air 上，<code>mu300-power</code> 帮你省电：电源模式（<code>plugged</code>、<code>battery</code>、<code>saver</code> 或 <code>auto</code>）、没人连接时让无线进入空闲，以及 80 % 的充电上限。在带控制面板的 OpenWrt 上，这就是“系统 &gt; 电源”（System &gt; Power）页面。</p>
 <pre><code>mu300-power status
 sudo mu300-power profile battery         <span class="c"># plugged、battery、saver 或 auto</span>
 sudo mu300-power set battery.WIFI_IDLE 10</code></pre>
@@ -248,7 +248,7 @@ sudo mu300-usb device          <span class="c"># 切回连接电脑（每次开�
 <li><strong>GPU：</strong>Mali-G57 支持 OpenCL 3.0，没有屏幕输出。</li>
 <li><strong>KVM：</strong>三个内核都有 <code>/dev/kvm</code>，可以跑虚拟机。</li>
 <li><strong>内存：</strong>约 1.4 GB 可用，另外还有内存压缩交换（zram）。</li>
-<li><strong>网页界面语言（OpenWrt）：</strong>自带英语、土耳其语和简体中文；装上 <code>lang</code> 扩展，LuCI 再多 40 种，控制面板再多 29 种。在“系统 &gt; 系统 &gt; 语言和界面”里切换，控制面板上是“系统 &gt; 语言”。面板的其他译文是机器翻译，<a href="https://github.com/dikeckaan/mu300-linux#languages" hreflang="en">欢迎指正</a>。</li>
+<li><strong>网页界面语言（OpenWrt）：</strong>自带英语、土耳其语和简体中文；装上 <code>lang</code> 扩展，LuCI 再多 40 种，控制面板再多 29 种。在“系统 &gt; 系统 &gt; 语言和界面”里切换，控制面板上是“系统 &gt; 语言”（Languages）。面板的其他译文是机器翻译，<a href="https://github.com/dikeckaan/mu300-linux#languages" hreflang="en">欢迎指正</a>。</li>
 </ul>
 </section>
 
