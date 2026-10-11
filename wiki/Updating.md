@@ -42,6 +42,7 @@ not have (installed from a `.apk` file) cannot come back by itself; its settings
 ```sh
 mu300-user-packages status    # what came back, what failed and why, how to put settings back
 mu300-user-packages retry     # try again now
+mu300-user-packages repair-dns  # a proxy that is gone left dnsmasq pointing at it: remove that (never done by itself)
 mu300-update apply --no-reinstall   # update without installing them again (MU300_KEEP_PACKAGES=0 does the same)
 ```
 

@@ -363,7 +363,7 @@ class Service(ShellTest):
                        f'{d}/files': 'luci-app-openclash etc/config/openclash\nluci-app-openclash etc/init.d/openclash\n'
                                      'luci-app-openclash etc/init.d/openclash-watch\n'
                                      'luci-theme-argon etc/config/argon\n',
-                       'etc/mu300/orphaned-config/etc/config/openclash': 'mine\n',
+                       'etc/mu300/orphaned-config/etc/config/openclash': "config openclash 'config'\n\toption dns_port '7874'\n",
                        'etc/mu300/orphaned-config/etc/config/argon': 'argon\n',
                        'etc/config/dhcp': 'dhcp file\n',
                        'www/luci-static/aurora/main.css': '', 'www/luci-static/bootstrap/x.css': '',
@@ -386,6 +386,7 @@ class Service(ShellTest):
 
     def run_upk(self, shell, *args, **env):
         e = dict(MU300_SYSROOT=self.R, MU300_BIN=BIN, MU300_PKG_SETTLE=0, MU300_PKG_DELAY=0, MU300_PKG_TRIES=2,
+                 MU300_DNS_CHECKS=2, MU300_DNS_INTERVAL=0,
                  MU300_RUN=self.tmp / 'run', MU300_MOTD_DIR=self.tmp / 'motd')
         e.update(env)
         return self.script(shell, UPK, *args, **e)
@@ -409,7 +410,7 @@ class Service(ShellTest):
             self.assertIn('luci-theme-argon ERROR: unable to select packages', self.rec('failed'))
             self.assertEqual(self.rec('state'), 'failed\n')
             # its settings back, its services as they were: enabled (and restarted with them) or left disabled
-            self.assertEqual((self.R / 'etc/config/openclash').read_text(), 'mine\n')
+            self.assertEqual((self.R / 'etc/config/openclash').read_text(), "config openclash 'config'\n\toption dns_port '7874'\n")
             self.assertFalse((self.R / 'etc/mu300/orphaned-config/etc/config/openclash').exists())
             init = (self.tmp / 'init.log').read_text()
             self.assertIn('openclash enable\nopenclash restart\n', init)
@@ -433,22 +434,96 @@ class Service(ShellTest):
             self.assertEqual(self.run_upk(shell, 'run').returncode, 0)
             self.assertFalse((self.tmp / 'pm.log').exists())
 
-    def test_dead_dns_forwarder_is_taken_out_before_anything(self):
+    # the DNS left by a proxy (dns_check): never weakened by itself, only a provably orphaned forwarder is touched
+    def dhcp(self):
+        return '\n'.join(l for l in self.uci().splitlines() if l.startswith('dhcp.'))
+
+    def test_dns_forwarder_of_a_package_gone_for_good_goes_when_another_server_stays(self):
         for shell in self.each_shell():
             self.setup_openwrt(server='127.0.0.1#7874 8.8.8.8')
+            (self.tmp / 'online').write_text('')
+            (self.tmp / 'missing').write_text('luci-app-openclash\n')     # not in the feeds: failed for good
             r = self.run_upk(shell, 'run')
             self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
             u = self.uci()
             self.assertIn('dhcp.cfg01.server=8.8.8.8\n', u)
-            self.assertIn('dhcp.cfg01.noresolv=1', u)      # another server is left: as it was
+            self.assertIn('dhcp.cfg01.noresolv=1', u)         # never touched
             self.assertTrue((self.R / 'etc/mu300/orphaned-config/etc/config/dhcp.before-dns-repair').exists())
-            self.assertIn('DNS: dnsmasq forwarded to 127.0.0.1#7874', self.rec('log'))
-            # only forwarder: removed and the connection's resolvers back
+            self.assertIn('DNS: removed the forwarder 127.0.0.1#7874 of luci-app-openclash', self.rec('log'))
+
+    def test_dns_only_forwarder_is_reported_and_removed_on_request_only(self):
+        for shell in self.each_shell():
             self.setup_openwrt()
-            self.run_upk(shell, 'run')
-            u = self.uci()
+            for _ in range(6):                                # offline at five boots: given up
+                self.run_upk(shell, 'run')
+            self.assertEqual(self.rec('state'), 'gave-up\n')
+            before = self.dhcp()
+            self.assertIn('dhcp.cfg01.server=127.0.0.1#7874', before)
+            self.assertIn('dhcp.cfg01.noresolv=1', before)
+            self.assertIn('mu300-user-packages repair-dns', self.rec('note'))
+            self.assertIn('repair-dns', self.run_upk(shell, 'status').stdout)
+            # the user's own decision: the forwarder goes, and then the connection's resolvers
+            r = self.run_upk(shell, 'repair-dns')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            u = self.dhcp()
             self.assertNotIn('dhcp.cfg01.server', u)
             self.assertIn('dhcp.cfg01.noresolv=0', u)
+            self.assertNotIn('repair-dns', self.rec('note') or '')
+
+    def test_dns_proxy_not_listening_yet_while_its_package_may_come_back(self):
+        # offline: the package is still to be installed again - nothing is touched, not even with another server
+        for shell in self.each_shell():
+            self.setup_openwrt(server='127.0.0.1#7874 8.8.8.8')
+            before = self.dhcp()
+            self.run_upk(shell, 'run')
+            self.assertEqual(self.rec('state'), 'offline\n')
+            self.assertEqual(self.dhcp(), before)
+
+    def test_dns_untouched_with_the_vpn_on(self):
+        for shell in self.each_shell():
+            self.setup_openwrt(server='127.0.0.1#7874 8.8.8.8')
+            write(self.R, {'etc/mu300/vpn.conf': 'ENABLE=1\nSECRET=do-not-print\n'})
+            (self.tmp / 'online').write_text('')
+            (self.tmp / 'missing').write_text('luci-app-openclash\n')
+            before = self.dhcp()
+            r = self.run_upk(shell, 'run')
+            self.assertEqual(self.dhcp(), before)
+            self.assertIn('the VPN is on', self.rec('note'))
+            self.assertNotIn('do-not-print', r.stdout + r.stderr + self.rec('log') + self.run_upk(shell, 'status').stdout)
+            self.run_upk(shell, 'repair-dns')
+            self.assertEqual(self.dhcp(), before)
+
+    def test_dns_unknown_owner_or_the_projects_port_untouched(self):
+        for shell in self.each_shell():
+            # a port no set-aside settings name (a user's own resolver, say): not attributable
+            self.setup_openwrt(server='127.0.0.1#5353 8.8.8.8')
+            (self.tmp / 'online').write_text('')
+            (self.tmp / 'missing').write_text('luci-app-openclash\n')
+            before = self.dhcp()
+            self.run_upk(shell, 'run')
+            self.run_upk(shell, 'repair-dns')
+            self.assertEqual(self.dhcp(), before)
+            # a port the project's own settings name
+            self.setup_openwrt(server='127.0.0.1#7874 8.8.8.8')
+            (self.tmp / 'online').write_text('')
+            (self.tmp / 'missing').write_text('luci-app-openclash\n')
+            write(self.R, {'etc/mu300/vpn/settings': 'DNS_PORT=7874\n'})
+            before = self.dhcp()
+            self.run_upk(shell, 'run')
+            self.assertEqual(self.dhcp(), before)
+
+    def test_dns_port_that_comes_up_during_the_window_is_left(self):
+        for shell in self.each_shell():
+            self.setup_openwrt(server='127.0.0.1#7874 8.8.8.8')
+            (self.tmp / 'online').write_text('')
+            (self.tmp / 'missing').write_text('luci-app-openclash\n')
+            # the proxy binds its port while the service looks again
+            self.stub('sleep', f'printf "   1: 0100007F:1EC2 00000000:0000 07\\n" >> "{self.R}/proc/net/udp"')
+            before = self.dhcp()
+            r = self.run_upk(shell, 'run', MU300_DNS_CHECKS=3)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(self.dhcp(), before)
+            (self.stubs / 'sleep').unlink()
 
     def test_offline_tries_again_at_the_next_boots_then_gives_up(self):
         for shell in self.each_shell():
@@ -479,10 +554,14 @@ class Service(ShellTest):
             r = self.run_upk(shell, 'skip')
             self.assertEqual(r.returncode, 0, r.stderr)
             self.run_upk(shell, 'run')
-            self.assertFalse((self.tmp / 'pm.log').exists())
+            pm = (self.tmp / 'pm.log').read_text() if (self.tmp / 'pm.log').exists() else ''
+            self.assertNotIn('apk add', pm)
+            self.assertNotIn('apk update', pm)
             self.assertEqual(self.rec('state'), 'skipped\n')
-            # what the absent packages left is dealt with all the same
-            self.assertNotIn('dhcp.cfg01.server', self.uci())
+            # the forwarder is the only server: reported, never replaced by the connection's resolvers by itself
+            self.assertIn('dhcp.cfg01.server=127.0.0.1#7874', self.uci())
+            self.assertIn('dhcp.cfg01.noresolv=1', self.uci())
+            self.assertIn('repair-dns', self.rec('note'))
             self.assertTrue((self.R / 'etc/mu300/orphaned-config/etc/config/openclash').exists())
             self.assertIn('skipped', self.rec('note'))
             self.run_upk(shell, 'retry')
@@ -497,7 +576,7 @@ class Service(ShellTest):
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(self.rec('state'), 'done\n')
             self.assertNotIn('apk update', (self.tmp / 'pm.log').read_text())
-            self.assertEqual((self.R / 'etc/config/openclash').read_text(), 'mine\n')
+            self.assertEqual((self.R / 'etc/config/openclash').read_text(), "config openclash 'config'\n\toption dns_port '7874'\n")
 
     def test_one_run_at_a_time(self):
         for shell in self.each_shell():

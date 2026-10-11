@@ -2281,9 +2281,14 @@ Since then `mu300-update apply` and the installers' update write down what was a
 Ubuntu: dpkg's packages apt did not pull in) less the image's own list (`/etc/mu300/image-packages`, written at build
 time; older systems: the new image's world and `packages.txt`), move those packages' own `etc/config` files to
 `/etc/mu300/orphaned-config/` (never one the new image has), and `mu300-user-packages` installs them again at the
-first boot and puts the files back. While one is still missing it takes a loopback forwarder nobody listens on out of
-dnsmasq (the file as it was: `orphaned-config/etc/config/dhcp.before-dns-repair`), and a LuCI theme whose files are
-not there off LuCI's list. Tested in a container of the openwrt-luci rootfs with real apk and uci; no device test
+first boot and puts the files back. A LuCI theme whose files are not there goes off LuCI's list. The DNS leftover is
+handled fail-closed (DNS privacy first; for some users the internet is only usable through the VPN): after the
+reinstall step, a loopback forwarder is touched only when its port is a value in the set-aside settings of a recorded
+package that is definitively absent (failed in the feeds, given up, skipped), nothing binds it over a window of
+looks, the project's own settings do not name it and the VPN is off - and then only when another server stays. The
+only forwarder is reported (status, the login note) and stays: `mu300-user-packages repair-dns` removes it on request
+and only then lets dnsmasq use the connection's resolvers (the file as it was:
+`orphaned-config/etc/config/dhcp.before-dns-repair`). Tested in a container of the openwrt-luci rootfs with real apk and uci; no device test
 recorded yet.
 
 ## ZTE U30 Air

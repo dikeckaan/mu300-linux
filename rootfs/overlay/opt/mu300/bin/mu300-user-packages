@@ -7,6 +7,8 @@
 #   mu300-user-packages dismiss   drop the note shown at login
 #   mu300-user-packages run       the service at boot (OpenWrt: init.d/mu300-user-packages; Ubuntu: systemd)
 #   mu300-user-packages brief     one line, for mu300-update check
+#   mu300-user-packages repair-dns  remove a dnsmasq forwarder of a package that is not installed; with none left,
+#                                   dnsmasq uses the connection's resolvers (only ever on this request)
 #
 # At boot it waits for the device to be online (MU300_PKG_TRIES rounds of apk update / apt-get update, MU300_PKG_DELAY
 # seconds apart; an hour by default), installs what is missing (OpenWrt: apk add; Ubuntu: apt-get install) and puts
@@ -14,11 +16,11 @@
 # tries again at the next boot, five boots at most (then: retry). A package the feeds do not have (installed from a
 # file) fails for good: its settings stay in /etc/mu300/orphaned-config, and status says how to put them back.
 #
-# Before it installs anything, OpenWrt's DNS is checked: a proxy (OpenClash and the like) points dnsmasq at a port
-# of its own on 127.0.0.1 while it runs, and an update took that over with /etc/config/dhcp - without the proxy there
-# was no DNS at all (#116). A forwarder on the loopback where nothing listens, while a package is missing, is taken
-# out (the file as it was: /etc/mu300/orphaned-config/etc/config/dhcp.before-dns-repair). Afterwards a LuCI theme
-# whose files are not there is taken off LuCI's list (the default goes back to one that is there).
+# After the reinstall step OpenWrt's DNS is checked: a proxy (OpenClash and the like) points dnsmasq at a port of its
+# own on 127.0.0.1 while it runs, and an update took that over with /etc/config/dhcp - without the proxy there was no
+# DNS at all (#116). It never weakens DNS privacy by itself (see dns_check): a forwarder of a package that is gone for
+# good is removed only when another server stays; an only one is reported, and repair-dns removes it on request.
+# A LuCI theme whose files are not there is taken off LuCI's list (the default goes back to one that is there).
 export PATH="$PATH:/opt/mu300/bin:/usr/sbin:/sbin"
 R=${MU300_SYSROOT:-}
 BIN=${MU300_BIN:-/opt/mu300/bin}
@@ -67,33 +69,102 @@ port_bound() {
     cat "$PROC/net/udp" "$PROC/net/udp6" 2>/dev/null |
         awk -v h="$_h" '{ n = split($2, a, ":"); if (n > 1 && toupper(a[n]) == h) f = 1 } END { exit !f }'
 }
-# dns_repair: dnsmasq forwarding to a loopback port nobody listens on (a proxy's, of a package that is not there)
-dns_repair() {
-    [ "$KIND" = openwrt ] && have uci || return 0
-    _changed=
+# What a proxy (OpenClash and the like) left in dnsmasq: while it runs it points dnsmasq at a port of its own on the
+# loopback, and an update took that over with /etc/config/dhcp (#116). DNS privacy comes first: nothing here ever
+# sends DNS to the connection's resolvers by itself, and it acts only on a forwarder that is provably orphaned:
+#   - its port is a value in the set-aside settings of a package the update wrote down (attributable), and nothing in
+#     the project's own settings (/etc/mu300, the VPN's included) names that port;
+#   - nothing is bound to it at any of DNS_CHECKS looks, DNS_INTERVAL seconds apart;
+#   - the VPN is off (vpn.conf ENABLE, read with vpn_conf_value, never printed);
+#   - for a change at boot: the package is definitively absent (failed in the feeds, given up, or skipped) - checked
+#     after the reinstall step, never before - and another server stays in that dnsmasq section. A forwarder that is
+#     the only one is reported (status, the note at login) and left as it is: no DNS until the user decides, with
+#     mu300-user-packages repair-dns, which removes it and only then lets dnsmasq use the connection's resolvers.
+DNS_CHECKS=${MU300_DNS_CHECKS:-6}
+DNS_INTERVAL=${MU300_DNS_INTERVAL:-10}
+DNS_NOTE=$D/dns-note
+# pkg_final PKG: not installed, and the service will not install it (failed in the feeds, given up, skipped)
+pkg_final() {
+    ! pm_has "$1" || return 1
+    awk '{print $1}' "$D/failed" 2>/dev/null | grep -qxF "$1" && return 0
+    case $(state) in gave-up|skipped) upk_pending "$D" | grep -qxF "$1" ;; *) return 1 ;; esac
+}
+# port_owner PORT: the recorded package, not installed, whose set-aside settings hold PORT as a value
+port_owner() {
+    while read -r _p _f; do
+        [ -f "$ORPH/$_f" ] || continue
+        LC_ALL=C grep -Eq "^[[:space:]]*(option|list)[[:space:]]+[A-Za-z0-9_]+[[:space:]]+['\"]?$1['\"]?[[:space:]]*\$" "$ORPH/$_f" || continue
+        ! pm_has "$_p" || continue
+        echo "$_p"; return 0
+    done < "$D/files"
+    return 1
+}
+# project_names PORT: the project's own settings (the VPN's too) mention the port
+project_names() {
+    [ -n "$(find "$R/etc/mu300" -type f ! -path '*/orphaned-config/*' ! -path '*/user-packages/*' \
+        -exec grep -lw -- "$1" {} + 2>/dev/null)" ]
+}
+vpn_on() { [ "$(vpn_conf_value "$R/etc/mu300/vpn.conf" ENABLE)" = 1 ]; }
+# dns_orphans: "SECTION VALUE PKG FINAL OTHERS" for each attributable loopback forwarder nothing listens on now
+# (FINAL 1: the package is definitively absent; OTHERS 1: the section has another server)
+dns_orphans() {
     for _s in $(uci -q show dhcp | sed -n 's/^dhcp\.\([^.=]*\)=dnsmasq$/\1/p'); do
-        _dead= _live=
-        for _v in $(uci -q get "dhcp.$_s.server"); do
-            case $_v in
-                127.*'#'[0-9]*|'::1#'[0-9]*)
-                    _p=${_v##*#}
-                    case $_p in *[!0-9]*) _live=1 ;; *) if port_bound "$_p"; then _live=1; else _dead="$_dead $_v"; fi ;; esac ;;
-                *) _live=1 ;;
-            esac
+        _all=$(uci -q get "dhcp.$_s.server")
+        for _v in $_all; do
+            case $_v in 127.*'#'[0-9]*|'::1#'[0-9]*) ;; *) continue ;; esac
+            _port=${_v##*#}
+            case $_port in *[!0-9]*) continue ;; esac
+            ! port_bound "$_port" || continue
+            _own=$(port_owner "$_port") || continue
+            ! project_names "$_port" || continue
+            _fin=0; ! pkg_final "$_own" || _fin=1
+            _oth=0; for _w in $_all; do [ "$_w" = "$_v" ] || _oth=1; done
+            echo "$_s $_v $_own $_fin $_oth"
         done
-        [ -n "$_dead" ] || continue
-        if [ ! -e "$ORPH/etc/config/dhcp.before-dns-repair" ]; then
-            mkdir -p "$ORPH/etc/config" && cp "$R/etc/config/dhcp" "$ORPH/etc/config/dhcp.before-dns-repair"
-        fi
-        for _v in $_dead; do uci -q del_list "dhcp.$_s.server=$_v"; done
-        # no server left: back to the resolvers the connection hands out
-        if [ -z "$_live" ] && [ "$(uci -q get "dhcp.$_s.noresolv")" = 1 ]; then uci -q set "dhcp.$_s.noresolv=0"; fi
-        log "DNS: dnsmasq forwarded to$_dead, where nothing listens (a package that is not installed now, such as a proxy, set this); removed. The file as it was: /$UPK_ORPH/etc/config/dhcp.before-dns-repair"
-        _changed=1
     done
+}
+# dns_check [manual]: after the reinstall step (and by repair-dns: manual); see above
+dns_check() {
+    rm -f "$DNS_NOTE"
+    [ "$KIND" = openwrt ] && have uci || return 0
+    _c=$(dns_orphans)
+    [ -n "$_c" ] || return 0
+    if vpn_on; then
+        log "DNS: dnsmasq forwards to a port of a package that is not installed, and the VPN is on: nothing is changed (uci show dhcp)"
+        echo "dnsmasq forwards to a port of a package that is not installed; the VPN is on, so nothing was changed: uci show dhcp" > "$DNS_NOTE"
+        return 0
+    fi
+    # seen again over the window: one that comes up meanwhile was starting, not gone
+    _i=1
+    while [ "$_i" -lt "$DNS_CHECKS" ] && [ -n "$_c" ]; do
+        sleep "$DNS_INTERVAL"
+        _c=$(printf '%s\n' "$_c" | while read -r _s _v _o _f _x; do port_bound "${_v##*#}" || echo "$_s $_v $_o $_f $_x"; done)
+        _i=$((_i + 1))
+    done
+    [ -n "$_c" ] || return 0
+    _changed=
+    while read -r _s _v _o _f _x; do
+        if [ "${1:-}" = manual ] || { [ "$_f" = 1 ] && [ "$_x" = 1 ]; }; then
+            [ -e "$ORPH/etc/config/dhcp.before-dns-repair" ] ||
+                { mkdir -p "$ORPH/etc/config" && cp "$R/etc/config/dhcp" "$ORPH/etc/config/dhcp.before-dns-repair"; }
+            uci -q del_list "dhcp.$_s.server=$_v"
+            log "DNS: removed the forwarder $_v of $_o (not installed, nothing listens there); the file as it was: /$UPK_ORPH/etc/config/dhcp.before-dns-repair"
+            # asked for by the user, and nothing left: the connection's resolvers (never at boot by itself)
+            if [ "${1:-}" = manual ] && [ -z "$(uci -q get "dhcp.$_s.server")" ] && [ "$(uci -q get "dhcp.$_s.noresolv")" = 1 ]; then
+                uci -q set "dhcp.$_s.noresolv=0"
+                log "DNS: no server left: dnsmasq uses the connection's resolvers now (noresolv 0)"
+            fi
+            _changed=1
+        else
+            log "DNS: dnsmasq forwards to $_v of $_o, which is not installed and has nothing listening there: no DNS through it. Left as it is; once $_o is not coming back: mu300-user-packages repair-dns (the connection's resolvers then answer)"
+            echo "DNS goes to $_v of $_o, which is not installed: no DNS. Install it again, or: mu300-user-packages repair-dns" >> "$DNS_NOTE"
+        fi
+    done <<EOF
+$_c
+EOF
     [ -n "$_changed" ] || return 0
     uci -q commit dhcp
-    [ ! -x "$R/etc/init.d/dnsmasq" ] || "$R/etc/init.d/dnsmasq" restart >/dev/null 2>&1 || :
+    [ ! -x "$R/etc/init.d/dnsmasq" ] || "$R/etc/init.d/dnsmasq" restart </dev/null >/dev/null 2>&1 || :
 }
 # theme_repair: LuCI themes whose files are not there are taken off the list; the default must be one that is there
 theme_repair() {
@@ -193,6 +264,7 @@ note() {
         failed|offline|gave-up|skipped) summary > "$D/note" ;;
         *) rm -f "$D/note" ;;
     esac
+    [ ! -s "$DNS_NOTE" ] || cat "$DNS_NOTE" >> "$D/note"
     [ "$KIND" = ubuntu ] || return 0
     if [ -s "$D/note" ]; then mkdir -p "${MOTD%/*}" && cp "$D/note" "$MOTD"; else rm -f "$MOTD"; fi
     return 0
@@ -205,20 +277,18 @@ run() {  # run [now]: now (retry) does not wait for the system to settle and doe
     trap 'rmdir "$RUNDIR/mu300-user-packages.lock" 2>/dev/null' EXIT
     trap 'exit 130' INT TERM HUP
     _left=$(upk_pending "$D")
-    if [ -z "$_left" ]; then theme_repair; note; return 0; fi
-    # whatever happens with the packages: what the absent ones left must not keep the device offline
+    if [ -z "$_left" ]; then finish; return 0; fi
     [ -n "${1:-}" ] || sleep "$SETTLE"
-    dns_repair
     case $(state) in
-        skipped) theme_repair; note; return 0 ;;
-        gave-up) [ -n "${1:-}" ] || { theme_repair; note; return 0; } ;;
+        skipped) finish; return 0 ;;
+        gave-up) [ -n "${1:-}" ] || { finish; return 0; } ;;
     esac
     if [ -z "${1:-}" ]; then
         _b=$(( $(cat "$D/boots" 2>/dev/null || echo 0) + 1 ))
         echo "$_b" > "$D/boots"
         if [ "$_b" -gt "$MAX_BOOTS" ]; then
             set_state gave-up; log "no internet at $MAX_BOOTS boots: given up (mu300-user-packages retry)"
-            theme_repair; note; return 0
+            finish; return 0
         fi
     fi
     set_state running
@@ -235,7 +305,7 @@ run() {  # run [now]: now (retry) does not wait for the system to settle and doe
                 set_state offline
                 log "no internet (the package lists could not be fetched): tries again at the next boot, or: mu300-user-packages retry"
                 printf '%s\n' "$_o" | tail -n 5 >> "$LOG"
-                theme_repair; note; return 0
+                finish; return 0
             fi
             _i=$((_i + 1))
             sleep "$DELAY"
@@ -244,10 +314,12 @@ run() {  # run [now]: now (retry) does not wait for the system to settle and doe
         install_all $_todo
     fi
     if [ -s "$D/failed" ]; then set_state failed; else set_state done; fi
-    theme_repair
     log "$(summary)"
-    note
+    finish
 }
+# after the reinstall step, however it ended: what the packages that stay out left behind (never before: a package
+# that is still to come back may be the one a forwarder belongs to)
+finish() { dns_check; theme_repair; note; }
 
 status() {
     if [ ! -s "$D/wanted" ]; then
@@ -273,6 +345,7 @@ status() {
             esac
         done
     fi
+    [ ! -s "$DNS_NOTE" ] || { printf '\nDNS:\n'; sed 's/^/  /' "$DNS_NOTE"; }
     if [ -s "$LOG" ]; then printf '\nlog (%s):\n' "$LOG"; tail -n 15 "$LOG" | sed 's/^/  /'; fi
 }
 
@@ -280,7 +353,7 @@ status() {
 [ -z "${MU300_PKG_LIB:-}" ] || return 0
 
 case ${1:-status} in
-    run|retry|skip) [ "$(id -u)" = 0 ] || { echo "run as root" >&2; exit 1; } ;;
+    run|retry|skip|repair-dns) [ "$(id -u)" = 0 ] || { echo "run as root" >&2; exit 1; } ;;
 esac
 case ${1:-status} in
     run) run ;;
@@ -293,9 +366,12 @@ case ${1:-status} in
         [ -s "$D/wanted" ] || { echo "nothing to skip"; exit 0; }
         set_state skipped; note
         echo "not installed again; their settings stay in /$UPK_ORPH (later: mu300-user-packages retry)" ;;
+    repair-dns)
+        [ -s "$D/wanted" ] || { echo "nothing recorded by an update: nothing to repair"; exit 0; }
+        dns_check manual; note ;;
     dismiss) rm -f "$D/note" "$MOTD"; echo "the note is gone (mu300-user-packages status still shows everything)" ;;
     status) status ;;
     brief) summary ;;
-    -h|--help|help) sed -n '2,9s/^# \{0,1\}//p' "$0" ;;
-    *) echo "usage: mu300-user-packages status|retry|skip|dismiss|run|brief" >&2; exit 2 ;;
+    -h|--help|help) sed -n '2,11s/^# \{0,1\}//p' "$0" ;;
+    *) echo "usage: mu300-user-packages status|retry|skip|repair-dns|dismiss|run|brief" >&2; exit 2 ;;
 esac
