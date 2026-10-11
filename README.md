@@ -323,22 +323,24 @@ without a computer: from the Magisk app (reached through scrcpy, a web panel or 
 by itself when a release is published, so the zips follow the other assets after a few minutes. Building them yourself:
 `tools/make-magisk-zips.sh RELEASE_DIR OUT_DIR`.
 
-**1. Take one zip.** One per system and kernel. The same zip works on the F50 and on the U30 Air, and installs to
-the internal storage or to an SD card: the installer recognises the device and finds the place. There is no zip
-for `openwrt-luci` (the OpenWrt with the control panel): that one comes with `./install.sh`.
+**1. Take one zip.** One per system and kernel, 11 in all. The same zip works on the F50 and on the U30 Air, and
+installs to the internal storage or to an SD card: the installer recognises the device and finds the place.
 
 | zip | system | kernel | size |
 |---|---|---|---|
-| `mu300-magisk-<tag>-openwrt-k5.4.zip` | OpenWrt | 5.4 (vendor) | 48.3 MB |
-| `mu300-magisk-<tag>-openwrt-k6.18.zip` | OpenWrt | 6.18 LTS | 37.0 MB |
-| `mu300-magisk-<tag>-openwrt-k7.2.zip` | OpenWrt | 7.2 | 37.7 MB |
-| `mu300-magisk-<tag>-ubuntu-24.04-k5.4.zip` | Ubuntu 24.04 | 5.4 | 123.6 MB |
-| `mu300-magisk-<tag>-ubuntu-24.04-k6.18.zip` | Ubuntu 24.04 | 6.18 LTS | 112.3 MB |
-| `mu300-magisk-<tag>-ubuntu-24.04-k7.2.zip` | Ubuntu 24.04 | 7.2 | 113.0 MB |
-| `mu300-magisk-<tag>-ubuntu-26.04-k6.18.zip` | Ubuntu 26.04 | 6.18 LTS | 124.6 MB |
-| `mu300-magisk-<tag>-ubuntu-26.04-k7.2.zip` | Ubuntu 26.04 | 7.2 | 125.3 MB |
+| `mu300-magisk-<tag>-openwrt-k5.4.zip` | OpenWrt | 5.4 (vendor) | 48.5 MB |
+| `mu300-magisk-<tag>-openwrt-k6.18.zip` | OpenWrt | 6.18 LTS | 37.2 MB |
+| `mu300-magisk-<tag>-openwrt-k7.2.zip` | OpenWrt | 7.2 | 37.9 MB |
+| `mu300-magisk-<tag>-openwrt-luci-k5.4.zip` | OpenWrt with the control panel | 5.4 (vendor) | 48.8 MB |
+| `mu300-magisk-<tag>-openwrt-luci-k6.18.zip` | OpenWrt with the control panel | 6.18 LTS | 37.6 MB |
+| `mu300-magisk-<tag>-openwrt-luci-k7.2.zip` | OpenWrt with the control panel | 7.2 | 38.3 MB |
+| `mu300-magisk-<tag>-ubuntu-24.04-k5.4.zip` | Ubuntu 24.04 | 5.4 | 124.1 MB |
+| `mu300-magisk-<tag>-ubuntu-24.04-k6.18.zip` | Ubuntu 24.04 | 6.18 LTS | 112.9 MB |
+| `mu300-magisk-<tag>-ubuntu-24.04-k7.2.zip` | Ubuntu 24.04 | 7.2 | 113.6 MB |
+| `mu300-magisk-<tag>-ubuntu-26.04-k6.18.zip` | Ubuntu 26.04 | 6.18 LTS | 125.2 MB |
+| `mu300-magisk-<tag>-ubuntu-26.04-k7.2.zip` | Ubuntu 26.04 | 7.2 | 125.9 MB |
 
-The sizes are those of the v2026.10.11 build. The VPN is not in the zips: add its module on the device with
+The sizes are those of the v2026.10.18 build. The VPN is not in the zips: add its module on the device with
 `sudo mu300-extra install vpn` (see [VPN](#vpn)). There is no Ubuntu 26.04 zip with kernel 5.4: its programs need system
 calls that kernel does not have, the same rule as for `install.sh`. Check a download with `SHA256SUMS-magisk`.
 
