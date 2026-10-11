@@ -337,8 +337,17 @@ apply_one() {  # apply_one OS TAG
     for k in $(keep_list "$os"); do
         [ -e "$old/$k" ] || continue
         mkdir -p "$new/$(dirname "$k")"
+        rm -rf "$new/$k.image"
+        [ "$k" = etc/config ] && [ -d "$new/$k" ] && mv "$new/$k" "$new/$k.image"
         rm -rf "$new/$k"
         cp -a "$old/$k" "$new/$k"
+        # OpenWrt's settings are the old system's, plus the files of the image's own packages the old one did not
+        # have (as sysupgrade keeps them): copied whole, the old etc/config dropped e.g. /etc/config/sqm of a
+        # package the new image brought, and its LuCI page failed with "uci/get: Resource not found"
+        if [ -d "$new/$k.image" ]; then
+            copy_missing "$new/$k.image" "$new/$k" || echo "$os: could not add the image's new settings files" >&2
+            rm -rf "$new/$k.image"
+        fi
     done
     merge_accounts "$old" "$new" || echo "$os: could not carry the accounts over; the image's default password applies" >&2
     if [ -n "$newver" ]; then
