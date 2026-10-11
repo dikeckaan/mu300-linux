@@ -248,7 +248,7 @@ printf "%s\n" "${MU300_VERSION:-dev}" > $R/etc/mu300/image-version
 # enable the services (rc.common "enable" needs ubus, which is not running in the build container)
 # accounts still those of the image until an installer or mu300-update puts the device ones in place
 : > $R/etc/.mu300-accounts-from-image
-for s in mu300-accounts mu300-vendor mu300-hw mu300-post mu300-toolkit mu300-cpu mu300-atd mu300-modem-log mu300-wifi-client mu300-buttons mu300-power mu300-traffic; do
+for s in mu300-accounts mu300-vendor mu300-hw mu300-post mu300-toolkit mu300-cpu mu300-atd mu300-modem-log mu300-wifi-client mu300-buttons mu300-power mu300-traffic mu300-user-packages; do
     n=$(sed -n "s/^START=//p" $R/etc/init.d/$s)
     ln -sf ../init.d/$s $R/etc/rc.d/S$n$s
 done
@@ -277,6 +277,10 @@ for b in power wps rfkill; do
 done
 # what apk installed, for comparing two builds (packages on the release feed are not pinned)
 apk list --installed | sort > $R/etc/mu300/packages.txt
+# the packages the image asks for (its world file): an update installs the others again, the ones added on the
+# device (mu300-update, upk_record; read with its own function)
+(MU300_LIB=1; . /in/opt-mu300/bin/mu300-update; upk_manual $R openwrt) > $R/etc/mu300/image-packages
+[ -s $R/etc/mu300/image-packages ] || { echo "no package list for etc/mu300/image-packages" >&2; exit 1; }
 # busybox PATH is /usr/sbin:/usr/bin:/sbin:/bin, so the commands go into /usr/bin (the same list as Ubuntu)
 for c in $(cat /in/opt-mu300/lib/path-commands); do ln -sf /opt/mu300/bin/$c $R/usr/bin/$c; done
 # no kernel of its own: OpenWrt kmods (6.12) and grub are unused on this device
