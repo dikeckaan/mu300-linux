@@ -27,6 +27,18 @@ Use **Cellular -> SMS** in the panel: read, send and delete. There a pool daemon
 > delete messages nobody has looked at. Delete from the panel, or with `mu300-sms delete` (which touches the SIM only
 > with `--sim`). For automation use the panel's hook, `/etc/mu300/sms-hook`, rather than `sms watch`.
 
+## SMS forwarding
+
+On OpenWrt with the control panel, **Cellular > SMS forwarding** passes incoming messages on to a webhook (JSON or a
+form), a Telegram chat or another phone by SMS. It is off until you turn it on. Each target has a template
+(`{sender}`, `{time}`, `{text}`, `{device}`) and can filter by sender and keyword; there is a "Send test" button and
+a delivery log, and failed deliveries are retried with a growing wait. Tokens, passwords and the webhook's address
+stay in `/etc/mu300/sms-forward.conf` (root only) and never appear in a log. E-mail forwarding needs `msmtp`, which
+the image does not include.
+
+Since v2026.10.18 a message leaves the SIM only once its copy is on the disk, so a power cut loses none, and a long
+message whose other parts never arrive is shown after an hour, marked incomplete.
+
 ## USSD
 
 Balance checks and similar codes:

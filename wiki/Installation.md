@@ -182,9 +182,9 @@ the first time you plug the device in.
 ## Installing from Android with a Magisk zip (no computer)
 
 If the device runs a rooted Android with **Magisk 26 or newer**, Linux can be installed from the device itself. Each
-release has one zip per system and kernel, e.g. `mu300-magisk-<tag>-ubuntu-24.04-k5.4.zip`; the same zip works on
-the F50 and the U30 Air and finds the place by itself. There is no zip for `openwrt-luci` (that one comes with
-`./install.sh`) and no Ubuntu 26.04 zip with kernel 5.4.
+release has one zip per system and kernel, 11 in all, e.g. `mu300-magisk-<tag>-ubuntu-24.04-k5.4.zip` or
+`mu300-magisk-<tag>-openwrt-luci-k7.2.zip` (OpenWrt with the control panel); the same zip works on the F50 and the
+U30 Air and finds the place by itself. There is no Ubuntu 26.04 zip with kernel 5.4.
 
 1. Put the zip on the device and open it in the Magisk app (Modules, Install from storage), or run
    `su -c 'magisk --install-module /sdcard/Download/<zip>'`. Not from recovery.

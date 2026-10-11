@@ -107,10 +107,10 @@
 <a class="brand" href="../../zh/"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="8" width="52" height="50" rx="12" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="22" cy="20" r="3.5" fill="#2259d6"/><circle cx="32" cy="20" r="3.5" fill="currentColor"/><circle cx="42" cy="20" r="3.5" fill="#f2b23a"/><path d="M17 32 l9 7 l-9 7" fill="none" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 47 h15" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round"/></svg>MU300 Linux</a>
 <nav class="site-nav" id="site-nav" aria-label="Main">
 <a href="../../zh/install/" aria-current="page">安装</a>
-<a href="../../choose/" hreflang="en">选择系统 <span class="en-tag">EN</span></a>
-<a href="../../features/" hreflang="en">功能 <span class="en-tag">EN</span></a>
-<a href="../../updates/" hreflang="en">更新与安全 <span class="en-tag">EN</span></a>
-<a href="../../troubleshooting/" hreflang="en">故障排除 <span class="en-tag">EN</span></a>
+<a href="../../zh/choose/">选择系统</a>
+<a href="../../zh/features/">功能</a>
+<a href="../../zh/updates/">更新与安全</a>
+<a href="../../zh/troubleshooting/">故障排除</a>
 <a href="https://github.com/dikeckaan/mu300-linux">GitHub</a>
 <span class="langs" role="group" aria-label="语言"><a href="../../install/" hreflang="en" lang="en">English</a><a href="../../tr/install/" hreflang="tr" lang="tr">Türkçe</a><a href="../../zh/install/" hreflang="zh-Hans" lang="zh-Hans" aria-current="true">中文</a></span>
 </nav>
@@ -257,7 +257,7 @@ install.cmd -Lang zh                   <span class="c"># Windows (cmd)</span></c
 或 <code>y</code>/<code>n</code>。有些问题只在需要时才会出现。</p>
 <div class="qa"><span class="ask">Language / Dil / 语言 [1]</span><p>安装程序的语言：1 English（默认），2 Türkçe，3 中文。如果用 <code>MU300_LANG=zh</code> 启动，就不会问这个问题。</p><p class="pick">输入 <code>3</code> 选择中文。</p></div>
 <div class="qa"><span class="ask">Linux 文件系统要放在哪里：内部存储还是 SD 卡（...）？(internal/sd)</span><p>只有 F50 里插着 SD 卡时才会问。<code>internal</code> 使用内部存储的空闲空间，<code>sd</code> 把卡格式化给 Linux 用（卡上所有内容都会被清除，你需要输入 <code>ERASE</code> 确认）。</p><p class="pick">不确定？64 GB 设备选 <code>internal</code>，32 GB 版本选 <code>sd</code>。</p></div>
-<div class="qa"><span class="ask">要安装什么？1) Ubuntu LTS 2) OpenWrt 3) 两者都装</span><p>Ubuntu 是带 <code>apt</code> 的完整 Linux 系统（约占用 500 MiB 内存）。OpenWrt 是带网页界面的路由器系统（约 140 MiB）。“两者都装”会把它们并排安装；之后用 <code>mu300-os</code> 切换。</p><p class="pick">不确定？如果检查结果说两个都装得下，选 3，两者都装（默认）。参见<a href="../../choose/" hreflang="en">选择系统</a>（英文）。</p></div>
+<div class="qa"><span class="ask">要安装什么？1) Ubuntu LTS 2) OpenWrt 3) 两者都装</span><p>Ubuntu 是带 <code>apt</code> 的完整 Linux 系统（约占用 500 MiB 内存）。OpenWrt 是带网页界面的路由器系统（约 140 MiB）。“两者都装”会把它们并排安装；之后用 <code>mu300-os</code> 切换。</p><p class="pick">不确定？如果检查结果说两个都装得下，选 3，两者都装（默认）。参见<a href="../choose/">选择系统</a>。</p></div>
 <div class="qa"><span class="ask">要哪个 OpenWrt？1) 标准的 LuCI 网页界面 2) 搭配 MU300 控制面板</span><p>选择 OpenWrt 时才会问。控制面板增加了仪表盘、蜂窝锁定、短信、AT 终端和 USB 模式。</p><p class="pick">不确定？想在浏览器里看信号和短信就选 2；普通 OpenWrt 选 1（默认）。</p></div>
 <div class="qa"><span class="ask">启动哪个系统（ubuntu/openwrt）</span><p>装了两个系统时：先启动哪一个。另一个仍然保留。</p><p class="pick">按 <kbd>Enter</kbd> 选择 Ubuntu。</p></div>
 <div class="qa"><span class="ask">选择哪个 Ubuntu？1) 24.04 LTS 2) 26.04 LTS</span><p>24.04 是默认选项，测试时间最长，支持到 2029 年。26.04 是最新版本（systemd 259，更新的软件包），支持到 2031 年，需要主线内核（6.18 或 7.2）。</p><p class="pick">不确定？选 1，24.04（默认）。</p></div>
@@ -305,7 +305,7 @@ ssh ubuntu@192.168.78.1        <span class="c"># U30 Air 上的 Ubuntu</span></c
 sudo mobile-data status        <span class="c"># 5G/LTE 连接是否正常？</span>
 sudo mu300-update check        <span class="c"># 有没有更新的版本？</span></code></pre>
 <p><code>mu300-toolkit</code> 是一个类似 <code>raspi-config</code> 的菜单：温度、CPU 和内存占用、网速、性能模式、Wi-Fi、VPN
-和软件更新。直接命令列在<a href="../../features/" hreflang="en">功能</a>（英文）页面上；更新、回滚以及在 Android 和 Linux 之间来回切换，请看<a href="../../updates/" hreflang="en">更新与安全</a>（英文）。</p>
+和软件更新。直接命令列在<a href="../features/">功能</a>页面上；更新、回滚以及在 Android 和 Linux 之间来回切换，请看<a href="../updates/">更新与安全</a>。</p>
 
 <h3>可以提前设定、跳过提问的选项</h3>
 <div class="table-scroll"><table>
@@ -324,6 +324,9 @@ sudo mu300-update check        <span class="c"># 有没有更新的版本？</sp
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k5.4.zip</code></th><td>OpenWrt</td><td>5.4</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k6.18.zip</code></th><td>OpenWrt</td><td>6.18 LTS</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k7.2.zip</code></th><td>OpenWrt</td><td>7.2</td></tr>
+<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k5.4.zip</code></th><td>带控制面板的 OpenWrt</td><td>5.4</td></tr>
+<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k6.18.zip</code></th><td>带控制面板的 OpenWrt</td><td>6.18 LTS</td></tr>
+<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k7.2.zip</code></th><td>带控制面板的 OpenWrt</td><td>7.2</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k5.4.zip</code></th><td>Ubuntu 24.04</td><td>5.4</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k6.18.zip</code></th><td>Ubuntu 24.04</td><td>6.18 LTS</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k7.2.zip</code></th><td>Ubuntu 24.04</td><td>7.2</td></tr>
@@ -331,7 +334,7 @@ sudo mu300-update check        <span class="c"># 有没有更新的版本？</sp
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-26.04-k7.2.zip</code></th><td>Ubuntu 26.04</td><td>7.2</td></tr>
 </tbody></table></div>
 <ol>
-<li><strong>选一个 zip</strong>：从<a href="https://github.com/dikeckaan/mu300-linux/releases/latest">最新版本</a>下载，并用 <code>SHA256SUMS-magisk</code> 校验。带控制面板的 OpenWrt 没有 zip：它只随 <code>./install.sh</code> 提供。</li>
+<li><strong>选一个 zip</strong>：从<a href="https://github.com/dikeckaan/mu300-linux/releases/latest">最新版本</a>下载，并用 <code>SHA256SUMS-magisk</code> 校验。每个版本共有 11 个，带控制面板的 OpenWrt 也在其中。</li>
 <li><strong>安装</strong>：在 Magisk 应用中（模块，从本地安装），或者在 <code>adb shell</code> 中：
 <pre><code>su -c 'magisk --install-module /sdcard/Download/&lt;zip&gt;'</code></pre>
 不要在 recovery 中安装。</li>
@@ -339,11 +342,11 @@ sudo mu300-update check        <span class="c"># 有没有更新的版本？</sp
 <code>/data/adb/mu300-linux-password.txt</code> 里；第一次登录后请删除这个文件。</li>
 <li><strong>重启。</strong>Linux 会启动；如果没有，设备会自动回到 Android。</li>
 </ol>
-<p>要装两个系统，就先后安装 OpenWrt 和 Ubuntu 的 zip。zip 永远不会缩小 <code>userdata</code>，这件事只能用电脑上的安装程序完成。存储位置、默认启动或你自己的密码等设置写在 <code>mu300-install.conf</code> 文件里，说明见
+<p>要装两个系统，就先后安装 OpenWrt（或带控制面板的 OpenWrt）和 Ubuntu 的 zip。zip 永远不会缩小 <code>userdata</code>，这件事只能用电脑上的安装程序完成。存储位置、默认启动或你自己的密码等设置写在 <code>mu300-install.conf</code> 文件里，说明见
 <a href="https://github.com/dikeckaan/mu300-linux#choosing-something-else-mu300-installconf">README</a>（英文）。</p>
 
 <h2 id="uninstall">再次移除</h2>
-<p>设备回到 Android 后，运行 <code>./uninstall.sh</code>（Windows：<code>.\uninstall.ps1</code> 或 <code>uninstall.cmd</code>）。它会把 Android 重新设为启动系统，恢复第二个启动分区，并清除 Linux 文件系统。你的 Android 数据不受影响。它提供的选项请看<a href="../../updates/#uninstall" hreflang="en">更新与安全</a>（英文）页面。</p>
+<p>设备回到 Android 后，运行 <code>./uninstall.sh</code>（Windows：<code>.\uninstall.ps1</code> 或 <code>uninstall.cmd</code>）。它会把 Android 重新设为启动系统，恢复第二个启动分区，并清除 Linux 文件系统。你的 Android 数据不受影响。它提供的选项请看<a href="../updates/#uninstall">更新与安全</a>页面。</p>
 <p><a href="../">返回首页</a></p>
 </div>
 
@@ -362,7 +365,7 @@ sudo mu300-update check        <span class="c"># 有没有更新的版本？</sp
 <h2>帮助</h2>
 <ul>
 <li><a href="https://github.com/dikeckaan/mu300-linux/wiki">Wiki（英文）</a></li>
-<li><a href="../../troubleshooting/" hreflang="en">故障排除（英文）</a></li>
+<li><a href="../../zh/troubleshooting/">故障排除</a></li>
 <li><a href="https://github.com/dikeckaan/mu300-linux/issues">报告问题</a></li>
 </ul>
 </div>

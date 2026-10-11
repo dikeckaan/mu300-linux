@@ -7,6 +7,10 @@
 <title>Troubleshooting MU300 Linux on the ZTE F50 / MU300 and U30 Air</title>
 <meta name="description" content="Fixes for common problems with Linux on the ZTE F50 / MU300 and U30 Air: the installer, no USB address, no internet, falling back to Android, OpenWrt on kernel 5.4, slow downloads and known issues.">
 <link rel="canonical" href="https://kaandikec.com/mu300-linux/troubleshooting/">
+<link rel="alternate" hreflang="en" href="https://kaandikec.com/mu300-linux/troubleshooting/">
+<link rel="alternate" hreflang="tr" href="https://kaandikec.com/mu300-linux/tr/troubleshooting/">
+<link rel="alternate" hreflang="zh-Hans" href="https://kaandikec.com/mu300-linux/zh/troubleshooting/">
+<link rel="alternate" hreflang="x-default" href="https://kaandikec.com/mu300-linux/troubleshooting/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="MU300 Linux">
 <meta property="og:title" content="Troubleshooting MU300 Linux on the ZTE F50 / MU300 and U30 Air">
@@ -62,7 +66,7 @@
 <a href="../updates/">Updates and safety</a>
 <a href="../troubleshooting/" aria-current="page">Troubleshooting</a>
 <a href="https://github.com/dikeckaan/mu300-linux">GitHub</a>
-<span class="langs" role="group" aria-label="Language"><a href="../" hreflang="en" lang="en" aria-current="true">English</a><a href="../tr/" hreflang="tr" lang="tr">Türkçe</a><a href="../zh/" hreflang="zh-Hans" lang="zh-Hans">中文</a></span>
+<span class="langs" role="group" aria-label="Language"><a href="../troubleshooting/" hreflang="en" lang="en" aria-current="true">English</a><a href="../tr/troubleshooting/" hreflang="tr" lang="tr">Türkçe</a><a href="../zh/troubleshooting/" hreflang="zh-Hans" lang="zh-Hans">中文</a></span>
 </nav>
 <button class="theme-btn" type="button" hidden data-labels="Theme|Auto|Light|Dark|follows your system|Change the colour theme"><svg class="i-auto" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg><svg class="i-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="i-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span class="theme-name"></span></button>
 <button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
@@ -171,11 +175,10 @@ adb shell su -c id</code></pre><p>The device should be listed as <code>device</c
 <li>A rare silent hang at start-up on 6.18, seen on one board (see <a href="#kernel-618">above</a>).</li>
 <li>Under sustained Wi-Fi load the vendor driver logs <code>edma_pending_q_buffer full</code> or <code>push link
 fail</code> while it drops packets. The transfer completes.</li>
+<li>Suspend with the hotspot up returns at once. Some carriers drop UDP and block OpenVPN.</li>
+<li>E-mail forwarding of SMS needs <code>msmtp</code>, which the image does not include, so that target stays off.</li>
 <li>Updating from v2026.10.14 or older prints "could not arm the Linux slot for a trial". The fallback to Android after
 failed starts still works.</li>
-<li>Suspend with the hotspot up returns at once. Some carriers drop UDP and block OpenVPN.</li>
-<li>On OpenWrt with the control panel, an IPv6 prefix the carrier has withdrawn can stay advertised on the LAN until it
-expires.</li>
 </ul>
 <p>Each release's notes list its own: <a href="https://github.com/dikeckaan/mu300-linux/releases">releases</a>.</p>
 

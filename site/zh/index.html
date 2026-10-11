@@ -86,7 +86,7 @@
    "name": "如果 Linux 启动不了怎么办？",
    "acceptedAnswer": {
     "@type": "Answer",
-    "text": "设备会自动回到 Android。每次启动 Linux 都是一次试用；如果连续失败 5 次（安装时可在 1 到 6 之间选择），下一次启动就是 Android。详见安全网（英文）。"
+    "text": "设备会自动回到 Android。每次启动 Linux 都是一次试用；如果连续失败 5 次（安装时可在 1 到 6 之间选择），下一次启动就是 Android。详见安全网。"
    }
   },
   {
@@ -102,7 +102,7 @@
    "name": "Ubuntu 还是 OpenWrt，该选哪个？",
    "acceptedAnswer": {
     "@type": "Answer",
-    "text": "如果主要想要一个带网页界面的路由器，选 OpenWrt；如果想要一台用 apt 的小服务器，选 Ubuntu。也可以两个都装，用 mu300-os 切换。选择系统（英文）页面连同三个内核一起做了说明。"
+    "text": "如果主要想要一个带网页界面的路由器，选 OpenWrt；如果想要一台用 apt 的小服务器，选 Ubuntu。也可以两个都装，用 mu300-os 切换。选择系统页面连同三个内核一起做了说明。"
    }
   },
   {
@@ -118,7 +118,7 @@
    "name": "可以不用电脑安装吗？",
    "acceptedAnswer": {
     "@type": "Answer",
-    "text": "可以，前提是设备已经运行装有 Magisk 26 或更新版本的 root 过的 Android：每个发布版本都有 Magisk zip，每个系统和内核各一个，在 Magisk 应用里安装。带控制面板的 OpenWrt 只能通过电脑上的安装程序安装。参见用 Magisk zip 安装。"
+    "text": "可以，前提是设备已经运行装有 Magisk 26 或更新版本的 root 过的 Android：每个发布版本都有 Magisk zip，每个系统和内核各一个（共 11 个，包括带控制面板的 OpenWrt），在 Magisk 应用里安装。参见用 Magisk zip 安装。"
    }
   },
   {
@@ -156,10 +156,10 @@
 <a class="brand" href="../zh/"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="8" width="52" height="50" rx="12" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="22" cy="20" r="3.5" fill="#2259d6"/><circle cx="32" cy="20" r="3.5" fill="currentColor"/><circle cx="42" cy="20" r="3.5" fill="#f2b23a"/><path d="M17 32 l9 7 l-9 7" fill="none" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 47 h15" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round"/></svg>MU300 Linux</a>
 <nav class="site-nav" id="site-nav" aria-label="Main">
 <a href="../zh/install/">安装</a>
-<a href="../choose/" hreflang="en">选择系统 <span class="en-tag">EN</span></a>
-<a href="../features/" hreflang="en">功能 <span class="en-tag">EN</span></a>
-<a href="../updates/" hreflang="en">更新与安全 <span class="en-tag">EN</span></a>
-<a href="../troubleshooting/" hreflang="en">故障排除 <span class="en-tag">EN</span></a>
+<a href="../zh/choose/">选择系统</a>
+<a href="../zh/features/">功能</a>
+<a href="../zh/updates/">更新与安全</a>
+<a href="../zh/troubleshooting/">故障排除</a>
 <a href="https://github.com/dikeckaan/mu300-linux">GitHub</a>
 <span class="langs" role="group" aria-label="语言"><a href="../" hreflang="en" lang="en">English</a><a href="../tr/" hreflang="tr" lang="tr">Türkçe</a><a href="../zh/" hreflang="zh-Hans" lang="zh-Hans" aria-current="true">中文</a></span>
 </nav>
@@ -605,7 +605,7 @@ Android 分区之后大约 32 GiB 的存储空间。Linux 搬进这个空房间�
 <p>在 Linux 中，要求下次启动进入 Android，然后重启：</p>
 <pre><code>sudo mu300-next-boot android
 sudo reboot</code></pre>
-<p>在 Android 中，用 <code>su -c mu300-linux</code>，或者安装程序添加的“MU300 Linux” Magisk 模块的 Action 按钮，就能回到 Linux。要永久移除 Linux，在电脑上运行卸载程序。这些都在<a href="../updates/" hreflang="en">更新与安全</a>（英文）页面上。</p>
+<p>在 Android 中，用 <code>su -c mu300-linux</code>，或者安装程序添加的“MU300 Linux” Magisk 模块的 Action 按钮，就能回到 Linux。要永久移除 Linux，在电脑上运行卸载程序。这些都在<a href="updates/">更新与安全</a>页面上。</p>
 
 <h3>4. 桌上的私人网络</h3>
 <p>手机和笔记本连接设备的 Wi-Fi 热点，或者插在它的 USB 口上。设备通过你的 SIM 卡用 5G 或 LTE，或者通过它加入的另一个 Wi-Fi 网络，把它们带到互联网。通过 USB，你的电脑可以在 <code>192.168.77.1</code>（F50）或 <code>192.168.78.1</code>（U30 Air）访问设备本身。</p>
@@ -792,7 +792,7 @@ root、解锁和救砖工具都不属于本项目。请做好备份，不要装�
 <details class="faq">
 <summary>如果 Linux 启动不了怎么办？</summary>
 <div>
-<p>设备会自动回到 Android。每次启动 Linux 都是一次试用；如果连续失败 5 次（安装时可在 1 到 6 之间选择），下一次启动就是 Android。详见<a href="../updates/#safety-net" hreflang="en">安全网</a>（英文）。</p>
+<p>设备会自动回到 Android。每次启动 Linux 都是一次试用；如果连续失败 5 次（安装时可在 1 到 6 之间选择），下一次启动就是 Android。详见<a href="updates/#safety-net">安全网</a>。</p>
 </div>
 </details>
 <details class="faq">
@@ -804,7 +804,7 @@ root、解锁和救砖工具都不属于本项目。请做好备份，不要装�
 <details class="faq">
 <summary>Ubuntu 还是 OpenWrt，该选哪个？</summary>
 <div>
-<p>如果主要想要一个带网页界面的路由器，选 OpenWrt；如果想要一台用 <code>apt</code> 的小服务器，选 Ubuntu。也可以两个都装，用 <code>mu300-os</code> 切换。<a href="../choose/" hreflang="en">选择系统</a>（英文）页面连同三个内核一起做了说明。</p>
+<p>如果主要想要一个带网页界面的路由器，选 OpenWrt；如果想要一台用 <code>apt</code> 的小服务器，选 Ubuntu。也可以两个都装，用 <code>mu300-os</code> 切换。<a href="choose/">选择系统</a>页面连同三个内核一起做了说明。</p>
 </div>
 </details>
 <details class="faq">
@@ -816,7 +816,7 @@ root、解锁和救砖工具都不属于本项目。请做好备份，不要装�
 <details class="faq">
 <summary>可以不用电脑安装吗？</summary>
 <div>
-<p>可以，前提是设备已经运行装有 Magisk 26 或更新版本的 root 过的 Android：每个发布版本都有 Magisk zip，每个系统和内核各一个，在 Magisk 应用里安装。带控制面板的 OpenWrt 只能通过电脑上的安装程序安装。参见<a href="install/#magisk">用 Magisk zip 安装</a>。</p>
+<p>可以，前提是设备已经运行装有 Magisk 26 或更新版本的 root 过的 Android：每个发布版本都有 Magisk zip，每个系统和内核各一个（共 11 个，包括带控制面板的 OpenWrt），在 Magisk 应用里安装。参见<a href="install/#magisk">用 Magisk zip 安装</a>。</p>
 </div>
 </details>
 <details class="faq">
@@ -841,10 +841,10 @@ root、解锁和救砖工具都不属于本项目。请做好备份，不要装�
 <h2 id="more">接下来去哪里</h2>
 <ul>
 <li><a href="install/">安装指南</a>：面向新手的每一步和每个问题。</li>
-<li><a href="../choose/" hreflang="en">选择系统</a>（英文）：Ubuntu、OpenWrt 还是控制面板，以及选哪个内核。</li>
-<li><a href="../features/" hreflang="en">功能</a>（英文）：移动数据、热点、Wi-Fi 客户端、短信、VPN、电池和指示灯。</li>
-<li><a href="../updates/" hreflang="en">更新与安全</a>（英文）：更新、回滚、回到 Android、卸载。</li>
-<li><a href="../troubleshooting/" hreflang="en">故障排除</a>（英文）：已知问题及解决方法。</li>
+<li><a href="choose/">选择系统</a>：Ubuntu、OpenWrt 还是控制面板，以及选哪个内核。</li>
+<li><a href="features/">功能</a>：移动数据、热点、Wi-Fi 客户端、短信、VPN、电池和指示灯。</li>
+<li><a href="updates/">更新与安全</a>：更新、回滚、回到 Android、卸载。</li>
+<li><a href="troubleshooting/">故障排除</a>：已知问题及解决方法。</li>
 <li><a href="https://github.com/dikeckaan/mu300-linux/wiki">Wiki</a>（英文）：每个技术词汇的解释，以及更深入的页面。</li>
 </ul>
 </div>
@@ -864,7 +864,7 @@ root、解锁和救砖工具都不属于本项目。请做好备份，不要装�
 <h2>帮助</h2>
 <ul>
 <li><a href="https://github.com/dikeckaan/mu300-linux/wiki">Wiki（英文）</a></li>
-<li><a href="../troubleshooting/" hreflang="en">故障排除（英文）</a></li>
+<li><a href="../zh/troubleshooting/">故障排除</a></li>
 <li><a href="https://github.com/dikeckaan/mu300-linux/issues">报告问题</a></li>
 </ul>
 </div>

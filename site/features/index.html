@@ -7,6 +7,10 @@
 <title>Features: 5G data, Wi-Fi hotspot, SMS, VPN and more on the ZTE F50 / U30 Air with Linux</title>
 <meta name="description" content="What Linux does on the ZTE F50 / MU300 and U30 Air: 5G and LTE mobile data, APN and TTL, Wi-Fi hotspot and client, USB network, SMS and USSD, VPN, battery, LEDs and the toolkit, with the commands.">
 <link rel="canonical" href="https://kaandikec.com/mu300-linux/features/">
+<link rel="alternate" hreflang="en" href="https://kaandikec.com/mu300-linux/features/">
+<link rel="alternate" hreflang="tr" href="https://kaandikec.com/mu300-linux/tr/features/">
+<link rel="alternate" hreflang="zh-Hans" href="https://kaandikec.com/mu300-linux/zh/features/">
+<link rel="alternate" hreflang="x-default" href="https://kaandikec.com/mu300-linux/features/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="MU300 Linux">
 <meta property="og:title" content="Features: 5G data, Wi-Fi hotspot, SMS, VPN and more on the ZTE F50 / U30 Air with Linux">
@@ -62,7 +66,7 @@
 <a href="../updates/">Updates and safety</a>
 <a href="../troubleshooting/">Troubleshooting</a>
 <a href="https://github.com/dikeckaan/mu300-linux">GitHub</a>
-<span class="langs" role="group" aria-label="Language"><a href="../" hreflang="en" lang="en" aria-current="true">English</a><a href="../tr/" hreflang="tr" lang="tr">Türkçe</a><a href="../zh/" hreflang="zh-Hans" lang="zh-Hans">中文</a></span>
+<span class="langs" role="group" aria-label="Language"><a href="../features/" hreflang="en" lang="en" aria-current="true">English</a><a href="../tr/features/" hreflang="tr" lang="tr">Türkçe</a><a href="../zh/features/" hreflang="zh-Hans" lang="zh-Hans">中文</a></span>
 </nav>
 <button class="theme-btn" type="button" hidden data-labels="Theme|Auto|Light|Dark|follows your system|Change the colour theme"><svg class="i-auto" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg><svg class="i-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="i-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span class="theme-name"></span></button>
 <button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
@@ -83,7 +87,7 @@
 <nav class="toc" aria-labelledby="toc-h">
 <h2 id="toc-h">Features</h2>
 <ol>
-<li><a href="#mobile-data">Mobile data and APN</a></li>
+<li><a href="#mobile-data">Mobile data, APN and data usage</a></li>
 <li><a href="#hotspot">Wi-Fi hotspot</a></li>
 <li><a href="#wifi-client">Wi-Fi client</a></li>
 <li><a href="#usb">USB network and console</a></li>
@@ -110,6 +114,17 @@ and the device uses what the SIM card says.</p>
 <tr><th scope="row">OpenWrt</th><td>LuCI: Network &gt; Interfaces &gt; wan, or with <code>uci</code> (below)</td></tr>
 </tbody></table></div>
 <pre><code>uci set network.wan.apn='your.apn'; uci commit network; ifup wan</code></pre>
+<h3 id="data-usage">How much data you used</h3>
+<p>The device counts its mobile data per day and per billing cycle, in both directions, the way the operator counts
+it. You can set the day the cycle starts and a monthly cap with a warning; turning mobile data off at the cap is
+optional, and it comes back on by itself when the next cycle starts. The count survives restarts and switching between
+systems, and nothing is counted twice. On OpenWrt with the control panel this is the Cellular &gt; Data usage page, and
+the dashboard shows the current download and upload speed every second.</p>
+<pre><code>mu300-traffic                       <span class="c"># today, this billing cycle and the cap</span>
+sudo mu300-traffic set reset-day 1  <span class="c"># the day a billing cycle starts</span>
+sudo mu300-traffic set cap 50G      <span class="c"># a monthly cap; warns at 90 %</span>
+sudo mu300-traffic set cut on       <span class="c"># optional: data off at the cap</span>
+mu300-traffic days                  <span class="c"># the last days with traffic</span></code></pre>
 <h3 id="ttl">A fixed TTL</h3>
 <p>Every packet carries a small counter called TTL. Some operators look at it to tell hotspot traffic from the
 device's own. You can set a fixed value:</p>
@@ -131,6 +146,9 @@ otherwise at install, it has the same name and password as under Android, so you
 </tbody></table></div>
 <pre><code>sudo nano /etc/mu300/hotspot.conf        <span class="c"># SSID=, PSK=, BAND=5 or 2.4, CHANNEL=auto, COUNTRY=</span>
 sudo systemctl restart mu300-hotspot</code></pre>
+<p>If the Wi-Fi chip's firmware crashes, the driver resets the chip and the Wi-Fi comes back by itself, as a hotspot
+or as a client of another network: in the tests within 15 to 20 seconds, on 6.18 and 7.2. If the chip cannot be reset
+within 70 seconds, the device restarts cleanly instead of hanging.</p>
 </section>
 
 <section id="wifi-client">
@@ -176,7 +194,16 @@ sudo sms delete INDEX
 sudo mu300-ussd '*101#'                  <span class="c"># a USSD code, for example your balance</span></code></pre>
 <p>On OpenWrt with the control panel, SMS are under Cellular &gt; SMS. That system syncs the SIM every 30 seconds,
 which marks unread messages on the SIM as read; the panel keeps its own unread state. Do not run
-<code>sms delete read</code> there.</p>
+<code>sms delete read</code> there. A message leaves the SIM only after its copy is safely on the disk, so a power cut
+loses none, and a long message whose other parts never arrive is shown after an hour, marked incomplete.</p>
+<h3 id="sms-forwarding">SMS forwarding</h3>
+<p>On OpenWrt with the control panel, Cellular &gt; SMS forwarding sends incoming messages on: to a webhook (JSON or a
+form), a Telegram chat, or another phone by SMS. It is off until you turn it on. Each target has a template
+(<code>{sender}</code>, <code>{time}</code>, <code>{text}</code>, <code>{device}</code>) and can filter by sender
+and keyword. There is a "Send test" button and a delivery log; failed deliveries are retried with a growing wait.
+Tokens, passwords and the webhook's address stay in <code>/etc/mu300/sms-forward.conf</code>, readable only by root,
+and never appear in a log. E-mail forwarding needs <code>msmtp</code>, which the image does not include, so that target
+stays off.</p>
 </section>
 
 <section id="vpn">
@@ -235,6 +262,13 @@ On OpenWrt with the control panel this is the System &gt; Power page.</p>
 <pre><code>mu300-power status
 sudo mu300-power profile battery         <span class="c"># plugged, battery, saver or auto</span>
 sudo mu300-power set battery.WIFI_IDLE 10</code></pre>
+<h3 id="cpu">CPU profiles</h3>
+<p>Three profiles decide how fast the processor may run: <strong>saving</strong> (cores capped at about 60 % of their
+maximum: cooler, less power), <strong>balanced</strong> (the default, the stock behaviour) and
+<strong>performance</strong> (every core cluster at its maximum). They never touch the voltage, and the thermal
+protection stays in charge in every profile. On the control panel: System &gt; CPU.</p>
+<pre><code>mu300-cpu status
+sudo mu300-cpu profile saving            <span class="c"># or balanced (the default), performance</span></code></pre>
 <p>A start that began because a charger was plugged in stays a charging start (LED blinking, hotspot and modem down)
 until you press the Wi-Fi key.</p>
 </section>
