@@ -355,6 +355,9 @@ finds the place by itself (the internal storage or an SD card).</p>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k5.4.zip</code></th><td>OpenWrt</td><td>5.4</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k6.18.zip</code></th><td>OpenWrt</td><td>6.18 LTS</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k7.2.zip</code></th><td>OpenWrt</td><td>7.2</td></tr>
+<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k5.4.zip</code></th><td>OpenWrt with the control panel</td><td>5.4</td></tr>
+<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k6.18.zip</code></th><td>OpenWrt with the control panel</td><td>6.18 LTS</td></tr>
+<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k7.2.zip</code></th><td>OpenWrt with the control panel</td><td>7.2</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k5.4.zip</code></th><td>Ubuntu 24.04</td><td>5.4</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k6.18.zip</code></th><td>Ubuntu 24.04</td><td>6.18 LTS</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k7.2.zip</code></th><td>Ubuntu 24.04</td><td>7.2</td></tr>
@@ -363,8 +366,7 @@ finds the place by itself (the internal storage or an SD card).</p>
 </tbody></table></div>
 <ol>
 <li><strong>Take one zip</strong> from the <a href="https://github.com/dikeckaan/mu300-linux/releases/latest">latest release</a> and check it with
-<code>SHA256SUMS-magisk</code>. There is no zip for OpenWrt with the control panel: that one comes with
-<code>./install.sh</code>.</li>
+<code>SHA256SUMS-magisk</code>. A release has 11 of them, OpenWrt with the control panel included.</li>
 <li><strong>Install it</strong> in the Magisk app (Modules, Install from storage), or from <code>adb shell</code>:
 <pre><code>su -c 'magisk --install-module /sdcard/Download/&lt;zip&gt;'</code></pre>
 Not from recovery.</li>
@@ -373,7 +375,7 @@ it generated. The password is also in <code>/data/adb/mu300-linux-password.txt</
 first login.</li>
 <li><strong>Restart.</strong> Linux starts; if it does not, the device returns to Android by itself.</li>
 </ol>
-<p>For both systems, install the OpenWrt zip and the Ubuntu zip one after the other. The zips never shrink
+<p>For two systems, install the OpenWrt (or control panel) zip and the Ubuntu zip one after the other. The zips never shrink
 <code>userdata</code>; that stays with the computer installer. Settings such as the storage, the boot default or your
 own password go in a <code>mu300-install.conf</code> file, explained in the
 <a href="https://github.com/dikeckaan/mu300-linux#choosing-something-else-mu300-installconf">README</a>.</p>

@@ -107,10 +107,10 @@
 <a class="brand" href="../../tr/"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="8" width="52" height="50" rx="12" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="22" cy="20" r="3.5" fill="#2259d6"/><circle cx="32" cy="20" r="3.5" fill="currentColor"/><circle cx="42" cy="20" r="3.5" fill="#f2b23a"/><path d="M17 32 l9 7 l-9 7" fill="none" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 47 h15" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round"/></svg>MU300 Linux</a>
 <nav class="site-nav" id="site-nav" aria-label="Main">
 <a href="../../tr/install/" aria-current="page">Kurulum</a>
-<a href="../../choose/" hreflang="en">Sistem seçimi <span class="en-tag">EN</span></a>
-<a href="../../features/" hreflang="en">Özellikler <span class="en-tag">EN</span></a>
-<a href="../../updates/" hreflang="en">Güncelleme ve güvenlik <span class="en-tag">EN</span></a>
-<a href="../../troubleshooting/" hreflang="en">Sorun giderme <span class="en-tag">EN</span></a>
+<a href="../../tr/choose/">Sistem seçimi</a>
+<a href="../../tr/features/">Özellikler</a>
+<a href="../../tr/updates/">Güncelleme ve güvenlik</a>
+<a href="../../tr/troubleshooting/">Sorun giderme</a>
 <a href="https://github.com/dikeckaan/mu300-linux">GitHub</a>
 <span class="langs" role="group" aria-label="Dil"><a href="../../install/" hreflang="en" lang="en">English</a><a href="../../tr/install/" hreflang="tr" lang="tr" aria-current="true">Türkçe</a><a href="../../zh/install/" hreflang="zh-Hans" lang="zh-Hans">中文</a></span>
 </nav>
@@ -281,7 +281,7 @@ sorularına <code>evet</code>/<code>hayır</code>, <code>e</code>/<code>h</code>
 yazabilirsiniz. Bazı sorular yalnızca gerektiğinde çıkar.</p>
 <div class="qa"><span class="ask">Language / Dil / 语言 [1]</span><p>Kurulum programının dili: 1 English (varsayılan), 2 Türkçe, 3 中文. <code>MU300_LANG=tr</code> ile başlattıysanız bu soru gelmez.</p><p class="pick">Türkçe için <code>2</code> yazın.</p></div>
 <div class="qa"><span class="ask">Linux dosya sistemi nereye kurulsun: dahili depolama mı, SD kart mı (...)? (internal/sd)</span><p>Yalnızca F50'de bir SD kart takılıysa sorulur. <code>internal</code> dahili depolamadaki boş alanı kullanır, <code>sd</code> kartı Linux için biçimlendirir (üzerindeki her şey silinir; onaylamak için <code>ERASE</code> yazarsınız).</p><p class="pick">Emin değilseniz: 64 GB cihazda <code>internal</code>, 32 GB sürümde <code>sd</code>.</p></div>
-<div class="qa"><span class="ask">Ne kurulsun? 1) Ubuntu LTS 2) OpenWrt 3) ikisi de</span><p>Ubuntu, <code>apt</code> ile tam bir Linux sistemidir (yaklaşık 500 MiB RAM kullanır). OpenWrt, web arayüzlü bir yönlendirici sistemidir (yaklaşık 140 MiB). "İkisi de" ikisini yan yana kurar; sonradan <code>mu300-os</code> ile geçiş yaparsınız.</p><p class="pick">Emin değilseniz: kontrol ikisinin de sığdığını söylediyse 3, ikisi de (varsayılan). Bkz. <a href="../../choose/" hreflang="en">sistem seçimi</a> (İngilizce).</p></div>
+<div class="qa"><span class="ask">Ne kurulsun? 1) Ubuntu LTS 2) OpenWrt 3) ikisi de</span><p>Ubuntu, <code>apt</code> ile tam bir Linux sistemidir (yaklaşık 500 MiB RAM kullanır). OpenWrt, web arayüzlü bir yönlendirici sistemidir (yaklaşık 140 MiB). "İkisi de" ikisini yan yana kurar; sonradan <code>mu300-os</code> ile geçiş yaparsınız.</p><p class="pick">Emin değilseniz: kontrol ikisinin de sığdığını söylediyse 3, ikisi de (varsayılan). Bkz. <a href="../choose/">sistem seçimi</a>.</p></div>
 <div class="qa"><span class="ask">Hangi OpenWrt? 1) standart LuCI web arayüzü 2) MU300 kontrol paneli</span><p>OpenWrt seçildiğinde sorulur. Kontrol paneli bir pano, hücresel kilitler, SMS, bir AT terminali ve USB kiplerini ekler.</p><p class="pick">Emin değilseniz: sinyali ve SMS'leri tarayıcıda görmek istiyorsanız 2; düz OpenWrt için 1 (varsayılan).</p></div>
 <div class="qa"><span class="ask">Hangisi açılsın (ubuntu/openwrt)</span><p>İki sistem kurulduğunda: önce hangisi açılsın. Diğeri kurulu kalır.</p><p class="pick">Ubuntu için <kbd>Enter</kbd>'a basın.</p></div>
 <div class="qa"><span class="ask">Hangi Ubuntu? 1) 24.04 LTS 2) 26.04 LTS</span><p>24.04 varsayılandır ve en uzun süre test edilendir, 2029'a kadar desteklenir. 26.04 en yenisidir (systemd 259, daha yeni paketler), 2031'e kadar desteklenir ve ana hat bir çekirdek (6.18 ya da 7.2) ister.</p><p class="pick">Emin değilseniz: 1, 24.04 (varsayılan).</p></div>
@@ -339,8 +339,8 @@ sudo mobile-data status        <span class="c"># 5G/LTE bağlantısı açık mı
 sudo mu300-update check        <span class="c"># daha yeni bir sürüm var mı?</span></code></pre>
 <p><code>mu300-toolkit</code>, <code>raspi-config</code> benzeri bir menüdür: sıcaklıklar, CPU ve RAM kullanımı, ağ
 hızları, performans profilleri, Wi-Fi, VPN ve yazılım güncellemeleri. Doğrudan komutlar
-<a href="../../features/" hreflang="en">özellikler</a> sayfasında (İngilizce); güncelleme, geri alma ve Android'e gidip gelme
-<a href="../../updates/" hreflang="en">güncelleme ve güvenlik</a> sayfasında (İngilizce) anlatılıyor.</p>
+<a href="../features/">özellikler</a> sayfasında; güncelleme, geri alma ve Android'e gidip gelme
+<a href="../updates/">güncelleme ve güvenlik</a> sayfasında anlatılıyor.</p>
 
 <h3>Önceden ayarlayarak atlayabileceğiniz seçimler</h3>
 <div class="table-scroll"><table>
@@ -361,6 +361,9 @@ kendisinden kurulabilir. Her sürümde her sistem ve çekirdek için bir zip var
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k5.4.zip</code></th><td>OpenWrt</td><td>5.4</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k6.18.zip</code></th><td>OpenWrt</td><td>6.18 LTS</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k7.2.zip</code></th><td>OpenWrt</td><td>7.2</td></tr>
+<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k5.4.zip</code></th><td>Kontrol panelli OpenWrt</td><td>5.4</td></tr>
+<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k6.18.zip</code></th><td>Kontrol panelli OpenWrt</td><td>6.18 LTS</td></tr>
+<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k7.2.zip</code></th><td>Kontrol panelli OpenWrt</td><td>7.2</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k5.4.zip</code></th><td>Ubuntu 24.04</td><td>5.4</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k6.18.zip</code></th><td>Ubuntu 24.04</td><td>6.18 LTS</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k7.2.zip</code></th><td>Ubuntu 24.04</td><td>7.2</td></tr>
@@ -369,8 +372,7 @@ kendisinden kurulabilir. Her sürümde her sistem ve çekirdek için bir zip var
 </tbody></table></div>
 <ol>
 <li><strong>Bir zip alın</strong>: <a href="https://github.com/dikeckaan/mu300-linux/releases/latest">son sürümden</a>, ve
-<code>SHA256SUMS-magisk</code> ile kontrol edin. Kontrol panelli OpenWrt için zip yoktur: o
-<code>./install.sh</code> ile gelir.</li>
+<code>SHA256SUMS-magisk</code> ile kontrol edin. Her sürümde, kontrol panelli OpenWrt dahil 11 zip vardır.</li>
 <li><strong>Kurun</strong>: Magisk uygulamasında (Modüller, Depodan yükle) ya da <code>adb shell</code>'den:
 <pre><code>su -c 'magisk --install-module /sdcard/Download/&lt;zip&gt;'</code></pre>
 Kurtarma (recovery) modundan değil.</li>
@@ -379,16 +381,16 @@ gösterir. Şifre <code>/data/adb/mu300-linux-password.txt</code> dosyasında da
 silin.</li>
 <li><strong>Yeniden başlatın.</strong> Linux açılır; açılmazsa cihaz kendiliğinden Android'e döner.</li>
 </ol>
-<p>İki sistem için OpenWrt zip'ini ve Ubuntu zip'ini arka arkaya kurun. Zip'ler <code>userdata</code>'yı asla
+<p>İki sistem için OpenWrt (ya da kontrol panelli OpenWrt) zip'ini ve Ubuntu zip'ini arka arkaya kurun. Zip'ler <code>userdata</code>'yı asla
 küçültmez; o iş bilgisayardaki kurulum programında kalır. Depolama, varsayılan açılış ya da kendi şifreniz gibi
-ayarlar bir <code>mu300-install.conf</code> dosyasına yazılır; <a href="https://github.com/dikeckaan/mu300-linux#choosing-something-else-mu300-installconf">README</a>'de
+ayarlar bir <code>mu300-install.conf</code> dosyasına yazılır; <a href="https://github.com/dikeckaan/mu300-linux#choosing-something-else-mu300-installconf" hreflang="en">README</a>'de
 (İngilizce) anlatılıyor.</p>
 
 <h2 id="uninstall">Geri kaldırmak</h2>
 <p>Cihaz Android'e döndüğünde <code>./uninstall.sh</code> çalıştırın (Windows: <code>.\uninstall.ps1</code> ya da
 <code>uninstall.cmd</code>). Android'i yeniden açılış sistemi yapar, ikinci açılış bölümünü geri yükler ve Linux dosya
-sistemini siler. Android verilerinize dokunulmaz. Sunduğu seçenekler <a href="../../updates/#uninstall" hreflang="en">güncelleme
-ve güvenlik</a> sayfasında (İngilizce).</p>
+sistemini siler. Android verilerinize dokunulmaz. Sunduğu seçenekler <a href="../updates/#uninstall">güncelleme
+ve güvenlik</a> sayfasında.</p>
 <p><a href="../">Ana sayfaya dön</a></p>
 </div>
 
@@ -407,7 +409,7 @@ ve güvenlik</a> sayfasında (İngilizce).</p>
 <h2>Yardım</h2>
 <ul>
 <li><a href="https://github.com/dikeckaan/mu300-linux/wiki">Wiki (İngilizce)</a></li>
-<li><a href="../../troubleshooting/" hreflang="en">Sorun giderme (İngilizce)</a></li>
+<li><a href="../../tr/troubleshooting/">Sorun giderme</a></li>
 <li><a href="https://github.com/dikeckaan/mu300-linux/issues">Sorun bildir</a></li>
 </ul>
 </div>

@@ -52,6 +52,7 @@
 
 <header class="page-head">
 <div class="prose">
+<section class="nf" lang="en" data-lang="en">
 <h1>This page is not here</h1>
 <p class="lede">The link may be old, or mistyped. Like the device after a failed start, you can always go back to
 somewhere safe.</p>
@@ -59,9 +60,37 @@ somewhere safe.</p>
 <a class="btn primary" href="/mu300-linux/">Home</a>
 <a class="btn" href="/mu300-linux/install/">Install guide</a>
 </div>
-<p style="margin-top:1.5rem">Türkçe: <a href="/mu300-linux/tr/" lang="tr">ana sayfa</a>. 中文：<a href="/mu300-linux/zh/" lang="zh-Hans">首页</a>.</p>
+</section>
+<section class="nf" lang="tr" data-lang="tr">
+<h2>Bu sayfa burada değil</h2>
+<p class="lede">Bağlantı eski ya da yanlış yazılmış olabilir. Açılamayan bir başlangıçtan sonraki cihaz gibi, siz de
+her zaman güvenli bir yere dönebilirsiniz.</p>
+<div class="actions">
+<a class="btn primary" href="/mu300-linux/tr/">Ana sayfa</a>
+<a class="btn" href="/mu300-linux/tr/install/">Kurulum rehberi</a>
+</div>
+</section>
+<section class="nf" lang="zh-Hans" data-lang="zh">
+<h2>这个页面不存在</h2>
+<p class="lede">链接可能已经过时，或者输错了。就像启动失败后的设备一样，你随时可以回到安全的地方。</p>
+<div class="actions">
+<a class="btn primary" href="/mu300-linux/zh/">首页</a>
+<a class="btn" href="/mu300-linux/zh/install/">安装指南</a>
+</div>
+</section>
 </div>
 </header>
+<script>
+(function () {
+  var m = location.pathname.match(/\/(tr|zh)(\/|$)/), want = m ? m[1] : "en";
+  document.querySelectorAll(".nf").forEach(function (s) {
+    if (s.getAttribute("data-lang") !== want) { s.hidden = true; return; }
+    var h = s.querySelector("h2");
+    if (h) { var h1 = document.createElement("h1"); h1.textContent = h.textContent; h.replaceWith(h1); }
+  });
+  document.documentElement.lang = want === "zh" ? "zh-Hans" : want;
+})();
+</script>
 
 </main>
 <footer class="site-footer">
