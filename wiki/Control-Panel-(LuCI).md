@@ -20,22 +20,27 @@ Log in as `root` with the password you chose at install.
 | | OpenWrt (`openwrt`) | OpenWrt with the panel (`openwrt-luci`) |
 |---|---|---|
 | LuCI (network, wireless, firewall, packages) | yes | yes |
-| MU300 pages (dashboard, Cellular, Power, Languages) | - | yes |
+| MU300 pages (dashboard, Cellular, Power, CPU, Languages) | - | yes |
 | Theme | LuCI's default | Aurora (Bootstrap stays installed) |
 | IPv6 from the carrier | prefix extension | relayed (router advertisements and NAT66) |
-| Magisk zip | yes | no, `./install.sh` only |
+| Magisk zip | yes | yes (since v2026.10.18) |
 
 Pick it at install ("Which OpenWrt?" -> 2, or `MU300_OPENWRT=luci`), or switch an installed device with
 `sudo mu300-os openwrt-luci` and reboot (the system must be installed).
 
 ## The panel's pages
 
-* **Status dashboard:** live radio readings (signal, bands, cells, temperatures) and the mobile data state; on the U30
+* **Status dashboard:** live radio readings (signal, bands, cells, temperatures), the operator's name, the mobile
+  data state and the current download and upload speed, every second; on the U30
   Air also the battery: level, whether it charges, and the power in watts. The home page also has **Switch to
   Android** and **Lock Linux** (see [Going Back to Android](Going-Back-to-Android)).
 * **Cellular > Network locks:** network mode, band, cell and EN-DC locks that persist across reboots and are replayed
   at boot. **Reset all to automatic** clears them. Locks live in the modem, so they also apply in Android.
 * **Cellular > SMS:** read, send and delete messages (see [SMS](SMS) for the one rule to remember).
+* **Cellular > SMS forwarding:** pass incoming messages on to a webhook, a Telegram chat or another phone (see
+  [SMS](SMS#sms-forwarding)).
+* **Cellular > Data usage:** mobile data per day and per billing cycle, with a reset day and a monthly cap
+  (`mu300-traffic`, see [Mobile Data and APN](Mobile-Data-and-APN#data-usage)).
 * **Cellular > AT terminal:** guarded AT commands over the same channel the system uses.
 * **Cellular > TTL:** a fixed TTL for mobile data (`mu300-ttl`).
 * **Cellular > Device management:** USB role (device or host), the USB network mode (NCM, ECM or RNDIS, applied at the
@@ -44,6 +49,8 @@ Pick it at install ("Which OpenWrt?" -> 2, or `MU300_OPENWRT=luci`), or switch a
 * **System > Languages:** interface language, and the lang extra.
 * **System > Power:** the active power profile and why, battery and power source, the idle settings of the three
   profiles, the saver threshold and the charge limit (100 or 80 %).
+* **System > CPU:** the CPU profile: saving, balanced (the default) or performance (`mu300-cpu`). It never touches
+  the voltage, and the thermal protection stays in charge in every profile.
 
 ## Languages
 

@@ -54,7 +54,8 @@ Or use the menu: `sudo mu300-toolkit` -> Network -> Wi-Fi -> "Join a network".
   From a script: `printf '%s\n' "$PW" | sudo wifi-client connect "NAME" -`, or `--password-file FILE`.
 * The joined network is saved in `/etc/mu300/wifi-client.conf` (root only) and joined again at every boot.
 * `disconnect` lasts across reboots; `disconnect --keep` leaves the network joined at the next boot.
-* Since v2026.10.17, Wi-Fi comes back as client (and as hotspot) after the Wi-Fi chip resets itself.
+* When the Wi-Fi chip's firmware crashes, the driver resets it and the Wi-Fi comes back by itself: the hotspot since
+  v2026.10.17, a Wi-Fi client of another network since v2026.10.18 (it used to reboot the device).
 
 ### What is shared, and what is not
 

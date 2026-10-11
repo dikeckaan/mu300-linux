@@ -38,6 +38,20 @@ which is what most carriers expect.
 | Ubuntu | `/etc/mu300/mobile-data.conf`: `MU300_APN` and `MU300_PDP_TYPE` (an example is in `/etc/mu300/mobile-data.conf.example`) |
 | OpenWrt | LuCI -> Network -> Interfaces -> wan, or `uci set network.wan.apn='…'; uci commit network; ifup wan` |
 
+## Data usage
+
+The device counts its mobile data per day and per billing cycle, both ways, the way the operator counts it. The count
+survives reboots and switching between systems, and nothing is counted twice. On OpenWrt with the control panel this
+is Cellular > Data usage.
+
+```sh
+mu300-traffic                       # today, this billing cycle and the cap
+sudo mu300-traffic set reset-day 1  # the day a billing cycle starts
+sudo mu300-traffic set cap 50G      # a monthly cap; it warns at 90 % unless you set another level
+sudo mu300-traffic set cut on       # optional: mobile data off at the cap, back on when the next cycle starts
+mu300-traffic days                  # the last days with traffic
+```
+
 ## Network, band and cell locks (control panel)
 
 On OpenWrt with the control panel, **Cellular -> Network locks** sets network mode, band, cell and EN-DC locks that
@@ -69,8 +83,8 @@ and flow offloading stays on; on 5.4 it is in nftables and offloading is off whi
 ## IPv6
 
 Plain OpenWrt uses prefix extension; OpenWrt with the control panel relays IPv6 from the carrier (router
-advertisements and NAT66) instead. On the panel system a prefix the carrier has withdrawn can stay advertised on the LAN until it expires (a
-known issue in v2026.10.17).
+advertisements and NAT66) instead. Since v2026.10.18, when the carrier moves the device to a new /64, the old prefix
+is withdrawn, so clients stop using it without a restart of the WAN.
 
 ## Wi-Fi beats mobile data
 
