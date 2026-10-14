@@ -199,7 +199,7 @@ at 0x1a)").
 +				return dev_err_probe(dev, -ENODEV, "no charger: %d (0x%02x not tried: %ld)\n", err,
 +						     SGM41513_I2C_ADDR, PTR_ERR(chip));
 +			part = i2c_smbus_read_byte_data(chip, BQ256XX_PART_INFORMATION);
-+			if (part < 0)
++			if (part <= 0 || ((part >> 3) & 0xf) == 0)
 +				return dev_err_probe(dev, -ENODEV, "no charger: %d (and %d at 0x%02x)\n", err, part,
 +						     SGM41513_I2C_ADDR);
 +			dev_info(dev, "nothing at 0x%02x (%d): the SGM41513 at 0x%02x\n", client->addr, err,
