@@ -419,6 +419,16 @@ void sc2355_setup_wiphy(struct wiphy *wiphy, struct sprd_priv *priv)
 			      NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI);
 	wiphy->features |= NL80211_FEATURE_SAE;
 
+	/* Map the firmware's SoftAP SAE support to the standard Linux AP API.
+	 * The existing AP-SME path otherwise receives no SAE password from
+	 * upstream hostapd and rejects SAE authentication before userspace.
+	 */
+	if ((priv->fw_capa & SPRD_CAPA_AP_SME) &&
+	    (priv->extend_feature & SPRD_EXTEND_SOATAP_WPA3)) {
+		wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_SAE_OFFLOAD_AP);
+		wiphy->max_num_akm_suites = 3;
+	}
+
 	if (priv->extend_feature & SPRD_EXTEND_FEATURE_OCE) {
                 pr_info("\tOCE supported\n");
                 wiphy_ext_feature_set(wiphy,

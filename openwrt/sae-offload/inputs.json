@@ -1,0 +1,58 @@
+{
+  "ap_uc_original_sha256": "d036c64e14ae75297487ac4e572ee4e2504d5795e0c907267341d7b14931275a",
+  "ap_uc_patch_sha256": "df82e2463eb678860d6c4b7dee4eac0ec4fee6a11ac4928e84e37bc1f6ca2683",
+  "ap_uc_sha256": "426df8d2e156285e5920a96eaa59b00ce363ef1621cbbcd4bb169d324894effc",
+  "hostapd_common_apk_sha256": "06fdee017a6876c2c234e42a67618522e3d51236b41a786e02b7c81c3d17a4d3",
+  "hostapd_common_package_version": "2025.08.26~ca266cc2-r6",
+  "hostapd_source_sha256": "59ac677093f524ff98588abd9f33805a336a6e929d6814222f0d784c854f2343",
+  "sae_result_patch_sha256": "23e87546eefd0a566a035075dd34a4afc26cf61f0db1afd5286e7b27a7437f32",
+  "sdk_archive_sha256": "1b0316604a3e820b2b008a1baff3f9dac6716af942bef800930e58c7de98c98b",
+  "sdk_config_sha256": "36927cacb602e7cad1a70589413d93b977635aa600a6d043b8c827125b9e058b",
+  "sdk_feed_commit": "f0a60eee2fe051741c643ea6118718aae1ef17fb",
+  "sdk_init_sha256": "b6679419287fa73cfbf808a5330ee329a246af17efbb5d9ab31a1647743d3855",
+  "sdk_recipe_sha256": "19f88079dd4eccd092eeba3f0582b9e8d37c92f213cee8e880080085be7e6577",
+  "wpad_apk_sha256": "c6418e235610890c54d5695a32cde27b3b3884044c096ec709eefe53a3224b48",
+  "wpad_init_sha256": "7fc339f1d679360cafc8559ce5e0ab1c0cc314144ede19051e4c1bffa31bf778",
+  "wpad_package_version": "2025.08.26~ca266cc2-r6",
+  "wpad_sdk_binary_sha256": "1b8c7765f63177908f6d9e1fa4f6db160afbf6e437a41c601af81c1f460012ac",
+  "wpad_sha256": "77d697e4092db4f9d3a41340aa6ae60658bca6e2e4a3e24fe0ef5991b598e741",
+  "downstream_reference": {
+    "driver_sha256": "4b0356f9d371b2f8c2580e77b01813e99ade63d971ecd844f88c7508f517523f",
+    "wcn_symbols_sha256": "4f1c83675bbd0f30344c82d4658a1c2ea3b232fff887fb051be81fd8c56c9107",
+    "wcn_external_header_files": [
+      {
+        "path": "kinclude/linux/of_gpio.h",
+        "sha256": "37a7b4e8a8c315fa5ddda8deeb7221a98f4f166b565840ce93f1678a5a936aa1"
+      },
+      {
+        "path": "kinclude/linux/sipc.h",
+        "sha256": "c26d5d5fa37990167ca665da453253a07c172bc49e89bbe0ce1c6a9f59906733"
+      },
+      {
+        "path": "kinclude/linux/trusty/trusty_ipc.h",
+        "sha256": "6ed3df666297c2e5a6632be8bc61984f2ae30ead84ea05e6f44294e1ecdbc2d4"
+      },
+      {
+        "path": "kinclude/misc/marlin_platform.h",
+        "sha256": "eb681c19b278619b33095101c4f4b369026bcb082751973babcf76ac0b523678"
+      },
+      {
+        "path": "kinclude/misc/mchn.h",
+        "sha256": "a6e8b08eec8568114607e5114c9224f65e1efcfdb93cd82f485bb0d6e46c30e4"
+      },
+      {
+        "path": "kinclude/misc/wcn_bus.h",
+        "sha256": "6dad752002341e31c440d68ff9b2c909bec9c0991b1e38c8e391d096a88ebf47"
+      },
+      {
+        "path": "kinclude/misc/wcn_integrate_platform.h",
+        "sha256": "c673c41f9dd3544bf4c1ac7064f7e4001f9d6401ca4fd0dd1616b04e9f2b2b90"
+      },
+      {
+        "path": "kinclude/mu300_compat.h",
+        "sha256": "9d0de2260a5d82d5239930d6fa2bbe889f9bd89a994ecb67065e9e40ee9ad2ff"
+      }
+    ],
+    "base_kernel_sha256": "fd87b29a0720331447d9b9fb2cad044cb8b190cc5b3c3c5670a513af039aa71e"
+  }
+}

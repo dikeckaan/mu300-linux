@@ -1,0 +1,135 @@
+--- a/src/ap/drv_callbacks.c
++++ b/src/ap/drv_callbacks.c
+@@ -17,2 +17,3 @@
+ #include "common/wpa_ctrl.h"
++#include "common/wpa_common.h"
+ #include "common/dpp.h"
+@@ -311,2 +312,37 @@
+ 
++
++/* SC2355 native AP-SME result, verified on U30 Air charge2 firmware.
++ * Enable only on the matching device via its wpad service environment.
++ * Firmware appends its SAE result after the peer association elements.
++ * Result layout: OUI/type (4), PMK (32), PMKID (16).
++ */
++#ifdef CONFIG_SAE
++static bool unisoc_sae_offload_enabled(void)
++{
++ const char *enable = getenv("U30AIR_SAE_OFFLOAD");
++ return enable && os_strcmp(enable, "pmk-first-v1") == 0;
++}
++
++static const u8 * unisoc_sae_offload_result(const u8 *ies, size_t len)
++{
++ const u8 *result = NULL;
++ if (!unisoc_sae_offload_enabled() || !ies)
++  return NULL;
++ while (len >= 2) {
++  size_t n = (size_t) ies[1] + 2;
++  if (n > len)
++   return NULL;
++  if (ies[0] == 221 && ies[1] == 52 &&
++      os_memcmp(ies + 2, "\x40\x45\xda\x04", 4) == 0) {
++   /* Only the single terminal record observed from the firmware. */
++   if (result || n != len)
++    return NULL;
++   result = ies + 6;
++  }
++  ies += n;
++  len -= n;
++ }
++ return len ? NULL : result;
++}
++#endif
+ 
+@@ -703,2 +739,83 @@
+ 
++#ifdef CONFIG_SAE
++  if ((hapd->iface->drv_flags2 & WPA_DRIVER_FLAGS2_SAE_OFFLOAD_AP) &&
++      unisoc_sae_offload_enabled()) {
++   /* This firmware has only been validated with HnP. Never bypass the
++    * ordinary H2E transcript check for an unsupported configuration. */
++   if (wpa_auth_uses_sae(sta->wpa_sm) &&
++       hapd->conf->sae_pwe != SAE_PWE_HUNT_AND_PECK) {
++    status = WLAN_STATUS_UNSPECIFIED_FAILURE;
++    reason = WLAN_REASON_UNSPECIFIED;
++    goto fail;
++   }
++   bool firmware_sae = wpa_auth_uses_sae(sta->wpa_sm) &&
++                       !wpa_auth_uses_ft_sae(sta->wpa_sm) &&
++                       (sta->flags & WLAN_STA_MFP);
++   const u8 *result = firmware_sae ?
++                      unisoc_sae_offload_result(req_ies, req_ies_len) : NULL;
++   /* Driver-SME associations do not deliver a fresh local auth event.
++    * Do not carry an imported SAE PMK into PSK or cached-open auth.
++    * A valid PMKSA remains owned by the normal authenticator cache.
++    */
++   if (!result && sta->auth_alg == WLAN_AUTH_SAE) {
++    if (sta->sae) {
++     sae_clear_data(sta->sae);
++     os_free(sta->sae);
++     sta->sae = NULL;
++    }
++    sta->auth_alg = WLAN_AUTH_OPEN;
++    wpa_printf(MSG_INFO, "Unisoc SAE offload: cleared previous SAE association context");
++   }
++   if (firmware_sae && !result &&
++       !wpa_auth_sta_get_pmksa(sta->wpa_sm)) {
++    wpa_printf(MSG_INFO, "Unisoc SAE offload: no fresh result or valid PMKSA");
++    status = WLAN_STATUS_INVALID_PMKID;
++    reason = WLAN_REASON_INVALID_PMKID;
++    goto fail;
++   }
++   if (result) {
++    struct wpa_ie_data rsn;
++    size_t index;
++    int matched = 0;
++    if (!elems.rsn_ie ||
++        wpa_parse_wpa_ie_rsn(elems.rsn_ie - 2, elems.rsn_ie_len + 2, &rsn) < 0 ||
++        rsn.key_mgmt != WPA_KEY_MGMT_SAE) {
++     status = WLAN_STATUS_INVALID_IE;
++     reason = WLAN_REASON_INVALID_IE;
++     goto fail;
++    }
++    for (index = 0; index < rsn.num_pmkid; index++)
++     matched |= os_memcmp_const(result + PMK_LEN,
++                               rsn.pmkid + index * PMKID_LEN, PMKID_LEN) == 0;
++    if (rsn.num_pmkid) {
++     wpa_printf(MSG_INFO, "Unisoc SAE offload: association PMKID matches firmware result=%d", matched);
++     if (!matched) {
++      status = WLAN_STATUS_INVALID_PMKID;
++      reason = WLAN_REASON_INVALID_PMKID;
++      goto fail;
++     }
++    }
++    if (!sta->sae)
++     sta->sae = os_zalloc(sizeof(*sta->sae));
++    if (!sta->sae) {
++     status = WLAN_STATUS_UNSPECIFIED_FAILURE;
++     reason = WLAN_REASON_UNSPECIFIED;
++     goto fail;
++    }
++    sae_clear_data(sta->sae);
++    os_memcpy(sta->sae->pmk, result, PMK_LEN);
++    sta->sae->pmk_len = PMK_LEN;
++    os_memcpy(sta->sae->pmkid, result + PMK_LEN, PMKID_LEN);
++    sta->sae->akmp = WPA_KEY_MGMT_SAE;
++    wpa_auth_add_sae_pmkid(sta->wpa_sm, sta->sae->pmkid);
++    wpa_auth_pmksa_add_sae(hapd->wpa_auth, sta->addr,
++                          sta->sae->pmk, sta->sae->pmk_len,
++                          sta->sae->pmkid, WPA_KEY_MGMT_SAE,
++                          false, sta->vlan_id);
++    sta->auth_alg = WLAN_AUTH_SAE;
++    wpa_printf(MSG_INFO, "Unisoc SAE offload: firmware PMK received; normal four-way handshake required");
++   }
++  }
++#endif
++
+ 		if (wpa_auth_uses_spp_amsdu(sta->wpa_sm))
+--- a/src/drivers/driver_nl80211_event.c
++++ b/src/drivers/driver_nl80211_event.c
+@@ -2372,3 +2372,3 @@
+ 			req_ies_len = nla_len(tb[NL80211_ATTR_IE]);
+-			wpa_hexdump(MSG_DEBUG, "nl80211: Assoc Req IEs",
++			wpa_hexdump_key(MSG_DEBUG, "nl80211: Assoc Req IEs",
+ 				    req_ies, req_ies_len);

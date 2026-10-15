@@ -1175,6 +1175,27 @@ int sprd_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
 	static u64 mgmt_index;
 	int ret = 0;
 
+	/* nl80211 permits an omitted frequency for on-channel AP management
+	 * frames. The vendor path unconditionally dereferenced params->chan,
+	 * producing the pstore-confirmed fault at mgmt_tx+0x60.
+	 */
+	if (!chan) {
+		if (params->offchan ||
+		    (wdev->iftype != NL80211_IFTYPE_AP &&
+		     wdev->iftype != NL80211_IFTYPE_P2P_GO))
+			return -EINVAL;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+		/* This SC2355 trial exposes a single non-MLO AP link. */
+		if (wdev->valid_links || params->link_id > 0)
+			return -EINVAL;
+		chan = wdev->links[0].ap.chandef.chan;
+#else
+		chan = wdev->chandef.chan;
+#endif
+		if (!chan)
+			return -ENODATA;
+	}
+
 	*cookie = ++mgmt_index;
 	netdev_info(wdev->netdev, "%s cookie %lld\n", __func__, *cookie);
 

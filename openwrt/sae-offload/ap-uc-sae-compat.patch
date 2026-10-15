@@ -1,0 +1,31 @@
+--- a/usr/share/ucode/wifi/ap.uc
++++ b/usr/share/ucode/wifi/ap.uc
+@@ -553,6 +553,12 @@
+ 	if (config.auth_type in [ 'sae', 'psk-sae', 'psk-sae-compat' ])
+ 		iface_sae_stations(config, stas);
+ 
++
++	/* Apply before iface_auth_type emits sae_pwe into the config text. */
++	if (fs.readfile('/proc/sys/kernel/osrelease') == '7.2.9-u30air-charge2\n' &&
++	    wildcard(fs.readlink(`/sys/class/ieee80211/${data.phy}/device/driver/module`) ?? '', '*/sprd_wlan_combo') &&
++	    config.auth_type in [ 'sae', 'psk-sae', 'psk-sae-compat' ])
++		config.sae_pwe = 0;
+ 	iface_auth_type(config, data.config.band);
+ 
+ 	iface_accounting_server(config);
+@@ -584,6 +590,15 @@
+ 	iface_interworking(config);
+ 
+ 	iface.wpa_key_mgmt(config, data.config.band);
++
++	/* Keep the verified U30 Air SC2355 AP on PSK/SAE AKMs. PMF remains
++	 * negotiated normally; the optional PSK-SHA256 AKM causes failures on
++	 * this firmware path. Other PHYs and supplicant mode are unchanged.
++	 */
++	if (fs.readfile('/proc/sys/kernel/osrelease') == '7.2.9-u30air-charge2\n' &&
++	    wildcard(fs.readlink(`/sys/class/ieee80211/${data.phy}/device/driver/module`) ?? '', '*/sprd_wlan_combo')) {
++		config.wpa_key_mgmt = replace(config.wpa_key_mgmt ?? '', 'WPA-PSK-SHA256', '');
++	}
+ 	append_vars(config, [
+ 		'wpa_key_mgmt',
+ 	]);

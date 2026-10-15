@@ -1877,6 +1877,69 @@ int sc2355_set_sae_ie(struct sprd_priv *priv, struct sprd_vif *vif,
 	return cmdevt_set_ie(priv, vif, SPRD_IE_SAE, ie, len);
 }
 
+
+/* Same CMD_SET_SAE_PARAM entry format used by Unisoc's vendor interface,
+ * fed from cfg80211's standard SAE AP password attribute. Never log the
+ * password. Group 19 is the mandatory interoperable SAE group.
+ */
+static int sc2355_set_ap_sae_password(struct sprd_priv *priv,
+				    struct sprd_vif *vif,
+				    const struct cfg80211_crypto_settings *crypto)
+{
+	struct sprd_msg *msg;
+	struct sae_param *param;
+	struct tlv_data *tlv;
+	u8 *pos;
+	u32 action = cpu_to_le32(0);
+	u16 data_len;
+	int ret;
+
+	netdev_info(vif->ndev, "Native SAE trial: password_attribute=%u length=%u pwe=%u\n",
+		!!crypto->sae_pwd, crypto->sae_pwd_len, crypto->sae_pwe);
+	if (!crypto->sae_pwd)
+		return 0;
+	if (!(priv->extend_feature & SPRD_EXTEND_SOATAP_WPA3))
+		return -EOPNOTSUPP;
+	if (!crypto->sae_pwd_len || crypto->sae_pwd_len >= 64)
+		return -EINVAL;
+
+	/* ENTRY, PWD, GROUP, ACT, END headers, one group byte and action. */
+	data_len = 5 * sizeof(*tlv) + crypto->sae_pwd_len + 1 + sizeof(action);
+	msg = get_cmdbuf(priv, vif, sizeof(*param) + data_len, CMD_SET_SAE_PARAM);
+	if (!msg)
+		return -ENOMEM;
+	param = (struct sae_param *)msg->data;
+	param->request_type = cpu_to_le16(SPRD_SAE_PASSWORD_ENTRY);
+	pos = param->data;
+
+	tlv = (struct tlv_data *)pos;
+	tlv->type = cpu_to_le16(0); /* VENDOR_SAE_ENTRY - 1 */
+	tlv->len = 0;
+	pos += sizeof(*tlv);
+	tlv = (struct tlv_data *)pos;
+	tlv->type = cpu_to_le16(7); /* VENDOR_SAE_PWD - 1 */
+	tlv->len = cpu_to_le16(crypto->sae_pwd_len);
+	memcpy(tlv->data, crypto->sae_pwd, crypto->sae_pwd_len);
+	pos += sizeof(*tlv) + crypto->sae_pwd_len;
+	tlv = (struct tlv_data *)pos;
+	tlv->type = cpu_to_le16(5); /* VENDOR_SAE_GROUP_ID - 1 */
+	tlv->len = cpu_to_le16(1);
+	tlv->data[0] = 19;
+	pos += sizeof(*tlv) + 1;
+	tlv = (struct tlv_data *)pos;
+	tlv->type = cpu_to_le16(6); /* VENDOR_SAE_ACT - 1 */
+	tlv->len = cpu_to_le16(sizeof(action));
+	memcpy(tlv->data, &action, sizeof(action));
+	pos += sizeof(*tlv) + sizeof(action);
+	tlv = (struct tlv_data *)pos;
+	tlv->type = cpu_to_le16(0xff);
+	tlv->len = 0;
+
+	ret = send_cmd_recv_rsp(priv, msg, NULL, NULL);
+	netdev_info(vif->ndev, "Native SAE trial: firmware_parameter_result=%d\n", ret);
+	return ret;
+}
+
 int sc2355_start_ap(struct sprd_priv *priv, struct sprd_vif *vif, u8 *beacon,
 		    u16 len, struct cfg80211_ap_settings *settings)
 {
@@ -1885,6 +1948,11 @@ int sc2355_start_ap(struct sprd_priv *priv, struct sprd_vif *vif, u8 *beacon,
 	u16 datalen = sizeof(*p) + len;
 	struct sprd_api_version_t *api = (&priv->sync_api)->api_array;
 	u8 fw_ver = 0;
+	int ret;
+
+	ret = sc2355_set_ap_sae_password(priv, vif, &settings->crypto);
+	if (ret)
+		return ret;
 
 	fw_ver = (api + CMD_SCAN)->fw_version;
 	if (vif->priv->hif.hw_type == SPRD_HW_SC2355_PCIE) {
@@ -3349,9 +3417,50 @@ static void cmdevt_report_remain_on_channel_evt(struct sprd_vif *vif, u8 *data,
 static void cmdevt_report_new_station_evt(struct sprd_vif *vif, u8 *data, u16 len)
 {
 	struct evt_new_station *sta = (struct evt_new_station *)data;
+	u16 ie_len;
+	unsigned int pos = 0;
 
-	sprd_report_softap(vif, sta->is_connect, sta->mac, sta->ie,
-			   sta->ie_len);
+	if (len < sizeof(sta->is_connect) + sizeof(sta->mac))
+		return;
+	netdev_info(vif->ndev, "Native SAE station envelope: connected=%u bytes=%u\n",
+		sta->is_connect, len);
+	/* A leave notification needs only its flag and MAC. Do not require
+	 * an association IE-length field that is unused for this event.
+	 */
+	if (!sta->is_connect) {
+		sprd_report_softap(vif, false, sta->mac, NULL, 0);
+		return;
+	}
+	if (len < sizeof(*sta))
+		return;
+	ie_len = le16_to_cpu(sta->ie_len);
+	if (ie_len > len - sizeof(*sta))
+		return;
+	if (sta->is_connect) {
+		netdev_info(vif->ndev, "Native SAE trial station event: bytes=%u ie_bytes=%u\n",
+			len, ie_len);
+		while (pos + 2 <= ie_len) {
+			u8 id = sta->ie[pos], size = sta->ie[pos + 1];
+			if (size > ie_len - pos - 2)
+				break;
+			/* Public protocol metadata only, never dump an IE body. */
+			switch (id) {
+			case 0: case 1: case 3: case 45: case 48: case 50:
+			case 61: case 127: case 191: case 192: case 221: case 255:
+				netdev_info(vif->ndev, "Native SAE trial station IE: id=%u bytes=%u\n", id, size);
+				break;
+			}
+			if (id == 221 && size >= 4)
+				netdev_info(vif->ndev, "Native SAE trial vendor IE header: oui=%02x%02x%02x type=%02x bytes=%u\n",
+					sta->ie[pos+2], sta->ie[pos+3], sta->ie[pos+4], sta->ie[pos+5], size);
+			if (id == 221 && size >= 4 &&
+			    sta->ie[pos + 2] == 0x40 && sta->ie[pos + 3] == 0x45 &&
+			    sta->ie[pos + 4] == 0xda && sta->ie[pos + 5] == 2)
+				netdev_info(vif->ndev, "Native SAE trial: Unisoc SAE vendor IE present\n");
+			pos += size + 2;
+		}
+	}
+	sprd_report_softap(vif, sta->is_connect, sta->mac, sta->ie, ie_len);
 }
 
 /* @flag: 1 for data, 0 for event */

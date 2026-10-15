@@ -12,6 +12,7 @@ macOS and Windows (`.github/workflows/tests.yml`).
 
 | file | what |
 |---|---|
+| `test_sae_offload_fixtures.py` | experimental U30 Air hostapd patch: 11 result-parser boundaries, 12 bridge states, and an old PWE-guard negative control; Linux C compiler with ASan/UBSan required; see `docs/U30AIR-SAE-MIXED.md` for the unresolved PMK provenance boundary |
 | `test_static.py` | every script parses under each shell that runs it; device programs are executable; rules from past bugs (no double quotes in `install.ps1`'s device commands, ASCII-only PowerShell, init looks for partitions after the modules) |
 | `test_i18n.py` | `tools/i18n.sh`: every translation with every placeholder, arguments passed through untouched, answers in all three languages |
 | `test_device_scripts.py` | `mu300-device`, `mu300-lan-ip`, `mu300-led` (both devices, 4G/5G, the timeout, the siren, the 5.4 LDO switches), `thermal-guard` (the heat alarm, the handoff to the kernel's thermal zone and back; `extra-modules` loading `mu300_thermal`), `mu300-nfc` (a fake NFC tag: ZTE's own Wi-Fi record byte for byte, URLs, text, what `sync` leaves alone), `mu300-ttl` (stub `nft`), `mu300-wifi-band`, `mu300-buttons`, `mu300-usb` (a fake charger: never 5 V against a supply), `mu300-next-boot` and `early-recorder` on slot a and slot b (`NextBoot`, `EarlyRecorder`) |
