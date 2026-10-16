@@ -2234,6 +2234,12 @@ msgstr "%s پیش بررسی شد"
 msgid "Not checked yet"
 msgstr "هنوز بررسی نشده"
 
+msgid "Mirror (release files)"
+msgstr "آینه (فایل‌های انتشار)"
+
+msgid "Leave empty for GitHub."
+msgstr "برای GitHub خالی بگذارید."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "بسته‌هایی که افزوده‌ام پس از به‌روزرسانی دوباره نصب شوند (دستگاه در نخستین شروع باید آنلاین باشد)"
 
@@ -3685,3 +3691,6 @@ msgstr "این فایل امضا نشده است: این به تأیید نیا�
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "این فایل از نسخهٔ نصب‌شده قدیمی‌تر است: این به تأیید نیاز دارد"
+
+msgid "The release source was not changed"
+msgstr "منبع انتشار تغییر نکرد"

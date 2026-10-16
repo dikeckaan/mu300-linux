@@ -62,7 +62,7 @@ var callPackagesAct = rpc.declare({ object: 'mu300dash', method: 'packages_act',
 var callUpdateGet = rpc.declare({ object: 'mu300dash', method: 'update_get', params: [ 'sizes' ], expect: { '': {} }, nobatch: true });
 var callUpdateJob = rpc.declare({ object: 'mu300dash', method: 'update_job', expect: { '': {} }, nobatch: true });
 var callUpdateAct = rpc.declare({ object: 'mu300dash', method: 'update_act',
-	params: [ 'op', 'tag', 'systems', 'kernel', 'sha256', 'size', 'flags', 'confirm' ], expect: { '': {} }, nobatch: true });
+	params: [ 'op', 'tag', 'systems', 'kernel', 'sha256', 'size', 'flags', 'confirm', 'url' ], expect: { '': {} }, nobatch: true });
 var callTrafficGet = rpc.declare({ object: 'mu300dash', method: 'traffic_get', expect: { '': {} }, nobatch: true });
 var callTrafficSet = rpc.declare({ object: 'mu300dash', method: 'traffic_set', params: [ 'op', 'value' ], expect: { '': {} }, nobatch: true });
 /* System > Terminal: a one-time token for ttyd (rpcd mu300term, ACL luci-app-mu300-terminal) */

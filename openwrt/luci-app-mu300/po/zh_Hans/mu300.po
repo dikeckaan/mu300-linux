@@ -2215,6 +2215,12 @@ msgstr "%s前已检查"
 msgid "Not checked yet"
 msgstr "尚未检查"
 
+msgid "Mirror (release files)"
+msgstr "镜像（发布文件）"
+
+msgid "Leave empty for GitHub."
+msgstr "留空即使用 GitHub。"
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "更新后重新安装我添加的软件包（首次启动时设备需要联网）"
 
@@ -3664,3 +3670,6 @@ msgstr "此文件未签名：需要确认"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "此文件比已安装的版本旧：需要确认"
+
+msgid "The release source was not changed"
+msgstr "发布源未更改"

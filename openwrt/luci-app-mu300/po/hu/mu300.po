@@ -2234,6 +2234,12 @@ msgstr "Ellenőrizve ennyi ideje: %s"
 msgid "Not checked yet"
 msgstr "Még nincs ellenőrizve"
 
+msgid "Mirror (release files)"
+msgstr "Tükör (kiadási fájlok)"
+
+msgid "Leave empty for GitHub."
+msgstr "Hagyd üresen a GitHubhoz."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "A frissítés után telepítse újra az általam hozzáadott csomagokat (az első indításkor az eszköznek online kell lennie)"
 
@@ -3685,3 +3691,6 @@ msgstr "Ez a fájl nincs aláírva: ehhez megerősítés szükséges"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Ez a fájl régebbi a telepítettnél: ehhez megerősítés szükséges"
+
+msgid "The release source was not changed"
+msgstr "A kiadás forrása nem változott"

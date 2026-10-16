@@ -2229,6 +2229,12 @@ msgstr "%s前已檢查"
 msgid "Not checked yet"
 msgstr "尚未檢查"
 
+msgid "Mirror (release files)"
+msgstr "鏡像（發行檔案）"
+
+msgid "Leave empty for GitHub."
+msgstr "留空即使用 GitHub。"
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "更新後重新安裝我加入的套件（首次啟動時裝置需要連上網路）"
 
@@ -3678,3 +3684,6 @@ msgstr "此檔案未簽署：需要確認"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "此檔案比已安裝的版本舊：需要確認"
+
+msgid "The release source was not changed"
+msgstr "發行來源未變更"

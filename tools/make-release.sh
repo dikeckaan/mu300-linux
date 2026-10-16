@@ -164,7 +164,7 @@ for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.2 mu300-ubuntu-rootfs mu3
         -e '(^|/)lib/firmware/(wcnmodem|gnssmodem|wifi_board_config|bt_configure)' \
         -e '^opt/mu300/android/.+' -e '__properties__|dev-properties' \
         -e '(^|/)(libmali|libOpenCL|libGLES|libEGL|libvulkan)[^/]*\.so' \
-        -e '^etc/ssh/ssh_host_' -e '^etc/mu300/(hotspot|vpn|toolkit|mobile-data)\.conf$' -e '^etc/dropbear/dropbear_.*_host_key' \
+        -e '^etc/ssh/ssh_host_' -e '^etc/mu300/(hotspot|vpn|toolkit|mobile-data)\.conf$' -e '^etc/mu300/update-source$' -e '^etc/dropbear/dropbear_.*_host_key' \
         -e '^opt/mu300/bin/(xray|sing-box|hev-socks5-tunnel|mihomo|mu300-vpn)$' -e '^opt/mu300/lib/vpn(/|$)' \
         -e '^etc/systemd/system/mu300-vpn\.service$' -e '^etc/init\.d/mu300-vpn$' -e '^etc/mu300/vpn\.conf\.example$' \
         | grep -vE '^opt/mu300/android/system/?$|^opt/mu300/android/system/bin/?$|^opt/mu300/android/system/bin/cltest$' || true)

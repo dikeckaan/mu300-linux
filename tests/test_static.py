@@ -275,6 +275,33 @@ class Rules(unittest.TestCase):
         self.assertNotRegex(extra, r'(?m)^    vpn-mihomo\)')
         self.assertNotIn('fetch-', extra)
 
+    def test_the_release_source_is_wired(self):
+        # a published image must not carry a configured release source, and both image trees must have the example
+        # (openwrt/overlay is the only overlay an OpenWrt image gets, so the Ubuntu one alone would miss them)
+        rel = (TOP / 'tools/make-release.sh').read_text()
+        self.assertIn("^etc/mu300/(hotspot|vpn|toolkit|mobile-data)\\.conf$", rel)
+        self.assertRegex(rel, r"\^etc/mu300/update-source\$")
+        self.assertNotIn('update-source.example', rel)
+        for f in ('rootfs/overlay/etc/mu300/update-source.example', 'openwrt/overlay/etc/mu300/update-source.example'):
+            text = (TOP / f).read_text()
+            for s in ('MU300_DOWNLOAD_URL=https://', 'MU300_API_URL=https://', '403'):
+                self.assertIn(s, text, f)
+        # the panel's field, the op behind it and the status field that feeds it name the same thing
+        js = (TOP / 'openwrt/luci-app-mu300/htdocs/luci-static/resources/view/mu300/update.js').read_text()
+        self.assertIn("op: 'source'", js)
+        self.assertIn("confirm: 'source'", js)
+        self.assertIn('st.source || {}', js)
+        common = (TOP / 'openwrt/luci-app-mu300/htdocs/luci-static/resources/mu300/common.js').read_text()
+        self.assertIn("'flags', 'confirm', 'url'", common)
+        dash = (TOP / 'openwrt/luci-app-mu300/root/usr/libexec/rpcd/mu300dash').read_text()
+        self.assertIn('|source|dismiss)', dash)
+        self.assertIn('allowed "$url"', dash)
+        adapter = (TOP / 'openwrt/luci-app-mu300/root/usr/libexec/unisoc-modem/update').read_text()
+        self.assertIn('"$CMD" source', adapter)
+        updater = (TOP / 'rootfs/overlay/opt/mu300/bin/mu300-update').read_text()
+        self.assertIn('source) shift; source_cmd "$@"', updater)
+        self.assertIn('"source":%s}', updater)
+
     def test_the_vpn_module_wiring(self):
         # mu300-update knows the module (fixed asset names, the repository's latest release, MU300_VPN_URL), and
         # mu300-extra lists vpn and its engine extras from it (module v2: the core, and the bundle as the fallback)

@@ -348,6 +348,9 @@ class Refusals(Mu300Dash):
         ('update_act', {'op': 'upload_begin'}, 'size', '52428800'),
         ('update_act', {'op': 'apply_file', 'confirm': 'apply'}, 'sha256', 'ab' * 32),
         ('update_act', {'op': 'apply_file', 'confirm': 'apply', 'sha256': 'ab' * 32}, 'flags', 'unsigned downgrade'),
+        # (the release source: a plain http(s) URL, empty for GitHub - both reach the adapter, and nothing else does)
+        ('update_act', {'op': 'source', 'confirm': 'source'}, 'url', ''),
+        ('update_act', {'op': 'source', 'confirm': 'source'}, 'url', 'https://ghfast.top/https://github.com/x/y/releases/download'),
         ('traffic_set', {'op': 'cap', 'value': '1024'}, 'op', 'cap'),
         ('traffic_set', {'op': 'cap', 'value': '1024'}, 'value', '1024'),
         ('traffic_set', {'op': 'reset_day', 'value': '15'}, 'value', '15'),
@@ -363,6 +366,8 @@ class Refusals(Mu300Dash):
                     continue
                 if field == 'iface' and name == 'leading dash after eth1':
                     continue   # eth1-rf is a valid interface name, and not an option
+                if field == 'url' and name.startswith('leading dash after '):
+                    continue   # .../download-rf is still a URL, and the updater's own rule takes it
                 jobs.append((f'{method}.{field}={name}', method, dict(base, **{field: bad})))
         for shell in self.each_shell():
             self.assert_refused(shell, jobs)
@@ -542,21 +547,27 @@ class Passthrough(Mu300Dash):
         ('update_get', {'sizes': '1'}, [['update', 'get', '1']]),
         ('update_job', {}, [['update', 'job']]),
         ('update_job', {'op': 'clean', 'confirm': 'clean'}, [['update', 'job']]),
-        ('update_act', {'op': 'check'}, [['update', 'act', 'check', '', '', '', '', '', '', '']]),
+        ('update_act', {'op': 'check'}, [['update', 'act', 'check', '', '', '', '', '', '', '', '']]),
         ('update_act', {'op': 'apply', 'tag': 'v2026.10.25', 'systems': 'openwrt-luci ubuntu', 'flags': 'no_reinstall',
                         'confirm': 'apply'},
-         [['update', 'act', 'apply', 'v2026.10.25', 'openwrt-luci ubuntu', '', '', '', 'no_reinstall', 'apply']]),
+         [['update', 'act', 'apply', 'v2026.10.25', 'openwrt-luci ubuntu', '', '', '', 'no_reinstall', 'apply', '']]),
         ('update_act', {'op': 'apply', 'tag': 'v2026.10.16.12', 'confirm': 'apply'},
-         [['update', 'act', 'apply', 'v2026.10.16.12', '', '', '', '', '', 'apply']]),
+         [['update', 'act', 'apply', 'v2026.10.16.12', '', '', '', '', '', 'apply', '']]),
         ('update_act', {'op': 'kernel', 'kernel': '7.2', 'confirm': 'kernel'},
-         [['update', 'act', 'kernel', '', '', '7.2', '', '', '', 'kernel']]),
+         [['update', 'act', 'kernel', '', '', '7.2', '', '', '', 'kernel', '']]),
         ('update_act', {'op': 'upload_begin', 'size': '52428800'},
-         [['update', 'act', 'upload_begin', '', '', '', '', '52428800', '', '']]),
+         [['update', 'act', 'upload_begin', '', '', '', '', '52428800', '', '', '']]),
         ('update_act', {'op': 'apply_file', 'sha256': 'ab' * 32, 'flags': 'unsigned downgrade', 'confirm': 'apply'},
-         [['update', 'act', 'apply_file', '', '', '', 'ab' * 32, '', 'unsigned downgrade', 'apply']]),
+         [['update', 'act', 'apply_file', '', '', '', 'ab' * 32, '', 'unsigned downgrade', 'apply', '']]),
         ('update_act', {'op': 'rollback', 'systems': 'ubuntu', 'confirm': 'rollback'},
-         [['update', 'act', 'rollback', '', 'ubuntu', '', '', '', '', 'rollback']]),
-        ('update_act', {'op': 'clean', 'confirm': 'clean'}, [['update', 'act', 'clean', '', '', '', '', '', '', 'clean']]),
+         [['update', 'act', 'rollback', '', 'ubuntu', '', '', '', '', 'rollback', '']]),
+        ('update_act', {'op': 'clean', 'confirm': 'clean'}, [['update', 'act', 'clean', '', '', '', '', '', '', 'clean', '']]),
+        # (the release source: the address is the last argument, empty for GitHub)
+        ('update_act', {'op': 'source', 'confirm': 'source', 'url': 'https://ghfast.top/https://github.com/x/y/releases/download'},
+         [['update', 'act', 'source', '', '', '', '', '', '', 'source',
+           'https://ghfast.top/https://github.com/x/y/releases/download']]),
+        ('update_act', {'op': 'source', 'confirm': 'source', 'url': ''},
+         [['update', 'act', 'source', '', '', '', '', '', '', 'source', '']]),
         ('sim_get', {}, [['sim', 'status', '--json']]),
         ('sim_set', {'op':'default','value':'2'}, [['sim','default','2']]),
         ('sim_set', {'op':'hot','value':'1'}, [['sim','hot','1']]),

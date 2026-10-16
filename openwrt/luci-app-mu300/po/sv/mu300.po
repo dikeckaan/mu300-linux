@@ -2234,6 +2234,12 @@ msgstr "Kontrollerades för %s sedan"
 msgid "Not checked yet"
 msgstr "Inte kontrollerat än"
 
+msgid "Mirror (release files)"
+msgstr "Spegel (utgivningsfiler)"
+
+msgid "Leave empty for GitHub."
+msgstr "Lämna tomt för GitHub."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Installera paketen jag har lagt till igen efter uppdateringen (enheten måste vara online vid första starten)"
 
@@ -3685,3 +3691,6 @@ msgstr "Den här filen är inte signerad: det kräver bekräftelse"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Den här filen är äldre än det som är installerat: det kräver bekräftelse"
+
+msgid "The release source was not changed"
+msgstr "Utgivningskällan ändrades inte"

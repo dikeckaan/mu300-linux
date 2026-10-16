@@ -2234,6 +2234,12 @@ msgstr "Verificat acum %s"
 msgid "Not checked yet"
 msgstr "Încă neverificat"
 
+msgid "Mirror (release files)"
+msgstr "Oglindă (fișierele versiunii)"
+
+msgid "Leave empty for GitHub."
+msgstr "Lasă gol pentru GitHub."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Instalează din nou după actualizare pachetele adăugate de mine (dispozitivul trebuie să fie online la prima pornire)"
 
@@ -3685,3 +3691,6 @@ msgstr "Acest fișier este nesemnat: este nevoie de confirmare"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Acest fișier este mai vechi decât ce este instalat: este nevoie de confirmare"
+
+msgid "The release source was not changed"
+msgstr "Sursa versiunii nu a fost schimbată"

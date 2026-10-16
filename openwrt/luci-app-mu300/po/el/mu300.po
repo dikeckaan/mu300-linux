@@ -2234,6 +2234,12 @@ msgstr "Ελέγχθηκε πριν από %s"
 msgid "Not checked yet"
 msgstr "Δεν έχει ελεγχθεί ακόμη"
 
+msgid "Mirror (release files)"
+msgstr "Καθρέφτης (αρχεία έκδοσης)"
+
+msgid "Leave empty for GitHub."
+msgstr "Αφήστε κενό για το GitHub."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Εγκατάσταση ξανά, μετά την ενημέρωση, των πακέτων που πρόσθεσα (η συσκευή πρέπει να είναι σε σύνδεση στην πρώτη εκκίνηση)"
 
@@ -3685,3 +3691,6 @@ msgstr "Αυτό το αρχείο είναι χωρίς υπογραφή: αυ�
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Αυτό το αρχείο είναι παλαιότερο από το εγκατεστημένο: αυτό χρειάζεται επιβεβαίωση"
+
+msgid "The release source was not changed"
+msgstr "Η πηγή έκδοσης δεν άλλαξε"

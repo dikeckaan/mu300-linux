@@ -2234,6 +2234,12 @@ msgstr "Vor %s geprüft"
 msgid "Not checked yet"
 msgstr "Noch nicht geprüft"
 
+msgid "Mirror (release files)"
+msgstr "Spiegel (Release-Dateien)"
+
+msgid "Leave empty for GitHub."
+msgstr "Leer lassen für GitHub."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Die von mir hinzugefügten Pakete nach dem Update wieder installieren (das Gerät muss beim ersten Start online sein)"
 
@@ -3685,3 +3691,6 @@ msgstr "Diese Datei ist nicht signiert: Das erfordert eine Bestätigung"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Diese Datei ist älter als die installierte Version: Das erfordert eine Bestätigung"
+
+msgid "The release source was not changed"
+msgstr "Die Release-Quelle wurde nicht geändert"

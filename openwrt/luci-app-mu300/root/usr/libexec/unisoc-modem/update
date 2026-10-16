@@ -23,6 +23,9 @@
 #       apply_file SHA256 FLAGS     mu300-update apply --from the upload whose SHA-256 the page showed; FLAGS
 #                                   unsigned, downgrade (each needed when the file is that), no_reinstall
 #       rollback SYSTEMS | rollback_boot | clean | kernel KERNEL
+#       source URL|(empty)          where the release files come from: mu300-update source URL, or source off for
+#                                   GitHub (the panel's "Mirror (release files)"). Runs at once, not as a task, and
+#                                   its reply is a whole update_get: the page has the new state in one round trip
 #       dismiss                     forget a finished task
 #   Everything that changes the device wants CONFIRM, the word of its operation: a stray call does nothing.
 # The log a reply carries is redacted (redact_log): no address, no password or key, no long number.
@@ -264,8 +267,8 @@ systems_ok() {
 # has_flag FLAGS NAME
 has_flag() { case " $1 " in *" $2 "*) return 0 ;; esac; return 1; }
 
-do_act() {  # do_act OP TAG SYSTEMS KERNEL SHA256 SIZE FLAGS CONFIRM
-    local op=${1:-} tag=${2:-} systems=${3:-} kernel=${4:-} sha=${5:-} size=${6:-} flags=${7:-} confirm=${8:-}
+do_act() {  # do_act OP TAG SYSTEMS KERNEL SHA256 SIZE FLAGS CONFIRM URL
+    local op=${1:-} tag=${2:-} systems=${3:-} kernel=${4:-} sha=${5:-} size=${6:-} flags=${7:-} confirm=${8:-} url=${9:-}
     local f offered need insp
     [ -x "$CMD" ] || error 'Updating is not available on this system'
     systems=$(printf '%s' "$systems" | tr ',' ' ')
@@ -364,6 +367,18 @@ do_act() {  # do_act OP TAG SYSTEMS KERNEL SHA256 SIZE FLAGS CONFIRM
             job_running && error 'An update task is already running'
             lock_free
             start_job kernel -- kernel "$kernel" ;;
+        source)
+            # the release source: one mu300-update command, run here rather than as a task (it downloads nothing),
+            # and the whole update_get back so the page needs no second call
+            [ "$confirm" = source ] || error 'This needs confirmation'
+            # (an empty URL means GitHub: the page's field, left empty)
+            case $url in ''|https://*|http://*) ;; *) error 'Invalid update request' ;; esac
+            job_running && error 'An update task is already running'
+            lock_free
+            if [ -n "$url" ]; then run_cmd "$CMD" source "$url" > "$RUN/source.log" 2>&1
+            else run_cmd "$CMD" source off > "$RUN/source.log" 2>&1; fi ||
+                { cat "$RUN/source.log" >&2 2>/dev/null; error 'The release source was not changed'; }
+            do_get ;;
         dismiss)
             job_running && error 'An update task is already running'
             rm -rf "$JOB"

@@ -16,6 +16,9 @@
 #   mu300-update clean            delete the kept <os>.old copies
 #   mu300-update notice           only look: a note for the login message and mu300-toolkit when a newer release is
 #                                 out (at boot and every 6 hours; nothing is installed without apply)
+#   mu300-update source [URL|off]  show where the release files come from (the environment, /etc/mu300/update-source,
+#                                 or GitHub), put a mirror of them in that file (URL), or take it out (off). A mirror
+#                                 that cannot be reached is said once, and the rest of that run comes from GitHub
 #   mu300-update apply --from FILE|DIR   the same update without the network: from a Magisk zip of a release, or a
 #                                 directory with a release's files and their SHA256SUMS (--unsigned: one the project's
 #                                 release key cannot vouch for)
@@ -41,6 +44,11 @@ DISK=${MU300_DISK:-/mnt/mu300-disk}
 CONF=/etc/mu300
 VERSION_FILE=$CONF/image-version
 SYSTEMS="ubuntu openwrt openwrt-luci"
+# what this process's environment said about the release source, before source_conf fills the variables in from
+# /etc/mu300/update-source: the environment wins, so `mu300-update source` has to be able to say which of the two
+# is in force, and the file's value is indistinguishable from an environment one once it is in the variable
+SOURCE_ENV_DL=${MU300_DOWNLOAD_URL:-}
+SOURCE_ENV_API=${MU300_API_URL:-}
 # a system's kind decides which files are its settings and how its accounts look (spec D2)
 os_kind() { case $1 in ubuntu) echo ubuntu ;; openwrt|openwrt-*) echo openwrt ;; *) return 1 ;; esac; }
 
@@ -56,22 +64,54 @@ have() { command -v "$1" >/dev/null 2>&1; }
 # curl's own --retry leaves resets alone. Only a failed connection is retried here (curl 6 7 35 52 56; wget 4, GNU's
 # network failure - busybox wget says 1 for everything and is not): an HTTP error (22, a 404) is an answer, and a
 # timeout (28) has been retried by curl already (four more rounds would hold "check" for half an hour).
-fetch_stdout() {  # fetch_stdout URL
+# The release source of this run, and what to do when a mirror cannot be reached. A mirror may be down - a
+# third-party proxy is allowed to be - so a run that cannot reach it says so once and takes the rest of that run
+# from github.com. Only a connection-class failure counts (curl 6 7 28 35 52 56); an HTTP error, a wrong hash or a
+# bad signature is the source's answer, not its absence, and stops the run as it always did. The fetchers report
+# that failure as exit 9 so the caller can act on it in its own process: a subshell's assignments do not survive,
+# and $(fetch_stdout ...) is one. Nothing is written down - the next run tries the mirror again.
+FETCH_UNREACHABLE=9
+SOURCE_FELL_BACK=
+# fetch_unreachable_rc RC: 9 when RC is a mirror of this run that could not be reached, 1 for every other failure
+# (which is what these two fetchers have always returned)
+fetch_unreachable_rc() {
+    case $1 in 6|7|28|35|52|56) ;; *) printf '1\n'; return ;; esac
+    if [ -n "${MU300_RELEASE_URL:-}${MU300_DOWNLOAD_URL:-}" ] && [ -z "$SOURCE_FELL_BACK" ]; then printf '%s\n' "$FETCH_UNREACHABLE"
+    else printf '1\n'; fi
+}
+# mirror_fell_back: in the caller's own process - say it once, and use github.com for the rest of this run
+mirror_fell_back() {
+    [ -z "$SOURCE_FELL_BACK" ] || return 1
+    SOURCE_FELL_BACK=1
+    MU300_RELEASE_URL= MU300_DOWNLOAD_URL=
+    SUMS_FETCHED= SUMS_OK= SUMS_PIN=
+    printf 'mirror unreachable: the rest comes from github.com\n' >&2
+    return 0
+}
+# fetch_base TAG: the directory this run takes release TAG's files from (MU300_RELEASE_URL is the whole base, the
+# tag included, as it always was; MU300_DOWNLOAD_URL is the one the tag is added to)
+fetch_base() {
+    [ -z "$SOURCE_FELL_BACK" ] || { printf '%s\n' "https://github.com/$REPO/releases/download/$1"; return; }
+    printf '%s\n' "${MU300_RELEASE_URL:-${MU300_DOWNLOAD_URL:-https://github.com/$REPO/releases/download}/$1}"
+}
+fetch_stdout() {  # fetch_stdout URL (exit 9: the mirror of this run could not be reached)
     _try=1
     while :; do
         if have curl; then _out=$(curl -fsSL --connect-timeout 30 --max-time 120 --retry 3 "$1"); _rc=$?
-            case $_rc in 0|6|7|35|52|56) ;; *) return 1 ;; esac
+            case $_rc in 0|6|7|35|52|56) ;; *) return "$(fetch_unreachable_rc "$_rc")" ;; esac
         else _out=$(wget -T 60 -qO- "$1"); _rc=$?
-            case $_rc in 0|4) ;; *) return 1 ;; esac
+            case $_rc in 0|4) ;; *) return "$(fetch_unreachable_rc "$_rc")" ;; esac
         fi
         [ "$_rc" = 0 ] && { printf '%s\n' "$_out"; return 0; }
-        [ "$_try" -ge 4 ] && return 1
+        [ "$_try" -ge 4 ] && return "$(fetch_unreachable_rc "$_rc")"
         _try=$((_try + 1))
         sleep "${MU300_FETCH_DELAY:-4}"
     done
 }
-fetch_file() {  # fetch_file URL OUT (resumes a partial OUT)
-    if have curl; then curl -fL --retry 5 --retry-delay 5 --connect-timeout 30 --speed-limit 1024 --speed-time 60 -C - -o "$2" "$1"
+fetch_file() {  # fetch_file URL OUT (resumes a partial OUT; exit 9: the mirror of this run could not be reached)
+    if have curl; then
+        curl -fL --retry 5 --retry-delay 5 --connect-timeout 30 --speed-limit 1024 --speed-time 60 -C - -o "$2" "$1"
+        _rc=$?; [ "$_rc" = 0 ] || return "$(fetch_unreachable_rc "$_rc")"
     else wget -c -T 60 -O "$2" "$1"; fi
 }
 
@@ -84,14 +124,20 @@ fetch_verified() {
     progress file "$2"
     # (apply --from: the release is a file or a directory, see from_verified)
     [ -z "${MU300_FROM:-}" ] || { from_verified "$@"; return; }
-    # MU300_RELEASE_URL: another server with the same files and SHA256SUMS (a local test server), as for install.sh
-    base=${MU300_RELEASE_URL:-${MU300_DOWNLOAD_URL:-https://github.com/$REPO/releases/download}/$1}
+    # the release source of this run (MU300_RELEASE_URL: another server with the same files and SHA256SUMS, as for
+    # install.sh - fetch_base knows the three of them)
+    base=$(fetch_base "$1")
     stage_private || return 1
     # SHA256SUMS is fetched once per run, never trusted from an earlier one: a release published again under the
     # same tag left a stale copy that every file then failed (and the updater it had verified replaced this one).
     # Only without GitHub does the kept copy of the same tag stand in.
     if [ "${SUMS_FETCHED:-}" != "$1" ]; then
-        if _sums=$(fetch_stdout "$base/SHA256SUMS") && [ -n "$_sums" ]; then
+        _sums=$(fetch_stdout "$base/SHA256SUMS"); _src=$?
+        # a mirror this run cannot reach: once, and github.com for everything left (its checksums too)
+        if [ "$_src" = "$FETCH_UNREACHABLE" ] && mirror_fell_back; then
+            base=$(fetch_base "$1"); _sums=$(fetch_stdout "$base/SHA256SUMS"); _src=$?
+        fi
+        if [ "$_src" = 0 ] && [ -n "$_sums" ]; then
             printf '%s\n' "$_sums" > "$STAGE/SHA256SUMS"
             echo "$1" > "$STAGE/SHA256SUMS.tag"
             SUMS_FETCHED=$1
@@ -106,7 +152,10 @@ fetch_verified() {
     [ -n "$want" ] || { echo "$2 is not part of release $1" >&2; return 2; }
     for try in 1 2 3; do
         [ -s "$STAGE/$2" ] && [ "$(sha256sum "$STAGE/$2" | cut -d' ' -f1)" = "$want" ] && return 0
-        fetch_file "$base/$2" "$STAGE/$2" && [ "$(sha256sum "$STAGE/$2" | cut -d' ' -f1)" = "$want" ] && return 0
+        fetch_file "$base/$2" "$STAGE/$2"; _frc=$?
+        [ "$_frc" = 0 ] && [ "$(sha256sum "$STAGE/$2" | cut -d' ' -f1)" = "$want" ] && return 0
+        # the same as for the checksums: the mirror is gone, so this file and the checksums come from github.com
+        if [ "$_frc" = "$FETCH_UNREACHABLE" ] && mirror_fell_back; then base=$(fetch_base "$1"); fi
         # a corrupt or stale file cannot be resumed: start over. The kept SHA256SUMS may be the stale part - a
         # release published again under the same tag - so it is fetched again too.
         rm -f "$STAGE/$2"
@@ -3494,7 +3543,7 @@ status_json() {
     _nt=$(sed -n 's/^mu300-linux \(v[0-9.]*\) is out .*/\1/p' "$NOTICE" 2>/dev/null | head -n1)
     tag_ok "$_nt" || _nt=
     _vt=none; if have usign; then _vt=usign; elif have openssl; then _vt=openssl; fi
-    printf '"notice":%s,"signing":{"key":%d,"tool":"%s"}}\n' "$(jstr "$_nt")" "$([ "$(key_state)" = none ] && echo 0 || echo 1)" "$_vt"
+    printf '"notice":%s,"signing":{"key":%d,"tool":"%s"},"source":%s}\n' "$(jstr "$_nt")" "$([ "$(key_state)" = none ] && echo 0 || echo 1)" "$_vt" "$(source_json)"
 }
 
 # releases: the newest release, and the newest pre-release when it is newer (never offered by itself: the page
@@ -3563,6 +3612,95 @@ releases_json() {
 progress() { [ -z "${MU300_PROGRESS:-}" ] || printf '%s\n' "$*" >> "$MU300_PROGRESS" 2>/dev/null || :; }
 # ---- for a panel: end
 
+# ---- the release source (mu300-update source): the address the release files come from, set from the command line
+# What /etc/mu300/update-source names, for a person and for the panel's field: the file source_conf reads, written
+# through the same checks it applies (a plain http(s) URL; root's own regular file; no link), so a value this writes
+# is a value the next run takes. Only MU300_DOWNLOAD_URL is written here - the whole-base MU300_RELEASE_URL and the
+# API address stay whatever they were.
+# source_file_value NAME: what the source file names for NAME, or nothing - the same value source_conf would take
+# (a plain http(s) URL in root's own file), read the same way
+source_file_value() {
+    [ -f "$SOURCE_CONF" ] && [ ! -L "$SOURCE_CONF" ] || return 0
+    # the same rule source_conf applies: a file others can write is not one this device takes a source from
+    case $(ls -ln "$SOURCE_CONF" 2>/dev/null) in -????-??-?*) ;; *) return 0 ;; esac
+    [ -O "$SOURCE_CONF" ] || return 0
+    _fv=$(sed -n "s/^[[:space:]]*$1=//p" "$SOURCE_CONF" 2>/dev/null | tail -n1)
+    printf '%s\n' "$_fv" | grep -Eqx 'https?://[A-Za-z0-9._:/-]{1,200}' || return 0
+    printf '%s\n' "$_fv"
+}
+# source_state NAME: where NAME's value comes from, and the value, as "origin value" - env (this process's
+# environment won, as source_conf lets it), file (the source file), or github (neither names one)
+source_state() {
+    case $1 in
+        MU300_DOWNLOAD_URL)
+            if [ -n "${MU300_RELEASE_URL:-}" ]; then printf 'env %s\n' "$MU300_RELEASE_URL"; return; fi
+            if [ -n "$SOURCE_ENV_DL" ]; then printf 'env %s\n' "$SOURCE_ENV_DL"; return; fi ;;
+        MU300_API_URL)
+            if [ -n "$SOURCE_ENV_API" ]; then printf 'env %s\n' "$SOURCE_ENV_API"; return; fi ;;
+    esac
+    _sv=$(source_file_value "$1")
+    if [ -n "$_sv" ]; then printf 'file %s\n' "$_sv"; else printf 'github\n'; fi
+}
+# source_json: the release source of this run, for a panel (status_json). Only the file and GitHub can be in force
+# there: the adapter clears every environment variable that names a source before it runs the updater.
+source_json() {
+    _st=$(source_state MU300_DOWNLOAD_URL); _so=${_st%% *}; _sv=${_st#* }
+    case $_so in
+        github) printf '{"files":null,"from":"github"}\n' ;;
+        *) printf '{"files":%s,"from":"%s"}\n' "$(jstr "$_sv")" "$_so" ;;
+    esac
+}
+source_show() {
+    _st=$(source_state MU300_DOWNLOAD_URL); _so=${_st%% *}; _sv=${_st#* }
+    case $_so in
+        env) if [ -n "${MU300_RELEASE_URL:-}" ]; then
+                 printf 'release files  %s  (MU300_RELEASE_URL: the whole base, the release tag is not added)\n' "$_sv"
+             else printf 'release files  %s  (environment)\n' "$_sv"; fi ;;
+        file) printf 'release files  %s  (%s)\n' "$_sv" "$SOURCE_CONF" ;;
+        *) printf 'release files  %s  (default)\n' "https://github.com/$REPO/releases/download" ;;
+    esac
+    _st=$(source_state MU300_API_URL); _so=${_st%% *}; _sv=${_st#* }
+    case $_so in
+        env) printf 'release list   %s  (environment)\n' "$_sv" ;;
+        file) printf 'release list   %s  (%s)\n' "$_sv" "$SOURCE_CONF" ;;
+        *) printf 'release list   %s  (default)\n' "https://api.github.com/repos/$REPO" ;;
+    esac
+}
+# source_dir_ok: where the file goes - made if needed, and never through a link, a directory of somebody else's, or
+# one others can write (a directory others can write lets them put their own file where this one is written)
+source_dir_ok() {
+    _dd=${SOURCE_CONF%/*}
+    [ ! -L "$SOURCE_CONF" ] || { echo "$SOURCE_CONF is a link: nothing was changed" >&2; return 1; }
+    [ -d "$_dd" ] || mkdir -p "$_dd" 2>/dev/null || { echo "$_dd cannot be made" >&2; return 1; }
+    case $(ls -ldn "$_dd" 2>/dev/null) in
+        d????-??-?*) ;;
+        *) echo "$_dd is not a directory of ours, or is writable by others: nothing was changed" >&2; return 1 ;;
+    esac
+    [ -O "$_dd" ] || { echo "$_dd is not ours: nothing was changed" >&2; return 1; }
+    [ ! -e "$SOURCE_CONF" ] || { [ -f "$SOURCE_CONF" ] && [ ! -L "$SOURCE_CONF" ] && [ -O "$SOURCE_CONF" ]; } ||
+        { echo "$SOURCE_CONF is not ours: nothing was changed" >&2; return 1; }
+}
+# source_put TEXT: TEXT (or nothing, to take the line out) becomes the MU300_DOWNLOAD_URL line, everything else kept
+source_put() {
+    source_dir_ok || return 1
+    _pt=${SOURCE_CONF}.new
+    { [ ! -f "$SOURCE_CONF" ] || grep -v '^[[:space:]]*MU300_DOWNLOAD_URL=' "$SOURCE_CONF" || :
+      [ -z "${1:-}" ] || printf 'MU300_DOWNLOAD_URL=%s\n' "$1"; } > "$_pt" 2>/dev/null || :
+    chmod 600 "$_pt" && mv "$_pt" "$SOURCE_CONF" || { rm -f "$_pt"; echo "could not write $SOURCE_CONF" >&2; return 1; }
+    # nothing left in it but blank lines and comments: the file itself goes
+    [ -n "${1:-}" ] || grep -qv '^[[:space:]]*\(#\|$\)' "$SOURCE_CONF" || rm -f "$SOURCE_CONF"
+}
+source_cmd() {  # source_cmd [URL|off]: show it, name another one, or take it back out
+    case ${1:-} in
+        '') [ $# = 0 ] || die "usage: mu300-update source [URL|off]"; source_show ;;
+        off) [ $# = 1 ] || die "usage: mu300-update source [URL|off]"; source_put && source_show ;;
+        -*) die "usage: mu300-update source [URL|off]" ;;
+        *) [ $# = 1 ] || die "usage: mu300-update source [URL|off]"
+           printf '%s\n' "$1" | grep -Eqx 'https?://[A-Za-z0-9._:/-]{1,200}' || die "not an http(s) URL: $1"
+           source_put "$1" && source_show ;;
+    esac
+}
+
 # tests/ source this file for its functions only (MU300_BIN, MU300_DISK: a fake device)
 [ -z "${MU300_LIB:-}" ] || return 0
 
@@ -3595,6 +3733,7 @@ case ${1:-check} in
     clean) clean ;;
     notice) notice ;;
     report) report ;;
-    -h|--help|help) sed -n '2,27s/^# \{0,1\}//p' "$0" ;;
-    *) echo "usage: mu300-update check|version|apply [--no-reinstall] [--no-rollback] [ubuntu|openwrt|openwrt-luci ...]|boot|kernel [5.4|6.18|7.2]|rollback [os]|rollback-boot|clean|report|notice|status|releases|inspect FILE" >&2; exit 2 ;;
+    source) shift; source_cmd "$@" ;;
+    -h|--help|help) sed -n '2,30s/^# \{0,1\}//p' "$0" ;;
+    *) echo "usage: mu300-update check|version|apply [--no-reinstall] [--no-rollback] [ubuntu|openwrt|openwrt-luci ...]|boot|kernel [5.4|6.18|7.2]|rollback [os]|rollback-boot|clean|report|notice|source [URL|off]|status|releases|inspect FILE" >&2; exit 2 ;;
 esac

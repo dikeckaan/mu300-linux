@@ -2234,6 +2234,12 @@ msgstr "Sprawdzono %s temu"
 msgid "Not checked yet"
 msgstr "Jeszcze nie sprawdzono"
 
+msgid "Mirror (release files)"
+msgstr "Lustro (pliki wydania)"
+
+msgid "Leave empty for GitHub."
+msgstr "Zostaw puste dla GitHuba."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Po aktualizacji zainstaluj ponownie dodane przeze mnie pakiety (urządzenie musi być online przy pierwszym uruchomieniu)"
 
@@ -3685,3 +3691,6 @@ msgstr "Ten plik jest niepodpisany: to wymaga potwierdzenia"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Ten plik jest starszy niż to, co zainstalowane: to wymaga potwierdzenia"
+
+msgid "The release source was not changed"
+msgstr "Źródło wydania nie zostało zmienione"

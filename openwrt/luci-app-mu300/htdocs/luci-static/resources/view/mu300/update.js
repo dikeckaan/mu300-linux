@@ -66,7 +66,7 @@ return view.extend({
 	act: function(btn, a) {
 		var self = this;
 		M.busy(btn, true);
-		return M.callUpdateAct(a.op, a.tag || '', a.systems || '', a.kernel || '', a.sha256 || '', a.size || '', a.flags || '', a.confirm || '').then(function(r) {
+		return M.callUpdateAct(a.op, a.tag || '', a.systems || '', a.kernel || '', a.sha256 || '', a.size || '', a.flags || '', a.confirm || '', a.url || '').then(function(r) {
 			M.busy(btn, false);
 			if (!r || r.ok !== 1) {
 				M.toast(_('Failed: %s').format(M.errText(r)), { type: 'error', timeout: 8000 });
@@ -269,6 +269,20 @@ return view.extend({
 		online.appendChild(E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0' }, [ cb,
 			E('span', { 'class': 'mud-note', 'style': 'margin:0', 'id': 'mud-upd-checked' }, [
 				checking ? _('Asking GitHub…') : res.check_age != null ? _('Checked %s ago').format(M.ageText(res.check_age)) : _('Not checked yet') ]) ]));
+		/* where the release files come from: one address, written to /etc/mu300/update-source through mu300-update
+		 * source (the adapter runs that one command; the environment is not a channel to it). Empty: GitHub, which is
+		 * also what the placeholder says while the field is left alone. */
+		var src = st.source || {};
+		var sfield = E('input', { 'type': 'text', 'id': 'mud-upd-source', 'spellcheck': 'false', 'autocomplete': 'off',
+			'style': 'flex:1 1 20em;min-width:12em;padding:4px 6px', 'placeholder': src.files || 'GitHub' });
+		var sbtn = E('button', { 'class': 'mud-btn', 'id': 'mud-upd-source-save', 'disabled': off ? '' : null }, [ _('Save') ]);
+		sbtn.addEventListener('click', function() {
+			self.act(sbtn, { op: 'source', url: sfield.value.trim(), confirm: 'source' });
+		});
+		online.appendChild(E('div', { 'style': 'margin:8px 0' }, [
+			E('label', { 'class': 'mud-note', 'style': 'display:block;margin:0', 'for': 'mud-upd-source' }, [ _('Mirror (release files)') ]),
+			E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0' }, [ sfield, sbtn,
+				E('span', { 'class': 'mud-note', 'style': 'margin:0' }, [ _('Leave empty for GitHub.') ]) ]) ]));
 		var reinstall = check('mud-upd-reinstall', _('Install the packages I added again after the update (needs the device online at the first start)'), true);
 		var sysBoxes = systems.map(function(s) { return { name: s.name, c: check('mud-upd-sys-' + s.name, s.name + ' · ' + s.release, true) }; });
 		var offered = false;	/* an Update button is on the page: the choices that go with it are shown */

@@ -2234,6 +2234,12 @@ msgstr "تم التحقق قبل %s"
 msgid "Not checked yet"
 msgstr "لم يتم التحقق بعد"
 
+msgid "Mirror (release files)"
+msgstr "مرآة (ملفات الإصدار)"
+
+msgid "Leave empty for GitHub."
+msgstr "اتركه فارغًا لاستخدام GitHub."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "إعادة تثبيت الحزم التي أضفتها بعد التحديث (يحتاج الجهاز إلى الإنترنت عند أول تشغيل)"
 
@@ -3685,3 +3691,6 @@ msgstr "هذا الملف غير موقَّع: هذا يحتاج إلى تأكي
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "هذا الملف أقدم من المثبت: هذا يحتاج إلى تأكيد"
+
+msgid "The release source was not changed"
+msgstr "لم يتم تغيير مصدر الإصدار"

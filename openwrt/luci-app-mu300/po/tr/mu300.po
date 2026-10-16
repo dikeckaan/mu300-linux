@@ -2229,6 +2229,12 @@ msgstr "%s önce denetlendi"
 msgid "Not checked yet"
 msgstr "Henüz denetlenmedi"
 
+msgid "Mirror (release files)"
+msgstr "Ayna (sürüm dosyaları)"
+
+msgid "Leave empty for GitHub."
+msgstr "GitHub için boş bırakın."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Eklediğim paketleri güncellemeden sonra yeniden kur (ilk açılışta cihazın çevrimiçi olması gerekir)"
 
@@ -3678,3 +3684,6 @@ msgstr "Bu dosya imzalı değil: bunun için onay gerekiyor"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Bu dosya kurulu olandan eski: bunun için onay gerekiyor"
+
+msgid "The release source was not changed"
+msgstr "Sürüm kaynağı değiştirilmedi"

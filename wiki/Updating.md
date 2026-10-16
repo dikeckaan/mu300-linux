@@ -72,6 +72,35 @@ A release can carry a signature of its checksums (`SHA256SUMS.sig`). A system th
 that has none unless you say so (`--unsigned`). Systems up to v2026.10.27 have no key and update as they always did. Details:
 [FINDINGS 86](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md).
 
+### Where the release files come from
+
+GitHub's release CDN throttles single connections in some regions, so the device can take its releases from
+somewhere else: a GitHub file proxy (a prefix in front of the release URL), or a copy of a release's files on your
+own network. The panel's **System > Update** page has a field for it - *Mirror (release files)*, under **Online
+update** - and the command line writes and reads the same file:
+
+```sh
+mu300-update source https://ghfast.top/https://github.com/dikeckaan/mu300-linux/releases/download
+mu300-update source        # what is in force now, and where it comes from
+mu300-update source off    # back to GitHub
+```
+
+Two addresses are involved, and they are not the same service:
+
+* **the release files** - `MU300_DOWNLOAD_URL` in `/etc/mu300/update-source`; the release tag is added after it, so
+  one line keeps working for every release;
+* **"which release is newest"** - `MU300_API_URL`, standing for `https://api.github.com/repos/dikeckaan/mu300-linux`.
+  The GitHub file proxies in common use serve the first and **not** the second: a request for `api.github.com`
+  through one of them comes back `403`. Leave this address alone unless your source serves the API too.
+
+Both live in `/etc/mu300/update-source`, which only root can write (a commented `update-source.example` sits beside
+it, and an update keeps the file). The environment wins over the file, which is how the computer installer's
+`MU300_RELEASE_URL` and a one-off run work.
+
+**A mirror that cannot be reached is not the end of an update**: it is said once, and that run carries on with
+GitHub. The setting stays as you left it, so the next run tries your mirror again. A mirror that *answers* with the
+wrong files is another matter - the release is then not installed.
+
 ## What an update keeps
 
 **Everything you added to the system, and everything you changed in it.** Up to v2026.10.27 an update kept a list

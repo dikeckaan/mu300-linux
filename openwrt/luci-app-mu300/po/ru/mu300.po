@@ -2234,6 +2234,12 @@ msgstr "Проверено %s назад"
 msgid "Not checked yet"
 msgstr "Ещё не проверялось"
 
+msgid "Mirror (release files)"
+msgstr "Зеркало (файлы выпуска)"
+
+msgid "Leave empty for GitHub."
+msgstr "Оставьте пустым для GitHub."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "После обновления снова установить добавленные мной пакеты (при первом запуске устройству нужен интернет)"
 
@@ -3685,3 +3691,6 @@ msgstr "Этот файл не подписан: требуется подтве
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Этот файл старее установленного: требуется подтверждение"
+
+msgid "The release source was not changed"
+msgstr "Источник выпуска не изменён"

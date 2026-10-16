@@ -2234,6 +2234,12 @@ msgstr "%s əvvəl yoxlanılıb"
 msgid "Not checked yet"
 msgstr "Hələ yoxlanılmayıb"
 
+msgid "Mirror (release files)"
+msgstr "Güzgü (buraxılış faylları)"
+
+msgid "Leave empty for GitHub."
+msgstr "GitHub üçün boş buraxın."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Yeniləmədən sonra əlavə etdiyim paketləri yenidən quraşdır (ilk başlanğıcda cihazın interneti olmalıdır)"
 
@@ -3685,3 +3691,6 @@ msgstr "Bu fayl imzalanmayıb: bunun üçün təsdiq lazımdır"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Bu fayl quraşdırılmış olandan köhnədir: bunun üçün təsdiq lazımdır"
+
+msgid "The release source was not changed"
+msgstr "Buraxılış mənbəyi dəyişdirilmədi"
