@@ -1984,6 +1984,27 @@ class Page(unittest.TestCase):
         self.assertIn('Mirror (release files)', r['text'])
         self.assertIn('Leave empty for GitHub.', r['text'])
 
+    def test_a_saved_mirror_is_kept_and_shown(self):
+        # what a Save writes is what the device reads (the Status and Adapter tests), and the page shows it once it is
+        # back from the save: as the empty box's placeholder, never as something the box pretends the user typed
+        r = self.page('''const root = await open(STATE);
+            const f = root.find('mud-upd-source');
+            const before = f.attrs.placeholder;
+            f.value = 'https://m.example/dl';
+            replies.update_act = { ok: 1 };
+            replies.update_get = Object.assign({}, STATE,
+                { status: Object.assign({}, STATE.status, { source: { files: 'https://m.example/dl', from: 'file' } }) });
+            await click(root, 'mud-upd-source-save');
+            await flush();
+            const after = root.find('mud-upd-source');
+            return { before: before, value: after.attrs.value || '', placeholder: after.attrs.placeholder,
+                     sent: calls.filter((c) => c[0] === 'update_act').length };''',
+            self.with_(status__source={}))
+        self.assertEqual(r['before'], 'GitHub')                     # nothing set: the box says where it comes from
+        self.assertEqual(r['sent'], 1)
+        self.assertEqual(r['value'], '')                            # the box is not filled in for the user
+        self.assertEqual(r['placeholder'], 'https://m.example/dl')  # ... and this is what the device now uses
+
     def test_an_update_asks_first_and_sends_what_was_shown(self):
         r = self.page('''const root = await open(STATE);
             replies.update_act = { ok: 1, started: 1, kind: 'apply' };
