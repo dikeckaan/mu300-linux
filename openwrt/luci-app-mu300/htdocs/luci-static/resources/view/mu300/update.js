@@ -62,11 +62,15 @@ return view.extend({
 		return L.resolveDefault(M.callUpdateGet('1'), {}).then(function(st) { self.paint(st || {}); return st; });
 	},
 
-	/* one update_act; a started task is followed until it ends */
+	/* one update_act; a started task is followed until it ends. The source address goes only where it belongs (the
+	 * Mirror field's Save): every other operation sends its own arguments alone, as its requests have always done */
 	act: function(btn, a) {
 		var self = this;
 		M.busy(btn, true);
-		return M.callUpdateAct(a.op, a.tag || '', a.systems || '', a.kernel || '', a.sha256 || '', a.size || '', a.flags || '', a.confirm || '', a.url || '').then(function(r) {
+		var cargs = [ a.op, a.tag || '', a.systems || '', a.kernel || '', a.sha256 || '', a.size || '', a.flags || '', a.confirm || '' ];
+		if (a.url !== undefined)
+			cargs.push(a.url);
+		return M.callUpdateAct.apply(null, cargs).then(function(r) {
 			M.busy(btn, false);
 			if (!r || r.ok !== 1) {
 				M.toast(_('Failed: %s').format(M.errText(r)), { type: 'error', timeout: 8000 });
