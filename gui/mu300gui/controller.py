@@ -291,6 +291,7 @@ class Controller:
             return False
         a = answers(self.choices, self.facts, language(), self.serial)
         self.masker.add(self.choices.password, '<password>')
+        self.masker.add(self.choices.current_password, '<password>')
         ok = self._begin('install', 'install', [], INSTALL_STEPS, answers_=a)
         self._tell('run')
         return ok

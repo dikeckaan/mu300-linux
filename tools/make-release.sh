@@ -85,7 +85,13 @@ docker run --rm -v "$TOP/tools":/src:ro -v "$IN/tools":/o mu300-kbuild sh -c '
   gcc -O2 -static -o /o/logdw/logdw /src/logdw/logdw.c &&
   gcc -O2 -static -o /o/bt-init/mu300-bt-init /src/bt-init/mu300-bt-init.c &&
   mkdir -p /o/keys && gcc -O2 -static -o /o/keys/mu300-keys /src/keys/mu300-keys.c &&
-  mkdir -p /o/carry && gcc -O2 -static -o /o/carry/mu300-carry /src/carry/mu300-carry.c'
+  mkdir -p /o/carry && gcc -O2 -static -o /o/carry/mu300-carry /src/carry/mu300-carry.c &&
+  mkdir -p /o/pwcheck && gcc -O2 -static -o /o/pwcheck/mu300-pwcheck /src/pwcheck/mu300-pwcheck.c -lcrypt'
+# the password checker of the installers (tools/android-pwcheck.sh: never a program of the Linux system it checks):
+# it must know yescrypt, what Ubuntu's passwd writes (FINDINGS 126)
+H='$y$j9T$yozuPAQ4fDSQH5fJzaFQd/$Z6UKqnHQMcZqZNJ18QIV5mTrJ7raj2y7MDipRg8bUj.'
+[ "$(printf '%s\n%s\n' 'old secret 1' "$H" | docker run --rm -i -v "$IN/tools/pwcheck":/p:ro mu300-kbuild /p/mu300-pwcheck)" = MATCH ] ||
+    { echo "mu300-pwcheck does not check a yescrypt hash" >&2; exit 1; }
 # adbd (adb over USB to Linux): static aarch64, from AOSP's sources (tools/adbd/build.sh)
 sh "$TOP/tools/adbd/build.sh" "$IN/tools/adbd/adbd" >/dev/null
 # cltest links against Android's libraries at build time only; use a local build when there is one
@@ -102,6 +108,8 @@ echo "f50 u30air" > "$K/devices"
 # it; its init runs from either slot, so a Linux on slot a may get it (mu300-update checks both)
 printf 'sdcard\nlinux-slot\n' > "$K/features"
 cp "$KOUT/Image" "$KOUT/modules.builtin" "$KOUT/modules.builtin.modinfo" "$IN/busybox" "$IN/tools/logdw/logdw" "$K/"
+# beside busybox for the installers' password check (the Magisk zips take both from here; FINDINGS 126)
+cp "$IN/tools/pwcheck/mu300-pwcheck" "$K/"
 # the device-independent part of the boot ramdisk, which mu300-update puts behind the device's own ramdisk to update
 # the kernel and the boot image without a computer (same builder and file list as install.sh)
 python3 "$TOP/boot/build-boot-image.py" --generic-ramdisk --modules "$IN/out/modules" --busybox "$IN/busybox" \
@@ -164,7 +172,7 @@ for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.2 mu300-ubuntu-rootfs mu3
         -e '(^|/)lib/firmware/(wcnmodem|gnssmodem|wifi_board_config|bt_configure)' \
         -e '^opt/mu300/android/.+' -e '__properties__|dev-properties' \
         -e '(^|/)(libmali|libOpenCL|libGLES|libEGL|libvulkan)[^/]*\.so' \
-        -e '^etc/ssh/ssh_host_' -e '^etc/mu300/(hotspot|vpn|toolkit|mobile-data)\.conf$' -e '^etc/mu300/update-source$' -e '^etc/dropbear/dropbear_.*_host_key' \
+        -e '^etc/ssh/ssh_host_' -e '^etc/uhttpd\.key$' -e '^etc/mu300/(hotspot|vpn|toolkit|mobile-data)\.conf$' -e '^etc/mu300/update-source$' -e '^etc/dropbear/dropbear_.*_host_key' \
         -e '^opt/mu300/bin/(xray|sing-box|hev-socks5-tunnel|mihomo|mu300-vpn)$' -e '^opt/mu300/lib/vpn(/|$)' \
         -e '^etc/systemd/system/mu300-vpn\.service$' -e '^etc/init\.d/mu300-vpn$' -e '^etc/mu300/vpn\.conf\.example$' \
         | grep -vE '^opt/mu300/android/system/?$|^opt/mu300/android/system/bin/?$|^opt/mu300/android/system/bin/cltest$' || true)
@@ -297,7 +305,7 @@ first with \`./install.sh --check\`.
 
 | file | contents |
 |---|---|
-| mu300-kernel.tar.gz | Linux 5.4.254 \`Image\` and modules (with the U30 Air's own in \`modules-u30air/\`), with the patches of \`kernel/patches\` (among them: no panic when a network namespace goes away, #103, and the Wi-Fi driver's routine lines no longer at error level, #140), static busybox and logdw for the boot image, and the generic boot ramdisk segment \`mu300-update\` uses |
+| mu300-kernel.tar.gz | Linux 5.4.254 \`Image\` and modules (with the U30 Air's own in \`modules-u30air/\`), with the patches of \`kernel/patches\` (among them: no panic when a network namespace goes away, #103, and the Wi-Fi driver's routine lines no longer at error level, #140), static busybox and logdw for the boot image, the installers' static password checker \`mu300-pwcheck\`, and the generic boot ramdisk segment \`mu300-update\` uses |
 | mu300-kernel-6.18.tar.gz | mainline Linux 6.18 (longterm) for \`mu300-update kernel 6.18\`: \`Image\`, modules, generic boot ramdisk segment; with BTF and the BPF JIT (so the VPN module's dae engine runs), FunctionFS (for adb) and card detect for the F50's SD slot (an empty slot is no longer polled, #181) |
 | mu300-kernel-7.2.tar.gz | mainline Linux 7.2 (newest stable) for \`mu300-update kernel 7.2\`: the same parts |
 | mu300-ubuntu-rootfs.tar.gz | Ubuntu 24.04 LTS root filesystem |

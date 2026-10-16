@@ -40,7 +40,10 @@ Plug it into a computer with USB and run `ssh ubuntu@192.168.77.1` (Ubuntu) or `
 U30 Air the address is `192.168.78.1`. OpenWrt also has a web page at the same address. Or join its Wi-Fi hotspot.
 
 ### What is the default password?
-There is none: you choose it during installation (at least 6 characters). A Magisk zip generates one and shows it.
+From a computer you choose it during installation (at least 6 characters). A Magisk zip uses the images' own:
+Ubuntu's user `ubuntu` has the password `ubuntu`, OpenWrt's `root` has none until you set one (`passwd`, or LuCI's
+System > Administration). An update keeps the password the system has: the computer installer asks for it and checks
+it (or sets a new one), a Magisk zip keeps it unless a `mu300-install.conf` in the zip says otherwise.
 
 ### Does 5G work?
 Yes: 5G NSA and LTE, shared with Wi-Fi and USB clients, reconnecting by itself after modem resets. See

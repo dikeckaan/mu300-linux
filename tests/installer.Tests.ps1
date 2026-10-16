@@ -145,19 +145,20 @@ $sdEnv = $common.Clone(); $sdEnv.SIZE = [int64]31914967040; $sdEnv.INT_SIZE = [i
 $sdEnv.SD_DEV = '/dev/block/mmcblk1p1'; $sdEnv.INTERNAL_EXISTS = 1
 $inEnv = $common.Clone(); $inEnv.SIZE = [int64]34776023040; $inEnv.INT_SIZE = [int64]0; $inEnv.SD_MODE = 0
 $inEnv.SD_DEV = ''; $inEnv.INTERNAL_EXISTS = 0; $inEnv.FORMAT = 0; $inEnv.UPDATE = 1
-$inEnv.ADB = 1; $inEnv.ADB_KEY = ('QAAAA' + ('A' * 694) + '= me@host')
+$inEnv.ADB = 1; $inEnv.ADB_KEY = ('QAAAA' + ('A' * 694) + '= me@host'); $inEnv.KEEP_PW_OSES = @('openwrt')
 $t = InstallEnvText $sdEnv
 Check 'env sd: region'      ($t -match "(?m)^OFF=27762098176\nSIZE=34776023040\nOFF_S=54222848\nSIZE_S=67921920\n") $true
 Check 'env sd: card'        ($t -match "(?m)^SD_MODE=1\nSD_DEV=/dev/block/mmcblk1p1\nINTERNAL_EXISTS=1\n") $true
 Check 'env sd: format'      ($t -match "(?m)^FORMAT=1\n" -and $t -match "(?m)^UPDATE=0\n") $true
 Check 'env sd: oses'        ($t -match '(?m)^OSES="ubuntu openwrt"\n') $true
-Check 'env sd: hash'        ($t.EndsWith("SYNC_BOOTCHAIN=1`nPWHASH='`$6`$salt`$hash/x.y'`n")) $true
+Check 'env sd: hash'        ($t.EndsWith("SYNC_BOOTCHAIN=1`nPWHASH='`$6`$salt`$hash/x.y'`nKEEP_PW_OSES=`"`"`n")) $true
 Check 'env sd: no CR'       ($t.Contains("`r")) $false
 $t = InstallEnvText $inEnv
 Check 'env internal'        ($t -match "(?m)^OFF=27762098176\nSIZE=34776023040\nOFF_S=54222848\nSIZE_S=67921920\nFORMAT=0\n") $true
 Check 'env internal: sd'    ($t -match "(?m)^UPDATE=1\n" -and $t -match "(?m)^SD_MODE=0\nSD_DEV=\nINTERNAL_EXISTS=0\n") $true
 Check 'env internal: adb'   ($t -match ("(?m)^ADB=1\nADB_KEY='QAAAA" + ('A' * 694) + "= me@host'\nSYNC_BOOTCHAIN=1\nPWHASH=")) $true
 Check 'env sd: adb off'     ((InstallEnvText $sdEnv) -match "(?m)^ADB=0\nADB_KEY=''\n") $true
+Check 'env internal: kept passwords' ($t.EndsWith("`nKEEP_PW_OSES=`"openwrt`"`n")) $true
 
 # ---- AdbPubKey: the installing computer's adb key, safe inside single quotes --------------------------------------
 $key = 'QAAAA' + ('A' * 694) + '='

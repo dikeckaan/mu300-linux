@@ -14,7 +14,14 @@ mu300_x=$TMPDIR/mu300-zip
 rm -rf "$mu300_x"
 unzip -o -q "$ZIPFILE" 'mu300/*' module.prop action.sh switch.sh bootchain.sh 'system/*' -d "$mu300_x" >&2 ||
     abort "! The zip could not be unpacked"
-MU300_DIR=$mu300_x/mu300 ZIPFILE=$ZIPFILE MAGISKBIN=${MAGISKBIN:-/data/adb/magisk} \
+# settings a user put into the zip, at its top (zip mu300-magisk-....zip mu300-install.conf): the only way to tell an
+# update anything about the password (mu300/install.sh, conf_read). Most zips have none.
+mu300_conf=
+if unzip -l "$ZIPFILE" mu300-install.conf >/dev/null 2>&1 &&
+    unzip -o -q "$ZIPFILE" mu300-install.conf -d "$mu300_x" >&2 && [ -f "$mu300_x/mu300-install.conf" ]; then
+    mu300_conf=$mu300_x/mu300-install.conf
+fi
+MU300_DIR=$mu300_x/mu300 ZIPFILE=$ZIPFILE MAGISKBIN=${MAGISKBIN:-/data/adb/magisk} MU300_ZIP_CONF=$mu300_conf \
     "${MAGISKBIN:-/data/adb/magisk}/busybox" sh "$mu300_x/mu300/install.sh"
 mu300_rc=$?
 rm -rf "$mu300_x/mu300"
@@ -31,4 +38,4 @@ set_perm "$MODPATH/switch.sh" 0 0 0755
 set_perm "$MODPATH/action.sh" 0 0 0755
 set_perm "$MODPATH/bootchain.sh" 0 0 0755
 set_perm "$MODPATH/system/bin/mu300-linux" 0 0 0755
-unset mu300_x mu300_rc
+unset mu300_x mu300_rc mu300_conf

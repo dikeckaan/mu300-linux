@@ -31,7 +31,7 @@ $script:MuAnswers = New-Object 'System.Collections.Generic.Dictionary[string,str
 $script:MuAsked = New-Object 'System.Collections.Generic.Dictionary[string,string]'
 $script:MuProgress = $false
 # the answers that are secrets, in one place
-$script:MuSecrets = @('MU300_ANS_PASSWORD')
+$script:MuSecrets = @('MU300_ANS_PASSWORD', 'MU300_ANS_CURRENT_PASSWORD', 'MU300_ANS_CURRENT_PASSWORD_UBUNTU', 'MU300_ANS_CURRENT_PASSWORD_OPENWRT', 'MU300_ANS_CURRENT_PASSWORD_OPENWRT_LUCI')
 function AnswerSecret([string]$Id) { return ($script:MuSecrets -ccontains $Id) }
 $script:MuStepId = ''
 $script:MuStepPct = ''

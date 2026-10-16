@@ -317,7 +317,6 @@ password for root: none yet - set one with passwd, or in LuCI (System > Administ
 could not write {1}; nothing was installed	无法写入 {1}；未安装任何内容
 used by this installation and removed from {1}:{2}	已在本次安装中使用并从 {1} 中删除：{2}
 could not remove{1} from {2}; remove it by hand	无法从 {2} 中删除：{1}；请手动删除
-password:       kept: the accounts and passwords of the installed system are not changed ({1} in {2} sets a new one)	密码：          保留：已安装系统的账户和密码不变（在 {2} 中写入 {1} 可设置新密码）
 password for {1}: unchanged (the one this system had)	{1} 的密码：未改变（仍为该系统原来的密码）
 The web panel for Ubuntu (Cockpit with an MU300 page: signal, SMS, VPN, Wi-Fi, updates, a terminal; on the LAN only) is optional. It can also be added later on the device:	Ubuntu 的网页面板（带 MU300 页面的 Cockpit：信号、短信、VPN、Wi-Fi、更新、终端；仅限局域网）是可选的。之后也可以在设备上添加：
 Install the web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)? (yes/no)	安装 Ubuntu 的网页面板（额外下载约 24 MB，设备上占用 50 MB）？(yes/no)
@@ -854,3 +853,30 @@ This window was started from an unpacked Magisk zip: it installs the system and 
 Files	文件
 From	来源
 this unpacked Magisk zip, nothing downloaded: {1}	本解压的 Magisk zip，不下载任何东西：{1}
+The installed {1} has a login password of its own.	已安装的 {1} 有自己的登录密码。
+yes  keep it: the current password is asked once and checked on the device	yes  保留：询问一次当前密码，并在设备上核对
+no   set a new password	no   设置新密码
+Keep the current password? (yes/no)	保留当前密码吗？（yes/no）
+Current password of "{1}" in the installed {2} (only Enter if it has none)	已安装的 {2} 中 "{1}" 的当前密码（没有密码时直接按 Enter）
+confirmed: the password of {1} stays as it is	已确认：{1} 的密码保持不变
+that is not the current password of "{1}" in {2}	这不是 {2} 中 "{1}" 的当前密码
+"{1}" in the installed {2} has no password login, so there is none to confirm. Nothing was changed: run the installer again and answer no to set a new password.	已安装的 {2} 中 "{1}" 不能用密码登录，因此没有可确认的密码。未做任何更改：请重新运行安装程序，并回答 no 以设置新密码。
+the current password of "{1}" in the installed {2} could not be checked on the device ({3}). Nothing was changed: run the installer again and answer no to set a new password.	无法在设备上核对已安装的 {2} 中 "{1}" 的当前密码（{3}）。未做任何更改：请重新运行安装程序，并回答 no 以设置新密码。
+the current password of "{1}" in the installed {2} was not confirmed. Nothing was changed: run the installer again and answer no to set a new password.	已安装的 {2} 中 "{1}" 的当前密码未被确认。未做任何更改：请重新运行安装程序，并回答 no 以设置新密码。
+password:       kept as it is in {1} (confirmed){2}	密码：          {1} 中保持不变（已确认）{2}
+the new one in {1}	{1} 中使用新密码
+mu300-install.conf: {1} is taken only from a mu300-install.conf inside the zip; ignored in {2}	mu300-install.conf：{1} 只从 zip 内的 mu300-install.conf 读取；在 {2} 中已忽略
+an update sets a password only from a mu300-install.conf inside the zip: {1} in {2} is not used	更新只按 zip 内的 mu300-install.conf 设置密码：{2} 中的 {1} 未被使用
+mu300-install.conf: MU300_KEEP_PASSWORD=yes and a new password (MU300_PASSWORD or MU300_PASSWORD_RESET) do not go together; nothing was changed	mu300-install.conf：MU300_KEEP_PASSWORD=yes 不能与新密码（MU300_PASSWORD 或 MU300_PASSWORD_RESET）同时使用；未做任何更改
+MU300_CURRENT_PASSWORD in {1} is not the current password of "{2}" in the installed {3}. Nothing was changed. Correct it (no such line: no password), or set a new one with MU300_KEEP_PASSWORD=no and MU300_PASSWORD, or remove MU300_KEEP_PASSWORD to keep the password without a check.	{1} 中的 MU300_CURRENT_PASSWORD 不是已安装的 {3} 中 "{2}" 的当前密码。未做任何更改。请改正（没有这一行：表示没有密码），或用 MU300_KEEP_PASSWORD=no 和 MU300_PASSWORD 设置新密码，或删除 MU300_KEEP_PASSWORD 以不经核对保留密码。
+"{1}" in the installed {2} has no password login, so there is none to confirm. Nothing was changed. Set a new one with MU300_KEEP_PASSWORD=no and MU300_PASSWORD, or remove MU300_KEEP_PASSWORD to keep the account as it is.	已安装的 {2} 中 "{1}" 不能用密码登录，因此没有可确认的密码。未做任何更改。请用 MU300_KEEP_PASSWORD=no 和 MU300_PASSWORD 设置新密码，或删除 MU300_KEEP_PASSWORD 以保持该账户不变。
+the current password of "{1}" in the installed {2} could not be checked on the device ({3}). Nothing was changed. Set a new one with MU300_KEEP_PASSWORD=no and MU300_PASSWORD, or remove MU300_KEEP_PASSWORD to keep the password without a check.	无法在设备上核对已安装的 {2} 中 "{1}" 的当前密码（{3}）。未做任何更改。请用 MU300_KEEP_PASSWORD=no 和 MU300_PASSWORD 设置新密码，或删除 MU300_KEEP_PASSWORD 以不经核对保留密码。
+MU300_KEEP_PASSWORD: the installed {1} has no password of its own to keep; the password below is used	MU300_KEEP_PASSWORD：已安装的 {1} 没有可保留的自有密码；使用下面的密码
+password:       kept: the accounts and passwords of the installed system are not changed; the current password was checked ({1})	密码：          保留：已安装系统的账户和密码不变；当前密码已核对（{1}）
+password:       kept, not checked: the accounts and passwords of the installed system are not changed (a mu300-install.conf inside the zip can check it or set a new one: {1})	密码：          保留，未核对：已安装系统的账户和密码不变（zip 内的 mu300-install.conf 可以核对它或设置新密码：{1}）
+(not checked: a mu300-install.conf inside the zip can check it or set a new one, see {1})	（未核对：zip 内的 mu300-install.conf 可以核对它或设置新密码，见 {1}）
+Keep the current password	保留当前密码
+Current password	当前密码
+The installer checks it on the device before anything is written, and stops when it is not the current one. Leave it empty when there is none (OpenWrt's root as it ships). The new password below is then needed only for a system the update installs new.	安装程序在写入任何内容之前会在设备上核对它，不是当前密码时就停止。没有密码时留空（OpenWrt 出厂时的 root）。这样下面的新密码只用于更新新装的系统。
+kept: the current one is checked on the device	保留：在设备上核对当前密码
+the new one	新密码

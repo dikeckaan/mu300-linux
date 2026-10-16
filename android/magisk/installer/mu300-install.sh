@@ -13,6 +13,9 @@
 # there can be replaced between the check and the use. A settings file on /sdcard is read, but it can only choose
 # what destroys nothing (see conf_load).
 #
+# MU300_ZIP_CONF=FILE (customize.sh): the mu300-install.conf a user put at the top of the zip, read like the zip's own
+# (see conf_read). Without it, an update keeps the accounts and passwords of the system it replaces.
+#
 # Another caller than Magisk's customize.sh (tools/android-web.sh, for the web installer, runs this as root over adb)
 # sets two things in the environment:
 #   MU300_ANSWERS=FILE  the settings of this run come from FILE alone - one only root can change, or the run is
@@ -50,6 +53,9 @@ PW_FILE_SDCARD=$SDCARD/mu300-linux-password.txt
 MAGISKBIN=${MAGISKBIN:-/data/adb/magisk}
 MAGISKBOOT=${MAGISKBOOT:-$MAGISKBIN/magiskboot}
 UBB=${MU300_UBB:-$D/busybox}             # the release's static busybox: its mkpasswd
+# the project's own password checker (tools/pwcheck; static, libxcrypt), in zips whose kernel bundle has it: what checks
+# a current password (android-pwcheck.sh), never a program of the Linux system that is checked
+PWBIN=${MU300_PWBIN:-$D/mu300-pwcheck}
 DEVSH=${MU300_DEVICE_SH:-/system/bin/sh}
 ANDROID_SH=${MU300_ANDROID_SH:-/system/bin/sh}
 APATH=${MU300_ANDROID_PATH:-/system/bin:/system/xbin:/vendor/bin}
@@ -90,17 +96,22 @@ android_lang() {  # the language of the Android locale: tr, zh or en
 # ---- answers: mu300-install.conf, read line by line, never sourced (it is a text file, and this runs as root). Only
 # these keys are taken. Two kinds of file:
 #   trusted    /data/adb/mu300-install.conf when root owns it and nobody else can write it, and a
-#              mu300-install.conf inside the zip (as trusted as the scripts it comes with)
+#              mu300-install.conf inside the zip (as trusted as the scripts it comes with): mu300/mu300-install.conf,
+#              and one a user put at the top of the zip (MU300_ZIP_CONF, which wins over every other)
+# The password of an update is the zip's business alone (docs/INSTALLER-AUTOMATION.md, "Magisk zip"):
+# MU300_KEEP_PASSWORD and MU300_CURRENT_PASSWORD count only from a mu300-install.conf inside the zip (or MU300_ANSWERS),
+# and an update takes MU300_PASSWORD and MU300_PASSWORD_RESET only from there too (plan_password).
 #   untrusted  /sdcard/mu300-install.conf or /sdcard/Download/mu300-install.conf (first found): any app with
 #              storage access can write these, so they choose only what destroys nothing and reveals nothing
 # Trusted values win.
-CONF_KEYS='MU300_STORAGE MU300_SD_ERASE MU300_REGION_OVERWRITE MU300_MODE MU300_DOWNGRADE MU300_UPDATE_KEEP MU300_BOOT_OS MU300_BOOT MU300_BOOT_ATTEMPTS MU300_HOTSPOT MU300_GPU MU300_PASSWORD MU300_PASSWORD_RESET MU300_PASSWORD_FILE MU300_DEVICE MU300_LANG MU300_DRY_RUN MU300_SYNC_BOOTCHAIN MU300_ADB_KEY'
+CONF_KEYS='MU300_STORAGE MU300_SD_ERASE MU300_REGION_OVERWRITE MU300_MODE MU300_DOWNGRADE MU300_UPDATE_KEEP MU300_BOOT_OS MU300_BOOT MU300_BOOT_ATTEMPTS MU300_HOTSPOT MU300_GPU MU300_PASSWORD MU300_PASSWORD_RESET MU300_KEEP_PASSWORD MU300_CURRENT_PASSWORD MU300_PASSWORD_FILE MU300_DEVICE MU300_LANG MU300_DRY_RUN MU300_SYNC_BOOTCHAIN MU300_ADB_KEY'
 CONF_SET=
 conf_find() { for _f in "$SDCARD/mu300-install.conf" "$SDCARD/Download/mu300-install.conf"; do [ -f "$_f" ] && { echo "$_f"; return 0; }; done; return 0; }
 # erasing, formatting, overriding the model check and the password: only from a trusted file
 conf_trusted_only() {  # conf_trusted_only KEY VALUE
     case $1 in
         MU300_SD_ERASE|MU300_REGION_OVERWRITE|MU300_PASSWORD|MU300_PASSWORD_RESET|MU300_PASSWORD_FILE|MU300_DEVICE) return 0 ;;
+        MU300_KEEP_PASSWORD|MU300_CURRENT_PASSWORD) return 0 ;;
         MU300_ADB_KEY) return 0 ;;               # whoever holds that key gets a root shell in Linux
         MU300_MODE) [ "$2" = wipe ] ;;
         # an update that may not carry everything of the user's over: to an older release, or keeping only the list
@@ -115,9 +126,11 @@ conf_trusted() {  # conf_trusted FILE: a regular file that root owns and nobody 
     [ "${3:-}" = "${MU300_TRUSTED_UID:-0}" ] || return 1
     case $1 in ?????w*|????????w*) return 1 ;; esac
 }
-conf_load() {  # conf_load FILE [trusted]
+conf_load() {  # conf_load FILE [trusted|zip [NAME]]   (zip: a file inside the zip, or MU300_ANSWERS; trusted too.
+    # NAME: what the messages, the plan and the password note call the file, when its path means nothing to the user)
     [ -n "$1" ] && [ -f "$1" ] || return 0
-    _cf=$1; _tr=${2:-}; _set=; _ign=
+    _cf=${3:-$1}; _tr=${2:-}; _set=; _ign=
+    _zip=; [ "$_tr" != zip ] || { _zip=1; _tr=trusted; }
     while IFS= read -r _line || [ -n "$_line" ]; do
         _line=$(printf '%s' "$_line" | tr -d '\r' | sed 's/^[[:space:]]*//')
         case $_line in ''|'#'*) continue ;; *=*) ;; *) continue ;; esac
@@ -134,14 +147,17 @@ conf_load() {  # conf_load FILE [trusted]
                     [ "$_k" != MU300_ADB_KEY ] || _v=$(printf '%s' "$_v" | cut -c1-16)...
                     die "$(t 'mu300-install.conf: {1}={2} is not valid' "$_k" "$_v")"
                 fi
-                if [ "$_tr" != trusted ] && conf_trusted_only "$_k" "$_v"; then
+                if [ -z "$_zip" ] && { [ "$_k" = MU300_KEEP_PASSWORD ] || [ "$_k" = MU300_CURRENT_PASSWORD ]; }; then
+                    # (the key only: the value is a password)
+                    warn "$(t 'mu300-install.conf: {1} is taken only from a mu300-install.conf inside the zip; ignored in {2}' "$_k" "$_cf")"
+                elif [ "$_tr" != trusted ] && conf_trusted_only "$_k" "$_v"; then
                     _kv=$_k; [ "$_k" != MU300_MODE ] || _kv=$_k=$_v        # never a password's value
                     warn "$(t 'mu300-install.conf: {1} is taken only from {2}, which only root can change; ignored in {3}' "$_kv" "$TRUSTED_CONF" "$_cf")"
                     _ign="$_ign $_k"
                 else
                     # $_k is one of CONF_KEYS: the eval is safe, and the value is assigned, never evaluated
                     _t=; [ "$_tr" != trusted ] || _t=1
-                    eval "$_k=\$_v; SRC_$_k=\$_cf; TRUST_$_k=\$_t"; _set="$_set $_k"
+                    eval "$_k=\$_v; SRC_$_k=\$_cf; TRUST_$_k=\$_t; ZIP_$_k=\$_zip"; _set="$_set $_k"
                 fi ;;
             *) warn "$(t 'mu300-install.conf: {1} is not a setting of this installer; ignored' "$_k")" ;;
         esac
@@ -161,7 +177,7 @@ conf_read() {  # every settings file there is, the untrusted ones first so that 
     if [ -n "${MU300_ANSWERS:-}" ]; then
         conf_trusted "$MU300_ANSWERS" ||
             die "$(t '{1} is not a file that only root can change; nothing was changed' "$MU300_ANSWERS")"
-        conf_load "$MU300_ANSWERS" trusted
+        conf_load "$MU300_ANSWERS" zip
         return 0
     fi
     conf_load "$(conf_find)"
@@ -173,8 +189,11 @@ conf_read() {  # every settings file there is, the untrusted ones first so that 
             conf_load "$TRUSTED_CONF"
         fi
     fi
-    conf_load "$D/mu300-install.conf" trusted
+    conf_load "$D/mu300-install.conf" zip
     [ -z "$_adb" ] || conf_load "$TRUSTED_CONF" trusted
+    # the one a user put into this zip, at its top: for this zip, so over every other
+    # (customize.sh unpacked it into a directory of the run: it is named after the zip)
+    [ -z "${MU300_ZIP_CONF:-}" ] || conf_load "$MU300_ZIP_CONF" zip "mu300-install.conf in ${ZIPFILE##*/}"
 }
 conf_valid() {  # conf_valid KEY VALUE: VALUE is exactly one this installer knows for KEY
     case $1 in
@@ -184,6 +203,9 @@ conf_valid() {  # conf_valid KEY VALUE: VALUE is exactly one this installer know
         MU300_BOOT) case $2 in linux|android) return 0 ;; esac ;;
         MU300_BOOT_ATTEMPTS) case $2 in [1-6]) return 0 ;; esac ;;
         MU300_SD_ERASE|MU300_REGION_OVERWRITE|MU300_PASSWORD_RESET|MU300_DOWNGRADE) [ "$2" = yes ] && return 0 ;;
+        MU300_KEEP_PASSWORD) case $2 in yes|no) return 0 ;; esac ;;
+        # the password the installed system has now, any characters: it only ever goes to android-pwcheck.sh on stdin
+        MU300_CURRENT_PASSWORD) return 0 ;;
         MU300_UPDATE_KEEP) case $2 in all|list) return 0 ;; esac ;;
         MU300_HOTSPOT|MU300_GPU) case $2 in yes|no) return 0 ;; esac ;;
         MU300_PASSWORD_FILE) [ "$2" = sdcard ] && return 0 ;;
@@ -232,6 +254,7 @@ env_check() {
     [ -n "${MU300_SKIP_ROOT_CHECK:-}" ] || [ "$(id -u)" = 0 ] || die "$(t 'this installer needs root')"
     [ -x "$MAGISKBOOT" ] || die "$(t "Magisk's magiskboot was not found; install this zip with Magisk 26 or newer")"
     chmod 755 "$UBB" 2>/dev/null || true
+    [ ! -f "$PWBIN" ] || chmod 755 "$PWBIN" 2>/dev/null || true
 }
 detect_device() {
     _m="$(getprop ro.product.model) / $(getprop ro.product.device)"
@@ -356,9 +379,10 @@ cleanup() {  # every exit
 }
 
 # ---- what to do
-mount_target() {  # mount_target DIR [ro]: the Linux filesystem of the plan, with Android's mount helper
+mount_target() {  # mount_target DIR [ro|recover]: the Linux filesystem of the plan, with Android's mount helper
+    # (recover: read only after the journal is replayed, android-mount-mu300root.sh)
     cp "$D/android-mount-mu300root.sh" "$W/" || return 1
-    _ro=; [ "${2:-}" != ro ] || _ro=1
+    _ro=; [ "${2:-}" != ro ] || _ro=1; [ "${2:-}" != recover ] || _ro=recover
     if [ "$SD_MODE" = 1 ]; then
         asw MU300_RO="$_ro" MU300_SD_DEV="$SD_DEV" "$ANDROID_SH" "$W/android-mount-mu300root.sh" "$1"
     else
@@ -447,39 +471,30 @@ $(t 'Take the card out and install the zip again, or install to the card (MU300_
     fi
     if [ "$SD_MODE" = 1 ] && [ "$FORMAT" = 1 ]; then USED_KEYS="$USED_KEYS MU300_SD_ERASE"; fi
 }
-# HAVE_ACCOUNTS: the system of this zip is there with accounts of its own: its user (ubuntu, OpenWrt's root) has a
-# crypt hash in /etc/shadow (not empty, not locked) that is not the image's default, and they are not the image's
-# accounts (an older mu300-update leaves .mu300-accounts-from-image until they are carried over). Anything else, a
-# shadow that cannot be read included, gets a new password: an update never keeps a default or an empty one.
-image_hash() {  # image_hash USER: USER's hash in the image this zip installs (OpenWrt's root: empty); fails when the
-    # image's shadow or USER's line in it cannot be read
-    _ish=$(tar -xzOf "$W/mu300-$OS.tar.gz" ./etc/shadow 2>/dev/null || tar -xzOf "$W/mu300-$OS.tar.gz" etc/shadow 2>/dev/null) || _ish=
-    printf '%s\n' "$_ish" | grep -q "^$1:" || return 1
-    printf '%s\n' "$_ish" | sed -n "s/^$1:\([^:]*\):.*/\1/p" | head -n1
-}
-default_hash() {  # default_hash USER HASH: HASH is the image's own password (this image's hash, or a SHA-crypt hash of
-    # the images' well-known "ubuntu", which the bundled mkpasswd can check; OpenWrt's is empty, never a hash)
-    # an image whose hash cannot be read counts as the default: what cannot be decided gets a new password
-    _ih=$(image_hash "$1") || return 0
-    [ "$2" != "$_ih" ] || return 0
-    case $2 in '$5$'*) _m=sha256 ;; '$6$'*) _m=sha512 ;; *) return 1 ;; esac
-    _s=${2#\$?\$}; _s=${_s%%\$*}
-    case $_s in rounds=*|'') return 1 ;; esac
-    [ "$(printf '%s\n' ubuntu | "$UBB" mkpasswd -m "$_m" -S "$_s" -P 0 2>/dev/null)" = "$2" ]
-}
+# HAVE_ACCOUNTS: the system of this zip is there with an account of its own: its user (ubuntu, OpenWrt's root) has a
+# line in its /etc/shadow, with a password or none, and they are not the image's accounts (an older mu300-update leaves
+# .mu300-accounts-from-image until they are carried over). An update keeps them as they are (plan_password): the
+# password the user has, whatever it is, the images' well-known one or none included, as mu300-update does.
+# PW_CHECK: with MU300_KEEP_PASSWORD=yes from the zip, android-pwcheck.sh's word on MU300_CURRENT_PASSWORD (MATCH,
+# NOMATCH, LOCKED, UNVERIFIABLE), checked here while the filesystem is mounted read-only: never the password or the hash.
 inspect_target() {  # which systems the existing filesystem holds, its Ubuntu release, and the release of the
     # system this zip replaces (HAVE_VERSION; empty when it is not there or does not say): mounted read-only
-    HAVE_SYSTEMS=; HAVE_UBUNTU=; HAVE_ACCOUNTS=0; HAVE_VERSION=
+    HAVE_SYSTEMS=; HAVE_UBUNTU=; HAVE_ACCOUNTS=0; HAVE_VERSION=; PW_CHECK=
     [ "$existing" = yes ] && [ "$FORMAT" = 0 ] || return 0
-    mount_target "$W/mnt" ro || die "$(t 'could not mount the existing Linux filesystem')"
+    # with a password to check, the files as Linux left them: the journal is replayed first (a noload view can hold
+    # the shadow from before the last passwd; android-mount-mu300root.sh). Else nothing is written, a dry run included.
+    _how=ro
+    if [ "${MU300_KEEP_PASSWORD:-}" = yes ] && [ -n "${ZIP_MU300_KEEP_PASSWORD:-}" ]; then _how=recover; fi
+    mount_target "$W/mnt" "$_how" || die "$(t 'could not mount the existing Linux filesystem')"
     for _os in ubuntu openwrt openwrt-luci; do [ -d "$W/mnt/$_os" ] && HAVE_SYSTEMS="$HAVE_SYSTEMS $_os"; done
     _u=root; [ "$OS" != ubuntu ] || _u=ubuntu
-    _h=$(sed -n "s/^$_u:\([^:]*\):.*/\1/p" "$W/mnt/$OS/etc/shadow" 2>/dev/null | head -n1) || _h=
-    case $_h in
-        '$'?*) if [ ! -e "$W/mnt/$OS/etc/.mu300-accounts-from-image" ] && ! default_hash "$_u" "$_h"; then
-                   HAVE_ACCOUNTS=1; fi ;;
-    esac
-    _h=
+    if grep -q "^$_u:" "$W/mnt/$OS/etc/shadow" 2>/dev/null && [ ! -e "$W/mnt/$OS/etc/.mu300-accounts-from-image" ]; then
+        HAVE_ACCOUNTS=1
+        if [ "${MU300_KEEP_PASSWORD:-}" = yes ] && [ -n "${ZIP_MU300_KEEP_PASSWORD:-}" ]; then
+            PW_CHECK=$(printf '%s\n' "${MU300_CURRENT_PASSWORD:-}" |
+                asw MU300_PWCHECK_BIN="$PWBIN" MU300_PWCHECK_BB="$UBB" "$ANDROID_SH" "$D/android-pwcheck.sh" "$W/mnt/$OS" "$_u" 2>/dev/null | tail -n1) || true
+        fi
+    fi
     HAVE_UBUNTU=$(sed -n 's/^VERSION_ID="\(.*\)"/\1/p' "$W/mnt/ubuntu/usr/lib/os-release" 2>/dev/null | head -n1)
     HAVE_VERSION=$(head -n1 "$W/mnt/$OS/etc/mu300/image-version" 2>/dev/null) || HAVE_VERSION=
     case $HAVE_VERSION in v[0-9]*) ;; *) HAVE_VERSION= ;; esac
@@ -514,19 +529,60 @@ $(t 'Nothing was changed. To install it all the same, put MU300_DOWNGRADE=yes in
     IMPORT_HOTSPOT=1; [ "${MU300_HOTSPOT:-yes}" = no ] && IMPORT_HOTSPOT=0
     GPU=${MU300_GPU:-yes}
     PW_FILE=$PW_FILE_ROOT; [ "${MU300_PASSWORD_FILE:-}" != sdcard ] || PW_FILE=$PW_FILE_SDCARD
-    # Update (keep) leaves the accounts and their passwords as they are, as mu300-update does. A system that has none
-    # of its own yet (a new filesystem, a wipe, a system added beside another, one still with the images' accounts)
-    # gets the images' well-known ones (build_password), or the one /data/adb/mu300-install.conf gives (MU300_PASSWORD,
-    # MU300_PASSWORD_RESET=yes: trusted only)
-    KEEP_PW=0
-    if [ "$UPDATE" = 1 ] && [ "${HAVE_ACCOUNTS:-0}" = 1 ] && [ -z "${MU300_PASSWORD:-}" ] &&
-        [ "${MU300_PASSWORD_RESET:-}" != yes ]; then KEEP_PW=1; fi
+    plan_password
     # adb over USB to Linux for one key (MU300_ADB_KEY, trusted only): android-install.sh turns it on and authorises
     # the key in the system it installs. Without it nothing about adb changes (an update keeps what was set).
     ADB=0 ADB_KEY=
     if [ -n "${MU300_ADB_KEY:-}" ]; then ADB=1; ADB_KEY=$MU300_ADB_KEY; fi
     # an if, not an && list: the last command's status is the function's, and set -e would stop main on it
     WIPE_LEGACY=0; if [ "$OS" = ubuntu ] && [ "$FORMAT" = 0 ]; then WIPE_LEGACY=1; fi
+}
+# The password. An update of a system with an account of its own (HAVE_ACCOUNTS) keeps its accounts and passwords as
+# they are, as mu300-update does, unless a mu300-install.conf inside the zip says otherwise - the only place an update
+# takes an answer about the password from (nothing can be typed while Magisk installs a zip):
+#   nothing                        kept, not checked (PW_MODE=kept): the plan and the end say so
+#   MU300_KEEP_PASSWORD=yes        kept once MU300_CURRENT_PASSWORD is the current password (no such line: the empty
+#                                  one, OpenWrt's root as it ships), checked on the device by android-pwcheck.sh
+#                                  (inspect_target; PW_MODE=checked). Anything else stops the run before anything is
+#                                  written: a guess changes nothing, and nothing is set that was not asked for.
+#   MU300_KEEP_PASSWORD=no, MU300_PASSWORD=<new>, MU300_PASSWORD_RESET=yes
+#                                  the new one (PW_MODE=given), or without MU300_PASSWORD the images' own (image)
+# MU300_PASSWORD or MU300_PASSWORD_RESET from /data/adb/mu300-install.conf is not used by an update (a line left
+# there must not reset a password at the next update). A system with no account of its own yet (a new filesystem, a
+# wipe, a system added beside another, one still with the images' accounts) gets the images' well-known password
+# (build_password), or MU300_PASSWORD from a trusted file. KEEP_PW=1: android-install.sh leaves the accounts alone.
+plan_password() {
+    PW_MODE=image
+    if [ "$UPDATE" = 1 ] && [ "${HAVE_ACCOUNTS:-0}" = 1 ]; then
+        for _k in MU300_PASSWORD MU300_PASSWORD_RESET; do
+            eval "_v=\${$_k:-}; _z=\${ZIP_$_k:-}"
+            if [ -n "$_v" ] && [ -z "$_z" ]; then
+                warn "$(t 'an update sets a password only from a mu300-install.conf inside the zip: {1} in {2} is not used' "$_k" "$(src_of "$_k")")"
+                eval "$_k=; SRC_$_k="
+            fi
+        done
+        _pwu=root; [ "$OS" != ubuntu ] || _pwu=ubuntu
+        if [ "${MU300_KEEP_PASSWORD:-}" = yes ]; then
+            [ -z "${MU300_PASSWORD:-}" ] && [ "${MU300_PASSWORD_RESET:-}" != yes ] ||
+                die "$(t 'mu300-install.conf: MU300_KEEP_PASSWORD=yes and a new password (MU300_PASSWORD or MU300_PASSWORD_RESET) do not go together; nothing was changed')"
+            case ${PW_CHECK:-} in
+                MATCH) PW_MODE=checked ;;
+                NOMATCH) die "$(t 'MU300_CURRENT_PASSWORD in {1} is not the current password of "{2}" in the installed {3}. Nothing was changed. Correct it (no such line: no password), or set a new one with MU300_KEEP_PASSWORD=no and MU300_PASSWORD, or remove MU300_KEEP_PASSWORD to keep the password without a check.' "$(src_of MU300_KEEP_PASSWORD)" "$_pwu" "$OS")" ;;
+                LOCKED) die "$(t '"{1}" in the installed {2} has no password login, so there is none to confirm. Nothing was changed. Set a new one with MU300_KEEP_PASSWORD=no and MU300_PASSWORD, or remove MU300_KEEP_PASSWORD to keep the account as it is.' "$_pwu" "$OS")" ;;
+                *) die "$(t 'the current password of "{1}" in the installed {2} could not be checked on the device ({3}). Nothing was changed. Set a new one with MU300_KEEP_PASSWORD=no and MU300_PASSWORD, or remove MU300_KEEP_PASSWORD to keep the password without a check.' "$_pwu" "$OS" "${PW_CHECK:-no answer}")" ;;
+            esac
+        elif [ "${MU300_KEEP_PASSWORD:-}" = no ] || [ -n "${MU300_PASSWORD:-}" ] || [ "${MU300_PASSWORD_RESET:-}" = yes ]; then
+            [ -z "${MU300_PASSWORD:-}" ] || PW_MODE=given
+        else
+            PW_MODE=kept
+        fi
+    else
+        [ -z "${MU300_PASSWORD:-}" ] || PW_MODE=given
+        [ -z "${MU300_KEEP_PASSWORD:-}" ] ||
+            warn "$(t 'MU300_KEEP_PASSWORD: the installed {1} has no password of its own to keep; the password below is used' "$OS")"
+    fi
+    PW_CHECK=
+    KEEP_PW=0; case $PW_MODE in kept|checked) KEEP_PW=1 ;; esac
 }
 # The extras a caller put beside the scripts, mu300/extras/mu300-extra-<name>.tar.gz (the VPN module as vpn, the
 # web panel as panel): android-install.sh installs every mu300-extra-<name>.tar.gz of its work directory onto the
@@ -598,8 +654,10 @@ plan_print() {
     echo "  $(t 'boot attempts:  {1} failed boots in a row, then Android ({2})' "$BOOT_ATTEMPTS" "$(src_of MU300_BOOT_ATTEMPTS)")"
     echo "  $(t 'hotspot:        {1} ({2})' "$([ "$IMPORT_HOTSPOT" = 1 ] && t 'name and password copied from Android' || t 'not copied')" "$(src_of MU300_HOTSPOT)")"
     echo "  $(t 'GPU files:      {1} ({2})' "$([ "$GPU" = yes ] && t 'included' || t 'not included')" "$(src_of MU300_GPU)")"
-    if [ "$KEEP_PW" = 1 ]; then
-        echo "  $(t 'password:       kept: the accounts and passwords of the installed system are not changed ({1} in {2} sets a new one)' "MU300_PASSWORD_RESET=yes" "$TRUSTED_CONF")"
+    if [ "$PW_MODE" = checked ]; then
+        echo "  $(t 'password:       kept: the accounts and passwords of the installed system are not changed; the current password was checked ({1})' "$(src_of MU300_KEEP_PASSWORD)")"
+    elif [ "$KEEP_PW" = 1 ]; then
+        echo "  $(t 'password:       kept, not checked: the accounts and passwords of the installed system are not changed (a mu300-install.conf inside the zip can check it or set a new one: {1})' "MU300_KEEP_PASSWORD, MU300_CURRENT_PASSWORD, MU300_PASSWORD")"
     elif [ -n "${MU300_PASSWORD:-}" ]; then
         echo "  $(t 'password:       the one from {1} (not shown)' "$(src_of MU300_PASSWORD)")"
     elif [ "$OS" = ubuntu ]; then
@@ -619,11 +677,12 @@ plan_machine() {
     [ "${MU300_PROGRESS:-}" = 1 ] || return 0
     _pw=image
     if [ "$KEEP_PW" = 1 ]; then _pw=kept; elif [ -n "${MU300_PASSWORD:-}" ]; then _pw=given; fi
+    _pwc=0; [ "${PW_MODE:-}" != checked ] || _pwc=1
     for _l in "tag=$TAG" "system=$SYSTEM" "os=$OS" "ubuntu=$UBUNTU" "kernel=$KERNEL" "device=$DEVICE" \
         "storage=$([ "$SD_MODE" = 1 ] && echo sd || echo internal)" "sd_dev=$([ "$SD_MODE" != 1 ] || echo "$SD_DEV")" \
         "offset=$INT_OFF" "size=$TARGET_SIZE" "format=$FORMAT" "update=$UPDATE" "have=${HAVE_SYSTEMS# }" \
         "boot_os=$BOOT_OS" "default_linux=$DEFAULT_LINUX" "boot_attempts=$BOOT_ATTEMPTS" "hotspot=$IMPORT_HOTSPOT" \
-        "gpu=$GPU" "password=$_pw" "extras=$EXTRAS" "adb=$ADB" "linux_slot=$LINUX_SLOT" "android_slot=$ANDROID_SLOT" \
+        "gpu=$GPU" "password=$_pw" "password_checked=$_pwc" "extras=$EXTRAS" "adb=$ADB" "linux_slot=$LINUX_SLOT" "android_slot=$ANDROID_SLOT" \
         "sync_bootchain=$SYNC_BOOTCHAIN" "bootchain=$BC_NAMES" "dry_run=${MU300_DRY_RUN:-0}"; do
         echo "MU300-PLAN $_l"
     done
@@ -676,10 +735,19 @@ write_example() {
         echo "#MU300_HOTSPOT=yes"
         echo "# Mali GPU (OpenCL) files: yes or no"
         echo "#MU300_GPU=yes"
-        echo "# (root) 6+ characters; empty: the images' own (Ubuntu: ubuntu/ubuntu; OpenWrt: root without a password)"
+        echo "# (root) 6+ characters; empty: the images' own (Ubuntu: ubuntu/ubuntu; OpenWrt: root without a password);"
+        echo "# for an update only from a mu300-install.conf inside the zip"
         echo "#MU300_PASSWORD="
-        echo "# (root) yes: the images' own password also when updating (an update keeps the existing one)"
+        echo "# (root) yes: the images' own password also when updating (an update keeps the existing one; for an"
+        echo "# update only from a mu300-install.conf inside the zip)"
         echo "#MU300_PASSWORD_RESET=yes"
+        echo "# An update keeps the password of the installed system. To check it, or to set a new one, put a"
+        echo "# mu300-install.conf with these lines at the top of the zip (an update takes them, and MU300_PASSWORD and"
+        echo "# MU300_PASSWORD_RESET, only from there): yes keeps it once MU300_CURRENT_PASSWORD is the current one"
+        echo "# (no such line: no password, OpenWrt's root as it ships); no sets MU300_PASSWORD (without it: the images' own)"
+        echo "#MU300_KEEP_PASSWORD=yes"
+        echo "# with yes: the current password, checked against the installed system's before anything is written"
+        echo "#MU300_CURRENT_PASSWORD="
         echo "# (root) write the password note to $PW_FILE_SDCARD instead of $PW_FILE_ROOT"
         echo "#MU300_PASSWORD_FILE=sdcard"
         echo "# (root) f50 or u30air, only when the model is not recognised"
@@ -765,8 +833,8 @@ build_boot() {
 # PWHASH goes into the system's own account (ubuntu, OpenWrt's root) when PW_SET=1; empty with PW_SET=1 it is OpenWrt's
 # root without a password. PW_SET=0: android-install.sh carries the accounts over (KEEP_PW)
 build_password() {
-    PWHASH=; PW_SET=0
-    [ "$KEEP_PW" = 0 ] || return 0
+    PWHASH=; PW_SET=0; KEEP_PW_OSES=
+    if [ "$KEEP_PW" = 1 ]; then KEEP_PW_OSES=$OS; return 0; fi
     PW_SET=1
     if [ -n "${MU300_PASSWORD:-}" ]; then PWHASH=$(password_hash "$MU300_PASSWORD") || die "$(t 'could not hash the password')"
     elif [ "$OS" = ubuntu ]; then PWHASH=$(password_hash ubuntu) || die "$(t 'could not hash the password')"
@@ -877,6 +945,7 @@ pw_text() {
 # never the password of the conf file: it is not shown anywhere
 pw_show() {
     if [ "$KEEP_PW" = 1 ]; then echo "  $(t 'password for {1}: unchanged (the one this system had)' "$_users")"
+        [ "$PW_MODE" = checked ] || echo "  $(t '(not checked: a mu300-install.conf inside the zip can check it or set a new one, see {1})' "$SDCARD/mu300-install.conf.example")"
     elif [ -n "${MU300_PASSWORD:-}" ]; then echo "  $(t 'password for {1}: the one from {2}' "$_users" "$(src_of MU300_PASSWORD)")"
     elif [ "$OS" = ubuntu ]; then echo "  $(t 'password for ubuntu: "ubuntu"   (as in the images; change it after the first login: passwd)')"
     else echo "  $(t 'password for root: none yet - set one with passwd, or in LuCI (System > Administration)')"

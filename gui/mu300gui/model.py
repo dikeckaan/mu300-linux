@@ -177,6 +177,11 @@ class Choices:
         self.existing = 'update'            # with an installation there: update | wipe
         self.password = ''
         self.password2 = ''
+        # an update keeps the login password of the systems it replaces, once the installer has checked the current
+        # one on the device (MU300_ANS_KEEP_PASSWORD, MU300_ANS_CURRENT_PASSWORD); the new one above is then only for a
+        # system the update installs new
+        self.keep_password = True
+        self.current_password = ''          # empty: none (OpenWrt's root as it ships)
         self.overwrite_word = ''            # "overwrite": the free space holds data
         self.erase_sd_word = ''             # "ERASE": a new filesystem on the card
         self.internal_word = ''             # "internal": internal storage although the card holds an installation
@@ -243,6 +248,10 @@ class Choices:
             return bool(sd and sd[2] == 'yes')
         return facts.existing
 
+    def keeps_password(self, facts):
+        """Whether this installation is an update that keeps the current password (checked by the installer)."""
+        return bool(self.place_existing(facts)) and self.existing == 'update' and self.keep_password
+
     def place_bytes(self, facts):
         if self.storage == 'sd':
             sd = facts.sd
@@ -290,11 +299,14 @@ def problems(c, facts):
         out.append(('kernel', _('Choose a kernel.')))
     if c.default_linux and not 1 <= int(c.boot_attempts or 0) <= 6:
         out.append(('boot', _('Failed boots before Android: a number from 1 to 6.')))
-    if len(c.password) < MIN_PASSWORD:
+    # an update that keeps the current password needs a new one only for a system it installs new: none typed is fine
+    if c.keeps_password(facts) and not c.password and not c.password2:
+        pass
+    elif len(c.password) < MIN_PASSWORD:
         out.append(('password', _('The password needs {1} characters or more.', MIN_PASSWORD)))
     elif c.password != c.password2:
         out.append(('password', _('The two passwords differ.')))
-    if '\n' in c.password or '\r' in c.password:
+    if '\n' in c.password or '\r' in c.password or '\n' in c.current_password or '\r' in c.current_password:
         out.append(('password', _('The password cannot hold a line end.')))
     return out
 
@@ -354,11 +366,18 @@ def answers(c, facts, lang, serial):
         a['MU300_ANS_KERNEL'] = c.kernel
     if c.place_existing(facts):
         a['MU300_ANS_EXISTING'] = c.existing
+        if c.existing == 'update':
+            a['MU300_ANS_KEEP_PASSWORD'] = yn(c.keep_password)
+            if c.keep_password:
+                a['MU300_ANS_CURRENT_PASSWORD'] = c.current_password
     if c.storage == 'sd' and c.formats(facts) and c.erase_sd_word:
         a['MU300_ANS_ERASE_SD'] = c.erase_sd_word
     if int(c.fetch_jobs or 8) != 8:
         a['MU300_FETCH_JOBS'] = str(int(c.fetch_jobs))
-    a['MU300_ANS_PASSWORD'] = c.password
+    # (none typed with an update that keeps the current one: the installer then asks for it only for a system the
+    # update installs new, and stops naming the variable)
+    if c.password or not c.keeps_password(facts):
+        a['MU300_ANS_PASSWORD'] = c.password
     a['MU300_ANS_CONFIRM'] = '@stdin'
     return a
 
@@ -433,6 +452,8 @@ def summary(c, facts, release):
     rows.append((_('Where'), _('SD card') if c.storage == 'sd' else _('internal storage')))
     if c.place_existing(facts):
         rows.append((_('Existing installation'), _('update: settings and data are kept') if c.existing == 'update' else _('wipe: start from scratch')))
+        if c.existing == 'update':
+            rows.append((_('Password'), _('kept: the current one is checked on the device') if c.keep_password else _('the new one')))
     rows.append((_('Default boot'), _('Linux (Android after {1} failed boots in a row)', c.boot_attempts) if c.default_linux else _('Android, Linux on demand')))
     extras = [n for flag, n in ((c.vpn, _('VPN module')), (c.panel and c.ubuntu, _('web panel for Ubuntu')), (c.gpu, _('GPU userspace')),
                                 (c.hotspot, _('hotspot name and password from Android')), (c.adb, _('adb to Linux for this computer only'))) if flag]

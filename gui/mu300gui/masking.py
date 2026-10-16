@@ -16,7 +16,7 @@ _ICCID = re.compile(r'(?<![0-9A-Za-z])89\d{16,18}[0-9Ff]?(?![0-9A-Za-z])')
 _NAMED_ID = re.compile(r'(?i)\b(imei(?:sv)?|imsi|iccid|meid|serial(?:\s*(?:number|no))?|serialno|ro\.serialno|ro\.boot\.serialno)\b'
                        r'(\s*[\]:=]*\s*\[?\s*)(?=[0-9A-Za-z._-]*\d)([0-9A-Za-z][0-9A-Za-z._-]{5,})')
 # name=value and name: value of anything that is a secret by its name
-_NAMED_SECRET = re.compile(r'(?i)\b((?:MU300_ANS_PASSWORD|MU300_PASSWORD|[A-Za-z_]*pass(?:word|phrase|wd)?|psk|wpa_passphrase|'
+_NAMED_SECRET = re.compile(r'(?i)\b((?:MU300_ANS_PASSWORD|MU300_ANS_CURRENT_PASSWORD(?:_[A-Z_]+)?|MU300_PASSWORD|[A-Za-z_]*pass(?:word|phrase|wd)?|psk|wpa_passphrase|'
                            r'secret|token|private[_-]?key|PWHASH)\s*[=:]\s*)(\'[^\']*\'|"[^"]*"|\S+)')
 # a crypt(3) hash ($6$salt$hash, $y$..., $1$...), wherever it stands
 _CRYPT = re.compile(r'\$(?:1|2[aby]?|5|6|y|7)\$[./A-Za-z0-9$,=+-]{8,}')

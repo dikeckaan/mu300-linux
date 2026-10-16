@@ -47,11 +47,15 @@ esac
 W=$(mktemp -d); trap 'rm -rf "$W"' EXIT
 tar -xzOf "$R/mu300-kernel.tar.gz" ./busybox > "$W/busybox"
 [ -s "$W/busybox" ] || { echo "mu300-kernel.tar.gz has no busybox" >&2; exit 1; }
+# the installer's password checker (tools/pwcheck, FINDINGS 126), in the bundles of the releases that have it: without
+# it a zip checks MD5- and SHA-crypt with the busybox only, and a yescrypt password cannot be checked
+tar -xzOf "$R/mu300-kernel.tar.gz" ./mu300-pwcheck > "$W/mu300-pwcheck" 2>/dev/null || rm -f "$W/mu300-pwcheck"
+[ -s "$W/mu300-pwcheck" ] || rm -f "$W/mu300-pwcheck"
 
 # what every zip holds besides its payload, by name (the audit below compares against this)
 COMMON='META-INF/com/google/android/update-binary META-INF/com/google/android/updater-script module.prop customize.sh
 action.sh switch.sh bootchain.sh system/bin/mu300-linux mu300/install.sh mu300/android-boot-image.sh mu300/mu300-update
-mu300/android-install.sh mu300/android-bootchain.sh mu300/android-mount-mu300root.sh mu300/storage.sh mu300/i18n.sh mu300/i18n/tr.tsv
+mu300/android-install.sh mu300/android-bootchain.sh mu300/android-mount-mu300root.sh mu300/android-pwcheck.sh mu300/storage.sh mu300/i18n.sh mu300/i18n/tr.tsv
 mu300/i18n/zh.tsv mu300/subset-files.txt mu300/gpu-files.txt mu300/busybox mu300/manifest mu300/SHA256SUMS'
 # ... and the computer's side: the launchers, the guide, and computer/ - the files of files.txt (a directory: every
 # file in it, never a cache of Python's or a hidden file), and the mark that says "the payload is next to me"
@@ -73,6 +77,7 @@ COMMON="$COMMON $LAUNCHERS computer/.mu300-package $(printf '%s\n' $COMPUTER | s
 crlf() { tr -d '\r' < "$1" | awk '{ printf "%s\r\n", $0 }' > "$2"; }
 # (the signature of a signed release)
 [ ! -s "$R/SHA256SUMS.sig" ] || COMMON="$COMMON mu300/SHA256SUMS.sig"
+[ ! -s "$W/mu300-pwcheck" ] || COMMON="$COMMON mu300/mu300-pwcheck"
 stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
     S=$1
     mkdir -p "$S/META-INF/com/google/android" "$S/system/bin" "$S/mu300/i18n" "$S/payload"
@@ -83,13 +88,14 @@ stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
     cp "$M/system/bin/mu300-linux" "$S/system/bin/"
     cp "$I/mu300-install.sh" "$S/mu300/install.sh"
     cp "$TOP/tools/android-boot-image.sh" "$TOP/tools/android-install.sh" "$TOP/tools/android-bootchain.sh" "$TOP/tools/android-mount-mu300root.sh" \
-       "$TOP/tools/storage.sh" "$TOP/tools/i18n.sh" "$S/mu300/"
+       "$TOP/tools/android-pwcheck.sh" "$TOP/tools/storage.sh" "$TOP/tools/i18n.sh" "$S/mu300/"
     # the checkout's (in CI the tag's, so the release's own): the installer needs bootimg_from_stock, which an older
     # release's mu300-update does not have when zips are built locally from one
     cp "$TOP/rootfs/overlay/opt/mu300/bin/mu300-update" "$S/mu300/mu300-update"
     cp "$TOP/i18n/tr.tsv" "$TOP/i18n/zh.tsv" "$S/mu300/i18n/"
     cp "$TOP/android-vendor/subset-files.txt" "$TOP/android-vendor/gpu-files.txt" "$S/mu300/"
     cp "$W/busybox" "$S/mu300/busybox"
+    [ ! -s "$W/mu300-pwcheck" ] || cp "$W/mu300-pwcheck" "$S/mu300/mu300-pwcheck"
     cp "$R/SHA256SUMS" "$S/mu300/SHA256SUMS"
     [ ! -s "$R/SHA256SUMS.sig" ] || cp "$R/SHA256SUMS.sig" "$S/mu300/SHA256SUMS.sig"
     cp "$R/$4" "$R/$5" "$S/payload/"

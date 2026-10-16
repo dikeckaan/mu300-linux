@@ -51,7 +51,13 @@
 #   MU300_ANS_KERNEL=5.4|6.18|7.2          the kernel
 #   MU300_ANS_EXISTING=update|wipe         Linux is installed already
 #   MU300_ANS_ERASE_SD=ERASE               a new filesystem on the SD card erases it
-#   MU300_ANS_PASSWORD=<password>          for "ubuntu" (Ubuntu) and "root" (OpenWrt), 6 characters or more
+#   MU300_ANS_KEEP_PASSWORD=yes|no         an update of a system with a login password: keep it (its current password
+#                                          is asked and checked on the device) or set the new one below
+#   MU300_ANS_CURRENT_PASSWORD=<password>  with keep: the current password (empty: none, as OpenWrt's root ships);
+#                                          for one system: MU300_ANS_CURRENT_PASSWORD_UBUNTU,
+#                                          MU300_ANS_CURRENT_PASSWORD_OPENWRT, MU300_ANS_CURRENT_PASSWORD_OPENWRT_LUCI
+#   MU300_ANS_PASSWORD=<password>          for "ubuntu" (Ubuntu) and "root" (OpenWrt), 6 characters or more (not
+#                                          asked when an update keeps the passwords of every system it installs)
 #   MU300_ANS_CONFIRM=INSTALL              the summary's question; @stdin waits for it on standard input
 # The Linux slot gets the boot chain of Android's slot (uboot, sml, teecfg, trustos, vbmeta; backed up first):
 # MU300_SYNC_BOOTCHAIN=0 skips that.
@@ -847,8 +853,91 @@ if [ $SD_MODE = 1 ] && [ $FORMAT = 1 ]; then
     ask erase "$(t 'Everything on the SD card ({1}, {2}) will be erased. Type ERASE to continue' "$SD_DEV" "$(gib $SIZE)")" no MU300_ANS_ERASE_SD
     [ "$erase" = ERASE ] || die "$(t 'cancelled')"
 fi
-ask_password pw1 "$(t 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)')" "$(t 'Repeat')"
-[ ${#pw1} -ge 6 ] || die "$(t 'passwords differ or are shorter than 6 characters')"
+# The password. An update keeps the accounts and passwords of the systems it replaces when the user says so and shows
+# that they know the current one (checked on the device by android-pwcheck.sh, with the hash's own method: yescrypt
+# on Ubuntu, MD5- or SHA-crypt on OpenWrt; an empty one, OpenWrt's root as it ships, is confirmed by an empty entry).
+# Three wrong entries stop the run before anything is written: nothing is changed by a guess, and nothing is set that
+# the user did not ask for (run again and answer no to set a new one). The systems installed new, and an update whose
+# user says no, get the new password asked for below.
+KEEP_PW_OSES=; NEW_PW_OSES=$OSES; pw1=
+# pw_tools: what computes the hash on the device (tools/storage.sh, pw_tools_push): the project's own tools, never a
+# program of the Linux system being checked (it would run with Android's root). From an unpacked zip its mu300/
+# (mu300-pwcheck when its release has one, and busybox); for prebuilt images the release's 5.4 kernel bundle, fetched
+# and checked against SHA256SUMS now (the installation takes it from there later: it is downloaded once). --build has
+# neither: then only an empty password can be confirmed (answer no to set one).
+pw_tools() {
+    PW_BIN= PW_BB=
+    if [ -n "$PKG" ]; then
+        [ ! -s "$PKG/mu300/mu300-pwcheck" ] || PW_BIN=$PKG/mu300/mu300-pwcheck
+        [ ! -s "$PKG/mu300/busybox" ] || PW_BB=$PKG/mu300/busybox
+        return 0
+    fi
+    [ $MODE = prebuilt ] && [ -n "${RELEASE:-}" ] || return 0
+    _rel=$WORK/release/$RELEASE _base=${MU300_RELEASE_URL:-https://github.com/$REPO/releases/download/$RELEASE}
+    mkdir -p "$_rel" "$WORK/pwtools" || return 0
+    curl -fsSL -o "$_rel/SHA256SUMS" "$_base/SHA256SUMS" 2>/dev/null || return 0
+    _want=$(awk '$2 == "mu300-kernel.tar.gz" || $2 == "*mu300-kernel.tar.gz" {print $1}' "$_rel/SHA256SUMS")
+    [ -n "$_want" ] || return 0
+    _have=$( (shasum -a 256 "$_rel/mu300-kernel.tar.gz" 2>/dev/null || sha256sum "$_rel/mu300-kernel.tar.gz" 2>/dev/null) | cut -d' ' -f1)
+    if [ "$_have" != "$_want" ]; then
+        fetch "$_base/mu300-kernel.tar.gz" "$_rel/mu300-kernel.tar.gz.part" || { rm -f "$_rel/mu300-kernel.tar.gz.part"; return 0; }
+        _have=$( (shasum -a 256 "$_rel/mu300-kernel.tar.gz.part" 2>/dev/null || sha256sum "$_rel/mu300-kernel.tar.gz.part") | cut -d' ' -f1)
+        [ "$_have" = "$_want" ] || { rm -f "$_rel/mu300-kernel.tar.gz.part"; return 0; }
+        mv "$_rel/mu300-kernel.tar.gz.part" "$_rel/mu300-kernel.tar.gz"
+    fi
+    tar -xzOf "$_rel/mu300-kernel.tar.gz" ./mu300-pwcheck > "$WORK/pwtools/mu300-pwcheck" 2>/dev/null &&
+        [ -s "$WORK/pwtools/mu300-pwcheck" ] && PW_BIN=$WORK/pwtools/mu300-pwcheck
+    tar -xzOf "$_rel/mu300-kernel.tar.gz" ./busybox > "$WORK/pwtools/busybox" 2>/dev/null &&
+        [ -s "$WORK/pwtools/busybox" ] && PW_BB=$WORK/pwtools/busybox
+    return 0
+}
+if [ $UPDATE = 1 ]; then
+    pw_have=
+    for l in $(pw_states "$OSES" | tr -d '\r'); do
+        case ${l#*:} in SET|EMPTY|LOCKED) pw_have="$pw_have ${l%%:*}" ;; esac
+    done
+    pw_have=${pw_have# }
+    if [ -n "$pw_have" ]; then
+        echo
+        echo "  $(t 'The installed {1} has a login password of its own.' "$pw_have")"
+        echo "    $(t 'yes  keep it: the current password is asked once and checked on the device')"
+        echo "    $(t 'no   set a new password')"
+        ask keep_pw "$(t 'Keep the current password? (yes/no)')" yes MU300_ANS_KEEP_PASSWORD
+        case $keep_pw in
+            yes)
+                pw_tools
+                for os in $pw_have; do
+                    case $os in ubuntu) pwu=ubuntu ;; *) pwu=root ;; esac
+                    osv=$(echo "$os" | tr 'a-z-' 'A-Z_')
+                    tries=0
+                    while :; do
+                        tries=$((tries + 1))
+                        ask_secret cur "$(t 'Current password of "{1}" in the installed {2} (only Enter if it has none)' "$pwu" "$os")" \
+                            "MU300_ANS_CURRENT_PASSWORD_$osv" MU300_ANS_CURRENT_PASSWORD
+                        res=$(pw_check "$os" "$cur" | tr -d '\r' | tail -n1); cur=
+                        progress info key "password.$os" value "$res"
+                        case $res in
+                            MATCH) echo "  $(t 'confirmed: the password of {1} stays as it is' "$os")"; KEEP_PW_OSES="$KEEP_PW_OSES $os"; break ;;
+                            NOMATCH) echo "  $(t 'that is not the current password of "{1}" in {2}' "$pwu" "$os")" ;;
+                            LOCKED) die "$(t '"{1}" in the installed {2} has no password login, so there is none to confirm. Nothing was changed: run the installer again and answer no to set a new password.' "$pwu" "$os")" ;;
+                            *) die "$(t 'the current password of "{1}" in the installed {2} could not be checked on the device ({3}). Nothing was changed: run the installer again and answer no to set a new password.' "$pwu" "$os" "${res:-no answer}")" ;;
+                        esac
+                        [ $ANSWERS_MODE = 0 ] && [ $tries -lt 3 ] ||
+                            die "$(t 'the current password of "{1}" in the installed {2} was not confirmed. Nothing was changed: run the installer again and answer no to set a new password.' "$pwu" "$os")"
+                    done
+                done ;;
+            no) ;;
+            *) die "$(t 'invalid choice')" ;;
+        esac
+    fi
+    KEEP_PW_OSES=${KEEP_PW_OSES# }
+    NEW_PW_OSES=$(for os in $OSES; do case " $KEEP_PW_OSES " in (*" $os "*) ;; (*) printf '%s ' "$os" ;; esac; done)
+    NEW_PW_OSES=${NEW_PW_OSES% }
+fi
+if [ -n "$NEW_PW_OSES" ]; then
+    ask_password pw1 "$(t 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)')" "$(t 'Repeat')"
+    [ ${#pw1} -ge 6 ] || die "$(t 'passwords differ or are shorter than 6 characters')"
+fi
 
 # ---------------------------------------------------------------- pull vendor data from the device
 mkdir -p "$WORK/dumps" "$WORK/firmware"
@@ -964,7 +1053,7 @@ for os in $OSES; do
       $([ -n "$KMAIN" ] && echo --kernel-bundle "$KMAIN") \
       --out "$WORK/mu300-vendor-$os.tar.gz"
 done
-PWHASH=$(printf '%s\n' "$pw1" | python3 "$TOP/tools/sha512crypt.py")
+PWHASH=; [ -z "$pw1" ] || PWHASH=$(printf '%s\n' "$pw1" | python3 "$TOP/tools/sha512crypt.py")
 else
 # ---------------------------------------------------------------- build
 say "$(t 'Building helper binaries')"
@@ -1020,7 +1109,7 @@ for os in $OSES; do case $os in openwrt|openwrt-*) reuse $os || {
     MU300_SYSTEM=$os MU300_INPUTS="$WORK" sh "$TOP/openwrt/build-rootfs.sh" mu300-$os-rootfs.tar.gz >/dev/null
     mv "$TOP/openwrt/mu300-$os-rootfs.tar.gz" "$WORK/mu300-$os.tar.gz"; } ;; esac; done
 BUSYBOX=$WORK/busybox; LOGDW=$WORK/tools/logdw/logdw
-PWHASH=$(printf '%s' "$pw1" | docker run --rm -i mu300-ubuntu:24.04 openssl passwd -6 -stdin)
+PWHASH=; [ -z "$pw1" ] || PWHASH=$(printf '%s' "$pw1" | docker run --rm -i mu300-ubuntu:24.04 openssl passwd -6 -stdin)
 fi
 
 step bootimage 68
@@ -1046,6 +1135,7 @@ echo "  $(t 'adb to Linux:   {1}' "$([ "$ADB" = 1 ] && t 'on, only for the adb k
 echo "  $(t 'default boot:   {1}' "$([ $DEFAULT_LINUX = 1 ] && t 'Linux (Android after {1} failed boots in a row)' "$BOOT_ATTEMPTS" || t 'Android, Linux on demand')")"
 echo "  $(t 'filesystem:     {1}' "$([ $FORMAT = 0 ] && t 'keep existing' || { [ $SD_MODE = 1 ] && t 'CREATE new ext4 (erases the SD card)' || t 'CREATE new ext4 (erases the Linux region)'; })")"
 [ $UPDATE = 1 ] && echo "  $(t 'update:         everything you added to the chosen systems or changed in them is kept (/etc/mu300/update-report)')"
+[ -z "$KEEP_PW_OSES" ] || echo "  $(t 'password:       kept as it is in {1} (confirmed){2}' "$KEEP_PW_OSES" "$([ -z "$NEW_PW_OSES" ] || echo "; $(t 'the new one in {1}' "$NEW_PW_OSES")")")"
 [ $UPDATE = 0 ] && [ $FORMAT = 0 ] && echo "  $(t 'note:           the chosen systems are installed fresh; their previous files and settings are replaced')"
 if [ $SD_MODE = 1 ]; then
     echo "  $(t 'writes:         SD card {1}, boot_{2}, 32 bytes of misc (the eMMC region, boot_{3}, GPT and userdata are not touched)' "$SD_DEV" "$LINUX_SLOT" "$ANDROID_SLOT")"

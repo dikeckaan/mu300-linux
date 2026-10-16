@@ -27,6 +27,7 @@ tools/linux-mode.sh
 tools/android-bootchain.sh
 tools/android-install.sh
 tools/android-mount-mu300root.sh
+tools/android-pwcheck.sh
 tools/install-magisk-module.sh
 tools/resize-last-partition.py
 tools/vendor-overlay.py

@@ -153,6 +153,8 @@ what replaced it. The table below gives each section's state.
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 | 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
+| 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
+| 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
 
 ## Hardware and firmware facts
 
@@ -8244,3 +8246,152 @@ three have the same logic in these places):
   time of publishing and was right.
 * The graphical installer and the installers' beta question are newer than v2026.10.27 (`tools/release_pick.py` is
   not in those tags); they go by the time of publishing too, now with the tag order on top.
+
+### 126. An update's password: kept, and checked when the user asks (the Magisk zip and the computer's installers)
+
+**What happened.** The v2026.10.16.1 smoke test on an F50 (F50-C: Android, internal OpenWrt, kernel 6.18) updated
+OpenWrt with that release's Magisk zip, and root's password was empty afterwards, while the plan had said the
+accounts and passwords are kept. Two rules met. The zip carries no password (issue #167: a system it installs gets
+the images' well-known one, Ubuntu's `ubuntu`/`ubuntu`, OpenWrt's `root` with none). And to decide whether a system
+"has accounts of its own" it compared the installed hash with the image's and with a SHA-crypt hash of `ubuntu`
+(`default_hash`): a root whose password was `ubuntu` - what the computer's installer sets when asked for it, and what
+the project's tests use - counted as "the images' own", so the update put the images' own back, which for OpenWrt is
+none. An empty root counted the same. The computer's installers had the opposite gap: an update always asked a new
+password and wrote it over the old one; `mu300-update apply` on the device keeps passwords.
+
+**The owner's rule (2026-10-16).** On an update, ask whether to keep the password. Yes: keep it, after the user types
+the current one and it checks against the installed system's hash (an empty one is confirmed by an empty entry). No:
+a new one, typed twice. Fresh installs as before.
+
+**Checking a password against an installed system** (`tools/android-pwcheck.sh`, run as root on Android over a
+mount of the Linux filesystem; it prints one word - `MATCH`, `NOMATCH`, `LOCKED`, `NOUSER`, `UNVERIFIABLE` - and never
+the password or the hash; the password comes on standard input, the hash never leaves the device):
+
+* What the images hold, measured: Ubuntu 24.04's `passwd` and `chpasswd` write yescrypt (`$y$j9T$...`); OpenWrt
+  25.12's `passwd` (busybox) and so LuCI write SHA-256-crypt (`$5$`, seen on F50-C); the installers write
+  SHA-512-crypt (`$6$`); OpenWrt's image has root empty.
+* **Nothing of the Linux system is run.** The first version of this check ran the system's own `perl` (Ubuntu) or
+  `openssl` (OpenWrt) in a `chroot`. That is Android's root executing programs, libraries and a loader that the Linux
+  system controls - a Linux system that has been tampered with would get Android's root during the update (review of
+  the pushed branch). So the hash is computed only by the project's own tools, and what is read from the Linux
+  filesystem is data: the shadow line, read with `sed`, its hash handed to the checker on standard input (a busybox
+  salt only as an argument's value, and only of crypt's alphabet); `ROOT`, `ROOT/etc` and `ROOT/etc/shadow` must not be
+  links (a link is resolved on Android's side). A test runs the check against a system whose `perl`, `openssl`,
+  `busybox`, `sh` and `chroot` all answer `MATCH` and leave a mark: none may run.
+* **`mu300-pwcheck`** (`tools/pwcheck/mu300-pwcheck.c`): a few lines around libxcrypt's `crypt_r()`, linked
+  statically, built with the other helper binaries in `tools/make-release.sh` (`mu300-kbuild`, Ubuntu 20.04's
+  libxcrypt 4.4.10, which has yescrypt; the build checks a real Ubuntu yescrypt hash and stops if it fails) and put
+  into the 5.4 kernel bundle beside busybox. The zips take it from there as `mu300/mu300-pwcheck`; the computer's
+  installers take it from the package, or from the release's kernel bundle, which they now fetch (and check against
+  `SHA256SUMS`) before the question instead of after it, and push it. It knows every method of libxcrypt: yescrypt,
+  SHA-crypt with or without `rounds=`, MD5-crypt, bcrypt. Measured on F50-C's Android (5.4 kernel): a yescrypt hash of
+  Ubuntu 24.04 `MATCH` and `NOMATCH` as it should.
+* **The bundle's busybox** (`mkpasswd`: des, md5, sha256, sha512 - asked for yescrypt it silently makes an MD5 hash)
+  checks MD5- and SHA-crypt without `rounds=` when there is no `mu300-pwcheck`: the releases up to v2026.10.16.1 have
+  none, so their zips (and the computer's installers with such a release) check OpenWrt's passwords but answer
+  `UNVERIFIABLE` for Ubuntu's yescrypt: the installer then stops, and the way out is to answer no (or, in a zip, to
+  remove `MU300_KEEP_PASSWORD`, which keeps the password without a check).
+* An empty entry matches only an empty field (`passwd -d` and LuCI never store a hash of the empty password).
+* **A journal not replayed.** The installers look at an installed system through a read-only mount without journal
+  replay (`ro,noload`), so a dry run writes nothing. On F50-C the region's superblock had `needs_recovery` set
+  (incompat flags `0x46`) after OpenWrt sessions: OpenWrt's reboot does not unmount the root filesystem, and what was
+  committed last is then only in the journal, which a noload view does not show - an `/etc/shadow` from before the
+  last `passwd` would be checked. So the password check mounts with the journal replayed first (`MU300_RO=recover` of
+  `android-mount-mu300root.sh`, a plain `ro` mount: what Linux itself does at its next boot, and what the update does
+  anyway); the zip does this only when a check was asked for (`MU300_KEEP_PASSWORD=yes`), the computer's installers
+  for the check, not for the first look at which systems have a password. A stale shadow was not caught in the act;
+  the other noload reads (which systems and releases are there, the VPN probe) are older than this and were left.
+
+**The computer's installers** (`install.sh`, `install.ps1`, the window, and an unpacked zip's `computer/`, which is the
+same `install.sh`): an update first looks at the systems it replaces (`pw_states`, a read-only mount) and, when one
+has a login password of its own (set, empty or locked), asks *Keep the current password? (yes/no)*, default yes. Yes
+asks the current password of each such system once, without echo, sends it to the device in a file of the user's
+alone (pushed, read by the check on standard input, removed in the same command) and stops after three wrong tries:
+**nothing is changed** and the message says to run again and answer no. Stopping was chosen over falling back to "set
+a new password": the user asked to keep it, a run that turns that into a new password is a surprise, and nothing is
+written before the question, so stopping costs nothing. `LOCKED` and `UNVERIFIABLE` stop the same way. No asks a new
+password typed twice (the old question). A system the update installs new still gets the new password; the device's
+`android-install.sh` leaves the accounts of `KEEP_PW_OSES` exactly as they were whatever `PWHASH` says. Answers mode:
+`MU300_ANS_KEEP_PASSWORD`, `MU300_ANS_CURRENT_PASSWORD` (or `..._UBUNTU`, `..._OPENWRT`, `..._OPENWRT_LUCI`), secrets
+like `MU300_ANS_PASSWORD`, one try; the verdict is an `info` event `password.<system>`.
+
+**The Magisk zip.** Nothing can be typed while Magisk installs a zip (and the devices have no keys a module could
+read), so its answers are a `mu300-install.conf`, and for the password of an update only one **inside the zip**: at
+its top (`zip mu300-magisk-...zip mu300-install.conf`; `customize.sh` unpacks it and hands it over as
+`MU300_ZIP_CONF`, and it wins over every other file), in its `mu300/`, or `MU300_ANSWERS` of a caller. Without one an
+update keeps the accounts and passwords as they are - every password, the images' own and none included, as
+`mu300-update` does - and the plan and the end say "kept, not checked". `MU300_KEEP_PASSWORD=yes` with
+`MU300_CURRENT_PASSWORD` keeps it once it checks (no such line: the empty password); anything else stops before
+anything is written, with the way out in the message. `MU300_KEEP_PASSWORD=no` with `MU300_PASSWORD` sets a new one
+(a file is not typed, so it is given once); `no` alone or `MU300_PASSWORD_RESET=yes` puts the images' own back. An
+update no longer takes `MU300_PASSWORD` or `MU300_PASSWORD_RESET` from `/data/adb/mu300-install.conf` (a line left
+there would reset the password at every later update); a new system still does. `MU300_KEEP_PASSWORD` and
+`MU300_CURRENT_PASSWORD` from any other file are reported and ignored. The machine plan gains `password_checked`.
+
+**On the device** (F50-C, 2026-10-16, a zip of this branch built with `tools/make-magisk-zips.sh` from the
+v2026.10.16.1 assets, OpenWrt k6.18, Android locale Chinese; root's password set to `ubuntu` with `passwd` first):
+the zip without a file: "kept, not checked", root still `ubuntu` (the next run's check confirmed it); with
+`MU300_KEEP_PASSWORD=yes`, `MU300_CURRENT_PASSWORD=ubuntu`: checked, kept, ssh with `ubuntu` works and a wrong one is
+refused; with a wrong current password: refused before anything was written (exit 1, the module not installed);
+with `MU300_KEEP_PASSWORD=no`, `MU300_PASSWORD=...`: the new one logs in over ssh, `ubuntu` no longer does. Then the
+same zip unpacked on a Mac, its `computer/install.sh` in answers mode against F50-C: a wrong current password stopped
+it at the question ("not confirmed. Nothing was changed"); the right one passed the check, the update installed
+(`kept the accounts and passwords of the previous openwrt`) and `root`/`ubuntu` logged in afterwards, the hash still
+the `$5$` one `passwd` had written. `install.ps1` and the window were run against the fake adb only. (These runs
+were of the first version, whose check ran OpenWrt's `openssl` in a chroot: its verdicts are the ones the busybox and
+`mu300-pwcheck` give for the same hashes, see the unit tests.) The second version's `mu300-pwcheck`, built in
+`mu300-kbuild` as `make-release.sh` does, on F50-C's Android through `android-pwcheck.sh`: Ubuntu 24.04's yescrypt hash
+`MATCH` with the right password, `NOMATCH` with another, `UNVERIFIABLE` without the checker. Then, once another
+session that had used F50-C in between was done, the second version's zips (built from the v2026.10.16.1 assets, with
+that `mu300-pwcheck` added as `mu300/mu300-pwcheck` as a release with it in its bundle carries it), over the published
+v2026.10.16.1 OpenWrt with root's password `ubuntu` (`$5$`): no file - "kept, not checked"; `MU300_KEEP_PASSWORD=yes`
+with the right one - checked (journal replayed, `mu300-pwcheck`), kept; with a wrong one - refused before anything was
+written; after these two `ubuntu` logged in over ssh and a wrong password was refused. `MU300_KEEP_PASSWORD=no` with
+`MU300_PASSWORD` - the new one logged in, `ubuntu` no longer. The zip's `computer/install.sh` (answers mode, keep, the
+right password): pushed the zip's `mu300-pwcheck` and busybox, confirmed, updated, and `ubuntu` logged in afterwards.
+
+### 132. Every OpenWrt release shipped its web server's TLS key: one private key for all devices of an image
+
+**Status: current** (unit tests; the shipped keys' fingerprints taken from every published release; the field fix run
+on the U30 Air, by hand and at boot, 2026-10-16).
+
+**What was wrong.** The uhttpd package makes its key pair (`/etc/uhttpd.key`, `/etc/uhttpd.crt`) when apk installs it,
+and since v2026.10.13 apk installs it in the image build: the pair was in the published rootfs tarball, so every device
+that installed one image had the same private key for LuCI over HTTPS, and anyone who downloads the release has it
+(a man in the middle on the LAN, or anyone the device's HTTPS is reachable to, could pose as the device's LuCI and read
+the password typed into it). uhttpd only makes a pair when there is none, so a device kept the shipped one for good.
+Found while working on Docker in the images (PR #258), on F50-C: its key was v2026.10.16.1's plain OpenWrt one.
+
+**Which releases.** `gh release list`, then each published `mu300-openwrt-rootfs.tar.gz` and
+`mu300-openwrt-luci-rootfs.tar.gz` (60 tarballs, 41 releases) streamed through `tar` for `etc/uhttpd.key` and hashed,
+nothing kept: the 28 tarballs from v2026.09.17 to v2026.10.12 have no key (the listing checked: uhttpd, no key file);
+the 32 of v2026.10.13 to v2026.10.27 and v2026.10.16.1 each have one, all different (one key per image build, the
+same for every device of that image). Assets that were replaced on a release before this was looked at, and images
+built by hand, are not on the list.
+
+**The build.** `openwrt/build-rootfs.sh` removes the pair from the image and fails if a key is still there; the audit
+of `tools/make-release.sh` refuses a tarball with `etc/uhttpd.key` (the same hunk as PR #258's). uhttpd makes the
+device its own pair at its first start: px5g (px5g-mbedtls, in both images; openssl is there too) with the
+`key_type ec` of `/etc/config/uhttpd`, an EC P-256 key and a self-signed certificate valid for 397 days.
+
+**The devices.** `/etc/uci-defaults/92-mu300-uhttpd-key` (both images) holds the 32 fingerprints (sha256 of the key
+file; never a key) and removes `/etc/uhttpd.key` and `/etc/uhttpd.crt`, and the pair of any uhttpd section whose
+`key` points elsewhere, when the key file is byte for byte one of them; a key not on the list (made on the device,
+or the user's own) is never touched, nor an empty file. uci-defaults run at boot before uhttpd (START 50), so uhttpd
+starts with no pair and makes one. Every update brings the file again (it removed itself when it ran, and
+mu300-update does not carry that removal over), so it runs on the first boot of every image, whatever way it came:
+mu300-update with the old image's manifest already leaves the image's key behind (it is the old image's file, not
+the user's), but without the manifest, and the Magisk zip and computer installer paths that carry `/etc`, would keep
+it. A device on an old release keeps the shipped key until it updates; by hand, the same script then
+`/etc/init.d/uhttpd restart`, or `rm /etc/uhttpd.key /etc/uhttpd.crt; /etc/init.d/uhttpd restart`. The browser warns
+once about the new self-signed certificate (or about a changed one, where it had an exception for the old); LuCI over
+plain HTTP is not affected.
+
+**Measured on the U30 Air** (openwrt-luci v2026.10.16.1, VPN profile `cengiz-abi`, sing-box, kill switch on). Its key
+was v2026.10.16.1's openwrt-luci one (0523f54e...). After a root-only backup of `/etc/uhttpd.*` and the VPN settings:
+the script by hand removed the pair and logged it; `uhttpd restart` made an EC P-256 pair (px5g, "Generating EC private
+key"), not on the list; HTTPS answered with the new certificate (SHA-256 69:88:5C... before, B2:05:9C... after) and the
+LuCI login page, as did HTTP; a second run kept the new key. Then the boot path: the shipped pair put back, the script
+in `/etc/uci-defaults`, a reboot: the script ran and was gone, uhttpd had made another new pair (EC:94:0E...), LuCI
+answered over both. Through all of it the VPN stayed up with the same exit IP, and the sha256 of every file of
+`/etc/config` and `/etc/mu300/vpn*` was the same as before.

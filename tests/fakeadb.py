@@ -62,6 +62,10 @@ DEFAULT = {
     'crypto_type': 'file',           # ro.crypto.type
     'data_source': '/dev/block/dm-6',    # what /data is mounted from
     'emmc': None,                # a directory standing for the device's storage (tests/fakeemmc.py): see above
+    'passwords': None,           # the current passwords of the installed systems' own accounts, for android-pwcheck.sh:
+                                 # {"openwrt": "", "ubuntu": "secret1"}; "" is none (EMPTY), "!" a locked account, a
+                                 # system not named has no account (NOUSER)
+    'pwcheck': '',               # what every check of a password answers instead (UNVERIFIABLE, say)
 }
 T = '/data/local/tmp'
 
@@ -267,6 +271,28 @@ def su(st, cmd, argv):
     m = re.fullmatch(r'\[ -d (\S+) \] && echo y', cmd)
     if m:
         return '', 'read'
+    # android-pwcheck.sh (tools/storage.sh's pw_states and pw_check): the password a pw_check pushed is read back here
+    if 'android-pwcheck.sh -s ' in cmd:
+        pws = st.get('passwords') or {}
+        oses = re.search(r'for o in (.*?); do', cmd).group(1).split()
+        return '\n'.join('%s:%s' % (o, 'NOUSER' if o not in pws else 'EMPTY' if pws[o] == '' else
+                                     'LOCKED' if pws[o] == '!' else 'SET') for o in oses), 'read'
+    m = re.search(r'android-pwcheck\.sh %s/mu300pw/(\S+) (\S+) < %s/mu300-pwcheck\.in' % (T, T), cmd)
+    if m:
+        pws = st.get('passwords') or {}
+        try:
+            with open(state_path() + '.pwin', encoding='utf-8') as f:
+                given = f.read()
+            os.remove(state_path() + '.pwin')
+        except OSError:
+            return 'NOMATCH', 'read'
+        given = given[:-1] if given.endswith('\n') else given
+        if st.get('pwcheck'):
+            return st['pwcheck'], 'read'
+        want = pws.get(m.group(1))
+        return ('NOUSER' if want is None else 'LOCKED' if want == '!' else 'MATCH' if given == want else 'NOMATCH'), 'read'
+    if cmd == 'chmod 755 %s/mu300-pwcheck %s/mu300-pwbb; true' % (T, T):
+        return '', 'read'       # the check's own tools, pushed (tools/storage.sh's pw_tools_push)
     if 'android-mount-mu300root.sh' in cmd and 'MU300_RO=1' in cmd:
         return st['vpn_on'], 'read'
     # what a pull of the file written on the device will give
@@ -407,6 +433,9 @@ def main(argv):
         return 0
     if cmd == 'push':
         log('push', argv)
+        if rest[-1:] == [T + '/mu300-pwcheck.in'] and not st.get('emmc'):
+            import shutil
+            shutil.copy(rest[0], state_path() + '.pwin')     # what su's pw_check reads (android-pwcheck.sh above)
         if st.get('emmc'):
             import shutil
             srcs, dst = rest[:-1], rest[-1].replace('/data/local/tmp', st['emmc'] + '/tmp')

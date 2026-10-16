@@ -21,6 +21,8 @@
 #                      UPDATE=1: the accounts and passwords of the previous installation stay as they are
 #   PW_SET=0|1         the Magisk installer: 1 puts PWHASH into that account even when it is empty (OpenWrt's root
 #                      without a password, as the image ships it); 0 or not set (install.sh): as above
+#   KEEP_PW_OSES="..."  with UPDATE=1: the systems whose accounts and passwords stay exactly as they are (PWHASH and
+#                      PW_SET do not touch them); install.sh: those whose current password the user confirmed
 #   IMPORT_HOTSPOT=0|1 copy Android's hotspot SSID/passphrase into each system
 #   KERNEL=5.4|6.18|7.2  the kernel in the new boot image; mu300-update keeps installing that one (boot/kernel)
 #   ADB=0|1 ADB_KEY    adb over USB to each system: 1 lets in only the adb public key ADB_KEY ("BASE64 name",
@@ -742,6 +744,11 @@ for os in $OSES; do
     stage_run "unpack $os" 3600 tar -xzpf $tarball -C $M/$os.new
     # the account the installer gives a password (ubuntu, OpenWrt's root)
     case $os in ubuntu) pwu=ubuntu ;; *) pwu=root ;; esac
+    # KEEP_PW_OSES: the systems whose accounts and passwords this update keeps as they are, whatever PWHASH says (the
+    # user chose to keep them and confirmed the current password, or a Magisk zip was told nothing): only with a
+    # previous system to keep them from
+    pwkeep=0
+    case " ${KEEP_PW_OSES:-} " in *" $os "*) if [ "${UPDATE:-0}" = 1 ] && [ -f "$M/$os/etc/shadow" ]; then pwkeep=1; fi ;; esac
     # prebuilt images: firmware and Android userspace pulled from this device by install.sh (tools/vendor-overlay.py)
     if [ -f $T/mu300-vendor-$os.tar.gz ]; then
         stage_run "unpack $os vendor" 900 tar -xzpf $T/mu300-vendor-$os.tar.gz -C $M/$os.new
@@ -857,7 +864,9 @@ for os in $OSES; do
             # the log line says what the shadow will hold: with a hash, or PW_SET=1 (the Magisk installer's
             # MU300_PASSWORD_RESET=yes, or a system that still had the images' accounts), the system's own account
             # gets PWHASH below, and only the other accounts keep their passwords
-            if [ -n "$PWHASH" ]; then
+            if [ $pwkeep = 1 ]; then
+                say "kept the accounts and passwords of the previous $os"
+            elif [ -n "$PWHASH" ]; then
                 say "kept the other accounts of the previous $os; $pwu's password is the one the installer chose (the images' own, or MU300_PASSWORD)"
             elif [ "${PW_SET:-0}" = 1 ]; then
                 say "kept the other accounts of the previous $os; $pwu's password is the images' own again: none, until one is set"
@@ -872,7 +881,7 @@ for os in $OSES; do
     # empty one, OpenWrt's root without a password), else the accounts carried over, else the image's own (Ubuntu's
     # ubuntu/ubuntu, OpenWrt's root without a password: the well-known ones, issue #167). The accounts are this
     # system's now, whichever they are: never the mark that has mu300-update carry some <os>.old's over at boot.
-    if [ -n "$PWHASH" ] || [ "${PW_SET:-0}" = 1 ]; then
+    if [ $pwkeep = 0 ] && { [ -n "$PWHASH" ] || [ "${PW_SET:-0}" = 1 ]; }; then
         sed -i "s|^$pwu:[^:]*:|$pwu:$PWHASH:|" $M/$os.new/etc/shadow
     fi
     rm -f $M/$os.new$ACCOUNTS_MARK

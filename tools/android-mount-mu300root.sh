@@ -11,8 +11,13 @@ OFF=${MU300_OFF:-27762098176}
 SIZE=${MU300_SIZE:-}
 # MU300_RO=1: read only, and no journal replay either (an ext4 "ro" mount still replays it, which writes): the
 # Magisk installer only looks at what is installed before its plan, and a dry run must not change the filesystem
+# MU300_RO=recover: read only after the journal is replayed (what any mount without noload does, Linux's at boot too):
+# a Linux that went down without unmounting (OpenWrt's reboot does: needs_recovery stays set) leaves its last changes
+# in the journal, and a noload view shows the files from before them - an /etc/shadow with the password before the
+# last passwd (needs_recovery was set on an F50, FINDINGS 126). The password check of an update uses this.
 MOUNT_OPTS=noatime
 [ "${MU300_RO:-}" != 1 ] || MOUNT_OPTS=ro,noload
+[ "${MU300_RO:-}" != recover ] || MOUNT_OPTS=ro
 
 if [ "$1" = -u ]; then
     L=$(grep " $2 " "${MU300_MOUNTS:-/proc/mounts}" | cut -d' ' -f1)

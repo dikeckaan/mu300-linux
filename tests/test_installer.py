@@ -497,8 +497,13 @@ class InstallEnv(ShellTest):
             self.assertEqual(list(e), ['OFF', 'SIZE', 'OFF_S', 'SIZE_S', 'FORMAT', 'OSES', 'WIPE_LEGACY', 'UPDATE',
                                        'BOOT_OS', 'DEFAULT_LINUX', 'BOOT_ATTEMPTS', 'IMPORT_HOTSPOT', 'KERNEL',
                                        'SD_MODE', 'SD_DEV', 'INTERNAL_EXISTS', 'ADB', 'ADB_KEY', 'SYNC_BOOTCHAIN',
-                                       'PWHASH'])
+                                       'PWHASH', 'KEEP_PW_OSES'])
             self.assertEqual(e['SYNC_BOOTCHAIN'], '1')
+            self.assertEqual(e['KEEP_PW_OSES'], '""')
+            # an update that keeps the passwords of the systems the user confirmed
+            out = self.write_env(shell, **dict(self.COMMON, FORMAT=0, UPDATE=1), SIZE=34776023040, INT_SIZE='', SD_MODE=0,
+                                 SD_DEV='', INTERNAL_EXISTS=1, KEEP_PW_OSES='ubuntu openwrt')
+            self.assertEqual(self.parse(out)['KEEP_PW_OSES'], '"ubuntu openwrt"')
 
     def test_internal_mode(self):
         for shell in self.each_shell():

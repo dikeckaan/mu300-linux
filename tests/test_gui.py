@@ -428,6 +428,48 @@ class Model(unittest.TestCase):
         c.internal_word = 'internal'
         self.assertEqual(model.problems(c, facts(**dict(card, sd__state='yes'))), [])
 
+    def test_an_update_keeps_the_password(self):
+        """With an installation there and update chosen, the current password is kept by default: the installer
+        checks the one typed here on the device, and the new one is then needed only for a system installed new."""
+        def fields(c, f):
+            return sorted(set(p[0] for p in model.problems(c, f)))
+        there = facts(region__existing='yes')
+        c = model.Choices()
+        self.assertEqual((c.keep_password, c.current_password), (True, ''))
+        self.assertTrue(c.keeps_password(there))
+        self.assertFalse(c.keeps_password(facts()))                         # nothing there to keep
+        self.assertEqual(model.problems(c, there), [])                      # no new password needed
+        a = model.answers(c, there, 'en', '')
+        self.assertEqual((a['MU300_ANS_EXISTING'], a['MU300_ANS_KEEP_PASSWORD'], a['MU300_ANS_CURRENT_PASSWORD']), ('update', 'yes', ''))
+        self.assertNotIn('MU300_ANS_PASSWORD', a)
+        self.assertLess(list(a).index('MU300_ANS_KEEP_PASSWORD'), list(a).index('MU300_ANS_CONFIRM'))
+        c.current_password = 'oldsecret1'
+        self.assertEqual(model.answers(c, there, 'en', '')['MU300_ANS_CURRENT_PASSWORD'], 'oldsecret1')
+        c.password = 'newsecret22'                                          # one for a system installed new: checked
+        self.assertEqual(fields(c, there), ['password'])
+        c.password2 = 'newsecret22'
+        self.assertEqual(model.answers(c, there, 'en', '')['MU300_ANS_PASSWORD'], 'newsecret22')
+        c = model.Choices(); c.current_password = 'two\nlines'
+        self.assertEqual(fields(c, there), ['password'])
+        # no: the new password, as always, and nothing about the current one
+        c = model.Choices(); c.keep_password = False
+        self.assertEqual(fields(c, there), ['password'])
+        c.password = c.password2 = 'newsecret22'
+        a = model.answers(c, there, 'en', '')
+        self.assertEqual((a['MU300_ANS_KEEP_PASSWORD'], a['MU300_ANS_PASSWORD']), ('no', 'newsecret22'))
+        self.assertNotIn('MU300_ANS_CURRENT_PASSWORD', a)
+        # wipe: nothing is kept
+        c = good_choices(); c.existing = 'wipe'
+        a = model.answers(c, there, 'en', '')
+        self.assertFalse(c.keeps_password(there))
+        self.assertNotIn('MU300_ANS_KEEP_PASSWORD', a)
+        self.assertNotIn('MU300_ANS_CURRENT_PASSWORD', a)
+        rows = dict(model.summary(good_choices(), there, ''))
+        self.assertEqual(rows['Password'], 'kept: the current one is checked on the device')
+        # in the log too
+        m = masking.Masker(home='')
+        self.assertNotIn('oldsecret1', m.mask('MU300_ANS_CURRENT_PASSWORD_UBUNTU=oldsecret1 MU300_ANS_CURRENT_PASSWORD=oldsecret1'))
+
     def header_variables(self):
         head = (TOP / 'install.sh').read_text().split('\nset -eu\n')[0]
         return set(re.findall(r'\b(?:MU300_[A-Z0-9_]+|ANDROID_SERIAL)\b', head))
@@ -1243,7 +1285,19 @@ class Window(unittest.TestCase):
         a.on_change({'check'})
         root.update()
         ctl.facts = facts(region__existing='yes')
-        self.assertIn('Linux is already installed there', show('install', 2))
+        page = show('install', 2)
+        self.assertIn('Linux is already installed there', page)
+        self.assertIn('Keep the current password', page)                    # an update keeps it, checked
+        self.assertIn('Current password', page)
+        a.v['keep_password'].set(False)
+        root.update()
+        self.assertNotIn('Current password', show('install', 2))
+        a.v['keep_password'].set(True)
+        a.v['existing'].set('wipe')
+        root.update()
+        self.assertNotIn('Keep the current password', show('install', 2))  # nothing is kept by a wipe
+        a.v['existing'].set('update')
+        root.update()
         self.assertIn('Uninstall', show('manage'))
         # a run, as its events come in
         p = model.Progress(model.INSTALL_STEPS, kind='install')

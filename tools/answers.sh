@@ -31,7 +31,7 @@
 
 ANSWERS_MODE=0; ANSWERS_ASKED=; PROGRESS_FD=; PROGRESS_STEP=; PROGRESS_PCT=; PROGRESS_ENDED=0
 # the answers that are secrets, in one place
-ANSWERS_SECRET="MU300_ANS_PASSWORD"
+ANSWERS_SECRET="MU300_ANS_PASSWORD MU300_ANS_CURRENT_PASSWORD MU300_ANS_CURRENT_PASSWORD_UBUNTU MU300_ANS_CURRENT_PASSWORD_OPENWRT MU300_ANS_CURRENT_PASSWORD_OPENWRT_LUCI"
 answers_secret() { case " $ANSWERS_SECRET " in *" $1 "*) return 0 ;; esac; return 1; }
 
 # answers_private FILE: the file is this user's alone - no link, owned by this user, no permission for the group or
@@ -186,4 +186,26 @@ ask_password() {
     progress question id MU300_ANS_PASSWORD text "$2" default "" secret 1
     [ "$_p1" = "$_p2" ] || _p1=
     eval "$1=\$_p1"; _p1=; _p2=
+}
+# ask_secret VAR "question" ANSWER-VARIABLE...: typed once, without echo (the current password, which is checked, not
+# set). In answers mode the first of the variables that is set - an empty value is the empty password - or @stdin.
+ask_secret() {
+    _sv=$1 _sq=$2; shift 2
+    _sid=$1
+    if [ $ANSWERS_MODE = 1 ]; then
+        _sset=
+        for _sn in "$@"; do eval "_as=\${$_sn+set}"; if [ -n "$_as" ]; then _sid=$_sn; _sset=1; break; fi; done
+        [ -n "$_sset" ] || die "$(t 'no answer to the question "{1}": set {2} (nothing is asked and nothing is assumed in answers mode)' "$_sq" "$1")"
+        eval "_p1=\$$_sid"
+        if [ "$_p1" = @stdin ]; then
+            progress question id "$_sid" text "$_sq" default "" state waiting secret 1
+            IFS= read -r _p1 || die "$(t 'no answer to the question "{1}" on standard input ({2}=@stdin)' "$_sq" "$_sid")"
+        fi
+        printf '%s: ******\n' "$_sq"
+    else
+        printf '%s: ' "$_sq"
+        [ -t 0 ] && stty -echo; IFS= read -r _p1 || _p1=; [ -t 0 ] && stty echo; echo
+    fi
+    progress question id "$_sid" text "$_sq" default "" secret 1
+    eval "$_sv=\$_p1"; _p1=
 }

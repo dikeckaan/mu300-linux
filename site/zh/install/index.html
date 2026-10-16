@@ -274,6 +274,7 @@ install.cmd -Lang zh                   <span class="c"># Windows (cmd)</span></c
 <div class="qa"><span class="ask">安装 VPN 模块吗（约多下载 40 MB，在设备上占用 120 MB）？(是/否)</span><p><a href="https://github.com/dikeckaan/mu300-linux-vpn">mu300-linux-vpn</a> 提供的可选 VPN。之后也可以在设备上用 <code>sudo mu300-extra install vpn</code> 添加。</p><p class="pick">不确定？选“否”（首次安装时的默认值）。</p></div>
 <div class="qa"><span class="ask">选择哪个内核？1) 5.4 2) 6.18 3) 7.2</span><p>内核是 Linux 中负责和硬件打交道的核心。5.4 是紫光展锐的厂商内核，测试时间最长。6.18 是主线 Linux 的长期支持版本，驱动更新，功能相同。7.2 最新，测试比 6.18 少。</p><p class="pick">不确定？选 1，5.4（默认）。Ubuntu 26.04 需要 6.18 或 7.2。之后可以用 <code>sudo mu300-update kernel 6.18</code> 修改。</p></div>
 <div class="qa"><span class="ask">update（更新）或 wipe（清除）</span><p>只有已经装过 Linux 时才会问。<code>update</code> 重新安装系统，并保留你的设置、用户、主目录、SSH 主机密钥和 OpenWrt 的设置。<code>wipe</code> 清除 Linux 文件系统，从头安装。</p><p class="pick">按 <kbd>Enter</kbd> 选择 update（也可以输入 <code>更新</code> 或 <code>清除</code>）。</p></div>
+<div class="qa"><span class="ask">保留当前密码吗？（yes/no）</span><p>更新时，如果被替换的系统有自己的登录密码，就会问。<code>yes</code> 会为每个这样的系统问一次当前密码，并在设备上与该系统的密码核对（没有密码时直接按 <kbd>Enter</kbd>；OpenWrt 出厂时的 <code>root</code> 没有密码）；输错三次后安装程序停止，什么都不改。<code>no</code> 会要求输入新密码，输入两次。</p><p class="pick">按 <kbd>Enter</kbd> 选 yes，然后输入你现在登录用的密码。</p></div>
 <div class="qa"><span class="ask">"ubuntu" 用户（Ubuntu）和 "root"（OpenWrt）的密码</span><p>以后登录用的密码，至少 6 个字符，输入两次。输入时屏幕上不会显示任何东西。</p><p class="pick">选一个你记得住的：第 3 步要用。</p></div>
 <div class="qa"><span class="ask">输入 INSTALL 继续</span><p>最后一站。在它上面，安装程序会准确列出将要写入的内容：系统、内核、默认启动和要写入的分区。请看一遍。输入 <code>INSTALL</code> 以外的任何内容都会取消。</p><p class="pick">用大写字母输入 <code>INSTALL</code>。</p></div>
 
@@ -352,6 +353,8 @@ Ubuntu 的用户 <code>ubuntu</code> 密码是 <code>ubuntu</code>，OpenWrt 的
 </ol>
 <p>要装两个系统，就先后安装 OpenWrt（或带控制面板的 OpenWrt）和 Ubuntu 的 zip。zip 永远不会缩小 <code>userdata</code>，这件事只能用电脑上的安装程序完成。存储位置、默认启动或你自己的密码等设置写在 <code>mu300-install.conf</code> 文件里，说明见
 <a href="https://github.com/dikeckaan/mu300-linux#choosing-something-else-mu300-installconf">README</a>（英文）。</p>
+
+<p><strong>更新时的密码。</strong>装在已有系统上的 zip 会保留密码，什么都不问：Magisk 安装 zip 时无法输入任何东西。输出会写"保留，未核对"。要核对当前密码或设置新密码，请在安装前把一个 <code>mu300-install.conf</code> 放到 zip 的最上层 - 在电脑上用 <code>zip mu300-magisk-&lt;tag&gt;-...zip mu300-install.conf</code>，在 Android 上用能打开 zip 的文件管理器。<code>MU300_KEEP_PASSWORD=yes</code> 加 <code>MU300_CURRENT_PASSWORD=...</code> 会在核对通过后保留密码（不对就停止安装，什么都不改；没有第二行表示没有密码，即 OpenWrt 出厂时的 <code>root</code>）；<code>MU300_KEEP_PASSWORD=no</code> 加 <code>MU300_PASSWORD=...</code> 会设置新密码。该文件以明文保存密码：安装后请删除 zip 或其中的这个文件。详见 <a href="https://github.com/dikeckaan/mu300-linux#the-password-of-an-update-a-mu300-installconf-in-the-zip">README</a>（英文）。</p>
 
 <h2 id="uninstall">再次移除</h2>
 <p>设备回到 Android 后，运行 <code>./uninstall.sh</code>（Windows：<code>.\uninstall.ps1</code> 或 <code>uninstall.cmd</code>）。它会把 Android 重新设为启动系统，恢复第二个启动分区，并清除 Linux 文件系统。你的 Android 数据不受影响。它提供的选项请看<a href="../updates/#uninstall">更新与安全</a>页面。</p>

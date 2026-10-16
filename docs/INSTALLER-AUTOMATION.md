@@ -42,7 +42,8 @@ file are exported to the programs the installer starts (adb reads `ANDROID_SERIA
 
 ### Secrets
 
-One answer is a secret: `MU300_ANS_PASSWORD`. The scripts keep the list in one place (`ANSWERS_SECRET` in
+The passwords are secrets: `MU300_ANS_PASSWORD`, `MU300_ANS_CURRENT_PASSWORD` and
+`MU300_ANS_CURRENT_PASSWORD_UBUNTU`, `_OPENWRT`, `_OPENWRT_LUCI`. The scripts keep the list in one place (`ANSWERS_SECRET` in
 `tools/answers.sh`, `$script:MuSecrets` in `tools/answers.ps1`), and for every name in it:
 
 * the value is never printed: the transcript shows `******`, an event carries `"secret":"1"` and no answer, and an
@@ -50,6 +51,8 @@ One answer is a secret: `MU300_ANS_PASSWORD`. The scripts keep the list in one p
 * it is not handed to the programs the installer starts. From a file it is never exported; given in the
   environment it is taken out of the environment before anything is started, so adb, curl and python do not
   inherit it. It reaches one command only, on its standard input: the one that hashes it. The device gets the hash;
+  a current password goes to the device in a file of the user's alone, which `tools/android-pwcheck.sh` reads on its
+  standard input and the same command removes, and only its one-word verdict comes back;
 * a line of the file that is not `NAME=value` is reported by its number, not by its text.
 
 **The answers file holds the password in plain text.** `install.sh` and `uninstall.sh` refuse a file that is a
@@ -94,12 +97,21 @@ A question is asked only where the installer asks it by hand too.
 | `MU300_ANS_KERNEL` | `5.4`, `6.18`, `7.2` | the kernel |
 | `MU300_ANS_EXISTING` | `update`, `wipe` | Linux is installed already |
 | `MU300_ANS_ERASE_SD` | `ERASE` | a new filesystem on the SD card erases it |
-| `MU300_ANS_PASSWORD` | 6 characters or more | the password of `ubuntu` (Ubuntu) and `root` (OpenWrt) |
+| `MU300_ANS_KEEP_PASSWORD` | `yes`, `no` | an update of systems with a login password of their own: keep it (the current one is then asked and checked on the device) or set a new one |
+| `MU300_ANS_CURRENT_PASSWORD` | the current password, empty for none | with keep: checked against the installed system's hash; one try in answers mode, and a wrong one stops the run before anything is written. `MU300_ANS_CURRENT_PASSWORD_UBUNTU`, `MU300_ANS_CURRENT_PASSWORD_OPENWRT`, `MU300_ANS_CURRENT_PASSWORD_OPENWRT_LUCI` answer for one system and win over it |
+| `MU300_ANS_PASSWORD` | 6 characters or more | the password of `ubuntu` (Ubuntu) and `root` (OpenWrt); not asked when an update keeps the password of every system it installs |
 | `MU300_ANS_CONFIRM` | `INSTALL` | the summary's question |
 
 The variables that were there before work as they did (`MU300_WORK`, `MU300_RELEASE_URL`, `MU300_SYNC_BOOTCHAIN`,
 `MU300_VPN_URL`, `MU300_VPN_MODULE`, `MU300_FETCH_JOBS`, `MU300_NO_SELF_UPDATE`); `install.ps1` now reads
 `MU300_LANG`, `MU300_RELEASE`, `MU300_RELEASE_URL` and `MU300_WORK` where its parameters are not given.
+
+**The Magisk zip on the device** asks nothing (nothing can be typed while Magisk installs it). Its answers are a
+`mu300-install.conf` (README, "Choosing something else"); for the password of an update only one inside the zip
+counts - at the top of the zip, or `MU300_ANSWERS` of a caller such as `tools/android-web.sh`: `MU300_KEEP_PASSWORD`
+(`yes`, `no`), `MU300_CURRENT_PASSWORD`, `MU300_PASSWORD`, `MU300_PASSWORD_RESET`. Without them an update keeps the
+password unchecked. The plan line `MU300-PLAN password=kept` is followed by `password_checked=1` when the current one
+was checked.
 
 **An unpacked Magisk zip** (`MU300_PACKAGE=DIR`, `--package DIR` / `-Package DIR`, or the zip's own `computer/`
 with its `.mu300-package`; `tools/package.sh`): the system, the Ubuntu, the kernel and the release are the zip's, so
@@ -182,6 +194,7 @@ The stages of an installation, in order: `preflight` 2, `storage` 6, `choices` 1
 | `verdict`, `verdict.code` | the result line of the check, and `tested`, `both`, `one`, `openwrt`, `existing`, `sd`, `dirty`, `sd-only` |
 | `makeroom.first`, `.end`, `.usable_end`, `.min_android`, `.min_linux`, `.max_linux` | where `userdata` fills the disk: its sectors, and the limits of a split, in sectors |
 | `release` | the release this run installs |
+| `password.<system>` | an update that keeps the password: the device's verdict on the current one, `MATCH`, `NOMATCH`, `LOCKED`, `NOUSER` or `UNVERIFIABLE` (never the password or its hash) |
 | `package`, `package.system`, `package.kernel`, `package.release` | an unpacked Magisk zip this run installs from: its folder, and what it holds |
 | `makeroom.crypto`, `.crypto_state`, `.crypto_type` | the make-room path: whether Android's data is encrypted (`yes`, `no`, `unknown`: kano's rule), and `ro.crypto.state` / `ro.crypto.type` |
 | `resume.transaction`, `resume.check`, `resume.backup` | a prepared installation: its transaction, what its checks said (`RESUME-OK` or `RESUME-REFUSED: why`), the backup made before it |

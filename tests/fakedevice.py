@@ -17,6 +17,8 @@ case $1 in
     -c) shift; exec "$FAKE/devsh" -c "$@" ;;
     # the real one, on the fake by-name directory (MU300_BY_NAME), with Android's getprop
     */android-bootchain.sh) PATH="$FAKE/bin:$PATH" exec sh "$@" ;;
+    # the real one, on the mounted copy; its chroot runs the command on this machine (the test's MU300_CHROOT)
+    */android-pwcheck.sh) exec sh "$@" ;;
     */android-install.sh)
         cp "$MU300_DEVICE_WORK/mu300-install.env" "$FAKE/install.env"
         [ "${FAKE_INSTALL_FAILS:-0}" = 1 ] && { echo "[device] failing as asked"; exit 1; }

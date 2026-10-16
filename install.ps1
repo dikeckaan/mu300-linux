@@ -951,7 +951,7 @@ function InstallEnvText($v) {
         "IMPORT_HOTSPOT=$($v.IMPORT_HOTSPOT)", "KERNEL=$($v.KERNEL)", "SD_MODE=$($v.SD_MODE)", "SD_DEV=$($v.SD_DEV)",
         "INTERNAL_EXISTS=$($v.INTERNAL_EXISTS)", "ADB=$(if ($v.ADB) { $v.ADB } else { 0 })", "ADB_KEY='$($v.ADB_KEY)'",
         "SYNC_BOOTCHAIN=$(if ($v.SYNC_BOOTCHAIN) { $v.SYNC_BOOTCHAIN } else { 0 })",
-        "PWHASH='$($v.PWHASH)'")
+        "PWHASH='$($v.PWHASH)'", "KEEP_PW_OSES=`"$(@($v.KEEP_PW_OSES) -join ' ')`"")
     return (($lines -join "`n") + "`n")
 }
 # AdbPubKey: the first line of an adb public key file (adbkey.pub: "BASE64 user@host") as it goes into mu300-install.env
@@ -979,6 +979,103 @@ function VpnOnSystems($oses, $existing, $sdMode, $sdDev, $off, $size) {
     if (-not (PushUnix "$Top\rootfs\overlay\opt\mu300\lib\vpn-orphan.sh" "$T/vpn-orphan.sh")) { return @() }
     $out = SuDo "$envs MU300_RO=1 sh $T/android-mount-mu300root.sh $T/mu300probe >/dev/null 2>&1 && { . $T/vpn-orphan.sh; for o in $(@($oses) -join ' '); do if vpn_killswitch_wanted $T/mu300probe/`$o; then echo `$o:ks; else case `$(vpn_conf_value $T/mu300probe/`$o/etc/mu300/vpn.conf ENABLE) in 1) echo `$o ;; esac; fi; done; sh $T/android-mount-mu300root.sh -u $T/mu300probe >/dev/null 2>&1; }; true"
     return @(([string]$out -split "`n") | ForEach-Object { $_.Trim() } | Where-Object { @($oses) -contains ($_ -replace ':ks$', '') })
+}
+# The passwords of the systems on the Linux filesystem already on the device, for an update that keeps them (install.sh's
+# pw_states and pw_check, tools/storage.sh): android-pwcheck.sh, pushed along, looks through a read-only mount taken
+# down again at once. Neither shows or hands anywhere a password or a hash: one word per system.
+function PwMountEnv($sdMode, $sdDev, $off, $size) { if ($sdMode -eq 1) { "MU300_SD_DEV=$sdDev" } else { "MU300_OFF=$off MU300_SIZE=$size" } }
+# PwStates: "os:SET", "os:EMPTY" (no password), "os:LOCKED" or "os:NOUSER" per system of $oses; nothing when the
+# filesystem cannot be mounted
+function PwStates($oses, $existing, $sdMode, $sdDev, $off, $size) {
+    if ($existing -ne 'yes') { return @() }
+    if (-not (PushUnix "$Top\tools\android-mount-mu300root.sh" "$T/android-mount-mu300root.sh")) { return @() }
+    if (-not (PushUnix "$Top\tools\android-pwcheck.sh" "$T/android-pwcheck.sh")) { return @() }
+    $envs = PwMountEnv $sdMode $sdDev $off $size
+    $out = SuDo "$envs MU300_RO=1 sh $T/android-mount-mu300root.sh $T/mu300pw >/dev/null 2>&1 && { for o in $(@($oses) -join ' '); do case `$o in ubuntu) u=ubuntu ;; *) u=root ;; esac; echo `$o:`$(sh $T/android-pwcheck.sh -s $T/mu300pw/`$o `$u); done; sh $T/android-mount-mu300root.sh -u $T/mu300pw >/dev/null 2>&1 && rmdir $T/mu300pw 2>/dev/null; }; true"
+    return @(([string]$out -split "`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^[a-z-]+:[A-Z]+$' })
+}
+# PwCheck OS PASSWORD: MATCH, NOMATCH, LOCKED, NOUSER or UNVERIFIABLE (nothing: the filesystem did not mount). The
+# password goes to the device in a file (LF, UTF-8 without a BOM) removed from this computer at once, which
+# android-pwcheck.sh reads on its standard input and the same command removes on the device; never on a command line.
+function PwCheck($os, [string]$pw, $sdMode, $sdDev, $off, $size, [string]$pwEnv) {
+    $u = if ($os -eq 'ubuntu') { 'ubuntu' } else { 'root' }
+    $f = [IO.Path]::GetTempFileName()
+    $pushed = $false
+    try {
+        [IO.File]::WriteAllText($f, "$pw`n", (New-Object Text.UTF8Encoding $false))
+        Quiet { adb push $f "$T/mu300-pwcheck.in" } | Out-Null
+        $pushed = $LASTEXITCODE -eq 0
+    } finally { Remove-Item -LiteralPath $f -ErrorAction SilentlyContinue }
+    if (-not $pushed) { return '' }
+    $envs = PwMountEnv $sdMode $sdDev $off $size
+    $out = SuDo "chmod 600 $T/mu300-pwcheck.in; $envs MU300_RO=recover sh $T/android-mount-mu300root.sh $T/mu300pw >/dev/null 2>&1 && { $pwEnv sh $T/android-pwcheck.sh $T/mu300pw/$os $u < $T/mu300-pwcheck.in; sh $T/android-mount-mu300root.sh -u $T/mu300pw >/dev/null 2>&1 && rmdir $T/mu300pw 2>/dev/null; }; rm -f $T/mu300-pwcheck.in; true"
+    $last = @(([string]$out -split "`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    if ($last.Count -eq 0) { return '' }
+    return $last[-1]
+}
+# PwTools: the project's own tools that compute the hash on the device (install.sh's pw_tools, tools/storage.sh's
+# pw_tools_push) - never a program of the Linux system being checked, which would run with Android's root (FINDINGS
+# 126). From an unpacked zip its mu300\ (mu300-pwcheck when its release has one, and busybox); else the release's 5.4
+# kernel bundle, fetched into the release's folder and checked against SHA256SUMS now (the download step finds it
+# there and does not fetch it again). Both pushed, made executable once; returns the environment android-pwcheck.sh
+# gets for them ('' without: then only an empty password can be confirmed, anything else is UNVERIFIABLE).
+function PwTools {
+    $bin = ''; $bb = ''
+    try {
+        if ($PKG) {
+            foreach ($n in 'mu300-pwcheck', 'busybox') {
+                $f = Join-Path $PKG "mu300\$n"
+                if ((Test-Path -LiteralPath $f -PathType Leaf) -and (Get-Item -LiteralPath $f).Length -gt 0) {
+                    if ($n -eq 'busybox') { $bb = $f } else { $bin = $f }
+                }
+            }
+        } elseif ($Release) {
+            $rel = "$Work\release\$Release"; $dir = "$Work\pwtools"
+            New-Item -ItemType Directory -Force -Path $rel, $dir | Out-Null
+            $base = if ($ReleaseUrl) { $ReleaseUrl } else { "https://github.com/$Repo/releases/download/$Release" }
+            Invoke-WebRequest "$base/SHA256SUMS" -OutFile "$rel\SHA256SUMS" -UseBasicParsing
+            $want = ''
+            foreach ($line in Get-Content "$rel\SHA256SUMS") {
+                $q = $line -split '\s+', 2
+                if ($q.Count -eq 2 -and $q[1].TrimStart('*') -eq 'mu300-kernel.tar.gz') { $want = $q[0].ToLower() }
+            }
+            if (-not $want) { return '' }
+            $k = "$rel\mu300-kernel.tar.gz"
+            $have = if (Test-Path -LiteralPath $k) { (Get-FileHash -LiteralPath $k -Algorithm SHA256).Hash.ToLower() } else { '' }
+            if ($have -ne $want) {
+                Fetch "$base/mu300-kernel.tar.gz" "$k.part" | Out-Null
+                if ((Get-FileHash -LiteralPath "$k.part" -Algorithm SHA256).Hash.ToLower() -ne $want) {
+                    Remove-Item -LiteralPath "$k.part" -ErrorAction SilentlyContinue
+                    return ''
+                }
+                Move-Item -Force -LiteralPath "$k.part" -Destination $k
+            }
+            foreach ($n in 'mu300-pwcheck', 'busybox') {
+                Remove-Item -LiteralPath "$dir\$n" -ErrorAction SilentlyContinue
+                Quiet { & tar -xzf $k -C $dir "./$n" } | Out-Null
+                if ((Test-Path -LiteralPath "$dir\$n" -PathType Leaf) -and (Get-Item -LiteralPath "$dir\$n").Length -gt 0) {
+                    if ($n -eq 'busybox') { $bb = "$dir\$n" } else { $bin = "$dir\$n" }
+                }
+            }
+        }
+    } catch { return '' }
+    $envs = @()
+    if ($bin) {
+        Quiet { adb push $bin "$T/mu300-pwcheck" } | Out-Null
+        if ($LASTEXITCODE -eq 0) { $envs += "MU300_PWCHECK_BIN=$T/mu300-pwcheck" }
+    }
+    if ($bb) {
+        Quiet { adb push $bb "$T/mu300-pwbb" } | Out-Null
+        if ($LASTEXITCODE -eq 0) { $envs += "MU300_PWCHECK_BB=$T/mu300-pwbb" }
+    }
+    if ($envs.Count -gt 0) { SuDo "chmod 755 $T/mu300-pwcheck $T/mu300-pwbb; true" | Out-Null }
+    return ($envs -join ' ')
+}
+# ReadSecret QUESTION: one line typed without echo (the -Answers queue: its next line)
+function ReadSecret($question) {
+    if ($script:AnswerQueue) { return (NextAnswer $question -Secret) }
+    $ss = Read-Host -AsSecureString $question
+    return [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($ss))
 }
 function VpnDefault($on) { if (@($on).Count -gt 0) { 'yes' } else { 'no' } }
 function SdExisting {
@@ -1672,21 +1769,88 @@ if ($existing -eq 'no') {
 if ($SD_MODE -eq 1 -and $FORMAT -eq 1) {
     if ((Ask (T 'Everything on the SD card ({1}, {2}) will be erased. Type ERASE to continue' $SD_DEV (Gib $SIZE)) 'no' 'MU300_ANS_ERASE_SD') -cne 'ERASE') { Die (T 'cancelled') }
 }
-if ($script:MuAnswersMode) {
-    # MU300_ANS_PASSWORD: no event and no line of output ever shows it
-    $p1 = AnswerNamed (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)') '' 'MU300_ANS_PASSWORD' -Secret
-    $p2 = $p1
-    Progress 'question' 'id' 'MU300_ANS_PASSWORD' 'text' (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)') 'default' '' 'secret' '1'
-} elseif ($script:AnswerQueue) {
-    $p1 = NextAnswer (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)') -Secret
-    $p2 = NextAnswer (T 'Repeat') -Secret
-} else {
-    $pw1 = Read-Host -AsSecureString (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)')
-    $pw2 = Read-Host -AsSecureString (T 'Repeat')
-    $p1 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw1))
-    $p2 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw2))
+# The password. An update keeps the accounts and passwords of the systems it replaces when the user says so and shows
+# that they know the current one (checked on the device by android-pwcheck.sh, with the hash's own method; an empty
+# one, OpenWrt's root as it ships, is confirmed by an empty entry). Three wrong entries stop the run before anything is
+# written (install.sh's password block). The systems installed new, and an update whose user says no, get the new
+# password asked for below.
+$KEEP_PW_OSES = @(); $NEW_PW_OSES = @($OSES); $p1 = ''; $p2 = ''
+if ($UPDATE -eq 1) {
+    $pwHave = @()
+    foreach ($l in @(PwStates $OSES $existing $SD_MODE $SD_DEV $OFF $SIZE)) {
+        $st = $l.Substring($l.IndexOf(':') + 1)
+        if ($st -in 'SET', 'EMPTY', 'LOCKED') { $pwHave += $l.Substring(0, $l.IndexOf(':')) }
+    }
+    if ($pwHave.Count -gt 0) {
+        Write-Host ''
+        Write-Host ('  ' + (T 'The installed {1} has a login password of its own.' ($pwHave -join ' ')))
+        Write-Host ('    ' + (T 'yes  keep it: the current password is asked once and checked on the device'))
+        Write-Host ('    ' + (T 'no   set a new password'))
+        switch (Ask (T 'Keep the current password? (yes/no)') 'yes' 'MU300_ANS_KEEP_PASSWORD') {
+            'yes' {
+                $pwEnv = PwTools
+                foreach ($os in $pwHave) {
+                    $pwu = if ($os -eq 'ubuntu') { 'ubuntu' } else { 'root' }
+                    $osv = $os.ToUpper().Replace('-', '_')
+                    $q = T 'Current password of "{1}" in the installed {2} (only Enter if it has none)' $pwu $os
+                    $tries = 0
+                    while ($true) {
+                        $tries++
+                        if ($script:MuAnswersMode) {
+                            $cid = "MU300_ANS_CURRENT_PASSWORD_$osv"
+                            if (-not (AnswerLookup $cid).Set) { $cid = 'MU300_ANS_CURRENT_PASSWORD' }
+                            if (-not (AnswerLookup $cid).Set) { Die (T 'no answer to the question "{1}": set {2} (nothing is asked and nothing is assumed in answers mode)' $q 'MU300_ANS_CURRENT_PASSWORD') }
+                            # one MU300_ANS_CURRENT_PASSWORD may answer for every system (a wrong one stops below)
+                            [void]$script:MuAsked.Remove($cid)
+                            $cur = AnswerNamed $q '' $cid -Secret
+                        } else {
+                            $cid = 'MU300_ANS_CURRENT_PASSWORD'
+                            $cur = ReadSecret $q
+                        }
+                        Progress 'question' 'id' $cid 'text' $q 'default' '' 'secret' '1'
+                        $res = PwCheck $os ([string]$cur) $SD_MODE $SD_DEV $OFF $SIZE $pwEnv
+                        $cur = $null
+                        Info "password.$os" $res
+                        if ($res -eq 'MATCH') {
+                            Write-Host ('  ' + (T 'confirmed: the password of {1} stays as it is' $os))
+                            $KEEP_PW_OSES += $os
+                            break
+                        } elseif ($res -eq 'NOMATCH') {
+                            Write-Host ('  ' + (T 'that is not the current password of "{1}" in {2}' $pwu $os))
+                        } elseif ($res -eq 'LOCKED') {
+                            Die (T '"{1}" in the installed {2} has no password login, so there is none to confirm. Nothing was changed: run the installer again and answer no to set a new password.' $pwu $os)
+                        } else {
+                            Die (T 'the current password of "{1}" in the installed {2} could not be checked on the device ({3}). Nothing was changed: run the installer again and answer no to set a new password.' $pwu $os $(if ($res) { $res } else { 'no answer' }))
+                        }
+                        if ($script:MuAnswersMode -or $tries -ge 3) {
+                            Die (T 'the current password of "{1}" in the installed {2} was not confirmed. Nothing was changed: run the installer again and answer no to set a new password.' $pwu $os)
+                        }
+                    }
+                }
+            }
+            'no' { }
+            default { Die (T 'invalid choice') }
+        }
+    }
+    $NEW_PW_OSES = @($OSES | Where-Object { $KEEP_PW_OSES -notcontains $_ })
 }
-if ($p1 -ne $p2 -or $p1.Length -lt 6) { Die (T 'passwords differ or are shorter than 6 characters') }
+if ($NEW_PW_OSES.Count -gt 0) {
+    if ($script:MuAnswersMode) {
+        # MU300_ANS_PASSWORD: no event and no line of output ever shows it
+        $p1 = AnswerNamed (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)') '' 'MU300_ANS_PASSWORD' -Secret
+        $p2 = $p1
+        Progress 'question' 'id' 'MU300_ANS_PASSWORD' 'text' (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)') 'default' '' 'secret' '1'
+    } elseif ($script:AnswerQueue) {
+        $p1 = NextAnswer (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)') -Secret
+        $p2 = NextAnswer (T 'Repeat') -Secret
+    } else {
+        $pw1 = Read-Host -AsSecureString (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)')
+        $pw2 = Read-Host -AsSecureString (T 'Repeat')
+        $p1 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw1))
+        $p2 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw2))
+    }
+    if ($p1 -ne $p2 -or $p1.Length -lt 6) { Die (T 'passwords differ or are shorter than 6 characters') }
+}
 
 New-Item -ItemType Directory -Force -Path "$Work\dumps", "$Work\firmware" | Out-Null
 Step 'pull' 15
@@ -1826,7 +1990,7 @@ foreach ($os in $OSES) {
 }
 # not `| Python ...`: that helper is an advanced function with no pipeline-bound parameter, so the
 # binding fails, and its body would not forward $input to the child's stdin even if it bound
-$PWHASH = ($p1 | & $script:PyExe "$Top\tools\sha512crypt.py").Trim()
+$PWHASH = if ($p1) { ($p1 | & $script:PyExe "$Top\tools\sha512crypt.py").Trim() } else { '' }
 
 Step 'bootimage' 68
 Say (T 'Building the boot image')
@@ -1859,6 +2023,10 @@ Write-Host ('  ' + (T 'adb to Linux:   {1}' $(if ($ADB -eq 1) { T 'on, only for 
 Write-Host ('  ' + (T 'default boot:   {1}' $(if ($DEFAULT_LINUX -eq 1) { T 'Linux (Android after {1} failed boots in a row)' $BOOT_ATTEMPTS } else { T 'Android, Linux on demand' })))
 $fsText = if ($FORMAT -eq 0) { T 'keep existing' } elseif ($SD_MODE -eq 1) { T 'CREATE new ext4 (erases the SD card)' } else { T 'CREATE new ext4 (erases the Linux region)' }
 Write-Host ('  ' + (T 'filesystem:     {1}' $fsText))
+if ($KEEP_PW_OSES.Count -gt 0) {
+    $pwNew = if ($NEW_PW_OSES.Count -gt 0) { '; ' + (T 'the new one in {1}' ($NEW_PW_OSES -join ' ')) } else { '' }
+    Write-Host ('  ' + (T 'password:       kept as it is in {1} (confirmed){2}' ($KEEP_PW_OSES -join ' ') $pwNew))
+}
 if ($UPDATE -eq 1) { Write-Host ('  ' + (T 'update:         everything you added to the chosen systems or changed in them is kept (/etc/mu300/update-report)')) }
 if ($SD_MODE -eq 1) {
     Write-Host ('  ' + (T 'writes:         SD card {1}, boot_{2}, 32 bytes of misc (the eMMC region, boot_{3}, GPT and userdata are not touched)' $SD_DEV $LINUX_SLOT $ANDROID_SLOT))
@@ -1887,7 +2055,7 @@ $envText = (InstallEnvText @{ OFF = $OFF; SIZE = $SIZE; INT_SIZE = $INT_SIZE; FO
     WIPE_LEGACY = $WIPE_LEGACY; UPDATE = $UPDATE; BOOT_OS = $BOOT_OS; DEFAULT_LINUX = $DEFAULT_LINUX
     BOOT_ATTEMPTS = $BOOT_ATTEMPTS; IMPORT_HOTSPOT = $IMPORT_HOTSPOT; KERNEL = $KERNEL; SD_MODE = $SD_MODE
     SD_DEV = $SD_DEV; INTERNAL_EXISTS = $INTERNAL_EXISTS; ADB = $ADB; ADB_KEY = $ADB_KEY
-    SYNC_BOOTCHAIN = $SYNC_BOOTCHAIN; PWHASH = $PWHASH })
+    SYNC_BOOTCHAIN = $SYNC_BOOTCHAIN; PWHASH = $PWHASH; KEEP_PW_OSES = $KEEP_PW_OSES })
 # an update to an older release: the device refuses it unless told (tools/android-install.sh, the downgrade block)
 if ($env:MU300_DOWNGRADE -eq 'yes') { $envText += "DOWNGRADE=1`n" }
 WriteUnix $envFile $envText

@@ -11,6 +11,8 @@
 #   sd_kernel_ok     a card installation refuses a kernel bundle that cannot read the card
 #   sd_erase         uninstall.sh: overwrite the start of the card's mu300sd filesystem (nothing else, ever)
 #   write_install_env  install.sh: the text of mu300-install.env (install.ps1's InstallEnvText writes the same)
+#   pw_states "OS..."  install.sh: "OS:SET|EMPTY|LOCKED|NOUSER" per system on the existing filesystem
+#   pw_check OS PASSWORD  install.sh: MATCH when PASSWORD is the current one of OS's own account (android-pwcheck.sh)
 #   adb_pubkey FILE  install.sh: the adb public key in FILE (adbkey.pub) as one safe line, "BASE64 name"
 #   bootchain_line   install.sh and the Magisk installer: the plan's line from android-bootchain.sh check
 
@@ -171,8 +173,48 @@ ADB=%s
 ADB_KEY='"'"'%s'"'"'
 SYNC_BOOTCHAIN=%s
 PWHASH='"'"'%s'"'"'
+KEEP_PW_OSES="%s"
 ' \
-      "$OFF" "$_rs" "$((OFF / 512))" "$((_rs / 512))" "$FORMAT" "$OSES" "$WIPE_LEGACY" "$UPDATE" "$BOOT_OS" "$DEFAULT_LINUX" "$BOOT_ATTEMPTS" "$IMPORT_HOTSPOT" "$KERNEL" "$SD_MODE" "$SD_DEV" "$INTERNAL_EXISTS" "${ADB:-0}" "${ADB_KEY:-}" "${SYNC_BOOTCHAIN:-0}" "$PWHASH"
+      "$OFF" "$_rs" "$((OFF / 512))" "$((_rs / 512))" "$FORMAT" "$OSES" "$WIPE_LEGACY" "$UPDATE" "$BOOT_OS" "$DEFAULT_LINUX" "$BOOT_ATTEMPTS" "$IMPORT_HOTSPOT" "$KERNEL" "$SD_MODE" "$SD_DEV" "$INTERNAL_EXISTS" "${ADB:-0}" "${ADB_KEY:-}" "${SYNC_BOOTCHAIN:-0}" "$PWHASH" "${KEEP_PW_OSES:-}"
+}
+
+# The passwords of the systems on the Linux filesystem already on the device, for an update that keeps them
+# (install.sh asks; android-pwcheck.sh, pushed along, looks). Read through a read-only mount taken down again at once,
+# like vpn_on_systems. Neither prints nor hands anywhere a password or a hash: one word per system.
+pw_mount_env() { if [ "$SD_MODE" = 1 ]; then echo "MU300_SD_DEV=$SD_DEV"; else echo "MU300_OFF=$OFF MU300_SIZE=$SIZE"; fi; }
+# pw_states "OS...": "OS:SET", "OS:EMPTY" (no password), "OS:LOCKED" or "OS:NOUSER" (no such system or account), one
+# per line; nothing at all when the filesystem cannot be mounted
+pw_states() {
+    [ "$existing" = yes ] || return 0
+    adb push "$TOP/tools/android-mount-mu300root.sh" "$TOP/tools/android-pwcheck.sh" $T/ >/dev/null 2>&1 || return 0
+    su_do "$(pw_mount_env) MU300_RO=1 sh $T/android-mount-mu300root.sh $T/mu300pw >/dev/null 2>&1 && { for o in $1; do case \$o in ubuntu) u=ubuntu ;; *) u=root ;; esac; echo \$o:\$(sh $T/android-pwcheck.sh -s $T/mu300pw/\$o \$u); done; sh $T/android-mount-mu300root.sh -u $T/mu300pw >/dev/null 2>&1 && rmdir $T/mu300pw 2>/dev/null; }; true"
+}
+# pw_tools_push: the project's own tools that compute the hash - never a program of the Linux system being checked,
+# which would run with Android's root (FINDINGS 126) - pushed once: PW_BIN (mu300-pwcheck, every method) and PW_BB (a
+# busybox with mkpasswd: MD5- and SHA-crypt), files on this computer the caller found (install.sh's pw_tools); PW_ENV
+# the environment android-pwcheck.sh gets for them. Without either it can confirm only an empty password.
+pw_tools_push() {
+    [ -z "${PW_ENV+set}" ] || return 0
+    PW_ENV=
+    if [ -n "${PW_BIN:-}" ] && adb push "$PW_BIN" $T/mu300-pwcheck >/dev/null 2>&1; then
+        PW_ENV="MU300_PWCHECK_BIN=$T/mu300-pwcheck"
+    fi
+    if [ -n "${PW_BB:-}" ] && adb push "$PW_BB" $T/mu300-pwbb >/dev/null 2>&1; then
+        PW_ENV="$PW_ENV MU300_PWCHECK_BB=$T/mu300-pwbb"
+    fi
+    [ -z "$PW_ENV" ] || su_do "chmod 755 $T/mu300-pwcheck $T/mu300-pwbb; true" >/dev/null
+}
+# pw_check OS PASSWORD: MATCH, NOMATCH, LOCKED, NOUSER or UNVERIFIABLE (nothing: the filesystem did not mount). The
+# password goes to the device in a file of this user's alone, which android-pwcheck.sh reads on its standard input and
+# the same command removes; never on a command line.
+pw_check() {
+    case $1 in ubuntu) _pu=ubuntu ;; *) _pu=root ;; esac
+    pw_tools_push
+    _pf=$(umask 077; mktemp "${TMPDIR:-/tmp}/mu300-pw.XXXXXX") || return 0
+    printf '%s\n' "$2" > "$_pf"
+    if ! adb push "$_pf" $T/mu300-pwcheck.in >/dev/null 2>&1; then rm -f "$_pf"; return 0; fi
+    rm -f "$_pf"
+    su_do "chmod 600 $T/mu300-pwcheck.in; $(pw_mount_env) MU300_RO=recover sh $T/android-mount-mu300root.sh $T/mu300pw >/dev/null 2>&1 && { $PW_ENV sh $T/android-pwcheck.sh $T/mu300pw/$1 $_pu < $T/mu300-pwcheck.in; sh $T/android-mount-mu300root.sh -u $T/mu300pw >/dev/null 2>&1 && rmdir $T/mu300pw 2>/dev/null; }; rm -f $T/mu300-pwcheck.in; true"
 }
 
 # The free eMMC region: from the first 2 MiB boundary after the last partition to the last one before the backup

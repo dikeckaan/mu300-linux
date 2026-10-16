@@ -314,6 +314,19 @@ If Linux is already installed it asks whether to **update** or **wipe**:
   keeps only `/etc/mu300`, accounts and home directories, `/usr/local`, SSH host keys and OpenWrt's UCI config.
 * **wipe** — erases the Linux filesystem and installs from scratch.
 
+An update then asks **Keep the current password? (yes/no)** for the systems that have a login password of their own
+(Ubuntu's `ubuntu`, OpenWrt's `root`). **yes** (the default) asks the current password once per system and checks it
+on the device against the installed system's own hash (yescrypt on Ubuntu, SHA-crypt or MD5-crypt on OpenWrt; just
+Enter for none, OpenWrt's `root` as it ships); three wrong tries stop the installer before anything is written, and
+nothing is changed. **no** asks a new password, typed twice. A system the update installs new still gets the new
+password. In answers mode: `MU300_ANS_KEEP_PASSWORD`, `MU300_ANS_CURRENT_PASSWORD` (one try,
+[docs/INSTALLER-AUTOMATION.md](docs/INSTALLER-AUTOMATION.md)).
+
+The check runs nothing of the installed Linux system on Android's side: it uses the project's own `mu300-pwcheck`
+(static, libxcrypt) and busybox from the release's kernel bundle. Releases up to v2026.10.16.1 have no
+`mu300-pwcheck`: with them an Ubuntu password (yescrypt) cannot be checked and the installer stops; answer **no** then
+(FINDINGS 126).
+
 If the device is running Linux rather than Android when you start, the installer notices and offers to reboot it
 into Android for you over SSH.
 
@@ -544,7 +557,9 @@ calls that kernel does not have, the same rule as for `install.sh`. Check a down
 the images' own, as on a computer install without one of your choice - Ubuntu's user `ubuntu` has the password
 `ubuntu`, OpenWrt's `root` has none until you set one (`passwd`, or LuCI's System > Administration). The same note is
 in `/data/adb/mu300-linux-password.txt` (`su -c cat /data/adb/mu300-linux-password.txt`). A zip installed over a
-system that is already there (an update) keeps its accounts and passwords and says "unchanged".
+system that is already there (an update) keeps its accounts and passwords, asks nothing, and says "unchanged (not
+checked)"; a `mu300-install.conf` you put into the zip can check the current password or set a new one
+([below](#the-password-of-an-update-a-mu300-installconf-in-the-zip)).
 
 **4. Reboot.** Linux starts. If it does not, the device returns to Android by itself.
 
@@ -627,8 +642,9 @@ There are two places for the file, because any app with storage access can write
 * `/sdcard/mu300-install.conf` (or `/sdcard/Download/mu300-install.conf`) may choose only what destroys nothing and
   reveals nothing.
 * `/data/adb/mu300-install.conf` counts for everything. Only root can create files there, and the installer uses it
-  only when root owns it and neither group nor others can write it. A `mu300-install.conf` inside the zip's `mu300/`
-  folder counts the same (it is as trusted as the scripts next to it).
+  only when root owns it and neither group nor others can write it. A `mu300-install.conf` inside the zip - at its
+  top, or in its `mu300/` folder - counts the same (it is as trusted as the scripts next to it), and the one at the
+  top of the zip wins over every other file. It is also the only place an update takes the password from.
 
 A key of the second kind found in the `/sdcard` file is reported and ignored, and the installer prints the command
 that turns that file into one only root can change:
@@ -662,8 +678,10 @@ update - would wipe or erase again. For another erase, put the line back.
 | `MU300_BOOT_ATTEMPTS` | `1` to `6` | either | `5` |
 | `MU300_HOTSPOT` | `yes`, `no` | either | `yes`: Android's hotspot name and password are copied |
 | `MU300_GPU` | `yes`, `no` | either | `yes` (skipped with a message when this device lacks a file of the GPU set) |
-| `MU300_PASSWORD` | 6 or more characters | `/data/adb` only | The images' own for a new system: Ubuntu's `ubuntu`/`ubuntu`, OpenWrt's `root` without a password. An update keeps the existing password |
-| `MU300_PASSWORD_RESET` | `yes` | `/data/adb` only | Not set: an update keeps the existing password. `yes`: the images' own again |
+| `MU300_PASSWORD` | 6 or more characters | `/data/adb` or the zip; for an update the zip only | The images' own for a new system: Ubuntu's `ubuntu`/`ubuntu`, OpenWrt's `root` without a password. An update keeps the existing password |
+| `MU300_PASSWORD_RESET` | `yes` | the zip only (an update) | Not set: an update keeps the existing password. `yes`: the images' own again |
+| `MU300_KEEP_PASSWORD` | `yes`, `no` | the zip only | Not set: an update keeps the password without a check. `yes`: kept once `MU300_CURRENT_PASSWORD` is the current one, else nothing is installed. `no`: `MU300_PASSWORD`, or without it the images' own |
+| `MU300_CURRENT_PASSWORD` | the current password | the zip only | With `MU300_KEEP_PASSWORD=yes`; no such line: no password (OpenWrt's `root` as it ships) |
 | `MU300_PASSWORD_FILE` | `sdcard` | `/data/adb` only | Not set: the password note is `/data/adb/mu300-linux-password.txt` |
 | `MU300_DEVICE` | `f50`, `u30air` | `/data/adb` only | Detected; needed only for a model name the installer does not know |
 | `MU300_LANG` | `en`, `tr`, `zh` | either | The language of the Android locale |
@@ -692,8 +710,39 @@ instead, for every system it installs (put these there, not into a zip's own `mu
 never edited and would reset the password at every update); it is hashed and never shown or written down. Which
 password works is said in the Magisk output before anything is installed and noted in
 `/data/adb/mu300-linux-password.txt` (a trusted `MU300_PASSWORD_FILE=sdcard` puts the note in
-`/sdcard/mu300-linux-password.txt` instead). A `MU300_PASSWORD` or `MU300_PASSWORD_RESET` from
-`/data/adb/mu300-install.conf` is replaced by a comment in that file after a successful install.
+`/sdcard/mu300-linux-password.txt` instead). A `MU300_PASSWORD` from `/data/adb/mu300-install.conf` is replaced by a
+comment in that file after a successful install.
+
+#### The password of an update: a mu300-install.conf in the zip
+
+Nothing can be typed while Magisk installs a zip (the devices have no keys for it either), so an update asks nothing:
+it keeps the accounts and passwords of the system it replaces, whatever the password is (the images' own, none, or
+one you set), and the plan and the end say "kept, not checked". To check the current password, or to set a new one,
+put a file named `mu300-install.conf` at the top of the zip before you install it. On a computer:
+
+```sh
+printf 'MU300_KEEP_PASSWORD=yes\nMU300_CURRENT_PASSWORD=the-current-one\n' > mu300-install.conf
+zip mu300-magisk-<tag>-openwrt-k6.18.zip mu300-install.conf
+```
+
+On Android, a file manager that opens zips (ZArchiver, MiXplorer and the like) can add the file to the zip. The lines:
+
+| lines | what the update does |
+|---|---|
+| none (no file) | keeps the password, without a check |
+| `MU300_KEEP_PASSWORD=yes` and `MU300_CURRENT_PASSWORD=...` | checks the current password on the device against the installed system's own hash (yescrypt on Ubuntu, SHA-crypt or MD5-crypt on OpenWrt) and keeps it. A wrong one stops the install before anything is written: nothing is changed, and the output says what to do |
+| `MU300_KEEP_PASSWORD=yes` alone | the same for no password (OpenWrt's `root` as it ships) |
+| `MU300_KEEP_PASSWORD=no` and `MU300_PASSWORD=...` | sets the new password (6 characters or more) |
+| `MU300_KEEP_PASSWORD=no` alone, or `MU300_PASSWORD_RESET=yes` | the images' own again (Ubuntu `ubuntu`, OpenWrt's `root` none) |
+
+The file in the zip holds the password in plain text, and the zip usually lies in shared storage that apps can read:
+delete the zip, or the file from it, after the install. The installer never shows the password or its hash. An update
+takes these lines only from the zip: `MU300_PASSWORD` and `MU300_PASSWORD_RESET` in `/data/adb/mu300-install.conf`
+are not used by an update (they still set the password of a system installed new), so a line left there cannot reset
+the password at a later update. The computer's installers ask the same question at the terminal (their **update**,
+above). The check uses only the zip's own tools (`mu300/mu300-pwcheck`, `mu300/busybox`), never a program of the
+installed Linux; a zip of a release up to v2026.10.16.1 has no `mu300-pwcheck` and cannot check an Ubuntu (yescrypt)
+password: it stops, and without `MU300_KEEP_PASSWORD` the password is kept unchecked.
 
 ### Starting Linux from Android without a computer
 
@@ -1016,8 +1065,9 @@ operators and VPN servers often look like a different city.
    It mounts the Linux filesystem from Android and rewrites the password hash, keeping all your data.
 3. Start Linux again with `boot/android-boot-linux.sh work/boot-linux-slotb.img`, or reboot if Linux is the default.
 
-Re-running `./install.sh` and choosing **update** keeps your data and sets the password you type (the Magisk zip's
-update keeps the old one unless `MU300_PASSWORD_RESET=yes` is in `/data/adb/mu300-install.conf`).
+Re-running `./install.sh` and choosing **update** keeps your data; answer **no** to "Keep the current password?" and it
+sets the password you type (the Magisk zip's update keeps the old one unless a `mu300-install.conf` in the zip says
+`MU300_KEEP_PASSWORD=no` with `MU300_PASSWORD`).
 
 **Downloads are slow.** GitHub's release CDN throttles single connections in some regions (0.2 MB/s on a
 180 Mbit/s line here). The installer already downloads in 8 parallel chunks, which measured 8x faster; set

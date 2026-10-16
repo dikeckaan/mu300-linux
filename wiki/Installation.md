@@ -374,8 +374,15 @@ written (`update: openwrt v2026.10.27 -> vYYYY.MM.DD.N: everything you added to 
   ([what an update keeps](Updating#what-an-update-keeps)). Packages you installed are installed again at the first
   boot. What could not stay in its place is saved under `/etc/mu300/update-kept/` and listed in
   `/etc/mu300/update-report`.
-* **Your password stays** the one the device has. (`MU300_PASSWORD` or `MU300_PASSWORD_RESET=yes` in
-  `/data/adb/mu300-install.conf` set another.)
+* **Your password stays** the one the device has, without a question (nothing can be typed while Magisk installs
+  a zip) and without a check: the output says "kept, not checked". To have it checked, or to set a new one, put a
+  `mu300-install.conf` at the top of the zip before you install it (`zip mu300-magisk-<tag>-...zip mu300-install.conf`
+  on a computer, or a file manager that opens zips on Android):
+  `MU300_KEEP_PASSWORD=yes` with `MU300_CURRENT_PASSWORD=<the current one>` keeps it once it is checked on the
+  device (a wrong one stops the install, nothing changed; no `MU300_CURRENT_PASSWORD` line: no password, OpenWrt's
+  `root` as it ships); `MU300_KEEP_PASSWORD=no` with `MU300_PASSWORD=<new>` sets a new one. Delete the zip or the
+  file afterwards: it holds the password in plain text. An update takes these only from the zip
+  ([README](https://github.com/dikeckaan/mu300-linux#the-password-of-an-update-a-mu300-installconf-in-the-zip)).
 * **A zip carries one system and one kernel.** It updates the installed system of its kind (an OpenWrt zip updates
   OpenWrt). The other installed systems and the extras (the VPN module) are not touched; a system that is not
   installed yet is installed beside the others.

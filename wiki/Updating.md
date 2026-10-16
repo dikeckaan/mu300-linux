@@ -273,14 +273,17 @@ there says the device is "newer than the newest release" - run `sudo mu300-updat
 ## Updating with the computer installer instead
 
 Run `./install.sh` again and answer **update** when it asks *update or wipe*. It reinstalls the systems, writes a fresh
-boot image and keeps everything of yours, as `apply` does. It also sets the password you type there. The previous
+boot image and keeps everything of yours, as `apply` does. It asks whether to keep the current password: yes checks
+the one you type against the installed system (three tries, then it stops with nothing changed), no sets a new one,
+typed twice. The previous
 system is not kept on this path (no `rollback`), so it needs no room for a second copy of your files.
 
 ## Updating with a Magisk zip
 
 Install the zip of the new release over the installation, from Android: see
 [Installation](Installation#updating-with-a-zip). It keeps everything of yours too, leaves the other installed
-systems and the extras alone, keeps your password, and works without a network.
+systems and the extras alone, keeps your password (a `mu300-install.conf` at the top of the zip can check it or set
+a new one), and works without a network.
 
 ## Coming from a very old release
 

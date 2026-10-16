@@ -264,6 +264,79 @@ Check 'existing: update'        ($r.Asked -contains 'MU300_ANS_EXISTING=update')
 Check 'existing: goes on'       (LastEvent $r).message 'pulling boot_a failed'
 Check "existing: nothing written: $(UntouchedWhy)"  (Untouched) 0
 
+# an update of systems with a login password: keep it (the current one checked on the device, android-pwcheck.sh in
+# the fake) or set a new one. The passwords of the fake: Ubuntu's ubuntu has one, OpenWrt's root has none.
+$upd = With (Without $answers 'MU300_ANS_PASSWORD') @{ MU300_ANS_EXISTING = 'update' }
+# keep fetches the release's own tools for the check (PwTools): from nowhere here - a release URL nothing answers
+$noRel = @{ MU300_RELEASE_URL = 'http://127.0.0.1:9/no-release' }
+Device 'pull' $false 'existing' $true 'passwords' @{ ubuntu = 'oldsecret1'; 'openwrt-luci' = '' }
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf $upd)`"" $noRel
+Check 'keep: asks'              ((LastEvent $r).message -match 'set MU300_ANS_KEEP_PASSWORD ') $true
+Check 'keep: the systems'       ($r.Out -match 'The installed ubuntu openwrt-luci has a login password of its own') $true
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'yes'; MU300_ANS_CURRENT_PASSWORD_UBUNTU = 'oldsecret1'; MU300_ANS_CURRENT_PASSWORD = '' }))`"" $noRel
+Check 'keep, right: confirmed'  "$($r.Facts['password.ubuntu']) $($r.Facts['password.openwrt-luci'])" 'MATCH MATCH'
+Check 'keep, right: no new password asked' (@($r.Asked | Where-Object { $_ -like 'MU300_ANS_PASSWORD=*' }).Count) 0
+Check 'keep, right: asked'      (@($r.Asked | Where-Object { $_ -like 'MU300_ANS_*PASSWORD*' }) -join ' ') 'MU300_ANS_KEEP_PASSWORD=yes MU300_ANS_CURRENT_PASSWORD_UBUNTU= MU300_ANS_CURRENT_PASSWORD='
+Check 'keep, right: goes on'    (LastEvent $r).message 'pulling boot_a failed'
+Check 'keep, right: never shown' ($r.Out -match 'oldsecret1') $false
+Check 'keep, right: adb never sees it' (@(Calls '' | Where-Object { @($_.answers | ForEach-Object { "$_".ToUpper() }) -match 'CURRENT_PASSWORD' }).Count) 0
+Check 'keep, right: not on a command line' (@(Calls '' | Where-Object { "$($_.cmd) $($_.argv -join ' ')" -match 'oldsecret1' }).Count) 0
+Check "keep, right: nothing written: $(UntouchedWhy)"  (Untouched) 0
+Device 'pull' $false 'existing' $true 'passwords' @{ ubuntu = 'oldsecret1'; 'openwrt-luci' = '' }
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'yes'; MU300_ANS_CURRENT_PASSWORD_UBUNTU = 'wrongpass9'; MU300_ANS_CURRENT_PASSWORD = '' }))`"" $noRel
+Check 'keep, wrong: stops'      "$($r.Rc) $((LastEvent $r).event) $(@(Calls 'pull').Count)" '1 error 0'
+Check 'keep, wrong: says so'    ((LastEvent $r).message -match 'the current password of "ubuntu" in the installed ubuntu was not confirmed. Nothing was changed') $true
+Check 'keep, wrong: never shown' ($r.Out -match 'wrongpass9') $false
+Check "keep, wrong: nothing written: $(UntouchedWhy)"  (Untouched) 0
+# OpenWrt's root without a password: confirmed by an empty entry, and not by a typed one
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'yes'; MU300_ANS_CURRENT_PASSWORD_UBUNTU = 'oldsecret1'; MU300_ANS_CURRENT_PASSWORD_OPENWRT_LUCI = 'something' }))`"" $noRel
+Check 'keep, empty one typed: stops' ((LastEvent $r).message -match '"root" in the installed openwrt-luci was not confirmed') $true
+Device 'pull' $false 'existing' $true 'passwords' @{ ubuntu = 'oldsecret1'; 'openwrt-luci' = '' }
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'no'; MU300_ANS_PASSWORD = 'newsecret22' }))`"" $noRel
+Check 'no: the new password'    ($r.Asked -contains 'MU300_ANS_PASSWORD=') $true
+Check 'no: nothing checked'     (@(Calls 'push' | Where-Object { "$($_.argv -join ' ')" -match 'mu300-pwcheck\.in' }).Count) 0
+Check 'no: goes on'             (LastEvent $r).message 'pulling boot_a failed'
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'no' }))`""
+Check 'no: needs the new one'   ((LastEvent $r).message -match 'set MU300_ANS_PASSWORD ') $true
+Device 'pull' $false 'existing' $true 'passwords' @{ ubuntu = 'oldsecret1' } 'pwcheck' 'UNVERIFIABLE'
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'yes'; MU300_ANS_CURRENT_PASSWORD = 'oldsecret1' }))`"" $noRel
+Check 'unverifiable: stops'     ((LastEvent $r).message -match 'could not be checked on the device \(UNVERIFIABLE\)') $true
+Check "unverifiable: nothing written: $(UntouchedWhy)"  (Untouched) 0
+# the check runs nothing of the Linux system it looks at: the release's 5.4 bundle (its mu300-pwcheck and busybox) is
+# fetched, checked against SHA256SUMS, pushed and handed to android-pwcheck.sh (a release served on this machine)
+$relDir = Join-Path $fx 'fake-release'
+New-Item -ItemType Directory -Force -Path $relDir | Out-Null
+$mkRel = Join-Path $fx 'mkrel.py'
+[IO.File]::WriteAllText($mkRel, @'
+import hashlib, io, sys, tarfile
+d = sys.argv[1]
+buf = io.BytesIO()
+with tarfile.open(fileobj=buf, mode='w:gz') as t:
+    for name, data in (('./busybox', b'#!bb\n'), ('./mu300-pwcheck', b'\x7fELF pwcheck\n')):
+        i = tarfile.TarInfo(name); i.size = len(data); t.addfile(i, io.BytesIO(data))
+open(d + '/mu300-kernel.tar.gz', 'wb').write(buf.getvalue())
+open(d + '/SHA256SUMS', 'w', newline='\n').write(hashlib.sha256(buf.getvalue()).hexdigest() + '  mu300-kernel.tar.gz\n')
+'@)
+& $py $mkRel $relDir | Out-Null
+$port = Get-Random -Minimum 20000 -Maximum 40000
+$srv = Start-Process -FilePath $py -ArgumentList @('-m', 'http.server', "$port", '--bind', '127.0.0.1', '--directory', "`"$relDir`"") -PassThru -WindowStyle Hidden
+try {
+    $up = $false
+    for ($i = 0; $i -lt 50 -and -not $up; $i++) {
+        try { Invoke-WebRequest "http://127.0.0.1:$port/SHA256SUMS" -UseBasicParsing | Out-Null; $up = $true } catch { Start-Sleep -Milliseconds 200 }
+    }
+    Device 'pull' $false 'existing' $true 'passwords' @{ ubuntu = 'oldsecret1' }
+    $r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'yes'; MU300_ANS_CURRENT_PASSWORD = 'oldsecret1' }))`"" @{ MU300_RELEASE_URL = "http://127.0.0.1:$port" }
+    Check 'tools: confirmed'        $r.Facts['password.ubuntu'] 'MATCH'
+    $pushed = @(Calls 'push' | ForEach-Object { @($_.argv)[-1] })
+    Check 'tools: pushed'           "$($pushed -contains '/data/local/tmp/mu300-pwcheck') $($pushed -contains '/data/local/tmp/mu300-pwbb')" 'True True'
+    $chk = @(Calls '' | Where-Object { "$($_.cmd)" -like '*< /data/local/tmp/mu300-pwcheck.in*' } | ForEach-Object { "$($_.cmd)" })
+    Check 'tools: handed over'      ($chk.Count -gt 0 -and $chk[0].Contains('MU300_PWCHECK_BIN=/data/local/tmp/mu300-pwcheck MU300_PWCHECK_BB=/data/local/tmp/mu300-pwbb sh ')) $true
+    Check 'tools: no chroot'        (($chk -join ' ') -match 'chroot') $false
+    Check 'tools: the bundle kept'  (Test-Path (Join-Path $fx 'work\release\v2026.10.23\mu300-kernel.tar.gz')) $true
+    Check "tools: nothing written: $(UntouchedWhy)"  (Untouched) 0
+} finally { try { Stop-Process -Id $srv.Id -Force } catch { } }
+
 # data in the free space needs its word
 Device 'pull' $false 'dirty' 2
 $r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf $answers)`""

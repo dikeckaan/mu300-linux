@@ -365,6 +365,11 @@ done
 # image the device lacks (mu300-update), so these would land on every device (v2026.10.18, built before the cleanup
 # above, had both). Removed again here, in the image itself, and checked.
 rm -f $R/etc/config/attendedsysupgrade $R/etc/config/*.apk-new
+# no TLS key of the web server in the image: the uhttpd package makes the pair when apk installs it here, and every
+# release up to v2026.10.16.1 shipped that one key to every device (FINDINGS 132). uhttpd makes the device its own
+# at its first start, as it does whenever the pair is missing
+rm -f $R/etc/uhttpd.key $R/etc/uhttpd.crt
+[ ! -e $R/etc/uhttpd.key ] || { echo "the image holds a TLS key" >&2; exit 1; }
 for f in $R/etc/config/attendedsysupgrade $R/etc/config/*.apk-new; do
     [ ! -e "$f" ] || { echo "stray config file in the image: $f" >&2; exit 1; }
 done

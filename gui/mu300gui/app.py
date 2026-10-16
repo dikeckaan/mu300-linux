@@ -60,8 +60,9 @@ class App:
                 ('release', tk.StringVar, False), ('release_url', tk.StringVar, False), ('default_linux', tk.BooleanVar, True),
                 ('boot_attempts', tk.StringVar, False), ('hotspot', tk.BooleanVar, False), ('gpu', tk.BooleanVar, False),
                 ('vpn', tk.BooleanVar, False), ('adb', tk.BooleanVar, False), ('panel', tk.BooleanVar, False),
-                ('storage', tk.StringVar, True), ('existing', tk.StringVar, False), ('password', tk.StringVar, False),
-                ('password2', tk.StringVar, False), ('overwrite_word', tk.StringVar, False), ('erase_sd_word', tk.StringVar, False),
+                ('storage', tk.StringVar, True), ('existing', tk.StringVar, True), ('password', tk.StringVar, False),
+                ('password2', tk.StringVar, False), ('keep_password', tk.BooleanVar, True),
+                ('current_password', tk.StringVar, False), ('overwrite_word', tk.StringVar, False), ('erase_sd_word', tk.StringVar, False),
                 ('internal_word', tk.StringVar, False), ('unknown_model', tk.BooleanVar, False), ('sync_bootchain', tk.BooleanVar, False),
                 ('fetch_jobs', tk.StringVar, False), ('vpn_url', tk.StringVar, False), ('vpn_module', tk.StringVar, False))
         for name, kind, rebuild in spec:
@@ -775,6 +776,15 @@ class App:
             ttk.Label(i, text=_('/etc/mu300, users and home directories, SSH host keys, OpenWrt\'s UCI configuration and the hotspot settings are kept.'),
                       style='Accent.Small.TLabel', wraplength=640, justify='left').pack(anchor='w', padx=(S5, 0), pady=(0, S2))
             ttk.Radiobutton(i, text=_('Wipe: erase the Linux filesystem and install from scratch'), variable=self.v['existing'], value='wipe', style='Accent.TRadiobutton').pack(anchor='w')
+            if ch.existing == 'update':
+                ttk.Checkbutton(i, text=_('Keep the current password'), variable=self.v['keep_password'], style='Accent.TCheckbutton').pack(anchor='w', pady=(S2, 0))
+                if ch.keep_password:
+                    line = ttk.Frame(i, style='Accent.TFrame')
+                    line.pack(anchor='w', padx=(S5, 0))
+                    ttk.Label(line, text=_('Current password'), style='Accent.TLabel').pack(side='left')
+                    ttk.Entry(line, textvariable=self.v['current_password'], show='•', width=28).pack(side='left', padx=S2)
+                    ttk.Label(i, text=_('The installer checks it on the device before anything is written, and stops when it is not the current one. Leave it empty when there is none (OpenWrt\'s root as it ships). The new password below is then needed only for a system the update installs new.'),
+                              style='Accent.Small.TLabel', wraplength=640, justify='left').pack(anchor='w', padx=(S5, 0), pady=(0, S2))
 
         o, i = card(body, _('Password'), _('For the user "ubuntu" (Ubuntu) and for "root" (OpenWrt): the login over SSH and the web interface. At least 6 characters.'))
         add(o)
@@ -1078,6 +1088,7 @@ class App:
             # the password has done its work: it is not kept in the window
             self.v['password'].set('')
             self.v['password2'].set('')
+            self.v['current_password'].set('')
             self._show_result = False
             self.goto('install', [s for s, _l in WIZARD].index('done'))
             return
