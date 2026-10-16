@@ -298,6 +298,9 @@ class Rules(unittest.TestCase):
         self.assertIn('allowed "$url"', dash)
         adapter = (TOP / 'openwrt/luci-app-mu300/root/usr/libexec/unisoc-modem/update').read_text()
         self.assertIn('"$CMD" source', adapter)
+        # the fallback tells an unreachable mirror from an answering one by curl's exit codes, so both images carry
+        # curl (the OpenWrt one had only the wget family, where every failure looks the same)
+        self.assertRegex((TOP / 'openwrt/build-rootfs.sh').read_text(), r'apk add[^>]*\bcurl\b')
         updater = (TOP / 'rootfs/overlay/opt/mu300/bin/mu300-update').read_text()
         self.assertIn('source) shift; source_cmd "$@"', updater)
         self.assertIn('"source":%s}', updater)

@@ -95,7 +95,9 @@ Two addresses are involved, and they are not the same service:
 
 Both live in `/etc/mu300/update-source`, which only root can write (a commented `update-source.example` sits beside
 it, and an update keeps the file). The environment wins over the file, which is how the computer installer's
-`MU300_RELEASE_URL` and a one-off run work.
+`MU300_RELEASE_URL` and a one-off run work. **The panel's field writes that file** through one `mu300-update source`
+command: an account that may use the Update page's write access can change where the device takes releases from, and
+the page's read access is what shows the address in force.
 
 **A mirror that cannot be reached is not the end of an update**: it is said once, and that run carries on with
 GitHub. The setting stays as you left it, so the next run tries your mirror again. A mirror that *answers* with the

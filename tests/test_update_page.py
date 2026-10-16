@@ -1121,6 +1121,10 @@ class Status(test_update.Lock):
             conf.chmod(0o600)
             o, r = self.status(shell, MU300_SOURCE_CONF=conf)
             self.assertEqual(o['source'], {'files': url, 'from': 'file'}, r.stderr)
+            # a file with two lines of the same name: the reader and source_conf agree on the first one
+            conf.chmod(0o600)
+            conf.write_text(f'MU300_DOWNLOAD_URL={url}\nMU300_DOWNLOAD_URL=http://second/dl\n')
+            self.assertEqual(self.status(shell, MU300_SOURCE_CONF=conf)[0]['source'], {'files': url, 'from': 'file'})
             # a value that is not a plain http(s) URL, or a file others can write, is not a source
             conf.write_text('MU300_DOWNLOAD_URL=file:///etc\n')
             self.assertEqual(self.status(shell, MU300_SOURCE_CONF=conf)[0]['source'], {'files': None, 'from': 'github'})
@@ -1181,12 +1185,14 @@ class Status(test_update.Lock):
                           'printf "%s\\n" "$u" >> "$STUBLOG/urls"\n'
                           f'case $u in *ghfast.top*) exit 7 ;; *) printf "%s\\n" "{field}  mu300-update"; exit 0 ;; esac')
         self.stub('sleep', ':')     # fetch_verified waits between its tries; the test does not
-        code = 'source_conf; fetch_verified v2026.11.02 mu300-update; echo "rc=$?"; echo "mirror: [${MU300_DOWNLOAD_URL:-}]"'
+        code = 'source_conf; fetch_verified v2026.11.02 mu300-update; echo "rc=$?"; echo "mirror: [${MU300_DOWNLOAD_URL:-}]"; echo "api: [${MU300_API_URL:-}]"'
         for shell in self.each_shell():
             (self.tmp / 'urls').unlink(missing_ok=True)
             r = self.up(shell, code, MU300_SOURCE_CONF=conf, MU300_FETCH_DELAY=0)
             self.assertEqual(r.stderr.count('mirror unreachable: the rest comes from github.com'), 1, r.stderr)
             self.assertIn('mirror: []', r.stdout)
+            # the announcement is true of both sides: an API mirror this device named is left too
+            self.assertIn('api: []', r.stdout, 'a run that says github.com must not still ask an API mirror')
             urls = (self.tmp / 'urls').read_text().split()
             self.assertTrue(urls[0].startswith(url + '/v2026.11.02/'), urls[:2])
             self.assertIn('https://github.com/dikeckaan/mu300-linux/releases/download/v2026.11.02/SHA256SUMS', urls)

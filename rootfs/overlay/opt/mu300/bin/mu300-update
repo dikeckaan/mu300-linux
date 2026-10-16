@@ -83,7 +83,9 @@ fetch_unreachable_rc() {
 mirror_fell_back() {
     [ -z "$SOURCE_FELL_BACK" ] || return 1
     SOURCE_FELL_BACK=1
-    MU300_RELEASE_URL= MU300_DOWNLOAD_URL=
+    # both sides: the line says the rest of this run comes from github.com, and it has to be true of the release
+    # listing too (a device that named an API mirror would otherwise still ask it)
+    MU300_RELEASE_URL= MU300_DOWNLOAD_URL= MU300_API_URL=
     SUMS_FETCHED= SUMS_OK= SUMS_PIN=
     printf 'mirror unreachable: the rest comes from github.com\n' >&2
     return 0
@@ -3624,7 +3626,9 @@ source_file_value() {
     # the same rule source_conf applies: a file others can write is not one this device takes a source from
     case $(ls -ln "$SOURCE_CONF" 2>/dev/null) in -????-??-?*) ;; *) return 0 ;; esac
     [ -O "$SOURCE_CONF" ] || return 0
-    _fv=$(sed -n "s/^[[:space:]]*$1=//p" "$SOURCE_CONF" 2>/dev/null | tail -n1)
+    # (the first line, as source_conf takes it: a file with two lines of this name is hand-edited, and the reader
+    #  and the writer have to agree on which one is in force)
+    _fv=$(sed -n "s/^[[:space:]]*$1=//p" "$SOURCE_CONF" 2>/dev/null | head -n1)
     printf '%s\n' "$_fv" | grep -Eqx 'https?://[A-Za-z0-9._:/-]{1,200}' || return 0
     printf '%s\n' "$_fv"
 }
@@ -3684,8 +3688,10 @@ source_dir_ok() {
 source_put() {
     source_dir_ok || return 1
     _pt=${SOURCE_CONF}.new
-    { [ ! -f "$SOURCE_CONF" ] || grep -v '^[[:space:]]*MU300_DOWNLOAD_URL=' "$SOURCE_CONF" || :
-      [ -z "${1:-}" ] || printf 'MU300_DOWNLOAD_URL=%s\n' "$1"; } > "$_pt" 2>/dev/null || :
+    # root's own from the first byte: the redirection would otherwise create it 0644 (umask 022, which is what the
+    # adapter's run_cmd uses) and leave a readable copy of the address behind if this process is killed before the mv
+    ( umask 077; { [ ! -f "$SOURCE_CONF" ] || grep -v '^[[:space:]]*MU300_DOWNLOAD_URL=' "$SOURCE_CONF" || :
+                   [ -z "${1:-}" ] || printf 'MU300_DOWNLOAD_URL=%s\n' "$1"; } > "$_pt" 2>/dev/null || : )
     chmod 600 "$_pt" && mv "$_pt" "$SOURCE_CONF" || { rm -f "$_pt"; echo "could not write $SOURCE_CONF" >&2; return 1; }
     # nothing left in it but blank lines and comments: the file itself goes
     [ -n "${1:-}" ] || grep -qv '^[[:space:]]*\(#\|$\)' "$SOURCE_CONF" || rm -f "$SOURCE_CONF"

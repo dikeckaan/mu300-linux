@@ -5544,7 +5544,10 @@ mirror: `MU300_API_URL=` in place of `https://api.github.com/repos/dikeckaan/mu3
 `MU300_DOWNLOAD_URL=` in place of `https://github.com/dikeckaan/mu300-linux/releases/download`, plain http(s) URLs
 only; the command and the panel read the same file. It exists for the device test below and for places where GitHub
 cannot be reached. Without a release key a mirror is trusted as much as whoever runs it; with one it cannot change
-a file. The file is in `/etc/mu300`, so it survives updates: whoever could write it was root.
+a file. The file is in `/etc/mu300`, so it survives updates: whoever could write it was root. (Since the panel's
+Update page gained the same setting - a *Mirror (release files)* field, written through one `mu300-update source`
+command - an account that may use that page's write access can change the source as well, and its read access is what
+shows the address in force.)
 
 **What a browser may ask for.** Reading (`update_get`, `update_job`) is in the ACL's read grant, every change
 (`update_act`) in the write grant, and the upload path is the one file path added. Nothing starts by a GET: LuCI's
