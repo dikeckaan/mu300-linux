@@ -1208,6 +1208,75 @@ class Status(test_update.Lock):
             r = self.up(shell, code, MU300_SOURCE_CONF=self.tmp / 'no-such-file', MU300_FETCH_DELAY=0)
             self.assertEqual(r.stderr.count('mirror unreachable'), 0, r.stderr)
 
+    def test_a_slow_mirror_is_not_an_unreachable_one(self):
+        # a mirror that answers and then stalls wrote bytes before it died, so the run keeps taking the files from
+        # it: the fallback is for a mirror that is not there, not for a slow line - the people who set this field
+        # are often the ones who cannot reach github.com at all
+        conf = self.tmp / 'update-source'
+        url = 'http://mirror.lan/mu300/releases/download'
+        field = 'b' * 64
+        conf.write_text(f'MU300_DOWNLOAD_URL={url}\n')
+        conf.chmod(0o600)
+        # -o FILE gets half a file and then curl's 28 (a transfer cut at --speed-time); the checksums come back fine
+        self.stub('curl', 'for u in "$@"; do :; done\n'
+                          'out=; prev=; for a in "$@"; do [ "$prev" = -o ] && out=$a; prev=$a; done\n'
+                          'printf "%s\\n" "$u" >> "$STUBLOG/urls"\n'
+                          f'case $u in *mirror.lan*SHA256SUMS) printf "%s\\n" "{field}  mu300-update"; exit 0 ;;'
+                          ' *mirror.lan*) [ -z "$out" ] || printf half >> "$out"; exit 28 ;; *) exit 0 ;; esac')
+        self.stub('sleep', ':')     # fetch_verified waits between its tries; the test does not
+        code = 'source_conf; fetch_verified v2026.11.02 mu300-update; echo "rc=$?"; echo "mirror: [${MU300_DOWNLOAD_URL:-}]"'
+        for shell in self.each_shell():
+            (self.tmp / 'urls').unlink(missing_ok=True)
+            r = self.up(shell, code, MU300_SOURCE_CONF=conf, MU300_FETCH_DELAY=0)
+            self.assertEqual(r.stderr.count('mirror unreachable'), 0, r.stderr)
+            self.assertIn(f'mirror: [{url}]', r.stdout)
+            urls = (self.tmp / 'urls').read_text().split()
+            self.assertTrue(all(u.startswith(url) for u in urls), urls)                 # github was never asked
+            self.assertGreaterEqual(urls.count(f'{url}/v2026.11.02/mu300-update'), 2, urls)   # and it was retried
+
+    def test_the_fallback_can_be_turned_off(self):
+        # MU300_MIRROR_FALLBACK=0: an update the mirror cannot serve fails, as it did before there was a mirror -
+        # over a mobile link taking the release from github.com can be the more expensive answer. Only the file
+        # says so, never the environment.
+        conf = self.tmp / 'update-source'
+        url = 'http://mirror.lan/mu300/releases/download'
+        conf.write_text(f'MU300_DOWNLOAD_URL={url}\nMU300_MIRROR_FALLBACK=0\n')
+        conf.chmod(0o600)
+        self.stub('curl', 'for u in "$@"; do :; done\nprintf "%s\\n" "$u" >> "$STUBLOG/urls"\n'
+                          'case $u in *mirror.lan*) exit 7 ;; *) exit 0 ;; esac')
+        code = 'source_conf; fetch_verified v2026.11.02 mu300-update; echo "rc=$?"; echo "state: [${MU300_DOWNLOAD_URL:-} $MIRROR_FALLBACK]"'
+        for shell in self.each_shell():
+            (self.tmp / 'urls').unlink(missing_ok=True)
+            r = self.up(shell, code, MU300_SOURCE_CONF=conf, MU300_FETCH_DELAY=0)
+            self.assertEqual(r.stderr.count('mirror unreachable'), 0, r.stderr)
+            self.assertIn(f'state: [{url} 0]', r.stdout)
+            self.assertIn('cannot download SHA256SUMS of v2026.11.02', r.stderr)
+            urls = (self.tmp / 'urls').read_text().split()
+            self.assertTrue(all(u.startswith(url) for u in urls), urls)
+        # without the line the fallback is on, and the environment cannot turn it off
+        conf.write_text(f'MU300_DOWNLOAD_URL={url}\n')
+        for shell in self.each_shell():
+            r = self.up(shell, code, MU300_SOURCE_CONF=conf, MU300_FETCH_DELAY=0, MU300_MIRROR_FALLBACK='0')
+            self.assertIn('state: [', r.stdout)
+            self.assertIn(' 1]', r.stdout)
+            self.assertEqual(r.stderr.count('mirror unreachable: the rest comes from github.com'), 1, r.stderr)
+
+    def test_the_fallback_state_goes_with_a_self_update(self):
+        # apply execs the updater of the release it carries, in this very environment: it must not read the source
+        # file again, wait for the same mirror and say the line a second time
+        conf = self.tmp / 'update-source'
+        conf.write_text('MU300_DOWNLOAD_URL=http://mirror.lan/mu300/releases/download\n')
+        conf.chmod(0o600)
+        for shell in self.each_shell():
+            r = self.up(shell, 'source_conf; mirror_fell_back; printf "child: [%s]\\n" "$(sh -c \'echo ${MU300_MIRROR_FELL_BACK:-}\')"',
+                        MU300_SOURCE_CONF=conf)
+            self.assertIn('child: [1]', r.stdout)
+            r = self.up(shell, 'source_conf; echo "mirror: [${MU300_DOWNLOAD_URL:-}]"; echo "base: $(fetch_base v2026.11.02)"',
+                        MU300_SOURCE_CONF=conf, MU300_MIRROR_FELL_BACK=1)
+            self.assertIn('mirror: []', r.stdout)
+            self.assertIn('base: https://github.com/dikeckaan/mu300-linux/releases/download/v2026.11.02', r.stdout)
+            self.assertEqual(r.stderr.count('mirror unreachable'), 0, r.stderr)
+
     def test_the_download_address(self):
         for shell in self.each_shell():
             for env, want in (({}, 'https://github.com/dikeckaan/mu300-linux/releases/download/v2026.11.02/SHA256SUMS'),
@@ -1237,7 +1306,8 @@ class Status(test_update.Lock):
             'jv', 'jstr', 'jnum', 'mtime', 'tag_ok', 'tag_key', 'newer', 'space_needed', 'source_conf', 'key_state', 'sig_raw', 'sig_state',
             'stage_private', 'tag_sha', 'sums_trusted', 'sums_verdict', 'apply_targets', 'downgrade_ok', 'boot_downgrade_ok', 'zip_p', 'man_val', 'from_open', 'from_read', 'payload_is', 'from_close', 'from_member', 'from_fits',
             'from_installed', 'apply_options', 'from_begin', 'from_verified', 'from_handover', 'inspect_json',
-            'lock_holder', 'size_kb', 'status_json', 'release_json', 'releases_json', 'progress']))
+            'lock_holder', 'size_kb', 'status_json', 'release_json', 'releases_json', 'progress',
+            'mirror_fell_back_inherited']))
 
 
 # (Status borrows Lock's holder of the lock, not its tests: those run in test_update)

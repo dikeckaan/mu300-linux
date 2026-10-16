@@ -284,7 +284,7 @@ class Rules(unittest.TestCase):
         self.assertNotIn('update-source.example', rel)
         for f in ('rootfs/overlay/etc/mu300/update-source.example', 'openwrt/overlay/etc/mu300/update-source.example'):
             text = (TOP / f).read_text()
-            for s in ('MU300_DOWNLOAD_URL=https://', 'MU300_API_URL=https://', '403'):
+            for s in ('MU300_DOWNLOAD_URL=http://mirror.lan/', 'MU300_API_URL=https://', '403', 'MU300_MIRROR_FALLBACK=0'):
                 self.assertIn(s, text, f)
         # the panel's field, the op behind it and the status field that feeds it name the same thing
         js = (TOP / 'openwrt/luci-app-mu300/htdocs/luci-static/resources/view/mu300/update.js').read_text()

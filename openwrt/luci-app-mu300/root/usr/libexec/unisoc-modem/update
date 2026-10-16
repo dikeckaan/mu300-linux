@@ -39,7 +39,8 @@ LIB=${0%/*}/../../share/unisoc-modem/lib.sh
 # (flags unsigned and downgrade of apply_file, which become --unsigned and --downgrade): never by the environment
 # this happens to run in, and never the key or the source.
 unset MU300_ALLOW_UNSIGNED MU300_ALLOW_DOWNGRADE MU300_FROM MU300_FROM_SHA MU300_RELEASE MU300_RELEASE_URL MU300_RELEASE_PUB \
-    MU300_API_URL MU300_DOWNLOAD_URL MU300_SOURCE_CONF MU300_FORCE MU300_SELF_UPDATED MU300_REPO MU300_KERNEL_BUNDLE
+    MU300_API_URL MU300_DOWNLOAD_URL MU300_SOURCE_CONF MU300_FORCE MU300_SELF_UPDATED MU300_REPO MU300_KERNEL_BUNDLE \
+    MU300_MIRROR_FELL_BACK
 # Everything this writes - the task's files, the releases, what was said about an upload - is root's alone (the
 # pages read it through this program, never as files). The updater itself runs under the usual umask (run_cmd): it
 # makes the directories of the new system.

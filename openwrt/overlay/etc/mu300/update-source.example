@@ -6,7 +6,7 @@
 
 # Where the release files come from. A GitHub file proxy belongs here (the release tag is added after it), and so
 # does a directory of a release's files on the LAN, served by something like python3 -m http.server.
-#MU300_DOWNLOAD_URL=https://ghfast.top/https://github.com/dikeckaan/mu300-linux/releases/download
+#MU300_DOWNLOAD_URL=http://mirror.lan/mu300/releases/download
 
 # Where "which release is newest" is asked. The usual GitHub file proxies do NOT serve GitHub's API - a request
 # through them for api.github.com comes back 403 - so this is normally left out and GitHub itself is asked.
@@ -16,4 +16,8 @@
 # /opt/mu300/lib/release.pub - see wiki/Updating.md) wherever it came from. A system that has no such key - every
 # release up to v2026.10.27 - has nothing of its own to compare with: there a mirror is trusted as much as whoever
 # runs it. A mirror that cannot be reached is said once, and the rest of that run comes from github.com; the
-# setting stays, so the next run tries your mirror again.
+# setting stays, so the next run tries your mirror again. A mirror that answers and then stalls is not
+# "unreachable": the run keeps taking the files from it.
+# On a metered link the fallback can be the worse answer - the release would come over mobile data. This turns it
+# off: an update your mirror cannot serve then fails, as it did before there was a mirror.
+#MU300_MIRROR_FALLBACK=0

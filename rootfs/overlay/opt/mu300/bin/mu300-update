@@ -66,23 +66,44 @@ have() { command -v "$1" >/dev/null 2>&1; }
 # timeout (28) has been retried by curl already (four more rounds would hold "check" for half an hour).
 # The release source of this run, and what to do when a mirror cannot be reached. A mirror may be down - a
 # third-party proxy is allowed to be - so a run that cannot reach it says so once and takes the rest of that run
-# from github.com. Only a connection-class failure counts (curl 6 7 28 35 52 56); an HTTP error, a wrong hash or a
-# bad signature is the source's answer, not its absence, and stops the run as it always did. The fetchers report
-# that failure as exit 9 so the caller can act on it in its own process: a subshell's assignments do not survive,
-# and $(fetch_stdout ...) is one. Nothing is written down - the next run tries the mirror again.
+# from github.com. What counts as "cannot reach it" is the careful part: a failure is not the source's absence when
+# it delivered bytes before it failed. A large file from a working mirror stalls on a bad line, and curl cuts it at
+# --speed-time with 28 (or 52/56 once the transfer started) - moving that run to github.com would take the update
+# where the person who set a mirror often cannot go. So 28 and 56 count only when the caller says nothing arrived
+# (fetch_file measures the file); 6 7 35 52 are the codes that cannot have delivered anything: no name, no
+# connection, no TLS, an empty reply. An HTTP error, a wrong hash or a bad signature is the source's answer too,
+# never its absence, and stops the run as it always did. The fetchers report that failure as exit 9 so the caller
+# can act on it in its own process: a subshell's assignments do not survive, and $(fetch_stdout ...) is one.
+# Nothing is written down - the next run tries the mirror again - but a self-update handover does pass the state on
+# (mirror_fell_back), so the updater of the new release does not wait for the same mirror all over again.
 FETCH_UNREACHABLE=9
 SOURCE_FELL_BACK=
-# fetch_unreachable_rc RC: 9 when RC is a mirror of this run that could not be reached, 1 for every other failure
-# (which is what these two fetchers have always returned)
+# 0 when /etc/mu300/update-source says MU300_MIRROR_FALLBACK=0: an update then fails when the mirror cannot be
+# reached instead of taking the release over the mobile link, which on a metered uplink can be the cheaper answer
+# (the file is the only place that says so, never the environment - source_conf)
+MIRROR_FALLBACK=1
+# fetch_unreachable_rc RC [ARRIVED]: 9 when RC is a mirror of this run that could not be reached, 1 for every other
+# failure (which is what these two fetchers have always returned). ARRIVED is 0 when the caller knows nothing came
+# back, 1 when it knows bytes did, unset when it cannot tell
 fetch_unreachable_rc() {
-    case $1 in 6|7|28|35|52|56) ;; *) printf '1\n'; return ;; esac
-    if [ -n "${MU300_RELEASE_URL:-}${MU300_DOWNLOAD_URL:-}" ] && [ -z "$SOURCE_FELL_BACK" ]; then printf '%s\n' "$FETCH_UNREACHABLE"
-    else printf '1\n'; fi
+    [ "${2:-}" != 1 ] || { printf '1\n'; return; }
+    case $1 in
+        6|7|35|52) ;;                                          # never answered
+        28|56) [ "${2:-}" = 0 ] || { printf '1\n'; return; } ;;  # cut off, or answered: only nothing counts
+        *) printf '1\n'; return ;;
+    esac
+    [ -n "${MU300_RELEASE_URL:-}${MU300_DOWNLOAD_URL:-}" ] || { printf '1\n'; return; }
+    [ -z "$SOURCE_FELL_BACK" ] || { printf '1\n'; return; }
+    [ "$MIRROR_FALLBACK" = 1 ] || { printf '1\n'; return; }
+    printf '%s\n' "$FETCH_UNREACHABLE"
 }
 # mirror_fell_back: in the caller's own process - say it once, and use github.com for the rest of this run
 mirror_fell_back() {
     [ -z "$SOURCE_FELL_BACK" ] || return 1
     SOURCE_FELL_BACK=1
+    # apply hands over to the release's own updater in this very environment ("exec sh $STAGE/mu300-update"): it
+    # would read the source file again and wait for the same mirror, so the state goes along with it
+    export MU300_MIRROR_FELL_BACK=1
     # both sides: the line says the rest of this run comes from github.com, and it has to be true of the release
     # listing too (a device that named an API mirror would otherwise still ask it)
     MU300_RELEASE_URL= MU300_DOWNLOAD_URL= MU300_API_URL=
@@ -111,10 +132,17 @@ fetch_stdout() {  # fetch_stdout URL (exit 9: the mirror of this run could not b
     done
 }
 fetch_file() {  # fetch_file URL OUT (resumes a partial OUT; exit 9: the mirror of this run could not be reached)
+    # what the file holds before the attempt: a transfer that arrived and then failed wrote bytes, and that is a
+    # source that answered - the loop resumes it here rather than moving the run to github.com
+    _had=$(wc -c < "$2" 2>/dev/null || printf '0\n')
     if have curl; then
         curl -fL --retry 5 --retry-delay 5 --connect-timeout 30 --speed-limit 1024 --speed-time 60 -C - -o "$2" "$1"
-        _rc=$?; [ "$_rc" = 0 ] || return "$(fetch_unreachable_rc "$_rc")"
-    else wget -c -T 60 -O "$2" "$1"; fi
+        _rc=$?
+    else wget -c -T 60 -O "$2" "$1"; _rc=$?; fi
+    [ "$_rc" = 0 ] && return 0
+    _now=$(wc -c < "$2" 2>/dev/null || printf '0\n')
+    if [ "$_now" -gt "$_had" ]; then return 1; fi
+    return "$(fetch_unreachable_rc "$_rc" 0)"
 }
 
 # fetch_verified TAG ASSET: the release file in $STAGE, checked against the release's SHA256SUMS; a file that is
@@ -3042,16 +3070,34 @@ space_needed() { echo $((1000000 + 1000000 * $1 + ${2:-0})); }
 # the environment wins. MU300_API_URL stands for https://api.github.com/repos/REPO (releases/latest and releases
 # below it), MU300_DOWNLOAD_URL for https://github.com/REPO/releases/download (TAG/FILE below it).
 SOURCE_CONF=${MU300_SOURCE_CONF:-$CONF/update-source}
+# The fallback state of the run a self-update handed over from (mirror_fell_back exports MU300_MIRROR_FELL_BACK):
+# apply does not start a new process for the updater of the release it carries, it execs it, so this environment is
+# the one the handover left. That run took the rest of its files from github.com, and this one does the same -
+# rather than reading the source file again, waiting for the same mirror and saying the line a second time.
+mirror_fell_back_inherited() {
+    [ -n "${MU300_MIRROR_FELL_BACK:-}" ] || return 0
+    SOURCE_FELL_BACK=1
+    # the file is left out of it for this run: what it names is a mirror that was just found unreachable
+    MIRROR_IGNORED=1
+}
 source_conf() {
+    mirror_fell_back_inherited
+    [ -z "${MIRROR_IGNORED:-}" ] || return 0
     [ -f "$SOURCE_CONF" ] && [ ! -L "$SOURCE_CONF" ] || return 0
     _sc=$(ls -ln "$SOURCE_CONF" 2>/dev/null)
     case $_sc in -????-??-?*) ;; *) echo "$SOURCE_CONF is writable by others: ignored" >&2; return 0 ;; esac
     [ -O "$SOURCE_CONF" ] || { echo "$SOURCE_CONF is not ours: ignored" >&2; return 0; }
     while IFS='=' read -r _sk _sv; do
-        printf '%s\n' "$_sv" | grep -Eqx 'https?://[A-Za-z0-9._:/-]{1,200}' || continue
         case $_sk in
-            MU300_API_URL) [ -n "${MU300_API_URL:-}" ] || MU300_API_URL=$_sv ;;
-            MU300_DOWNLOAD_URL) [ -n "${MU300_DOWNLOAD_URL:-}" ] || MU300_DOWNLOAD_URL=$_sv ;;
+            MU300_API_URL|MU300_DOWNLOAD_URL)
+                printf '%s\n' "$_sv" | grep -Eqx 'https?://[A-Za-z0-9._:/-]{1,200}' || continue
+                case $_sk in
+                    MU300_API_URL) [ -n "${MU300_API_URL:-}" ] || MU300_API_URL=$_sv ;;
+                    MU300_DOWNLOAD_URL) [ -n "${MU300_DOWNLOAD_URL:-}" ] || MU300_DOWNLOAD_URL=$_sv ;;
+                esac ;;
+            # the one line of this file that is not an address: it decides whether a run whose mirror cannot be
+            # reached takes the release from github.com (the default) or fails as it did before there was a mirror
+            MU300_MIRROR_FALLBACK) [ "$_sv" != 0 ] || MIRROR_FALLBACK=0 ;;
         esac
     done < "$SOURCE_CONF"
 }

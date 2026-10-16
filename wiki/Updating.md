@@ -80,7 +80,7 @@ own network. The panel's **System > Update** page has a field for it - *Mirror (
 update** - and the command line writes and reads the same file:
 
 ```sh
-mu300-update source https://ghfast.top/https://github.com/dikeckaan/mu300-linux/releases/download
+mu300-update source http://mirror.lan/mu300/releases/download
 mu300-update source        # what is in force now, and where it comes from
 mu300-update source off    # back to GitHub
 ```
@@ -101,7 +101,17 @@ the page's read access is what shows the address in force.
 
 **A mirror that cannot be reached is not the end of an update**: it is said once, and that run carries on with
 GitHub. The setting stays as you left it, so the next run tries your mirror again. A mirror that *answers* with the
-wrong files is another matter - the release is then not installed.
+wrong files is another matter - the release is then not installed. A mirror that answers and *stalls* counts as an
+answer too: the run keeps taking the files from it rather than moving to GitHub, which is usually the host this
+setting exists for.
+
+If the device is on a metered link, that fallback can be the expensive answer - the release would come over mobile
+data. One line in the same file turns it off, and an update your mirror cannot serve then fails, exactly as it did
+before there was a mirror:
+
+```
+MU300_MIRROR_FALLBACK=0
+```
 
 ## What an update keeps
 
