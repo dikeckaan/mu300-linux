@@ -12062,3 +12062,77 @@ in the core as well.
   versions or symbols. No call was placed.
 * U30 Air (6.18.57): `/proc/config.gz`'s settings hash to the 6.18 kit's; it uses no call audio, so nothing was
   installed there.
+
+### 195. USB 3 in one plug orientation only (#54): the redriver detects once, and mainline set the lanes once
+
+koocyton's four-way table on an F50 with an RTL8153B adapter (#54) settled what fails: with the adapter's end the
+same, Android has SuperSpeed with the F50's end either way round, mainline with one of them only, and a full power
+cycle of everything sometimes brings it back. ZTE's kernel does nothing with the CC pin itself for the lanes; two
+pieces set them, at every attach, and mainline had neither at every attach.
+
+**The two pieces in ZTE's kernel** (`zte-u30air` in the `mu300-kernel` volume; Unisoc's own 5.4 has the first only):
+
+- The PHY's Type-C Assist (TCA, Synopsys, at the start of `phy_glb_regs`, 0x25310000; mainline's
+  `phy-fsl-imx8mq-usb.c` has the same block): `sprd_ssphy_init()` reads the AON's `BOOT_MODE` (0x6490002c) and
+  writes TCPC (+0x14) 0x13 when bit 10 is set and 0x17 when it is not, and SYSMODE_CFG (+0x18) bit 2 the same way
+  (`drivers/usb/phy/phy-sprd-usb31-qogirn6pro.c:516-532`; Unisoc's 5.4 at `:429-439`, with the USB-only mux). Bit
+  10 is `MASK_AON_APB_USB_SW` in our `sprd,qogirn6pro-mask.h`, next to `USB_INSERT`: an input the lane flip is taken
+  from, nothing else in either kernel reads it. TCPC bit 2 is the TCA's `ORIENTATION_NORMAL`.
+- The NXP PTN38003A redriver on i2c6 at 0x30, `"sprd,ptn38003a redriver"` in both boards' dtbo (U30 Air
+  `fragment@7`, F50 B09 `fragment@6`; ZTE's `btn38003a` label): `ptn38003a_mode_usb32_set(1)` at the start of every
+  PHY init (`:364`) writes register 0x04 bits 7 and 0 (auto orientation, USB 3.2 mode, `ptn38003a-i2c.c:145-190`),
+  `ptn38003a_mode_usb32_set(0)` at every PHY shutdown (`:633`) clears them (deep power saving).
+- And the PHY is brought up at every attach: `dwc3-sprd.c` runs `usb_phy_init(ss_phy)` from `dwc3_sprd_enable()`
+  (`:1676`) on every runtime resume (`:1769`), and shuts it down at every detach.
+
+The Type-C block's own polarity (`sc27xx_typec.c:349-389`, STATUS bit 5 in `sc27xx_pd.c:81-83`) only goes to sysfs
+and a uevent; neither kernel flips a lane from it.
+
+**What the redriver does** (PTN38003A data sheet Rev. 2.1, 7.7.1-7.7.3 and table 12): it has no crossbar - "crossbar
+switch can be integrated in host processor" - and in USB mode it holds the pair of the other orientation in USB safe
+state, so its orientation must match the plug as much as the TCA's. With its AUTO_ORIENT_EN pin high it comes out of
+power-on reset in USB mode with auto orientation detection, "based on SuperSpeed USB characteristics", which "may
+not work properly if SuperSpeed USB interface is not enabled"; the detection "is executed only once", and setting bit
+7 again does not start it again while the mode is not deep power saving. Register 0x04: bit 7 auto, bit 6 done (read
+only), bit 5 DFP/UFP, bit 4 orientation (reverse), bits 2:0 mode (0 deep power saving, 1 USB).
+
+**Mainline before this entry.** The port (`phy-sprd-ums9620-ssphy.c`) copied the TCA lines, but `sprd_ssphy_init()`
+runs once, at dwc3's probe (`dwc3_core_init()`; later calls are "already inited"), and the redriver was never
+written: it kept whatever power-on reset, LK or the last Android left - one detection, done once, possibly before the
+SoC's SuperSpeed side was up, so normal or stale. That fits the table: the plug the redriver happened to settle on
+works, the other gets no SuperSpeed link and the adapter falls back to USB 2 or, without a USB 2 path on its side,
+is not seen; a complete power cycle gives the redriver a new detection, and booting Linux alone does not.
+
+**The change** (`upstream/port/drivers/usb/phy/phy-sprd-ums9620-ssphy.c`; no device-tree change, the vendor DTB
+as the boards boot it):
+
+- What ZTE's kernel does at every PHY init, done at every attach without bringing the PHY down (that would reset
+  the dwc3 core under mainline's driver): TCPC and SYSMODE_CFG from USB_SW, written only when the TCA has the other
+  orientation (it then waits for the controller's ack, as init does), and the redriver taken through deep power
+  saving into 0x81, so that each attach gets a new detection. The redriver's I2C client is looked up when needed (the
+  node has no driver; i2c6 may come later than the PHY), tried again each second for 30 s, never a probe deferral.
+- When: after PHY init, after a role change (`otg_set_vbus`, mu300-usb host/device), 300 ms after VBUS comes
+  (extcon, the F50's and a device's attach), and as a host every second from the PMIC's Type-C block (typec@380,
+  STATUS: state in bits 4:0, CC1 in bit 5), since a host powers VBUS itself and an attach shows only on CC. A detach
+  writes nothing (the next attach arms the redriver again); shutdown and reboot leave the redriver in deep power
+  saving, as ZTE's kernel leaves an unused port, so that the next kernel's arming gets a detection.
+- `/sys/module/phy_sprd_ums9620_ssphy/parameters/orientation` (applies at once; on the command line too, where the
+  kernel takes one): `auto` (the above, the default), `cc` (TCA and redriver both from
+  the Type-C block's CC pin, the redriver given the orientation instead of detecting it), `off` (as before this entry:
+  the TCA once at init, the redriver untouched).
+- The log says what was decided and from what: `USB 3 lanes flipped (from USB_SW; USB_SW 1, Type-C CC2, TCA flip
+  status 1)`, the redriver's mode before and after (`redriver: mode 0xc1, now 0x81`), and 1.5 s later what it
+  detected (`redriver: detected orientation reverse (0xd1)`, or `no orientation detected yet`).
+
+Not a typec_switch provider: nothing would call it. The vendor DTB has no `orientation-switch` and no graph from a
+connector to the PHY, the Type-C block has no driver unless `mu300-usb pd on` loads 0020 (whose CC pin is the
+block's own, `ump9620_set_polarity()` does nothing), and `CONFIG_TYPEC` is a module while the PHY is built in.
+Mainline 7.2.11 has no sc27xx Type-C driver either (`drivers/usb/typec` has none; 0020 is ours).
+
+**Not known, for the device test** (#54's PR has the plan): that USB_SW is the plug's orientation at the time of an
+attach on our boards (ZTE's kernel reads it only right after one; the log line puts it next to the CC pin each time),
+whether the F50's AUTO_ORIENT_EN pin is high (the first `redriver: mode` line after a cold boot shows the POR value:
+0x00 is deep power saving, so the pin is low, 0x81/0xc1/0xd1 high), and the polarity of the CC pin against TCPC bit 2
+(`cc` assumes CC1 = normal). Compiled only (`W=1`, the one object, on 6.18.57 and 7.2.11 from
+`rel-20261017/src.ext4` in a private overlay); `tests/test_usb_orientation.py` runs the orientation code against a
+fake SoC, PMIC and redriver. No board was touched.
