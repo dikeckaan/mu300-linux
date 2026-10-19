@@ -1,0 +1,47 @@
+audio fe_dai: the voice capture tap's MCDT watermark and DMA fragment as module parameters
+
+FE_ST_VOICE_C, the AP's tap on a call's downlink, reads the voice_c MCDT channel with a full watermark and a DMA
+fragment of 160 words of 4 bytes, 320 samples at 8 kHz mono. With an ALSA period shorter than one fragment (24d's
+160 frames) the tap gives one 20 ms frame per 40 ms in a call (FINDINGS 24d, 193, #331). voice_c_wmk and voice_c_frag
+(in words, 1-511) make both settable on a running system; the next open of the tap takes them. The defaults are the
+vendor's 160/160.
+
+--- a/sprd/dai/vbc/v4/fe_dai/sprd-fe-dai.c	2026-10-18 10:50:50
++++ b/sprd/dai/vbc/v4/fe_dai/sprd-fe-dai.c	2026-10-18 10:50:50
+@@ -56,6 +56,18 @@
+ static struct sprd_pcm_dma_params pcm_fast_play_mcdt;
+ static struct sprd_pcm_dma_params pcm_hifi_fast_play_mcdt;
+ static struct sprd_pcm_dma_params vbc_pcm_voice_capture_mcdt;
++
++/*
++ * FE_ST_VOICE_C (the call's downlink tap): the MCDT full watermark and the DMA fragment, in 32-bit FIFO words.
++ * The vendor values are 160/160, 320 samples at 8 kHz mono: a capture period shorter than that loses every
++ * other 20 ms frame in a call (mu300-linux docs/FINDINGS.md 24d, 193). The next open of the tap takes them.
++ */
++static unsigned int voice_c_wmk = MCDT_FULL_WMK_VOICE_CAPTURE;
++module_param(voice_c_wmk, uint, 0644);
++MODULE_PARM_DESC(voice_c_wmk, "MCDT full watermark of the voice capture tap, in words (1-511)");
++static unsigned int voice_c_frag = MCDT_VOICE_C_FRAGMENT;
++module_param(voice_c_frag, uint, 0644);
++MODULE_PARM_DESC(voice_c_frag, "DMA fragment of the voice capture tap, in words (1-511)");
+ static struct sprd_pcm_dma_params pcm_loop_record_mcdt;
+ static struct sprd_pcm_dma_params pcm_loop_play_mcdt;
+ static struct sprd_pcm_dma_params pcm_voip_record_mcdt;
+@@ -206,8 +218,15 @@
+ 		pcm_dsp_btsco_cap_mcdt.channels[0] = uid;
+ 		break;
+ 	case FE_DAI_ID_VOICE_CAPTURE:
+-		uid = mcdt_adc_dma_enable(MCDT_CHAN_VOICE_CAPTURE,
+-			MCDT_FULL_WMK_VOICE_CAPTURE);
++		if (!voice_c_wmk || voice_c_wmk > 511)
++			voice_c_wmk = MCDT_FULL_WMK_VOICE_CAPTURE;
++		if (!voice_c_frag || voice_c_frag > 511)
++			voice_c_frag = MCDT_VOICE_C_FRAGMENT;
++		/* read by the platform's hw_params, which runs after this one */
++		vbc_pcm_voice_capture_mcdt.desc.fragmens_len = voice_c_frag;
++		pr_info("voice capture: mcdt wmk %u, dma fragment %u words\n",
++			voice_c_wmk, voice_c_frag);
++		uid = mcdt_adc_dma_enable(MCDT_CHAN_VOICE_CAPTURE, voice_c_wmk);
+ 		vbc_pcm_voice_capture_mcdt.channels[0] = uid;
+ 		break;
+ 	case FE_DAI_ID_LOOP:
