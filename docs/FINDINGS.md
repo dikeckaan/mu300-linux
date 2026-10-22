@@ -194,7 +194,7 @@ what replaced it. The table below gives each section's state.
 | 206 | Linux 7.3 as a fourth kernel: every patch applies unchanged (none upstream, none dropped); `PROC_SYSCTL` folded into `SYSCTL` (`config-ignored.txt`, checked only where the kernel lacks the symbol), the cfg80211 cookie handed in by value, `dma_capable()` with DMA attributes, `IIO_CONSUMER` for the audio extra; the checksum list from www.kernel.org (the CDN lagged) | current (F50-B Ubuntu: all checks, call audio with the 7.3 extra, the boot fallback; the one hang in a reboot loop was the board's plug pulled by accident, not 7.3; the U30 Air openwrt-luci with the VPN and its kill switch, 2026-10-19; `sprd_wlan_combo` for 6.18.57 and 7.2.11 byte for byte v2026.10.19.3's; released in v2026.10.22.1, F50-B 10/10 boots on 7.3 in a reboot soak) |
 | 205 | Idle CPU of the shell daemons: a look that finds nothing new starts no process (builtin reads, `read -t` on a fifo for the wait, timer slack during it); mu300-smsd asks AT+CNMI? every 2 min instead of a full sync and AT+CNMI? every 30 s, mu300-power asks iw and hostapd once a minute, the LED tick runs only on a change, thermal-guard's interval grows with the distance from its thresholds; mobile-data's watch and mu300-at as proposals | unit tests; the old and new rounds measured on a U30 Air in one shell; on our U30 Air since 2026-10-22 |
 | 206 | The home page's CPU (70.7 % of a core, a fifth on the A76s) and the modem daemon: the panel's status in rpcd itself (mu300status, ucode), the collector and dashboard-info in ucode, the services on the A55s; mu300-modemd (ucode) and mu300-atd-io (C) instead of the shell AT brokers, opt-in with /etc/mu300/modemd; a bridge that closed every SIPC channel at the first ENODATA, fixed; mobile-data's watch on the modem's events; a stale page's old calls answered by the plugin. Idle 1.3 %, the page open 2.8 % | unit tests; on our U30 Air (dual-SIM boot, SIM2) since 2026-10-23 |
-| 208 | The system daemons without a clock: mu300-sysd (ucode; keys, the LED tick, the thermal guard; `mu300-keys -u power_supply` for the uevents; opt-in with /etc/mu300/sysd), mu300-smsd and ndp-learn on events (modemd's, `ip monitor`), mu300-power's loops 30-60 s apart while nothing is close. Idle 0.3 %, the page open 2.6 % | unit tests; on our U30 Air since 2026-10-23; a plug's uevent and a real key press through sysd not yet seen |
+| 208 | The system daemons without a clock: mu300-sysd (ucode; keys, the LED tick, the thermal guard; `mu300-keys -u power_supply` for the uevents; opt-in with /etc/mu300/sysd), mu300-smsd and ndp-learn on events (modemd's, `ip monitor`), mu300-power's loops 30-60 s apart while nothing is close. Idle 0.3 %, the page open 2.6 % | unit tests; on our U30 Air since 2026-10-23 (an injected key press and a synthetic power_supply uevent went through sysd; a physical plug not yet seen) |
 
 ## Hardware and firmware facts
 
@@ -12996,9 +12996,14 @@ charger; 60 s, the system counters read right around the wait, after the boot's 
 What is left at rest is the kernel and the radio stack's own (rcu_sched 4 ticks a minute, sugov 3-4, netifd 3,
 the USB interrupt thread 3, hostapd 2) and each mu300 daemon at 2 ticks or less. During the first seven minutes of a
 boot the boot partition's log recorder (`early-recorder`) costs about 95 ticks a minute and wakes the A76s; it ends
-by itself. Not verified on the device: a plug or a 1 % step reaching sysd as a uevent (the device stayed on the
-charger at 100 %; about 30 minutes of listening showed no power_supply uevent at rest, so none wake it either), and
-a real key press through sysd.
+by itself. Checked on the device without touching it: a short power-key press written into the gpio-keys event
+device (press, 150 ms, release) reached sysd, which woke the LEDs and mu300-power ("active: woken by the power key"),
+and at the wake's end the timer ran the LED tick (a new hint, due in 600 s); with a file of the hint changed by hand
+nothing ran for 3 s, and a `change` written to the fuel gauge's `uevent` reached mu300-keys and had the tick run
+0.5 s later (the coalescing), which put the file right. Not seen yet: a physical plug or a 1 % step (the device
+stayed on the charger at 100 %; about 30 minutes of listening showed no power_supply uevent at rest, so none wake it
+either). The charger's interrupt and the gauge's 1 % interrupt call power_supply_changed, which is the same netlink
+path, and a lost one is caught by the 90 s look.
 
 Tests: `tests/test_sysd.py` (mu300-buttons' and thermal-guard's tests against sysd, the daemon, `--check`, the init
 wiring, `mu300-keys -u` with real kernel uevents and a fake userspace datagram that must be dropped),
