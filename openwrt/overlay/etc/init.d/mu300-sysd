@@ -1,0 +1,21 @@
+#!/bin/sh /etc/rc.common
+# The buttons, the LEDs' tick and the thermal guard in one event-driven daemon (/opt/mu300/bin/mu300-sysd, FINDINGS
+# 207), opted into with /etc/mu300/sysd. With it, mu300-buttons and mu300-post's thermal-guard step aside (the same
+# sysd_on there); without it, or without what it needs (ucode with uloop and socket, mu300-keys with -u), they run
+# as they always did.
+START=95
+USE_PROCD=1
+export PATH="$PATH:/opt/mu300/busybox-bin"
+
+sysd_on() { [ -e /etc/mu300/sysd ] && /usr/bin/ucode /opt/mu300/bin/mu300-sysd --check >/dev/null 2>&1; }
+
+start_service() {
+	sysd_on || return 0
+	procd_open_instance sysd
+	procd_set_param command /usr/bin/ucode /opt/mu300/bin/mu300-sysd
+	procd_set_param env PATH="$PATH"
+	procd_set_param respawn 3600 5 0
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+}

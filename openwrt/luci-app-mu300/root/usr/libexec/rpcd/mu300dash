@@ -60,6 +60,17 @@
 
 export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/libexec/unisoc-modem:/usr/sbin:/sbin"
 
+# A page from before mu300status (FINDINGS 206) still polls status and sysinfo here every 1.5 s: LuCI loads a view
+# with its own version in the URL, which an update of this app does not change, so a browser can keep running the old
+# home.js from its cache for days. rpcd's own plugin answers it, before this script reads the rest of itself: one
+# ubus call instead of a shell, dashboard-info and the collectors (170 ms a call on the U30 Air, 100 forks a second).
+case "${1:-} ${2:-}" in
+    'call status'|'call sysinfo')
+        if [ -e "${MU300_STATUS_PLUGIN:-/usr/share/rpcd/ucode/mu300status.uc}" ]; then
+            ubus -t 25 call mu300status "$2" 2>/dev/null && exit 0
+        fi ;;
+esac
+
 # the shared JSON escaper and uci allow-lists (/usr/share/unisoc-modem/lib.sh)
 LIB=${0%/*}/../../share/unisoc-modem/lib.sh
 [ -f "$LIB" ] || LIB=/usr/share/unisoc-modem/lib.sh

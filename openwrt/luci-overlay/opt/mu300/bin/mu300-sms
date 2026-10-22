@@ -75,7 +75,7 @@ PAGE=${MU300_SMS_PAGE:-10}
 HOOK=${MU300_SMS_HOOK:-/etc/mu300/sms-hook}
 case $PAGE in ''|*[!0-9]*|0) PAGE=10 ;; esac
 TAB=$(printf '\t')
-# The pool lock lives in RAM, not in the pool: the pool is on flash (/etc), and smsd syncs every 30 s. One lock per
+# The pool lock lives in RAM, not in the pool: the pool is on flash (/etc), and smsd syncs (FINDINGS 205). One lock per
 # pool path.
 RUNDIR=${MU300_SMS_RUN:-/run}
 [ -d "$RUNDIR" ] || RUNDIR=${TMPDIR:-/tmp}

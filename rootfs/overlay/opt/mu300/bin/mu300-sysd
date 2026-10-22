@@ -1,0 +1,912 @@
+#!/usr/bin/ucode
+// mu300-sysd -- the buttons, the LEDs' tick and the thermal guard in one event-driven daemon (FINDINGS 207).
+//
+// It does what three shell loops did, without their clocks: mu300-buttons (the keys), the LED tick that mu300-buttons
+// looked at every 5 s (the LEDs' timeout, the U30 Air's battery LED; FINDINGS 205) and thermal-guard (its caps, the
+// alarm, the power-off at CRIT). One helper, `mu300-keys -u power_supply` (C), reports the presses and the kernel's
+// power_supply uevents (the device's ucode cannot open a netlink socket); everything else is read in this process:
+//   keys      each press as mu300-buttons handled it: the same order (the LEDs' wake first), the same helpers
+//             (mu300-led wake, mu300-power wake, mu300-wifi-band, wifi or systemctl), the same markers in $PST, the
+//             same deadlines. A press is the only thing that starts them.
+//   LED tick  `mu300-led tick` only when it has something to do, by its hint (.tick-hint): looked at on a uevent of
+//             the charger or the fuel gauge, by a timer at the hint's due time (and at the end of a key's wake, which
+//             the hint cannot know of yet), and every SAFETY s in case a uevent got lost. The battery's readings count
+//             by what mu300-led shows of them (colour, breathing, low, plugged): a 1 % step starts nothing. Every
+//             other file the hint names counts as it is, as mu300-buttons compared them.
+//   thermal   thermal-guard's rounds as timers, at its adaptive interval, with its thresholds, caps, alarm, power-off
+//             and log lines; the zones are read here, no process per round.
+// At rest that is a thermal round every 22-30 s and a look at the LED hint every SAFETY s, both in this process,
+// and nothing else: no tick every 5 s, no process unless an LED, a cap or the alarm has to change.
+//
+//   mu300-sysd            the daemon (/etc/init.d/mu300-sysd, opted into with /etc/mu300/sysd)
+//   mu300-sysd --check    exit 0 when what it needs is there (the init scripts ask before the old loops step aside)
+//   mu300-sysd --round    one thermal round, its next look on stderr: thermal-guard with MU300_SYSROOT (the tests)
+//
+// Environment, as the scripts it replaces read it: MU300_SYSROOT (a fake / for the tests), MU300_RUN, MU300_BIN,
+// MU300_BUTTONS_DEADLINE, MU300_BUTTONS_PROBE_DEADLINE, MU300_THERMAL_*, MU300_BATTERY_HOT, MU300_BATTERY_COOL. Its
+// own: MU300_KEYS_BIN (mu300-keys), MU300_SYSD_SAFETY (90 s), MU300_SYSD_LED_HINT_MAX (600 s: the hint's due time
+// at the latest, mu300-led's MU300_LED_TICK_HINT_MAX), and for the tests MU300_SYSD_PARTS ("keys led thermal"),
+// MU300_SYSD_ONCE (the helper's end ends the daemon once its presses and their work are done) and MU300_SYSD_LOG
+// (a file for the log lines instead of syslog).
+'use strict';
+
+import * as uloop from 'uloop';
+import * as socket from 'socket';
+import { readfile, writefile, open, stat, lstat, mkdir, unlink, lsdir, dup2, access, popen, fdopen, basename,
+	dirname } from 'fs';
+
+let logmod = null;
+try { logmod = require('log'); } catch (e) { }
+
+// ------------------------------------------------------------------ small things
+function env(name, dflt) { let v = getenv(name); return (v != null && v != '') ? v : dflt; }
+function digits(s) { return type(s) == 'string' && s != '' && ltrim(s, '0123456789') == ''; }
+function integer(s) { return type(s) == 'string' && digits((substr(s, 0, 1) == '-') ? substr(s, 1) : s); }
+function num(name, dflt) { let v = env(name, ''); return digits(v) ? +v : dflt; }
+function shq(s) { return "'" + replace('' + s, "'", "'\\''") + "'"; }
+function exists(path) { return lstat(path) != null; }
+// rd PATH: its first line as the shell's `read -r` leaves it (the blanks around it gone); null when it cannot be read
+function rd(path) {
+	let s = readfile(path);
+	if (s == null)
+		return null;
+	let i = index(s, '\n');
+	return trim((i >= 0) ? substr(s, 0, i) : s, ' \t');
+}
+function mkdir_p(dir) {
+	if (dir == '' || dir == '/' || exists(dir))
+		return;
+	mkdir_p(dirname(dir));
+	mkdir(dir);
+}
+function retimer(old, ms, cb) {
+	if (old)
+		old.cancel();
+	return uloop.timer(ms, cb);
+}
+// names DIR PREFIX: the entries of DIR that start with PREFIX, in the shell's glob order
+function names(dir, prefix) {
+	let out = [];
+	for (let n in lsdir(dir) ?? [])
+		if (substr(n, 0, length(prefix)) == prefix)
+			push(out, n);
+	return sort(out);
+}
+
+const R = env('MU300_SYSROOT', '');
+const RUN = env('MU300_RUN', '/run');
+const BIN = env('MU300_BIN', '/opt/mu300/bin');
+const KEYS = env('MU300_KEYS_BIN', 'mu300-keys');
+const MODE = ARGV[0] ?? '';
+const ONCE = env('MU300_SYSD_ONCE', '') == '1';
+let parts = {};
+for (let p in split(env('MU300_SYSD_PARTS', 'keys led thermal'), /[ ,]+/))
+	parts[p] = true;
+
+// the uptime in seconds (a fraction): the clock of the LED files and of mu300-buttons' hotspot marker
+function now() {
+	let u = readfile(R + '/proc/uptime');
+	return u ? +split(u, ' ')[0] : 0;
+}
+
+// log TAG MSG: as the script it comes from logged it (logger -t TAG), into syslog; MU300_SYSD_LOG: into that file
+const LOGFILE = env('MU300_SYSD_LOG', null);
+function log(tag, msg) {
+	if (LOGFILE) {
+		let f = open(LOGFILE, 'a');
+		if (f) {
+			f.write(tag + ': ' + msg + '\n');
+			f.close();
+		}
+	}
+	else if (logmod) {
+		logmod.openlog(tag);
+		logmod.syslog(logmod.LOG_NOTICE, '%s', msg);
+	}
+	else
+		warn(tag + ': ' + msg + '\n');
+}
+
+// ------------------------------------------------------------------ processes
+// What runs is found on mu300-buttons' PATH (the stubs of the tests come first).
+let ENV = getenv();
+ENV.PATH = (ENV.PATH ?? '/usr/sbin:/usr/bin:/sbin:/bin') + ':/opt/mu300/bin:/usr/sbin:/sbin';
+function which(cmd) {
+	if (index(cmd, '/') >= 0)
+		return access(cmd, 'x') ? cmd : null;
+	for (let d in split(ENV.PATH, ':')) {
+		let p = ((d == '') ? '.' : d) + '/' + cmd;
+		if (access(p, 'x') && stat(p)?.type == 'file')
+			return p;
+	}
+	return null;
+}
+
+// The waits may end up to half a second late, so the kernel can serve the timers of several daemons with one wakeup
+// (thermal-guard's timer slack, FINDINGS 205); what this starts gets the default back. Only on a real /.
+const SLACK_FILE = '/proc/self/timerslack_ns';
+let slack = (R == '' && MODE == '') ? rd(SLACK_FILE) : null;
+function slack_wait() { if (slack != null) writefile(SLACK_FILE, '500000000'); }
+function fork_exec(exe, args, envs, cb) {
+	if (slack != null)
+		writefile(SLACK_FILE, slack);
+	let p = uloop.process(exe, args, envs, cb);
+	slack_wait();
+	return p;
+}
+
+let running = 0;   // started and not ended yet (the helper is not counted)
+let idle_check;    // set below
+// spawn ARGV [DONE] [MORE] [QUIET]: ARGV in the background, DONE(exit code) once it ended; MORE: environment on top.
+// QUIET: stdin, stdout and stderr on /dev/null, as mu300-buttons ran its background work.
+function spawn(argv, done, more, quiet) {
+	let exe = which(argv[0]) ?? argv[0], args = slice(argv, 1);
+	if (quiet) {
+		args = [ '-c', 'exec "$0" "$@" </dev/null >/dev/null 2>&1', exe, ...args ];
+		exe = '/bin/sh';
+	}
+	let p = fork_exec(exe, args, more ? { ...ENV, ...more } : ENV, (code) => {
+		running--;
+		if (done) {
+			try { done(code); }
+			catch (e) { log('mu300-sysd', argv[0] + ': ' + e); }
+		}
+		idle_check();
+	});
+	if (!p) {
+		log('mu300-sysd', 'could not start ' + argv[0]);
+		if (done)
+			uloop.timer(0, () => done(-1));
+		return null;
+	}
+	running++;
+	return p;
+}
+
+// --- deadlines (mu300-buttons' and mu300-power's rule): a process tree killed
+function proc_table() {   // { PID: PPID } of every process
+	let t = {};
+	for (let d in lsdir('/proc') ?? []) {
+		let c = ord(d);
+		if (c < 48 || c > 57)
+			continue;
+		let s = readfile('/proc/' + d + '/stat');
+		if (s == null)
+			continue;
+		t[d] = split(substr(s, rindex(s, ')') + 2), ' ')[1];
+	}
+	return t;
+}
+// tree_kill PID: the process and everything it started. The tree is stopped until a look finds nothing new (a child
+// forked during one look is caught by the next), then every process any look saw is killed
+function tree_kill(pid) {
+	let prev = null, seen = {};
+	for (let n = 1; ; n++) {
+		let pp = proc_table(), s = {}, more = true;
+		s['' + pid] = true;
+		while (more) {
+			more = false;
+			for (let p in pp)
+				if (!s[p] && s[pp[p]]) {
+					s[p] = true;
+					more = true;
+				}
+		}
+		let all = sort(keys(s), (a, b) => +a - +b);
+		system('kill -STOP ' + join(' ', all) + ' 2>/dev/null');
+		for (let p in all)
+			seen[p] = true;
+		let key = join(' ', all);
+		if (key == prev || n >= 10)
+			break;
+		prev = key;
+	}
+	system('kill -KILL ' + join(' ', keys(seen)) + ' 2>/dev/null');
+}
+// deadline SECONDS P: past SECONDS the process P and all it started are killed; the timer to cancel when it ends
+function deadline(secs, p) {
+	return p ? uloop.timer(secs * 1000, () => tree_kill(p.pid())) : null;
+}
+// in_background SECONDS CMD: the shell command CMD in the background, quiet, under a deadline
+function in_background(secs, cmd) {
+	let t = null;
+	let p = spawn([ '/bin/sh', '-c', 'exec </dev/null >/dev/null 2>&1; ' + cmd ], () => { if (t) t.cancel(); });
+	t = deadline(secs, p);
+}
+
+// chain ARGV: one after another, each within a minute (a round's power-off before its alarm, as the guard ran them)
+let chain_q = [], chaining = false;
+function chain_next() {
+	let a = shift(chain_q);
+	if (!a) {
+		chaining = false;
+		idle_check();
+		return;
+	}
+	chaining = true;
+	let t = null;
+	t = deadline(60, spawn(a, () => { if (t) t.cancel(); chain_next(); }));
+}
+function chain(argv) {
+	push(chain_q, argv);
+	if (!chaining)
+		chain_next();
+}
+
+// ------------------------------------------------------------------ the keys (mu300-buttons)
+const KEY_POWER = 116;
+const KEY_WIFI = 138;   // "Wifi Switch Key" in the U30 Air's device tree (KEY_HELP's code, as its Android maps it)
+const PST = RUN + '/mu300/power';
+const LEDDIR = R + '/run/mu300/led';
+const LEDIDLE = LEDDIR + '/.idle';   // mu300-led idle on (mu300-led keeps its state there)
+const DEADLINE = num('MU300_BUTTONS_DEADLINE', 150);   // a toggle in the background (the LED sync after wifi up: 120 s)
+const PROBE_DEADLINE = num('MU300_BUTTONS_PROBE_DEADLINE', 5);
+function is_openwrt() { return exists('/etc/openwrt_release'); }
+
+// probe ARGV CB: ARGV within PROBE_DEADLINE, CB(true) when it said yes (the direction of a hold is decided before the
+// wake: it must not wait long)
+function probe(argv, cb) {
+	let t = null;
+	t = deadline(PROBE_DEADLINE, spawn(argv, (code) => {
+		if (t)
+			t.cancel();
+		cb(code == 0);
+	}, null, true));
+}
+function hotspot_is_up(cb) {
+	if (is_openwrt())
+		probe([ 'ubus', '-t', '5', 'call', 'hostapd.wlan0', 'get_status' ], cb);
+	else
+		probe([ 'systemctl', 'is-active', '--quiet', 'mu300-hotspot' ], cb);
+}
+function hotspot_set(dir) {   // the toggle itself, a shell command
+	if (is_openwrt())
+		return (dir == 'off') ? 'wifi down; mu300-led wifi off' : 'wifi up; mu300-led wifi sync 120';
+	return (dir == 'off') ? 'systemctl stop mu300-hotspot' : 'systemctl start mu300-hotspot';
+}
+
+let led_arm;   // set below (the LED tick)
+let presses = [], pressing = false;
+let press_next;   // set below
+// press_act: what the press does once the LEDs are lit and, for a Wi-Fi hold, its direction is decided (see the top
+// of mu300-buttons: idle wakes on any key, a charging boot only on the Wi-Fi key; the toggles act on an awake device)
+function press_act(code, kind, s, was_idle, dir) {
+	let key = (code == KEY_WIFI) ? 'wifi' : 'power';
+	// a held power key in the charging boot starts the device (the stock charger mode: hold power to switch it on;
+	// FINDINGS 196): the wake without a key name ends it, as the Wi-Fi key does
+	if (code == KEY_POWER && kind == 'long' && s == 'charging-boot') {
+		log('mu300-buttons', 'power button held in the charging boot: starting');
+		spawn([ 'mu300-power', 'wake' ], null, null, true);
+		return;
+	}
+	// a held power key shuts down instead: no wake (it would bring the radios back on the way down), the marker
+	if (code == KEY_POWER && kind == 'long') {
+		log('mu300-buttons', 'power button held: shutting down');
+		mkdir_p(PST);
+		writefile(PST + '/shutdown', '');
+		spawn(is_openwrt() ? [ 'poweroff' ] : [ 'systemctl', 'poweroff' ]);
+		return;
+	}
+	spawn([ 'mu300-power', 'wake', key ], null, null, true);
+	if (code == KEY_WIFI && kind == 'short' && !was_idle)
+		in_background(DEADLINE, 'mu300-wifi-band toggle | logger -t mu300-buttons 2>/dev/null');
+	else if (code == KEY_WIFI && kind == 'long' && dir)
+		in_background(DEADLINE, hotspot_set(dir));
+}
+function press_rest(code, kind) {
+	let s = rd(PST + '/state') ?? '';
+	// dark on purpose (idle, or someone's mu300-led idle on): this press only wakes
+	let was_idle = (s != '' && s != 'active') || exists(LEDIDLE);
+	if (code != KEY_WIFI || kind != 'long' || was_idle) {
+		press_act(code, kind, s, was_idle, null);
+		press_next();
+		return;
+	}
+	// a Wi-Fi hold on an awake device: which way, and the user's marker (with the uptime of the hold), before the
+	// wake can look
+	mkdir_p(PST);
+	hotspot_is_up((up) => {
+		try {
+			if (up)
+				writefile(PST + '/hotspot-off', int(now()) + '\n');
+			else
+				unlink(PST + '/hotspot-off');
+			press_act(code, kind, s, was_idle, up ? 'off' : 'on');
+		}
+		catch (e) {
+			log('mu300-sysd', 'a press failed: ' + e);
+		}
+		press_next();
+	});
+}
+// one press at a time, in order, as mu300-buttons read them; the next waits for this one's wake and probe only
+press_next = function() {
+	let p = shift(presses);
+	if (!p) {
+		pressing = false;
+		idle_check();
+		return;
+	}
+	pressing = true;
+	// first, whatever else this key does or whatever state anything is in
+	spawn([ 'mu300-led', 'wake' ], () => {
+		if (parts.led)
+			led_arm();   // the wake moved the timeout on: a look at its end
+		try {
+			press_rest(p[0], p[1]);
+		}
+		catch (e) {
+			log('mu300-sysd', 'a press failed: ' + e);
+			press_next();
+		}
+	});
+};
+function press(code, kind) {
+	push(presses, [ code, kind ]);
+	if (!pressing)
+		press_next();
+}
+
+// ------------------------------------------------------------------ the LED tick (mu300-led's hint, FINDINGS 205)
+const LEDHINT = LEDDIR + '/.tick-hint';
+const PSY = R + '/sys/class/power_supply/';
+const SAFETY = num('MU300_SYSD_SAFETY', 90);
+const HINT_MAX = num('MU300_SYSD_LED_HINT_MAX', 600);
+
+// The hint: "due UPTIME", then a "FILE VALUE" line for every file the next tick depends on, as mu300-buttons read it
+// (whole lines only; the value is what follows the first space). The battery's files are kept apart.
+let hint = null;   // { due, lines: [ [ FILE, VALUE ] ], battery: { FILE: VALUE } or null }
+function hint_load() {
+	hint = null;
+	let s = readfile(LEDHINT);
+	if (s == null)
+		return;
+	let lines = split(s, '\n');
+	let l = trim(lines[0], ' \t'), i = index(l, ' ');
+	if (i < 0 || substr(l, 0, i) != 'due' || !digits(ltrim(substr(l, i + 1), ' \t')))
+		return;
+	let h = { due: +ltrim(substr(l, i + 1), ' \t'), lines: [], battery: null };
+	for (let j = 1; j < length(lines) - 1; j++) {
+		l = lines[j];
+		if (l == '')
+			continue;
+		i = index(l, ' ');
+		let f = (i < 0) ? l : substr(l, 0, i), v = (i < 0) ? l : substr(l, i + 1);
+		if (substr(f, 0, length(PSY)) == PSY) {
+			h.battery ??= {};
+			h.battery[f] = v;
+		}
+		else
+			push(h.lines, [ f, v ]);
+	}
+	hint = h;
+}
+
+// battery_state GET: what mu300-led's battery_read makes of the readings GET(FILE) gives ("COLOUR MODE LOW PLUGGED",
+// or null without a capacity; GET is null for a file that cannot be read). The battery LED shows nothing else.
+function battery_state(get) {
+	let b = null;
+	for (let d in [ PSY + 'sc27xx-fgu', PSY + 'battery' ])
+		if (get(d + '/capacity') != null) {
+			b = d;
+			break;
+		}
+	if (b == null)
+		return null;
+	let cap = get(b + '/capacity'), st = get(b + '/status') ?? '-';
+	if (!digits(cap))
+		return null;
+	cap = +cap;
+	// outside power: the charger's online flag, when there is one (the gauge says "Charging" for a while after an
+	// unplug); the gauge's status only where no charger says anything
+	let on = null;
+	for (let d in [ 'bq256xx-charger', 'usb', 'ac' ]) {
+		let v = get(PSY + d + '/online') ?? '-';
+		if (v == '-')
+			continue;
+		if (v == '1') {
+			on = 1;
+			break;
+		}
+		on = 0;
+	}
+	on ??= (st == 'Charging' || st == 'Full') ? 1 : 0;
+	let col = (cap >= 60) ? 'green' : (cap >= 10) ? 'blue' : 'red';
+	let mode = (on == 1 && st == 'Charging') ? 'breathe' : 'steady';
+	return col + ' ' + mode + ' ' + ((on == 0 && cap < 10) ? 1 : 0) + ' ' + on;
+}
+
+// tick_due: the tick has something to do - no hint, its time has come, a file it names changed, or the battery shows
+// otherwise than when it was written
+function tick_due() {
+	if (!hint || int(now()) >= hint.due)
+		return true;
+	for (let l in hint.lines)
+		if ((rd(l[0]) ?? '-') != l[1])
+			return true;
+	return hint.battery != null && battery_state(rd) != battery_state((f) => hint.battery[f]);
+}
+
+let led_ticking = false, led_again = false, led_timer = null, led_soon_timer = null, led_hintless = 0;
+function led_look() {
+	if (led_ticking) {   // one tick at a time; a look asked for meanwhile comes after it
+		led_again = true;
+		return;
+	}
+	if (!tick_due()) {
+		led_arm();
+		return;
+	}
+	led_ticking = true;
+	spawn([ 'mu300-led', 'tick' ], () => {
+		led_ticking = false;
+		hint_load();
+		led_hintless = hint ? 0 : led_hintless + 1;
+		if (led_again) {
+			led_again = false;
+			led_look();
+		}
+		else
+			led_arm();
+	}, { MU300_LED_TICK_HINT_MAX: '' + HINT_MAX });
+}
+// the next look: at the hint's due time, at the end of a timeout the hint cannot know of yet (a key's wake since the
+// last tick), every SAFETY s at the latest. Without a hint (an mu300-led that writes none) as mu300-buttons did,
+// every 5 s, and less often while none comes.
+led_arm = function() {
+	let t = now();
+	let left = hint ? min(SAFETY, hint.due - t) : min(SAFETY, 5 * (1 << min(led_hintless, 5)));
+	for (let f in [ '.awake-until', '.peek-until' ]) {
+		let v = rd(LEDDIR + '/' + f);
+		if (digits(v) && +v > t)
+			left = min(left, +v - t);
+	}
+	led_timer = retimer(led_timer, max(0, int(left * 1000)) + 50, () => {
+		led_timer = null;
+		try { led_look(); }
+		catch (e) { log('mu300-sysd', 'the LED look failed: ' + e); led_arm(); }
+	});
+};
+// a uevent: the charger and the gauge often speak within a moment of each other, one look for both
+function led_soon() {
+	led_soon_timer ??= uloop.timer(500, () => {
+		led_soon_timer = null;
+		try { led_look(); }
+		catch (e) { log('mu300-sysd', 'the LED look failed: ' + e); }
+	});
+}
+
+// ------------------------------------------------------------------ the helper (mu300-keys -u power_supply)
+let helper = null, helper_sock = null, helper_h = null, helper_buf = '', helper_wait = 1, helper_since = 0;
+let helper_gone = false, helper_said = false;
+function on_line(line) {
+	let f = split(line, ' ');
+	if (f[0] == 'uevent') {   // the charger or the fuel gauge; "uevent overflow": some were lost
+		if (parts.led)
+			led_soon();
+	}
+	else if (f[1] == 'tick') {   // (from -t: a look, as mu300-buttons' tick)
+		if (parts.led)
+			led_look();
+	}
+	else if ((f[1] == 'short' || f[1] == 'long') && digits(f[0]) && parts.keys)
+		press(+f[0], f[1]);
+}
+function helper_close() {
+	if (helper_h)
+		helper_h.delete();
+	if (helper_sock)
+		helper_sock.close();
+	helper_h = null;
+	helper_sock = null;
+	helper_buf = '';
+}
+function helper_readable() {
+	let eof = false;
+	while (helper_sock) {
+		let d = helper_sock.recv(4096, socket.MSG_DONTWAIT);
+		if (d == null)
+			break;
+		if (d === '') {
+			eof = true;
+			break;
+		}
+		helper_buf += d;
+	}
+	let i;
+	while ((i = index(helper_buf, '\n')) >= 0) {
+		let line = substr(helper_buf, 0, i);
+		helper_buf = substr(helper_buf, i + 1);
+		try { on_line(line); }
+		catch (e) { log('mu300-sysd', 'a line failed: ' + e); }
+	}
+	if (eof) {
+		helper_close();
+		if (ONCE) {
+			helper_gone = true;
+			idle_check();
+		}
+	}
+}
+let helper_start;   // set below
+function helper_ended(code) {
+	helper = null;
+	helper_readable();   // what it said before it went
+	helper_close();
+	if (ONCE) {
+		helper_gone = true;
+		idle_check();
+		return;
+	}
+	// started again, a second after a long run, up to a minute after a run that ended at once
+	helper_wait = (time() - helper_since >= 60) ? 1 : min(helper_wait * 2, 60);
+	log('mu300-sysd', KEYS + ' ended (' + code + '); again in ' + helper_wait + ' s');
+	uloop.timer(helper_wait * 1000, () => helper_start());
+}
+helper_start = function() {
+	let exe = which(KEYS);
+	let pr = exe ? socket.pair(socket.SOCK_STREAM | socket.SOCK_CLOEXEC) : null;
+	if (!pr) {
+		if (!helper_said)
+			log('mu300-sysd', exe ? 'no socket pair for ' + KEYS + ': ' + socket.error() : 'no ' + KEYS);
+		helper_said = true;
+		uloop.timer(60000, () => helper_start());
+		return;
+	}
+	helper_said = false;
+	// Its stdout is the pair's other end, read here without blocking (a pipe from popen is a stdio stream: lines
+	// that arrive together would wait in its buffer, unseen by the loop). That end is lent to this process's stdin
+	// for the fork alone, where the shell can name it (a redirection takes one digit, and the pair's own numbers are
+	// past 9 here; this process never reads its stdin), then stdin is /dev/null again: nothing else started later
+	// holds the pair open.
+	dup2(pr[1].fileno(), 0);
+	helper = fork_exec('/bin/sh', [ '-c', 'exec "$0" "$@" >&0 </dev/null', exe, '-l', '3000', '-u', 'power_supply' ],
+		ENV, (code) => helper_ended(code));
+	let nul = open('/dev/null', 'r');
+	if (nul) {
+		dup2(nul.fileno(), 0);
+		nul.close();
+	}
+	else
+		fdopen(0, 'r')?.close();
+	pr[1].close();
+	helper_since = time();
+	helper_sock = pr[0];
+	helper_h = uloop.handle(helper_sock, () => helper_readable(), uloop.ULOOP_READ);
+	if (!helper)
+		helper_ended(-1);
+};
+
+// ------------------------------------------------------------------ thermal (thermal-guard)
+const HOT = num('MU300_THERMAL_HOT', 85000);
+const COOL = num('MU300_THERMAL_COOL', 75000);
+const CRIT = num('MU300_THERMAL_CRIT', 105000);
+const BACKSTOP = num('MU300_THERMAL_BACKSTOP', 92000);
+const BACKSTOP_ALL = num('MU300_THERMAL_BACKSTOP_ALL', 95000);
+const BATT_HOT = num('MU300_BATTERY_HOT', 500);
+const BATT_COOL = num('MU300_BATTERY_COOL', 450);
+const WAIT = num('MU300_THERMAL_INTERVAL', 5);
+const MAX_WAIT = num('MU300_THERMAL_MAX_INTERVAL', 30);
+const MAX_WAIT_ALONE = num('MU300_THERMAL_MAX_INTERVAL_ALONE', 10);
+const TH = R + '/sys/class/thermal';
+const LED = BIN + '/mu300-led';
+const CEILING = R + '/run/mu300/cpu-ceiling';   // mu300-cpu's "policyN=HZ" lines: a profile's ceiling per cluster
+const CAPPED = R + '/run/mu300/thermal-capped';   // this guard holds a cap ("backstop": set on top of the kernel's)
+const ALARM = R + '/run/mu300/thermal-alarm';     // the alarm is on (it outlives a restart: never left flashing)
+
+let DEVICE = null, RELEASE = null;
+function thermal_init() {
+	// the label boot/init leaves when it says u30air, else mu300-device (its V50 rule is about the other labels)
+	DEVICE = rd(R + '/run/mu300/device');
+	if (DEVICE != 'u30air') {
+		let p = popen(shq(BIN + '/mu300-device') + ' 2>/dev/null', 'r');
+		DEVICE = p ? trim(p.read('all') ?? '') : '';
+		p?.close();
+	}
+	// the kernel, for the log only: what this guard does is decided by the zones it finds, on every kernel (#229)
+	RELEASE = rd(R + '/proc/sys/kernel/osrelease') ?? rd('/proc/sys/kernel/osrelease') ?? '';
+}
+
+function hottest(zones) {
+	let t = 0;
+	for (let z in zones) {
+		let v = rd(TH + '/' + z + '/temp');
+		if (integer(v) && +v > t)
+			t = +v;
+	}
+	return t;
+}
+// the battery's temperature in tenths of a degree (null without one); the U30 Air only. The F50 has no battery, but
+// under mainline the PMIC's fuel gauge probes on it too and reports one, at 75 C from an unconnected NTC input. The
+// supply that is the battery is looked for again only when its reading fails.
+let battery_dir = null;
+function battery_temp() {
+	if (DEVICE != 'u30air')
+		return null;
+	let b = battery_dir ? rd(battery_dir + '/temp') : null;
+	if (b != null && b != '')
+		return b;
+	battery_dir = null;
+	for (let d in names(R + '/sys/class/power_supply', '')) {
+		d = R + '/sys/class/power_supply/' + d;
+		if (rd(d + '/type') != 'Battery')
+			continue;
+		b = rd(d + '/temp');
+		if (b != null && b != '') {
+			battery_dir = d;
+			return b;
+		}
+	}
+	return null;
+}
+
+// native_cpu_cooling HOTTEST LISTING: the type of an enabled zone with a passive trip at or below HOT that has every
+// cpufreq cooling device bound and reads a number within 15 C of HOTTEST (the kernel throttles the CPUs itself), or
+// null: then this guard caps. Decided again every round, as thermal-guard did, without a pattern match (one is ~0.1
+// ms here: a round of them took 30 ms). A sysfs read is ~60 us from here, and the 40 reads of a whole look at the
+// zones' modes and trips were a third of a round: the zone found last round is looked at alone, and all of them
+// again when /sys/class/thermal lists other entries (a module came or went), when that zone does not qualify any
+// more, and every NATIVE_RESCAN rounds (the first zone that qualifies is the one named, as the glob found it).
+function cpufreq_cdev(kind) {
+	return kind != null && (substr(kind, 0, 8) == 'cpufreq-' || substr(kind, 0, 16) == 'thermal-cpufreq-');
+}
+function inode(s) { return s.dev.major + ':' + s.dev.minor + ':' + s.inode; }
+// qualifies ZONEDIR HOTTEST CDEVS: that zone throttles the CPUs (see above)
+function qualifies(z, t, cdevs) {
+	if (rd(z + '/mode') != 'enabled')
+		return false;
+	let tp = null;
+	for (let i = 0; tp == null; i++) {
+		let tt = rd(z + '/trip_point_' + i + '_type');
+		if (tt == null)
+			break;
+		let v = (tt == 'passive') ? rd(z + '/trip_point_' + i + '_temp') : null;
+		if (digits(v) && +v <= HOT)
+			tp = v;
+	}
+	if (tp == null)
+		return false;
+	let zt = rd(z + '/temp');
+	if (!digits(zt) || +zt < t - 15000)
+		return false;
+	// cdevK is the link to a cooling device (cdevK_trip_point and cdevK_weight are files)
+	let bound = {};
+	for (let l in names(z, 'cdev')) {
+		let c = ord(l, 4), s = (c >= 48 && c <= 57) ? stat(z + '/' + l) : null;
+		if (s?.type == 'directory')
+			bound[inode(s)] = true;
+	}
+	for (let d in cdevs) {
+		let s = stat(d);
+		if (!s || !bound[inode(s)])
+			return false;
+	}
+	return true;
+}
+const NATIVE_RESCAN = 10;
+let native_seen = null;   // { listing, zone, cdevs, type, rounds }: the zone found last round
+function native_cpu_cooling(t, listing) {
+	let key = join(' ', listing), n = native_seen;
+	if (n && n.listing == key && ++n.rounds < NATIVE_RESCAN && qualifies(n.zone, t, n.cdevs))
+		return n.type;
+	native_seen = null;
+	let cdevs = [];
+	for (let c in listing)
+		if (substr(c, 0, 14) == 'cooling_device' && cpufreq_cdev(rd(TH + '/' + c + '/type')))
+			push(cdevs, TH + '/' + c);
+	if (!length(cdevs))
+		return null;
+	for (let z in listing) {
+		if (substr(z, 0, 12) != 'thermal_zone' || !qualifies(TH + '/' + z, t, cdevs))
+			continue;
+		let type = rd(TH + '/' + z + '/type') ?? '';
+		native_seen = { listing: key, zone: TH + '/' + z, cdevs: cdevs, type: type, rounds: 0 };
+		return type;
+	}
+	return null;
+}
+
+function policies() {
+	let out = [];
+	for (let p in names(R + '/sys/devices/system/cpu/cpufreq', 'policy'))
+		push(out, R + '/sys/devices/system/cpu/cpufreq/' + p);
+	return out;
+}
+// ceiling_of POLICYDIR: the profile's ceiling for this policy (its last line), else its cpuinfo_max_freq; null when
+// neither can be read
+function ceiling_of(p) {
+	let name = basename(p) + '=', v = null;
+	for (let l in split(readfile(CEILING) ?? '', '\n'))
+		if (substr(l, 0, length(name)) == name)
+			v = substr(l, length(name));
+	return digits(v) ? v : rd(p + '/cpuinfo_max_freq');
+}
+// step POLICYDIR DIR (-1 lower, +1 higher): scaling_max_freq to the neighbouring available frequency, never above the
+// ceiling when raising
+function step(p, dir) {
+	let cur = rd(p + '/scaling_max_freq'), ceil = ceiling_of(p), next = null, fs = [];
+	if (!integer(cur))
+		return;
+	cur = +cur;
+	for (let f in split(trim(readfile(p + '/scaling_available_frequencies') ?? ''), ' '))
+		if (integer(f))
+			push(fs, +f);
+	for (let f in sort(fs, (a, b) => a - b)) {
+		if (dir < 0) {
+			if (f < cur)
+				next = f;
+		}
+		else if (next == null && f > cur && (ceil == null || ceil == '' || (integer(ceil) && f <= +ceil)))
+			next = f;
+	}
+	if (next != null)
+		writefile(p + '/scaling_max_freq', next + '\n');
+}
+// lift_caps: every policy back to its ceiling, when this guard holds a cap from before the kernel throttled (the
+// backstop's stay: they were set while it throttled already)
+function lift_caps() {
+	if (!exists(CAPPED) || rtrim(readfile(CAPPED) ?? '', '\n') == 'backstop')
+		return;
+	for (let p in policies()) {
+		let c = ceiling_of(p);
+		if (c != null && c != '')
+			writefile(p + '/scaling_max_freq', c + '\n');
+	}
+	unlink(CAPPED);
+}
+// raise_caps: every policy one step up towards its ceiling; the marker goes when none is below it
+function raise_caps() {
+	let below = false;
+	for (let p in policies()) {
+		let cur = rd(p + '/scaling_max_freq'), mx = rd(p + '/cpuinfo_max_freq');
+		if (integer(cur) && integer(mx) && +cur < +mx)
+			step(p, 1);
+		cur = rd(p + '/scaling_max_freq');
+		let ceil = ceiling_of(p);
+		if (integer(cur) && integer(ceil) && +cur < +ceil)
+			below = true;
+	}
+	if (!below && exists(CAPPED))
+		unlink(CAPPED);
+}
+function mark(path, text) {
+	mkdir_p(dirname(path));
+	writefile(path, text);
+}
+
+// next_look: the seconds to the next round: WAIT near a threshold or while a cap or the alarm of this guard is on, a
+// second more per 2 C under HOT (per 1 C of the battery under BATT_HOT), up to MAX_WAIT while the kernel throttles
+// itself, MAX_WAIT_ALONE where this guard is the thermal policy
+function next_look(t, b, throttle) {
+	if (exists(ALARM) || exists(CAPPED))
+		return WAIT;
+	let w = WAIT + int((HOT - t) / 2000);
+	if (integer(b))
+		w = min(w, WAIT + int((BATT_HOT - +b) / 10));
+	w = min(w, throttle ? MAX_WAIT_ALONE : MAX_WAIT);
+	return (w > WAIT) ? w : WAIT;
+}
+
+let native_was = '', first = true, th_timer = null;
+// one round: the reading, who throttles, what this guard does about it, the alarm; the seconds to the next round
+function thermal_round() {
+	let listing = names(TH, ''), zones = filter(listing, (z) => substr(z, 0, 12) == 'thermal_zone');
+	let t = hottest(zones), b = battery_temp(), throttle = false;
+	let native = native_cpu_cooling(t, listing) ?? '';
+	if (native != '') {
+		if (native != native_was) {
+			log('thermal-guard', 'kernel thermal zone ' + native + ' throttles the CPUs: watching only, power-off at ' + CRIT + ' mC stays');
+			lift_caps();
+		}
+	}
+	else {
+		throttle = true;
+		if (native_was != '')
+			log('thermal-guard', 'kernel thermal zone ' + native_was + ' gone: capping cpufreq again');
+		else if (first)
+			log('thermal-guard', 'no kernel thermal zone throttles the CPUs (kernel ' + RELEASE + '): capping cpufreq here above ' + HOT + ' mC, power-off at ' + CRIT + ' mC');
+	}
+	native_was = native;
+	first = false;
+	// the battery as the guard compared it ("${b:-0}"): none is 0, a reading that is no number compares false
+	let bn = (b == null || b == '') ? 0 : integer(b) ? +b : null;
+	if (t >= CRIT) {
+		log('thermal-guard', 'critical temperature ' + t + ' mC, powering off');
+		chain([ 'poweroff' ]);
+	}
+	else if (t >= HOT && throttle) {
+		for (let p in policies())
+			step(p, -1);
+		mark(CAPPED, '');
+		log('thermal-guard', 'hot (' + t + ' mC): lowered cpufreq limits');
+	}
+	else if (t <= COOL && throttle)
+		raise_caps();
+	else if (t >= BACKSTOP && !throttle) {
+		// the kernel throttles but does not hold the SoC: one step more per round on top of its cap, the A76 clusters
+		// from BACKSTOP, the A55 one (policy0) too from BACKSTOP_ALL; logged once per hot spell
+		if (!exists(CAPPED))
+			log('thermal-guard', 'kernel thermal zone ' + native + ' does not hold the SoC (' + t + ' mC): capping cpufreq on top of it from ' + BACKSTOP + ' mC (the A55 cluster too from ' + BACKSTOP_ALL + ' mC) until ' + HOT + ' mC');
+		for (let p in policies())
+			if (basename(p) != 'policy0' || t >= BACKSTOP_ALL)
+				step(p, -1);
+		mark(CAPPED, 'backstop\n');
+	}
+	else if (t <= HOT && !throttle && exists(CAPPED))
+		raise_caps();   // the backstop's caps, a step a round once the kernel holds the SoC at its trip again
+	let bs = (b == null || b == '') ? '-' : b;
+	if (!exists(ALARM) && (t >= HOT || (bn != null && bn >= BATT_HOT))) {
+		mark(ALARM, '');
+		log('thermal-guard', 'too hot (SoC ' + t + ' mC, battery ' + bs + ' dC): LED alarm on');
+		chain([ LED, 'alarm', 'on' ]);
+	}
+	else if (exists(ALARM) && t <= COOL && bn != null && bn <= BATT_COOL) {
+		unlink(ALARM);
+		log('thermal-guard', 'cooled down (SoC ' + t + ' mC, battery ' + bs + ' dC): LED alarm off');
+		chain([ LED, 'alarm', 'off' ]);
+	}
+	return next_look(t, b, throttle);
+}
+function thermal_next() {
+	let gap = WAIT;
+	try { gap = thermal_round(); }
+	catch (e) { log('mu300-sysd', 'a thermal round failed: ' + e); }
+	th_timer = retimer(th_timer, gap * 1000, () => thermal_next());
+}
+
+// ------------------------------------------------------------------ main
+idle_check = function() {
+	if (MODE == '--round') {
+		if (!running && !chaining)
+			uloop.end();
+	}
+	else if (ONCE && helper_gone && !pressing && !length(presses) && !running)
+		uloop.end();
+};
+
+if (MODE == '--check') {
+	// the modules loaded (or this program would not run), the calls of this ucode, a helper that knows -u
+	if (type(socket.pair) != 'function' || type(uloop.process) != 'function' || type(uloop.signal) != 'function') {
+		warn('mu300-sysd: this ucode lacks socket.pair, uloop.process or uloop.signal\n');
+		exit(1);
+	}
+	let exe = which(KEYS);
+	let p = exe ? popen(shq(exe) + ' -? 2>&1', 'r') : null;
+	let usage = p ? (p.read('all') ?? '') : '';
+	p?.close();
+	if (index(usage, '-u SUBSYSTEM') < 0) {
+		warn('mu300-sysd: ' + (exe ? exe + ' does not know -u (an older build)' : 'no ' + KEYS) + '\n');
+		exit(1);
+	}
+	exit(0);
+}
+
+uloop.init();
+if (MODE == '--round') {
+	thermal_init();
+	warn('next look in ' + thermal_round() + ' s\n');
+	if (running || chaining)
+		uloop.run();
+	exit(0);
+}
+if (MODE != '') {
+	warn('usage: mu300-sysd [--check | --round]\n');
+	exit(2);
+}
+
+slack_wait();
+uloop.signal('SIGTERM', () => uloop.end());
+uloop.signal('SIGINT', () => uloop.end());
+if (parts.keys || parts.led)
+	helper_start();
+if (parts.led) {
+	hint_load();
+	// the first look a little after the start, as mu300-buttons' first tick (the tests' runs end before it)
+	if (!ONCE)
+		led_timer = uloop.timer(5000, () => { led_timer = null; led_look(); });
+}
+if (parts.thermal) {
+	thermal_init();
+	thermal_next();
+}
+uloop.run();

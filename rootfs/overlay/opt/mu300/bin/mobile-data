@@ -1075,7 +1075,7 @@ up_locked() {
     if [ "$SIM_NATIVE" = 1 ] && [ ! -e /run/mu300/sim-radio-ready ]; then
         local native_end=$((SECONDS + ${MU300_NATIVE_RADIO_WAIT:-40}))
         until [ -e /run/mu300/sim-radio-ready ] || [ ! -e /run/mu300-radio-freeze ] || [ "$SECONDS" -ge "$native_end" ]; do
-            sleep 1
+            nap 0.2   # the dial starts as soon as the radio is (a whole second here was up to a second of each boot)
         done
     fi
     tty_setup
@@ -1634,8 +1634,110 @@ downlink_recover() {
     dl_rx=   # a new reference once the step is through
 }
 
+# The watchdog's wait (FINDINGS 206). With the modem daemon on ubus (mu300-modemd), the watchdog no longer asks the
+# modem every 30 s: it waits for something to happen - a line on the card's unsolicited channel that can mean the
+# bearer went (+CGEV, NO CARRIER, a registration lost, or back after a loss) or netifd's WAN going up or down - and
+# looks in full then; after a look that found trouble the next one comes MU300_WATCH_INTERVAL later, as before; and
+# every MU300_WATCH_FULL seconds (300) whatever happens, for what no event announces (an address the network changed
+# while packets still trickle in on the old one, a radio policy edited by hand). In between, every
+# MU300_WATCH_INTERVAL seconds, it reads the data device's packet counters, two sysfs reads and no process: a device
+# that sends and receives nothing in that time gets a full look, where downlink_stalled judges it. An idle link that
+# receives nothing because it sends nothing is no reason. Without the daemon (the shell mu300-atd, Ubuntu), or once
+# the event stream ends, every round is a full one, as it always was.
+WATCH_EV_FD= WATCH_EV_LPID= watch_full_at=0 watch_reg_lost= wc_rx= wc_tx=
+watch_events_start() {
+    [ -z "$WATCH_EV_FD" ] || return 0
+    [ "${MU300_WATCH_EVENTS:-1}" = 1 ] || return 1
+    command -v ubus >/dev/null 2>&1 || return 1
+    ubus -t 2 list mu300.modem >/dev/null 2>&1 || return 1
+    coproc WATCH_EV { exec ubus -S listen mu300.modem.urc network.interface 2>/dev/null; }
+    # bash unsets WATCH_EV once the listener has ended: a copy of its output stays readable to the end of the stream
+    exec {WATCH_EV_FD}<&"${WATCH_EV[0]}"
+    WATCH_EV_LPID=$WATCH_EV_PID
+}
+# the stream ended (ubus or the daemon went away): the next round starts a new listener, or sleeps without one
+watch_events_stop() {
+    [ -n "$WATCH_EV_FD" ] || return 0
+    exec {WATCH_EV_FD}<&-
+    WATCH_EV_FD=
+    kill "$WATCH_EV_LPID" 2>/dev/null || true
+}
+# watch_relevant EVENT: a reason for a full look now (one line of `ubus -S listen`)
+watch_relevant() {
+    local s
+    case $1 in
+        *'"network.interface"'*)
+            case $1 in *'"interface":"'"${MU300_WAN:-wan}"'"'*) return 0 ;; esac
+            return 1 ;;
+    esac
+    # the card in use's unsolicited channel only (nr0 for slot 0, nr3 for slot 1; the other card's says nothing here)
+    case $1 in *'"channel":"stty_nr'"$((SIM_SLOT * 3))"'"'*) ;; *) return 1 ;; esac
+    case $1 in
+        *'"line":"+CGEV:'*|*'"line":"NO CARRIER'*) return 0 ;;
+        *'"line":"+CEREG:'*|*'"line":"+C5GREG:'*|*'"line":"+CREG:'*|*'"line":"+CGREG:'*)
+            # the unsolicited form starts with <stat>: registered (1 home, 5 roaming) is a cell change and nothing
+            # for the bearer, unless it ends a loss; anything else is a loss
+            s=${1#*'"line":"'}; s=${s#*:}; s=${s# }; s=${s%%[!0-9]*}
+            case $s in
+                1|5) [ -n "$watch_reg_lost" ] || return 1; watch_reg_lost=; return 0 ;;
+                *) watch_reg_lost=1; return 0 ;;
+            esac ;;
+    esac
+    return 1
+}
+# watch_counters_suspicious: the data device sent since the last look and received nothing
+watch_counters_suspicious() {
+    local rx= tx=
+    { read -r rx < "$SYS_NET/$IFACE/statistics/rx_packets" && read -r tx < "$SYS_NET/$IFACE/statistics/tx_packets"; } 2>/dev/null ||
+        return 1
+    case $rx$tx in ''|*[!0-9]*) return 1 ;; esac
+    if [ -n "$wc_rx" ] && [ "$rx" = "$wc_rx" ] && [ "$tx" -gt "$wc_tx" ]; then
+        wc_rx=$rx wc_tx=$tx
+        return 0
+    fi
+    wc_rx=$rx wc_tx=$tx
+    return 1
+}
+# watch_next: until the next full look (it reads the caller's fails and unknown)
+watch_next() {
+    local interval=${MU300_WATCH_INTERVAL:-30} ev rc
+    if ! watch_events_start; then
+        sleep "$interval"
+        return 0
+    fi
+    [ "$watch_full_at" -gt 0 ] || watch_full_at=$((SECONDS + ${MU300_WATCH_FULL:-300}))
+    while :; do
+        if IFS= read -r -t "$interval" -u "$WATCH_EV_FD" ev; then
+            watch_relevant "$ev" || continue
+            # a burst (a re-attach, a handover) comes as several lines: they are taken with this one
+            while IFS= read -r -t 2 -u "$WATCH_EV_FD" ev; do :; done
+            break
+        else
+            rc=$?
+            if [ "$rc" -le 128 ]; then
+                watch_events_stop
+                sleep "$interval"
+                break
+            fi
+        fi
+        [ "$SECONDS" -lt "$watch_full_at" ] || break
+        [ "${fails:-0}" = 0 ] && [ "${unknown:-0}" = 0 ] || break
+        [ ! -e "$SIM_HELD" ] || continue
+        watch_counters_suspicious && break
+    done
+    watch_full_at=$((SECONDS + ${MU300_WATCH_FULL:-300}))
+}
+# watch_sim_absent: the card in use answered "not there" (mu300-sim-state get's own file, read here: the helper and the
+# selector it runs cost 17 ms; mu300-sim-state check, which asks the card, still runs where it did)
+watch_sim_absent() {
+    local v=
+    if [ -n "${MU300_SIM_STATE_BIN:-}" ]; then [ "$(sim_state get)" = absent ]; return; fi
+    { read -r v < "/run/mu300/sim$SIM_SLOT.state"; } 2>/dev/null
+    [ "${v//[!a-z]/}" = absent ]
+}
+
 watch() {
-    local fails=0 rounds=0 unknown=0 state
+    local fails=0 rounds=0 unknown=0 state sim_checked=0
     # one watchdog is enough: procd and systemd have both been seen starting a second one
     local wlock=/run/mu300-mobile-data-watch.lock wp=
     while ! mkdir "$wlock" 2>/dev/null; do
@@ -1649,23 +1751,26 @@ watch() {
         rm -rf "$wlock"
     done
     echo $$ > "$wlock/pid"
-    trap 'rm -rf "$wlock"' EXIT INT TERM
+    trap 'watch_events_stop; rm -rf "$wlock"' EXIT
+    trap 'exit 143' INT TERM
     modem_stack || { echo "no modem stack in this kernel ($(uname -r)), not watching" >&2; exit 0; }
     while :; do
-        sleep "${MU300_WATCH_INTERVAL:-30}"
         if [ -n "${MU300_WATCH_ROUNDS:-}" ]; then   # tests only: stop after that many rounds
+            if [ "$rounds" -ge "$MU300_WATCH_ROUNDS" ]; then watch_events_stop; rm -rf "$wlock"; trap - EXIT INT TERM; break; fi
             rounds=$((rounds + 1))
-            if [ "$rounds" -gt "$MU300_WATCH_ROUNDS" ]; then rm -rf "$wlock"; trap - EXIT INT TERM; break; fi
         fi
+        watch_next   # (was: sleep 30 before every round; see watch_next)
         [ -e /run/mu300/sim-switching ] && continue
         [ -e /run/mu300/sim-active-unknown ] && continue
         # A live switch publishes the slot only after its RF and routing gates pass. The same when the dual-SIM
         # boot gave up for SIM1 in this boot (mu300-sim2-warmup: the freeze goes, the card may stay the same):
         # this process chose its channels and its radio rules at its start, so it starts over.
         local current_slot current_native=0
-        current_slot=$(cat /run/mu300/sim-slot 2>/dev/null || echo "$SIM_SLOT")
+        current_slot=$SIM_SLOT
+        { read -r current_slot < /run/mu300/sim-slot; } 2>/dev/null || current_slot=$SIM_SLOT
         [ ! -e /run/mu300-radio-freeze ] || current_native=1
         if [ "$current_slot" != "$SIM_SLOT" ] || [ "$current_native" != "$SIM_NATIVE" ]; then
+            watch_events_stop
             rm -rf "$wlock"
             trap - EXIT INT TERM
             unset MU300_SIM_SLOT
@@ -1681,9 +1786,9 @@ watch() {
         if ! rf_allowed; then continue; fi
         # no card in the slot (FINDINGS 186): nothing to restore; every tenth round (five minutes) the card is asked
         # again, for an insertion whose event was missed - mu300-sim-state dials when one answers
-        if [ -e "$SIM_HELD" ] || [ "$(sim_state get)" = absent ]; then
-            sim_rounds=$(( ${sim_rounds:-0} + 1 ))
-            [ $((sim_rounds % 10)) != 0 ] || sim_state check >/dev/null
+        if [ -e "$SIM_HELD" ] || watch_sim_absent; then
+            # (every five minutes by the clock: the rounds are no longer 30 s apart with the modem daemon)
+            if [ $((SECONDS - sim_checked)) -ge 300 ]; then sim_checked=$SECONDS; sim_state check >/dev/null; fi
             continue
         fi
         if [ -e "$RF_HELD" ] && [ ! -s "$SUSPEND" ]; then

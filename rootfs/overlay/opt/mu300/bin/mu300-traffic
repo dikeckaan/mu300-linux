@@ -105,7 +105,24 @@ tzoff() {
     [ -n "${MU300_TRAFFIC_TZOFF:-}" ] && { echo "$MU300_TRAFFIC_TZOFF"; return; }
     date +%z | awk '{ s = substr($0, 1, 1) == "-" ? -1 : 1; print s * (substr($0, 2, 2) * 3600 + substr($0, 4, 2) * 60) }'
 }
+# clock: NOW and OFF (as now and tzoff) from one date, the offset worked out by the shell (FINDINGS 205: the service's
+# round used to run date twice and awk for this)
+clock() {
+    NOW=${MU300_TRAFFIC_NOW:-} OFF=${MU300_TRAFFIC_TZOFF:-}
+    [ -n "$NOW" ] && [ -n "$OFF" ] && return 0
+    set -- $(date '+%s %z')
+    [ -n "$NOW" ] || NOW=${1:-0}
+    [ -n "$OFF" ] && return 0
+    case ${2:-} in
+        [+-][0-9][0-9][0-9][0-9])
+            _h=${2#?}; _m=${_h#??}; _h=${_h%??}
+            OFF=$(( ${_h#0} * 3600 + ${_m#0} * 60 ))
+            case $2 in -*) OFF=$((-OFF)) ;; esac ;;
+        *) OFF=$(tzoff) ;;
+    esac
+}
 uptime_s() { { read -r u _ < "$R/proc/uptime"; } 2>/dev/null; echo "${u%%.*}"; }
+uptime_v() { u=; { read -r u _ < "$R/proc/uptime"; } 2>/dev/null; UP=${u%%.*}; }   # the same, into UP
 # counters: BOOT IDX RX TX of the counted interface (BOOT alone without it)
 counters() {
     BOOT= IDX= RX= TX=
@@ -361,11 +378,11 @@ END {
 ledger_run() {
     _op=$1 _fmt=$2; shift 2
     counters
-    UP=$(uptime_s); NOW=$(now)
+    uptime_v; clock
     clock_ok && _t=1 || _t=0
     data_up && _du=1 || _du=0
     _src=$LIVE; [ -s "$_src" ] || _src=$DISK; [ -s "$_src" ] || _src=/dev/null
-    awk -v op="$_op" -v fmt="$_fmt" -v now="$NOW" -v off="$(tzoff)" -v up="${UP:-0}" -v trusted="$_t" \
+    awk -v op="$_op" -v fmt="$_fmt" -v now="$NOW" -v off="$OFF" -v up="${UP:-0}" -v trusted="$_t" \
         -v cboot="$BOOT" -v cidx="$IDX" -v cdev="$DEVICE" -v crx="$RX" -v ctx="$TX" -v dev="$DEVICE" \
         -v reset="$RESET_DAY" -v cap="$CAP" -v warn="$WARN" -v cut="$CUT" -v dataup="$_du" \
         -v ndays="${NDAYS:-31}" -v ncyc="${NCYC:-12}" -v usedarg="${USED:-0}" -v sumfile="${SUMFILE:-}" \
@@ -376,7 +393,7 @@ ledger_run() {
 # lock / unlock: one writer of the live ledger at a time (the service's reading, a change made here). A lock whose
 # owner is gone is taken over.
 lock() {
-    mkdir -p "$RUN" || die "cannot create $RUN"
+    [ -d "$RUN" ] || mkdir -p "$RUN" || die "cannot create $RUN"
     i=0
     while ! mkdir "$LOCK" 2>/dev/null; do
         p=$(cat "$LOCK/pid" 2>/dev/null)
@@ -422,26 +439,48 @@ round() {
     lock
     SUMFILE=$SUMMARY.new update sample ledger && mv "$SUMMARY.new" "$SUMMARY"
     unlock
-    s() { sed -n "s/^$1=//p" "$SUMMARY" 2>/dev/null; }
-    c=$(s counted); UNSAVED=$((UNSAVED + ${c:-0}))
-    case $(s alert) in
-        warn) log "$(s warn)% of the monthly cap is used ($(s used) of $(s cap) bytes this cycle)" ;;
-        over) log "the monthly cap is reached ($(s used) of $(s cap) bytes this cycle)" ;;
+    # the summary's lines, read by the shell (one sed per value used to be most of a round's processes)
+    s_counted= s_alert= s_warn= s_used= s_cap= s_cut= s_restore=
+    { while IFS= read -r _l; do
+        case $_l in
+            counted=*) s_counted=${_l#*=} ;; alert=*) s_alert=${_l#*=} ;; warn=*) s_warn=${_l#*=} ;;
+            used=*) s_used=${_l#*=} ;; cap=*) s_cap=${_l#*=} ;; cut=*) s_cut=${_l#*=} ;;
+            restore=*) s_restore=${_l#*=} ;;
+        esac
+    done < "$SUMMARY"; } 2>/dev/null
+    case $s_counted in ''|*[!0-9]*) s_counted=0 ;; esac
+    UNSAVED=$((UNSAVED + s_counted))
+    case $s_alert in
+        warn) log "$s_warn% of the monthly cap is used ($s_used of $s_cap bytes this cycle)" ;;
+        over) log "the monthly cap is reached ($s_used of $s_cap bytes this cycle)" ;;
     esac
-    if [ "$(s cut)" = 1 ]; then
+    if [ "$s_cut" = 1 ]; then
         log "turning mobile data off at the monthly cap (to keep it on: mu300-traffic set cut off, or a higher cap)"
         data_off >/dev/null 2>&1 &
     fi
-    if [ "$(s restore)" = 1 ]; then
+    if [ "$s_restore" = 1 ]; then
         log "turning mobile data back on: the cap no longer applies"
         data_on >/dev/null 2>&1 &
     fi
 }
+# conf_changed: the settings file is not what load_conf read last (the shell reads it: a few lines); load_conf's nine
+# seds and greps run only then
+conf_seen=-
+conf_changed() {
+    _cf=
+    { while IFS= read -r _l || [ -n "$_l" ]; do _cf="$_cf$_l
+"; done < "$CONF"; } 2>/dev/null
+    [ "$_cf" != "$conf_seen" ] || return 1
+    conf_seen=$_cf
+}
 checkpoint() { save && LAST_SAVE=$(uptime_s) && UNSAVED=0; }
 
 run() {
-    load_conf
+    conf_changed || :; load_conf
     mkdir -p "$RUN" "$STORE" || die "cannot create $RUN or $STORE"
+    # the wait's timer (and those of what this starts: awk, date) may fire up to half a second late, so the kernel can
+    # serve the timers of several daemons with one wakeup (FINDINGS 205)
+    { echo 500000000 > /proc/$$/timerslack_ns; } 2>/dev/null
     # one service: another one alive keeps its place
     p=$(cat "$RUN/pid" 2>/dev/null)
     if [ -n "$p" ] && [ "$p" != $$ ] && kill -0 "$p" 2>/dev/null; then die "already running (pid $p)"; fi
@@ -458,10 +497,10 @@ run() {
             wait "$pid" 2>/dev/null || true
             kill "$pid" 2>/dev/null
         fi
-        load_conf   # a setting changed meanwhile applies to this round
+        if conf_changed; then load_conf; fi   # a setting changed meanwhile applies to this round
         round
         if [ -n "$stop" ]; then checkpoint; rm -f "$RUN/pid"; exit 0; fi
-        UP=$(uptime_s)
+        uptime_v
         if [ $((UP - LAST_SAVE)) -ge "$CHECKPOINT" ] ||
            { [ "$UNSAVED" -ge "$CHECKPOINT_BYTES" ] && [ $((UP - LAST_SAVE)) -ge 300 ]; }; then
             checkpoint

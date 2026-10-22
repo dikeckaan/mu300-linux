@@ -23,6 +23,38 @@ wait_and_exec() {
 	echo "n=0; while [ ! -c $dev ]; do n=\$((n+1)); if [ \"\$n\" -gt 240 ]; then echo 'mu300-atd: $dev never appeared' >&2; exit 1; fi; sleep 1; done; exec $*"
 }
 
+# The modem daemon (FINDINGS 206, docs/MODEMD.md), opted into with /etc/mu300/modemd: mu300-atd-io (C) holds the
+# channels and mu300-modemd (ucode) serves every broker of this boot in one process - the same channels, directories,
+# request FIFOs, answer files and URC logs as the shell mu300-atd instances below, without ~10 forks per AT command.
+# Without the file, or without ucode and its uloop and socket modules, the shell daemons run as they always did.
+modemd_on() {
+	[ -e /etc/mu300/modemd ] && [ -x /opt/mu300/bin/mu300-atd-io ] && [ -x /opt/mu300/bin/mu300-modemd ] &&
+		/usr/bin/ucode -e "import * as a from 'uloop'; import * as b from 'socket'; import * as c from 'ubus';" >/dev/null 2>&1
+}
+MODEMD_BROKERS=
+# modemd_broker NAME DEVICE DIR URC-CHANNELS LIVE-URC-LOG REOPEN [READY]: one broker, as one shell instance would be
+modemd_broker() {
+	MODEMD_BROKERS="$MODEMD_BROKERS name=$1,dev=$2,dir=$3${4:+,urc=$4}${5:+,live=$5},reopen=$6${7:+,ready=$7}"
+}
+# modemd_start RESPAWN: the bridge and the daemon. The bridge is respawned only where the shell brokers were (a SIM1
+# boot): a new bridge reopens the channels, which the dual-SIM path refuses to talk to. modemd holds no channel, so it
+# is always respawned: a restarted daemon takes over the bridge's open channels.
+modemd_start() {
+	procd_open_instance atd-io
+	procd_set_param command /opt/mu300/bin/mu300-atd-io -s /run/mu300-modem/io.sock
+	[ "$1" != 1 ] || procd_set_param respawn 3600 10 0
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+	procd_open_instance modemd
+	# shellcheck disable=SC2086 # one word per broker
+	procd_set_param command /usr/bin/ucode /opt/mu300/bin/mu300-modemd -s /run/mu300-modem/io.sock $MODEMD_BROKERS
+	procd_set_param respawn 3600 5 0
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+}
+
 start_sim1() {
 	local slot=0 cmddev datadev
 	[ ! -x /opt/mu300/bin/mu300-sim ] || slot=$(/opt/mu300/bin/mu300-sim active) || return 1
@@ -33,6 +65,12 @@ start_sim1() {
 	# panel's); with it, nr1's first-command window is reserved for the panel's radio-on path.
 	[ ! -x /usr/libexec/unisoc-modem/lock ] || : > /run/unisoc-modem-early-hook-pending
 
+	if modemd_on; then
+		# nr1 with the slot's URC channel (nr0, or nr3 for slot 1), nr2 without one; the reopen rule on, as here
+		modemd_broker atd "$cmddev" /run/mu300-at "$((slot * 3))" '' 1
+		modemd_broker atd2 "$datadev" /run/mu300-at2 '' '' 1
+		modemd_start 1
+	else
 	procd_open_instance atd
 	procd_set_param command /bin/sh -c "$(wait_and_exec "$cmddev" /opt/mu300/bin/mu300-atd)"
 	procd_set_param respawn 3600 10 0
@@ -48,6 +86,7 @@ start_sim1() {
 	procd_set_param stdout 1
 	procd_set_param stderr 1
 	procd_close_instance
+	fi
 
 	# K20 (ported from kanoqwq/clean-tf-7.2 cd4fb28): switch the radio on as soon as nr1's daemon reads commands,
 	# in a procd process of its own, so it overlaps the remaining init scripts; the PDP context stays netifd's.
@@ -93,10 +132,19 @@ start_sim2() {
     : > /run/mu300-radio-freeze
     : > /run/mu300/sim-active-unknown
     [ "$hot" != 1 ] || : > /run/mu300/sim-managed
+    if modemd_on; then
+        # the same four owners (no reopen, the sbuf condition), in modemd; the bridge is not respawned (see broker)
+        modemd_broker atd /dev/stty_nr1 /run/mu300-at 0 /run/mu300-at/urc/stty_nr0.log 0 sbuf:sbuf_5_006
+        modemd_broker atd2 /dev/stty_nr2 /run/mu300-at2 '' /run/mu300-at/urc/stty_nr0.log 0 sbuf:sbuf_5_006
+        modemd_broker atd4 /dev/stty_nr4 /run/mu300-at4 3 /run/mu300-at4/urc/stty_nr3.log 0 sbuf:sbuf_5_006
+        modemd_broker atd5 /dev/stty_nr5 /run/mu300-at5 '' /run/mu300-at4/urc/stty_nr3.log 0 sbuf:sbuf_5_006
+        modemd_start 0
+    else
     broker atd 1 /run/mu300-at 0 /run/mu300-at/urc/stty_nr0.log "$SBUF_READY"
     broker atd2 2 /run/mu300-at2 '' /run/mu300-at/urc/stty_nr0.log "$SBUF_READY"
     broker atd4 4 /run/mu300-at4 3 /run/mu300-at4/urc/stty_nr3.log "$SBUF_READY"
     broker atd5 5 /run/mu300-at5 '' /run/mu300-at4/urc/stty_nr3.log "$SBUF_READY"
+    fi
     # The cold start (and its fallback to SIM1 when it cannot be done): mu300-sim2-warmup confirms the boot.
     procd_open_instance sim2-cold-start
     procd_set_param command /bin/bash /opt/mu300/bin/mu300-sim2-warmup

@@ -19,6 +19,50 @@ GIT_CHECKOUT = bool(shutil.which('git')) and subprocess.run(['git', '-C', str(TO
                                                            capture_output=True).returncode == 0
 
 
+# The panel's ucode programs (unisoc-modem/dashboard-info and cell, FINDINGS 206) run under a ucode interpreter:
+# MU300_TEST_UCODE (a command line, e.g. a wrapper that sets LD_LIBRARY_PATH for a local build), else `ucode` on PATH.
+# The modules they load from the device's own ucode packages (ubus, uci, nl80211, rtnl) are stood in for by
+# tests/ucode-stubs, which run the same stubbed commands (ubus, uci, iw, ip) the shell versions ran; mu300.dash comes
+# from the tree. A test of such a program is skipped where there is no ucode.
+UCODE_STUBS = TOP / 'tests' / 'ucode-stubs'
+UCODE_MODULES = TOP / 'openwrt' / 'luci-app-mu300' / 'root' / 'usr' / 'share' / 'ucode'
+# the modules of the base system (mu300.cellparse: the modem daemon's and the panel's collector's parsers)
+UCODE_BASE_MODULES = TOP / 'rootfs' / 'overlay' / 'usr' / 'share' / 'ucode'
+
+
+def ucode_paths():
+    """The -L arguments: the stand-ins first, then the tree's modules."""
+    return ['-L', f'{UCODE_STUBS}/*.uc', '-L', f'{UCODE_MODULES}/*.uc', '-L', f'{UCODE_BASE_MODULES}/*.uc']
+
+
+def ucode():
+    """[argv] of a ucode interpreter, or None."""
+    cmd = os.environ.get('MU300_TEST_UCODE', '').split() or ([shutil.which('ucode')] if shutil.which('ucode') else [])
+    if not cmd:
+        return None
+    try:
+        ok = subprocess.run(cmd + ['-e', 'print(1)'], capture_output=True, timeout=10).returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        ok = False
+    return cmd if ok else None
+
+
+def is_ucode(path):
+    try:
+        with open(path, 'rb') as f:
+            return f.readline().startswith(b'#!/usr/bin/ucode')
+    except OSError:
+        return False
+
+
+def ucode_argv(path):
+    """The command line that runs the ucode program at PATH with the stand-in modules, or None without ucode."""
+    u = ucode()
+    if not u:
+        return None
+    return u + ucode_paths() + [str(path)]
+
+
 def _works(argv):
     try:
         return subprocess.run(argv + ['-c', 'true'], capture_output=True, timeout=10).returncode == 0
@@ -77,8 +121,14 @@ class ShellTest(unittest.TestCase):
                               env=self.env(**env), timeout=60)
 
     def script(self, shell, path, *args, stdin=None, **env):
-        """Run the script at PATH with SHELL (not its #! line: the point is to try every shell)."""
-        return subprocess.run(shell + [str(path)] + [str(a) for a in args], input=stdin, capture_output=True,
+        """Run the script at PATH with SHELL (not its #! line: the point is to try every shell). A ucode program
+        (#!/usr/bin/ucode) runs under ucode instead, with the stand-in modules; skipped where there is none."""
+        argv = shell + [str(path)]
+        if is_ucode(path):
+            argv = ucode_argv(path)
+            if argv is None:
+                self.skipTest('no ucode interpreter (MU300_TEST_UCODE)')
+        return subprocess.run(argv + [str(a) for a in args], input=stdin, capture_output=True,
                               text=True, env=self.env(**env), timeout=60)
 
     def each_shell(self):

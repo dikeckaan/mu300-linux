@@ -5,8 +5,12 @@ START=95
 USE_PROCD=1
 export PATH="$PATH:/opt/mu300/busybox-bin"
 
+# mu300-sysd serves the keys and the LED tick instead, where it runs (/etc/init.d/mu300-sysd, the same test)
+sysd_on() { [ -e /etc/mu300/sysd ] && /usr/bin/ucode /opt/mu300/bin/mu300-sysd --check >/dev/null 2>&1; }
+
 start_service() {
 	[ -x /opt/mu300/bin/mu300-keys ] || return 0
+	sysd_on && return 0
 	procd_open_instance buttons
 	procd_set_param command /opt/mu300/bin/mu300-buttons
 	procd_set_param respawn 3600 10 0

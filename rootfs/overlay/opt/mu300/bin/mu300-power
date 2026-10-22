@@ -81,7 +81,7 @@ bounded() {
     _bd_s=$1; shift
     trap : USR1
     _bd_me=$(exec sh -c 'echo $PPID')   # this shell's own pid, also inside $( )
-    mkdir -p "$ST" 2>/dev/null
+    [ -d "$ST" ] || mkdir -p "$ST" 2>/dev/null
     "$@" &
     _bd_p=$!
     _bd_f=$ST/.deadline.$_bd_me.$_bd_p
@@ -99,12 +99,13 @@ bounded() {
 }
 
 # --- configuration
-default() {  # default KEY: the built-in value of a top-level key or PROFILE_KNOB
+default() { default_v "$1" && echo "$DV"; }   # default KEY: the built-in value of a top-level key or PROFILE_KNOB
+default_v() {  # the same, into DV
     case $1 in
-        PROFILE) echo auto ;; SAVER_BELOW) echo 20 ;; CHARGE_TO) echo 100 ;; POWER_ON_CHARGER) echo 0 ;;
-        plugged_WIFI_IDLE) echo 0 ;;  plugged_RADIO_IDLE) echo keep ;; plugged_LEDS_IDLE) echo on ;;  plugged_CPU) echo full ;;
-        battery_WIFI_IDLE) echo 10 ;; battery_RADIO_IDLE) echo off ;;  battery_LEDS_IDLE) echo off ;; battery_CPU) echo full ;;
-        saver_WIFI_IDLE) echo 5 ;;    saver_RADIO_IDLE) echo off ;;    saver_LEDS_IDLE) echo off ;;   saver_CPU) echo eco ;;
+        PROFILE) DV=auto ;; SAVER_BELOW) DV=20 ;; CHARGE_TO) DV=100 ;; POWER_ON_CHARGER) DV=0 ;;
+        plugged_WIFI_IDLE) DV=0 ;;  plugged_RADIO_IDLE) DV=keep ;; plugged_LEDS_IDLE) DV=on ;;  plugged_CPU) DV=full ;;
+        battery_WIFI_IDLE) DV=10 ;; battery_RADIO_IDLE) DV=off ;;  battery_LEDS_IDLE) DV=off ;; battery_CPU) DV=full ;;
+        saver_WIFI_IDLE) DV=5 ;;    saver_RADIO_IDLE) DV=off ;;    saver_LEDS_IDLE) DV=off ;;   saver_CPU) DV=eco ;;
         *) return 1 ;;
     esac
 }
@@ -171,6 +172,101 @@ num() {  # a number for arithmetic: empty or junk is 0; leading zeros go (dash r
     while [ ${#_nd} -gt 1 ] && [ "${_nd#0}" != "$_nd" ]; do _nd=${_nd#0}; done
     case $1 in -*) echo "-$_nd" ;; *) echo "$_nd" ;; esac
 }
+# --- the daemon's reads (FINDINGS 205). Its loop reads with the shell's own read, into variables: a $( ) is a process,
+# a cat another, and one loop of the helpers above started some forty of them every 10 s (52 ticks a minute on a
+# U30 Air on the charger). The helpers above stay for the commands (status, profile...), with the same answers.
+NL='
+'
+rv() { RV=; { read -r RV < "$1"; } 2>/dev/null; }   # rv FILE: its first line into RV (empty when unreadable)
+drop() { for _f in "$@"; do [ ! -e "$_f" ] && [ ! -L "$_f" ] || rm -f "$_f"; done; }   # rm -f, no process for nothing
+nv() {  # nv VALUE: num's answer into NV
+    case ${1#-} in ""|*[!0-9]*) NV=0; return 0 ;; esac
+    _nd=${1#-}
+    while [ ${#_nd} -gt 1 ] && [ "${_nd#0}" != "$_nd" ]; do _nd=${_nd#0}; done
+    case $1 in -*) NV="-$_nd" ;; *) NV=$_nd ;; esac
+}
+upv() {  # uptime_s into UPV
+    UPV=; { read -r UPV _ < "$R/proc/uptime"; } 2>/dev/null; UPV=${UPV%%.*}
+    [ -n "$UPV" ] || UPV=$(date +%s)
+}
+# conf_load / conf_v KEY: conf_get's answer into CV, from the file's lines as conf_load read them (once a loop)
+conf_load() {
+    CONF_NL=$NL
+    { while IFS= read -r _l || [ -n "$_l" ]; do CONF_NL="$CONF_NL$_l$NL"; done < "$CONF"; } 2>/dev/null
+}
+conf_v() {
+    CV=
+    case ${CONF_NL-} in *"$NL$1="*) CV=${CONF_NL##*"$NL$1="}; CV=${CV%%"$NL"*} ;; esac   # the last KEY= line
+    if [ -n "$CV" ] && valid "$1" "$CV"; then return 0; fi
+    if [ -n "$CV" ]; then   # (noted for status, as conf_get does)
+        mkdir -p "$ST" 2>/dev/null
+        grep -qx "$1" "$ST/ignored" 2>/dev/null || echo "$1" >> "$ST/ignored" 2>/dev/null
+    fi
+    default_v "$1"; CV=$DV
+}
+knob_v() { conf_v "$1_$2"; }
+# psy_scan: the power supplies by type, as psy_all lists them: PSY_BAT (Battery), PSY_CHG (USB, Mains)
+psy_scan() {
+    PSY_BAT= PSY_CHG=
+    for _d in "$R"/sys/class/power_supply/*; do
+        [ -f "$_d/type" ] || continue
+        rv "$_d/type"
+        case $RV in Battery) PSY_BAT="$PSY_BAT $_d" ;; USB|Mains) PSY_CHG="$PSY_CHG $_d" ;; esac
+    done
+}
+device_v() { [ -n "${DEVNAME+x}" ] || DEVNAME=$(mu300-device 2>/dev/null); }   # mu300-device, asked once
+battery_v() {  # battery_dir into BAT (false: none)
+    BAT=
+    device_v; case $DEVNAME in f50|v50) return 1 ;; esac
+    for _d in $PSY_BAT; do
+        if [ -f "$_d/present" ]; then rv "$_d/present"; [ "$RV" = 1 ] || continue; fi
+        BAT=$_d; return 0
+    done
+    return 1
+}
+extcon_v() {  # an extcon whose state has the line USB=1
+    for _s in "$R"/sys/class/extcon/*/state; do
+        [ -r "$_s" ] || continue
+        { while IFS= read -r _l || [ -n "$_l" ]; do [ "$_l" = USB=1 ] && return 0; done < "$_s"; } 2>/dev/null
+    done
+    return 1
+}
+plugged_v() {  # plugged
+    if [ -n "$PSY_CHG" ]; then
+        for _d in $PSY_CHG; do rv "$_d/online"; [ "$RV" = 1 ] && return 0; done
+        return 1
+    fi
+    extcon_v && return 0
+    battery_v || return 0   # no battery at all (the F50): it runs on the cable
+    return 1
+}
+unplugged_v() {  # unplugged
+    plugged_v && return 1
+    extcon_v && return 1
+    _us=; battery_v && { rv "$BAT/status"; _us=$RV; }
+    [ "$_us" != Charging ]
+}
+pick_profile_v() {  # pick_profile without printing: PICKED and WHY
+    conf_v PROFILE
+    if [ "$CV" != auto ]; then PICKED=$CV WHY=forced; return 0; fi
+    if plugged_v; then PICKED=plugged WHY=auto; return 0; fi
+    conf_v SAVER_BELOW; _below=$CV
+    _cap=; battery_v && { rv "$BAT/capacity"; _cap=$RV; }
+    case $_cap in ''|*[!0-9]*) _cap= ;; esac
+    if [ "$_below" != 0 ] && [ -n "$_cap" ] && [ "$_cap" -lt "$_below" ]; then
+        PICKED=saver WHY="auto, battery under $_below %"
+    else
+        PICKED=battery WHY=auto
+    fi
+}
+usb_host_v() { for _s in "$R"/sys/class/udc/*/state; do rv "$_s"; [ "$RV" = configured ] && return 0; done; return 1; }
+SWITCH=   # charging_switch, found once and kept while it is there
+switch_v() {
+    if [ -n "$SWITCH" ] && [ -e "$SWITCH" ]; then return 0; fi
+    SWITCH=$(charging_switch) || SWITCH=
+    [ -n "$SWITCH" ]
+}
+
 capacity() { _d=$(battery_dir) && rd "$_d/capacity"; }
 battery_temp() { _d=$(battery_dir) && rd "$_d/temp"; }
 charger_dir() { psy_of_type USB Mains; }
@@ -247,6 +343,30 @@ usb_host() { for _s in "$R"/sys/class/udc/*/state; do [ "$(rd "$_s")" = configur
 activity() {  # anyone there? a Wi-Fi station, a computer on USB, or a key press (the wake flag)
     [ "$(stations)" -gt 0 ] && return 0   # a failed dump counts (see stations)
     usb_host && return 0
+    [ -e "$ST/wake" ]
+}
+# The daemon's: stations into ST_N (as stations prints it; false on a failed dump), its dump through a file in the
+# state directory (emptied after the count) rather than a $( ), and activity with the stations asked only when SAMPLE
+# is 1 (the daemon's every MU300_POWER_SAMPLE_EVERY-th loop; a computer on USB and the wake flag are looked at every
+# loop: they cost no process). The idle timer asks the stations once more itself before it runs out (step).
+stations_v() {
+    ST_N=0
+    [ -e "$R/sys/class/net/wlan0" ] || return 0
+    if ! bounded "$PROBE" iw dev wlan0 station dump > "$ST/.stations" 2>/dev/null </dev/null; then
+        ST_N=1; : > "$ST/.stations"; return 1
+    fi
+    { while IFS= read -r _l; do case $_l in Station*) ST_N=$((ST_N + 1)) ;; esac; done < "$ST/.stations"; } 2>/dev/null
+    : > "$ST/.stations"
+    return 0
+}
+ST_OK=1
+activity_v() {
+    ST_N=0 ST_OK=1
+    if [ "${SAMPLE:-1}" = 1 ]; then
+        stations_v && ST_OK=0
+        [ "$ST_N" -gt 0 ] && return 0
+    fi
+    usb_host_v && return 0
     [ -e "$ST/wake" ]
 }
 
@@ -486,43 +606,53 @@ restore() {
 }
 leave_idle() { restore "$@"; }
 # selfcheck PROFILE: the state says active, yet the modem is held down, or the hotspot is down where it should never
-# idle (WIFI_IDLE=0) and nobody turned it off on purpose; prints why. The hotspot is not looked at in the first
-# MU300_POWER_SELFCHECK_GRACE seconds of a boot (it is still coming up) nor within as long of the last self-check's
-# restore (a hotspot that will not start is not restarted every loop).
+# idle (WIFI_IDLE=0) and nobody turned it off on purpose; why goes into SC_WHY. The hotspot is not looked at in the
+# first MU300_POWER_SELFCHECK_GRACE seconds of a boot (it is still coming up) nor within as long of the last
+# self-check's restore (a hotspot that will not start is not restarted every loop).
 # A hotspot that stays down after that is retried at a doubling interval, up to 30 min, logged once per step
 # ($ST/selfcheck-hold); it is reset once the hotspot is seen up.
+# hostapd is asked (ubus) only when SAMPLE is 1 - the daemon's every MU300_POWER_SAMPLE_EVERY-th loop, a minute - or
+# when wlan0 is gone: a hotspot that went down by itself is restored up to a minute later than it was (FINDINGS 205).
 selfcheck() {
-    if [ -e "$MD_SUSPEND" ]; then echo "the modem is suspended ($(rd "$MD_SUSPEND"))"; return 0; fi
+    SC_WHY=
+    if [ -e "$MD_SUSPEND" ]; then rv "$MD_SUSPEND"; SC_WHY="the modem is suspended ($RV)"; return 0; fi
     # a VPN this left stopped (a start that failed, or a kill in between): again, at most once per grace period
     # after the last try (vpn_start stamps a failed one)
     if [ -e "$ST/vpn-stopped" ]; then
-        _sc_now=$(num "$(uptime_s)")
-        if [ ! -s "$ST/vpn-retry-at" ] || [ $((_sc_now - $(num "$(rd "$ST/vpn-retry-at")"))) -ge "${MU300_POWER_SELFCHECK_GRACE:-120}" ]; then
+        upv; nv "$UPV"; _sc_now=$NV; rv "$ST/vpn-retry-at"; nv "$RV"
+        if [ ! -s "$ST/vpn-retry-at" ] || [ $((_sc_now - NV)) -ge "${MU300_POWER_SELFCHECK_GRACE:-120}" ]; then
             echo "$_sc_now" > "$ST/vpn-retry-at"
-            echo "mu300-vpn is still stopped"; return 0
+            SC_WHY="mu300-vpn is still stopped"; return 0
         fi
     fi
     if [ -e "$MD_ENDC" ]; then
-        _sc_now=$(num "$(uptime_s)")
-        [ ! -s "$ST/endc-at" ] || [ $((_sc_now - $(num "$(rd "$ST/endc-at")"))) -ge "${MU300_POWER_SELFCHECK_GRACE:-120}" ] || return 1
+        upv; nv "$UPV"; _sc_now=$NV; rv "$ST/endc-at"; nv "$RV"
+        [ ! -s "$ST/endc-at" ] || [ $((_sc_now - NV)) -ge "${MU300_POWER_SELFCHECK_GRACE:-120}" ] || return 1
         echo "$_sc_now" > "$ST/endc-at"
-        echo "EN-DC is still off after a failed resume"; return 0
+        SC_WHY="EN-DC is still off after a failed resume"; return 0
     fi
-    [ "$(knob "$1" WIFI_IDLE)" = 0 ] || return 1
-    _sc_g=${MU300_POWER_SELFCHECK_GRACE:-120}; _sc_now=$(num "$(uptime_s)")
+    knob_v "$1" WIFI_IDLE; [ "$CV" = 0 ] || return 1
+    _sc_g=${MU300_POWER_SELFCHECK_GRACE:-120}; upv; nv "$UPV"; _sc_now=$NV
     [ "$_sc_now" -ge "$_sc_g" ] || return 1
-    _sc_hold=$(num "$(rd "$ST/selfcheck-hold")"); [ "$_sc_hold" -ge "$_sc_g" ] || _sc_hold=$_sc_g
-    [ ! -s "$ST/hotspot-on-at" ] || [ $((_sc_now - $(num "$(rd "$ST/hotspot-on-at")"))) -ge "$_sc_hold" ] || return 1
-    if hotspot_up; then seen_up; rm -f "$ST/selfcheck-hold" "$ST/hotspot-on-at"; return 1; fi
+    rv "$ST/selfcheck-hold"; nv "$RV"; _sc_hold=$NV; [ "$_sc_hold" -ge "$_sc_g" ] || _sc_hold=$_sc_g
+    rv "$ST/hotspot-on-at"; nv "$RV"
+    [ ! -s "$ST/hotspot-on-at" ] || [ $((_sc_now - NV)) -ge "$_sc_hold" ] || return 1
+    [ "${SAMPLE:-1}" = 1 ] || [ ! -e "$R/sys/class/net/wlan0" ] || return 1
+    if hotspot_up; then
+        seen_up
+        [ ! -e "$ST/selfcheck-hold" ] && [ ! -e "$ST/hotspot-on-at" ] || rm -f "$ST/selfcheck-hold" "$ST/hotspot-on-at"
+        return 1
+    fi
     hotspot_wanted || return 1
     if [ -s "$ST/hotspot-on-at" ]; then   # it was switched on before, and is down again or still: back off
         _sc_next=$((_sc_hold * 2)); [ "$_sc_next" -le 1800 ] || _sc_next=1800
-        if [ "$_sc_next" != "$(rd "$ST/selfcheck-hold")" ]; then
+        rv "$ST/selfcheck-hold"
+        if [ "$_sc_next" != "$RV" ]; then
             echo "$_sc_next" > "$ST/selfcheck-hold"
             say "self-check: the hotspot did not stay up; the next try after $_sc_next s"
         fi
     fi
-    echo "the hotspot is down"
+    SC_WHY="the hotspot is down"
 }
 # --- the charging boot: LK opened our slot for a flat battery on the charger; stay light until the Wi-Fi key
 boot_mode() { rd "$RUN/boot-mode"; }
@@ -579,16 +709,17 @@ shutdown_uv() {
     echo 3100000
 }
 uvlo() {
-    _ub=$(battery_dir) || return 1
-    _usd=$(shutdown_uv); _uwin=$((_usd + 120000)); _un=0
+    battery_v || return 1; _ub=$BAT
+    [ -n "${USD_CACHE:-}" ] || USD_CACHE=$(shutdown_uv)   # the device tree, read once
+    _usd=$USD_CACHE; _uwin=$((_usd + 120000)); _un=0
     while [ "$_un" -lt 5 ]; do
-        _uv=$(rd "$_ub/voltage_now")
+        rv "$_ub/voltage_now"; _uv=$RV
         case $_uv in ''|*[!0-9]*) return 1 ;; esac
         [ "$_uv" -gt 0 ] && [ "$_uv" -le "$_uwin" ] || return 1
         _un=$((_un + 1))
         [ "$_un" -ge 5 ] || sleep "${MU300_POWER_UVLO_GAP:-1}"
     done
-    _ucap=$(capacity)
+    rv "$_ub/capacity"; _ucap=$RV
     case $_ucap in ''|*[!0-9]*) _ucap=100 ;; esac
     [ "$_ucap" -le 1 ] || [ "$_uv" -le "$_usd" ] || return 1
     _ulow="battery at $((_uv / 1000)) mV ($_ucap %) for five samples, unplugged"
@@ -599,15 +730,15 @@ uvlo() {
 # Critical where the driver has it, else 0 %). Unplugged in the charging boot, charger_gone_check is quicker. Returns 1
 # when it powered off.
 low_battery_check() {
-    battery_dir >/dev/null || return 0
-    if ! unplugged; then echo 0 > "$ST/low-loops"; return 0; fi
+    battery_v || return 0
+    if ! unplugged_v; then echo 0 > "$ST/low-loops"; return 0; fi
     if uvlo; then power_off "$_ulow"; return 1; fi
-    _lowc=$(capacity); _lowl=$(_b=$(battery_dir) && rd "$_b/capacity_level")
+    rv "$BAT/capacity"; _lowc=$RV; rv "$BAT/capacity_level"; _lowl=$RV
     case $_lowc in ''|*[!0-9]*) _lowc= ;; esac
     if [ "$_lowl" != Critical ] && { [ -z "$_lowc" ] || [ "$_lowc" -gt 0 ]; }; then
         echo 0 > "$ST/low-loops"; return 0
     fi
-    _lown=$(( $(num "$(rd "$ST/low-loops")") + 1 )); echo "$_lown" > "$ST/low-loops"
+    rv "$ST/low-loops"; nv "$RV"; _lown=$((NV + 1)); echo "$_lown" > "$ST/low-loops"
     [ "$_lown" -ge 3 ] || return 0
     if [ "$_lowl" = Critical ]; then power_off "battery critical (${_lowc:-?} %) and unplugged for three loops"
     else power_off "battery at $_lowc % and unplugged for three loops"; fi
@@ -616,9 +747,9 @@ low_battery_check() {
 # The charging boot ends with the charger, as the stock charger mode does (kanoqwq 85d72fa9, FINDINGS 196): unplugged
 # by every account for two loops in a row, a clean poweroff. Returns 1 when it powered off.
 charger_gone_check() {
-    battery_dir >/dev/null || return 0
-    if ! unplugged; then rm -f "$ST/unplugged-loops"; return 0; fi
-    _ugn=$(( $(num "$(rd "$ST/unplugged-loops")") + 1 )); echo "$_ugn" > "$ST/unplugged-loops"
+    battery_v || return 0
+    if ! unplugged_v; then [ ! -e "$ST/unplugged-loops" ] || rm -f "$ST/unplugged-loops"; return 0; fi
+    rv "$ST/unplugged-loops"; nv "$RV"; _ugn=$((NV + 1)); echo "$_ugn" > "$ST/unplugged-loops"
     [ "$_ugn" -ge 2 ] || return 0
     power_off "charger removed in the charging boot"
     return 1
@@ -645,8 +776,10 @@ switch_write() {  # switch_write NODE VALUE: a failed write turns the guard off 
     return 1
 }
 set_charging() {  # set_charging on|off REASON: logs only when the marker $ST/charge-off changes
-    _sw=$(charging_switch) || return 0
-    _cur=$(rd "$_sw"); _was=$(rd "$ST/charge-off")
+    switch_v || return 0
+    _sw=$SWITCH
+    [ "$1" = off ] || [ -e "$ST/charge-off" ] || return 0   # (on: not ours to turn on, below)
+    rv "$_sw"; _cur=$RV; rv "$ST/charge-off"; _was=$RV
     if [ "$1" = off ]; then
         if [ "$_cur" != 'N/A' ]; then switch_write "$_sw" 'N/A' || return 0; fi
         [ "$_was" = "$2" ] || say "charging off: $2"
@@ -663,9 +796,9 @@ guard() {  # temp in 0.1 C: off above 45.0 or below 0, back on under 40.0 and ov
     # N of 1-99: off at N %, on under N-5 (or at once when the limit changed); 0: off whatever the capacity; and
     # never held under 5 %: a load the charger's input does not cover still drains the battery with charging off
     [ ! -e "$ST/switch-failed" ] || return 0
-    battery_dir >/dev/null || return 0   # no battery (the F50): nothing to guard, whatever the limit says
-    charging_switch >/dev/null || { [ -e "$ST/no-switch-logged" ] || { say "no charge switch: the guard does nothing"; : > "$ST/no-switch-logged"; }; return 0; }
-    _gt=$(battery_temp); _gcap=$(capacity); _goff=$(rd "$ST/charge-off"); _glim=$(conf_get CHARGE_TO)
+    battery_v || return 0   # no battery (the F50): nothing to guard, whatever the limit says
+    switch_v || { [ -e "$ST/no-switch-logged" ] || { say "no charge switch: the guard does nothing"; : > "$ST/no-switch-logged"; }; return 0; }
+    rv "$BAT/temp"; _gt=$RV; rv "$BAT/capacity"; _gcap=$RV; rv "$ST/charge-off"; _goff=$RV; conf_v CHARGE_TO; _glim=$CV
     case $_gcap in ''|*[!0-9]*) _gcap= ;; esac
     case $_goff in   # off for a reason whose reading is gone: fail safe, keep it off (unless the limit is gone)
         temp) case ${_gt#-} in ''|*[!0-9]*) return 0 ;; esac ;;
@@ -677,7 +810,7 @@ guard() {  # temp in 0.1 C: off above 45.0 or below 0, back on under 40.0 and ov
         elif [ "$_goff" = temp ] && { [ "$_gt" -ge 400 ] || [ "$_gt" -le 30 ]; }; then _gwant=off _gwhy=temp; fi ;;
     esac
     if [ "$_gwant" = on ] && [ "$_glim" != 100 ]; then
-        _gfrom=$(rd "$ST/charge-limit")   # the limit that switched it off (none, from before this file: the same)
+        rv "$ST/charge-limit"; _gfrom=$RV   # the limit that switched it off (none, from before this file: the same)
         if [ "$_glim" = 0 ]; then _gwant=off
         elif [ -n "$_gcap" ]; then
             if [ "$_gcap" -ge "$_glim" ]; then _gwant=off
@@ -689,39 +822,41 @@ guard() {  # temp in 0.1 C: off above 45.0 or below 0, back on under 40.0 and ov
     fi
     if [ "$_gwant" = off ]; then
         set_charging off "$_gwhy"
-        if [ "$_gwhy" = limit ]; then echo "$_glim" > "$ST/charge-limit"; else rm -f "$ST/charge-limit"; fi
+        if [ "$_gwhy" = limit ]; then echo "$_glim" > "$ST/charge-limit"; else drop "$ST/charge-limit"; fi
     else
         set_charging on "$_gon"
-        [ -e "$ST/charge-off" ] || rm -f "$ST/charge-limit"
+        [ -e "$ST/charge-off" ] || drop "$ST/charge-limit"
     fi
 }
 
 step() {  # one look at the world; sets _acted when it changed the state
-    mkdir -p "$ST"
-    _prof=$(pick_profile); _state=$(rd "$ST/state")
+    [ -d "$ST" ] || mkdir -p "$ST"
+    pick_profile_v; _prof=$PICKED; rv "$ST/state"; _state=$RV
     [ -n "$_state" ] || { _state=active; set_state active "started"; }
-    _old=$(rd "$ST/profile"); echo "$_prof" > "$ST/profile"
-    _now=$(num "$(uptime_s)")
+    rv "$ST/profile"; _old=$RV; echo "$_prof" > "$ST/profile"
+    upv; nv "$UPV"; _now=$NV
     # the supply of the last loop: idle wakes on the edge battery -> plugged, not on being plugged (which an idle on
     # the charger, a forced profile or the F50 always is)
-    _sup=battery; plugged && _sup=plugged
-    _osup=$(rd "$ST/supply"); echo "$_sup" > "$ST/supply"
-    if activity; then echo "$_now" > "$ST/idle-since"; fi
+    _sup=battery; plugged_v && _sup=plugged
+    rv "$ST/supply"; _osup=$RV; echo "$_sup" > "$ST/supply"
+    if activity_v; then echo "$_now" > "$ST/idle-since"; fi
     [ -s "$ST/idle-since" ] || echo "$_now" > "$ST/idle-since"
     low_battery_check || return 0
     case $_state in
         idle)
-            rm -f "$ST/idle-now"
+            drop "$ST/idle-now"
             if [ -e "$ST/wake" ]; then leave_idle "woken by a key"; return 0; fi
-            if usb_host; then leave_idle "woken by a computer on USB"; return 0; fi
+            if usb_host_v; then leave_idle "woken by a computer on USB"; return 0; fi
             if [ "$_osup" = battery ] && [ "$_sup" = plugged ]; then leave_idle "woken: plugged in"; return 0; fi
-            if _sn=$(stations) && [ "$_sn" -gt 0 ]; then leave_idle "woken by a Wi-Fi station"; return 0; fi
+            # (the stations activity_v asked this loop, when it did: SAMPLE)
+            if [ "$ST_OK" = 0 ] && [ "$ST_N" -gt 0 ]; then leave_idle "woken by a Wi-Fi station"; return 0; fi
             if [ -n "$_old" ] && [ "$_old" != "$_prof" ]; then enter_idle "$_prof" "idle: profile now $_prof"; fi ;;
         charging-boot)   # only the Wi-Fi key (or the held power key) ends it; a computer on USB does not
-            rm -f "$ST/idle-now"
+            drop "$ST/idle-now"
             charger_gone_check || return 0
             if [ -e "$ST/wake" ]; then
-                case $(rd "$ST/wake") in
+                rv "$ST/wake"
+                case $RV in
                     power) rm -f "$ST/wake" ;;
                     wifi) leave_charging_boot "woken by the Wi-Fi key" ;;
                     *) leave_charging_boot "woken (mu300-power wake)" ;;
@@ -730,20 +865,60 @@ step() {  # one look at the world; sets _acted when it changed the state
         *)  # active; anything unknown is treated as active
             [ "$_state" = active ] || { set_state active "unknown state '$_state'"; _state=active; }
             if [ -e "$ST/wake" ]; then rm -f "$ST/wake"; echo "$_now" > "$ST/idle-since"; fi
-            if _why=$(selfcheck "$_prof"); then
-                say "self-check: active, but $_why: restoring"
-                restore "self-check: $_why"; return 0
+            if selfcheck "$_prof"; then
+                say "self-check: active, but $SC_WHY: restoring"
+                restore "self-check: $SC_WHY"; return 0
             fi
             if [ -e "$ST/idle-now" ]; then rm -f "$ST/idle-now"; enter_idle "$_prof" "idle now (asked)"; return 0; fi
-            _min=$(knob "$_prof" WIFI_IDLE)
+            knob_v "$_prof" WIFI_IDLE; _min=$CV
             [ "$_min" = 0 ] && return 0
-            _since=$(num "$(rd "$ST/idle-since")")
-            if [ $((_now - _since)) -ge $((_min * 60)) ]; then enter_idle "$_prof" "idle: no client for $_min min ($_prof)"; fi ;;
+            rv "$ST/idle-since"; nv "$RV"; _since=$NV
+            if [ $((_now - _since)) -ge $((_min * 60)) ]; then
+                # the timer runs out: the stations are asked now if this loop did not (SAMPLE), so the hotspot never
+                # goes down under a client that came since the last look
+                if [ "${SAMPLE:-1}" != 1 ]; then
+                    stations_v
+                    if [ "$ST_N" -gt 0 ]; then echo "$_now" > "$ST/idle-since"; return 0; fi
+                fi
+                enter_idle "$_prof" "idle: no client for $_min min ($_prof)"
+            fi ;;
     esac
+    return 0
+}
+# wait_v: the wait before the next loop into WV, and its reason into WWHY (FINDINGS 208). The base interval (10 s)
+# while something is close: idle (a plug or a computer on USB wakes it, and only a loop sees them), the charging
+# boot (its charger may go), a battery off the charger at 20 % or less (or Low, Critical, unreadable), a retry, a
+# wake or an idle asked for. Otherwise nothing a loop does is urgent: the charge guard (temperature, the limit) every
+# 30 s on the charger, and every 60 s on a battery above 20 %; the stations and the hotspot are asked at most once a
+# minute anyway, the idle timer counts minutes (and the wait never passes its end), and a key restores at once by
+# itself (cmd_wake). 6 loops a minute become 1 or 2.
+wait_v() {
+    WV=$_iv WWHY=close
+    case $_iv in ''|*[!0-9]*) return 0 ;; esac
+    [ "$_ivr" -gt "$_iv" ] || [ "$_ivp" -gt "$_iv" ] || return 0
+    rv "$ST/state"; case $RV in ''|active) ;; *) WWHY=$RV; return 0 ;; esac
+    [ ! -s "$ST/retry" ] || { WWHY=retry; return 0; }
+    [ ! -e "$ST/wake" ] && [ ! -e "$ST/idle-now" ] || return 0
+    if ! battery_v; then WV=$_ivr WWHY='no battery'
+    elif plugged_v; then WV=$_ivp WWHY=plugged
+    else
+        rv "$BAT/capacity"; case $RV in ''|*[!0-9]*) WWHY='battery unknown'; return 0 ;; esac
+        [ "$RV" -gt 20 ] || { WWHY='battery low'; return 0; }
+        rv "$BAT/capacity_level"; case $RV in Low|Critical) WWHY='battery low'; return 0 ;; esac
+        WV=$_ivr WWHY=battery
+    fi
+    # never past the idle timer's end (pick_profile_v and knob_v as the loop had them)
+    knob_v "$PICKED" WIFI_IDLE; nv "$CV"; _wmin=$NV
+    if [ "$_wmin" -gt 0 ]; then
+        rv "$ST/idle-since"; nv "$RV"; _wsince=$NV; upv; nv "$UPV"
+        _wleft=$((_wsince + _wmin * 60 - NV))
+        if [ "$_wleft" -lt "$WV" ]; then WV=$_wleft; [ "$WV" -ge "$_iv" ] || WV=$_iv; fi
+    fi
     return 0
 }
 loop() {  # retries wait for a loop that changed nothing: a transition has just done its own actions
     _acted=
+    conf_load; psy_scan   # this loop's configuration and power supplies, for the readers above
     guard
     step
     [ -n "$_acted" ] || retry_run
@@ -768,15 +943,55 @@ cmd_daemon() {
           [ -z "$_bd_w" ] || { kill "$_bd_w" 2>/dev/null; wait "$_bd_w" 2>/dev/null; }; [ -z "$_bd_f" ] || rm -f "$_bd_f"
           _bd_p= _bd_w= _bd_f=
           if [ "$(rd "$ST/state")" = idle ] && ! shutting_down; then leave_idle "daemon stopping" fast; fi; busy_drop; exit 0' TERM INT
-    _n=0
+    # The wait between loops (FINDINGS 205): where the shell's read takes a timeout (busybox ash, bash) and the interval
+    # is whole seconds, on a fifo nobody writes to, opened read-write so it never ends either - no sleep process every
+    # 10 s, and the TERM above still ends it at once; else sleep in the background, as before (dash). Its timer may
+    # fire up to half a second late, so the kernel can serve the timers of several daemons with one wakeup; what the
+    # loop starts keeps the default timer slack.
+    _iv=${MU300_POWER_INTERVAL:-10} _wfd= _slack=
+    # the longer waits of wait_v: 60 s and 30 s, or the interval itself where only that was given (the tests)
+    _ivr=${MU300_POWER_INTERVAL_RELAXED:-${MU300_POWER_INTERVAL:+$_iv}} _ivp=${MU300_POWER_INTERVAL_PLUGGED:-${MU300_POWER_INTERVAL:+$_iv}}
+    _ivr=${_ivr:-60} _ivp=${_ivp:-30} _wlast=
+    case $_iv in ''|*[!0-9]*) _ivr=0 _ivp=0 ;; esac   # (then wait_v keeps the interval as it is)
+    case $_ivr in ''|*[!0-9]*) _ivr=0 ;; esac
+    case $_ivp in ''|*[!0-9]*) _ivp=0 ;; esac
+    { read -r _slack < /proc/$$/timerslack_ns; } 2>/dev/null || _slack=
+    case $_iv in ''|*[!0-9]*) ;; *)
+        _wd=$(mktemp -d "${TMPDIR:-/tmp}/mu300-power.XXXXXX" 2>/dev/null) || _wd=
+        if [ -n "$_wd" ] && mkfifo "$_wd/wait" 2>/dev/null; then
+            exec 8<>"$_wd/wait"
+            if { read -t 0 _w <&8; [ $? = 1 ]; } 2>/dev/null; then _wfd=8; else exec 8<&-; fi
+        fi
+        [ -z "$_wd" ] || rm -rf "$_wd" ;;
+    esac
+    # SAMPLE: this loop asks iw for the stations and hostapd (ubus) for the hotspot - the first loop and every
+    # MU300_POWER_SAMPLE_EVERY-th (6: a minute); the others read files only
+    _every=${MU300_POWER_SAMPLE_EVERY:-6}
+    case $_every in ''|0|*[!0-9]*) _every=6 ;; esac
+    # (and whenever a minute has passed since the last such loop: the loops are 30 or 60 s apart when nothing is close)
+    _n=0 _sampled=
     while :; do
+        SAMPLE=0; [ $((_n % _every)) != 0 ] || SAMPLE=1
+        upv; nv "$UPV"
+        [ -n "$_sampled" ] && [ $((NV - _sampled)) -lt 55 ] || SAMPLE=1
+        [ "$SAMPLE" = 0 ] || _sampled=$NV
         loop
         _n=$((_n + 1))
+        wait_v
+        if [ "$WWHY" != "$_wlast" ]; then   # one line when the reason changes (the idle timer's end moves the wait)
+            [ -z "$_wlast" ] && [ "$WV" = "$_iv" ] || say "the next loop in $WV s ($WWHY)"
+            _wlast=$WWHY
+        fi
         [ -n "${MU300_POWER_LOOPS:-}" ] && [ "$_n" -ge "$MU300_POWER_LOOPS" ] && break
-        sleep "${MU300_POWER_INTERVAL:-10}" &
-        _sleep=$!
-        wait "$_sleep"
-        _sleep=
+        [ -z "$_slack" ] || { echo 500000000 > /proc/$$/timerslack_ns; } 2>/dev/null
+        if [ -n "$_wfd" ]; then
+            read -t "$WV" _w <&8 || :
+        else
+            sleep "$WV" 8<&- &
+            _sleep=$!
+        fi
+        [ -z "$_slack" ] || { echo "$_slack" > /proc/$$/timerslack_ns; } 2>/dev/null
+        if [ -n "$_sleep" ]; then wait "$_sleep"; _sleep=; fi
     done
 }
 cmd_log() {  # cmd_log [SECONDS] [FILE]
@@ -843,7 +1058,7 @@ cmd_charge_limit() {  # charge-limit [N]: show the limit and what the guard does
         temp) echo "charging: paused, battery temperature" ;;
         *) echo "charging: $(_b=$(battery_dir) && rd "$_b/status" | tr 'A-Z' 'a-z')" ;;
     esac
-    [ $# -eq 0 ] || echo "(the power daemon applies it within ${MU300_POWER_INTERVAL:-10} s)"
+    [ $# -eq 0 ] || echo "(the power daemon applies it within ${MU300_POWER_INTERVAL_PLUGGED:-30} s)"   # (its loop on the charger)
     return 0
 }
 

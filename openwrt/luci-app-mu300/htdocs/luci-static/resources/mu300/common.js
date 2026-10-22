@@ -17,9 +17,12 @@
  * a lock reading behind it, and when the browser gave up on the request (20 s) every call in it failed together - the
  * whole page went blank while one AT command was stuck. */
 
-var callStatus = rpc.declare({ object: 'mu300dash', method: 'status', expect: { '': {} }, nobatch: true });
+/* The status snapshot and the new-message watcher's look at the SMS pool are answered by rpcd itself (mu300status,
+ * the ucode plugin; FINDINGS 206): mu300dash's shell started ~700 processes per snapshot, every 1.5 s. */
+var callStatus = rpc.declare({ object: 'mu300status', method: 'status', expect: { '': {} }, nobatch: true });
 var callSignal = rpc.declare({ object: 'mu300dash', method: 'signal', expect: { '': {} }, nobatch: true });
-var callSysinfo = rpc.declare({ object: 'mu300dash', method: 'sysinfo', expect: { '': {} }, nobatch: true });
+var callSysinfo = rpc.declare({ object: 'mu300status', method: 'sysinfo', expect: { '': {} }, nobatch: true });
+var callSmsHead = rpc.declare({ object: 'mu300status', method: 'sms_head', expect: { '': {} }, nobatch: true });
 var callAct    = rpc.declare({ object: 'mu300dash', method: 'act', params: [ 'op', 'arg' ], expect: { '': {} }, nobatch: true });
 var callAt     = rpc.declare({ object: 'mu300dash', method: 'at', params: [ 'cmd', 'confirm' ], expect: { '': {} }, nobatch: true });
 var callAtJob  = rpc.declare({ object: 'mu300dash', method: 'at_job', expect: { '': {} }, nobatch: true });
@@ -632,22 +635,35 @@ function ageText(s) {
 	return _('%d h').format(Math.round(s / 3600));
 }
 
-/* New-SMS watcher (each page's render calls it; one instance): every 5 s it reads page 1 of the local pool (a file
- * read, no AT), the first time only to set the baseline. A higher message id that is incoming (mt) then shows a
- * notification with the sender and a preview. When the pool is cleared (the id drops) the baseline is reset
- * silently. */
+/* New-SMS watcher (each page's render calls it; one instance): every 5 s it looks at the pool's head (sms_head: its
+ * next id and its message directory, read in rpcd itself) and reads page 1 of the local pool (a file read, no AT)
+ * only when that changed - the first time only to set the baseline. A higher message id that is incoming (mt) then
+ * shows a notification with the sender and a preview. When the pool is cleared (the id drops) the baseline is reset
+ * silently. A backend without sms_head is asked for the list every time, as before. */
 var smsWatch = null;
+function smsHeadKey(h) {
+	return (h && !h.error && h.next_id != null) ? [ h.next_id, h.count, h.mtime ].join(':') : null;
+}
 function watchSms() {
 	if (smsWatch) return;
-	smsWatch = { seen: null, busy: false, fails: 0, skip: 0 };
+	smsWatch = { seen: null, head: null, busy: false, fails: 0, skip: 0 };
 	window.setInterval(function() {
 		/* never a second read while one is out (a slow backend would otherwise collect a request every 5 s), and
 		 * fewer reads after failures (backoff) */
 		if (smsWatch.busy) return;
 		if (smsWatch.skip > 0) { smsWatch.skip--; return; }
 		smsWatch.busy = true;
-		Promise.resolve(callSmsList(1)).then(function(r) {
+		var head = null;
+		L.resolveDefault(callSmsHead(), null).then(function(h) {
+			head = smsHeadKey(h);
+			if (head != null && head === smsWatch.head)
+				return { unchanged: true };
+			return callSmsList(1);
+		}).then(function(r) {
+			if (r && r.unchanged) { smsWatch.fails = 0; return r; }
 			smsWatch.fails = r && !r.error ? 0 : smsWatch.fails + 1;
+			/* the head this list was read at: the next look skips the list until the pool changes again */
+			if (r && !r.error) smsWatch.head = head;
 			return r;
 		}, function() {
 			smsWatch.fails++;
@@ -655,6 +671,7 @@ function watchSms() {
 		}).then(function(r) {
 			smsWatch.busy = false;
 			smsWatch.skip = Math.round(backoff(1, smsWatch.fails)) - 1;
+			if (r && r.unchanged) return;
 			r = r || {};
 			var msgs = r.msgs || [], max = 0;
 			msgs.forEach(function(m) {

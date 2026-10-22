@@ -1550,6 +1550,77 @@ up() { at UP; }
                 r, _ = self.lib('watch_context', modem=self.WATCH_MODEM, CGACT=answer)
                 self.assertEqual(r.stdout.strip(), want, r.stderr)
 
+    # FINDINGS 206: with the modem daemon on ubus the watchdog waits for events instead of asking every round. The
+    # stand-in ubus has mu300.modem, and its `listen` prints $STUBLOG/events line by line ("sleep N" lines pause it);
+    # MU300_WATCH_FULL is the full look's period, MU300_WATCH_INTERVAL the counters' tick.
+    def event_watch(self, events, rounds, **env):
+        (self.tmp / 'events').write_text(''.join(e + '\n' for e in events))
+        self.stub('ubus', 'case "$*" in\n'
+                  '  *"list mu300.modem"*) exit 0 ;;\n'
+                  '  *"listen"*) while IFS= read -r l; do case $l in "sleep "*) sleep "${l#sleep }" ;; *) echo "$l" ;; esac; '
+                  'done < "$STUBLOG/events"; sleep "${LISTEN_TAIL:-30}" ;;\n'
+                  '  *) exit 1 ;;\n'
+                  'esac')
+        self.stub('ip', 'echo "2: sipa_eth0    inet 10.1.2.3/24 scope global sipa_eth0"')
+        net = self.tmp / 'sysnet' / 'sipa_eth0' / 'statistics'
+        net.mkdir(parents=True, exist_ok=True)
+        (net / 'rx_packets').write_text(env.pop('RX', '100') + '\n')
+        (net / 'tx_packets').write_text(env.pop('TX', '100') + '\n')
+        r, sent = self.lib('watch', modem=self.WATCH_MODEM, MU300_AT_DEV='/dev/null', MU300_WATCH_ROUNDS=str(rounds),
+                           MU300_SYS_NET=self.tmp / 'sysnet', **env)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return r, sent
+
+    @staticmethod
+    def event(name, data):
+        # as `ubus -S listen` prints one on the device: { "NAME": {compact data} }
+        return '{ %s: %s }' % (json.dumps(name), json.dumps(data, separators=(',', ':')))
+
+    def urc(self, line, channel='stty_nr0'):
+        return self.event('mu300.modem.urc', {'channel': channel, 'line': line})
+
+    def test_watch_with_the_modem_daemon_looks_when_an_event_says_so(self):
+        events = [self.urc('+CEREG: 1,"1A2B","0123ABCD",7'),        # a cell change while registered: nothing
+                  self.urc('+CGEV: NW PDN DEACT 1', 'stty_nr3'),      # the other card's channel: nothing
+                  'sleep 1', self.urc('+CGEV: NW PDN DEACT 1')]       # the bearer: a look now
+        t0 = time.time()
+        r, sent = self.event_watch(events, 1, MU300_WATCH_INTERVAL='30', MU300_WATCH_FULL='300')
+        self.assertLess(time.time() - t0, 20, 'the look came with the event, not with the 300 s period')
+        self.assertIn('AT+CGACT?', [s.split(' ', 1)[1] for s in sent], r.stderr)
+
+    def test_watch_with_the_modem_daemon_looks_on_a_lost_registration_and_on_netifd(self):
+        for event in (self.urc('+CEREG: 2'), self.urc('NO CARRIER'),
+                      self.event('network.interface', {'action': 'ifdown', 'interface': 'wan'})):
+            with self.subTest(event=event):
+                (self.tmp / 'at').unlink(missing_ok=True)
+                t0 = time.time()
+                r, sent = self.event_watch(['sleep 1', event], 1, MU300_WATCH_INTERVAL='30', MU300_WATCH_FULL='300')
+                self.assertLess(time.time() - t0, 20)
+                self.assertIn('AT+CGACT?', [s.split(' ', 1)[1] for s in sent])
+
+    def test_watch_with_the_modem_daemon_asks_nothing_while_nothing_happens(self):
+        # the counters' tick (1 s here) reads two files and asks the modem nothing; a sending device that receives
+        # nothing is a reason to look
+        (self.tmp / 'at').unlink(missing_ok=True)
+        self.stub('ubus', 'case "$*" in *"list mu300.modem"*) exit 0 ;; *"listen"*) sleep 30 ;; *) exit 1 ;; esac')
+        net = self.tmp / 'sysnet' / 'sipa_eth0' / 'statistics'
+        net.mkdir(parents=True, exist_ok=True)
+        (net / 'rx_packets').write_text('100\n')
+        (net / 'tx_packets').write_text('100\n')
+        self.stub('ip', 'echo "2: sipa_eth0    inet 10.1.2.3/24 scope global sipa_eth0"')
+        r, sent = self.lib('watch_events_start; for i in 1 2 3; do watch_counters_suspicious && echo SUSPICIOUS; done; '
+                           'echo 150 > "$MU300_SYS_NET/sipa_eth0/statistics/tx_packets"; '
+                           'watch_counters_suspicious && echo SUSPICIOUS-AFTER-TX',
+                           modem=self.WATCH_MODEM, MU300_SYS_NET=self.tmp / 'sysnet')
+        self.assertEqual(sent, [])
+        self.assertEqual(r.stdout.split(), ['SUSPICIOUS-AFTER-TX'], r.stderr)
+
+    def test_watch_without_the_modem_daemon_looks_every_round(self):
+        # no mu300.modem on ubus: a full look every MU300_WATCH_INTERVAL, as before
+        self.stub('ubus', 'exit 1')
+        r, sent = self.watch(2)
+        self.assertEqual([s for s in sent if s == 'AT+CGACT?'], ['AT+CGACT?'] * 2)
+
     def test_watch_leaves_the_bearer_alone_while_the_modem_does_not_answer(self):
         """A channel without an answer for up to three rounds: no radio check, no reconnect."""
         r, sent = self.watch(3, CGACT='none')
@@ -3838,6 +3909,77 @@ class Buttons(ShellTest):
                                         calls.index('systemctl start mu300-hotspot'))
                 self.assertEqual(marker.exists(), event == '116 long', event)
 
+    def test_a_tick_starts_mu300_led_only_when_it_has_something_to_do(self):
+        """FINDINGS 205: the tick every 5 s starts mu300-led only when a file its hint names changed, its due time
+        came (a timeout running out; a minute at the latest) or there is no hint - the LEDs still time out on time and
+        the battery LED still follows the charger"""
+        root = self.tmp / 'root'
+        for n in ('sc27xx:red', 'sc27xx:green', 'sc27xx:blue', 'zte-ldo0'):   # zte-ldo0: SIM 1's network LED
+            d = root / 'sys/class/leds' / n
+            d.mkdir(parents=True, exist_ok=True)
+            (d / 'brightness').write_text('0\n'); (d / 'max_brightness').write_text('255\n')
+            (d / 'trigger').write_text('[none] timer\n')
+        ps = root / 'sys/class/power_supply'
+        for d, files in (('sc27xx-fgu', {'capacity': 80, 'status': 'Discharging'}), ('bq256xx-charger', {'online': 0})):
+            (ps / d).mkdir(parents=True, exist_ok=True)
+            for k, v in files.items():
+                (ps / d / k).write_text(f'{v}\n')
+        (root / 'proc').mkdir(parents=True, exist_ok=True)
+        (root / 'run/mu300').mkdir(parents=True, exist_ok=True)
+        (root / 'run/mu300/device').write_text('u30air\n')
+        self.stub('mu300-keys', 'echo "0 tick"')
+        self.stub('mu300-led', f'echo "mu300-led $*" >> "$STUBLOG/calls"; exec "{BIN}/mu300-led" "$@"')
+        env = dict(MU300_RUN=self.tmp / 'run', MU300_SYSROOT=root, MU300_BIN=BIN, MU300_LED_CONF=self.tmp / 'none')
+
+        def uptime(s):
+            (root / 'proc/uptime').write_text(f'{s}.50 0.00\n')
+
+        def ticks(shell):
+            (self.tmp / 'calls').unlink(missing_ok=True)
+            r = self.script(shell, BIN / 'mu300-buttons', **env)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            calls = (self.tmp / 'calls').read_text().splitlines() if (self.tmp / 'calls').exists() else []
+            return calls.count('mu300-led tick')
+
+        def lit():
+            return (root / 'sys/class/leds/zte-ldo0/brightness').read_text().strip()
+
+        for shell in self.each_shell():
+            for f in (root / 'run/mu300/led').glob('.*'):
+                f.unlink()
+            (ps / 'bq256xx-charger/online').write_text('0\n')
+            uptime(100)
+            self.assertEqual(self.script(shell, BIN / 'mu300-led', 'data', 'on', **env).returncode, 0)
+            self.assertEqual(self.script(shell, BIN / 'mu300-led', 'wake', **env).returncode, 0)   # lit until 160
+            self.assertEqual(lit(), '255')
+            self.assertEqual(ticks(shell), 1)          # no hint yet
+            uptime(101)
+            self.assertEqual(ticks(shell), 0)          # nothing changed, nothing due
+            uptime(160)
+            self.assertEqual(ticks(shell), 1)          # the timeout ran out: dark
+            self.assertEqual(lit(), '0')
+            uptime(170)
+            self.assertEqual(ticks(shell), 0)
+            (ps / 'bq256xx-charger/online').write_text('1\n')
+            self.assertEqual(ticks(shell), 1)          # plugged in: lit at once
+            self.assertEqual(lit(), '255')
+            uptime(200)
+            self.assertEqual(ticks(shell), 0)
+            uptime(230)
+            self.assertEqual(ticks(shell), 1)          # a minute without one: a tick all the same
+            (ps / 'bq256xx-charger/online').write_text('0\n')
+            self.assertEqual(ticks(shell), 1)          # unplugged: the timeout starts again (until 290)
+            uptime(250)
+            self.assertEqual(ticks(shell), 0)
+            self.assertEqual(self.script(shell, BIN / 'mu300-led', 'wake', **env).returncode, 0)   # a key: until 310
+            self.assertEqual(ticks(shell), 1)          # .awake-until changed
+            uptime(300)
+            self.assertEqual(ticks(shell), 0)
+            self.assertEqual(lit(), '255')
+            uptime(310)
+            self.assertEqual(ticks(shell), 1)
+            self.assertEqual(lit(), '0')
+
     def test_held_power_in_the_charging_boot_starts(self):
         # the stock charger mode: hold power to switch the device on (FINDINGS 196); no shutdown, no marker
         self.stub('mu300-keys', 'cat "$STUBLOG/keys.in"')
@@ -4275,6 +4417,47 @@ class ThermalGuard(ShellTest):
             self.assertIn('watching', self.log())
             self.assertEqual(self.round(shell, 105000), ['poweroff'])             # our 105 C power-off stays
             self.assertEqual(self.maxes(), ['2002000'] * 3)
+
+    def next_look(self, shell, soc, battery=None):
+        """one round with every zone at SOC and the battery at BATTERY; the seconds the guard would wait for the next"""
+        (self.root / 'sys/class/thermal/thermal_zone0').mkdir(parents=True, exist_ok=True)
+        for z in (self.root / 'sys/class/thermal').glob('thermal_zone*'):
+            (z / 'temp').write_text(f'{soc}\n')
+        if battery is not None:
+            b = self.root / 'sys/class/power_supply/battery'
+            b.mkdir(parents=True, exist_ok=True)
+            (b / 'type').write_text('Battery\n')
+            (b / 'temp').write_text(f'{battery}\n')
+        r = self.script(shell, BIN / 'thermal-guard', MU300_SYSROOT=self.root, MU300_BIN=self.bin)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return int(re.search(r'next look in (\d+) s', r.stderr).group(1))
+
+    def test_the_interval_grows_with_the_distance_from_the_thresholds(self):
+        """FINDINGS 205: 5 s near HOT, a second more per 2 C under it, at most 30 s while the kernel throttles itself
+        and 10 s where this guard is the thermal policy; 5 s while its cap or the alarm is on"""
+        for shell in self.each_shell():
+            self.mainline(50000)                                       # the kernel's soc-thmzone is bound
+            self.assertEqual(self.next_look(shell, 50000), 22)
+            self.mainline(30000)
+            self.assertEqual(self.next_look(shell, 30000), 30)
+            self.mainline(80000)
+            self.assertEqual(self.next_look(shell, 80000), 7)
+            self.mainline(86000)
+            self.assertEqual(self.next_look(shell, 86000), 5)          # the alarm is on
+            self.assertEqual(self.next_look(shell, 80000), 5)          # and stays on until COOL
+            self.assertEqual(self.next_look(shell, 50000), 22)         # off again
+            # the battery counts too, a second per degree under BATT_HOT (the U30 Air: the F50 has no battery)
+            self.mainline(50000)
+            self.device('u30air')
+            self.assertEqual(self.next_look(shell, 50000, battery=420), 13)
+            # this guard is the thermal policy (no zone): at most 10 s, and 5 s while its cap is on
+            self.mainline(50000)
+            shutil.rmtree(self.root / 'sys/class/thermal/thermal_zone3')
+            self.assertEqual(self.next_look(shell, 50000), 10)
+            self.assertEqual(self.next_look(shell, 90000), 5)          # capped (and the alarm)
+            self.assertTrue((self.root / 'run/mu300/thermal-capped').exists())
+            (self.root / 'run/mu300/thermal-alarm').unlink()
+            self.assertEqual(self.next_look(shell, 80000), 5)          # still capped
 
     def test_mainline_without_the_zone_caps_and_powers_off(self):
         for shell in self.each_shell():

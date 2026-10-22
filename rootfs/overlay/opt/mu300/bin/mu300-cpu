@@ -13,6 +13,10 @@
 #   mu300-cpu lowlatency [on|off]    CPU0 without its cpuidle states, as ZTE's U30 Air firmware ("lowlatency"): far
 #                                    shorter Wi-Fi delays in kanoqwq's measurements, more power drawn; off by default,
 #                                    saved, applied at boot (FINDINGS 200). No argument: the saved setting
+#   mu300-cpu services [little|all]  where the system's services run (OpenWrt: procd's /sys/fs/cgroup/services, and
+#                                    every process they start): on the little cluster (the default) or on every CPU;
+#                                    saved, applied now and at boot (FINDINGS 206). No argument: the saved setting
+#   mu300-cpu services apply         apply the saved setting (the boot service)
 # Profiles: saving (cores capped at ~60 % of the maximum, schedutil - cooler, less power), balanced (schedutil over
 # the full range, the stock behaviour), performance (every cluster pinned at its hardware maximum).
 # Why it never fights the rest: mu300-power's idle "eco" drops the big core and caps policy4 to 1.5 GHz and brings
@@ -33,13 +37,14 @@ SAVING_PERCENT=${MU300_CPU_SAVING_PERCENT:-60}
 say() { echo "mu300-cpu: $*" >&2; logger -t mu300-cpu -- "$*" 2>/dev/null || true; }
 
 # --- configuration (as mu300-power reads power.conf)
-default() { case $1 in PROFILE) echo balanced ;; CORES_OFF) echo ;; LOWLATENCY) echo 0 ;; *) return 1 ;; esac; }
+default() { case $1 in PROFILE) echo balanced ;; CORES_OFF) echo ;; LOWLATENCY) echo 0 ;; SERVICES) echo little ;; *) return 1 ;; esac; }
 valid() {
     case $1 in
         PROFILE) case $2 in saving|balanced|performance) return 0 ;; esac ;;
         # the CPUs kept offline: 1..63, comma-separated, never CPU0
         CORES_OFF) printf '%s\n' "$2" | grep -Eqx '([1-9]|[1-5][0-9]|6[0-3])(,([1-9]|[1-5][0-9]|6[0-3])){0,62}' && return 0 ;;
         LOWLATENCY) case $2 in 0|1) return 0 ;; esac ;;
+        SERVICES) case $2 in little|all) return 0 ;; esac ;;
     esac
     return 1
 }
@@ -190,6 +195,47 @@ lowlat_apply() {  # at boot: only an "on" is applied; off leaves the kernel's ow
     [ "$(conf_get LOWLATENCY)" = 1 ] || return 0
     lowlat_supported || return 0
     lowlat_write 1 && say "low latency on (saved): CPU0 idle states off" || say "low latency: CPU0's idle states could not be written"
+}
+
+# --- the services' CPUs (FINDINGS 206). The panel, the collectors and the daemons are shell scripts and ucode: short
+# bursts of process starts that the scheduler spread over idle big cores (each burst woke an A76 and its cluster, and
+# raised its clock), for work a little core does in the same milliseconds. procd puts every service in a cgroup of its
+# own under /sys/fs/cgroup/services, so one cpuset there holds them all, and every process they start, on the little
+# cluster; the kernel's own work (network, interrupts) is not touched. "all" gives the services every CPU again (a
+# userspace VPN engine pushing traffic, say). A no-op where there is no procd service tree (Ubuntu) or no cpuset.
+CGROUP=$R/sys/fs/cgroup
+little_cpus() {  # the CPUs of the lowest capacity, comma-separated (every CPU on a SoC of one kind)
+    _lc_min= _lc_list=
+    for _c in "$CPUDIR"/cpu[0-9]*; do
+        read -r _cap < "$_c/cpu_capacity" 2>/dev/null || continue
+        case $_cap in ''|*[!0-9]*) continue ;; esac
+        if [ -z "$_lc_min" ] || [ "$_cap" -lt "$_lc_min" ]; then _lc_min=$_cap; _lc_list=${_c##*/cpu}
+        elif [ "$_cap" = "$_lc_min" ]; then _lc_list="$_lc_list,${_c##*/cpu}"; fi
+    done
+    printf '%s\n' "$_lc_list"
+}
+services_apply() {
+    [ -d "$CGROUP/services" ] || return 0
+    _sv_cpus=
+    [ "$(conf_get SERVICES)" = little ] && _sv_cpus=$(little_cpus)
+    if [ -n "$_sv_cpus" ]; then
+        grep -qw cpuset "$CGROUP/cgroup.controllers" 2>/dev/null || { say "no cpuset controller: the services stay on every CPU"; return 0; }
+        grep -qw cpuset "$CGROUP/cgroup.subtree_control" 2>/dev/null || echo +cpuset > "$CGROUP/cgroup.subtree_control" 2>/dev/null ||
+            { say "the cpuset controller could not be enabled: the services stay on every CPU"; return 0; }
+        echo "$_sv_cpus" > "$CGROUP/services/cpuset.cpus" 2>/dev/null || { say "services: CPUs $_sv_cpus could not be set"; return 0; }
+        say "services on CPUs $_sv_cpus"
+    elif [ -f "$CGROUP/services/cpuset.cpus" ] && [ -n "$(rd "$CGROUP/services/cpuset.cpus")" ]; then
+        # empty: every CPU the parent has
+        echo > "$CGROUP/services/cpuset.cpus" 2>/dev/null && say "services on every CPU"
+    fi
+    return 0
+}
+services_set() {
+    case ${1:-} in
+        apply) services_apply ;;
+        little|all) conf_set SERVICES "$1" && services_apply ;;
+        *) echo "usage: mu300-cpu services [little|all|apply]" >&2; return 2 ;;
+    esac
 }
 
 khz() { case $1 in ''|*[!0-9]*) echo null ;; *) echo $(( $1 / 1000 )) ;; esac; }
@@ -532,12 +578,15 @@ case ${1:-status} in
     profile)
         if [ -z "${2:-}" ]; then echo "$(conf_get PROFILE)"; exit 0; fi
         apply "$2" && conf_set PROFILE "$2" && { [ "${3:-}" = --json ] && status_json || status_human; } ;;
-    apply) apply "$(conf_get PROFILE)"; cores_apply; lowlat_apply ;;
+    apply) apply "$(conf_get PROFILE)"; cores_apply; lowlat_apply; services_apply ;;
     core) core_set "${2:-}" "${3:-}" ;;
     lowlatency)
         if [ -z "${2:-}" ]; then [ "$(conf_get LOWLATENCY)" = 1 ] && echo on || echo off; exit 0; fi
         lowlat_set "$2" ;;
+    services)
+        if [ -z "${2:-}" ]; then conf_get SERVICES; exit 0; fi
+        services_set "$2" ;;
     voltage) shift; voltage_main "$@" ;;
-    -h|--help|help) sed -n '2,15s/^# \{0,1\}//p' "$0" ;;
-    *) echo "usage: mu300-cpu [status [--json]|profile [saving|balanced|performance]|apply|core N on|off|lowlatency [on|off]|voltage ...]" >&2; exit 2 ;;
+    -h|--help|help) sed -n '2,20s/^# \{0,1\}//p' "$0" ;;
+    *) echo "usage: mu300-cpu [status [--json]|profile [saving|balanced|performance]|apply|core N on|off|lowlatency [on|off]|services [little|all|apply]|voltage ...]" >&2; exit 2 ;;
 esac

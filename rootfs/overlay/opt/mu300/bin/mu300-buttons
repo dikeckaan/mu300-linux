@@ -18,12 +18,46 @@
 # mu300-keys reports the presses; its tick every 5 s lets the LEDs time out and the U30 Air's battery LED follow the
 # battery. Ubuntu's logind leaves the power key to this script (/etc/systemd/logind.conf.d/mu300-buttons.conf): it
 # used to power the device off at a touch.
+# On OpenWrt with /etc/mu300/sysd, mu300-sysd does all of this in one ucode daemon instead, without the tick (FINDINGS
+# 207); tests/test_sysd.py runs this script's tests against it. A change here belongs there too.
 export PATH="$PATH:/opt/mu300/bin:/usr/sbin:/sbin"
 KEY_POWER=116
 KEY_WIFI=138   # "Wifi Switch Key" in the U30 Air's device tree (KEY_HELP's code, as its Android maps it)
 is_openwrt() { [ -e /etc/openwrt_release ]; }
 PST=${MU300_RUN:-/run}/mu300/power
 LEDIDLE=${MU300_SYSROOT:-}/run/mu300/led/.idle   # mu300-led idle on (mu300-led keeps its state there)
+LEDHINT=${MU300_SYSROOT:-}/run/mu300/led/.tick-hint
+
+# tick_due: the tick has something to do (FINDINGS 205). mu300-led leaves after each tick the files the next one depends
+# on, each with what it held then, and the uptime from which it has something to do anyway ("due", a minute away at the
+# latest): only when one of them changed, that time has come or there is no hint is mu300-led started. The hint is
+# read here at the start and after each tick this starts (nothing else runs one), and kept; a look reads the uptime and
+# those files with the shell's own read: no process, where the tick itself was two runs of mu300-led and one of
+# mu300-device every 5 s. (busybox's read takes a byte per system call: the hint is not read again at every look.)
+NL='
+'
+hint_due=0 hint_in= hinted=
+hint_load() {  # the hint into hint_due and hint_in ("FILE VALUE" lines); hinted when there is a whole one
+    hint_due=0 hint_in= hinted=
+    { read -r _k _d || return 0
+      [ "$_k" = due ] || return 0
+      case $_d in ''|*[!0-9]*) return 0 ;; esac
+      while IFS= read -r _l; do hint_in="$hint_in$_l$NL"; done
+      hint_due=$_d hinted=1
+    } < "$LEDHINT" 2>/dev/null
+}
+tick_due() {
+    [ -n "$hinted" ] || return 0
+    _now=0; { read -r _now _ < "${MU300_SYSROOT:-}/proc/uptime"; } 2>/dev/null; _now=${_now%%.*}
+    [ "$_now" -lt "$hint_due" ] || return 0
+    set -f; _ifs=$IFS; IFS=$NL; set -- $hint_in; IFS=$_ifs; set +f
+    for _l in "$@"; do
+        _c=-; { read -r _c < "${_l%% *}"; } 2>/dev/null
+        [ "$_c" = "${_l#* }" ] || return 0
+    done
+    return 1
+}
+hint_load
 
 DEADLINE=${MU300_BUTTONS_DEADLINE:-150}   # a toggle in the background (the LED sync after wifi up runs 120 s)
 
@@ -85,8 +119,8 @@ band_toggle() { mu300-wifi-band toggle | logger -t mu300-buttons 2>/dev/null; }
 
 mu300-keys -l 3000 -t 5 | { while read -r code kind; do
     # the tick every 5 s is no press: it lets the LEDs time out, and the U30 Air's battery LED follow the charge
-    # (plugged in, unplugged, the 60 % and 10 % marks)
-    if [ "$kind" = tick ]; then mu300-led tick; continue; fi
+    # (plugged in, unplugged, the 60 % and 10 % marks) - when there is something to do (tick_due)
+    if [ "$kind" = tick ]; then tick_due && { mu300-led tick; hint_load; }; continue; fi
     mu300-led wake   # first, whatever else this key does or whatever state anything is in
     was_idle=0; s=$(cat "$PST/state" 2>/dev/null); [ -z "$s" ] || [ "$s" = active ] || was_idle=1
     [ ! -e "$LEDIDLE" ] || was_idle=1   # dark on purpose (idle, or someone's mu300-led idle on): this press only wakes

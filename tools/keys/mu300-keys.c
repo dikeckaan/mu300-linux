@@ -1,30 +1,40 @@
 /*
  * mu300-keys: the device's buttons as lines of text, for mu300-buttons (a shell script: OpenWrt has no Python and
- * a pipe from od is block-buffered, so the events came too late).
+ * a pipe from od is block-buffered, so the events came too late) and mu300-sysd.
  *
  * Watches every /dev/input/event* that has keys and prints, flushed at once:
  *   <code> short      released before the long-press time
  *   <code> long       still held when the long-press time is reached (once; nothing on its release)
  *   0 tick            every -t seconds (the LED timeout of mu300-buttons runs on these)
+ *   uevent <action> <subsystem> <name>
+ *                     -u: a kernel uevent of one of the subsystems given (mu300-sysd: the charger and the fuel gauge
+ *                     announce a plug, an unplug and every 1 % of charge; the device's ucode cannot open a netlink
+ *                     socket itself); "uevent overflow - -" when the kernel dropped some, so the reader looks again
  * Codes are Linux key codes: 116 KEY_POWER, 138 the U30 Air's Wi-Fi key, 114/115 volume.
  *
- * usage: mu300-keys [-l MS] [-t SEC]   (long press: MS milliseconds, default 3000; tick: none by default)
+ * usage: mu300-keys [-l MS] [-t SEC] [-u SUBSYSTEM[,SUBSYSTEM...]]
+ *   (long press: MS milliseconds, default 3000; tick: none by default; uevents: none by default)
+ * With -u it also runs without a key (uevents only) or without uevents (keys only, a line on stderr), and it ends
+ * when whoever reads its output goes away: mu300-sysd starts it again, and a reader that died leaves no helper behind.
  * SPDX-License-Identifier: MIT
  */
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/input.h>
+#include <linux/netlink.h>
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
 
 #define MAXDEV 16
 #define MAXKEY KEY_MAX
+#define MAXSUB 8
 
 static long long now_ms(void)
 {
@@ -41,24 +51,102 @@ static int has_keys(int fd)
 	return (ev >> EV_KEY) & 1;
 }
 
+static const char *subsystems[MAXSUB];
+static int nsub;
+
+/* the kernel's uevent multicast group; no udev in between (OpenWrt has none) */
+static int uevent_open(void)
+{
+	struct sockaddr_nl sa = { .nl_family = AF_NETLINK, .nl_groups = 1 };
+	int fd = socket(AF_NETLINK, SOCK_DGRAM | SOCK_CLOEXEC, NETLINK_KOBJECT_UEVENT);
+	int size = 256 * 1024;
+
+	if (fd < 0)
+		return -1;
+	/* a boot's burst of uevents of other subsystems must not crowd out the ones asked for */
+	if (setsockopt(fd, SOL_SOCKET, SO_RCVBUFFORCE, &size, sizeof(size)) < 0)
+		setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size));
+	if (bind(fd, (struct sockaddr *)&sa, sizeof(sa)) < 0) {
+		close(fd);
+		return -1;
+	}
+	return fd;
+}
+
+/* a word of a line: no space, no control character (a reader splits the line at spaces) */
+static void word(char *s)
+{
+	for (; *s; s++)
+		if ((unsigned char)*s <= ' ' || *s == 0x7f)
+			*s = '_';
+}
+
+/* one datagram: "ACTION@DEVPATH" and then KEY=VALUE strings, each ending in a NUL. Only the kernel's (the sender's
+ * port id is 0): another root process could send to the group too. */
+static void uevent_read(int fd)
+{
+	char buf[8192 + 1];
+	struct sockaddr_nl sa;
+	struct iovec iov = { buf, sizeof(buf) - 1 };
+	struct msghdr msg = { .msg_name = &sa, .msg_namelen = sizeof(sa), .msg_iov = &iov, .msg_iovlen = 1 };
+	ssize_t r = recvmsg(fd, &msg, MSG_DONTWAIT);
+	char *action = NULL, *subsystem = NULL, *devpath = NULL, *name;
+
+	if (r < 0) {
+		if (errno == ENOBUFS)
+			printf("uevent overflow - -\n");
+		return;
+	}
+	if (msg.msg_namelen != sizeof(sa) || sa.nl_pid != 0 || r == 0)
+		return;
+	buf[r] = 0;
+	for (char *p = buf; p < buf + r; p += strlen(p) + 1) {
+		if (!strncmp(p, "ACTION=", 7))
+			action = p + 7;
+		else if (!strncmp(p, "SUBSYSTEM=", 10))
+			subsystem = p + 10;
+		else if (!strncmp(p, "DEVPATH=", 8))
+			devpath = p + 8;
+	}
+	if (!action || !subsystem || !devpath)
+		return;
+	for (int i = 0; i < nsub; i++) {
+		if (strcmp(subsystem, subsystems[i]))
+			continue;
+		name = strrchr(devpath, '/');
+		name = name ? name + 1 : devpath;
+		if (!*name)
+			return;
+		word(action);
+		word(name);
+		printf("uevent %s %s %s\n", action, subsystem, name);
+		return;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	long long hold = 3000, tick = 0, next_tick = 0;
 	static long long down[MAXKEY + 1];	/* press time, 0: not held */
 	static char reported[MAXKEY + 1];	/* "long" already printed for this press */
-	struct pollfd pfd[MAXDEV];
-	int n = 0, opt;
+	struct pollfd pfd[MAXDEV + 2];
+	int n = 0, opt, ue = -1, out = -1, npfd;
+	char *list = NULL;
 
-	while ((opt = getopt(argc, argv, "l:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "l:t:u:")) != -1) {
 		if (opt == 'l')
 			hold = atoll(optarg);
 		else if (opt == 't')
 			tick = atoll(optarg) * 1000;
+		else if (opt == 'u')
+			list = optarg;
 		else {
-			fprintf(stderr, "usage: mu300-keys [-l MS] [-t SEC]\n");
+			fprintf(stderr, "usage: mu300-keys [-l MS] [-t SEC] [-u SUBSYSTEM[,SUBSYSTEM...]]\n");
 			return 2;
 		}
 	}
+	for (char *s = list ? strtok(list, ",") : NULL; s && nsub < MAXSUB; s = strtok(NULL, ","))
+		subsystems[nsub++] = s;
 
 	DIR *d = opendir("/dev/input");
 	struct dirent *e;
@@ -80,10 +168,27 @@ int main(int argc, char **argv)
 	}
 	if (d)
 		closedir(d);
-	if (!n) {
+	npfd = n;
+	if (nsub) {
+		int fd = uevent_open();
+		if (fd < 0)
+			fprintf(stderr, "mu300-keys: no uevents (%s)\n", strerror(errno));
+		else {
+			pfd[npfd].fd = fd;
+			pfd[npfd].events = POLLIN;
+			ue = npfd++;
+		}
+		/* the reader: its going away (a hangup or an error on stdout) ends this program */
+		pfd[npfd].fd = STDOUT_FILENO;
+		pfd[npfd].events = 0;
+		out = npfd++;
+	}
+	if (!n && (!nsub || ue < 0)) {
 		fprintf(stderr, "mu300-keys: no input device with keys\n");
 		return 1;
 	}
+	if (!n)
+		fprintf(stderr, "mu300-keys: no input device with keys; uevents only\n");
 	setvbuf(stdout, NULL, _IOLBF, 0);
 	if (tick > 0)
 		next_tick = now_ms() + tick;
@@ -108,8 +213,10 @@ int main(int argc, char **argv)
 			if (timeout < 0 || left < timeout)
 				timeout = (int)left;
 		}
-		if (poll(pfd, n, timeout) < 0 && errno != EINTR)
+		if (poll(pfd, npfd, timeout) < 0 && errno != EINTR)
 			return 1;
+		if (out >= 0 && (pfd[out].revents & (POLLHUP | POLLERR | POLLNVAL)))
+			return 0;
 		t = now_ms();
 		if (tick > 0 && t >= next_tick) {
 			printf("0 tick\n");
@@ -142,5 +249,7 @@ int main(int argc, char **argv)
 				}
 			}
 		}
+		if (ue >= 0 && (pfd[ue].revents & POLLIN))
+			uevent_read(pfd[ue].fd);
 	}
 }

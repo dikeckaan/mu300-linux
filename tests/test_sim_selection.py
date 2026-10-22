@@ -300,13 +300,19 @@ for (const neigh of [null, [null], {}, [null, {rat:'nr', band:41, pci:315, arfcn
         self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_empty_lte_neighbours_are_not_null_entries(self):
+        # the collector's parsers (mu300.cellparse, FINDINGS 206): no LTE neighbour line is an empty list, never [null]
         s = (TOP / 'openwrt/luci-app-mu300/root/usr/libexec/unisoc-modem/cell').read_text()
-        start = s.index('LN=$(sp_fragment ltenb')
-        block = s[start:s.index('\nCOPSJ=', start)]
-        for shell in self.each_shell():
-            r = self.sh(shell, 'sp_fragment() { echo null; }; nr_neighbours() { :; };\n' + block + '\necho "$NEIGH"')
-            value = json.loads(r.stdout)
-            self.assertIn(value, [None, []])
+        self.assertIn('let NEIGH = [ ...nr_neighbours(SP_NRNB), ...sp_ltenb(SP_LN) ];', s)
+        self.assertIn('NEIGH = null;', s)
+        from helpers import ucode, ucode_paths
+        u = ucode()
+        if not u:
+            self.skipTest('no ucode interpreter (MU300_TEST_UCODE)')
+        code = ("import { sp_ltenb, nr_neighbours } from 'mu300.cellparse';"
+                "print(sprintf('%J', [ ...nr_neighbours(''), ...sp_ltenb('') ]), '\\n');")
+        r = subprocess.run(u + ucode_paths() + ['-e', code], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(json.loads(r.stdout), [])
 
     def test_profile_fields_survive_changing_selector(self):
         # LuCI removes hidden options unless retain is set: changing slots must not erase an APN.

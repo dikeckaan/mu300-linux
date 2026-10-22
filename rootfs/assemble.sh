@@ -23,7 +23,7 @@ if [ -n "$miss" ]; then
 fi
 # Optional inputs decide whether the image can use the modem, Wi-Fi and the GPU at all. Missing ones used to
 # pass silently and produce an image that boots and does nothing useful, so say what went in.
-for o in /firmware /android-subset /android-gpu-subset /bt-init /keys /adbd /carry /cltest; do
+for o in /firmware /android-subset /android-gpu-subset /bt-init /keys /atd-io /adbd /carry /cltest; do
     [ -e "$o" ] && echo "assemble.sh: + $o" || echo "assemble.sh: - $o (not mounted; the image will be built without it)"
 done
 
@@ -66,6 +66,8 @@ if [ -e /cltest ]; then install -D -m755 /cltest $R/opt/mu300/android/system/bin
 if [ -e /bt-init ]; then cp /bt-init $R/opt/mu300/bin/mu300-bt-init; fi
 # tools/keys build (static arm64): the buttons (mu300-buttons)
 if [ -e /keys ]; then install -m755 /keys $R/opt/mu300/bin/mu300-keys; fi
+# tools/atd-io build (static arm64): holds the modem's AT channels for mu300-modemd (docs/MODEMD.md)
+if [ -e /atd-io ]; then install -m755 /atd-io $R/opt/mu300/bin/mu300-atd-io; fi
 # tools/adbd build (static arm64, musl): adb over USB, on unless mu300-usb adb off
 if [ -e /adbd ]; then install -m755 /adbd $R/opt/mu300/bin/adbd; fi
 # tools/carry build (static arm64): an update carries everything of the user's over with it (mu300-update, the carry

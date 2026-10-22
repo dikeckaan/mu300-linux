@@ -90,6 +90,7 @@ docker run --rm -v "$TOP/tools":/src:ro -v "$IN/tools":/o mu300-kbuild sh -c '
   gcc -O2 -static -o /o/logdw/logdw /src/logdw/logdw.c &&
   gcc -O2 -static -o /o/bt-init/mu300-bt-init /src/bt-init/mu300-bt-init.c &&
   mkdir -p /o/keys && gcc -O2 -static -o /o/keys/mu300-keys /src/keys/mu300-keys.c &&
+  mkdir -p /o/atd-io && gcc -O2 -static -o /o/atd-io/mu300-atd-io /src/atd-io/mu300-atd-io.c &&
   mkdir -p /o/carry && gcc -O2 -static -o /o/carry/mu300-carry /src/carry/mu300-carry.c &&
   mkdir -p /o/pwcheck && gcc -O2 -static -o /o/pwcheck/mu300-pwcheck /src/pwcheck/mu300-pwcheck.c -lcrypt'
 # the password checker of the installers (tools/android-pwcheck.sh: never a program of the Linux system it checks):
@@ -151,7 +152,7 @@ for u in 24.04 26.04; do
     # shellcheck disable=SC2086
     docker run --rm -v "$B":/w -v "$IN/out/modules":/kmods:ro -v "$IN/out":/kout:ro -v "$IN/tools/logdw/logdw":/logdw:ro \
       -v "$IN/tools/bt-init/mu300-bt-init":/bt-init:ro -v "$IN/tools/keys/mu300-keys":/keys:ro -v "$IN/tools/adbd/adbd":/adbd:ro \
-      -v "$IN/tools/carry/mu300-carry":/carry:ro $cltest \
+      -v "$IN/tools/carry/mu300-carry":/carry:ro -v "$IN/tools/atd-io/mu300-atd-io":/atd-io:ro $cltest \
       -e MU300_VERSION="$TAG" mu300-ubuntu:$u bash /w/assemble.sh >/dev/null
     out=mu300-ubuntu-rootfs.tar.gz; [ $u = 24.04 ] || out=mu300-ubuntu-$u-rootfs.tar.gz
     mv "$B/mu300-ubuntu-$u-rootfs.tar.gz" "$D/$out"; rm -rf "$B"

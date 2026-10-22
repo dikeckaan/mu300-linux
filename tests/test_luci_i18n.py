@@ -55,14 +55,25 @@ MINI = {
         "fail() { printf '{\"ok\":0,\"op\":%s,\"error\":%s}\\n' \"$(json_str \"$1\")\" \"$(json_str \"$2\")\"; }\n"
         "radio_on || fail \"radio on\" \"Radio did not come up\"\n"
         "printf '{\"ok\":1,\"message\":\"Done\"}\\n'\n"),
+    # a ucode program and modules (FINDINGS 206)
+    'root/usr/libexec/unisoc-modem/cell': (
+        "#!/usr/bin/ucode\n"
+        "// error: 'Not a message: a comment'\n"
+        "let e = { ts: now(), error: 'A ucode \\'literal\\'' }, s = r.error ? 1 : 0;\n"
+        "// i18n: Told by a variable\n"
+        "reply({ ok: 0, error: why });\n"
+        "print(sprintf('%J', { \"message\": \"Quoted key\", error: null }));\n"),
     'root/usr/libexec/unisoc-modem/device-usb': (
         "#!/bin/sh\n"
         "error() { printf '{\"ok\":0,\"error\":%s}\\n' \"$(json_str \"$1\")\"; exit 1; }\n"
         "[ -w \"$F\" ] || error 'USB role switch is unavailable'\n"),
+    'root/usr/share/rpcd/ucode/mu300x.uc': "return { x: { call: () => ({ error: 'From the plugin' }) } };\n",
+    'root/usr/share/ucode/mu300/x.uc': "function f() { return { ok: 0, message: \"From a module\" }; }\n",
 }
 MESSAGES = ['Dashboard', 'MU300 control panel', 'It\'s "quoted" A', '· %d messages', 'In a template',
             'Literal error', 'Refused here', 'No valid reply', 'Built elsewhere', 'Radio did not come up', 'Done',
-            'USB role switch is unavailable']
+            "A ucode 'literal'", 'Told by a variable', 'Quoted key', 'USB role switch is unavailable',
+            'From the plugin', 'From a module']
 
 
 def po_str(m):
@@ -209,6 +220,8 @@ class Catalogs(unittest.TestCase):
             ('dynamic', append(VIEW, "\nE('p', {}, _('Half ' + 'a sentence'));\n")),
             ('dynamic', append(DASH, '\nm_w() { printf \'{"ok":0,"error":%s}\\n\' "$(json_str "$msg")"; }\n')),
             ('dynamic', append(DASH, '\nm_v() { printf \'{"ok":0,"error":"%s"}\\n\' "$msg"; }\n')),
+            ('missing', append('root/usr/share/ucode/mu300/dash.uc', "\nlet z = { error: 'A ucode nobody translated' };\n")),
+            ('dynamic', append('root/usr/share/ucode/mu300/dash.uc', '\nlet y = { ok: 0, error: e.message };\n')),
             ('plural', append(VIEW, "\nE('p', {}, N_(n, 'One item', '%d items').format(n));\n")),
         ]
         for base_name, base in (('the app', APP), ('a clean app', self.mini())):
