@@ -1,4 +1,4 @@
-"""mu300-sysd (FINDINGS 207): the buttons, the LED tick and the thermal guard in one event-driven ucode daemon, and
+"""mu300-sysd (FINDINGS 208): the buttons, the LED tick and the thermal guard in one event-driven ucode daemon, and
 its helper's uevent option (mu300-keys -u).
 
 The daemon is held to the scripts it replaces by their own tests: test_device_scripts' Buttons (mu300-buttons) and
@@ -291,12 +291,48 @@ class Daemon(ShellTest):
         self.assertTrue(wait_for(lambda: battery.read_text().split() == ['red', 'steady', '1'], 4))
         self.assertEqual(self.calls().count('mu300-led tick'), 2)
 
+    def led_daemon(self, online, status):
+        """sysd's LED part on a U30 Air's supplies (the charger ONLINE, the gauge STATUS), the safety look 3600 s on
+        the battery and 1 s on the charger, after its first tick"""
+        root = self.u30air()
+        ps = root / 'sys/class/power_supply'
+        (ps / 'bq256xx-charger/online').write_text(f'{online}\n')
+        (ps / 'sc27xx-fgu/status').write_text(f'{status}\n')
+        self.stub('mu300-led', f'echo "mu300-led $*" >> "$STUBLOG/calls"; exec "{BIN}/mu300-led" "$@"')
+        env = dict(MU300_RUN=self.tmp / 'run', MU300_SYSROOT=root, MU300_BIN=BIN, MU300_LED_CONF=self.tmp / 'none',
+                   MU300_SYSD_PARTS='keys led', MU300_SYSD_SAFETY=3600, MU300_SYSD_SAFETY_PLUGGED=1)
+        self.clock = Clock(root / 'proc/uptime', 100)
+        self.clock.start()
+        self.start(**env)
+        self.send('0 tick')
+        self.assertTrue(wait_for(lambda: self.calls().count('mu300-led tick') == 1))
+        return root
+
+    def test_on_the_charger_the_safety_look_comes_sooner(self):
+        """the U30 Air's charger has no interrupt wired: charging -> full changes the battery LED without a uevent
+        (FINDINGS 208), so on the charger the hint is looked at every SAFETY_PLUGGED s (30)"""
+        root = self.led_daemon(1, 'Charging')
+        time.sleep(2.5)                                            # looks, nothing changed
+        self.assertEqual(self.calls().count('mu300-led tick'), 1)
+        (root / 'sys/class/power_supply/sc27xx-fgu/status').write_text('Full\n')    # no uevent
+        self.assertTrue(wait_for(lambda: self.calls().count('mu300-led tick') == 2, 4))
+
+    def test_on_the_battery_a_plug_is_an_extcon_uevent(self):
+        """on the battery the look waits for SAFETY s (90; 3600 here) or a uevent: the plug's is extcon-gpio's"""
+        root = self.led_daemon(0, 'Discharging')
+        (root / 'sys/class/power_supply/bq256xx-charger/online').write_text('1\n')   # plugged, no uevent yet
+        time.sleep(2.5)
+        self.assertEqual(self.calls().count('mu300-led tick'), 1)
+        self.send('uevent change extcon extcon0')
+        self.assertTrue(wait_for(lambda: self.calls().count('mu300-led tick') == 2, 3))
+        self.assertEqual((root / 'run/mu300/led/.plugged').read_text().strip(), '1')
+
     def test_the_helper_is_asked_for_power_supply_uevents_and_started_again(self):
         self.stub('mu300-keys', 'echo "mu300-keys $*" >> "$STUBLOG/helper"')   # ends at once
         self.start(feed=False, MU300_SYSD_PARTS='keys led', MU300_SYSD_SAFETY=3600)
         helper = self.tmp / 'helper'
         self.assertTrue(wait_for(lambda: helper.exists() and len(helper.read_text().splitlines()) >= 2, 8))
-        self.assertEqual(helper.read_text().splitlines()[0], 'mu300-keys -l 3000 -u power_supply')
+        self.assertEqual(helper.read_text().splitlines()[0], 'mu300-keys -l 3000 -u power_supply,extcon')
         self.assertIn('mu300-keys ended (0); again in', self.log())
 
     # --- thermal

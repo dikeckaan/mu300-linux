@@ -12949,9 +12949,9 @@ After 205 and 206 the U30 Air at rest still woke about 50 times a minute for loo
 it is there for.
 
 - **mu300-sysd** (ucode + uloop, `rootfs/overlay/opt/mu300/bin/mu300-sysd`, opted into with `/etc/mu300/sysd`) does
-  the keys, the LED tick and the thermal guard in one process. One helper, `mu300-keys -u power_supply`, reports the
-  presses and the kernel's power_supply uevents in its one poll loop (the device's ucode socket module has no
-  AF_NETLINK); it accepts kernel messages only (sender port 0), says `uevent overflow - -` when the kernel dropped
+  the keys, the LED tick and the thermal guard in one process. One helper, `mu300-keys -u power_supply,extcon`,
+  reports the presses and the kernel's power_supply and extcon uevents in its one poll loop (the device's ucode socket
+  module has no AF_NETLINK); it accepts kernel messages only (sender port 0), says `uevent overflow - -` when the kernel dropped
   some, and ends with its reader. Its lines reach sysd through a socket pair, not a popen pipe: a popen pipe is a
   stdio stream, and lines that arrive together wait in its buffer where the event loop never sees them. Presses do
   exactly what mu300-buttons did (its own tests run against sysd). The LED tick runs when the hint says it has
@@ -13009,10 +13009,17 @@ the USB interrupt thread 3, hostapd 2) and each mu300 daemon at 2 ticks or less.
 device (press, 150 ms, release) reached sysd, which woke the LEDs and mu300-power ("active: woken by the power key"),
 and at the wake's end the timer ran the LED tick (a new hint, due in 600 s); with a file of the hint changed by hand
 nothing ran for 3 s, and a `change` written to the fuel gauge's `uevent` reached mu300-keys and had the tick run
-0.5 s later (the coalescing), which put the file right. Not seen yet: a physical plug or a 1 % step (the device
-stayed on the charger at 100 %; about 30 minutes of listening showed no power_supply uevent at rest, so none wake it
-either). The charger's interrupt and the gauge's 1 % interrupt call power_supply_changed, which is the same netlink
-path, and a lost one is caught by the 90 s look.
+0.5 s later (the coalescing), which put the file right.
+
+  **The charger sends no uevent.** Charging switched off and on (`charge_type` N/A, Fast) changed the charger's and
+  the gauge's status at once, but no uevent came, and the LED followed only at the next look: 73 s late in the first
+  version, whose safety look was 90 s (mu300-buttons' tick had been 5 s). The U30 Air's charger is an SGM41513 under
+  the bq256xx driver with no interrupt in `/proc/interrupts`; the gauge's interrupt counts 1 % steps only. What has
+  an interrupt is the plug: extcon-gpio, which sends an **extcon** uevent. So the helper is now
+  `mu300-keys -u power_supply,extcon`, and on the charger the look comes every 30 s (`MU300_SYSD_SAFETY_PLUGGED`;
+  90 s on the battery), a few sysfs reads in the process. On the device: a `change` on extcon0's `uevent` had the
+  LED put right 1.2 s later; charging off and on again had the battery LED steady, then breathing, 30 s after each
+  (no uevent either time). Not seen yet: a physical plug (the device is on its USB cable to the computer).
 
 Tests: `tests/test_sysd.py` (mu300-buttons' and thermal-guard's tests against sysd, the daemon, `--check`, the init
 wiring, `mu300-keys -u` with real kernel uevents and a fake userspace datagram that must be dropped),

@@ -49,7 +49,7 @@
 # the next tick has something to do even with all of them unchanged (a timeout that runs out; at the latest a minute
 # on). mu300-buttons starts the next tick only once one of them says so: a tick that would change nothing is not
 # started every 5 s (it was a third of the buttons' service's CPU, two runs of this script and mu300-device's each).
-# mu300-sysd (FINDINGS 207) looks at the same hint on the charger's and the fuel gauge's uevents and on timers instead,
+# mu300-sysd (FINDINGS 208) looks at the same hint on the charger's and the fuel gauge's uevents and on timers instead,
 # and asks for ten minutes at the latest (MU300_LED_TICK_HINT_MAX=600): it looks every 90 s by itself.
 # (MU300_SYSROOT, MU300_BIN and MU300_LED_CONF are for tests/: a fake /, this directory, a led.conf)
 R=${MU300_SYSROOT:-}

@@ -26,7 +26,7 @@
 # while the kernel throttles by itself (its passive trips at 70 and 85 C act whatever this guard does) and up to 10 s
 # where this guard is the thermal policy. At 50 C that is a look every 22 s instead of every 5 s. A round reads the
 # zones with the shell's own read, no process (it used to start a dozen: cat and subshells, 26 ticks a minute).
-# On OpenWrt with /etc/mu300/sysd, mu300-sysd runs these rounds instead (FINDINGS 207); tests/test_sysd.py runs this
+# On OpenWrt with /etc/mu300/sysd, mu300-sysd runs these rounds instead (FINDINGS 208); tests/test_sysd.py runs this
 # script's tests against it. A change here belongs there too.
 HOT=${MU300_THERMAL_HOT:-85000}
 COOL=${MU300_THERMAL_COOL:-75000}
