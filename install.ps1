@@ -858,6 +858,132 @@ if ($partList.Count -eq 1) {
     $OFF = $PART_OFF; $SIZE = $PART_SIZE; $IN_PART = 1
 }
 Info 'emmc.sectors' $disk; Info 'emmc.last_end' $lastEnd; Info 'region.offset' $OFF; Info 'region.size' $SIZE
+# resume.py with these arguments: its lines, and its exit code in $script:ResumeRc
+function ResumePy {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$RArgs)
+    $ErrorActionPreference = 'Continue'
+    $out = @(Python "$Top\tools\resume.py" @RArgs 2>$null | ForEach-Object { "$_" })
+    $script:ResumeRc = $LASTEXITCODE
+    return $out
+}
+# what identifies the device and its userdata, and how Android keeps its data: the same command as install.sh's
+# (sysfs, properties, /proc/mounts; read only, and no double quotes - see the data check)
+$script:FactsCmd = 'd=$(readlink -f /dev/block/by-name/userdata); n=${d##*/}; b=${n%p*}; echo NODE=$n; echo CID=$(cat /sys/class/block/$b/device/cid); echo START=$(cat /sys/class/block/$n/start); echo SIZE=$(cat /sys/class/block/$n/size); echo STATE=$(getprop ro.crypto.state); echo TYPE=$(getprop ro.crypto.type); while read s m r; do case $m in /data) echo SOURCE=$s; break ;; esac; done < /proc/mounts; echo MAGIC=$(dd if=$d bs=1 skip=1024 count=4 2>/dev/null | od -An -tx1 | tr -d \\040\\012); echo EXT=$(dd if=$d bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d \\040\\012)'
+function ParseFacts([string]$Text) {
+    $f = @{}
+    foreach ($l in ($Text -split "`n")) { if ($l -match '^([A-Z]+)=(.*)$') { if (-not $f.ContainsKey($Matches[1])) { $f[$Matches[1]] = $Matches[2].Trim() } } }
+    return $f
+}
+# FactsOk: the identity is one kano's checks take (an eMMC partition node, a 128-bit CID, numbers, a serial)
+function FactsOk($F) {
+    return ([string]$F.NODE -cmatch '^mmcblk[0-9]p[0-9]+$' -and [string]$F.CID -cmatch '^[0-9a-f]{32}$' -and
+        [string]$F.START -match '^[0-9]+$' -and [string]$F.SIZE -match '^[0-9]+$' -and [string]$F.SERIAL)
+}
+function ResumeFacts {
+    $f = ParseFacts (SuDo $script:FactsCmd)
+    $f.SERIAL = AdbProp 'ro.serialno'
+    if (-not (FactsOk $f)) { return $null }
+    $magic = if ($f.EXT -eq '53ef') { '53ef' } else { [string]$f.MAGIC }
+    $f.CRYPTO = [string]((ResumePy encrypted "state=$($f.STATE)" "type=$($f.TYPE)" "source=$($f.SOURCE)" "magic=$magic") | Select-Object -First 1)
+    return $f
+}
+# the backup of kano's: the table (as read for the plan), the first block of misc, both slots' boot and boot chain,
+# each checked against the device. Never the NV or calibration partitions.
+function ResumeBackup([string]$Dir, [string]$G) {
+    New-Item -ItemType Directory -Force -Path $Dir | Out-Null
+    Copy-Item "$G\gpt.head" (Join-Path $Dir 'gpt.head'); Copy-Item "$G\gpt.tail" (Join-Path $Dir 'gpt.tail')
+    SuDoToFile 'dd if=/dev/block/by-name/misc bs=4096 count=1 2>/dev/null' (Join-Path $Dir 'misc-head.bin')
+    if (-not (Test-Path (Join-Path $Dir 'misc-head.bin'))) { Die (T 'could not read the misc header from the device') }
+    foreach ($bp in 'boot', 'uboot', 'sml', 'teecfg', 'trustos', 'vbmeta') {
+        foreach ($bs in 'a', 'b') {
+            $n = "${bp}_$bs"
+            Say (T 'Backing up {1}' $n)
+            $f = Join-Path $Dir "$n.img"
+            SuDoToFile "cat /dev/block/by-name/$n" $f
+            $want = (([string](SuDo "sha256sum /dev/block/by-name/$n")).Trim() -split '\s+')[0]
+            if (-not (Test-Path $f) -or -not $want -or (Get-FileHash $f -Algorithm SHA256).Hash.ToLower() -ne $want) {
+                Die (T 'the copy of {1} is not what the device holds; nothing was changed' $n)
+            }
+        }
+    }
+    $lines = foreach ($n in @('gpt.head', 'gpt.tail', 'misc-head.bin') + @(Get-ChildItem -LiteralPath $Dir -Filter '*.img' | Sort-Object Name | ForEach-Object { $_.Name })) {
+        "$((Get-FileHash (Join-Path $Dir $n) -Algorithm SHA256).Hash.ToLower())  $n"
+    }
+    WriteUnix (Join-Path $Dir 'SHA256SUMS') ((@($lines) -join "`n") + "`n")
+}
+# a file to the device, and there with the checksum it has here
+function ResumePush([string]$Local, [string]$Remote) {
+    Quiet { adb push $Local $Remote } | Out-Null
+    $sum = (([string](SuDo "sha256sum $Remote")).Trim() -split '\s+')[0]
+    return ($sum -eq (Get-FileHash $Local -Algorithm SHA256).Hash.ToLower())
+}
+function ResumeSha([string]$Cmd) { return (([string](SuDo $Cmd)).Trim() -split '\s+')[0] }
+# GptShow: the userdata entry from the lines of resize-last-partition.py --show, $null when one is missing.
+function GptShow([string[]]$Lines) {
+    $v = @{}
+    foreach ($l in @($Lines)) { if ("$l" -match '^(LAST_FIRST|LAST_END|USABLE_END)=([0-9]+)\s*$') { $v[$Matches[1]] = [int64]$Matches[2] } }
+    if ($v.Count -ne 3) { return $null }
+    return @{ First = $v['LAST_FIRST']; End = $v['LAST_END']; UsableEnd = $v['USABLE_END'] }
+}
+# RepartitionPlan: what userdata and Linux have to share, in sectors, and whether it can be split at all.
+function RepartitionPlan([int64]$First, [int64]$End, [int64]$UsableEnd) {
+    [int64]$total = $UsableEnd - $First + 1
+    [int64]$minAndroid = 4GB / 512      # below this Android has nowhere to put apps or updates
+    [int64]$minLinux = 800MB / 512      # OpenWrt alone, with room for one update
+    [int64]$missing = $minAndroid + $minLinux - $total
+    if ($missing -lt 0) { $missing = 0 }
+    return @{ Total = $total; MinAndroid = $minAndroid; MinLinux = $minLinux; MaxLinux = ($total - $minAndroid)
+        Free = ($UsableEnd - $End); Ok = (($total - $minAndroid) -ge $minLinux); Missing = $missing }
+}
+# RepartitionSectors: the answer to "How many GiB for Linux?" as sectors, a multiple of 4096 of them (2 MiB). State
+# is nan for anything but a number like 4 or 2.5 (written with a point in every language), small, large or ok.
+function RepartitionSectors([string]$Gib, [int64]$MinLinux, [int64]$MaxLinux) {
+    if ($Gib -notmatch '^([0-9]+\.?[0-9]*|\.[0-9]+)$') { return @{ State = 'nan'; Sectors = [int64]0 } }
+    $g = [double]::Parse($Gib, [Globalization.CultureInfo]::InvariantCulture)
+    if ($g -gt 1048576) { return @{ State = 'large'; Sectors = [int64]0 } }   # more than the numbers below hold
+    [int64]$s = [math]::Truncate($g * 1073741824 / 512)
+    $s = $s - ($s % 4096)
+    $state = if ($s -lt $MinLinux) { 'small' } elseif ($s -gt $MaxLinux) { 'large' } else { 'ok' }
+    return @{ State = $state; Sectors = $s }
+}
+# LayoutFigures: the numbers a refusal has to say (issue #32: "a different layout" alone identifies nothing) - the
+# eMMC, where its partitions end, what is free and what the smallest installation lacks; with the userdata entry
+# ($Info, GptShow) and its plan, userdata's own sectors and what a split lacks.
+function LayoutFigures([int64]$Disk, [int64]$LastEnd, [int64]$Size, $Info, $Plan) {
+    [int64]$need = 700MB
+    [int64]$short = $need - $Size
+    if ($short -lt 0) { $short = 0 }
+    $mib = { param([int64]$b) [int64][math]::Floor($b / 1MB) }
+    $up = { param([int64]$b) [int64][math]::Ceiling($b / 1MB) }
+    $lines = @((T 'eMMC: {1} ({2} sectors); the partitions end at sector {3}; free after them: {4} MiB' (Gib ($Disk * 512)) $Disk $LastEnd (& $mib $Size)))
+    $lines += (T 'needed behind the partitions: {1} MiB; missing: {2} MiB' (& $mib $need) (& $up $short))
+    if ($Info -and $Plan) {
+        $lines += (T 'userdata now:         {1} (sectors {2}..{3})' (Gib (($Info.End - $Info.First + 1) * 512)) $Info.First $Info.End)
+        $lines += (T 'to share by shrinking it: {1} MiB up to sector {2}; needed: {3} MiB ({4} MiB Android + {5} MiB Linux); missing: {6} MiB' (& $mib ($Plan.Total * 512)) $Info.UsableEnd (& $mib (($Plan.MinAndroid + $Plan.MinLinux) * 512)) (& $mib ($Plan.MinAndroid * 512)) (& $mib ($Plan.MinLinux * 512)) (& $up ($Plan.Missing * 512)))
+    }
+    return @($lines | ForEach-Object { "  $_" })
+}
+# resize-last-partition.py in $Dir with these arguments: its lines, what it refuses with among them, and its exit
+# code in $script:GptRc. It validates both GPT copies and every CRC before it says anything. Run from $Dir with file
+# names only: it takes "head,tail" apart at the comma, and a Windows path may hold one.
+function GptTool([string]$Dir, [string[]]$ToolArgs) {
+    $ErrorActionPreference = 'Continue'
+    $argv = @("$Top\tools\resize-last-partition.py") + $ToolArgs
+    $out = @()
+    Push-Location $Dir
+    try { $out = @(Python @argv 2>&1 | ForEach-Object { "$_" }); $script:GptRc = $LASTEXITCODE }
+    finally { Pop-Location }
+    return $out
+}
+# The partition table as the tool wants it: the first 34 sectors of the eMMC and the last 33, as $Prefix.head and
+# $Prefix.tail. A file from an earlier run never stands in for one that could not be read.
+function GptDump([int64]$Disk, [string]$Prefix) {
+    Remove-Item -Force "$Prefix.head", "$Prefix.tail" -ErrorAction SilentlyContinue
+    SuDoToFile 'dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null' "$Prefix.head"
+    SuDoToFile "dd if=/dev/block/mmcblk0 bs=512 skip=$($Disk - 33) count=33 2>/dev/null" "$Prefix.tail"
+    if (-not (Test-Path "$Prefix.head") -or -not (Test-Path "$Prefix.tail")) { return $false }
+    return ((Get-Item "$Prefix.head").Length -eq 34 * 512 -and (Get-Item "$Prefix.tail").Length -eq 33 * 512)
+}
 # a prepared installation waiting for this device (the make-room path below, on an earlier run): its checks first
 $RESUMING = 0; $RESUME_TX = ''
 if ($ResumeWanted -ne '0' -and ($ResumeWanted -eq '1' -or $resumeWaits)) {
@@ -1123,72 +1249,6 @@ function SdExisting {
 # It is still the most dangerous thing this installer can do. It rewrites the partition table and it erases
 # everything in Android. Reported and first done by hand in issue #2; treat it as experimental.
 #
-# GptShow: the userdata entry from the lines of resize-last-partition.py --show, $null when one is missing.
-function GptShow([string[]]$Lines) {
-    $v = @{}
-    foreach ($l in @($Lines)) { if ("$l" -match '^(LAST_FIRST|LAST_END|USABLE_END)=([0-9]+)\s*$') { $v[$Matches[1]] = [int64]$Matches[2] } }
-    if ($v.Count -ne 3) { return $null }
-    return @{ First = $v['LAST_FIRST']; End = $v['LAST_END']; UsableEnd = $v['USABLE_END'] }
-}
-# RepartitionPlan: what userdata and Linux have to share, in sectors, and whether it can be split at all.
-function RepartitionPlan([int64]$First, [int64]$End, [int64]$UsableEnd) {
-    [int64]$total = $UsableEnd - $First + 1
-    [int64]$minAndroid = 4GB / 512      # below this Android has nowhere to put apps or updates
-    [int64]$minLinux = 800MB / 512      # OpenWrt alone, with room for one update
-    [int64]$missing = $minAndroid + $minLinux - $total
-    if ($missing -lt 0) { $missing = 0 }
-    return @{ Total = $total; MinAndroid = $minAndroid; MinLinux = $minLinux; MaxLinux = ($total - $minAndroid)
-        Free = ($UsableEnd - $End); Ok = (($total - $minAndroid) -ge $minLinux); Missing = $missing }
-}
-# RepartitionSectors: the answer to "How many GiB for Linux?" as sectors, a multiple of 4096 of them (2 MiB). State
-# is nan for anything but a number like 4 or 2.5 (written with a point in every language), small, large or ok.
-function RepartitionSectors([string]$Gib, [int64]$MinLinux, [int64]$MaxLinux) {
-    if ($Gib -notmatch '^([0-9]+\.?[0-9]*|\.[0-9]+)$') { return @{ State = 'nan'; Sectors = [int64]0 } }
-    $g = [double]::Parse($Gib, [Globalization.CultureInfo]::InvariantCulture)
-    if ($g -gt 1048576) { return @{ State = 'large'; Sectors = [int64]0 } }   # more than the numbers below hold
-    [int64]$s = [math]::Truncate($g * 1073741824 / 512)
-    $s = $s - ($s % 4096)
-    $state = if ($s -lt $MinLinux) { 'small' } elseif ($s -gt $MaxLinux) { 'large' } else { 'ok' }
-    return @{ State = $state; Sectors = $s }
-}
-# LayoutFigures: the numbers a refusal has to say (issue #32: "a different layout" alone identifies nothing) - the
-# eMMC, where its partitions end, what is free and what the smallest installation lacks; with the userdata entry
-# ($Info, GptShow) and its plan, userdata's own sectors and what a split lacks.
-function LayoutFigures([int64]$Disk, [int64]$LastEnd, [int64]$Size, $Info, $Plan) {
-    [int64]$need = 700MB
-    [int64]$short = $need - $Size
-    if ($short -lt 0) { $short = 0 }
-    $mib = { param([int64]$b) [int64][math]::Floor($b / 1MB) }
-    $up = { param([int64]$b) [int64][math]::Ceiling($b / 1MB) }
-    $lines = @((T 'eMMC: {1} ({2} sectors); the partitions end at sector {3}; free after them: {4} MiB' (Gib ($Disk * 512)) $Disk $LastEnd (& $mib $Size)))
-    $lines += (T 'needed behind the partitions: {1} MiB; missing: {2} MiB' (& $mib $need) (& $up $short))
-    if ($Info -and $Plan) {
-        $lines += (T 'userdata now:         {1} (sectors {2}..{3})' (Gib (($Info.End - $Info.First + 1) * 512)) $Info.First $Info.End)
-        $lines += (T 'to share by shrinking it: {1} MiB up to sector {2}; needed: {3} MiB ({4} MiB Android + {5} MiB Linux); missing: {6} MiB' (& $mib ($Plan.Total * 512)) $Info.UsableEnd (& $mib (($Plan.MinAndroid + $Plan.MinLinux) * 512)) (& $mib ($Plan.MinAndroid * 512)) (& $mib ($Plan.MinLinux * 512)) (& $up ($Plan.Missing * 512)))
-    }
-    return @($lines | ForEach-Object { "  $_" })
-}
-# resize-last-partition.py in $Dir with these arguments: its lines, what it refuses with among them, and its exit
-# code in $script:GptRc. It validates both GPT copies and every CRC before it says anything. Run from $Dir with file
-# names only: it takes "head,tail" apart at the comma, and a Windows path may hold one.
-function GptTool([string]$Dir, [string[]]$ToolArgs) {
-    $ErrorActionPreference = 'Continue'
-    $argv = @("$Top\tools\resize-last-partition.py") + $ToolArgs
-    $out = @()
-    Push-Location $Dir
-    try { $out = @(Python @argv 2>&1 | ForEach-Object { "$_" }); $script:GptRc = $LASTEXITCODE }
-    finally { Pop-Location }
-    return $out
-}
-# The partition table as the tool wants it: the first 34 sectors of the eMMC and the last 33, as $Prefix.head and
-# $Prefix.tail. A file from an earlier run never stands in for one that could not be read.
-function GptDump([int64]$Disk, [string]$Prefix) {
-    Remove-Item -Force "$Prefix.head", "$Prefix.tail" -ErrorAction SilentlyContinue
-    SuDoToFile 'dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null' "$Prefix.head"
-    SuDoToFile "dd if=/dev/block/mmcblk0 bs=512 skip=$($Disk - 33) count=33 2>/dev/null" "$Prefix.tail"
-    if (-not (Test-Path "$Prefix.head") -or -not (Test-Path "$Prefix.tail")) { return $false }
-    return ((Get-Item "$Prefix.head").Length -eq 34 * 512 -and (Get-Item "$Prefix.tail").Length -eq 33 * 512)
-}
 # ---- reset and resume (EXPERIMENTAL; tools/resume.sh): ported from kano's desktop installer (kanoqwq/mu300-linux,
 # clean-tf-7.2, desktop/installer.py and desktop/boot/part-prepare.sh; f6b0668d, 0e19fe32). userdata is shrunk as before,
 # but Android's own recovery formats it (a bootloader message in misc, --wipe_data): with file-based encryption a
@@ -1196,66 +1256,6 @@ function GptDump([int64]$Disk, [string]$Prefix) {
 # first, a token goes to the start of the new region (outside every partition, where the reset does not reach), and
 # the next run continues when the device, its slot, the partition table, the region, the token and these tools still
 # match (tools\resume.py check).
-# resume.py with these arguments: its lines, and its exit code in $script:ResumeRc
-function ResumePy {
-    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$RArgs)
-    $ErrorActionPreference = 'Continue'
-    $out = @(Python "$Top\tools\resume.py" @RArgs 2>$null | ForEach-Object { "$_" })
-    $script:ResumeRc = $LASTEXITCODE
-    return $out
-}
-# what identifies the device and its userdata, and how Android keeps its data: the same command as install.sh's
-# (sysfs, properties, /proc/mounts; read only, and no double quotes - see the data check)
-$script:FactsCmd = 'd=$(readlink -f /dev/block/by-name/userdata); n=${d##*/}; b=${n%p*}; echo NODE=$n; echo CID=$(cat /sys/class/block/$b/device/cid); echo START=$(cat /sys/class/block/$n/start); echo SIZE=$(cat /sys/class/block/$n/size); echo STATE=$(getprop ro.crypto.state); echo TYPE=$(getprop ro.crypto.type); while read s m r; do case $m in /data) echo SOURCE=$s; break ;; esac; done < /proc/mounts; echo MAGIC=$(dd if=$d bs=1 skip=1024 count=4 2>/dev/null | od -An -tx1 | tr -d \\040\\012); echo EXT=$(dd if=$d bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d \\040\\012)'
-function ParseFacts([string]$Text) {
-    $f = @{}
-    foreach ($l in ($Text -split "`n")) { if ($l -match '^([A-Z]+)=(.*)$') { if (-not $f.ContainsKey($Matches[1])) { $f[$Matches[1]] = $Matches[2].Trim() } } }
-    return $f
-}
-# FactsOk: the identity is one kano's checks take (an eMMC partition node, a 128-bit CID, numbers, a serial)
-function FactsOk($F) {
-    return ([string]$F.NODE -cmatch '^mmcblk[0-9]p[0-9]+$' -and [string]$F.CID -cmatch '^[0-9a-f]{32}$' -and
-        [string]$F.START -match '^[0-9]+$' -and [string]$F.SIZE -match '^[0-9]+$' -and [string]$F.SERIAL)
-}
-function ResumeFacts {
-    $f = ParseFacts (SuDo $script:FactsCmd)
-    $f.SERIAL = AdbProp 'ro.serialno'
-    if (-not (FactsOk $f)) { return $null }
-    $magic = if ($f.EXT -eq '53ef') { '53ef' } else { [string]$f.MAGIC }
-    $f.CRYPTO = [string]((ResumePy encrypted "state=$($f.STATE)" "type=$($f.TYPE)" "source=$($f.SOURCE)" "magic=$magic") | Select-Object -First 1)
-    return $f
-}
-# the backup of kano's: the table (as read for the plan), the first block of misc, both slots' boot and boot chain,
-# each checked against the device. Never the NV or calibration partitions.
-function ResumeBackup([string]$Dir, [string]$G) {
-    New-Item -ItemType Directory -Force -Path $Dir | Out-Null
-    Copy-Item "$G\gpt.head" (Join-Path $Dir 'gpt.head'); Copy-Item "$G\gpt.tail" (Join-Path $Dir 'gpt.tail')
-    SuDoToFile 'dd if=/dev/block/by-name/misc bs=4096 count=1 2>/dev/null' (Join-Path $Dir 'misc-head.bin')
-    if (-not (Test-Path (Join-Path $Dir 'misc-head.bin'))) { Die (T 'could not read the misc header from the device') }
-    foreach ($bp in 'boot', 'uboot', 'sml', 'teecfg', 'trustos', 'vbmeta') {
-        foreach ($bs in 'a', 'b') {
-            $n = "${bp}_$bs"
-            Say (T 'Backing up {1}' $n)
-            $f = Join-Path $Dir "$n.img"
-            SuDoToFile "cat /dev/block/by-name/$n" $f
-            $want = (([string](SuDo "sha256sum /dev/block/by-name/$n")).Trim() -split '\s+')[0]
-            if (-not (Test-Path $f) -or -not $want -or (Get-FileHash $f -Algorithm SHA256).Hash.ToLower() -ne $want) {
-                Die (T 'the copy of {1} is not what the device holds; nothing was changed' $n)
-            }
-        }
-    }
-    $lines = foreach ($n in @('gpt.head', 'gpt.tail', 'misc-head.bin') + @(Get-ChildItem -LiteralPath $Dir -Filter '*.img' | Sort-Object Name | ForEach-Object { $_.Name })) {
-        "$((Get-FileHash (Join-Path $Dir $n) -Algorithm SHA256).Hash.ToLower())  $n"
-    }
-    WriteUnix (Join-Path $Dir 'SHA256SUMS') ((@($lines) -join "`n") + "`n")
-}
-# a file to the device, and there with the checksum it has here
-function ResumePush([string]$Local, [string]$Remote) {
-    Quiet { adb push $Local $Remote } | Out-Null
-    $sum = (([string](SuDo "sha256sum $Remote")).Trim() -split '\s+')[0]
-    return ($sum -eq (Get-FileHash $Local -Algorithm SHA256).Hash.ToLower())
-}
-function ResumeSha([string]$Cmd) { return (([string](SuDo $Cmd)).Trim() -split '\s+')[0] }
 function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     Say (T 'Not enough free space - this looks like the 32 GB variant')
     $g = Join-Path $Work 'gpt'
