@@ -5752,6 +5752,40 @@ class EarlyRecorderNode(ShellTest):
         self.assertIn('\n    node_ok\n', after)
 
 
+class EarlyRecorderCpus(ShellTest):
+    """early-recorder on the little cluster, and a round that reads only what it writes (FINDINGS 208): it ran from
+    preinit on any CPU and read the kernel's and logd's whole logs every 2-10 s for 420 s."""
+    def little(self, shell, caps):
+        m = re.search(r'# --- cpus begin\n(.*?)# --- cpus end', (BIN / 'early-recorder').read_text(), re.S)
+        self.assertIsNotNone(m, 'early-recorder has no cpus block')
+        cpudir = self.tmp / f'cpu-{len(caps)}-{"-".join(caps)}'
+        for i, cap in enumerate(caps):
+            (cpudir / f'cpu{i}').mkdir(parents=True, exist_ok=True)
+            if cap is not None:
+                (cpudir / f'cpu{i}' / 'cpu_capacity').write_text(cap + '\n')
+        (cpudir / 'cpufreq').mkdir(exist_ok=True)                     # not a CPU
+        r = self.sh(shell, m.group(1) + 'little_cpus', MU300_CPUDIR=cpudir)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return r.stdout.strip()
+
+    def test_the_lowest_capacity_cpus(self):
+        for shell in self.each_shell():
+            self.assertEqual(self.little(shell, ['380', '380', '380', '380', '1024', '1024', '1024', '880']),
+                             '0,1,2,3')
+            self.assertEqual(self.little(shell, ['1024', '1024']), '0,1')            # one kind: every CPU
+            self.assertEqual(self.little(shell, ['', 'junk', '512']), '2')          # unreadable values skipped
+            self.assertEqual(self.little(shell, ['', '']), '')                      # none: no pinning
+
+    def test_a_round_reads_little_and_pins_itself(self):
+        s = (BIN / 'early-recorder').read_text()
+        self.assertIn('[ -z "$_lc" ] || taskset -pc "$_lc" $$ >/dev/null 2>&1 || true', s)
+        self.assertLess(s.index('taskset -pc'), s.index('while [ "$(cut -d. -f1 /proc/uptime)" -lt "$end" ]'))
+        self.assertIn('logread -l 300 2>/dev/null | grep -v PR_CAPBSET;', s)
+        self.assertNotIn('logread 2>/dev/null |', s)
+        self.assertIn('dmesg -s 1000000 2>/dev/null || dmesg | tail -c 1000000', s)
+        self.assertIn('if [ "$(cut -d. -f1 /proc/uptime)" -lt 90 ]; then sleep 2; else sleep 30; fi', s)
+
+
 class ToolkitStress(ShellTest):
     """mu300-toolkit's stress test stops itself at 95 C (FINDINGS 166): on 6.18.56 the recommended 10-minute CPU test
     took the SoC to thermal-guard's 105 C power-off twice, and a hot power-off cost the next boot its eMMC."""

@@ -1497,7 +1497,8 @@ there go to Android.
   the first seconds of systemd leaves no log. `mu300-early-recorder.service` keeps writing `dmesg` to the boot_b log area
   for the first five minutes.
 
-  **Update 2026-10-07:** it now writes every 2 s for the first 90 s, then every 10 s (§31d). It runs up to 300 s on
+  **Update 2026-10-07:** it now writes every 2 s for the first 90 s, then every 10 s (§31d; every 30 s since §208,
+  on the little CPUs). It runs up to 300 s on
   Ubuntu (`mu300-early-recorder.service`) and up to 420 s from OpenWrt's preinit
   (`openwrt/overlay/lib/preinit/05_mu300_early_recorder`). It writes only what it has collected, not the full
   8 MiB.
@@ -12994,9 +12995,17 @@ charger; 60 s, the system counters read right around the wait, after the boot's 
 | sysd, events (208) | **0.3 %** (18 ticks a minute, no process started) | **2.6 %** (A76 5 ticks a minute) |
 
 What is left at rest is the kernel and the radio stack's own (rcu_sched 4 ticks a minute, sugov 3-4, netifd 3,
-the USB interrupt thread 3, hostapd 2) and each mu300 daemon at 2 ticks or less. During the first seven minutes of a
-boot the boot partition's log recorder (`early-recorder`) costs about 95 ticks a minute and wakes the A76s; it ends
-by itself. Checked on the device without touching it: a short power-key press written into the gpio-keys event
+the USB interrupt thread 3, hostapd 2) and each mu300 daemon at 2 ticks or less.
+
+- **early-recorder** (the boot partition's log of the first 420 s, sections 20 and 31d) was the boot's largest cost
+  once everything else was quiet: about 95 ticks a minute 300 s after boot, a third of it on the A76s. A round read
+  the kernel's and logd's whole logs (`dmesg | tail -c 1000000` about 0.45 s of CPU with 260 KB of kernel log,
+  `logread | grep | tail -300` about 0.27 s for 450 KB). It now pins itself to the little CPUs (preinit starts it
+  before mu300-cpu puts the services there; `taskset`, the CPUs of the lowest cpu_capacity), asks logd for its last
+  300 lines (`logread -l 300`: the same text, 0.01-0.03 s) and the kernel for its last MB without the pipe
+  (`dmesg -s 1000000`, 0.28 s), and after the first 90 s (still every 2 s there, the early hangs' window) writes
+  every 30 s instead of 10 s, to the same end. 300-360 s after boot: the whole system 75 ticks (was 156), the
+  recorder 16 (was 97), the A76s 1 (was 53); the snapshot read back from boot_a has every section. Checked on the device without touching it: a short power-key press written into the gpio-keys event
 device (press, 150 ms, release) reached sysd, which woke the LEDs and mu300-power ("active: woken by the power key"),
 and at the wake's end the timer ran the LED tick (a new hint, due in 600 s); with a file of the hint changed by hand
 nothing ran for 3 s, and a `change` written to the fuel gauge's `uevent` reached mu300-keys and had the tick run
