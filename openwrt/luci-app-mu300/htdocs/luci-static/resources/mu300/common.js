@@ -654,7 +654,7 @@ function watchSms() {
 		if (smsWatch.skip > 0) { smsWatch.skip--; return; }
 		smsWatch.busy = true;
 		var head = null;
-		L.resolveDefault(callSmsHead(), null).then(function(h) {
+		Promise.resolve(callSmsHead()).catch(function() { return null; }).then(function(h) {
 			head = smsHeadKey(h);
 			if (head != null && head === smsWatch.head)
 				return { unchanged: true };

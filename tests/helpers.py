@@ -134,4 +134,9 @@ class ShellTest(unittest.TestCase):
     def each_shell(self):
         for s in self.shells:
             with self.subTest(shell=' '.join(s)):
-                yield s
+                try:
+                    yield s
+                except GeneratorExit:
+                    # the loop's body left by an exception (a skipTest() where there is no ucode, a failure): that
+                    # exception is the test's outcome, not a second error in this subtest
+                    return
