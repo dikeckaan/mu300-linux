@@ -12762,3 +12762,35 @@ the missing name. v2026.10.23.1 ships all eight in each mainline bundle (built o
 A system installed with an earlier mainline bundle, or from macOS or Windows before this fix, gets the four modules
 with its next kernel update (`mu300-update kernel 6.18|7.2|7.3` from v2026.10.23.1 on, which unpacks on the device).
 `tests/test_case_sensitive.py`.
+
+### 213. The U30 Air's AT+CGSN answers fifteen zeros: the IMEI is read over diag
+
+**Status: fixed in the panel's collector; the diag read is a fallback, used only when AT+CGSN gives nothing
+usable.** Seen on a U30 Air (OpenWrt 25.12.5, v2026.10.23.1, 7.2.11, `MOCORTM_V2_23A_W25.03.2_Debug`).
+
+`AT+CGSN` and `AT+SPIMEI?` answer `000000000000000` on both SIM slots, and through the vendor's own miscserver path
+on the stock Android, while the modem's NV holds both IMEIs. The vendor's backend reads them over `/dev/sdiag_nr`
+(the request `7E 00 00 00 00 0A 00 5E 81/82 00 00 7E`; the value follows the `74 00 5E 01` marker, one 8-byte block,
+nibbles least significant first, an `a` filler before the first digit). The collector cached the zeros as a
+complete identity, so the page showed `0000****000` for 6 h.
+
+`imei-diag` (shell, read-only: no AT and no NV write) makes that read; `cell` asks it only when `AT+CGSN` returned
+nothing or fifteen zeros, and a zero IMEI no longer counts as a complete identity, so an existing zero cache is
+re-read within the minute. Verified on the unit: slot 0 reads IMEI1 and slot 1 IMEI2, over repeated runs; the cache
+and `mu300dash status` then carry the value. `tests/test_imei_diag.py`.
+
+**Device check before merge (U30 Air, OpenWrt):** the dashboard's IMEI row shows the active card's IMEI after a
+round (not `0000****000`), and follows the card when the slot is switched.
+
+### 214. The panel shows both IMEIs, marks the card in use and copies them on a click
+
+**Status: implemented in the panel; device check below.** Follows 213.
+
+`cell` reads the module's two IMEIs over diag on every identity round (`imei1`/`imei2`, plus `slot`), not only the
+active card's, so a unit with no card in the other slot still shows that slot's IMEI. The dashboard shows two rows
+(`IMEI1 (SIM1)` / `IMEI2 (SIM2)`); the active card's row carries a green tag with the existing `in use` message (no
+new catalog entries), and a click copies the full value -- the page may be masking it -- through the HTTP fallback
+(`execCommand`), as the panel is not a secure context.
+
+Verified on the U30 Air (OpenWrt): `sim-slot1.json` carries `"slot":1,"imei1":...,"imei2":...`; the active slot's
+row carries the tag and the other does not; a click copies the unmasked value.

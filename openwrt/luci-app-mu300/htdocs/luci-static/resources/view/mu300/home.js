@@ -303,7 +303,8 @@ return view.extend({
         <div class="mud-r"><span class="mud-k">${_('Modem')}</span><span class="mud-v" id="mud-modem">--</span></div>
         <div class="mud-r"><span class="mud-k">${_('Carrier')}</span><span class="mud-v" id="mud-carr">--</span></div>
         <div class="mud-r"><span class="mud-k">PLMN</span><span class="mud-v" id="mud-plmn">--</span></div>
-        <div class="mud-r"><span class="mud-k">IMEI</span><span class="mud-v" id="mud-imei">--</span></div>
+        <div class="mud-r"><span class="mud-k" id="mud-imei1-k">IMEI1 (SIM1)</span><span class="mud-v mud-copy" id="mud-imei1" data-copy="imei1">--</span></div>
+        <div class="mud-r"><span class="mud-k" id="mud-imei2-k">IMEI2 (SIM2)</span><span class="mud-v mud-copy" id="mud-imei2" data-copy="imei2">--</span></div>
         <div class="mud-r"><span class="mud-k">IMSI</span><span class="mud-v" id="mud-imsi">--</span></div>
         <div class="mud-r"><span class="mud-k">ICCID</span><span class="mud-v" id="mud-iccid">--</span></div>
         <div class="mud-r" id="mud-msisdn-r" style="display:none"><span class="mud-k">${_('Own number')}</span><span class="mud-v" id="mud-msisdn">--</span></div>
@@ -550,7 +551,47 @@ return view.extend({
 			if (!s) return '--';
 			return this.identShown ? s : s.substring(0, 4) + '****' + s.substring(s.length - 3);
 		}.bind(this);
-		M.set('imei', mask(id && id.imei));
+		/* The module has two IMEIs, one per card. Both are shown, the active one with a green check, and a click
+		 * copies the full value (the page may be masking it). A unit with no card in the other slot still shows
+		 * that slot's IMEI (FINDINGS 213/214). */
+		var slot = id && typeof id.slot === 'number' ? id.slot : null;
+		var badge = ' <span class="mud-imei-active">✓ ' + _('in use') + '</span>';
+		M.v('imei1-k').innerHTML = 'IMEI1 (SIM1)' + (slot === 0 ? badge : '');
+		M.v('imei2-k').innerHTML = 'IMEI2 (SIM2)' + (slot === 1 ? badge : '');
+		this.imeiFull = { imei1: id && id.imei1, imei2: id && id.imei2 };
+		M.set('imei1', mask(id && id.imei1));
+		M.set('imei2', mask(id && id.imei2));
+		if (!this._copyWired) {
+			this._copyWired = true;
+			var self = this;
+			var st = document.createElement('style');
+			st.textContent = '.mud-copy{cursor:pointer;border-bottom:1px dotted rgba(0,0,0,.25)}' +
+				'.mud-copy:hover{color:#1e7e34}' +
+				'.mud-copy.ok{color:#1e7e34}' +
+				'.mud-imei-active{display:inline-block;margin-left:6px;padding:0 6px;border-radius:9px;' +
+					'background:#e6f4ea;color:#1e7e34;font-size:11px;line-height:18px;font-weight:600}';
+			document.head.appendChild(st);
+			document.addEventListener('click', function(ev) {
+				var el = ev.target && ev.target.closest ? ev.target.closest('.mud-copy') : null;
+				if (!el) return;
+				var v = self.imeiFull && self.imeiFull[el.getAttribute('data-copy')];
+				if (!v) return;
+				var copy = navigator.clipboard && window.isSecureContext
+					? navigator.clipboard.writeText(v)
+					: new Promise(function(res, rej) {
+						var ta = document.createElement('textarea');
+						ta.value = v; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px';
+						document.body.appendChild(ta); ta.select();
+						try { document.execCommand('copy') ? res() : rej(new Error('copy')); } catch (e) { rej(e); }
+						document.body.removeChild(ta);
+					});
+				copy.then(function() {
+					el.classList.add('ok');
+					setTimeout(function() { el.classList.remove('ok'); }, 900);
+					M.toast(el.getAttribute('data-copy') === 'imei1' ? 'IMEI1 ✓' : 'IMEI2 ✓', { type: 'success' });
+				}, function() { M.toast('✗', { type: 'error' }); });
+			});
+		}
 		M.set('imsi', mask(id && id.imsi));
 		M.set('iccid', mask(id && id.iccid));
 		/* The SIM's own number (CNUM, else the IMS identity; full rounds only): a row only when there is one, masked
