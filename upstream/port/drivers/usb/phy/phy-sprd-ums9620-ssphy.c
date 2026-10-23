@@ -1,18 +1,23 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Unisoc UMS9620 (qogirn6pro) USB 3.1 / USB 2.0 combo PHY for DWC3, device mode.
- * Ported from the Unisoc 5.4 kernel (drivers/usb/phy/phy-sprd-usb31-qogirn6pro.c). Charger detection (BC1.2),
- * the Type-C redriver (ptn38003a) and the usbm cross-PHY bookkeeping are left out: the PHY is brought up for
- * peripheral mode and D+/D- are switched from the PMIC charger detector to the PHY at probe.
+ * Ported from the Unisoc 5.4 kernel (drivers/usb/phy/phy-sprd-usb31-qogirn6pro.c). Charger detection (BC1.2)
+ * and the usbm cross-PHY bookkeeping are left out: the PHY is brought up for peripheral mode and D+/D- are
+ * switched from the PMIC charger detector to the PHY at probe. The USB 3 lanes follow the plug's orientation
+ * (FINDINGS 195, #54): the TCA's lane flip and the PTN38003A redriver, set as ZTE's kernel sets them at every
+ * attach, where ZTE's kernel brings the whole PHY up again.
  *
  * Copyright (C) 2020 Spreadtrum Communications Inc.
  */
 #include <linux/delay.h>
 #include <linux/err.h>
+#include <linux/i2c.h>
 #include <linux/io.h>
 #include <linux/kernel.h>
 #include <linux/mfd/syscon.h>
 #include <linux/module.h>
+#include <linux/moduleparam.h>
+#include <linux/mutex.h>
 #include <linux/of.h>
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
@@ -21,6 +26,7 @@
 #include <linux/slab.h>
 #include <linux/usb/otg.h>
 #include <linux/usb/phy.h>
+#include <linux/workqueue.h>
 #include <dt-bindings/soc/sprd,qogirn6pro-mask.h>
 #include <dt-bindings/soc/sprd,qogirn6pro-regs.h>
 
@@ -44,6 +50,18 @@ struct sprd_ssphy {
 	atomic_t		reset;
 	atomic_t		inited;
 	bool			is_host;
+
+	/* the plug's orientation (FINDINGS 195): all below under orient_lock, except force (set from any context) */
+	struct mutex		orient_lock;
+	struct delayed_work	orient_work;
+	atomic_t		force;		/* the next run sets lanes and redriver even when nothing changed */
+	struct i2c_client	*redriver;	/* the PTN38003A on i2c6, NULL until its bus is there */
+	bool			no_redriver;	/* the device tree has none */
+	bool			no_redriver_warned;	/* said once why a flip is skipped */
+	int			lookups;
+	u32			typec_base;	/* the PMIC's Type-C block (typec@380), 0 when there is none */
+	u32			applied;	/* SSPHY_KEY() of what was last set, 0 = nothing attached since */
+	bool			check;		/* read the redriver's own detection back on the next run */
 };
 
 #define PHY_INIT_TIMEOUT 500
@@ -132,6 +150,138 @@ struct sprd_ssphy {
 
 #define DEFAULT_SSPHY_CTL5_EYE_PATTERN			0x1e40a000
 #define DEFAULT_SSPHY_CTL6_EYE_PATTERN			0x5d000083
+
+/*
+ * The Synopsys Type-C Assist (TCA) block at the start of phy_glb_regs, the names as in mainline's
+ * phy-fsl-imx8mq-usb.c. ZTE's kernel runs it in controller synced mode with TCPC = 0x13 or 0x17: USB and DP
+ * mux, VALID, and bit 2 - the lane flip - clear when the AON's USB_SW input is set. It writes SYSMODE_CFG bit 2
+ * equal to TCPC bit 2; both are kept as ZTE has them.
+ */
+#define TCA_INTR_EN			0x04
+#define TCA_INTR_STS			0x08
+#define TCA_INTR_XA_ACK			BIT(0)
+#define TCA_INTR_XA_TIMEOUT		BIT(1)
+#define TCA_GCFG			0x10
+#define TCA_TCPC			0x14
+#define TCA_TCPC_MUX			GENMASK(1, 0)
+#define TCA_TCPC_ORIENTATION_NORMAL	BIT(2)
+#define TCA_TCPC_LOW_POWER_EN		BIT(3)
+#define TCA_TCPC_VALID			BIT(4)
+#define TCA_SYSMODE_CFG			0x18
+#define TCA_SYSMODE_FLIP_BIT		BIT(2)
+#define TCA_GEN_STATUS			0x34
+#define TCA_GEN_PHY_TYPEC_FLIP		BIT(2)
+
+/* the PMIC's Type-C block, from its node's reg: STATUS as ZTE's sc27xx_pd.c reads it */
+#define TYPEC_STATUS			0x1c
+#define TYPEC_STATE			GENMASK(4, 0)
+#define TYPEC_STATE_ATTACHED_SNK	2
+#define TYPEC_STATE_ATTACHED_SRC	5
+#define TYPEC_CC1			BIT(5)		/* Unisoc's FINAL_SWITCH: attached on CC1 */
+
+/* NXP PTN38003A, register 0x04 (datasheet Rev. 2.1, table 12; ZTE's ptn38003a-i2c.h) */
+#define PTN38003A_MODE			0x04
+#define PTN38003A_AUTO_ORIENT		BIT(7)
+#define PTN38003A_ORIENT_DONE		BIT(6)
+#define PTN38003A_UFP			BIT(5)
+#define PTN38003A_REVERSE		BIT(4)
+#define PTN38003A_OP_MODE		GENMASK(2, 0)
+#define PTN38003A_OP_USB		1
+
+#define SSPHY_KEY(normal)		((normal) ? 3 : 1)
+
+enum { ORIENT_OFF, ORIENT_AUTO, ORIENT_CC };
+static const char * const orientation_names[] = { "off", "auto", "cc" };
+static int orientation = ORIENT_AUTO;
+static DEFINE_MUTEX(sprd_ssphy_instance_lock);
+static struct sprd_ssphy *sprd_ssphy_instance;
+
+static void sprd_ssphy_kick(struct sprd_ssphy *phy, unsigned int ms, bool force)
+{
+	if (force)
+		atomic_set(&phy->force, 1);
+	mod_delayed_work(system_wq, &phy->orient_work, msecs_to_jiffies(ms));
+}
+
+static int orientation_set(const char *val, const struct kernel_param *kp)
+{
+	int i = sysfs_match_string(orientation_names, val);
+
+	if (i < 0)
+		return i;
+	WRITE_ONCE(orientation, i);
+	mutex_lock(&sprd_ssphy_instance_lock);
+	if (sprd_ssphy_instance && i != ORIENT_OFF)
+		sprd_ssphy_kick(sprd_ssphy_instance, 0, true);
+	mutex_unlock(&sprd_ssphy_instance_lock);
+	return 0;
+}
+
+static int orientation_get(char *buf, const struct kernel_param *kp)
+{
+	return sysfs_emit(buf, "%s\n", orientation_names[READ_ONCE(orientation)]);
+}
+
+static const struct kernel_param_ops orientation_ops = {
+	.set = orientation_set,
+	.get = orientation_get,
+};
+module_param_cb(orientation, &orientation_ops, NULL, 0644);
+MODULE_PARM_DESC(orientation,
+		 "USB 3 lanes: auto (ZTE's: the TCA from USB_SW, the redriver detects), cc (both from the PMIC's CC pin), off (set once at PHY init, no redriver)");
+
+static bool sprd_ssphy_typec_attached(u32 status)
+{
+	u32 state = status & TYPEC_STATE;
+
+	return state == TYPEC_STATE_ATTACHED_SNK || state == TYPEC_STATE_ATTACHED_SRC;
+}
+
+/* the lanes as the plug has them: ZTE's kernel reads the AON's USB_SW (BOOT_MODE bit 10), set = flipped */
+static bool sprd_ssphy_lanes_normal(int mode, u32 boot_mode, bool typec, u32 typec_status, const char **from)
+{
+	if (mode == ORIENT_CC && typec && sprd_ssphy_typec_attached(typec_status)) {
+		*from = "CC";
+		return typec_status & TYPEC_CC1;
+	}
+	*from = "USB_SW";
+	return !(boot_mode & MASK_AON_APB_USB_SW);
+}
+
+/* ZTE: bits 0, 1 and 4 set, 3 clear, 2 for the orientation */
+static u32 sprd_ssphy_tcpc(u32 tcpc, bool normal)
+{
+	tcpc &= ~(TCA_TCPC_ORIENTATION_NORMAL | TCA_TCPC_LOW_POWER_EN);
+	tcpc |= TCA_TCPC_MUX | TCA_TCPC_VALID;
+	if (normal)
+		tcpc |= TCA_TCPC_ORIENTATION_NORMAL;
+	return tcpc;
+}
+
+static u32 sprd_ssphy_sysmode(u32 sysmode, bool normal)
+{
+	return normal ? sysmode | TCA_SYSMODE_FLIP_BIT : sysmode & ~TCA_SYSMODE_FLIP_BIT;
+}
+
+/* deep power saving: the high-speed pins in USB safe state, and a new detection at the next USB mode */
+static u8 sprd_ssphy_redriver_off(u8 v)
+{
+	return v & ~(PTN38003A_AUTO_ORIENT | PTN38003A_OP_MODE);
+}
+
+/* USB 3.2 mode; the orientation detected by the redriver itself (ZTE's 0x81), or the one given */
+static u8 sprd_ssphy_redriver_on(u8 v, int mode, bool normal)
+{
+	v &= ~(PTN38003A_AUTO_ORIENT | PTN38003A_ORIENT_DONE | PTN38003A_REVERSE | PTN38003A_OP_MODE);
+	v |= PTN38003A_OP_USB;
+	if (mode == ORIENT_CC) {
+		if (!normal)
+			v |= PTN38003A_REVERSE;
+	} else {
+		v |= PTN38003A_AUTO_ORIENT;
+	}
+	return v;
+}
 
 static void sc27xx_dpdm_switch_to_phy(struct regmap *regmap, bool enable)
 {
@@ -309,6 +459,196 @@ static void usb_config_4_cts(struct sprd_ssphy *phy)
 }
 
 
+/* the TCA's lane flip, as ZTE's init writes it; waits for the controller's ack (or the TCA's timeout) */
+static void sprd_ssphy_tca_set(struct sprd_ssphy *phy, bool normal)
+{
+	int timeout = PHY_INIT_TIMEOUT;
+	u32 reg;
+
+	writel_relaxed(0xffff, phy->base + TCA_INTR_STS);
+	writel_relaxed(sprd_ssphy_tcpc(readl_relaxed(phy->base + TCA_TCPC), normal), phy->base + TCA_TCPC);
+	writel_relaxed(sprd_ssphy_sysmode(readl_relaxed(phy->base + TCA_SYSMODE_CFG), normal),
+		       phy->base + TCA_SYSMODE_CFG);
+
+	msleep(10);
+	while (1) {
+		reg = readl_relaxed(phy->base + TCA_INTR_STS);
+		if (reg & (TCA_INTR_XA_ACK | TCA_INTR_XA_TIMEOUT)) {
+			writel_relaxed(0xffff, phy->base + TCA_INTR_STS);
+			break;
+		}
+		msleep(1);
+		if (!--timeout) {
+			dev_err(phy->dev, "tca interrupt not ready\n");
+			break;
+		}
+	}
+}
+
+/* the PMIC's Type-C block: STATUS, or false when the device tree has no such block or the read fails */
+static bool sprd_ssphy_typec_status(struct sprd_ssphy *phy, u32 *status)
+{
+	*status = 0;
+	return phy->typec_base && !regmap_read(phy->pmic, phy->typec_base + TYPEC_STATUS, status);
+}
+
+/*
+ * Set the TCA's lanes for the plug and return the key of what was set. At PHY init always (as before); later
+ * only when the orientation is not the one the TCA has, so that a running link is not disturbed for nothing.
+ */
+static u32 sprd_ssphy_lanes(struct sprd_ssphy *phy, int mode, bool always, bool flip)
+{
+	u32 boot = 0, st, tcpc;
+	const char *from;
+	bool typec, normal;
+
+	regmap_read(phy->aon_apb, REG_AON_APB_BOOT_MODE, &boot);
+	typec = sprd_ssphy_typec_status(phy, &st);
+	normal = sprd_ssphy_lanes_normal(mode, boot, typec, st, &from);
+	tcpc = readl_relaxed(phy->base + TCA_TCPC);
+	if (flip && (always || !!(tcpc & TCA_TCPC_ORIENTATION_NORMAL) != normal))
+		sprd_ssphy_tca_set(phy, normal);
+	if (mode != ORIENT_OFF)
+		dev_info(phy->dev, "USB 3 lanes %s (from %s; USB_SW %d, Type-C %s, TCA flip status %d)\n",
+			 normal ? "normal" : "flipped", from, !!(boot & MASK_AON_APB_USB_SW),
+			 !typec ? "unknown" : !sprd_ssphy_typec_attached(st) ? "open" :
+			 st & TYPEC_CC1 ? "CC1" : "CC2",
+			 !!(readl_relaxed(phy->base + TCA_GEN_STATUS) & TCA_GEN_PHY_TYPEC_FLIP));
+	return SSPHY_KEY(normal);
+}
+
+/* the redriver's I2C client: its node is in the vendor DTB (i2c6, 0x30, "sprd,ptn38003a redriver"), unbound */
+static struct i2c_client *sprd_ssphy_redriver(struct sprd_ssphy *phy)
+{
+#if IS_REACHABLE(CONFIG_I2C)
+	struct device_node *np;
+
+	if (phy->redriver || phy->no_redriver)
+		return phy->redriver;
+	np = of_find_compatible_node(NULL, NULL, "sprd,ptn38003a redriver");
+	if (!np || !of_device_is_available(np))
+		phy->no_redriver = true;
+	else
+		phy->redriver = of_find_i2c_device_by_node(np);
+	of_node_put(np);
+	return phy->redriver;
+#else
+	phy->no_redriver = true;
+	return NULL;
+#endif
+}
+
+/* through deep power saving into USB mode: the auto orientation detection runs once per entry (7.7.2) */
+static int sprd_ssphy_redriver_arm(struct sprd_ssphy *phy, int mode, bool normal)
+{
+	struct i2c_client *c = sprd_ssphy_redriver(phy);
+	int v, ret;
+
+	if (!c)
+		return phy->no_redriver ? -ENODEV : -EPROBE_DEFER;
+	v = i2c_smbus_read_byte_data(c, PTN38003A_MODE);
+	if (v < 0)
+		return v;
+	ret = i2c_smbus_write_byte_data(c, PTN38003A_MODE, sprd_ssphy_redriver_off(v));
+	if (ret)
+		return ret;
+	usleep_range(1000, 2000);
+	ret = i2c_smbus_write_byte_data(c, PTN38003A_MODE, sprd_ssphy_redriver_on(v, mode, normal));
+	if (!ret)
+		dev_info(phy->dev, "redriver: mode 0x%02x, now 0x%02x\n", v, sprd_ssphy_redriver_on(v, mode, normal));
+	return ret;
+}
+
+/* ZTE's shutdown: deep power saving, so that whoever brings the port up next gets a new detection */
+static void sprd_ssphy_redriver_park(struct sprd_ssphy *phy)
+{
+	int v;
+
+	if (!phy->redriver)
+		return;
+	v = i2c_smbus_read_byte_data(phy->redriver, PTN38003A_MODE);
+	if (v >= 0)
+		i2c_smbus_write_byte_data(phy->redriver, PTN38003A_MODE, sprd_ssphy_redriver_off(v));
+}
+
+/*
+ * After PHY init, a role change, VBUS or (as a host, polled each second) a Type-C attach: set the lanes and arm
+ * the redriver as ZTE's kernel does at every attach. A detach only forgets what was set, so that the next attach
+ * arms the redriver again.
+ */
+static void sprd_ssphy_orient_work(struct work_struct *work)
+{
+	struct sprd_ssphy *phy = container_of(to_delayed_work(work), struct sprd_ssphy, orient_work);
+	int mode = READ_ONCE(orientation), v, ret;
+	bool force, attached, typec;
+	unsigned int next = 0;
+	u32 st, key, boot = 0;
+	const char *from;
+
+	if (mode == ORIENT_OFF)
+		return;
+	mutex_lock(&phy->orient_lock);
+	if (!atomic_read(&phy->inited))
+		goto out;
+
+	force = atomic_xchg(&phy->force, 0);
+	typec = sprd_ssphy_typec_status(phy, &st);
+	attached = !typec || sprd_ssphy_typec_attached(st);
+	regmap_read(phy->aon_apb, REG_AON_APB_BOOT_MODE, &boot);
+	key = SSPHY_KEY(sprd_ssphy_lanes_normal(mode, boot, typec, st, &from));
+	if (!attached && !force) {
+		phy->applied = 0;
+	} else if (force || phy->applied != key) {
+		/* forced, attached after a detach, or attached again the other way round without a detach seen */
+		/*
+		 * Arm the redriver before the TCA is touched: the two have to agree on the lane pair. Where the
+		 * PTN38003A is missing, or does not answer at all (a U30 Air whose i2c 0x30 returns -EIO on every
+		 * bus), flipping the TCA alone leaves no pair working - the host does not enumerate the device at
+		 * all - while the single write PHY init made still falls back to USB 2. Keep that write then.
+		 */
+		ret = sprd_ssphy_redriver_arm(phy, mode, key == SSPHY_KEY(true));
+		if (ret == -EPROBE_DEFER && phy->lookups++ < 30) {
+			atomic_set(&phy->force, 1);
+			next = 1000;
+			key = sprd_ssphy_lanes(phy, mode, false, true);
+		} else if (ret) {
+			if (ret != -ENODEV && !phy->no_redriver_warned) {
+				phy->no_redriver_warned = true;
+				dev_warn(phy->dev,
+					 "redriver: %d, nothing to follow a flip; the lanes stay as PHY init left them\n",
+					 ret);
+			}
+			key = sprd_ssphy_lanes(phy, mode, false, false);
+		} else {
+			phy->check = true;
+			next = 1500;
+			key = sprd_ssphy_lanes(phy, mode, false, true);
+		}
+		phy->applied = attached ? key : 0;
+	} else if (phy->check && phy->redriver) {
+		phy->check = false;
+		v = i2c_smbus_read_byte_data(phy->redriver, PTN38003A_MODE);
+		if (v < 0)
+			dev_warn(phy->dev, "redriver: %d\n", v);
+		else if (!(v & PTN38003A_AUTO_ORIENT))
+			dev_info(phy->dev, "redriver: orientation %s as set (0x%02x)\n",
+				 v & PTN38003A_REVERSE ? "reverse" : "normal", v);
+		else if (v & PTN38003A_ORIENT_DONE)
+			dev_info(phy->dev, "redriver: detected orientation %s (0x%02x)\n",
+				 v & PTN38003A_REVERSE ? "reverse" : "normal", v);
+		else
+			dev_info(phy->dev, "redriver: no orientation detected yet (0x%02x)\n", v);
+	}
+
+	/* as a host the port powers VBUS itself, so a device plugged in later shows only on CC */
+	if (!next && typec && phy->is_host)
+		next = 1000;
+	if (next && !delayed_work_pending(&phy->orient_work))
+		schedule_delayed_work(&phy->orient_work, msecs_to_jiffies(next));
+out:
+	mutex_unlock(&phy->orient_lock);
+}
+
 static int sprd_ssphy_init(struct usb_phy *x)
 {
 	struct sprd_ssphy *phy = container_of(x, struct sprd_ssphy, phy);
@@ -469,43 +809,10 @@ static int sprd_ssphy_init(struct usb_phy *x)
 	reg |= BIT(0) | BIT(1);
 	writel_relaxed(reg, phy->base + 0x04);
 
-	/* usb3 switch port */
-	/* remove usbonly,add combophy for dp/usb */
-	ret |= regmap_read(phy->aon_apb, REG_AON_APB_BOOT_MODE, &reg);
-	msk = readl_relaxed(phy->base + 0x14);
-	if ((reg & BIT(10))) {
-		msk &= ~(BIT(2) | BIT(3));
-		msk |= BIT(0) | BIT(1) | BIT(4);
-	} else {
-		msk &= ~BIT(3);
-		msk |= BIT(0) | BIT(1) | BIT(2) | BIT(4);
-	}
-	writel_relaxed(msk, phy->base + 0x14);
-
-	msk = readl_relaxed(phy->base + 0x18);
-	if (reg & BIT(10))
-		msk &= ~BIT(2);
-	else
-		msk |= BIT(2);
-	writel_relaxed(msk, phy->base + 0x18);
-
-	msleep(10);
-	/* wait tca interrupt */
-	timeout = PHY_INIT_TIMEOUT;
-	while (1) {
-		reg = readl_relaxed(phy->base + 0x08);
-		if ((reg & BIT(0)) == BIT(0) || (reg & BIT(1)) == BIT(1)) {
-			msk = 0xffff;
-			writel_relaxed(msk, phy->base + 0x08);
-			break;
-		} else {
-			msleep(1);
-			if (!--timeout) {
-				dev_err(x->dev, "%s tca interrupt not ready\n", __func__);
-				break;
-			}
-		}
-	}
+	/* usb3 switch port: the lanes for the plug's orientation */
+	mutex_lock(&phy->orient_lock);
+	sprd_ssphy_lanes(phy, READ_ONCE(orientation), true, true);
+	mutex_unlock(&phy->orient_lock);
 
 	if (!phy->pmic) {
 		/*
@@ -516,6 +823,8 @@ static int sprd_ssphy_init(struct usb_phy *x)
 	}
 
 	atomic_set(&phy->inited, 1);
+	if (READ_ONCE(orientation) != ORIENT_OFF)
+		sprd_ssphy_kick(phy, 0, true);
 
 	return ret;
 }
@@ -531,6 +840,13 @@ static void sprd_ssphy_shutdown(struct usb_phy *x)
 		dev_dbg(x->dev, "%s is already shut down\n", __func__);
 		return;
 	}
+
+	cancel_delayed_work_sync(&phy->orient_work);
+	mutex_lock(&phy->orient_lock);
+	if (READ_ONCE(orientation) != ORIENT_OFF)
+		sprd_ssphy_redriver_park(phy);
+	phy->applied = 0;
+	mutex_unlock(&phy->orient_lock);
 
 
 		if (true) {
@@ -657,11 +973,16 @@ static int sprd_ssphy_vbus_notify(struct notifier_block *nb, unsigned long event
 {
 	struct usb_phy *x = container_of(nb, struct usb_phy, vbus_nb);
 
+	struct sprd_ssphy *phy = container_of(x, struct sprd_ssphy, phy);
+
 	dev_info(x->dev, "vbus %s\n", event ? "on" : "off");
 	if (event)
 		sprd_ssphy_notify_connect(x, USB_SPEED_UNKNOWN);
 	else
 		sprd_ssphy_notify_disconnect(x, USB_SPEED_UNKNOWN);
+	/* an attach: once the Type-C block has settled on a CC pin (tCCDebounce, 100 ms set by Unisoc) */
+	if (READ_ONCE(orientation) != ORIENT_OFF)
+		sprd_ssphy_kick(phy, event ? 300 : 0, event);
 	return NOTIFY_OK;
 }
 
@@ -729,7 +1050,34 @@ static void sprd_ssphy_vbus_source(struct device *dev)
  */
 static int sprd_ssphy_otg_set_vbus(struct usb_otg *otg, bool on)
 {
-	return sprd_ssphy_set_vbus(otg->usb_phy, on);
+	struct sprd_ssphy *phy = container_of(otg->usb_phy, struct sprd_ssphy, phy);
+	int ret = sprd_ssphy_set_vbus(otg->usb_phy, on);
+
+	/* a new session in the other role: ZTE's kernel brought the PHY up again here */
+	if (READ_ONCE(orientation) != ORIENT_OFF)
+		sprd_ssphy_kick(phy, 100, true);
+	return ret;
+}
+
+/* the PMIC's Type-C block: the node the U30 Air's PHY names, or the one both boards have (typec@380) */
+static u32 sprd_ssphy_typec_base(void)
+{
+	struct device_node *np = of_find_compatible_node(NULL, NULL, "sprd,sc27xx-typec");
+	u32 base = 0;
+
+	if (np && of_device_is_available(np) && of_property_read_u32(np, "reg", &base))
+		base = 0;
+	of_node_put(np);
+	return base;
+}
+
+static void sprd_ssphy_orient_stop(void *data)
+{
+	struct sprd_ssphy *phy = data;
+
+	cancel_delayed_work_sync(&phy->orient_work);
+	if (phy->redriver)
+		put_device(&phy->redriver->dev);
 }
 
 static int sprd_ssphy_probe(struct platform_device *pdev)
@@ -791,6 +1139,13 @@ static int sprd_ssphy_probe(struct platform_device *pdev)
 			   MASK_AON_APB_USB20_CTRL_MUX_REG, MASK_AON_APB_USB20_CTRL_MUX_REG);
 
 	platform_set_drvdata(pdev, phy);
+	mutex_init(&phy->orient_lock);
+	INIT_DELAYED_WORK(&phy->orient_work, sprd_ssphy_orient_work);
+	/* before usb_add_phy_dev(): devm undoes it after the VBUS notifier, which queues the work, is gone */
+	ret = devm_add_action_or_reset(dev, sprd_ssphy_orient_stop, phy);
+	if (ret)
+		return ret;
+	phy->typec_base = sprd_ssphy_typec_base();
 	phy->dev = dev;
 	phy->phy.dev = dev;
 	phy->phy.label = "sprd-ssphy";
@@ -811,6 +1166,9 @@ static int sprd_ssphy_probe(struct platform_device *pdev)
 	ret = usb_add_phy_dev(&phy->phy);
 	if (ret)
 		return dev_err_probe(dev, ret, "cannot add phy\n");
+	mutex_lock(&sprd_ssphy_instance_lock);
+	sprd_ssphy_instance = phy;
+	mutex_unlock(&sprd_ssphy_instance_lock);
 
 	/* device mode only for now: route D+/D- from the charger detector to the USB PHY */
 	sc27xx_dpdm_switch_to_phy(phy->pmic, true);
@@ -822,7 +1180,22 @@ static void sprd_ssphy_remove(struct platform_device *pdev)
 {
 	struct sprd_ssphy *phy = platform_get_drvdata(pdev);
 
+	mutex_lock(&sprd_ssphy_instance_lock);
+	sprd_ssphy_instance = NULL;
+	mutex_unlock(&sprd_ssphy_instance_lock);
 	usb_remove_phy(&phy->phy);
+}
+
+/* reboot or power off: the redriver as ZTE's kernel leaves an unused port, for the next kernel's detection */
+static void sprd_ssphy_platform_shutdown(struct platform_device *pdev)
+{
+	struct sprd_ssphy *phy = platform_get_drvdata(pdev);
+
+	cancel_delayed_work_sync(&phy->orient_work);
+	mutex_lock(&phy->orient_lock);
+	if (READ_ONCE(orientation) != ORIENT_OFF)
+		sprd_ssphy_redriver_park(phy);
+	mutex_unlock(&phy->orient_lock);
 }
 
 static const struct of_device_id sprd_ssphy_match[] = {
@@ -834,6 +1207,7 @@ MODULE_DEVICE_TABLE(of, sprd_ssphy_match);
 static struct platform_driver sprd_ssphy_driver = {
 	.probe = sprd_ssphy_probe,
 	.remove = sprd_ssphy_remove,
+	.shutdown = sprd_ssphy_platform_shutdown,
 	.driver = { .name = "sprd-ssphy", .of_match_table = sprd_ssphy_match },
 };
 module_platform_driver(sprd_ssphy_driver);
