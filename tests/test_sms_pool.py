@@ -1881,10 +1881,12 @@ class Daemon(ShellTest):
                 self.assertEqual(self.at_log()[n:], [])
                 self.assertEqual((self.tmp / 'md5.log').read_text().count('md5'), s)
                 # a line that is no +CMTI: the checksum once, and the routing is looked at (a modem that restarted
-                # announces itself on that channel)
+                # announces itself on that channel); the start asked AT+CNMI? already, so the one after this line
+                asked = self.commands().count('AT+CNMI?')
                 with open(self.atdir / 'urc' / 'stty_nr0.log', 'a') as f:
                     f.write('+SIND: 1\n')
-                self.wait_for(lambda: 'AT+CNMI?' in self.commands(), 'the routing was not looked at', timeout=15)
+                self.wait_for(lambda: self.commands().count('AT+CNMI?') > asked, 'the routing was not looked at',
+                              timeout=15)
                 self.assertEqual((self.tmp / 'md5.log').read_text().count('md5'), s + 1)
                 self.assertEqual(self.syncs(), ['sync'])
             finally:

@@ -773,7 +773,10 @@ exit 0''')
         link_local = 'fe800000000000000000000000000001 05 40 20 80 sipa_eth0\n'
         ran = False
         for shell in self.each_shell():
-            if not timed_read(shell):
+            # the solicitations are seen through the sleep stub: a shell whose sleep is its own (busybox ash built
+            # with its applets preferred, as Ubuntu's) never runs it
+            if not timed_read(shell) or subprocess.run(shell + ['-c', 'command -v sleep'], capture_output=True,
+                                                       text=True, env=self.env()).stdout.strip() == 'sleep':
                 continue
             ran = True
             d = self.ndp_daemon(shell, bearer=link_local)
@@ -798,7 +801,7 @@ exit 0''')
                 if fd is not None:
                     os.close(fd)
         if not ran:
-            self.skipTest('no shell with read -t')
+            self.skipTest('no shell with read -t and an outside sleep')
 
     def withdraw_rounds(self, shell, *states):
         """Rounds of one ndp-learn over bearer STATES ('a', 'b', 'ab', ''), returning per round the ra-deprecate
