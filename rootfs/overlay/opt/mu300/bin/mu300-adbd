@@ -42,14 +42,14 @@ BUILTIN=${MU300_MODULES_BUILTIN:-/lib/modules/$(uname -r)/modules.builtin}
 UDC_CLASS=${MU300_UDC_CLASS:-/sys/class/udc}
 HOOK=${MU300_USB_HOOK:-/etc/hotplug.d/iface/10-mu300-usb}
 TICK=${MU300_ADBD_TICK:-1}     # seconds between two looks at the gadget while something is under way
-IDLE_TICK=${MU300_ADBD_IDLE_TICK:-3}   # ... and while all is as it should be (FINDINGS 205)
+IDLE_TICK=${MU300_ADBD_IDLE_TICK:-3}   # ... and while all is as it should be (FINDINGS 215)
 GRACE=${MU300_ADBD_GRACE:-5}   # looks at an unbound gadget before it is bound again
 F=$G/functions/ffs.adb
 L=$G/configs/c.1/f3
 
 log() { echo "mu300-adbd: $*" >&2; }   # the service keeps it (journal, logread)
 nap() { sleep "$1" 2>/dev/null || sleep 1; }
-# look_again SECONDS: the wait between two looks of the loop (FINDINGS 205). Where the shell's read takes a timeout
+# look_again SECONDS: the wait between two looks of the loop (FINDINGS 215). Where the shell's read takes a timeout
 # (busybox ash, bash) and SECONDS is whole (OpenWrt's busybox takes no fraction), it waits on a fifo nobody writes to,
 # opened read-write so it never ends either (wait_init): no sleep process every second, and the TERM of a stop still
 # ends the wait at once. Else nap (dash has no read -t).
@@ -285,7 +285,7 @@ run() {
         # unbound gadget is then seen up to IDLE_TICK - TICK seconds later than before (the GRACE looks come after)
         if [ "$idle" = 0 ] && [ "$cool" = 0 ] && { [ "$_r" = host ] || linked; }; then
             # this wait's timer may also fire up to half a second late, so the kernel can serve the timers of several
-            # daemons with one wakeup (FINDINGS 205); the rest of the loop (bind retries, adbd) keeps the default slack
+            # daemons with one wakeup (FINDINGS 215); the rest of the loop (bind retries, adbd) keeps the default slack
             [ -z "$slack" ] || { echo 500000000 > /proc/$$/timerslack_ns; } 2>/dev/null
             look_again "$IDLE_TICK"
             [ -z "$slack" ] || { echo "$slack" > /proc/$$/timerslack_ns; } 2>/dev/null

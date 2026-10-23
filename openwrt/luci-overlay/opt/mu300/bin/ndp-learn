@@ -189,7 +189,7 @@ case ${1:-} in
     --once) learn_once; exit 0 ;;
 esac
 
-# The daemon (FINDINGS 205). A round looks at the kernel's addresses (/proc/net/if_inet6, a few lines, read by the shell
+# The daemon (FINDINGS 215). A round looks at the kernel's addresses (/proc/net/if_inet6, a few lines, read by the shell
 # itself) and, every ROUTE_EVERY rounds, at the routing table's lines of the bearer's /64s (one grep); learn_once (two
 # ip calls per prefix, the host routes, the withdrawal) runs only when one of them changed since its last run, or a
 # withdrawal still has rounds to go. A route someone removed comes back within ROUTE_EVERY rounds (30 s), a new or
@@ -241,7 +241,7 @@ nap() {
     [ -z "$slack" ] || { echo "$slack" > /proc/$$/timerslack_ns; } 2>/dev/null
 }
 
-# The kernel's word instead of a round every INTERVAL seconds (FINDINGS 206). With iproute2's monitor (OpenWrt's
+# The kernel's word instead of a round every INTERVAL seconds (FINDINGS 216). With iproute2's monitor (OpenWrt's
 # ip-full; busybox's ip has none) `ip -o -6 monitor address route` runs as a child and writes a line per change into a
 # fifo this reads with read -t: no process and no wakeup while the kernel says nothing. An address line (any
 # interface's: the round compares them all, as before) starts a round, which reads if_inet6 itself; a route line of

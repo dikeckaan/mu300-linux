@@ -288,7 +288,7 @@ SH_PLAIN_VALUE = re.compile(r'"((?:[^"\\]|\\.)*)"')
 SH_ESCAPED_VALUE = re.compile(r'\\"((?:[^"\\]|\\[^"])*)\\"')
 SH_CONST = re.compile(r'(?:null|true|false|-?\d)')
 CONVERSION = re.compile(r'%(?!%)')
-# the same in a ucode backend (FINDINGS 206: the collector, the snapshot module, rpcd's mu300status): an "error" or
+# the same in a ucode backend (FINDINGS 216: the collector, the snapshot module, rpcd's mu300status): an "error" or
 # "message" key of an object the code builds, quoted or not (error: 'Text', "message": "Text"), and '// i18n: Text'
 UC_I18N = re.compile(r'^\s*// i18n: (.+?)\s*$')
 UC_KEY = re.compile(r'''(?<![\w$.])["']?(?:error|message)["']?\s*:(?!:)\s*''')

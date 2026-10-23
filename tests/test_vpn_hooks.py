@@ -289,7 +289,7 @@ class Static(unittest.TestCase):
         self.assertIn('if [ -x "$VPN_CMD" ] && ! "$VPN_CMD" guard', (BIN / 'wifi-client').read_text())
 
     def test_luci_vpn_capability_is_the_module(self):
-        # the snapshot is mu300.dash's (FINDINGS 206): dashboard-info and rpcd's mu300status both use it
+        # the snapshot is mu300.dash's (FINDINGS 216): dashboard-info and rpcd's mu300status both use it
         info = (TOP / 'openwrt/luci-app-mu300/root/usr/share/ucode/mu300/dash.uc').read_text()
         self.assertIn("let cap_vpn = (executable('/opt/mu300/bin/mu300-vpn') && "
                       "executable('/etc/init.d/mu300-vpn')) ? 1 : 0;", info)

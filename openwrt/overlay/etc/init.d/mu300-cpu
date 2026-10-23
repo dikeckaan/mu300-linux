@@ -1,6 +1,6 @@
 #!/bin/sh /etc/rc.common
 # apply the CPU performance profile saved by mu300-cpu (/etc/mu300/cpu.conf), and keep the services on the little
-# cluster (mu300-cpu services, FINDINGS 206: the default, with or without the file)
+# cluster (mu300-cpu services, FINDINGS 216: the default, with or without the file)
 START=95
 
 start() {

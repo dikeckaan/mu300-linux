@@ -15,7 +15,7 @@
 #                                    saved, applied at boot (FINDINGS 200). No argument: the saved setting
 #   mu300-cpu services [little|all]  where the system's services run (OpenWrt: procd's /sys/fs/cgroup/services, and
 #                                    every process they start): on the little cluster (the default) or on every CPU;
-#                                    saved, applied now and at boot (FINDINGS 206). No argument: the saved setting
+#                                    saved, applied now and at boot (FINDINGS 216). No argument: the saved setting
 #   mu300-cpu services apply         apply the saved setting (the boot service)
 # Profiles: saving (cores capped at ~60 % of the maximum, schedutil - cooler, less power), balanced (schedutil over
 # the full range, the stock behaviour), performance (every cluster pinned at its hardware maximum).
@@ -197,7 +197,7 @@ lowlat_apply() {  # at boot: only an "on" is applied; off leaves the kernel's ow
     lowlat_write 1 && say "low latency on (saved): CPU0 idle states off" || say "low latency: CPU0's idle states could not be written"
 }
 
-# --- the services' CPUs (FINDINGS 206). The panel, the collectors and the daemons are shell scripts and ucode: short
+# --- the services' CPUs (FINDINGS 216). The panel, the collectors and the daemons are shell scripts and ucode: short
 # bursts of process starts that the scheduler spread over idle big cores (each burst woke an A76 and its cluster, and
 # raised its clock), for work a little core does in the same milliseconds. procd puts every service in a cgroup of its
 # own under /sys/fs/cgroup/services, so one cpuset there holds them all, and every process they start, on the little

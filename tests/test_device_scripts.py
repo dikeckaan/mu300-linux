@@ -1550,7 +1550,7 @@ up() { at UP; }
                 r, _ = self.lib('watch_context', modem=self.WATCH_MODEM, CGACT=answer)
                 self.assertEqual(r.stdout.strip(), want, r.stderr)
 
-    # FINDINGS 206: with the modem daemon on ubus the watchdog waits for events instead of asking every round. The
+    # FINDINGS 216: with the modem daemon on ubus the watchdog waits for events instead of asking every round. The
     # stand-in ubus has mu300.modem, and its `listen` prints $STUBLOG/events line by line ("sleep N" lines pause it);
     # MU300_WATCH_FULL is the full look's period, MU300_WATCH_INTERVAL the counters' tick.
     def event_watch(self, events, rounds, **env):
@@ -3910,7 +3910,7 @@ class Buttons(ShellTest):
                 self.assertEqual(marker.exists(), event == '116 long', event)
 
     def test_a_tick_starts_mu300_led_only_when_it_has_something_to_do(self):
-        """FINDINGS 205: the tick every 5 s starts mu300-led only when a file its hint names changed, its due time
+        """FINDINGS 215: the tick every 5 s starts mu300-led only when a file its hint names changed, its due time
         came (a timeout running out; a minute at the latest) or there is no hint - the LEDs still time out on time and
         the battery LED still follows the charger"""
         root = self.tmp / 'root'
@@ -4433,7 +4433,7 @@ class ThermalGuard(ShellTest):
         return int(re.search(r'next look in (\d+) s', r.stderr).group(1))
 
     def test_the_interval_grows_with_the_distance_from_the_thresholds(self):
-        """FINDINGS 205: 5 s near HOT, a second more per 2 C under it, at most 30 s while the kernel throttles itself
+        """FINDINGS 215: 5 s near HOT, a second more per 2 C under it, at most 30 s while the kernel throttles itself
         and 10 s where this guard is the thermal policy; 5 s while its cap or the alarm is on"""
         for shell in self.each_shell():
             self.mainline(50000)                                       # the kernel's soc-thmzone is bound
@@ -5753,7 +5753,7 @@ class EarlyRecorderNode(ShellTest):
 
 
 class EarlyRecorderCpus(ShellTest):
-    """early-recorder on the little cluster, and a round that reads only what it writes (FINDINGS 208): it ran from
+    """early-recorder on the little cluster, and a round that reads only what it writes (FINDINGS 217): it ran from
     preinit on any CPU and read the kernel's and logd's whole logs every 2-10 s for 420 s."""
     def little(self, shell, caps):
         m = re.search(r'# --- cpus begin\n(.*?)# --- cpus end', (BIN / 'early-recorder').read_text(), re.S)

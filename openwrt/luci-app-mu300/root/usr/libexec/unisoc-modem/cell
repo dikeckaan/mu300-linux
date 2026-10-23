@@ -9,7 +9,7 @@
 // starves the AT channel, the dial watchdog then sees a dead modem and the box
 // ends up rebooting itself (docs/FINDINGS.md, V50 archive "45g").
 //
-// A ucode program since the home page's CPU work (FINDINGS 206): the shell version paid ~60 ms of CPU per AT command
+// A ucode program since the home page's CPU work (FINDINGS 216): the shell version paid ~60 ms of CPU per AT command
 // (the adapter, mu300-at and their forks: ~48 ms on the client side alone) and ~0.5 s per fast round, every 1.5 s
 // while the home page was open. The commands, the files, the locks and the JSON are the same as before. With the
 // platform's mu300-atd (the "mu300" backend) the commands go to the daemon directly, by mu300-at's own protocol
@@ -327,7 +327,7 @@ function file_age(path) { let s = stat(path); return now() - (s ? s.mtime : 0); 
 // --------------------------------------------------------------- one collector
 // the same "one owner, spare waits/takes over" pattern mu300-atd uses, so two
 // kicks (page reload while a refresh runs) cannot interleave AT replies
-// a collector: this program, or the modem daemon in a round of its own (mu300-modemd, FINDINGS 206)
+// a collector: this program, or the modem daemon in a round of its own (mu300-modemd, FINDINGS 216)
 function collector(pid) {
 	if (!alive(pid))
 		return false;

@@ -1,4 +1,4 @@
-// The home page's status in rpcd itself (rpcd-mod-ucode, FINDINGS 206): the snapshot mu300.dash builds from files,
+// The home page's status in rpcd itself (rpcd-mod-ucode, FINDINGS 216): the snapshot mu300.dash builds from files,
 // ubus, uci, nl80211 and rtnl, without a process (the shell backend started ~700 per snapshot, every 1.5 s while the
 // page was open), and the two cellular caches the collector (unisoc-modem/cell) writes. A stale cache starts the
 // collector in the background and the call returns at once, as mu300dash's status always did.

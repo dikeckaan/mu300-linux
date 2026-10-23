@@ -1,5 +1,5 @@
 #!/usr/bin/ucode
-// mu300-modemd -- the modem's AT channels in one event-driven daemon (docs/MODEMD.md, FINDINGS 206).
+// mu300-modemd -- the modem's AT channels in one event-driven daemon (docs/MODEMD.md, FINDINGS 216).
 //
 // It does what one shell mu300-atd per channel did, for every channel of the boot's layout at once: one request at a
 // time per command channel, a drain before it and a collect after it, the answer files of mu300-at's protocol, the

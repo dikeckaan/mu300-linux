@@ -18,7 +18,7 @@
  * whole page went blank while one AT command was stuck. */
 
 /* The status snapshot and the new-message watcher's look at the SMS pool are answered by rpcd itself (mu300status,
- * the ucode plugin; FINDINGS 206): mu300dash's shell started ~700 processes per snapshot, every 1.5 s. */
+ * the ucode plugin; FINDINGS 216): mu300dash's shell started ~700 processes per snapshot, every 1.5 s. */
 var callStatus = rpc.declare({ object: 'mu300status', method: 'status', expect: { '': {} }, nobatch: true });
 var callSignal = rpc.declare({ object: 'mu300dash', method: 'signal', expect: { '': {} }, nobatch: true });
 var callSysinfo = rpc.declare({ object: 'mu300status', method: 'sysinfo', expect: { '': {} }, nobatch: true });

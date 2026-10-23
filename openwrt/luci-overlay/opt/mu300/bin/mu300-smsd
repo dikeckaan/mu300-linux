@@ -17,9 +17,9 @@
 # of the +CMTI lines there, and that starts a sync (mu300-sms sync, which moves what it pooled off the SIM, so a full
 # SIM never refuses the next message). The logs are emptied when they grow too large, which changes the checksum
 # too: a sync is idempotent, so a spurious one costs one AT+CMGL. The checksum is taken only when a log is not older
-# than the last look (FINDINGS 205: four processes every five seconds were most of this daemon's idle CPU).
+# than the last look (FINDINGS 215: four processes every five seconds were most of this daemon's idle CPU).
 #
-# The safety nets, without asking the modem every few seconds (FINDINGS 205). Every MU300_SMS_CHECK_INTERVAL seconds
+# The safety nets, without asking the modem every few seconds (FINDINGS 215). Every MU300_SMS_CHECK_INTERVAL seconds
 # (120), and at once when a URC log changed without a new +CMTI (a modem that restarted says so there; at most once in
 # 30 s), AT+CNMI? - one command - says whether the modem still routes new messages the way it was asked (direct: mt 2;
 # the SIM path: mt 1). It drops direct routing by itself after an acknowledgement that never came (mt=0: no indication
@@ -34,7 +34,7 @@
 # If the modem refuses any of the three commands (or MU300_SMS_DIRECT=0 says not to ask), AT+CNMI=2,1,0,0,0 is asked
 # again and only the SIM path runs, as before. $DIRECT_FLAG exists while direct delivery is on.
 #
-# With the modem daemon (mu300-modemd, FINDINGS 206) there is no look every POLL seconds: this waits on its events
+# With the modem daemon (mu300-modemd, FINDINGS 216) there is no look every POLL seconds: this waits on its events
 # (ubus mu300.modem.urc) - a spooled +CMT is pooled and acknowledged as soon as modemd says so, a +CMTI syncs, a SIM
 # or modem start is looked at - and the routing is asked every 600 s; see "The modem daemon's events" below.
 #
@@ -96,7 +96,7 @@ rm -f "$DIRECT_FLAG"
 # nap SECONDS: the waits of this daemon. Where the shell's read takes a timeout (busybox ash, bash) it waits on a
 # fifo that nobody ever writes to, opened read-write so it never ends either: no sleep process every five seconds,
 # and a signal still ends the wait at once. dash has no read -t: sleep. (OpenWrt's busybox takes whole seconds only.)
-# For the wait the timer slack is half a second (FINDINGS 205): its timer may fire that much late, so the kernel can
+# For the wait the timer slack is half a second (FINDINGS 215): its timer may fire that much late, so the kernel can
 # serve the timers of several daemons with one wakeup; what this starts (mu300-at's short polls) keeps the default.
 NAP_FIFO=$LOCK/nap
 read_t=0
@@ -129,7 +129,7 @@ done
 # A slot with no card (mu300-sim-state, FINDINGS 186) is asked nothing - no CPIN, CNMI, CMGL or CNMA - until a card
 # answers there; then the setup below runs as at the start. mu300-sim-state's answer is the slot of this boot and the
 # state it keeps for each card; the helper (and mu300-sim, which it runs: 17 ms together on a U30 Air on slot 1) is
-# asked again only when one of those files changed (FINDINGS 205).
+# asked again only when one of those files changed (FINDINGS 215).
 SIM_STATE=${MU300_SIM_STATE_BIN:-/opt/mu300/bin/mu300-sim-state}
 SIM_RUN=${MU300_RUN:-/run/mu300}
 sim_key= sim_said=
@@ -279,7 +279,7 @@ check() {
     fi
 }
 
-# The modem daemon's events (FINDINGS 206, docs/MODEMD.md). With mu300-modemd on ubus (the object mu300.modem) this
+# The modem daemon's events (FINDINGS 216, docs/MODEMD.md). With mu300-modemd on ubus (the object mu300.modem) this
 # does not look every POLL seconds: it waits on modemd's events. `ubus -S listen` runs as a child and writes into a
 # fifo that this reads with read -t - no process, no wakeup while nothing comes - and the shell tells each event
 # apart itself. What an event asks for:

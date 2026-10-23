@@ -60,7 +60,7 @@
 
 export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/libexec/unisoc-modem:/usr/sbin:/sbin"
 
-# A page from before mu300status (FINDINGS 206) still polls status and sysinfo here every 1.5 s: LuCI loads a view
+# A page from before mu300status (FINDINGS 216) still polls status and sysinfo here every 1.5 s: LuCI loads a view
 # with its own version in the URL, which an update of this app does not change, so a browser can keep running the old
 # home.js from its cache for days. rpcd's own plugin answers it, before this script reads the rest of itself: one
 # ubus call instead of a shell, dashboard-info and the collectors (170 ms a call on the U30 Air, 100 forks a second).

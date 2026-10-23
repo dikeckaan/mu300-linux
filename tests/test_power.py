@@ -438,7 +438,7 @@ class Daemon(DaemonTest):
             self.assertEqual(self.state(), 'active')
             self.assertIn('station', (self.run_dir / 'mu300/power/reason').read_text())
 
-    # --- FINDINGS 205: what a loop costs
+    # --- FINDINGS 215: what a loop costs
     def daemon_in(self, shell, loops, **env):
         """the daemon under SHELL itself (not its #! line), LOOPS loops"""
         r = self.script(shell, POWER, 'daemon', MU300_SYSROOT=self.root, MU300_RUN=self.run_dir,
@@ -505,7 +505,7 @@ class Daemon(DaemonTest):
                 counts.append(sorted(p.read_text().split()) if p.exists() else [])
             self.assertEqual(counts[0], counts[1])
 
-    # --- FINDINGS 208: the wait between loops follows what is close (6 s and 3 s here for 60 and 30)
+    # --- FINDINGS 217: the wait between loops follows what is close (6 s and 3 s here for 60 and 30)
     def next_loop(self, shell, **env):
         """the daemon's one line about its next wait after one loop, or None"""
         r = self.daemon_in(shell, 1, MU300_POWER_INTERVAL_RELAXED='6', MU300_POWER_INTERVAL_PLUGGED='3', **env)

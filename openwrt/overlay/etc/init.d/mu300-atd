@@ -23,7 +23,7 @@ wait_and_exec() {
 	echo "n=0; while [ ! -c $dev ]; do n=\$((n+1)); if [ \"\$n\" -gt 240 ]; then echo 'mu300-atd: $dev never appeared' >&2; exit 1; fi; sleep 1; done; exec $*"
 }
 
-# The modem daemon (FINDINGS 206, docs/MODEMD.md), opted into with /etc/mu300/modemd: mu300-atd-io (C) holds the
+# The modem daemon (FINDINGS 216, docs/MODEMD.md), opted into with /etc/mu300/modemd: mu300-atd-io (C) holds the
 # channels and mu300-modemd (ucode) serves every broker of this boot in one process - the same channels, directories,
 # request FIFOs, answer files and URC logs as the shell mu300-atd instances below, without ~10 forks per AT command.
 # Without the file, or without ucode and its uloop and socket modules, the shell daemons run as they always did.

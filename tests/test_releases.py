@@ -157,7 +157,7 @@ class Tags(unittest.TestCase):
         luci = TOP / 'openwrt' / 'luci-app-mu300' / 'root' / 'usr' / 'libexec'
         self.assertIn(f"allowed \"$tag\" '({TAG_ERE})?'", (luci / 'rpcd' / 'mu300dash').read_text())
         self.assertIn(f"LC_ALL=C grep -Eqx -- '{TAG_ERE}'", (luci / 'unisoc-modem' / 'update').read_text())
-        # dashboard-info's snapshot is mu300.dash's since FINDINGS 206 (rpcd's mu300status reads it too)
+        # dashboard-info's snapshot is mu300.dash's since FINDINGS 216 (rpcd's mu300status reads it too)
         dash = TOP / 'openwrt' / 'luci-app-mu300' / 'root' / 'usr' / 'share' / 'ucode' / 'mu300' / 'dash.uc'
         self.assertIn(f"match(update_tag, /^({TAG_ERE})$/)", dash.read_text())
 

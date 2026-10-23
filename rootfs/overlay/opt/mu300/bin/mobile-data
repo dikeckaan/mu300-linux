@@ -1634,7 +1634,7 @@ downlink_recover() {
     dl_rx=   # a new reference once the step is through
 }
 
-# The watchdog's wait (FINDINGS 206). With the modem daemon on ubus (mu300-modemd), the watchdog no longer asks the
+# The watchdog's wait (FINDINGS 216). With the modem daemon on ubus (mu300-modemd), the watchdog no longer asks the
 # modem every 30 s: it waits for something to happen - a line on the card's unsolicited channel that can mean the
 # bearer went (+CGEV, NO CARRIER, a registration lost, or back after a loss) or netifd's WAN going up or down - and
 # looks in full then; after a look that found trouble the next one comes MU300_WATCH_INTERVAL later, as before; and

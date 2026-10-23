@@ -1,4 +1,4 @@
-// mu300.cellparse -- the cellular collector's readings, from the modem's answers to JSON (FINDINGS 206).
+// mu300.cellparse -- the cellular collector's readings, from the modem's answers to JSON (FINDINGS 216).
 //
 // Pure functions, no AT and no files: shared by the collector program (/usr/libexec/unisoc-modem/cell) and the modem
 // daemon (/opt/mu300/bin/mu300-modemd), so both write the same sig.json and cell.json. They were the awk and sed

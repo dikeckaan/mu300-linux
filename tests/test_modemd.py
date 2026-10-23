@@ -1,4 +1,4 @@
-"""mu300-modemd (FINDINGS 206, docs/MODEMD.md): the modem daemon in ucode, against a stand-in for mu300-atd-io.
+"""mu300-modemd (FINDINGS 216, docs/MODEMD.md): the modem daemon in ucode, against a stand-in for mu300-atd-io.
 
 The stand-in speaks the bridge's side of the protocol (HELLO, STATE, RX, REQ...) on the unix socket and plays a modem:
 each TX is answered with the lines a test gave for that command. What is checked is what mu300-atd did, kept: one

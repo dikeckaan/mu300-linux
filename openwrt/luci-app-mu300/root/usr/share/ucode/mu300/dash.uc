@@ -868,7 +868,7 @@ function collector_alive(lock) {
 	if (cmd == null)
 		return false;
 	cmd = replace(cmd, /\0/g, ' ');
-	// the collector program, or the modem daemon running a round of its own (FINDINGS 206)
+	// the collector program, or the modem daemon running a round of its own (FINDINGS 216)
 	return index(cmd, '/unisoc-modem/cell') >= 0 || index(cmd, 'mu300-modemd') >= 0;
 }
 
@@ -903,7 +903,7 @@ function collector(dash, dir, opts) {
 }
 
 // kick(dash, dir, opts, mode): a background round. The modem daemon runs it in its own process when it is there
-// (ubus mu300.modem cell, FINDINGS 206: no process, no fork, the commands straight to its channels); else the
+// (ubus mu300.modem cell, FINDINGS 216: no process, no fork, the commands straight to its channels); else the
 // collector program starts, detached, as before.
 function kick(dash, dir, opts, mode) {
 	let r = ubus_call('mu300.modem', 'cell', { mode: mode });

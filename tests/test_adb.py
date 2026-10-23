@@ -52,7 +52,7 @@ class AdbdBuild(unittest.TestCase):
 
     def test_the_daemon_is_started_with_the_mode(self):
         s = (BIN / 'mu300-adbd').read_text()
-        # (9<&-: not the loop's wait fifo, FINDINGS 205)
+        # (9<&-: not the loop's wait fifo, FINDINGS 215)
         self.assertIn('MU300_ADB_AUTH=$auth "$ADBD" </dev/null 9<&- &', s)
         self.assertEqual(1, s.count('"$ADBD" </dev/null'))
 
@@ -316,7 +316,7 @@ class Gadget(ShellTest):
                 self.stop(p)
 
     def test_a_gadget_that_is_as_it_should_be_is_looked_at_without_a_process(self):
-        # FINDINGS 205: the loop's look is the shell's own reads (no cat), and where read takes a timeout (bash,
+        # FINDINGS 215: the loop's look is the shell's own reads (no cat), and where read takes a timeout (bash,
         # busybox ash) its wait is no sleep process either; dash sleeps
         self.adbd.write_text('#!/bin/sh\n: > "$MU300_FFS/ep1"\n'
                              'trap \'rm -f "$MU300_FFS/ep1"; exit 0\' TERM\nwhile :; do /bin/sleep 0.05; done\n')

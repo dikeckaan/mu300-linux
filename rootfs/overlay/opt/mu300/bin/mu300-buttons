@@ -19,7 +19,7 @@
 # battery. Ubuntu's logind leaves the power key to this script (/etc/systemd/logind.conf.d/mu300-buttons.conf): it
 # used to power the device off at a touch.
 # On OpenWrt with /etc/mu300/sysd, mu300-sysd does all of this in one ucode daemon instead, without the tick (FINDINGS
-# 207); tests/test_sysd.py runs this script's tests against it. A change here belongs there too.
+# 217); tests/test_sysd.py runs this script's tests against it. A change here belongs there too.
 export PATH="$PATH:/opt/mu300/bin:/usr/sbin:/sbin"
 KEY_POWER=116
 KEY_WIFI=138   # "Wifi Switch Key" in the U30 Air's device tree (KEY_HELP's code, as its Android maps it)
@@ -28,7 +28,7 @@ PST=${MU300_RUN:-/run}/mu300/power
 LEDIDLE=${MU300_SYSROOT:-}/run/mu300/led/.idle   # mu300-led idle on (mu300-led keeps its state there)
 LEDHINT=${MU300_SYSROOT:-}/run/mu300/led/.tick-hint
 
-# tick_due: the tick has something to do (FINDINGS 205). mu300-led leaves after each tick the files the next one depends
+# tick_due: the tick has something to do (FINDINGS 215). mu300-led leaves after each tick the files the next one depends
 # on, each with what it held then, and the uptime from which it has something to do anyway ("due", a minute away at the
 # latest): only when one of them changed, that time has come or there is no hint is mu300-led started. The hint is
 # read here at the start and after each tick this starts (nothing else runs one), and kept; a look reads the uptime and

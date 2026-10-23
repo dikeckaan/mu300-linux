@@ -1,8 +1,8 @@
 #!/usr/bin/ucode
-// mu300-sysd -- the buttons, the LEDs' tick and the thermal guard in one event-driven daemon (FINDINGS 208).
+// mu300-sysd -- the buttons, the LEDs' tick and the thermal guard in one event-driven daemon (FINDINGS 217).
 //
 // It does what three shell loops did, without their clocks: mu300-buttons (the keys), the LED tick that mu300-buttons
-// looked at every 5 s (the LEDs' timeout, the U30 Air's battery LED; FINDINGS 205) and thermal-guard (its caps, the
+// looked at every 5 s (the LEDs' timeout, the U30 Air's battery LED; FINDINGS 215) and thermal-guard (its caps, the
 // alarm, the power-off at CRIT). One helper, `mu300-keys -u power_supply,extcon` (C), reports the presses and the
 // kernel's power_supply and extcon uevents (the device's ucode cannot open a netlink socket); the rest is read here:
 //   keys      each press as mu300-buttons handled it: the same order (the LEDs' wake first), the same helpers
@@ -125,7 +125,7 @@ function which(cmd) {
 }
 
 // The waits may end up to half a second late, so the kernel can serve the timers of several daemons with one wakeup
-// (thermal-guard's timer slack, FINDINGS 205); what this starts gets the default back. Only on a real /.
+// (thermal-guard's timer slack, FINDINGS 215); what this starts gets the default back. Only on a real /.
 const SLACK_FILE = '/proc/self/timerslack_ns';
 let slack = (R == '' && MODE == '') ? rd(SLACK_FILE) : null;
 function slack_wait() { if (slack != null) writefile(SLACK_FILE, '500000000'); }
@@ -349,14 +349,14 @@ function press(code, kind) {
 		press_next();
 }
 
-// ------------------------------------------------------------------ the LED tick (mu300-led's hint, FINDINGS 205)
+// ------------------------------------------------------------------ the LED tick (mu300-led's hint, FINDINGS 215)
 const LEDHINT = LEDDIR + '/.tick-hint';
 const PSY = R + '/sys/class/power_supply/';
 const SAFETY = num('MU300_SYSD_SAFETY', 90);
 // On the charger the look comes sooner: the U30 Air's charger (an SGM41513 under the bq256xx driver) has no interrupt
 // wired, and the gauge's comes at a 1 % step only, so "charging" -> "full" (and charging switched off or on by the
 // charge guard) changes the battery LED without any uevent. The plug itself is extcon-gpio's interrupt, an extcon
-// uevent (FINDINGS 208).
+// uevent (FINDINGS 217).
 const SAFETY_PLUGGED = num('MU300_SYSD_SAFETY_PLUGGED', 30);
 const UEVENTS = 'power_supply,extcon';
 const HINT_MAX = num('MU300_SYSD_LED_HINT_MAX', 600);

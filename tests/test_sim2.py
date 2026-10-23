@@ -679,7 +679,7 @@ sleep() {{ :; }}
         self.assertEqual((self.run / 'mu300/sim-slot').read_text(), '0\n')
         self.assertNotIn('instance atd4', r.stdout)
 
-    # --- the modem daemon (FINDINGS 206, docs/MODEMD.md): the same brokers as arguments of one mu300-modemd
+    # --- the modem daemon (FINDINGS 216, docs/MODEMD.md): the same brokers as arguments of one mu300-modemd
     MODEMD_ON = 'modemd_on() { return 0; }; '
 
     def modemd_command(self, r):

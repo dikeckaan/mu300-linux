@@ -52,7 +52,7 @@ class AtdDash(unittest.TestCase):
             self.assertNotIn('OPEN',r.stdout)
 
     def test_adapter_uses_the_pool_and_falls_back_to_nr1(self):
-        c = CELL.read_text()   # a ucode program since FINDINGS 206
+        c = CELL.read_text()   # a ucode program since FINDINGS 216
         self.assertIn("[ '/run/mu300-at6', '/run/mu300-at7', '/run/mu300-at' ]", c)
         self.assertIn("!is_fifo(d + '/cmd')", c)   # an absent dash daemon is skipped, nr1 serves
 

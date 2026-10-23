@@ -1,6 +1,6 @@
 #!/bin/sh /etc/rc.common
 # The buttons, the LEDs' tick and the thermal guard in one event-driven daemon (/opt/mu300/bin/mu300-sysd, FINDINGS
-# 207), opted into with /etc/mu300/sysd. With it, mu300-buttons and mu300-post's thermal-guard step aside (the same
+# 217), opted into with /etc/mu300/sysd. With it, mu300-buttons and mu300-post's thermal-guard step aside (the same
 # sysd_on there); without it, or without what it needs (ucode with uloop and socket, mu300-keys with -u), they run
 # as they always did.
 START=95

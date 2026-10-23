@@ -192,9 +192,9 @@ what replaced it. The table below gives each section's state.
 | 204 | The ZTE V50's SIM cards (#332): ZTE's four board variants, a third built-in card behind SIM2 and the external card behind SIM1, switched by board GPIOs; chosen per boot, the switch set before the modem's CP starts (kanoqwq's f0ed60ff, b4c051c8) | offline only (no V50 here): unit tests, the driver built for 6.18.57 and 7.2.11; on a V50 by the #332 reporter |
 | 205 | The U30 Air's USB 3 link in **device** mode follows the plug orientation (#54): SuperSpeed only in the orientation the PHY/redriver latched at power-on; `mu300-usb pd on` (0020) gives CC and the roles but does not flip the lanes, and a replug does not bring SuperSpeed back (7.2.11) | measured on a U30 Air, 7.2.11; no fix here. #341 on the same unit: orientation A at 10 Gbps, B not seen at all (worse than the USB 2 fallback); the PTN38003A does not answer at i2c 0x30 there |
 | 206 | Linux 7.3 as a fourth kernel: every patch applies unchanged (none upstream, none dropped); `PROC_SYSCTL` folded into `SYSCTL` (`config-ignored.txt`, checked only where the kernel lacks the symbol), the cfg80211 cookie handed in by value, `dma_capable()` with DMA attributes, `IIO_CONSUMER` for the audio extra; the checksum list from www.kernel.org (the CDN lagged) | current (F50-B Ubuntu: all checks, call audio with the 7.3 extra, the boot fallback; the one hang in a reboot loop was the board's plug pulled by accident, not 7.3; the U30 Air openwrt-luci with the VPN and its kill switch, 2026-10-19; `sprd_wlan_combo` for 6.18.57 and 7.2.11 byte for byte v2026.10.19.3's; released in v2026.10.22.1, F50-B 10/10 boots on 7.3 in a reboot soak) |
-| 205 | Idle CPU of the shell daemons: a look that finds nothing new starts no process (builtin reads, `read -t` on a fifo for the wait, timer slack during it); mu300-smsd asks AT+CNMI? every 2 min instead of a full sync and AT+CNMI? every 30 s, mu300-power asks iw and hostapd once a minute, the LED tick runs only on a change, thermal-guard's interval grows with the distance from its thresholds; mobile-data's watch and mu300-at as proposals | unit tests; the old and new rounds measured on a U30 Air in one shell; on our U30 Air since 2026-10-22 |
-| 206 | The home page's CPU (70.7 % of a core, a fifth on the A76s) and the modem daemon: the panel's status in rpcd itself (mu300status, ucode), the collector and dashboard-info in ucode, the services on the A55s; mu300-modemd (ucode) and mu300-atd-io (C) instead of the shell AT brokers, opt-in with /etc/mu300/modemd; a bridge that closed every SIPC channel at the first ENODATA, fixed; mobile-data's watch on the modem's events; a stale page's old calls answered by the plugin. Idle 1.3 %, the page open 2.8 % | unit tests; on our U30 Air (dual-SIM boot, SIM2) since 2026-10-23 |
-| 208 | The system daemons without a clock: mu300-sysd (ucode; keys, the LED tick, the thermal guard; `mu300-keys -u power_supply` for the uevents; opt-in with /etc/mu300/sysd), mu300-smsd and ndp-learn on events (modemd's, `ip monitor`), mu300-power's loops 30-60 s apart while nothing is close. Idle 0.3 %, the page open 2.6 % | unit tests; on our U30 Air since 2026-10-23 (an injected key press and a synthetic power_supply uevent went through sysd; a physical plug not yet seen) |
+| 215 | Idle CPU of the shell daemons: a look that finds nothing new starts no process (builtin reads, `read -t` on a fifo for the wait, timer slack during it); mu300-smsd asks AT+CNMI? every 2 min instead of a full sync and AT+CNMI? every 30 s, mu300-power asks iw and hostapd once a minute, the LED tick runs only on a change, thermal-guard's interval grows with the distance from its thresholds; mobile-data's watch and mu300-at as proposals | unit tests; the old and new rounds measured on a U30 Air in one shell; on our U30 Air since 2026-10-22 |
+| 216 | The home page's CPU (70.7 % of a core, a fifth on the A76s) and the modem daemon: the panel's status in rpcd itself (mu300status, ucode), the collector and dashboard-info in ucode, the services on the A55s; mu300-modemd (ucode) and mu300-atd-io (C) instead of the shell AT brokers, opt-in with /etc/mu300/modemd; a bridge that closed every SIPC channel at the first ENODATA, fixed; mobile-data's watch on the modem's events; a stale page's old calls answered by the plugin. Idle 1.3 %, the page open 2.8 % | unit tests; on our U30 Air (dual-SIM boot, SIM2) since 2026-10-23 |
+| 217 | The system daemons without a clock: mu300-sysd (ucode; keys, the LED tick, the thermal guard; `mu300-keys -u power_supply` for the uevents; opt-in with /etc/mu300/sysd), mu300-smsd and ndp-learn on events (modemd's, `ip monitor`), mu300-power's loops 30-60 s apart while nothing is close. Idle 0.3 %, the page open 2.6 % | unit tests; on our U30 Air since 2026-10-23 (an injected key press and a synthetic power_supply uevent went through sysd; a physical plug not yet seen) |
 
 ## Hardware and firmware facts
 
@@ -1497,7 +1497,7 @@ there go to Android.
   the first seconds of systemd leaves no log. `mu300-early-recorder.service` keeps writing `dmesg` to the boot_b log area
   for the first five minutes.
 
-  **Update 2026-10-07:** it now writes every 2 s for the first 90 s, then every 10 s (§31d; every 30 s since §208,
+  **Update 2026-10-07:** it now writes every 2 s for the first 90 s, then every 10 s (§31d; every 30 s since §217,
   on the little CPUs). It runs up to 300 s on
   Ubuntu (`mu300-early-recorder.service`) and up to 420 s from OpenWrt's preinit
   (`openwrt/overlay/lib/preinit/05_mu300_early_recorder`). It writes only what it has collected, not the full
@@ -12767,7 +12767,7 @@ A system installed with an earlier mainline bundle, or from macOS or Windows bef
 with its next kernel update (`mu300-update kernel 6.18|7.2|7.3` from v2026.10.23.1 on, which unpacks on the device).
 `tests/test_case_sensitive.py`.
 
-### 205. Idle CPU of the shell daemons: no process for a look that finds nothing new
+### 215. Idle CPU of the shell daemons: no process for a look that finds nothing new
 
 On a U30 Air on the charger, idle (5G SA, the hotspot up with two clients), the userspace daemons together used about
 5 % of one core: 300-odd ticks a minute (USER_HZ 100) summed over every process, of which the vendor's
@@ -12860,7 +12860,7 @@ hint says so - timeouts, the plug, a minute, a key; `ThermalGuard`: the interval
 is looked at without `cat`, and without `sleep` where read has a timeout), `tests/test_mu300cell.py` (ndp-learn's
 daemon calls ip only when the addresses or the routes changed).
 
-### 206. The home page's CPU and the modem daemon: the panel's status in rpcd, the AT channels in one event-driven process
+### 216. The home page's CPU and the modem daemon: the panel's status in rpcd, the AT channels in one event-driven process
 
 With the LuCI home page open (status every 1.5 s, the rates every second, the SMS watcher every 5 s), a U30 Air on
 the charger used 70.7 % of one core, about a fifth of it on the A76 cluster; idle (no page) 9.5-11 %. Per process over
@@ -12925,7 +12925,7 @@ browser does it, status every 1.5 s after the reply, the rates every second, the
 |---|---|---|
 | before (shell panel, shell daemons) | 9.5-11 % | 70.7 % (A76 ~20 %) |
 | the rpcd plugin, the services on the A55s | | 13.0 % (A76 ~0) |
-| + FINDINGS 205 (daemons without idle forks) | 7.2 % | 11.0 % |
+| + FINDINGS 215 (daemons without idle forks) | 7.2 % | 11.0 % |
 | + modemd, the event-driven watch (60 s each) | 1.3 % (A76 0) | 2.8 % (A76 2 ticks a minute) |
 
 (The last row was measured with the system counters read right around the wait: the earlier rows include the
@@ -12941,9 +12941,9 @@ rules, URC logs, +CMT, the SIM hook, the ubus methods, a collection round equal 
 (the bridge), `tests/test_sim2.py` (the init script's brokers with and without the daemon), `tests/test_device_scripts.py`
 (MobileData: the event wait), `tests/test_mu300dash_security.py` (the plugin's ACL, a stale page answered by it).
 
-### 208. The system daemons without a clock: mu300-sysd, and smsd, ndp-learn and mu300-power on events
+### 217. The system daemons without a clock: mu300-sysd, and smsd, ndp-learn and mu300-power on events
 
-After 205 and 206 the U30 Air at rest still woke about 50 times a minute for loops that found nothing: mu300-keys'
+After 215 and 216 the U30 Air at rest still woke about 50 times a minute for loops that found nothing: mu300-keys'
 5 s tick and the mu300-buttons shell behind it (with `mu300-led tick` at least once a minute), thermal-guard every
 22-30 s, mu300-smsd's look every 5 s, ndp-learn every 10 s and mu300-power every 10 s. Each of them now waits for what
 it is there for.
@@ -12990,9 +12990,9 @@ charger; 60 s, the system counters read right around the wait, after the boot's 
 
 | | idle | home page open (through uhttpd) |
 |---|---|---|
-| 2026-10-22, before 205 | 9.5-11 % of a core | 70.7 % (A76 ~20 %) |
-| modemd (206) | 1.3 % | 2.8 % |
-| sysd, events (208) | **0.3 %** (18 ticks a minute, no process started) | **2.6 %** (A76 5 ticks a minute) |
+| 2026-10-22, before 215 | 9.5-11 % of a core | 70.7 % (A76 ~20 %) |
+| modemd (216) | 1.3 % | 2.8 % |
+| sysd, events (217) | **0.3 %** (18 ticks a minute, no process started) | **2.6 %** (A76 5 ticks a minute) |
 
 What is left at rest is the kernel and the radio stack's own (rcu_sched 4 ticks a minute, sugov 3-4, netifd 3,
 the USB interrupt thread 3, hostapd 2) and each mu300 daemon at 2 ticks or less.

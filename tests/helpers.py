@@ -19,7 +19,7 @@ GIT_CHECKOUT = bool(shutil.which('git')) and subprocess.run(['git', '-C', str(TO
                                                            capture_output=True).returncode == 0
 
 
-# The panel's ucode programs (unisoc-modem/dashboard-info and cell, FINDINGS 206) run under a ucode interpreter:
+# The panel's ucode programs (unisoc-modem/dashboard-info and cell, FINDINGS 216) run under a ucode interpreter:
 # MU300_TEST_UCODE (a command line, e.g. a wrapper that sets LD_LIBRARY_PATH for a local build), else `ucode` on PATH.
 # The modules they load from the device's own ucode packages (ubus, uci, nl80211, rtnl) are stood in for by
 # tests/ucode-stubs, which run the same stubbed commands (ubus, uci, iw, ip) the shell versions ran; mu300.dash comes

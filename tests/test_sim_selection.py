@@ -300,7 +300,7 @@ for (const neigh of [null, [null], {}, [null, {rat:'nr', band:41, pci:315, arfcn
         self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_empty_lte_neighbours_are_not_null_entries(self):
-        # the collector's parsers (mu300.cellparse, FINDINGS 206): no LTE neighbour line is an empty list, never [null]
+        # the collector's parsers (mu300.cellparse, FINDINGS 216): no LTE neighbour line is an empty list, never [null]
         s = (TOP / 'openwrt/luci-app-mu300/root/usr/libexec/unisoc-modem/cell').read_text()
         self.assertIn('let NEIGH = [ ...nr_neighbours(SP_NRNB), ...sp_ltenb(SP_LN) ];', s)
         self.assertIn('NEIGH = null;', s)

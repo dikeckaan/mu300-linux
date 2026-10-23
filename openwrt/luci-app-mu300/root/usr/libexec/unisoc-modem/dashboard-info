@@ -2,7 +2,7 @@
 // mu300-dash-info -- the dashboard's system/network snapshot: ONE line of JSON on stdout.
 //
 // The snapshot itself is mu300.dash's info() (/usr/share/ucode/mu300/dash.uc), which the home page now reads in
-// rpcd itself (mu300status, FINDINGS 206). This program is the same snapshot for mu300dash's status and sysinfo and
+// rpcd itself (mu300status, FINDINGS 216). This program is the same snapshot for mu300dash's status and sysinfo and
 // for anything else that ran it: it reads only files and asks ubus/uci/nl80211/rtnl, so it never touches the
 // modem's AT channel - the cell readings live in mu300-dash-cell, which has its own cache and its own pace.
 //

@@ -105,7 +105,7 @@ tzoff() {
     [ -n "${MU300_TRAFFIC_TZOFF:-}" ] && { echo "$MU300_TRAFFIC_TZOFF"; return; }
     date +%z | awk '{ s = substr($0, 1, 1) == "-" ? -1 : 1; print s * (substr($0, 2, 2) * 3600 + substr($0, 4, 2) * 60) }'
 }
-# clock: NOW and OFF (as now and tzoff) from one date, the offset worked out by the shell (FINDINGS 205: the service's
+# clock: NOW and OFF (as now and tzoff) from one date, the offset worked out by the shell (FINDINGS 215: the service's
 # round used to run date twice and awk for this)
 clock() {
     NOW=${MU300_TRAFFIC_NOW:-} OFF=${MU300_TRAFFIC_TZOFF:-}
@@ -479,7 +479,7 @@ run() {
     conf_changed || :; load_conf
     mkdir -p "$RUN" "$STORE" || die "cannot create $RUN or $STORE"
     # the wait's timer (and those of what this starts: awk, date) may fire up to half a second late, so the kernel can
-    # serve the timers of several daemons with one wakeup (FINDINGS 205)
+    # serve the timers of several daemons with one wakeup (FINDINGS 215)
     { echo 500000000 > /proc/$$/timerslack_ns; } 2>/dev/null
     # one service: another one alive keeps its place
     p=$(cat "$RUN/pid" 2>/dev/null)

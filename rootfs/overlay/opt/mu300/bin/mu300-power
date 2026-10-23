@@ -172,7 +172,7 @@ num() {  # a number for arithmetic: empty or junk is 0; leading zeros go (dash r
     while [ ${#_nd} -gt 1 ] && [ "${_nd#0}" != "$_nd" ]; do _nd=${_nd#0}; done
     case $1 in -*) echo "-$_nd" ;; *) echo "$_nd" ;; esac
 }
-# --- the daemon's reads (FINDINGS 205). Its loop reads with the shell's own read, into variables: a $( ) is a process,
+# --- the daemon's reads (FINDINGS 215). Its loop reads with the shell's own read, into variables: a $( ) is a process,
 # a cat another, and one loop of the helpers above started some forty of them every 10 s (52 ticks a minute on a
 # U30 Air on the charger). The helpers above stay for the commands (status, profile...), with the same answers.
 NL='
@@ -612,7 +612,7 @@ leave_idle() { restore "$@"; }
 # A hotspot that stays down after that is retried at a doubling interval, up to 30 min, logged once per step
 # ($ST/selfcheck-hold); it is reset once the hotspot is seen up.
 # hostapd is asked (ubus) only when SAMPLE is 1 - the daemon's every MU300_POWER_SAMPLE_EVERY-th loop, a minute - or
-# when wlan0 is gone: a hotspot that went down by itself is restored up to a minute later than it was (FINDINGS 205).
+# when wlan0 is gone: a hotspot that went down by itself is restored up to a minute later than it was (FINDINGS 215).
 selfcheck() {
     SC_WHY=
     if [ -e "$MD_SUSPEND" ]; then rv "$MD_SUSPEND"; SC_WHY="the modem is suspended ($RV)"; return 0; fi
@@ -885,7 +885,7 @@ step() {  # one look at the world; sets _acted when it changed the state
     esac
     return 0
 }
-# wait_v: the wait before the next loop into WV, and its reason into WWHY (FINDINGS 208). The base interval (10 s)
+# wait_v: the wait before the next loop into WV, and its reason into WWHY (FINDINGS 217). The base interval (10 s)
 # while something is close: idle (a plug or a computer on USB wakes it, and only a loop sees them), the charging
 # boot (its charger may go), a battery off the charger at 20 % or less (or Low, Critical, unreadable), a retry, a
 # wake or an idle asked for. Otherwise nothing a loop does is urgent: the charge guard (temperature, the limit) every
@@ -943,7 +943,7 @@ cmd_daemon() {
           [ -z "$_bd_w" ] || { kill "$_bd_w" 2>/dev/null; wait "$_bd_w" 2>/dev/null; }; [ -z "$_bd_f" ] || rm -f "$_bd_f"
           _bd_p= _bd_w= _bd_f=
           if [ "$(rd "$ST/state")" = idle ] && ! shutting_down; then leave_idle "daemon stopping" fast; fi; busy_drop; exit 0' TERM INT
-    # The wait between loops (FINDINGS 205): where the shell's read takes a timeout (busybox ash, bash) and the interval
+    # The wait between loops (FINDINGS 215): where the shell's read takes a timeout (busybox ash, bash) and the interval
     # is whole seconds, on a fifo nobody writes to, opened read-write so it never ends either - no sleep process every
     # 10 s, and the TERM above still ends it at once; else sleep in the background, as before (dash). Its timer may
     # fire up to half a second late, so the kernel can serve the timers of several daemons with one wakeup; what the

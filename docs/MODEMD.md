@@ -1,6 +1,6 @@
 # mu300-modemd: the modem's AT channels in one event-driven daemon
 
-Status: design for FINDINGS 206 step 2 (the CPU work of October 2026). It replaces the shell `mu300-atd` instances
+Status: design for FINDINGS 216 step 2 (the CPU work of October 2026). It replaces the shell `mu300-atd` instances
 (one busybox ash per channel, ~10 forks and 11-16 ms of CPU per AT command, a `wc -c` per URC line) and the
 polling around them (`mu300-smsd`'s 5 s look at the URC logs, the panel's collector started as a new process for
 every round) with two processes:

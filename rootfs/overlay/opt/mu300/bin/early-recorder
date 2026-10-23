@@ -51,7 +51,7 @@ node_ok() {
 }
 # --- node end
 # --- cpus begin
-# The little cluster (FINDINGS 208): a round reads the kernel's whole log, which is work that woke an A76 every few
+# The little cluster (FINDINGS 217): a round reads the kernel's whole log, which is work that woke an A76 every few
 # seconds of the boot's first minutes. This runs from preinit, before mu300-cpu puts procd's services on the little
 # CPUs, so it pins itself (and what it starts): the CPUs of the lowest cpu_capacity, where taskset is there.
 little_cpus() {
@@ -96,6 +96,6 @@ while [ "$(cut -d. -f1 /proc/uptime)" -lt "$end" ]; do
     sync
     # every 2 s for the first minute and a half, where the intermittent early hangs have happened; a 10 s gap
     # left a single snapshot of a boot that died between 11 and 21 s. After that every 30 s to the end (was 10 s:
-    # a round is the kernel's whole log, and the boot is up by then; FINDINGS 208)
+    # a round is the kernel's whole log, and the boot is up by then; FINDINGS 217)
     if [ "$(cut -d. -f1 /proc/uptime)" -lt 90 ]; then sleep 2; else sleep 30; fi
 done

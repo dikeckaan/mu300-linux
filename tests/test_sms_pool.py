@@ -53,7 +53,7 @@ echo OK
 '''
 
 
-# The daemons that wait on events (FINDINGS 206: mu300-smsd on the modem daemon's ubus events, ndp-learn on ip's
+# The daemons that wait on events (FINDINGS 216: mu300-smsd on the modem daemon's ubus events, ndp-learn on ip's
 # monitor) read their listener with read -t, which dash has not: there they look on their timers as before.
 def timed_read(shell):
     """SHELL's read takes a timeout (bash, busybox ash; not dash)."""
@@ -1864,7 +1864,7 @@ class Daemon(ShellTest):
                 self.stop(d)
 
     def test_an_idle_daemon_asks_the_modem_nothing_between_checks(self):
-        # FINDINGS 205: the look every POLL seconds is the spool and the URC logs' times, no AT command, no process
+        # FINDINGS 215: the look every POLL seconds is the spool and the URC logs' times, no AT command, no process
         # for the logs while none changed; a full sync only every SYNC_INTERVAL
         self.stub('md5sum', 'echo md5 >> "$STUBLOG/md5.log"; cksum')
         for shell in self.each_shell():
@@ -1996,7 +1996,7 @@ class Daemon(ShellTest):
                 out, err = d.communicate(timeout=10)
             self.assertNotIn('not found', err + out)
 
-    # FINDINGS 206: with the modem daemon on ubus (the object mu300.modem) the daemon waits on its events instead of
+    # FINDINGS 216: with the modem daemon on ubus (the object mu300.modem) the daemon waits on its events instead of
     # looking every POLL seconds. The stand-in ubus has the object while $STUBLOG/modemd exists and records its calls in
     # ubus.log; its `listen` (pid in listener.pid) passes on what the test writes into the fifo $STUBLOG/events, one
     # event a line, as `ubus -S listen` prints them.

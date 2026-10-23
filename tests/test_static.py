@@ -896,7 +896,7 @@ class Rules(unittest.TestCase):
                 self.assertGreater(int(m.group(1)), 9, s.name)
 
     def test_sysd_is_wired_in_beside_the_loops_it_replaces(self):
-        # FINDINGS 208: the image enables mu300-sysd (it runs only with /etc/mu300/sysd), mu300-buttons and mu300-post's
+        # FINDINGS 217: the image enables mu300-sysd (it runs only with /etc/mu300/sysd), mu300-buttons and mu300-post's
         # thermal-guard stay for every other case, and Ubuntu keeps its units (the behaviour: tests/test_sysd.py)
         build = (TOP / 'openwrt/build-rootfs.sh').read_text()
         enabled = build.split('for s in mu300-accounts')[1].split('; do')[0].split()

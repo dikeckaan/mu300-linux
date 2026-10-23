@@ -579,7 +579,7 @@ exit 0''')
             self.assertNotIn('replace', rounds[3], shell)
 
     def test_ndp_learn_daemon_routes_again_only_when_something_changed(self):
-        """FINDINGS 205: the daemon's round reads if_inet6 itself and looks at the routing table's lines of the /64
+        """FINDINGS 215: the daemon's round reads if_inet6 itself and looks at the routing table's lines of the /64
         every ROUTE_EVERY rounds; ip runs only when the addresses or those lines changed (a route removed by someone
         comes back), never every round of an unchanged bearer. Without a global address accept_ra is flipped."""
         import time
@@ -627,7 +627,7 @@ exit 0''')
                 d.kill()
                 d.communicate(timeout=10)
 
-    # FINDINGS 206: with ip's monitor the daemon's rounds come with the kernel's word. The stand-in ip records every
+    # FINDINGS 216: with ip's monitor the daemon's rounds come with the kernel's word. The stand-in ip records every
     # call in ipcalls; a `route replace` puts our route into the routing table file (as the kernel would), and
     # `monitor` (pid in mon.pid) passes on what the test writes into the fifo $STUBLOG/mon, one line a change, as
     # `ip -o -6 monitor address route` prints them.

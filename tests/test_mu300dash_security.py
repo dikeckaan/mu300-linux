@@ -278,7 +278,7 @@ class Inventory(Mu300Dash):
                 with self.subTest(p=p.name):
                     r = subprocess.run(shell + ['-n', str(p)], capture_output=True, text=True)
                     self.assertEqual(r.returncode, 0, r.stderr)
-        # the collector and the snapshot are ucode programs (FINDINGS 206), the plugin and its modules ucode too:
+        # the collector and the snapshot are ucode programs (FINDINGS 216), the plugin and its modules ucode too:
         # each compiles (ucode -c), where there is a ucode
         from helpers import ucode, ucode_paths
         u = ucode()
@@ -808,7 +808,7 @@ class Replies(Mu300Dash):
             self.assertEqual(self.reply(r)['info'], want)
 
     def test_a_stale_page_is_answered_by_the_rpcd_plugin(self):
-        # FINDINGS 206: a browser still running the old home.js polls status and sysinfo here; with mu300status
+        # FINDINGS 216: a browser still running the old home.js polls status and sysinfo here; with mu300status
         # there, each is one ubus call to it and nothing else runs (no dashboard-info, no collector)
         plugin = self.tmp / 'mu300status.uc'
         plugin.write_text('')
@@ -1208,7 +1208,7 @@ class Acl(unittest.TestCase):
                                                     '/mnt/mu300-disk/.mu300-upload/update.zip': ['write']})
         self.assertEqual(set(acl['read']['ubus']), {'mu300dash', 'mu300rates', 'mu300status', 'mu300vpn'})
         self.assertEqual(set(acl['write']['ubus']), {'mu300dash', 'mu300status', 'mu300vpn'})
-        # the status plugin in rpcd (FINDINGS 206): the snapshot is a read, the SMS pool's head a write like sms_list
+        # the status plugin in rpcd (FINDINGS 216): the snapshot is a read, the SMS pool's head a write like sms_list
         self.assertEqual(acl['read']['ubus'].get('mu300status'), ['status', 'sysinfo'])
         self.assertEqual(acl['write']['ubus'].get('mu300status'), ['sms_head'])
         self.assertNotIn('cgi-io', acl['read'])
@@ -1527,7 +1527,7 @@ class RuntimeDir(Mu300Dash):
             text = path.read_text()
             self.assertTrue('${MU300_DASH_DIR:-$RUN_DIR}' in text, path.name)
             self.assertFalse('/tmp/unisoc-modem' in text, path.name)
-        # the ucode collector and the status module (FINDINGS 206): the same directory, the same override
+        # the ucode collector and the status module (FINDINGS 216): the same directory, the same override
         for path in (ADAPTERS / 'cell', APP / 'usr' / 'share' / 'ucode' / 'mu300' / 'dash.uc'):
             text = path.read_text()
             self.assertIn("'/var/run/unisoc-modem'", text, path.name)

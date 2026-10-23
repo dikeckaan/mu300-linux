@@ -1,4 +1,4 @@
-"""mu300-sysd (FINDINGS 208): the buttons, the LED tick and the thermal guard in one event-driven ucode daemon, and
+"""mu300-sysd (FINDINGS 217): the buttons, the LED tick and the thermal guard in one event-driven ucode daemon, and
 its helper's uevent option (mu300-keys -u).
 
 The daemon is held to the scripts it replaces by their own tests: test_device_scripts' Buttons (mu300-buttons) and
@@ -310,7 +310,7 @@ class Daemon(ShellTest):
 
     def test_on_the_charger_the_safety_look_comes_sooner(self):
         """the U30 Air's charger has no interrupt wired: charging -> full changes the battery LED without a uevent
-        (FINDINGS 208), so on the charger the hint is looked at every SAFETY_PLUGGED s (30)"""
+        (FINDINGS 217), so on the charger the hint is looked at every SAFETY_PLUGGED s (30)"""
         root = self.led_daemon(1, 'Charging')
         time.sleep(2.5)                                            # looks, nothing changed
         self.assertEqual(self.calls().count('mu300-led tick'), 1)

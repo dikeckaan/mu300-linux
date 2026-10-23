@@ -55,7 +55,7 @@ MINI = {
         "fail() { printf '{\"ok\":0,\"op\":%s,\"error\":%s}\\n' \"$(json_str \"$1\")\" \"$(json_str \"$2\")\"; }\n"
         "radio_on || fail \"radio on\" \"Radio did not come up\"\n"
         "printf '{\"ok\":1,\"message\":\"Done\"}\\n'\n"),
-    # a ucode program and modules (FINDINGS 206)
+    # a ucode program and modules (FINDINGS 216)
     'root/usr/libexec/unisoc-modem/cell': (
         "#!/usr/bin/ucode\n"
         "// error: 'Not a message: a comment'\n"
