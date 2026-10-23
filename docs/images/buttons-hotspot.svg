@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="480" viewBox="0 0 900 480">
+  <defs>
+    <filter id="card" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0b1b1f" flood-opacity="0.08"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5b6b72"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="480" rx="24" fill="#ffffff"/>
+  <rect x="1" y="1" width="898" height="478" rx="23" fill="none" stroke="#e6ecef"/>
+
+  <!-- device wireframe -->
+  <g fill="none" stroke="#263238" stroke-linejoin="round">
+    <rect x="100" y="40" width="230" height="350" rx="34" stroke-width="3"/>
+    <rect x="111" y="51" width="208" height="328" rx="27" stroke="#6b7c85" stroke-width="1.3"/>
+    <circle cx="131" cy="81" r="7" stroke-width="2.6"/>
+    <circle cx="215" cy="188" r="88" stroke-width="3"/>
+    <circle cx="215" cy="188" r="74" stroke="#6b7c85" stroke-width="1.3"/>
+    <path d="M201 209 L201 167 L229 209 L229 167" stroke-width="9" stroke-linecap="round" stroke-linejoin="miter"/>
+    <path d="M201 360 L229 360" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- side keys: the upper one is the Wi-Fi key -->
+  <g fill="#ffffff" stroke="#263238" stroke-width="2.6">
+    <rect x="335" y="150" width="11" height="46" rx="5.5"/>
+    <rect x="335" y="270" width="11" height="46" rx="5.5"/>
+  </g>
+  <text x="352" y="214" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11.5" fill="#5b6b72">Wi-Fi 键</text>
+  <text x="352" y="334" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11.5" fill="#5b6b72">电源键</text>
+
+  <!-- hold arrow -->
+  <path d="M346 173 C 390 173, 425 195, 462 205" fill="none" stroke="#5b6b72" stroke-width="2.2" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+  <text x="400" y="162" text-anchor="middle" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#40515a">3 s hold</text>
+
+  <!-- card -->
+  <g filter="url(#card)">
+    <rect x="470" y="108" width="368" height="272" rx="20" fill="#ffffff" stroke="#dde5ea"/>
+  </g>
+  <text x="494" y="142" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="15" font-weight="700" fill="#22343c">Wi-Fi key · 长按 3 秒</text>
+  <text x="494" y="163" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11.5" fill="#72848d">one hold wakes the device and toggles the hotspot</text>
+
+  <!-- ON row -->
+  <rect x="494" y="192" width="74" height="38" rx="19" fill="#27ae60"/>
+  <circle cx="549" cy="211" r="14.5" fill="#ffffff"/>
+  <g transform="translate(592,199)" stroke="#57b0ff" stroke-width="2.6" fill="none" stroke-linecap="round">
+    <path d="M1 8 A 18 18 0 0 1 27 8"/>
+    <path d="M6 14 A 11 11 0 0 1 22 14"/>
+    <circle cx="14" cy="20" r="2.2" fill="#57b0ff" stroke="none"/>
+  </g>
+  <text x="630" y="211" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#22343c">Wi-Fi ON</text>
+  <text x="630" y="228" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11" fill="#72848d">热点开 · 单独使用时</text>
+
+  <!-- OFF row -->
+  <rect x="494" y="282" width="74" height="38" rx="19" fill="#d6dee3"/>
+  <circle cx="513" cy="301" r="14.5" fill="#ffffff"/>
+  <g transform="translate(592,289)" stroke="#9aa9b1" stroke-width="2.6" fill="none" stroke-linecap="round">
+    <path d="M1 8 A 18 18 0 0 1 27 8"/>
+    <path d="M6 14 A 11 11 0 0 1 22 14"/>
+    <circle cx="14" cy="20" r="2.2" fill="#9aa9b1" stroke="none"/>
+  </g>
+  <text x="630" y="301" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#22343c">Wi-Fi OFF</text>
+  <text x="630" y="318" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11" fill="#72848d">热点关 · 接 USB 路由器时</text>
+
+  <!-- footer -->
+  <text x="450" y="462" text-anchor="middle" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="12" fill="#6b7c85">短按：2.4G ↔ 5G　|　长按 3 秒：热点开 / 关（休眠时一次长按即唤醒并切换）　|　接 USB 路由器时关掉热点降温</text>
+</svg>

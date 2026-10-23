@@ -3958,22 +3958,25 @@ class Buttons(ShellTest):
             self.script(shell, BIN / 'mu300-buttons', MU300_RUN=self.tmp / 'run')
             self.assertFalse(marker.exists())
 
-    def test_first_wifi_press_while_asleep_only_wakes(self):
+    def test_wifi_hold_while_asleep_wakes_and_toggles(self):
         self.stub('mu300-keys', 'cat "$STUBLOG/keys.in"')
         for name in ('mu300-led', 'mu300-wifi-band', 'systemctl', 'logger', 'mu300-power'):
             self.stub(name, f'echo "{name} $*" >> "$STUBLOG/calls"')
         (self.tmp / 'run/mu300/power').mkdir(parents=True)
-        for state, acts in (('idle', False), ('charging-boot', False), ('active', True)):
+        # asleep (state idle): a short press only wakes, a hold wakes and toggles the hotspot too; the charging boot
+        # has no services to toggle, so both only wake; awake, both act.
+        for state, short_acts, long_acts in (('idle', False, True), ('charging-boot', False, False), ('active', True, True)):
             (self.tmp / 'run/mu300/power/state').write_text(state + '\n')
             for shell in self.each_shell():
-                for event in ('138 short', '138 long'):
+                for event, acts in (('138 short', short_acts), ('138 long', long_acts)):
                     (self.tmp / 'keys.in').write_text(event + '\n')
                     (self.tmp / 'calls').unlink(missing_ok=True)
                     r = self.script(shell, BIN / 'mu300-buttons', MU300_RUN=self.tmp / 'run')
                     self.assertEqual(r.returncode, 0, r.stderr)
                     calls = (self.tmp / 'calls').read_text()
                     self.assertIn('mu300-power wake', calls, (state, event))
-                    self.assertEqual(acts, ('mu300-wifi-band toggle' in calls or 'systemctl start' in calls or 'systemctl is-active' in calls), (state, event))
+                    self.assertEqual(acts, ('mu300-wifi-band toggle' in calls or 'systemctl start' in calls
+                                            or 'systemctl stop' in calls or 'systemctl is-active' in calls), (state, event))
 
 
 class TreeKill(ShellTest):

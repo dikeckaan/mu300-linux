@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="480" viewBox="0 0 900 480">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5b6b72"/>
+    </marker>
+    <filter id="s" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#0b1b1f" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+
+  <rect width="900" height="480" rx="24" fill="#ffffff"/>
+  <rect x="1" y="1" width="898" height="478" rx="23" fill="none" stroke="#e6ecef"/>
+
+  <text x="40" y="46" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="15" font-weight="700" fill="#22343c">One Wi-Fi state, two paths</text>
+  <text x="40" y="66" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11.5" fill="#72848d">the key and the panel write the same persistent flag, so either can undo the other</text>
+
+  <!-- row 1: key path -->
+  <g filter="url(#s)">
+    <rect x="40" y="92" width="170" height="62" rx="12" fill="#ffffff" stroke="#263238" stroke-width="2"/>
+    <rect x="248" y="92" width="166" height="62" rx="12" fill="#ffffff" stroke="#263238" stroke-width="2"/>
+    <rect x="452" y="92" width="166" height="62" rx="12" fill="#ffffff" stroke="#263238" stroke-width="2"/>
+    <rect x="656" y="84" width="214" height="78" rx="12" fill="#eaf7ee" stroke="#27ae60" stroke-width="2"/>
+  </g>
+  <text x="56" y="118" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#22343c">Wi-Fi 键</text>
+  <text x="56" y="136" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="10.5" fill="#72848d">KEY_WIFI 138 · 3 s hold</text>
+  <text x="264" y="118" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#22343c">mu300-buttons</text>
+  <text x="264" y="136" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="10.5" fill="#72848d">short: band · long: hotspot</text>
+  <text x="468" y="118" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#22343c">hotspot_set on / off</text>
+  <text x="468" y="136" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="10.5" fill="#72848d">direction set before wake</text>
+  <text x="670" y="106" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1b6e3c">uci wireless.@wifi-device[0]</text>
+  <text x="670" y="124" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="10.5" fill="#477a5d">.disabled = 0 / 1 · commit</text>
+  <text x="670" y="142" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="10.5" fill="#477a5d">wifi up / wifi down</text>
+
+  <path d="M210 123 L 244 123" stroke="#5b6b72" stroke-width="2" marker-end="url(#a)"/>
+  <path d="M414 123 L 448 123" stroke="#5b6b72" stroke-width="2" marker-end="url(#a)"/>
+  <path d="M618 123 L 652 123" stroke="#5b6b72" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- row 2: panel path -->
+  <g filter="url(#s)">
+    <rect x="40" y="206" width="170" height="62" rx="12" fill="#ffffff" stroke="#263238" stroke-width="2"/>
+    <rect x="248" y="206" width="166" height="62" rx="12" fill="#ffffff" stroke="#263238" stroke-width="2"/>
+  </g>
+  <text x="56" y="232" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#22343c">面板 Wi-Fi 开关</text>
+  <text x="56" y="250" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="10.5" fill="#72848d">LuCI / admin</text>
+  <text x="264" y="232" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#22343c">mu300-dash-act wifi</text>
+  <text x="264" y="250" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="10.5" fill="#72848d">wifi on / off</text>
+  <path d="M210 237 L 244 237" stroke="#5b6b72" stroke-width="2" marker-end="url(#a)"/>
+  <path d="M414 237 C 520 237, 600 200, 652 160" fill="none" stroke="#5b6b72" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#a)"/>
+
+  <!-- boundary notes -->
+  <rect x="40" y="316" width="820" height="128" rx="12" fill="#f7f9fa" stroke="#e3e9ee"/>
+  <text x="58" y="342" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11.5" font-weight="700" fill="#40515a">边界 / 代价</text>
+  <text x="58" y="366" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11" fill="#5b6b72">· charging boot（充电开机）：没有服务可切，长按只唤醒，不改开关</text>
+  <text x="58" y="388" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11" fill="#5b6b72">· idle / LED 熄灭：长按先唤醒，方向与 hotspot-off 标记在唤醒前写好，唤醒不会翻回去</text>
+  <text x="58" y="410" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11" fill="#5b6b72">· 短按：仍走 band_toggle（2.4G / 5G），不碰热点</text>
+  <text x="58" y="432" font-family="Inter, -apple-system, 'PingFang SC', Arial, sans-serif" font-size="11" fill="#5b6b72">· 代价：无新进程、无轮询；一次长按 = 一次 uci 写入 + 一次 wifi up/down，约 0.5–1 s</text>
+</svg>

@@ -12762,3 +12762,25 @@ the missing name. v2026.10.23.1 ships all eight in each mainline bundle (built o
 A system installed with an earlier mainline bundle, or from macOS or Windows before this fix, gets the four modules
 with its next kernel update (`mu300-update kernel 6.18|7.2|7.3` from v2026.10.23.1 on, which unpacks on the device).
 `tests/test_case_sensitive.py`.
+
+### 215. The Wi-Fi key toggles the hotspot in one press, awake or asleep
+
+**Status: on the U30 Air (OpenWrt); follows 152.** (Numbered after 213/214, which are open in #377/#378.)
+
+The Wi-Fi key already had the hotspot toggle on a 3 s hold, but two things made it useless for the case it is for:
+docking the U30 Air to a router over USB and turning its own hotspot off to cut heat.
+
+* the hold only counted on an awake device; on a sleeping one (LEDs dark) the first hold only woke it, so the
+  hotspot needed two holds;
+* `hotspot_set on` ran `wifi up` only. The panel's Wi-Fi switch writes `wireless.radio0.disabled=1` (persistent),
+  so after turning the hotspot off from the page the key could not bring it back -- `wifi up` does not clear the
+  flag -- and the only way back was USB.
+
+`hotspot_set` now writes the same uci flag the page does (0 on, 1 off) before `wifi up`/`wifi down`, and a Wi-Fi
+hold decides its direction (and writes the user's `hotspot-off` marker) before the wake starts, so one hold wakes
+and toggles. A short press still toggles the band, and on a sleeping device still only wakes; the charging boot is
+unchanged (no services to toggle, so a hold there still only wakes).
+
+**Device check (U30 Air, OpenWrt):** with the hotspot off from the page, one 3 s hold brings the SSID back; with
+the device idle (LEDs dark), one 3 s hold wakes it and toggles once, not twice; a short press still switches
+2.4/5 GHz.

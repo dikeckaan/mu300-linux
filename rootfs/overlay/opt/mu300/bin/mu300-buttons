@@ -9,8 +9,8 @@
 # always shows life. Then it wakes mu300-power with the key's name (`mu300-power wake wifi|power`; other keys count as
 # power), in the background: the wake restores whatever is down by looking (hotspot, modem, LEDs, CPU), which can
 # take a minute, and the keys must not wait for it. Idle wakes on any key, a charging boot only on the Wi-Fi key. The
-# band toggle and the hotspot toggle act on an awake device, so the first Wi-Fi press on a sleeping device (idle, or
-# the LEDs held dark) only wakes it. Held power does not wake mu300-power: it leaves the shutdown marker, so the
+# band toggle acts on an awake device, so the first Wi-Fi short press on a sleeping device (idle, or the LEDs held
+# dark) only wakes it; a long press wakes and toggles the hotspot in one go. Held power does not wake mu300-power: it leaves the shutdown marker, so the
 # daemon's stop on the way down does not bring the radios back. The hotspot toggle leaves $PST/hotspot-off (with the
 # uptime of the hold) while the user has it off, so neither a wake nor mu300-power's self-check turns it back on; the
 # direction is decided and the marker written before the wake starts, so the wake of the same press cannot undo it.
@@ -75,9 +75,15 @@ hotspot_is_up() {
     if is_openwrt; then probe ubus -t 5 call hostapd.wlan0 get_status
     else probe systemctl is-active --quiet mu300-hotspot; fi
 }
-hotspot_set() {  # hotspot_set on|off: the toggle itself
+hotspot_set() {  # hotspot_set on|off: the toggle itself, and the persistent flag the panel writes
     if is_openwrt; then
-        if [ "$1" = off ]; then wifi down; mu300-led wifi off; else wifi up; mu300-led wifi sync 120; fi
+        if [ "$1" = off ]; then
+            uci -q set wireless.@wifi-device[0].disabled=1; uci -q commit wireless
+            wifi down; mu300-led wifi off
+        else
+            uci -q set wireless.@wifi-device[0].disabled=0; uci -q commit wireless
+            wifi up; mu300-led wifi sync 120
+        fi
     elif [ "$1" = off ]; then systemctl stop mu300-hotspot
     else systemctl start mu300-hotspot; fi
 }
@@ -91,9 +97,11 @@ mu300-keys -l 3000 -t 5 | { while read -r code kind; do
     was_idle=0; s=$(cat "$PST/state" 2>/dev/null); [ -z "$s" ] || [ "$s" = active ] || was_idle=1
     [ ! -e "$LEDIDLE" ] || was_idle=1   # dark on purpose (idle, or someone's mu300-led idle on): this press only wakes
     key=power; [ "$code" = "$KEY_WIFI" ] && key=wifi
-    # a Wi-Fi hold on an awake device: which way, and the user's marker, before the wake can look
+    # a Wi-Fi hold decides which way and writes the user's marker even on a sleeping device (idle, or the LEDs held
+    # dark): one press wakes and toggles, and the direction and the marker are set before the wake starts, so the
+    # wake cannot undo them. The charging boot has no services to toggle, so a hold there still only wakes.
     dir=
-    if [ "$code $kind" = "$KEY_WIFI long" ] && [ "$was_idle" != 1 ]; then
+    if [ "$code $kind" = "$KEY_WIFI long" ] && [ "$s" != charging-boot ]; then
         mkdir -p "$PST" 2>/dev/null
         if hotspot_is_up; then dir=off; cut -d. -f1 "${MU300_SYSROOT:-}/proc/uptime" > "$PST/hotspot-off" 2>/dev/null
         else dir=on; rm -f "$PST/hotspot-off"; fi
