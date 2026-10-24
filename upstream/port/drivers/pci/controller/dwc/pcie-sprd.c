@@ -291,8 +291,32 @@ static int sprd_add_pcie_port(struct dw_pcie *pci, struct platform_device *pdev)
 		device_set_wakeup_capable(dev, true);
 
 no_wakeup:
-
+#ifdef DW_PCIE_HAS_SKIP_LINK_WAIT
+	/*
+	 * MU300: the Marlin3 is off until wcn_bsp powers it and brings the link up through
+	 * sprd_pcie_configure_device(); the core's 0.9 s wait at probe never sees a link (patches/6.18/0028)
+	 */
+	pp->skip_link_wait = true;
+#endif
 	return dw_pcie_host_init(&pci->pp);
+}
+
+/*
+ * MU300: a short look for a link at probe instead of dw_pcie_wait_for_link()'s 0.9 s. The endpoint is powered by
+ * its own driver much later (the Marlin3, through sprd_pcie_configure_device()), so at boot there is never a
+ * link here, and the wait cost every boot 0.9 s of the kernel's init thread. An endpoint that is up already
+ * has trained by the time the host is set up; this still finds it.
+ */
+static bool sprd_pcie_link_up_soon(struct dw_pcie *pci)
+{
+	int i;
+
+	for (i = 0; i < 5; i++) {
+		if (dw_pcie_link_up(pci))
+			return true;
+		usleep_range(10000, 11000);
+	}
+	return false;
 }
 
 static const struct of_device_id sprd_pcie_of_match[] = {
@@ -688,7 +712,7 @@ static int sprd_pcie_probe(struct platform_device *pdev)
 
 	ctrl->is_powered = 1;
 
-	if (dw_pcie_wait_for_link(pci)) {
+	if (!sprd_pcie_link_up_soon(pci)) {
 		dev_info(dev,
 			 "the EP has not been ready yet, power off the RC\n");
 		sprd_pcie_host_shutdown(pdev);

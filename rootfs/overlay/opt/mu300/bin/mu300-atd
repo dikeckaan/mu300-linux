@@ -136,25 +136,29 @@ open_tty() {
 }
 # The node is there before the channel works: until the modem has started (its sbuf ready) the open fails with ENODEV
 # - at a cold boot for longer than the init scripts wait for the node (#226), and for good when the modem never
-# starts. So the first open is tried again, every 2 s for up to MU300_AT_OPEN_WAIT seconds (240), with one line when
-# the wait starts and one when it ends; meanwhile the command fifo exists, so clients queue here and never take the
+# starts. So the first open is tried again, every 0.2 s for up to MU300_AT_OPEN_WAIT seconds (240), with one line when
+# the wait starts and one when it ends (every 2 s, as it was, cost a cold boot up to 2 s of the dial's critical path:
+# the channel comes up while the dial waits for it); meanwhile the command fifo exists, so clients queue here and never take the
 # direct path to the tty. A failed open was never seen to harm a channel (the releases before this one opened every
 # 10 s under procd's respawn, #170, and the modem answered once it was up); closing an open one is what loses it.
 # Given up: the supervisor starts this daemon again (procd's respawn, systemd's Restart=always), one line per round.
 OPEN_WAIT=${MU300_AT_OPEN_WAIT:-240}
 case $OPEN_WAIT in ''|*[!0-9]*) OPEN_WAIT=240 ;; esac
-open_waited=0
+# a fraction of a second where the static busybox can sleep one (the image's /bin/sleep takes whole seconds only)
+nap() { "${MU300_BUSYBOX:-/opt/mu300/bin/busybox}" sleep "$1" 2>/dev/null || sleep 1; }
+open_waited=0   # 1 once the wait has started
+open_start=$(date +%s)
 until open_tty 2>/dev/null; do
     [ "$open_waited" = 0 ] && echo "mu300-atd: $DEV is not ready (the modem has not started its AT channels); waiting up to ${OPEN_WAIT} s" >&2
-    if [ "$open_waited" -ge "$OPEN_WAIT" ]; then
+    open_waited=1
+    if [ $(($(date +%s) - open_start)) -ge "$OPEN_WAIT" ]; then
         echo "mu300-atd: $DEV did not become ready in ${OPEN_WAIT} s: the modem has not started (see dmesg and /run/mu300/radio.log)" >&2
         rm -f "$CMD"; [ "$(cat "$LOCK/pid" 2>/dev/null)" = $$ ] && rm -rf "$LOCK"
         exit 1
     fi
-    sleep 2
-    open_waited=$((open_waited + 2))
+    nap 0.2
 done
-[ "$open_waited" = 0 ] || echo "mu300-atd: $DEV ready after ${open_waited} s" >&2
+[ "$open_waited" = 0 ] || echo "mu300-atd: $DEV ready after $(($(date +%s) - open_start)) s" >&2
 
 # Keep the other AT channels drained, the way Android's RIL does - it holds nr0-nr5 open and reads all six.
 # /dev/stty_nr0 carries the modem's unsolicited output (+SIND, +ECIND, +SPERRLOG, ...), and each stty_nr<n> is
@@ -229,7 +233,7 @@ echo "mu300-atd: $DEV is ours, draining $(echo $drainers | wc -w) other channel(
 
 trap "" PIPE   # a client that gave up waiting must not kill the daemon
 silent=0       # consecutive commands the modem did not answer
-clean=0        # the last reply ended in a final result code (the first command drains the slow way)
+clean=0        # the last reply ended in a final result code (the first drain, below, is the slow one)
 last_reopen=0  # when the device was last reopened (see the reopen rule in the loop)
 
 now() { date +%s; }
@@ -301,6 +305,12 @@ collect() {  # collect TIMEOUT -> the reply lines, up to the final result code; 
     done
     return 1
 }
+
+# The slow drain (quiet for a whole second) once here, as soon as the channel is ours, instead of before the first
+# command: at a cold boot that second used to come on top of each channel's first command - three of them in the
+# U30 Air's SIM2 cold start, ~3 s of the dial's critical path. A client that queued meanwhile waits for the rest of it.
+DRAIN_MAX=3 drain 1
+clean=1
 
 while :; do
     line=

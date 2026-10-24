@@ -1075,7 +1075,7 @@ up_locked() {
     if [ "$SIM_NATIVE" = 1 ] && [ ! -e /run/mu300/sim-radio-ready ]; then
         local native_end=$((SECONDS + ${MU300_NATIVE_RADIO_WAIT:-40}))
         until [ -e /run/mu300/sim-radio-ready ] || [ ! -e /run/mu300-radio-freeze ] || [ "$SECONDS" -ge "$native_end" ]; do
-            sleep 1
+            nap 0.2   # the dial starts as soon as the radio is (a whole second here was up to a second of each boot)
         done
     fi
     tty_setup

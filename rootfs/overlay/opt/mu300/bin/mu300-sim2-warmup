@@ -32,6 +32,8 @@ ATD_INIT=${MU300_ATD_INIT:-/etc/init.d/mu300-atd}
 REBOOT=${MU300_REBOOT_CMD:-reboot}
 SIM_CONFIG_U30=1
 . "${MU300_SIM_CONFIG_LIB:-/opt/mu300/lib/sim-config.sh}"
+# a fraction of a second where the static busybox takes one (the image's /bin/sleep takes whole seconds only)
+nap() { "${MU300_BUSYBOX:-/opt/mu300/bin/busybox}" sleep "$1" 2>/dev/null || sleep "$1" 2>/dev/null || sleep 1; }
 # Preserve the charging-only boot's promise to leave both radios off (the pending marker stays for the real boot).
 [[ ! -e /run/mu300/charging-boot ]] || exit 0
 SLOT=$(cat /run/mu300/sim-slot 2>/dev/null || echo 1)
@@ -118,13 +120,14 @@ fallback() {  # fallback REASON: see 2. above
     setsid "$ATD_INIT" restart </dev/null >/dev/null 2>&1 &
     exit 1
 }
-for ((attempt=0; attempt<90; attempt++)); do
+# the brokers are polled every 0.2 s (the cold start is on the dial's critical path)
+for ((attempt=0; attempt<450; attempt++)); do
     ready=1
     for directory in /run/mu300-at /run/mu300-at2 /run/mu300-at4 /run/mu300-at5; do
         broker_ready "$directory" || ready=0
     done
     [[ $ready == 1 ]] && break
-    sleep 1
+    nap 0.2
 done
 [[ $ready == 1 ]] || fallback brokers-missing
 # (the radio lock is waited for: netifd's first dial takes it for a moment at about the same time, only to find

@@ -23,6 +23,8 @@ SLOT=${MU300_SIM_SLOT:-$(cat /run/mu300/sim-slot 2>/dev/null || echo 1)}
 case "$SLOT" in 0|1) ;; *) exit 2;; esac
 SIM_CONFIG_U30=1
 . "${MU300_SIM_CONFIG_LIB:-/opt/mu300/lib/sim-config.sh}"
+# a fraction of a second where the static busybox takes one (the image's /bin/sleep takes whole seconds only)
+nap() { "${MU300_BUSYBOX:-/opt/mu300/bin/busybox}" sleep "$1" 2>/dev/null || sleep "$1" 2>/dev/null || sleep 1; }
 LOG=/run/mu300/sim2-cold-start.log
 REASON=/run/mu300/sim2-cold-start.reason
 mkdir -p /run/mu300
@@ -60,12 +62,15 @@ rm -f "$REASON"
 for directory in /run/mu300-at /run/mu300-at2 /run/mu300-at4 /run/mu300-at5; do
     [[ -p "$directory/cmd" ]] || stop modem-silent "Missing broker $directory" 2
 done
-# Wait for actual CP output, not merely a FIFO created before open_tty completes.
-for ((attempt=0; attempt<60; attempt++)); do
+say "brokers there; waiting for CP output on nr0"
+# Wait for actual CP output, not merely a FIFO created before open_tty completes (looked for every 0.2 s: the cold
+# start is on the dial's critical path).
+for ((attempt=0; attempt<300; attempt++)); do
     [[ -s /run/mu300-at/urc/stty_nr0.log ]] && break
-    sleep 1
+    nap 0.2
 done
 [[ -s /run/mu300-at/urc/stty_nr0.log ]] || stop modem-silent 'No CP unsolicited output; refusing to send bring-up commands'
+say "CP output seen"
 # Verified Android SIM2-primary handshake: nr1, SMMSWAP=0. SMMSWAP=1 is not a slot selector.
 expect_ok main0 'AT+SMMSWAP=0' || stop modem-refused 'The RIL handshake was not taken'
 : > /run/mu300-ril-handshake
@@ -94,7 +99,7 @@ ask_card() {
         elif [[ "$response" == *'+CPIN: SIM PIN'* || "$response" == *'+CPIN: SIM PUK'* ]]; then card=sim-pin; return 0
         elif [[ "$response" =~ \+CME\ ERROR:\ (10($|[^0-9])|SIM\ not\ inserted) ]]; then card=no-sim
         else card=sim-not-ready; fi
-        sleep 1
+        nap 0.3
     done
 }
 powered=0
@@ -152,7 +157,7 @@ expect_ok data$SLOT 'AT+SFUN=4' 20 || stop no-radio "SIM$((SLOT+1)): the radio-o
 for ((attempt=0; attempt<15; attempt++)); do
     response=$(at main$SLOT 'AT+CFUN?') || stop no-radio "SIM$((SLOT+1)) stopped answering"
     if [[ "$response" == *'+CFUN: 1'* ]]; then break; fi
-    sleep 1
+    nap 0.3
 done
 [[ "$response" == *'+CFUN: 1'* ]] || stop no-radio "SIM$((SLOT+1)) did not reach CFUN=1"
 # CFUN=1 is the radio ready, for either card, exactly as the SIM1 path marks it: no service on a card does not

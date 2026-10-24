@@ -15,11 +15,17 @@ boot() {
 }
 
 hw_bringup() {
+	# The rules first, then the chip: cfg80211 looked for regulatory.db before the rootfs was mounted, and with the
+	# database and the country in place before the phy appears, netifd's own start of hostapd (it starts one as soon
+	# as the phy is there) already runs under them. The Wi-Fi then comes before the vendor extras and zram, which held
+	# it back ~2 s at every boot (10 modprobes of modules this kernel does not have, and the Mali GPU's).
+	/opt/mu300/bin/regdb-load >/tmp/mu300-wifi-start.log 2>&1
+	country=$(uci -q get wireless.radio0.country)
+	[ -n "$country" ] && iw reg set "$country"
+	/opt/mu300/bin/wifi-start >>/tmp/mu300-wifi-start.log 2>&1
 	/opt/mu300/bin/extra-modules >/tmp/mu300-extra-modules.log 2>&1
 	/opt/mu300/bin/zram-start >/dev/null 2>&1
-	/opt/mu300/bin/wifi-start >/tmp/mu300-wifi-start.log 2>&1
-	# cfg80211 looked for regulatory.db before the rootfs was mounted; load it now so hostapd sees the country rules
-	/opt/mu300/bin/regdb-load >>/tmp/mu300-wifi-start.log 2>&1
+	cfg=$(md5sum /etc/config/wireless 2>/dev/null)
 	/opt/mu300/bin/openwrt-wifi-config >>/tmp/mu300-wifi-start.log 2>&1
 	# a hotspot set to WPA3/SAE (the U30 Air's SAE offload, now disabled: docs/U30AIR-SAE.md, FINDINGS 80) becomes
 	# WPA2-PSK with the same password, before the Wi-Fi restart below, which is the start that brings the hotspot up
@@ -33,10 +39,30 @@ hw_bringup() {
 		iw reg set "$country"
 		for n in $(seq 1 10); do iw reg get | grep -q "country $country:" && break; sleep 1; done
 	fi
+	# Unchanged settings and an access point that netifd's own start brought up: nothing to redo. The down/up below
+	# took a hotspot that was up (and the chip under it: a power cycle and a firmware load) down again for ~4 s at
+	# every boot.
+	if [ "$(md5sum /etc/config/wireless 2>/dev/null)" = "$cfg" ] && ap_enabled_soon; then
+		echo "access point up under the configured rules, no restart" >>/tmp/mu300-wifi-start.log
+		return 0
+	fi
 	# a reload does not restart a hostapd interface that went AP-DISABLED while the world regulatory domain
 	# was still active; one down/up right after the country is live does
 	wifi down >>/tmp/mu300-wifi-start.log 2>&1
 	wifi up >>/tmp/mu300-wifi-start.log 2>&1
+}
+
+# ap_enabled_soon: true once hostapd reports wlan0 ENABLED (20 s at most); false when it gives up (DISABLED) or never
+# gets there
+ap_enabled_soon() {
+	for n in $(seq 1 100); do
+		case $(ubus -S call hostapd.wlan0 get_status 2>/dev/null | jsonfilter -e '@.status' 2>/dev/null) in
+			ENABLED) return 0 ;;
+			DISABLED) return 1 ;;
+		esac
+		/opt/mu300/bin/busybox sleep 0.2 2>/dev/null || sleep 1
+	done
+	return 1
 }
 
 start() {

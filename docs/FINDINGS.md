@@ -12762,3 +12762,68 @@ the missing name. v2026.10.23.1 ships all eight in each mainline bundle (built o
 A system installed with an earlier mainline bundle, or from macOS or Windows before this fix, gets the four modules
 with its next kernel update (`mu300-update kernel 6.18|7.2|7.3` from v2026.10.23.1 on, which unpacks on the device).
 `tests/test_case_sensitive.py`.
+
+### 214. Boot time on the U30 Air (OpenWrt, 6.18): mobile data at 14.5 s instead of 34 s
+
+Our U30 Air, OpenWrt 25.12.5 on 6.18.57, data on SIM2 over 5G SA, hotspot on 5 GHz channel 149. Seconds after the
+kernel started, from `/run/mu300/boot-timeline` (`dial-addr-ok`), dmesg and logread:
+
+| | before | after (three boots) |
+|---|---|---|
+| kernel to `/init` | 2.21 | 0.34 |
+| switch_root | 5.02 | 1.15 |
+| procd `- init -` | 13.89 | 2.05 to 2.14 |
+| hotspot `AP-ENABLED` | 28.0 (up at 24.0, then restarted) | 10.5 to 11.7 |
+| mobile data (`dial-addr-ok`) | 34.26 | 14.43, 14.50, 14.61 |
+
+The bootloader's part comes before all of it: the architected counter reads 7.0 s more than CLOCK_BOOTTIME, so LK and
+the firmware before it take about 7 s from power-on. That is the vendor's and was not touched.
+
+What took the time, and what was done:
+* **Kernel, 1.85 s.** The PCIe root port of the Marlin3 waited for a link twice at probe (the 6.18 DWC core's
+  `dw_pcie_wait_for_link`, then pcie-sprd's own check), 10 x 90 ms each, with the init thread waiting; the chip is off
+  until wcn_bsp powers it and brings the link up through `sprd_pcie_configure_device()`. `patches/6.18/0028` lets a host
+  driver skip the core's wait (`skip_link_wait`, with `DW_PCIE_HAS_SKIP_LINK_WAIT` so the shared driver still builds on
+  7.x without it); pcie-sprd sets it and takes a 50 ms look instead of its own 0.9 s wait.
+* **The UART, ~2.9 s.** `boot/init` set the console level to 7, so every KERN_INFO line went to the 115200 baud UART
+  synchronously until OpenWrt's sysctl lowered it at ~14 s: 33 KB, and the initramfs' module loads and procd's first
+  second (the TEE's log, ~100 lines) waited on it. Now 4: the stage lines are KERN_ERR and still reach the UART and
+  console-ramoops.
+* **Fixed pauses in the initramfs, ~1.9 s.** A `sleep 1` before the gadget bind (from the first bring-up, no reason
+  recorded) is gone, and the partition lookup polls every 0.1 s: with the faster kernel the eMMC's partitions appear
+  0.2 s after the modules, and its 1 s pause was then always taken.
+* **The random pool, 0.9 s.** There is no hardware RNG (no SMCCC TRNG in this firmware), so the kernel initialises it
+  only when something waits for it, with its timer-jitter loop; ubusd did, and procd's init stage waited 0.9 s. The
+  initramfs starts one blocking read of `/dev/random` in the background at once (`crng init done` at 1.4 s).
+* **procd's first kmodloader, 1.7 s.** `kmodloader /etc/modules-boot.d/` reads every module of `/lib/modules/<release>`
+  first (2955 files, a few scattered blocks of each, cold: 1.8 s on its own, 1.6 s with the loop device's direct I/O,
+  1.5 s with 16 parallel readers; sequential reads run at 270 MB/s). Its list is all in `/etc/modules.d`, which
+  `/etc/init.d/boot` loads two seconds later. The initramfs bind-mounts a stub over `/sbin/kmodloader` that skips that
+  one call, removes itself (lazily: the shell running it holds it open) at its first run whatever that is, and hands
+  any other call to the real binary by its own name; and it starts one `cat` of the modules, which survives switch_root,
+  so that the later run reads them from the cache.
+* **preinit, 4.9 s.** OpenWrt waited 4 s (`fs_failsafe_wait_timeout`) for a failsafe key typed on a console only test
+  pads reach, and `preinit_ip` ran `board_detect` (0.9 s) to put 192.168.1.1 on usb0 for that failsafe, which `run_init`
+  then flushed together with the early DHCP server's address. `lib/preinit/31_mu300_failsafe_wait` has no wait and sets
+  `pi_preinit_no_failsafe`; `failsafe=` on the command line still enters failsafe mode.
+* **The dial, ~7 s.** `mu300-atd` retried the channel's open every 2 s (now 0.2 s), and the first command on each
+  channel drained for a whole second (`clean=0`); it now drains once when the channel is its own, so the SIM2 cold
+  start's commands take ~0.15 s each instead of three of them taking 1 s more. `sipa-dele-start` slept 3 s after the
+  insmod to look for the channel-open line, which is there in the same millisecond (now looked for every 0.1 s), and
+  asked for the attach every 2 s (now 0.5 s). `mobile-data`, `mu300-sim2-start` and `mu300-sim2-warmup` polled every
+  second on the dial's path (now 0.2 to 0.3 s). Tried and taken back: reading `/proc/uptime` in `mu300-atd` instead of
+  forking `date +%s` for its deadlines. Under bash, `read -t` keeps what it read past a line from the channel in a
+  buffer it does not tie to the file, and both reads are on fd 0, so the next read of `/proc/uptime` returned the
+  modem's reply (empty answers under bash, as on Ubuntu; busybox ash was not affected; the `Atd` tests caught it).
+* **The hotspot, ~10 s later than needed.** `mu300-hw` loaded the vendor extras (ten modprobes of modules this kernel
+  does not have, and the Mali GPU's) and zram before the Wi-Fi, and after netifd's own start had brought the access point
+  up, its unconditional `wifi down; wifi up` took it down again for ~4 s (and the chip with it: a power cycle and a
+  firmware load). Now the regulatory database and the country come first, then the Wi-Fi, then the rest, and the
+  restart only runs when the settings changed meanwhile or the access point did not come up (`ap_enabled_soon`).
+
+What the dial waits for now, on the boots above: procd at 2.1 s starts the vendor stack at 2.2 s; the modem runs at
+5.6 s (modem_control and the TEE: stopping the four subsystems, 50 + 50 ms of power sequencing each, the images'
+verification, and 1.15 s in the TEE's `kbc_update_version`); its first output on nr0 comes at 7.4 s; the SIM2 cold start
+switches the radio on (`AT+SFUN=4`) at 9.2 s; the network registers it at 13.4 s; `AT+CGACT` takes 0.5 to 2 s. The rest
+is the modem's and the network's. Not done: a shorter quiet wait before each AT command (0.1 s, `QUICK`), and the Wi-Fi
+chip is still powered off and on twice while hostapd sets wlan0 up (a firmware load each).

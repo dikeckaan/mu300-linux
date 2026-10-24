@@ -84,8 +84,13 @@ while :; do
             exit 1
         fi
         log "loaded sipa-dele"
-        # Both halves of the handshake are pr_info, so this says immediately whether it took.
-        sleep 3
+        # Both halves of the handshake are pr_info, so this says immediately whether it took. Looked for every
+        # 0.1 s for up to 3 s (a fixed 3 s sleep here was 3 s of every boot's dial: the line is there at once).
+        n=0
+        while [ $n -lt 30 ] && ! dmesg | grep -q 'channel 5-120 send open msg'; do
+            /opt/mu300/bin/busybox sleep 0.1 2>/dev/null || sleep 0.1 2>/dev/null || { sleep 1; n=$((n + 9)); }
+            n=$((n + 1))
+        done
         if dmesg | grep -q 'channel 5-120 send open msg'; then
             log "channel open sent; handshake: $(dmesg | grep -c sipa_dele) sipa_dele messages so far"
         else
@@ -94,7 +99,8 @@ while :; do
         exit 0
     fi
     [ $(( $(date +%s) - start + 2 )) -lt "$WAIT" ] || break
-    sleep 2
+    # half a second between questions (it was 2 s): at boot the attach follows the registration closely
+    /opt/mu300/bin/busybox sleep 0.5 2>/dev/null || sleep 0.5 2>/dev/null || sleep 1
 done
 
 log "packet domain not attached after ${WAIT}s; refusing to load the delegate (it would race the PDP context)"

@@ -738,6 +738,7 @@ class Atd(ShellTest):
     def test_a_cmt_frame_while_idle_is_spooled_before_the_next_command(self):
         for shell in self.each_shell():
             m, _nr0 = self.start_spooling(shell, nr0=False)
+            time.sleep(1.3)                                          # past the daemon's startup drain (a quiet second)
             os.write(m, f'\r\n+CMT: "ADANA BLD",27\r\n{self.PDU}\r\n'.encode())
             time.sleep(0.3)
             self.assertEqual(self.spooled(timeout=0.1), [])        # nobody reads an idle command channel

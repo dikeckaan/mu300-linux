@@ -7,7 +7,10 @@
 export PATH=/bin:/sbin HOME=/root TERM=vt100
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
-echo 7 > /proc/sys/kernel/printk
+# 4, not 7: every KERN_INFO line went to the 115200 baud UART synchronously until OpenWrt's sysctl lowered it at ~14 s
+# (33 KB, ~2.9 s of the boot: the module loads below and procd's first second waited on the console). The stage
+# lines are KERN_ERR, so they still reach the UART and console-ramoops; everything stays in dmesg.
+echo 4 > /proc/sys/kernel/printk
 # the custom kernel has devtmpfs; fall back to tmpfs + mknod for safety
 if ! mount -t devtmpfs -o mode=0755 devtmpfs /dev; then
     mount -t tmpfs -o mode=0755 tmpfs /dev
@@ -19,6 +22,11 @@ if ! mount -t devtmpfs -o mode=0755 devtmpfs /dev; then
 fi
 pmsg_major=$(awk '$2=="pmsg"{print $1}' /proc/devices)
 [ -n "$pmsg_major" ] && [ ! -e /dev/pmsg0 ] && mknod /dev/pmsg0 c "$pmsg_major" 0
+# The kernel's random pool: no hardware RNG here (no SMCCC TRNG in this firmware), so it is initialised only once
+# something waits for it, by the kernel's timer-jitter loop (~0.9 s of one CPU). OpenWrt's ubusd was the first to
+# wait, and procd's init stage with it, once the boot before it had got fast. One blocking read in the background
+# here starts that loop on another CPU now; it is long done by switch_root.
+[ -c /dev/random ] && (head -c 1 /dev/random > /dev/null 2>&1) &
 
 log() {
     echo "<3>MU300-LINUX: $*" > /dev/kmsg
@@ -265,12 +273,14 @@ emmc_part() {  # emmc_part NAME -> /dev/<partition>; nothing (status 1) when the
 # --- emmc end
 misc=
 find_partitions() {
-    for n in $(seq 1 20); do
+    # every 0.1 s for up to 20 s (mdev once a second): the eMMC's partitions appear ~0.2 s after the modules are in,
+    # and a whole second's pause here held every boot back that long
+    for n in $(seq 1 200); do
         misc=$(emmc_part misc)
         bootb=$(emmc_part "boot_$LINUX_SLOT")
         [ -b "$misc" ] && [ -b "$bootb" ] && break
-        sleep 1
-        mdev -s
+        usleep 100000 2>/dev/null || sleep 1
+        [ $((n % 10)) != 0 ] || mdev -s
     done
     [ -b "$misc" ] || misc=
     [ -b "$bootb" ] || bootb=
@@ -380,7 +390,7 @@ setup_usb_gadget() {  # setup_usb_gadget [FUNCTIONS]: FUNCTIONS, else MU300_USBN
     [ -z "$udc" ] && for u in /sys/class/udc/*; do [ -e "$u" ] && { udc=$(basename "$u"); break; }; done
     log "stage=udc udc=${udc:-none} available=$(ls /sys/class/udc 2>/dev/null | tr '\n' ',')"
     persist
-    sleep 1
+    # (no pause here any more: a "sleep 1" from the first bring-up held every boot back a second, with the UDC there)
     # Never rebind the gadget from a shell running on its own ACM console: the console dies with the unbind and the
     # rebind never runs, which leaves the device with no USB at all until it is power-cycled.
     log "stage=usb-bind-start"
@@ -886,6 +896,15 @@ if [ "$root_mounted" = 1 ] && rootdir=$(pick_root) && [ -n "$rootdir" ]; then
         reboot -f
         sleep 30
     fi
+    # The system's modules into the page cache, beside the rest of the bring-up: OpenWrt's procd runs kmodloader before
+    # anything else, and its scan of every module (~2950 files, a few pages of each) cold off the eMMC held the boot
+    # 1.7 s. One cat of them all, from inside their directory so that it goes on after switch_root (the kill loop below
+    # spares it; its own binary and working directory stay valid), keeps ahead of the scan.
+    prefetch=
+    if [ -d "$rootdir/lib/modules/$(uname -r)" ]; then
+        (cd "$rootdir/lib/modules/$(uname -r)" && exec cat -- *.ko) >/dev/null 2>&1 </dev/null &
+        prefetch=$!
+    fi
     # the CPU voltage offset (EXPERIMENTAL): DVFS waits for this; 0,0,0 unless an offset was asked for and may run
     cpu_voltage_boot /disk/.mu300
 
@@ -915,10 +934,31 @@ if [ "$root_mounted" = 1 ] && rootdir=$(pick_root) && [ -n "$rootdir" ]; then
     echo "$DEVICE" > /run/mu300/device
     init=/sbin/init
     [ -x /newroot/lib/systemd/systemd ] && init=/lib/systemd/systemd
+    # OpenWrt: procd's first act is "kmodloader /etc/modules-boot.d/", and kmodloader begins by reading every module
+    # in /lib/modules/<release> (~2950 files, a few scattered blocks of each, cold off the eMMC: 1.7 s with procd
+    # waiting; parallel reads or the loop device's direct I/O won back 0.2 s at most). What that list loads is all in
+    # /etc/modules.d as well, which /etc/init.d/boot loads two seconds later (by then from the cache the prefetch
+    # above filled). So only that one call is skipped: a stub bind-mounted over /sbin/kmodloader takes itself away at
+    # its first run, whatever that is (lazily: the shell running it holds it open), and hands every call but
+    # procd's to the real kmodloader by its own name (modprobe, insmod, lsmod are links to it).
+    if [ "$init" = /sbin/init ] && [ -x /newroot/sbin/kmodloader ] && [ -d /newroot/etc/modules-boot.d ]; then
+        printf '%s\n' '#!/bin/sh' \
+            '# MU300 initramfs (boot/init): stands in for kmodloader until its first run, procd'"'"'s modules-boot.d' \
+            'umount -l /sbin/kmodloader 2>/dev/null' \
+            '[ "${0##*/} $1" = "kmodloader /etc/modules-boot.d/" ] && exit 0' \
+            '[ -z "$MU300_KMOD_ONCE" ] || exit 1' \
+            'export MU300_KMOD_ONCE=1' \
+            'exec "$0" "$@"' > /run/.kmodloader-once
+        chmod 755 /run/.kmodloader-once
+        mount --bind /run/.kmodloader-once /newroot/sbin/kmodloader && log "stage=kmodloader-once"
+    fi
     log "stage=switch-root root=$rootdir init=$init os=$(sed -n 's/^PRETTY_NAME=//p' /newroot/etc/os-release)"
     persist
-    kill $(jobs -p) 2>/dev/null
-    for p in /proc/[0-9]*; do [ "${p#/proc/}" = 1 ] || kill -9 "${p#/proc/}" 2>/dev/null; done
+    kill $(jobs -p | grep -vx "$prefetch") 2>/dev/null
+    for p in /proc/[0-9]*; do
+        p=${p#/proc/}
+        [ "$p" = 1 ] || [ "$p" = "$prefetch" ] || kill -9 "$p" 2>/dev/null
+    done
     # Trial guard, only in images built with --trial-guard SECONDS (tools/flash-trial.sh experiments, never an
     # install): the timer above ends here, and a trial kernel that boots but never brings up USB (6.18 on the U30
     # Air) left a device that only failing five boots by hand brought back. So one more timer outlives
