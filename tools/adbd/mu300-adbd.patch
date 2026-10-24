@@ -85,7 +85,17 @@
  #include "daemon/usb_ffs.h"
  #include "sysdeps/chrono.h"
  #include "transfer_id.h"
-@@ -401,6 +403,13 @@
+@@ -270,2 +272,8 @@
+-                // If we don't see our first bind within a second, try again.
++                // Linux's supervisor waits five seconds before recovering an unbound
++                // gadget. Keep these descriptors alive across that grace period instead
++                // of closing ep0 every second while it is about to bind them.
++#if defined(__ANDROID__)
+                 int timeout_ms = bound ? -1 : 1000;
++#else
++                int timeout_ms = bound ? -1 : 10000;
++#endif
+@@ -401,6 +409,13 @@
          CHECK(!worker_started_);
          worker_started_ = true;
          worker_thread_ = std::thread([this]() {
@@ -99,7 +109,7 @@
              adb_thread_setname("UsbFfs-worker");
              LOG(INFO) << "UsbFfs-worker thread spawned";
  
-@@ -434,7 +443,7 @@
+@@ -434,7 +449,7 @@
          }
  
          pthread_t worker_thread_handle = worker_thread_.native_handle();
@@ -108,7 +118,7 @@
              int rc = pthread_kill(worker_thread_handle, kInterruptionSignal);
              if (rc != 0) {
                  LOG(ERROR) << "failed to send interruption signal to worker: " << strerror(rc);
-@@ -707,6 +716,7 @@
+@@ -707,6 +722,7 @@
  
      bool worker_started_;
      std::thread worker_thread_;
@@ -116,7 +126,7 @@
  
      std::atomic<bool> stopped_;
      std::promise<void> destruction_notifier_;
-@@ -744,6 +754,7 @@
+@@ -744,6 +760,7 @@
  static void usb_ffs_open_thread() {
      adb_thread_setname("usb ffs open");
  
@@ -124,7 +134,7 @@
      // When the device is acting as a USB host, we'll be unable to bind to the USB gadget on kernels
      // that don't carry a downstream patch to enable that behavior.
      //
-@@ -757,6 +768,7 @@
+@@ -757,6 +774,7 @@
          // Return false (i.e. break out of PropertyMonitor::Run) when the property != 1.
          return android::base::ParseBool(value) == android::base::ParseBoolResult::kTrue;
      });
@@ -132,7 +142,7 @@
  
      while (true) {
          unique_fd control;
-@@ -767,11 +779,13 @@
+@@ -767,11 +785,13 @@
              continue;
          }
  

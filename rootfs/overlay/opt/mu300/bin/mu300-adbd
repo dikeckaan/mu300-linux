@@ -148,7 +148,7 @@ lan_back() {
         ip link set "$nic" master br-lan 2>/dev/null || true
         ip link set "$nic" up 2>/dev/null || true
     done
-    [ -x "$HOOK" ] && ACTION=ifup INTERFACE=lan "$HOOK" >/dev/null 2>&1
+    [ -x "$HOOK" ] && MU300_USB_SKIP_REBIND=1 ACTION=ifup INTERFACE=lan "$HOOK" >/dev/null 2>&1
     return 0
 }
 

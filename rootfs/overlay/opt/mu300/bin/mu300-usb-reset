@@ -72,7 +72,7 @@ if [ "${1:-}" = --fast-run ]; then
         ip link set "$nic" up 2>/dev/null || ifconfig "$nic" up 2>/dev/null
     done
     # the second enumeration can come after lan/ifup: complete the LAN handoff once more (OpenWrt only)
-    [ -x "$HOOK" ] && ACTION=ifup INTERFACE=lan "$HOOK"
+    [ -x "$HOOK" ] && MU300_USB_SKIP_REBIND=1 ACTION=ifup INTERFACE=lan "$HOOK"
     { cut -d ' ' -f 1 /proc/uptime 2>/dev/null || echo 0; } > "$RUN/mu300-usb-rebind-done" 2>/dev/null
     logger -t mu300-usb "fast gadget rebind completed on $udc"
     exit 0

@@ -4680,7 +4680,8 @@ class UsbReset(ShellTest):
         self.role = self.tmp / 'role'
         self.role.write_text('device\n')
         self.hook = self.tmp / 'hook'
-        self.hook.write_text('#!/bin/sh\necho "hook $ACTION $INTERFACE" >> "$STUBLOG/calls"\n')
+        self.hook.write_text('#!/bin/sh\necho "hook $ACTION $INTERFACE" >> "$STUBLOG/calls"\n'
+                             '[ "$MU300_USB_SKIP_REBIND" = 1 ] || echo queued-rebind >> "$STUBLOG/calls"\n')
         self.hook.chmod(0o755)
         self.run_dir = self.tmp / 'run'
         self.run_dir.mkdir()
@@ -4718,6 +4719,7 @@ class UsbReset(ShellTest):
             self.assertIn('usleep 100000\n', calls)
             self.assertNotIn('sleep 2', calls.replace('usleep', ''))
             self.assertIn('hook ifup lan\n', calls)
+            self.assertNotIn('queued-rebind', calls, 'USB reset recovery queued another rebind')
             self.assertIn('mu300-usb', calls)       # logger tag
             self.assertTrue(float((self.run_dir / 'mu300-usb-rebind-done').read_text().split()[0]) >= 0)
 

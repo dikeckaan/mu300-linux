@@ -304,6 +304,25 @@ class Gadget(ShellTest):
             (self.tmp / 'adbd.log').unlink()
             (self.tmp / 'calls').unlink()
 
+    def test_lan_recovery_hook_does_not_queue_a_second_rebind(self):
+        hook = self.tmp / 'hook'
+        hook.write_text('#!/bin/sh\n'
+                        'echo "hook $ACTION $INTERFACE" >> "$STUBLOG/hooks"\n'
+                        '[ "$MU300_USB_SKIP_REBIND" = 1 ] || echo rebind >> "$STUBLOG/queued"\n'
+                        'exit 0\n')
+        hook.chmod(0o755)
+        for shell in self.each_shell():
+            p = self.start(shell, MU300_USB_HOOK=hook)
+            try:
+                self.assertTrue(self.until(lambda: (self.tmp / 'hooks').exists()))
+                self.assertFalse((self.tmp / 'queued').exists(), 'ADB recovery requested another USB rebind')
+            finally:
+                rc, out = self.stop(p)
+            self.assertEqual(0, rc, out)
+            self.assertEqual(['hook ifup lan', 'hook ifup lan'], (self.tmp / 'hooks').read_text().splitlines())
+            self.assertFalse((self.tmp / 'queued').exists(), 'ADB teardown requested another USB rebind')
+            (self.tmp / 'hooks').unlink()
+
     def test_rndis_keeps_its_ms_os_descriptors(self):
         (self.g / 'configs/c.1/f1').unlink()
         (self.g / 'configs/c.1/f1').symlink_to(self.g / 'functions/rndis.rn0')

@@ -239,7 +239,7 @@ class EarlyUsbOpenWrt(ShellTest):
 
     # --- hotplug iface/10-mu300-usb (K9; K10 rejected: the re-enumeration stays)
     def hotplug(self, shell, stamp_age=None, bridge='10.1.2.1/24', port='10.1.2.1/24', rndis_port='yes',
-                rndis_addr='', usb0_port='yes'):
+                rndis_addr='', usb0_port='yes', skip_rebind=False):
         (self.tmp / 'run' / 'mu300-early-udhcpd.pid').write_text('4242\n')
         (self.tmp / 'uptime').write_text('100.50 90.00\n')
         (self.tmp / 'mounts').write_text(f'configfs {self.tmp}/cfg configfs rw 0 0\n')
@@ -266,7 +266,7 @@ class EarlyUsbOpenWrt(ShellTest):
             '/run/': f'{self.tmp}/run/', '/sys/class/net/': f'{self.tmp}/net/', '/tmp/mu300-usb-rebound': f'{self.tmp}/stamp',
             '/sys/kernel/config': f'{self.tmp}/cfg', '/proc/uptime': f'{self.tmp}/uptime', '/proc/mounts': f'{self.tmp}/mounts'})
         code = ('kill() { echo "kill $*" >> "$STUBLOG/kill.log"; }; sleep() { :; }; logger() { :; }; mount() { :; }\n'
-                'ACTION=ifup INTERFACE=lan\n' + body)
+                f'ACTION=ifup INTERFACE=lan MU300_USB_SKIP_REBIND={int(skip_rebind)}\n' + body)
         r = self.sh(shell, code)
         self.assertEqual('', r.stderr)
         return g
@@ -285,6 +285,20 @@ class EarlyUsbOpenWrt(ShellTest):
             # the macOS re-enumeration still runs (K10 rejected until its gate)
             self.assertEqual('100', (self.tmp / 'stamp').read_text().strip())
             self.assertEqual('25100000.dwc3', (g / 'UDC').read_text().strip())
+            self.tearDown(); self.setUp()
+
+    def test_rebind_recovery_hands_off_lan_without_scheduling_another_rebind(self):
+        for shell in self.each_shell():
+            self.netdevs('usb0', 'rndis0')
+            g = self.hotplug(shell, skip_rebind=True, rndis_port='no', rndis_addr='10.1.2.1/24')
+            self.assertEqual('kill 4242\n', (self.tmp / 'kill.log').read_text())
+            self.assertFalse((self.tmp / 'run' / 'mu300-early-udhcpd.pid').exists())
+            calls = (self.tmp / 'ip.log').read_text()
+            self.assertIn('ip addr del 10.1.2.1/24 dev usb0\n', calls)
+            self.assertIn('ip addr del 10.1.2.1/24 dev rndis0\n', calls)
+            self.assertEqual(1, calls.count('ip link set rndis0 master br-lan\n'))
+            self.assertFalse((self.tmp / 'stamp').exists(), 'recovery queued another gadget rebind')
+            self.assertEqual('25100000.dwc3\n', (g / 'UDC').read_text())
             self.tearDown(); self.setUp()
 
     def test_rndis_joins_the_bridge_before_its_address_comes_off(self):

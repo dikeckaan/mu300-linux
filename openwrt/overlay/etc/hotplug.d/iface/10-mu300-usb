@@ -33,6 +33,10 @@ if [ -n "$bridge_ip" ]; then
 	done
 fi
 
+# A caller that just rebound the gadget needs the LAN handoff above, not another rebind.
+# Otherwise adbd/usb-reset and this hook keep disconnecting each other.
+[ "${MU300_USB_SKIP_REBIND:-0}" = 1 ] && exit 0
+
 # The ECM gadget was bound in the initramfs; macOS keeps the link inactive after netifd reconfigures usb0
 # (at boot and on every network restart). Re-enumerate the gadget whenever the LAN comes up, at most every 20 s,
 # so the host starts DHCP on a fresh link. (Kept, K10: the fork replaces it with one rebind in mu300-post, K12,
