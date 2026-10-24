@@ -41,13 +41,35 @@ MOUNTS=${MU300_PROC_MOUNTS:-/proc/mounts}
 BUILTIN=${MU300_MODULES_BUILTIN:-/lib/modules/$(uname -r)/modules.builtin}
 UDC_CLASS=${MU300_UDC_CLASS:-/sys/class/udc}
 HOOK=${MU300_USB_HOOK:-/etc/hotplug.d/iface/10-mu300-usb}
-TICK=${MU300_ADBD_TICK:-1}     # seconds between two looks at the gadget
+TICK=${MU300_ADBD_TICK:-1}     # seconds between two looks at the gadget while something is under way
+IDLE_TICK=${MU300_ADBD_IDLE_TICK:-3}   # ... and while all is as it should be (FINDINGS 215)
 GRACE=${MU300_ADBD_GRACE:-5}   # looks at an unbound gadget before it is bound again
 F=$G/functions/ffs.adb
 L=$G/configs/c.1/f3
 
 log() { echo "mu300-adbd: $*" >&2; }   # the service keeps it (journal, logread)
 nap() { sleep "$1" 2>/dev/null || sleep 1; }
+# look_again SECONDS: the wait between two looks of the loop (FINDINGS 215). Where the shell's read takes a timeout
+# (busybox ash, bash) and SECONDS is whole (OpenWrt's busybox takes no fraction), it waits on a fifo nobody writes to,
+# opened read-write so it never ends either (wait_init): no sleep process every second, and the TERM of a stop still
+# ends the wait at once. Else nap (dash has no read -t).
+wait_fd=
+wait_init() {
+    _d=$(mktemp -d "${TMPDIR:-/tmp}/mu300-adbd.XXXXXX" 2>/dev/null) || return 0
+    if mkfifo "$_d/wait" 2>/dev/null; then
+        exec 9<>"$_d/wait"
+        { read -t 0 _n <&9; [ $? = 1 ]; } 2>/dev/null && wait_fd=9
+    fi
+    rm -rf "$_d"
+    [ -n "$wait_fd" ] || exec 9<&-
+}
+slack=; { read -r slack < /proc/$$/timerslack_ns; } 2>/dev/null
+look_again() {
+    case $wait_fd:$1 in 9:*[!0-9]*|:*) nap "$1" ;; *) read -t "$1" _n <&9 || : ;; esac
+}
+# the role and the controller the gadget is bound to, read by the shell itself (no cat once a second)
+role_now() { _r=; { read -r _r < "$ROLE"; } 2>/dev/null; }
+udc_now() { _u=; { read -r _u < "$G/UDC"; } 2>/dev/null; }
 # The state is two small files in /etc/mu300, part of the root filesystem (no mount of its own to wait for) and
 # kept by mu300-update apply with the rest of that directory. The default applies only where there is no file at
 # all; a file that is there and cannot be read as what mu300-usb writes (empty, cut short, unreadable, another
@@ -97,7 +119,7 @@ auth_read() {
     return 0
 }
 auth_mode() { auth_read; echo "$MODE"; }
-host_role() { [ "$(cat "$ROLE" 2>/dev/null)" = host ]; }
+host_role() { role_now; [ "$_r" = host ]; }
 ffs_ready() { [ -e "$FFS/ep1" ]; }
 linked() { [ -e "$L" ] || [ -L "$L" ]; }
 rndis() { case $(readlink "$G/configs/c.1/f1" 2>/dev/null) in *rndis*) return 0 ;; esac; return 1; }
@@ -225,23 +247,25 @@ run() {
     fi
     stopping= pid= exits= t0= idle=0 cool=0
     trap 'stopping=1' TERM INT HUP
+    wait_init
     while [ -z "$stopping" ]; do
         if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
             if [ -n "$pid" ]; then
                 wait "$pid" 2>/dev/null; log "adbd exited ($?), restarting it"
-                now=$(cut -d. -f1 /proc/uptime 2>/dev/null || echo 0)
+                now=0; { read -r now _ < /proc/uptime; } 2>/dev/null; now=${now%%.*}
                 [ -n "$t0" ] && [ $((now - t0)) -lt 60 ] || { t0=$now; exits=0; }
                 exits=$((exits + 1))
                 [ "$exits" -lt 5 ] || { log "adbd keeps exiting: adb is left out of the gadget"; teardown; exit 1; }
                 cool=0
             fi
-            MU300_ADB_AUTH=$auth "$ADBD" </dev/null &
+            MU300_ADB_AUTH=$auth "$ADBD" </dev/null 9<&- &
             pid=$!
             # its first descriptors: up to 5 s
             n=0; while [ "$n" -lt 25 ] && ! ffs_ready && kill -0 "$pid" 2>/dev/null; do nap 0.2; n=$((n + 1)); done
         fi
+        udc_now
         if host_role; then idle=0
-        elif [ -z "$(cat "$G/UDC" 2>/dev/null)" ]; then
+        elif [ -z "$_u" ]; then
             # FunctionFS took the gadget off the controller (an adb connection ended). Not at once: mu300-usb-reset
             # and the OpenWrt LAN hook unbind it on purpose for a few seconds, and bind it again themselves.
             idle=$((idle + 1))
@@ -257,7 +281,17 @@ run() {
             idle=0
             linked || ! ffs_ready || rebind adb || cool=30   # adbd has just started: into the gadget
         fi
-        nap "$TICK"
+        # bound with adb in it, or in the host role: nothing to follow closely, a look every IDLE_TICK seconds; an
+        # unbound gadget is then seen up to IDLE_TICK - TICK seconds later than before (the GRACE looks come after)
+        if [ "$idle" = 0 ] && [ "$cool" = 0 ] && { [ "$_r" = host ] || linked; }; then
+            # this wait's timer may also fire up to half a second late, so the kernel can serve the timers of several
+            # daemons with one wakeup (FINDINGS 215); the rest of the loop (bind retries, adbd) keeps the default slack
+            [ -z "$slack" ] || { echo 500000000 > /proc/$$/timerslack_ns; } 2>/dev/null
+            look_again "$IDLE_TICK"
+            [ -z "$slack" ] || { echo "$slack" > /proc/$$/timerslack_ns; } 2>/dev/null
+        else
+            look_again "$TICK"
+        fi
     done
     [ -n "$pid" ] && kill "$pid" 2>/dev/null && wait "$pid" 2>/dev/null
     teardown

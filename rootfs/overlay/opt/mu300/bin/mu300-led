@@ -18,7 +18,7 @@
 #   mu300-led charge on|off     the charging boot: the power LED blinks (1 s on, 1 s off); the U30 Air's battery LED
 #                               shows the charge as always
 #   mu300-led battery           U30 Air: the battery LED as the battery is now (also at every tick)
-#   mu300-led tick              mu300-buttons, every 5 s: the battery LED, then sleep --if-due
+#   mu300-led tick              mu300-buttons or mu300-sysd, when its hint says so: the battery LED, then sleep --if-due
 #   mu300-led test              each LED in turn, 2 s each, with its name (to tell which one is where)
 #   mu300-led alarm on|off      too hot (thermal-guard): the PMIC's RGB LED flashes red, white, blue one at a time
 #                               like a siren, also while the others are dark
@@ -44,11 +44,24 @@
 # the LEDs are dark shows up on the next wake.
 # Every write is best effort: the PMIC rejects a brightness write now and then (mobile-data), and a cosmetic
 # LED must never make a service fail.
+# The tick (FINDINGS 215): after each one this leaves $STATE/.tick-hint - every file what the next tick does depends on
+# (the battery's and the charger's readings, the state files here), each with what it held, and the uptime from which
+# the next tick has something to do even with all of them unchanged (a timeout that runs out; at the latest a minute
+# on). mu300-buttons starts the next tick only once one of them says so: a tick that would change nothing is not
+# started every 5 s (it was a third of the buttons' service's CPU, two runs of this script and mu300-device's each).
+# mu300-sysd (FINDINGS 217) looks at the same hint on the charger's and the fuel gauge's uevents and on timers instead,
+# and asks for ten minutes at the latest (MU300_LED_TICK_HINT_MAX=600): it looks every 90 s by itself.
 # (MU300_SYSROOT, MU300_BIN and MU300_LED_CONF are for tests/: a fake /, this directory, a led.conf)
 R=${MU300_SYSROOT:-}
 LEDS=$R/sys/class/leds
 STATE=$R/run/mu300/led
-DEVICE=$(${MU300_BIN:-/opt/mu300/bin}/mu300-device)
+# rd FILE: its first line into v (- when it cannot be read), by the shell itself
+rd() { v=-; { read -r v < "$1"; } 2>/dev/null; }
+# The device: boot/init's label, when it says u30air (mu300-device answers that label as it is: its V50 rule is about
+# the f50 and v50 labels), else mu300-device - a script of its own, 2 ms, at every run of this one (mobile-data runs
+# it every 30 s)
+rd "$R/run/mu300/device"; DEVICE=$v
+[ "$DEVICE" = u30air ] || DEVICE=$(${MU300_BIN:-/opt/mu300/bin}/mu300-device)
 
 # ZTE V50 (experimental; kano's mapping, read from its Android driver and lit one group at a time, FINDINGS 95): an
 #   AW9523B on I2C3 drives three lamps, each white, blue and red (mainline's leds-aw9523b, port/drivers/leds):
@@ -60,7 +73,7 @@ DEVICE=$(${MU300_BIN:-/opt/mu300/bin}/mu300-device)
 #   the V50 has no driver for them: every LED is skipped.
 BY_SIM=0
 V50_NET=net2
-[ "$(cat "$R/run/mu300/sim-slot" 2>/dev/null)" != 1 ] || V50_NET=net1
+rd "$R/run/mu300/sim-slot"; [ "$v" != 1 ] || V50_NET=net1
 case $DEVICE in
     u30air) POWER=sc27xx:green DATA=net_blue DATA5G=zte-ldo0 NODATA=keyboard-backlight WIFI5=zte-ldo1 WIFI24=zte-ldo2
             DEFAULT_TIMEOUT=60 BY_SIM=1 ;;   # DATA is slot 1's colour here, DATA5G slot 0's (BY_SIM)
@@ -79,17 +92,24 @@ SIREN_PID=$R/run/mu300/led-siren.pid
 BATTERY_LED=
 [ "$DEVICE" != u30air ] || { BATTERY_LED=1; POWER=; }
 PSY=$R/sys/class/power_supply
-TIMEOUT=$(sed -n 's/^LED_TIMEOUT=\([0-9][0-9]*\)$/\1/p' "${MU300_LED_CONF:-/etc/mu300/led.conf}" 2>/dev/null | tail -n1)
+# the last line that is LED_TIMEOUT=DIGITS
+TIMEOUT=
+if [ -r "${MU300_LED_CONF:-/etc/mu300/led.conf}" ]; then
+    while IFS= read -r l || [ -n "$l" ]; do
+        case $l in LED_TIMEOUT=*) v=${l#LED_TIMEOUT=}; case $v in ''|*[!0-9]*) ;; *) TIMEOUT=$v ;; esac ;; esac
+    done < "${MU300_LED_CONF:-/etc/mu300/led.conf}"
+fi
 TIMEOUT=${TIMEOUT:-$DEFAULT_TIMEOUT}
 
-uptime_s() { cut -d. -f1 "$R/proc/uptime" 2>/dev/null || echo 0; }
+uptime_s() { now; echo "$now"; }
+now() { now=0; { read -r now _ < "$R/proc/uptime"; } 2>/dev/null; now=${now%%.*}; }   # the uptime in now
 before() {  # before FILE: the uptime in FILE has not come yet
-    until=$(cat "$1" 2>/dev/null) || return 1
+    until=; { read -r until < "$1"; } 2>/dev/null
     case $until in ''|*[!0-9]*) return 1 ;; esac
-    [ "$(uptime_s)" -lt "$until" ]
+    now; [ "$now" -lt "$until" ]
 }
 # on outside power (the U30 Air's charger) nothing times out, as under ZTE's firmware
-plugged() { [ "$(cat "$STATE/.plugged" 2>/dev/null)" = 1 ]; }
+plugged() { rd "$STATE/.plugged"; [ "$v" = 1 ]; }
 awake() { [ "$TIMEOUT" = 0 ] || plugged || before "$STATE/.awake-until"; }
 vendor_ldo() {  # vendor_ldo zte-ldoN: the 5.4 kernel's switch for that LDO, if there
     case $1 in zte-ldo[0-9]) ;; *) return 1 ;; esac
@@ -102,7 +122,10 @@ idle() { [ -e "$STATE/.idle" ]; }   # mu300-power's idle: dark, whatever the tim
 shown() { if idle; then before "$STATE/.peek-until"; else awake; fi; }
 has_led() { [ -e "$LEDS/$1" ] || vendor_ldo "$1" >/dev/null; }
 level() {  # level NAME: its brightness when lit (ZTE lights the F50's Wi-Fi LED at 48: a low-current sink)
-    case $DEVICE:$1 in f50:keyboard-backlight) echo 48 ;; *) cat "$LEDS/$1/max_brightness" 2>/dev/null ;; esac
+    case $DEVICE:$1 in
+        f50:keyboard-backlight) echo 48 ;;
+        *) rd "$LEDS/$1/max_brightness"; [ "$v" = - ] || echo "$v" ;;
+    esac
 }
 write() {  # write NAME 0|1|blink: the LED itself (blink: the timer trigger, 0.5 s on, 0.5 s off; steady without one)
     if [ "$2" = blink ]; then
@@ -122,15 +145,15 @@ write() {  # write NAME 0|1|blink: the LED itself (blink: the timer trigger, 0.5
 set_led() {  # set_led NAME 0|1|blink: what it should show; lit only while awake
     [ -n "$1" ] || return 0
     has_led "$1" || return 0
-    mkdir -p "$STATE" 2>/dev/null && echo "$2" > "$STATE/$1" 2>/dev/null
+    { [ -d "$STATE" ] || mkdir -p "$STATE" 2>/dev/null; } && echo "$2" > "$STATE/$1" 2>/dev/null
     if [ "$2" != 0 ] && ! shown; then write "$1" 0; else write "$1" "$2"; fi
 }
 # The U30 Air's network LED by the SIM in use (FINDINGS 154). The slot is this boot's pin, the file the AT daemons
 # and mobile-data read too; it is never created here (that would pin a slot before mu300-atd chose one). A 1 counts
 # only where slot 1 is supported (the U30 Air on OpenWrt, as mu300-sim says): anywhere else every reader uses slot 0.
 sim_slot() {
-    s=$(cat "$R/run/mu300/sim-slot" 2>/dev/null)
-    if [ "$s" = 1 ] && [ -e "$R/etc/openwrt_release" ]; then echo 1; else echo 0; fi
+    rd "$R/run/mu300/sim-slot"
+    if [ "$v" = 1 ] && [ -e "$R/etc/openwrt_release" ]; then echo 1; else echo 0; fi
 }
 sim_led() { if [ "$1" = 1 ]; then echo "$DATA"; else echo "$DATA5G"; fi; }   # sim_led SLOT: its colour
 network() {  # network NAME|'' VALUE: NAME shows VALUE, the network LED's other colours go dark
@@ -157,35 +180,41 @@ show_all() {  # every LED as it should be (none while idle, unless a key woke th
     shown || return 0
     for f in "$STATE"/*; do
         [ -f "$f" ] || continue
-        write "${f##*/}" "$(cat "$f")"
+        rd "$f"; write "${f##*/}" "$v"
     done
 }
-siren_running() { p=$(cat "$SIREN_PID" 2>/dev/null) && [ -n "$p" ] && kill -0 "$p" 2>/dev/null; }
+siren_running() { rd "$SIREN_PID"; p=$v; [ "$p" != - ] && [ -n "$p" ] && kill -0 "$p" 2>/dev/null; }
 
 # --- the U30 Air's battery LED (FINDINGS 151): ZTE's services.jar ZteBatteryService and its lights HAL
 # ZTE's levels: white (the green channel) 120, blue 200, red 150 of 255
 battery_level() { case $1 in green) echo 120 ;; blue) echo 200 ;; red) echo 150 ;; esac; }
-# battery_read: "COLOUR MODE LOW PLUGGED" from the fuel gauge (mainline sc27xx-fgu, the 5.4 kernel's "battery") and
-# the charger (bq256xx-charger, or the 5.4 kernel's usb/ac); nothing without a capacity
+# battery_read: "COLOUR MODE LOW PLUGGED" into _br from the fuel gauge (mainline sc27xx-fgu, the 5.4 kernel's "battery")
+# and the charger (bq256xx-charger, or the 5.4 kernel's usb/ac); false without a capacity. Every file it reads goes
+# into the tick's hint with what it held (hint_in), the ones that are not there as "-".
+HINT_IN=
+hint_in() { HINT_IN="$HINT_IN$1 $v
+"; }   # hint_in FILE: FILE held $v (rd FILE just before)
 battery_read() {
     _b=
     for _d in "$PSY/sc27xx-fgu" "$PSY/battery"; do [ -r "$_d/capacity" ] && { _b=$_d; break; }; done
     [ -n "$_b" ] || return 1
-    _cap=$(cat "$_b/capacity" 2>/dev/null); _st=$(cat "$_b/status" 2>/dev/null)
+    rd "$_b/capacity"; hint_in "$_b/capacity"; _cap=$v
+    rd "$_b/status"; hint_in "$_b/status"; _st=$v
     case $_cap in ''|*[!0-9]*) return 1 ;; esac
     # outside power: the charger's online flag, when there is one. The gauge says "Charging" for a while after
     # an unplug (kano saw it), so its status alone counts only where no charger says anything
     _on=
     for _d in "$PSY/bq256xx-charger" "$PSY/usb" "$PSY/ac"; do
-        _o=$(cat "$_d/online" 2>/dev/null) || continue
-        [ "$_o" = 1 ] && { _on=1; break; }
+        rd "$_d/online"; hint_in "$_d/online"
+        [ "$v" != - ] || continue
+        [ "$v" = 1 ] && { _on=1; break; }
         _on=0
     done
     [ -n "$_on" ] || case $_st in Charging|Full) _on=1 ;; *) _on=0 ;; esac
     if [ "$_cap" -ge 60 ]; then _col=green; elif [ "$_cap" -ge 10 ]; then _col=blue; else _col=red; fi
     _mode=steady; [ "$_on" = 1 ] && [ "$_st" = Charging ] && _mode=breathe
     _low=0; [ "$_on" = 0 ] && [ "$_cap" -lt 10 ] && _low=1
-    echo "$_col $_mode $_low $_on"
+    _br="$_col $_mode $_low $_on"
 }
 # battery_show: the three channels as .battery says, lit while the LEDs are shown (and, below 10 % on the battery,
 # always); written only when that changes, so the breathing is not restarted every tick. The heat alarm's siren
@@ -197,7 +226,8 @@ battery_show() {
     [ ! -r "$STATE/.battery" ] || read -r _bc _bm _bl < "$STATE/.battery"
     _bw=off
     if [ -n "$_bc" ] && [ ! -e "$STATE/.battery-off" ] && { [ "$_bl" = 1 ] || shown; }; then _bw="$_bc $_bm"; fi
-    [ "$_bw" != "$(cat "$STATE/.battery-shown" 2>/dev/null)" ] || return 0
+    v=; { read -r v < "$STATE/.battery-shown"; } 2>/dev/null
+    [ "$_bw" != "$v" ] || return 0
     for _c in red green blue; do
         [ -w "$LEDS/sc27xx:$_c/brightness" ] || continue
         if [ "$_bw" = "$_c steady" ]; then write_level "sc27xx:$_c" "$(battery_level $_c)"
@@ -236,16 +266,53 @@ breathe() {
 # 15 s after an unplug; LED_TIMEOUT here); plugged in: everything lit, and it stays lit.
 battery_update() {
     [ -n "$BATTERY_LED" ] || return 0
-    _now=$(battery_read) || return 0
-    mkdir -p "$STATE" 2>/dev/null || return 0
-    _was=$(cat "$STATE/.plugged" 2>/dev/null)
-    _p=${_now##* }
+    battery_read || return 0
+    [ -d "$STATE" ] || mkdir -p "$STATE" 2>/dev/null || return 0
+    rd "$STATE/.plugged"; _was=$v
+    _p=${_br##* }
     echo "$_p" > "$STATE/.plugged"
-    echo "${_now% *}" > "$STATE/.battery"
+    echo "${_br% *}" > "$STATE/.battery"
     if [ "$_was" = 1 ] && [ "$_p" = 0 ] && [ "$TIMEOUT" != 0 ]; then
-        echo $(( $(uptime_s) + TIMEOUT )) > "$STATE/.awake-until"
+        now; echo $(( now + TIMEOUT )) > "$STATE/.awake-until"
     fi
     if [ "$_p" = 1 ] && [ "$_was" != 1 ]; then show_all; else battery_show; fi
+}
+# leds_sleep [--if-due]: dark now, or (--if-due, the tick) only once the timeout has passed
+leds_sleep() {
+    if idle; then   # a key's wake in idle: dark again once it is over
+        if [ "${1:-}" = --if-due ] && shown; then return 0; fi
+        [ -e "$STATE/.peek-until" ] || [ "${1:-}" != --if-due ] || return 0   # dark already
+        rm -f "$STATE/.peek-until"
+    else
+        [ "$TIMEOUT" = 0 ] && return 0
+        if [ "${1:-}" = --if-due ] && awake; then return 0; fi
+        [ -e "$STATE/.awake-until" ] || [ "${1:-}" != --if-due ] || return 0   # dark already
+    fi
+    rm -f "$STATE/.awake-until"
+    for f in "$STATE"/*; do [ -f "$f" ] && write "${f##*/}" 0; done
+    battery_show
+}
+# tick_hint: what the next tick depends on, for mu300-buttons (see the top): "due UPTIME", then "FILE VALUE" lines
+# (the battery's files battery_read saw, the state files here, the siren's pid file). The due time is when a timeout
+# runs out (.peek-until in idle; .awake-until while the LEDs time out and the device is not on outside power; a value
+# that is not a number: now), and a minute from now at the latest, so whatever this does not foresee is still caught.
+TICK_HINT_MAX=${MU300_LED_TICK_HINT_MAX:-60}
+tick_hint() {
+    [ -d "$STATE" ] || return 0
+    _hi=$HINT_IN
+    for _h in .plugged .battery .battery-shown .battery-off .idle .peek-until .awake-until; do
+        rd "$STATE/$_h"; _hi="$_hi$STATE/$_h $v
+"
+        case $_h in .idle) _idle=$v ;; .peek-until) _peek=$v ;; .awake-until) _awake=$v ;; .plugged) _plg=$v ;; esac
+    done
+    rd "$SIREN_PID"; _hi="$_hi$SIREN_PID $v
+"
+    now; _due=$((now + TICK_HINT_MAX))
+    if [ "$_idle" != - ]; then _u=$_peek
+    elif [ "$TIMEOUT" = 0 ] || [ "$_plg" = 1 ]; then _u=-
+    else _u=$_awake; fi
+    case $_u in -) ;; ''|*[!0-9]*) _due=0 ;; *) [ "$_u" -ge "$_due" ] || _due=$_u ;; esac
+    printf 'due %s\n%s' "$_due" "$_hi" > "$STATE/.tick-hint" 2>/dev/null
 }
 nap() { sleep "$1" 2>/dev/null || sleep 1; }   # (a busybox without fractional sleep)
 
@@ -255,7 +322,7 @@ case "$1 ${2:-}" in
     "power off")  set_led "$POWER" 0
                   [ -z "$BATTERY_LED" ] || { mkdir -p "$STATE" 2>/dev/null; : > "$STATE/.battery-off"; battery_show; } ;;
     "battery "*)  battery_update ;;
-    "tick "*)     battery_update; exec "$0" sleep --if-due ;;
+    "tick "*)     battery_update; leds_sleep --if-due; tick_hint ;;
     "data on"|"data 5g")
         rm -f "$STATE/.switch-to"
         if [ "$BY_SIM" = 1 ]; then network "$(sim_led "$(sim_slot)")" 1
@@ -301,26 +368,14 @@ case "$1 ${2:-}" in
         } ;;
     "wake "*)
         mkdir -p "$STATE" 2>/dev/null
-        now=$(uptime_s)
+        now
         if idle; then   # idle: lit for the timeout all the same (a minute where there is none), then dark again
             t=$TIMEOUT; [ "$t" != 0 ] || t=60
             echo $((now + t)) > "$STATE/.peek-until"
         fi
         [ "$TIMEOUT" = 0 ] || echo $((now + TIMEOUT)) > "$STATE/.awake-until"
         show_all ;;
-    "sleep "*)
-        if idle; then   # a key's wake in idle: dark again once it is over
-            if [ "${2:-}" = --if-due ] && shown; then exit 0; fi
-            [ -e "$STATE/.peek-until" ] || [ "${2:-}" != --if-due ] || exit 0   # dark already
-            rm -f "$STATE/.peek-until"
-        else
-            [ "$TIMEOUT" = 0 ] && exit 0
-            if [ "${2:-}" = --if-due ] && awake; then exit 0; fi
-            [ -e "$STATE/.awake-until" ] || [ "${2:-}" != --if-due ] || exit 0   # dark already
-        fi
-        rm -f "$STATE/.awake-until"
-        for f in "$STATE"/*; do [ -f "$f" ] && write "${f##*/}" 0; done
-        battery_show ;;
+    "sleep "*)    leds_sleep "${2:-}" ;;
     "idle on")
         mkdir -p "$STATE" 2>/dev/null
         : > "$STATE/.idle"
@@ -363,7 +418,7 @@ case "$1 ${2:-}" in
         # The file is written just after the start, so a missing one counts only after the first round.
         n=0
         while :; do
-            own=$(cat "$SIREN_PID" 2>/dev/null)
+            rd "$SIREN_PID"; own=$v; [ "$own" != - ] || own=
             if [ -n "$own" ]; then [ "$own" = $$ ] || exit 0
             elif [ $n -gt 0 ]; then exit 0; fi
             n=$((n + 1))

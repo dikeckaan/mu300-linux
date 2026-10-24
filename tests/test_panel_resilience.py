@@ -253,7 +253,7 @@ class CellDeadline(ShellTest):
         # the page's live signal read has 14 s (mu300dash; a normal round is about 1 s, and about 7 s where mu300-atd
         # drains a whole second per command), a background fast round 12, a full one 25
         src = CELL.read_text()
-        self.assertIn('[ "$MODE" = fast ] && MU300_DASH_DEADLINE=12 || MU300_DASH_DEADLINE=25', src)
+        self.assertIn("((MODE == 'fast') ? 12 : 25)", src)   # the collector is a ucode program (FINDINGS 216)
         dash = sec.DASH.read_text()
         self.assertIn('SIGNAL_DEADLINE=14', dash)
         self.assertIn('MU300_DASH_DEADLINE=$SIGNAL_DEADLINE', dash)

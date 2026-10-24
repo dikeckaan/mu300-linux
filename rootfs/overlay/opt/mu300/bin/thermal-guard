@@ -1,5 +1,5 @@
 #!/bin/sh
-# Thermal safety. Reads the hottest thermal zone every 5 s.
+# Thermal safety. Reads the hottest thermal zone every 5 s near its thresholds, less often further away (below).
 #   * Every kernel is asked the same question, the vendor 5.4 one too: does an enabled zone with a passive trip have
 #     every cpufreq cooling device bound? Where it does (5.4's sprd_cpu_cooling on its soc-thmzone, 70/85/110 C, when it
 #     binds; mainline with mu300_thermal) this guard only watches; where it does not, it caps. 5.4 was exempt by its
@@ -21,6 +21,13 @@
 # On every kernel: the SoC at HOT or (U30 Air) the battery at BATT_HOT (tenths of a degree, as power_supply reports it) sets
 # off the LED alarm (mu300-led alarm: red, white and blue in turn), until the SoC is down to COOL and the battery to
 # BATT_COOL.
+# How often (FINDINGS 215): every 5 s near a threshold, and while a cap of this guard or the alarm is on; further from
+# them a second more for every 2 C the SoC is under HOT (and for every 1 C the battery is under BATT_HOT), up to 30 s
+# while the kernel throttles by itself (its passive trips at 70 and 85 C act whatever this guard does) and up to 10 s
+# where this guard is the thermal policy. At 50 C that is a look every 22 s instead of every 5 s. A round reads the
+# zones with the shell's own read, no process (it used to start a dozen: cat and subshells, 26 ticks a minute).
+# On OpenWrt with /etc/mu300/sysd, mu300-sysd runs these rounds instead (FINDINGS 217); tests/test_sysd.py runs this
+# script's tests against it. A change here belongs there too.
 HOT=${MU300_THERMAL_HOT:-85000}
 COOL=${MU300_THERMAL_COOL:-75000}
 CRIT=${MU300_THERMAL_CRIT:-105000}
@@ -34,23 +41,32 @@ LED=${MU300_BIN:-/opt/mu300/bin}/mu300-led
 # the kernel, for the log only: what this guard does is decided by the zones it finds, on every kernel (#229)
 release=$(cat "$R/proc/sys/kernel/osrelease" 2>/dev/null || uname -r)
 
+# hottest: the hottest zone's reading, into t (the functions here set variables: a $( ) is a process of its own)
 hottest() {
-    local max=0 t
+    local z v
+    t=0
     for z in "$R"/sys/class/thermal/thermal_zone*/temp; do
-        read -r t < "$z" 2>/dev/null || continue
-        [ "$t" -gt "$max" ] 2>/dev/null && max=$t
+        { read -r v < "$z"; } 2>/dev/null || continue
+        [ "$v" -gt "$t" ] 2>/dev/null && t=$v
     done
-    echo "$max"
 }
 DEVICE=$(${MU300_BIN:-/opt/mu300/bin}/mu300-device)
-battery() {  # the battery's temperature in tenths of a degree; the U30 Air only
-    local b t
+# battery: the battery's temperature in tenths of a degree, into b (empty without one); the U30 Air only. The supply
+# that is the battery is looked for again only when its reading fails.
+battery_dir=
+battery() {
+    local d k
+    b=
     # The F50 has no battery, but under mainline the PMIC's fuel gauge probes on it too and reports one, at a
     # temperature read from an unconnected NTC input (750: 75 C): the alarm went on at every boot and never off.
     [ "$DEVICE" = u30air ] || return 0
-    for b in "$R"/sys/class/power_supply/*; do
-        [ "$(cat "$b/type" 2>/dev/null)" = Battery ] || continue
-        read -r t < "$b/temp" 2>/dev/null && [ -n "$t" ] && { echo "$t"; return; }
+    if [ -n "$battery_dir" ] && { read -r b < "$battery_dir/temp"; } 2>/dev/null && [ -n "$b" ]; then return 0; fi
+    b= battery_dir=
+    for d in "$R"/sys/class/power_supply/*; do
+        k=; { read -r k < "$d/type"; } 2>/dev/null
+        [ "$k" = Battery ] || continue
+        { read -r b < "$d/temp"; } 2>/dev/null && [ -n "$b" ] && { battery_dir=$d; return 0; }
+        b=
     done
 }
 
@@ -58,10 +74,11 @@ battery() {  # the battery's temperature in tenths of a degree; the U30 Air only
 # or below HOT has every cpufreq cooling device bound to it (the cooling maps of the stock soc-thmzone, through
 # mu300_thermal) and reads a temperature that is a number and within 15 C of HOTTEST, the hottest reading this guard
 # saw this round (a zone whose sensor fails reads nothing, a stale or zero reading is far below the die: the kernel
-# would not throttle, so this guard does). Prints that zone's type. No zone, a zone that is off, a cluster left out or
-# a reading that is not to be trusted: no, and this guard caps. Decided again every round.
+# would not throttle, so this guard does). That zone's type goes into native. No zone, a zone that is off, a cluster
+# left out or a reading that is not to be trusted: no (native empty), and this guard caps. Decided again every round.
 native_cpu_cooling() {
-    local z d l kind mode n found zt tp i
+    local z d l kind mode n found zt tp i tt
+    native=
     n=0
     for d in "$R"/sys/class/thermal/cooling_device*; do
         read -r kind < "$d/type" 2>/dev/null || continue
@@ -72,7 +89,8 @@ native_cpu_cooling() {
         read -r mode < "$z/mode" 2>/dev/null && [ "$mode" = enabled ] || continue
         tp=
         for i in "$z"/trip_point_*_type; do
-            [ "$(cat "$i" 2>/dev/null)" = passive ] || continue
+            tt=; { read -r tt < "$i"; } 2>/dev/null
+            [ "$tt" = passive ] || continue
             read -r tp < "${i%_type}_temp" 2>/dev/null || tp=
             case $tp in ''|*[!0-9]*) tp= ;; *) [ "$tp" -le "$HOT" ] && break; tp= ;; esac
         done
@@ -89,7 +107,10 @@ native_cpu_cooling() {
                 [ "$l" -ef "$d" ] && { found=$((found + 1)); break; }
             done
         done
-        [ "$found" = "$n" ] && { cat "$z/type"; return 0; }
+        if [ "$found" = "$n" ]; then
+            { read -r native < "$z/type"; } 2>/dev/null
+            return 0
+        fi
     done
     return 1
 }
@@ -98,11 +119,17 @@ native_cpu_cooling() {
 # scaling_max_freq a step at a time, but never above that ceiling, so a user's "saving" profile is not undone by the
 # cooling path. No line, or no file, means the hardware maximum (cpuinfo_max_freq), the old behaviour.
 CEILING=$R/run/mu300/cpu-ceiling
-ceiling() {  # ceiling POLICYDIR: the user ceiling in Hz for this policy, or its cpuinfo_max_freq
-    local name=${1##*/} v=
-    [ -r "$CEILING" ] && v=$(sed -n "s/^$name=//p" "$CEILING" | tail -n1)
-    case $v in ''|*[!0-9]*) cat "$1/cpuinfo_max_freq" 2>/dev/null ;; *) echo "$v" ;; esac
+# ceiling_of POLICYDIR: the user ceiling in Hz for this policy (its last line), or its cpuinfo_max_freq, into ceil
+ceiling_of() {
+    local name=${1##*/} v= l
+    if [ -r "$CEILING" ]; then
+        while IFS= read -r l || [ -n "$l" ]; do
+            case $l in "$name="*) v=${l#"$name="} ;; esac
+        done < "$CEILING"
+    fi
+    case $v in ''|*[!0-9]*) ceil=; { read -r ceil < "$1/cpuinfo_max_freq"; } 2>/dev/null ;; *) ceil=$v ;; esac
 }
+ceiling() { ceiling_of "$1"; [ -z "$ceil" ] || echo "$ceil"; }
 
 # step POLICY DIR (-1 lower, +1 higher): move scaling_max_freq to the neighbouring available frequency, never above
 # the user ceiling when raising
@@ -136,23 +163,68 @@ lift_caps() {  # every policy back to its ceiling, when this guard holds a cap f
     rm -f "$CAPPED"
 }
 raise_caps() {  # every policy one step up towards its ceiling; the marker goes when none is below it
-    local p below=0
+    local p below=0 cur max ceil
     for p in "$R"/sys/devices/system/cpu/cpufreq/policy*; do
-        [ "$(cat $p/scaling_max_freq)" -lt "$(cat $p/cpuinfo_max_freq)" ] && step "$p" 1
-        [ "$(cat $p/scaling_max_freq)" -lt "$(ceiling "$p")" ] && below=1
+        cur= max=; { read -r cur < "$p/scaling_max_freq"; read -r max < "$p/cpuinfo_max_freq"; } 2>/dev/null
+        [ "$cur" -lt "$max" ] 2>/dev/null && step "$p" 1
+        cur=; { read -r cur < "$p/scaling_max_freq"; } 2>/dev/null
+        ceiling_of "$p"
+        [ "$cur" -lt "$ceil" ] 2>/dev/null && below=1
     done
-    [ "$below" = 1 ] || rm -f "$CAPPED"
+    [ "$below" = 1 ] || [ ! -e "$CAPPED" ] || rm -f "$CAPPED"
 }
 
 # the alarm's state outlives a restart of this service, so a cooled device is never left flashing
 ALARM=$R/run/mu300/thermal-alarm
+
+# next_look: the seconds to the next round, into gap (see the top): 5 near a threshold or while a cap or the alarm of
+# this guard is on, a second more per 2 C under HOT (per 1 C of the battery under BATT_HOT), up to MAX_WAIT (30 s) while
+# the kernel throttles itself, MAX_WAIT_ALONE (10 s) where this guard is the thermal policy
+WAIT=${MU300_THERMAL_INTERVAL:-5}
+MAX_WAIT=${MU300_THERMAL_MAX_INTERVAL:-30}
+MAX_WAIT_ALONE=${MU300_THERMAL_MAX_INTERVAL_ALONE:-10}
+next_look() {
+    local w wb
+    gap=$WAIT
+    [ ! -e "$ALARM" ] && [ ! -e "$CAPPED" ] || return 0
+    w=$(( WAIT + (HOT - t) / 2000 ))
+    case $b in ''|-|*[!0-9-]*|?*-*) ;; *) wb=$(( WAIT + (BATT_HOT - b) / 10 )); [ "$wb" -ge "$w" ] || w=$wb ;; esac
+    if [ "$throttle" = 1 ]; then [ "$w" -le "$MAX_WAIT_ALONE" ] || w=$MAX_WAIT_ALONE
+    else [ "$w" -le "$MAX_WAIT" ] || w=$MAX_WAIT; fi
+    [ "$w" -le "$WAIT" ] || gap=$w
+}
+# The wait: where the shell's read takes a timeout (busybox ash, bash), on a fifo nobody writes to, opened read-write so
+# it never ends either - no sleep process per round; else sleep (dash). The wait's timer may fire up to half a second
+# late, so the kernel can serve the timers of several daemons with one wakeup; what this starts (the siren) keeps the
+# default timer slack.
+wait_for() { sleep "$1"; }
+slack=
+if [ -z "$R" ]; then
+    { read -r slack < /proc/$$/timerslack_ns; } 2>/dev/null || slack=
+    nap_d=$(mktemp -d "${TMPDIR:-/tmp}/thermal-guard.XXXXXX" 2>/dev/null) || nap_d=
+    if [ -n "$nap_d" ] && mkfifo "$nap_d/wait" 2>/dev/null; then
+        exec 9<>"$nap_d/wait"
+        if { read -t 0 _n <&9; [ $? = 1 ]; } 2>/dev/null; then
+            wait_for() { read -t "$1" _n <&9 || :; }
+        else
+            exec 9<&-
+        fi
+    fi
+    [ -z "$nap_d" ] || rm -rf "$nap_d"
+fi
+nap() {
+    [ -z "$slack" ] || { echo 500000000 > /proc/$$/timerslack_ns; } 2>/dev/null
+    wait_for "$1"
+    [ -z "$slack" ] || { echo "$slack" > /proc/$$/timerslack_ns; } 2>/dev/null
+}
+
 native_was=
 first=1
 while :; do
-    t=$(hottest)
-    b=$(battery)
+    hottest
+    battery
     throttle=0
-    native=$(native_cpu_cooling "$t") || native=
+    native_cpu_cooling "$t" || native=
     if [ -n "$native" ]; then
         if [ "$native" != "$native_was" ]; then
             logger -t thermal-guard "kernel thermal zone $native throttles the CPUs: watching only, power-off at ${CRIT} mC stays"
@@ -192,12 +264,13 @@ while :; do
     if [ ! -e "$ALARM" ] && { [ "$t" -ge "$HOT" ] || [ "${b:-0}" -ge "$BATT_HOT" ]; }; then
         mkdir -p "${ALARM%/*}" && : > "$ALARM"
         logger -t thermal-guard "too hot (SoC ${t} mC, battery ${b:--} dC): LED alarm on"
-        "$LED" alarm on
+        "$LED" alarm on 9<&-   # (the siren it starts lives on: no copy of the wait's fifo)
     elif [ -e "$ALARM" ] && [ "$t" -le "$COOL" ] && [ "${b:-0}" -le "$BATT_COOL" ]; then
         rm -f "$ALARM"
         logger -t thermal-guard "cooled down (SoC ${t} mC, battery ${b:--} dC): LED alarm off"
         "$LED" alarm off
     fi
-    [ -n "$R" ] && exit 0
-    sleep 5
+    next_look
+    [ -n "$R" ] && { echo "next look in $gap s" >&2; exit 0; }
+    nap "$gap"
 done

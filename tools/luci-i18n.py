@@ -22,6 +22,10 @@ Messages are English and come from:
         (mu300vpn); single or double quotes, no $ or `
         inside double quotes. A helper called with a non-literal message is an error, except in BACKEND_DYNAMIC_OK.
       - a comment line '# i18n: Text', for a message the code builds or passes through a variable.
+    and the ucode ones (a #!/usr/bin/ucode program there, root/usr/share/rpcd/ucode/*.uc, root/usr/share/ucode/**/*.uc):
+      - a literal "error" or "message" key of an object, quoted or not: { ok: 0, error: 'Text' }; any other value
+        is an error unless the line is right after '// i18n: Text' line(s);
+      - a comment line '// i18n: Text'.
   * N_() is an error: the app has no plural messages (tools/po2lmo.py refuses msgid_plural).
 
 The problems `check` prints, one per line as RULE: PATH:LINE: WHAT (spec, Translations):
@@ -284,6 +288,53 @@ SH_PLAIN_VALUE = re.compile(r'"((?:[^"\\]|\\.)*)"')
 SH_ESCAPED_VALUE = re.compile(r'\\"((?:[^"\\]|\\[^"])*)\\"')
 SH_CONST = re.compile(r'(?:null|true|false|-?\d)')
 CONVERSION = re.compile(r'%(?!%)')
+# the same in a ucode backend (FINDINGS 216: the collector, the snapshot module, rpcd's mu300status): an "error" or
+# "message" key of an object the code builds, quoted or not (error: 'Text', "message": "Text"), and '// i18n: Text'
+UC_I18N = re.compile(r'^\s*// i18n: (.+?)\s*$')
+UC_KEY = re.compile(r'''(?<![\w$.])["']?(?:error|message)["']?\s*:(?!:)\s*''')
+UC_VALUE = re.compile(r''''((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"''')
+UC_ESCAPE = re.compile(r'''\\(u[0-9a-fA-F]{4}|.)''')
+
+
+def _uc_string(body):
+    """The value of a ucode string literal's body (its escapes: \\n \\t \\uXXXX, and a backslash before anything
+    else is that character)."""
+    def esc(x):
+        c = x.group(1)
+        return {'n': '\n', 't': '\t', 'r': '\r'}.get(c, chr(int(c[1:], 16)) if len(c) == 5 else c)
+    return UC_ESCAPE.sub(esc, body)
+
+
+def is_ucode(path):
+    if path.suffix == '.uc':
+        return True
+    try:
+        with open(path, 'rb') as f:
+            return f.readline().startswith(b'#!/usr/bin/ucode')
+    except OSError:
+        return False
+
+
+def _backend_uc(m, path, rel):
+    """A ucode backend file: its literal messages; a non-literal one needs a '// i18n:' line right above it."""
+    covered = False
+    for start, line in enumerate(path.read_text(encoding='utf-8', errors='replace').split('\n'), 1):
+        c = UC_I18N.match(line)
+        if c:
+            m.add(c.group(1), rel, start)
+            covered = True
+            continue
+        if not line.strip() or line.lstrip().startswith('//'):
+            continue
+        for x in UC_KEY.finditer(line):
+            rest = line[x.end():]
+            v = UC_VALUE.match(rest)
+            if v:
+                m.add(_uc_string(v.group(1) if v.group(1) is not None else v.group(2)), rel, start)
+            elif not SH_CONST.match(rest) and not covered:
+                m.problem('dynamic', rel, start, f'a non-literal error/message ({rest[:30].strip()}) without a '
+                          '"// i18n:" line above it')
+        covered = False
 
 
 def _sh_literal(word):
@@ -380,10 +431,14 @@ def extract(root, base=None):
             elif arg not in DYNAMIC_OK:
                 m.problem('dynamic', rel(p), _line(src, off), f'_({arg}) is not one string literal')
     backend = [root / 'root/usr/libexec/rpcd/mu300dash', root / 'root/usr/libexec/rpcd/mu300vpn'] + \
-        sorted(root.glob('root/usr/libexec/unisoc-modem/*'))
+        sorted(root.glob('root/usr/libexec/unisoc-modem/*')) + \
+        sorted(root.glob('root/usr/share/rpcd/ucode/*.uc')) + sorted(root.glob('root/usr/share/ucode/**/*.uc'))
     for p in backend:
         if p.is_file():
-            _backend(m, p, rel(p), p.name)
+            if is_ucode(p):
+                _backend_uc(m, p, rel(p))
+            else:
+                _backend(m, p, rel(p), p.name)
     return m
 
 

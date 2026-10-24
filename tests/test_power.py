@@ -1,6 +1,7 @@
 """mu300-power: profiles, idle radios and the charging boot, against a fake / (MU300_SYSROOT), a fake /run and
 stub commands. The spec is docs/superpowers/specs/2026-10-06-power-profiles-design.md."""
 import os
+import shutil
 import unittest
 
 from helpers import ShellTest, BIN, TOP
@@ -436,6 +437,122 @@ class Daemon(DaemonTest):
             self.loops(shell)
             self.assertEqual(self.state(), 'active')
             self.assertIn('station', (self.run_dir / 'mu300/power/reason').read_text())
+
+    # --- FINDINGS 215: what a loop costs
+    def daemon_in(self, shell, loops, **env):
+        """the daemon under SHELL itself (not its #! line), LOOPS loops"""
+        r = self.script(shell, POWER, 'daemon', MU300_SYSROOT=self.root, MU300_RUN=self.run_dir,
+                        MU300_POWER_CONF=self.conf, MU300_POWER_INTERVAL=0, MU300_POWER_LOOPS=loops, **env)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return r
+
+    def test_the_stations_and_the_hotspot_are_asked_every_sixth_loop(self):
+        for shell in self.each_shell():
+            self.setUp()
+            self.stub('ubus', 'echo "ubus $*" >> "$STUBLOG/calls"; [ -e "$STUBLOG/ap-up" ]')
+            self.charger(online=1)                       # plugged: WIFI_IDLE=0, the self-check looks at the hotspot
+            self.stations(1)
+            self.uptime(600)
+            self.daemon_in(shell, 7)
+            c = self.calls().splitlines()
+            self.assertEqual(len([l for l in c if l.startswith('iw ')]), 2, c)          # loops 1 and 7
+            self.assertEqual(len([l for l in c if l.startswith('ubus ')]), 2, c)
+            self.assertEqual(self.state(), 'active')
+            # a hotspot whose interface is gone is looked at in the very next loop
+            (self.tmp / 'calls').unlink()
+            (self.root / 'sys/class/net/wlan0').rmdir()
+            self.daemon_in(shell, 3)
+            self.assertEqual(len([l for l in self.calls().splitlines() if l.startswith('ubus ')]), 3)
+
+    def test_the_idle_timer_asks_the_stations_before_it_runs_out(self):
+        """Between two looks at the stations the timer may run out: they are asked then, and a client that came since
+        keeps the hotspot up. (The iw stub moves the uptime on by 61 s, so the second loop finds the timer out.)"""
+        for shell in self.each_shell():
+            for n, want in ((1, 'active'), (0, 'idle')):
+                with self.subTest(stations=n):
+                    self.setUp()
+                    self.stub('iw', 'echo "iw $*" >> "$STUBLOG/calls"; cat "$STUBLOG/stations" 2>/dev/null\n'
+                                    'read -r u _ < "$MU300_SYSROOT/proc/uptime"; u=${u%%.*}\n'
+                                    'echo "$((u + 61)).00 0.00" > "$MU300_SYSROOT/proc/uptime"')
+                    self.write_conf('battery_WIFI_IDLE=1\n')
+                    st = self.run_dir / 'mu300/power'
+                    st.mkdir(parents=True, exist_ok=True)
+                    (st / 'state').write_text('active\n')
+                    (st / 'idle-since').write_text('100\n')
+                    self.stations(n)
+                    self.uptime(100)
+                    self.daemon_in(shell, 2, MU300_POWER_SAMPLE_EVERY=2)
+                    self.assertEqual(self.calls().count('iw dev wlan0 station dump'), 2)
+                    self.assertEqual(self.state(), want)
+                    if n:
+                        self.assertEqual((st / 'idle-since').read_text().strip(), '161')
+
+    def test_a_loop_starts_no_process_to_read_a_file(self):
+        """cat, sed, tail, grep... are no longer what a loop is made of: four loops start as many of them as one (the
+        first loop finds the charge switch and the device once)"""
+        real = {n: shutil.which(n) for n in ('cat', 'sed', 'tail', 'cut', 'grep', 'tr', 'mkdir', 'rm', 'date', 'od')}
+        for shell in self.each_shell():
+            counts = []
+            for loops in (1, 4):
+                self.setUp()
+                for n, path in real.items():
+                    self.stub(n, f'echo {n} >> "$STUBLOG/procs"; exec {path} "$@"')
+                self.charger(online=0)
+                self.write_conf('battery_WIFI_IDLE=10\nCHARGE_TO=80\n')
+                self.uptime(600)
+                self.daemon_in(shell, loops)
+                p = self.tmp / 'procs'
+                counts.append(sorted(p.read_text().split()) if p.exists() else [])
+            self.assertEqual(counts[0], counts[1])
+
+    # --- FINDINGS 217: the wait between loops follows what is close (6 s and 3 s here for 60 and 30)
+    def next_loop(self, shell, **env):
+        """the daemon's one line about its next wait after one loop, or None"""
+        r = self.daemon_in(shell, 1, MU300_POWER_INTERVAL_RELAXED='6', MU300_POWER_INTERVAL_PLUGGED='3', **env)
+        lines = [l for l in r.stderr.splitlines() if 'the next loop in' in l]
+        return lines[-1].split('the next loop in ', 1)[1] if lines else None
+
+    def test_the_loops_slow_down_while_nothing_is_close(self):
+        def low():
+            (self.battery(capacity=64) / 'capacity_level').write_text('Low\n')
+        for shell in self.each_shell():
+            cases = [
+                ('on a battery at 64 %', lambda: self.battery(capacity=64), '6 s (battery)'),
+                ('on the charger', lambda: (self.battery(capacity=64), self.charger(online=1)), '3 s (plugged)'),
+                ('a battery at 20 %', lambda: self.battery(capacity=20), None),
+                ('a battery that says Low', low, None),
+            ]
+            for label, setup, want in cases:
+                with self.subTest(shell=shell[0], case=label):
+                    self.setUp()
+                    setup()
+                    self.uptime(600)
+                    self.assertEqual(self.next_loop(shell), want)
+            # idle, the charging boot and a retry keep the interval
+            for state in ('idle', 'charging-boot'):
+                with self.subTest(shell=shell[0], state=state):
+                    self.setUp()
+                    self.battery(capacity=64)
+                    self.uptime(600)
+                    st = self.run_dir / 'mu300/power'
+                    st.mkdir(parents=True, exist_ok=True)
+                    (st / 'state').write_text(state + '\n')
+                    self.assertIsNone(self.next_loop(shell))
+            # the wait ends with the idle timer: one minute of WIFI_IDLE, 58 s of it gone
+            with self.subTest(shell=shell[0], case='idle timer'):
+                self.setUp()
+                self.battery(capacity=64)
+                self.write_conf('battery_WIFI_IDLE=1\n')
+                st = self.run_dir / 'mu300/power'
+                st.mkdir(parents=True, exist_ok=True)
+                (st / 'state').write_text('active\n')
+                (st / 'idle-since').write_text('542\n')
+                self.stations(1)                          # a client: the timer starts again at 600
+                self.uptime(600)
+                self.assertEqual(self.next_loop(shell), '6 s (battery)')
+                self.stations(0)
+                (st / 'idle-since').write_text('542\n')
+                self.assertEqual(self.next_loop(shell), '2 s (battery)')
 
     def test_exit_trap_wakes(self):
         for shell in self.each_shell():

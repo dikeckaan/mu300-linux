@@ -4,6 +4,7 @@ kernel option and the images. On by default and open to every computer (FINDINGS
 before that stays."""
 import os
 import re
+import shutil
 import signal
 import subprocess
 import time
@@ -51,8 +52,9 @@ class AdbdBuild(unittest.TestCase):
 
     def test_the_daemon_is_started_with_the_mode(self):
         s = (BIN / 'mu300-adbd').read_text()
-        self.assertIn('MU300_ADB_AUTH=$auth "$ADBD" </dev/null &', s)
-        self.assertEqual(1, s.count('"$ADBD" </dev/null &'))
+        # (9<&-: not the loop's wait fifo, FINDINGS 215)
+        self.assertIn('MU300_ADB_AUTH=$auth "$ADBD" </dev/null 9<&- &', s)
+        self.assertEqual(1, s.count('"$ADBD" </dev/null'))
 
     def test_keys_only_from_root_owned_files(self):
         auth = added(PATCH, 'native/libs/adbd_auth/adbd_auth.cpp')
@@ -312,6 +314,36 @@ class Gadget(ShellTest):
                 self.assertTrue(self.linked())
             finally:
                 self.stop(p)
+
+    def test_a_gadget_that_is_as_it_should_be_is_looked_at_without_a_process(self):
+        # FINDINGS 215: the loop's look is the shell's own reads (no cat), and where read takes a timeout (bash,
+        # busybox ash) its wait is no sleep process either; dash sleeps
+        self.adbd.write_text('#!/bin/sh\n: > "$MU300_FFS/ep1"\n'
+                             'trap \'rm -f "$MU300_FFS/ep1"; exit 0\' TERM\nwhile :; do /bin/sleep 0.05; done\n')
+        for name in ('cat', 'cut', 'sleep'):
+            real = shutil.which(name)
+            self.stub(name, f'echo {name} >> "$STUBLOG/procs"; exec {real} "$@"')
+        for shell in self.each_shell():
+            p = self.start(shell, MU300_ADBD_IDLE_TICK='1')
+            try:
+                self.assertTrue(self.until(self.linked), 'adb never joined the gadget')
+                self.assertTrue(self.until(lambda: self.read('UDC') == self.UDC))
+                time.sleep(0.5)
+                (self.tmp / 'procs').unlink(missing_ok=True)
+                time.sleep(2.5)
+                procs = (self.tmp / 'procs').read_text().split() if (self.tmp / 'procs').exists() else []
+                self.assertNotIn('cat', procs)
+                self.assertNotIn('cut', procs)
+                if 'bash' in shell[0]:
+                    self.assertNotIn('sleep', procs)
+                else:
+                    self.assertLessEqual(procs.count('sleep'), 4)   # one a second, not one every TICK (0.1 s)
+                # and an unbound gadget is still bound again
+                (self.g / 'UDC').write_text('\n')
+                self.assertTrue(self.until(lambda: self.read('UDC') == self.UDC, timeout=15), 'never bound again')
+            finally:
+                rc, out = self.stop(p)
+            self.assertEqual(0, rc, out)
 
     def test_unready_adbd_never_costs_the_network(self):
         # adbd that never writes its descriptors: the gadget stays as it is, bound, without adb

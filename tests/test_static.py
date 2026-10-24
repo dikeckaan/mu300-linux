@@ -895,6 +895,22 @@ class Rules(unittest.TestCase):
             if s.name != 'mu300-vendor' and m:
                 self.assertGreater(int(m.group(1)), 9, s.name)
 
+    def test_sysd_is_wired_in_beside_the_loops_it_replaces(self):
+        # FINDINGS 217: the image enables mu300-sysd (it runs only with /etc/mu300/sysd), mu300-buttons and mu300-post's
+        # thermal-guard stay for every other case, and Ubuntu keeps its units (the behaviour: tests/test_sysd.py)
+        build = (TOP / 'openwrt/build-rootfs.sh').read_text()
+        enabled = build.split('for s in mu300-accounts')[1].split('; do')[0].split()
+        for s in ('mu300-sysd', 'mu300-buttons', 'mu300-post'):
+            self.assertIn(s, enabled)
+        init = (OPENWRT / 'etc/init.d/mu300-sysd').read_text()
+        self.assertRegex(init, r'(?m)^START=95$')
+        self.assertIn('procd_set_param command /usr/bin/ucode /opt/mu300/bin/mu300-sysd\n', init)
+        sysd = (BIN / 'mu300-sysd').read_text()
+        self.assertIn("'-u', UEVENTS", sysd)
+        self.assertIn("const UEVENTS = 'power_supply,extcon';", sysd)   # the charger has no interrupt: the plug is extcon
+        for unit in ('mu300-buttons.service', 'mu300-thermal-guard.service'):
+            self.assertIn(unit, (TOP / 'rootfs/assemble.sh').read_text())
+
     def test_atd_before_the_network_with_a_second_daemon_on_nr2(self):
         # K16, K17, K18, K21: S19 (the dial at S20 asks the daemon), nr1 and nr2 only, nr2 without a URC channel
         f = (TOP / 'openwrt' / 'overlay' / 'etc' / 'init.d' / 'mu300-atd').read_text()
@@ -902,6 +918,8 @@ class Rules(unittest.TestCase):
         # K20: radio-warmup is the third instance, and it opens no channel: it waits for nr1's daemon and asks it
         # These assertions describe the unchanged default SIM1 path. SIM2 is exercised by test_sim2.
         f = f[:f.index('\nbroker() {')]
+        # (the modem daemon's two instances, opted into with /etc/mu300/modemd, are tested in test_modemd)
+        f = f[:f.index('\nmodemd_on() {')] + f[f.index('\nstart_sim1() {'):]
         self.assertEqual(re.findall(r'procd_open_instance (\S+)', f), ['atd', 'atd2', 'radio-warmup'])
         warm = f[f.index('procd_open_instance radio-warmup'):]
         warm = warm[:warm.index('procd_close_instance')]

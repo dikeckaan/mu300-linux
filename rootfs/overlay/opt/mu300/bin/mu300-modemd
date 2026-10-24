@@ -1,0 +1,1134 @@
+#!/usr/bin/ucode
+// mu300-modemd -- the modem's AT channels in one event-driven daemon (docs/MODEMD.md, FINDINGS 216).
+//
+// It does what one shell mu300-atd per channel did, for every channel of the boot's layout at once: one request at a
+// time per command channel, a drain before it and a collect after it, the answer files of mu300-at's protocol, the
+// URC logs, the +CMT spool, the +ECIND hook and the reopen rule. The channels themselves are held by mu300-atd-io (C):
+// this daemon talks to it over a unix socket and never blocks (the device's ucode cannot read a tty without
+// blocking). On top of what the shell did: the ubus object mu300.modem (at, status, cell), a ubus event per URC line
+// (mu300.modem.urc), and the panel's cellular collection on demand (cell), inside this process.
+//
+// Why: the shell daemon paid ~10 forks and 11-16 ms of CPU for every AT command, and a `wc -c` for every URC line;
+// the panel's collector started a process per round on top. Here a command costs a few socket writes, and nothing
+// runs while nothing happens: no timer is armed unless a deadline exists.
+//
+//   mu300-modemd [-s SOCKET] BROKER...
+//   BROKER  name=NAME,dev=/dev/stty_nrN,dir=DIR[,urc=N[+N...]][,live=LOG][,reopen=0][,ready=sbuf:SBUF]
+//           one command channel (as one shell mu300-atd instance: MU300_AT_DEV, MU300_AT_DIR,
+//           MU300_AT_URC_CHANNELS, MU300_AT_LIVE_URC_LOG, MU300_AT_DISABLE_REOPEN=1 is reopen=0, and the sbuf
+//           condition the init script waited for)
+//
+// Environment: MU300_AT_URC_MAX (65536 bytes a log), MU300_AT_URC_QUIET (240 s), MU300_CMT_SPOOL_BIN,
+// MU300_SIM_STATE_BIN, MU300_DASH_DIR / MU300_DASH_POOL_DIR / MU300_DASH_IDENT_DIR (the collector's, as
+// unisoc-modem/cell's); for the tests MU300_MODEMD_RUN (the /run the collector's channel names are under) and
+// MU300_UBUS_SOCKET.
+'use strict';
+
+import * as uloop from 'uloop';
+import * as socket from 'socket';
+import { readfile, open, stat, lstat, mkdir, unlink, rename, chmod, popen, rmdir, lsdir } from 'fs';
+import * as cp from 'mu300.cellparse';
+
+let ubusmod = null;
+try { ubusmod = require('ubus'); } catch (e) { }
+
+// ------------------------------------------------------------------ small things
+function log(msg) { warn('mu300-modemd: ' + msg + '\n'); }
+function env(name, dflt) { let v = getenv(name); return (v != null && v != '') ? v : dflt; }
+function rd(path) { let s = readfile(path); return (s == null) ? '' : rtrim(s, '\n'); }
+function exists(path) { return lstat(path) != null; }
+function is_fifo(path) { return stat(path)?.type == 'fifo'; }
+function executable(path) { let s = stat(path); return s != null && s.type == 'file'; }
+function shq(s) { return "'" + replace('' + s, "'", "'\\''") + "'"; }
+function now_ms() { let c = clock(true); return c[0] * 1000 + int(c[1] / 1000000); }
+function basename(p) { return substr(p, rindex(p, '/') + 1); }
+function alive(pid) { return match('' + pid, /^[0-9]+$/) && exists('/proc/' + pid); }
+function cmdline(pid) { let c = readfile('/proc/' + pid + '/cmdline'); return (c == null) ? '' : replace(c, /\0/g, ' '); }
+function rm_rf(path) {
+	let l = lstat(path);
+	if (!l)
+		return;
+	if (l.type == 'directory') {
+		for (let f in lsdir(path) ?? [])
+			rm_rf(path + '/' + f);
+		rmdir(path);
+	}
+	else
+		unlink(path);
+}
+// a file written whole: PATH.part (owner only), then renamed
+function publish(path, text) {
+	let f = open(path + '.part', 'w', 0600);
+	if (!f)
+		return false;
+	f.write(text);
+	f.close();
+	return rename(path + '.part', path) == true;
+}
+function write_small(path, text) { let f = open(path, 'w', 0600); if (f) { f.write(text); f.close(); } }
+const MYPID = +substr(readfile('/proc/self/stat'), 0, index(readfile('/proc/self/stat'), ' '));
+// a cancelled-or-new timer: uloop.timer objects are one-shot here; replace() cancels the old one first
+function retimer(old, ms, cb) {
+	if (old)
+		old.cancel();
+	return uloop.timer(ms, cb);
+}
+
+const URCMAX = +env('MU300_AT_URC_MAX', '65536') || 65536;
+const URC_QUIET = +env('MU300_AT_URC_QUIET', '240') || 240;
+const CMT_SPOOL = env('MU300_CMT_SPOOL_BIN', '/opt/mu300/bin/mu300-cmt-spool');
+const SIM_STATE = env('MU300_SIM_STATE_BIN', '/opt/mu300/bin/mu300-sim-state');
+const FINAL_LINE = /^(OK|ERROR|\+CME ERROR.*|\+CMS ERROR.*|CONNECT.*|NO CARRIER)$/;
+const RUN = env('MU300_MODEMD_RUN', '/run');
+
+// ------------------------------------------------------------------ arguments
+let SOCK = '/run/mu300-modem/io.sock';
+let specs = [];
+for (let i = 0; i < length(ARGV); i++) {
+	if (ARGV[i] == '-s' && i + 1 < length(ARGV)) {
+		SOCK = ARGV[++i];
+		continue;
+	}
+	let b = {};
+	for (let kv in split(ARGV[i], ',')) {
+		let j = index(kv, '=');
+		if (j > 0)
+			b[substr(kv, 0, j)] = substr(kv, j + 1);
+	}
+	if (!b.name || !match(b.dev ?? '', /^\/dev\/[A-Za-z0-9_]+$/) || !match(b.dir ?? '', /^\/[A-Za-z0-9_\/.-]+$/)) {
+		log('ignored broker argument: ' + ARGV[i]);
+		continue;
+	}
+	push(specs, b);
+}
+if (!length(specs)) {
+	log('no broker given; usage: mu300-modemd [-s SOCKET] name=NAME,dev=DEV,dir=DIR[,urc=N+N][,live=LOG][,reopen=0][,ready=sbuf:NAME]');
+	exit(2);
+}
+
+// ------------------------------------------------------------------ the run directories (lib/run-dir.sh's rule)
+// $DIR is root's alone, or it is made so: in a directory somebody else made first the command fifo would be his
+function take_dir(dir) {
+	mkdir(replace(dir, /\/[^\/]*$/, ''));
+	mkdir(dir, 0700);
+	let l = lstat(dir);
+	if (l && l.type == 'directory' && l.uid == 0) {
+		if (l.perm?.group_write || l.perm?.other_write)
+			log(dir + ': others could write it; that is taken away');
+		chmod(dir, 0755);
+		return true;
+	}
+	log(dir + ' was somebody else\'s (made first, or a symlink); put out of the way');
+	if (!unlink(dir) && !rmdir(dir)) {
+		let q = replace(dir, /\/([^\/]*)$/, '/.$1.foreign.' + MYPID);
+		mkdir(q, 0700);
+		rename(dir, q + '/' + basename(dir));
+	}
+	mkdir(dir, 0700);
+	l = lstat(dir);
+	if (l && l.type == 'directory' && l.uid == 0) {
+		chmod(dir, 0755);
+		return true;
+	}
+	log(dir + ' is still not the daemon\'s own directory; look at it and remove it by hand');
+	return false;
+}
+
+// ------------------------------------------------------------------ channels and brokers
+let brokers = [];
+let chans = {};      // bridge channel name -> { name, dev, kind, broker, n, log, state, partial, cmt }
+for (let s in specs) {
+	let b = {
+		name: s.name, dev: s.dev, chan: basename(s.dev), dir: s.dir, urcdir: s.dir + '/urc',
+		reopen: (s.reopen ?? '1') != '0', ready: s.ready ?? '',
+		queue: [], cur: null, phase: 'closed', clean: false, silent: 0, last_reopen: 0, reply: [],
+		t_quiet: null, t_max: null, t_collect: null, drain_then: null, drain_wait: 0, served: false
+	};
+	let prefix = replace(s.dev, /[0-9]$/, '');
+	b.live = s.live ?? (b.urcdir + '/' + basename(prefix + '0') + '.log');
+	b.cmdlog = b.urcdir + '/' + b.chan + '.log';
+	if (!take_dir(b.dir))
+		continue;
+	mkdir(b.urcdir, 0700);
+	chmod(b.urcdir, 0700);
+	push(brokers, b);
+	chans[b.chan] = { name: b.chan, dev: b.dev, kind: 'cmd', broker: b, log: b.cmdlog, state: 'unknown', partial: '', cmt: null };
+	for (let n in split(s.urc ?? '', '+')) {
+		if (!match(n, /^[0-9]$/))
+			continue;
+		let dev = prefix + n;
+		let name = basename(dev);
+		if (dev == s.dev || chans[name])
+			continue;
+		let logf = b.urcdir + '/' + name + '.log';
+		write_small(logf, '');   // the drainer of the shell daemon started its log over too
+		chans[name] = { name: name, dev: dev, kind: 'urc', broker: b, n: +n, log: logf, state: 'unknown', partial: '', cmt: null };
+	}
+}
+
+// the logs, appended to by line; a log over URCMAX starts over (/run is RAM)
+let logsize = {};
+function log_line(path, line) {
+	let f = open(path, 'a', 0644);
+	if (!f)
+		return;
+	f.write(line + '\n');
+	f.close();
+	logsize[path] ??= stat(path)?.size ?? 0;
+	logsize[path] += length(line) + 1;
+	if (logsize[path] > URCMAX) {
+		write_small(path, '');
+		logsize[path] = 0;
+	}
+}
+
+// ------------------------------------------------------------------ ubus
+let bus = null;
+function urc_event(chan, line) {
+	if (bus)
+		bus.event('mu300.modem.urc', { channel: chan, line: line });
+}
+
+// ------------------------------------------------------------------ the bridge
+let io = null, ioh = null, iobuf = '', io_pid = null, io_retry = null;
+let on_record, io_connect;   // set below
+function io_send(rec) {
+	if (!io)
+		return false;
+	if (io.send(rec + '\n') == null) {
+		log('the bridge connection failed: ' + socket.error());
+		return false;
+	}
+	return true;
+}
+function io_drop() {
+	if (ioh)
+		ioh.delete();
+	if (io)
+		io.close();
+	io = null; ioh = null; iobuf = '';
+	for (let name in chans)
+		chans[name].state = 'unknown';
+	io_retry = retimer(io_retry, 500, () => io_connect());
+}
+function io_readable() {
+	while (io) {
+		let d = io.recv(65536, socket.MSG_DONTWAIT);
+		if (d == null)
+			break;
+		if (d === '') {
+			log('the bridge closed the connection; connecting again');
+			io_drop();
+			return;
+		}
+		iobuf += d;
+	}
+	let i;
+	while ((i = index(iobuf, '\n')) >= 0) {
+		let rec = substr(iobuf, 0, i);
+		iobuf = substr(iobuf, i + 1);
+		try {
+			on_record(rec);
+		}
+		catch (e) {
+			log('a record failed: ' + e);
+		}
+	}
+}
+let io_waited = false;
+io_connect = function() {
+	io_retry = null;
+	let s = socket.create(socket.AF_UNIX, socket.SOCK_STREAM);
+	if (!s || !s.connect({ family: socket.AF_UNIX, path: SOCK })) {
+		if (s)
+			s.close();
+		if (!io_waited)
+			log('waiting for mu300-atd-io on ' + SOCK);
+		io_waited = true;
+		io_retry = uloop.timer(500, () => io_connect());
+		return;
+	}
+	io = s;
+	iobuf = '';
+	ioh = uloop.handle(io, () => io_readable(), uloop.ULOOP_READ);
+};
+
+// ------------------------------------------------------------------ requests (mu300-at's protocol)
+const LF = '\n', CR = '\r', SUB = '\x1a';
+// one_request CMD: exactly one modem command - no line feed, and a CR only in "AT+CMGS=<length><CR><hex PDU><Ctrl-Z>"
+function one_request(cmd) {
+	if (index(cmd, LF) >= 0)
+		return false;
+	let c = index(cmd, CR);
+	if (c < 0)
+		return true;
+	let head = substr(cmd, 0, c), body = substr(cmd, c + 1);
+	if (!match(head, /^AT\+CMG[SW]=[0-9]{1,3}$/))
+		return false;
+	if (substr(body, -1) != SUB)
+		return false;
+	let pdu = substr(body, 0, length(body) - 1);
+	return pdu != '' && !match(pdu, /[^0-9A-Fa-f]/);
+}
+
+function answer_file(r, text) {
+	if (!publish(r.answer, text))
+		log('the answer file ' + r.answer + ' could not be written');
+}
+
+// the client lock ($DIR/lock, mu300-at's mutex between clients), for this daemon's own requests: taken without waiting
+// (as the collector's mu300-at did with MU300_AT_LOCK_WAIT=0); a stale holder is taken over as mu300-at does
+function lock_take(b, budget) {
+	let lock = b.dir + '/lock';
+	for (let tries = 0; tries < 4; tries++) {
+		if (mkdir(lock)) {
+			write_small(lock + '/pid', MYPID + '\n');
+			write_small(lock + '/until', (time() + budget + 10) + '\n');
+			return lock;
+		}
+		let o = rd(lock + '/pid');
+		if (o != '' && !alive(o)) { rm_rf(lock); continue; }
+		if (o != '' && index(cmdline(o), 'mu300-atd') >= 0) { rm_rf(lock); continue; }
+		let due = rd(lock + '/until');
+		if (o != '' && match(due, /^[0-9]+$/) && time() > +due && index(cmdline(o), 'mu300-at') >= 0) {
+			log('pid ' + o + ' held the AT lock past its own deadline; ending it');
+			system('kill -9 ' + o + ' 2>/dev/null');
+			rm_rf(lock);
+			continue;
+		}
+		return null;
+	}
+	return null;
+}
+function lock_drop(lock) {
+	if (lock && rd(lock + '/pid') == '' + MYPID)
+		rm_rf(lock);
+}
+
+// ------------------------------------------------------------------ +CMT frames
+// "+CMT: <alpha>,<length>" and the PDU on the next line (an empty line, the frame's own CRLF, skipped once): both to
+// mu300-cmt-spool on its stdin, never into a reply or a log
+function cmt_end(c, pdu) {
+	let f = c.cmt;
+	c.cmt = null;
+	if (f.timer)
+		f.timer.cancel();
+	let ok = false;
+	if (executable(CMT_SPOOL)) {
+		let p = popen(shq(CMT_SPOOL) + ' >/dev/null 2>&1', 'w');
+		if (p) {
+			p.write(f.header + '\n' + pdu + '\n');
+			ok = (p.close() == 0);
+		}
+	}
+	if (ok)
+		log_line(f.log, '+CMT (PDU spooled)');
+	else {
+		log('a message delivered directly (+CMT) could not be spooled; it stays unacknowledged');
+		log_line(f.log, '+CMT (not spooled)');
+	}
+	// mu300-smsd pools and acknowledges a spooled frame when it hears of it: the log's fixed words, never the header
+	// or the PDU
+	urc_event(c.name, ok ? '+CMT (PDU spooled)' : '+CMT (not spooled)');
+}
+function cmt_start(c, header, logpath) {
+	c.cmt = { header: header, tries: 0, log: logpath, timer: null };
+	c.cmt.timer = uloop.timer(2000, () => { if (c.cmt) cmt_end(c, ''); });
+}
+// a line while a frame waits for its PDU: true when the frame took it
+function cmt_line(c, line) {
+	if (!c.cmt)
+		return false;
+	if (line == '' && c.cmt.tries < 1) {
+		c.cmt.tries++;
+		c.cmt.timer.cancel();
+		c.cmt.timer = uloop.timer(2000, () => { if (c.cmt) cmt_end(c, ''); });
+		return true;
+	}
+	cmt_end(c, line);
+	return true;
+}
+
+// ------------------------------------------------------------------ one command channel
+let pump, finish, send_cmd, start_drain, drain_done;   // (mutually recursive; assigned below)
+
+function modem_alive(b) {
+	let s = stat(b.live);
+	return s != null && s.type == 'file' && time() - s.mtime < URC_QUIET;
+}
+
+drain_done = function(b) {
+	if (b.phase != 'drain')
+		return;
+	if (b.t_quiet) b.t_quiet.cancel();
+	if (b.t_max) b.t_max.cancel();
+	b.t_quiet = b.t_max = null;
+	b.phase = 'idle';
+	let then = b.drain_then;
+	b.drain_then = null;
+	if (then)
+		then();
+};
+
+// drain WAIT MAX: take what the modem sent while nobody was asking, until the channel has been quiet for WAIT ms, MAX
+// ms at most; a line in between starts the quiet over (each one goes to the channel's own log, see cmd_line)
+start_drain = function(b, wait, max, then) {
+	b.phase = 'drain';
+	b.drain_wait = wait;
+	b.drain_then = then;
+	b.t_quiet = retimer(b.t_quiet, wait, () => drain_done(b));
+	b.t_max = retimer(b.t_max, max, () => drain_done(b));
+};
+
+function deliver(b, r, reply, clean) {
+	b.cur = null;
+	let text = join('\n', reply);
+	if (r.kind == 'fifo')
+		answer_file(r, text + '\n');
+	else if (r.cb) {
+		try { r.cb(text, clean); }
+		catch (e) { log('a reply callback failed: ' + e); }
+	}
+	pump(b);
+}
+
+finish = function(b, clean) {
+	if (b.phase != 'collect')
+		return;
+	if (b.t_collect) b.t_collect.cancel();
+	b.t_collect = null;
+	b.phase = 'idle';
+	b.clean = clean;
+	let r = b.cur;
+	let reply = b.reply;
+	b.reply = [];
+	if (!length(reply)) {
+		b.silent++;
+		// The reopen rule (mu300-atd): a descriptor left on a channel that no longer exists (a modem restart) reads
+		// nothing for ever; reopening cures that case and breaks every other one. So only when five commands in a
+		// row went unanswered, the last reopen was 5 min ago, and the modem's URC log has been quiet too.
+		if (b.reopen && b.silent >= 5 && time() - b.last_reopen >= 300 && !modem_alive(b) && !r.retried) {
+			log('no reply and no URCs either, the modem looks gone; reopening ' + b.dev);
+			b.last_reopen = time();
+			b.silent = 0;
+			r.retried = true;
+			b.phase = 'reopen';
+			b.reopen_timer = retimer(b.reopen_timer, 5000, () => {
+				// not open again within 5 s: this client gets its empty answer, the bridge keeps trying
+				if (b.phase != 'reopen')
+					return;
+				log('cannot reopen ' + b.dev + ' yet; the bridge keeps trying');
+				b.phase = 'closed';
+				deliver(b, r, [], false);
+			});
+			io_send('REOPEN ' + b.chan);
+			return;
+		}
+	}
+	else
+		b.silent = 0;
+	deliver(b, r, reply, clean);
+};
+
+
+send_cmd = function(b) {
+	let r = b.cur;
+	b.phase = 'collect';
+	b.reply = [];
+	// A PDU send ("AT+CMGS=N<CR>PDU<Ctrl-Z>") goes out as one write too (FINDINGS 46)
+	if (!io_send('TX ' + b.chan + ' ' + uc(hexenc(r.cmd + CR)))) {
+		finish(b, false);
+		return;
+	}
+	// at least T whole seconds, as mu300-atd's collect
+	b.t_collect = retimer(b.t_collect, (r.t + 1) * 1000, () => finish(b, false));
+};
+
+pump = function(b) {
+	if (b.phase != 'idle' || !b.served || b.cur || !length(b.queue))
+		return;
+	b.cur = shift(b.queue);
+	// after a command that timed out, give the late reply time to show up and throw it away before asking anything new
+	start_drain(b, b.clean ? 100 : 1000, (b.silent > 0) ? 25000 : 3000, () => send_cmd(b));
+};
+
+function enqueue(b, r) {
+	push(b.queue, r);
+	pump(b);
+}
+
+// a line on a command channel
+function cmd_line(b, c, line) {
+	if (cmt_line(c, line))
+		return;
+	if (substr(line, 0, 5) == '+CMT:') {
+		cmt_start(c, line, b.cmdlog);
+		return;
+	}
+	if (b.phase == 'collect') {
+		if (line == '')
+			return;
+		push(b.reply, line);
+		if (match(line, FINAL_LINE))
+			finish(b, true);
+		return;
+	}
+	// idle or draining: an announcement, an unsolicited NO CARRIER, a late OK - kept in the channel's log (never the
+	// echo of a command, which can hold a secret), and thrown away for the next command's purpose
+	if (line != '' && !match(line, /^[Aa][Tt]/)) {
+		log_line(b.cmdlog, line);
+		// a new message's index the modem routed here, between commands, is announced as on the unsolicited
+		// channel (mu300-smsd syncs on it); nothing else from a command channel, where a late reply can hold a secret
+		if (match(line, /^\+C(MT|DS)I:/))
+			urc_event(c.name, line);
+	}
+	if (b.phase == 'drain')
+		b.t_quiet = retimer(b.t_quiet, b.drain_wait, () => drain_done(b));
+}
+
+// a line on an unsolicited channel (what a drainer of the shell daemon did)
+function urc_line(c, line) {
+	if (cmt_line(c, line))
+		return;
+	if (substr(line, 0, 5) == '+CMT:') {
+		cmt_start(c, line, c.log);
+		return;
+	}
+	log_line(c.log, line);
+	// a SIM-status change on the card's event channel (nr0 slot 0, nr3 slot 1): mu300-sim-state asks the card in the
+	// background whether one is there (FINDINGS 186)
+	if (match(line, /^\+ECIND: ?3,/) && executable(SIM_STATE))
+		system(shq(SIM_STATE) + ' event ' + int(c.n / 3) + ' ' + shq(line) + ' </dev/null >/dev/null 2>&1 &');
+	if (line != '')
+		urc_event(c.name, line);
+}
+
+// one request line from a channel's fifo: "SECONDS /path/to/answer AT+COMMAND", parsed strictly (mu300-atd)
+function fifo_request(b, line) {
+	if (line == '')
+		return;
+	let sp = index(line, ' ');
+	let t = (sp >= 0) ? substr(line, 0, sp) : line;
+	let rest = (sp >= 0) ? substr(line, sp + 1) : line;
+	let sp2 = index(rest, ' ');
+	let answer = (sp2 >= 0) ? substr(rest, 0, sp2) : rest;
+	let cmd = (sp2 >= 0) ? substr(rest, sp2 + 1) : rest;
+	if (!match(t, /^[1-9][0-9]?$/)) { log('malformed request (timeout), dropped'); return; }
+	let pre = b.dir + '/answer.';
+	if (substr(answer, 0, length(pre)) != pre || !match(substr(answer, length(pre)), /^[0-9]+$/)) {
+		log('malformed request (answer file), dropped');
+		return;
+	}
+	if (sp2 < 0 || cmd == '') { log('malformed request (no command), dropped'); return; }
+	if (!one_request(cmd)) {
+		log('a request with more than one command, refused');
+		publish(answer, 'mu300-atd: refused\n');
+		return;
+	}
+	enqueue(b, { kind: 'fifo', t: +t, answer: answer, cmd: cmd });
+}
+
+// ------------------------------------------------------------------ the bridge's records
+function owner_write(b) {
+	mkdir(b.dir + '/owner', 0755);
+	write_small(b.dir + '/owner/pid', io_pid + '\n');
+}
+function hello() {
+	for (let b in brokers) {
+		owner_write(b);
+		io_send('FIFO ' + b.chan + ' ' + b.dir + '/cmd');
+		io_send('OPEN ' + b.chan + ' ' + b.dev + ((b.ready != '') ? ' ' + b.ready : ''));
+	}
+	for (let name in chans)
+		if (chans[name].kind == 'urc')
+			io_send('OPEN ' + name + ' ' + chans[name].dev + ((chans[name].broker.ready != '') ? ' ' + chans[name].broker.ready : ''));
+}
+// a channel is open: the slow drain once (quiet for a second, 3 s at most), then it serves (mu300-atd did this as soon
+// as the channel was its own)
+function chan_open(c) {
+	let b = c.broker;
+	if (c.kind != 'cmd')
+		return;
+	if (b.phase == 'reopen') {
+		if (b.reopen_timer) b.reopen_timer.cancel();
+		let r = b.cur;
+		b.phase = 'idle';
+		start_drain(b, 1000, 3000, () => send_cmd(b));
+		return;
+	}
+	if (b.phase != 'closed' && b.served)
+		return;
+	b.served = false;
+	b.phase = 'idle';
+	start_drain(b, 1000, 3000, () => {
+		b.clean = true;
+		b.served = true;
+		log(b.dev + ' is ours (' + b.dir + ')');
+		pump(b);
+	});
+}
+on_record = function(rec) {
+	let p = split(rec, ' ', 3);
+	let type = p[0], name = p[1], c = chans[name];
+	switch (type) {
+	case 'HELLO':
+		io_pid = +(p[2] ?? '0');
+		io_waited = false;
+		log('connected to mu300-atd-io (pid ' + io_pid + ')');
+		hello();
+		break;
+	case 'STATE': {
+		if (!c) break;
+		let st = split(p[2] ?? '', ' ');
+		let state = st[length(st) - 1];
+		// a channel and its request FIFO share the name: the path says which one this is (the FIFO's state is
+		// not the channel's)
+		if (st[0] != c.dev) {
+			if (state != 'open')
+				log('the request FIFO ' + st[0] + ' is ' + state);
+			break;
+		}
+		let was = c.state;
+		c.state = state;
+		if (state == 'open' && was != 'open')
+			chan_open(c);
+		if (state != 'open' && c.kind == 'cmd' && c.broker.phase == 'idle' && !c.broker.cur)
+			c.broker.phase = 'closed';
+		break;
+	}
+	case 'RX': {
+		if (!c) break;
+		let line = c.partial + ((p[2] != null && p[2] != '') ? hexdec(p[2]) : '');
+		c.partial = '';
+		if (c.kind == 'cmd')
+			cmd_line(c.broker, c, line);
+		else
+			urc_line(c, line);
+		break;
+	}
+	case 'RXP':
+		// bytes without a newline (a "> " prompt): they lead the next line, as a shell read had them
+		if (c) c.partial += hexdec(p[2] ?? '');
+		break;
+	case 'REQ': {
+		if (!c || c.kind != 'cmd') break;
+		fifo_request(c.broker, (p[2] != null && p[2] != '') ? hexdec(p[2]) : '');
+		break;
+	}
+	case 'OPENFAIL':
+		if (c) log(c.dev + ' is not ready yet (errno ' + (p[2] ?? '?') + '); the bridge keeps trying');
+		break;
+	case 'EOF':
+		if (c) { c.state = 'eof'; log(c.dev + ' reached end of file; it stays closed'); }
+		break;
+	case 'TXERR':
+		if (c) log('a command to ' + c.dev + ' could not be written (errno ' + (p[2] ?? '?') + ')');
+		break;
+	case 'DROPPED':
+		log((p[2] ?? '?') + ' records of ' + (name ?? '?') + ' were dropped while modemd was away');
+		break;
+	}
+};
+
+// ------------------------------------------------------------------ requests of this daemon (ubus, the collector)
+// internal_at B CMD T CB: CMD on broker B under the client lock, CB(reply, clean) - reply null when busy or the
+// channel is not served
+// a live SIM switch (mu300-sim-u30) holds the modem for its own commands: mu300-at's gate - the marker, believed only
+// while the switch holds its lock - keeps every other client off, and this daemon's own requests too
+function sim_sequence() {
+	if (!exists(RUN + '/mu300/sim-sequence'))
+		return false;
+	let f = open(RUN + '/mu300/sim-control.lock', 'a', 0600);
+	if (!f)
+		return true;
+	let free = f.lock('xn');
+	if (free)
+		f.lock('u');
+	f.close();
+	return !free;
+}
+
+function internal_at(b, cmd, t, cb) {
+	if (!b.served || b.phase == 'closed' || sim_sequence()) {
+		cb(null, false);
+		return;
+	}
+	let lock = lock_take(b, t + 31);
+	if (!lock) {
+		cb(null, false);
+		return;
+	}
+	enqueue(b, { kind: 'internal', t: t, cmd: cmd, cb: (text, clean) => { lock_drop(lock); cb(text, clean); } });
+}
+function broker_by(key) {
+	for (let b in brokers)
+		if (b.name == key || b.chan == key || b.dir == key)
+			return b;
+	return null;
+}
+
+// ------------------------------------------------------------------ the panel's collection (unisoc-modem/cell's rounds)
+const RUN_DIR = '/var/run/unisoc-modem';
+const IDENT_MAXAGE = 21600, IDENT_RETRY = 60;
+let round = null;
+
+function private_dir(dir) {
+	if (!exists(dir)) {
+		mkdir(replace(dir, /\/[^\/]*$/, ''));
+		mkdir(dir, 0700);
+	}
+	let l = lstat(dir);
+	if (!l || l.type != 'directory' || l.uid != 0 || l.perm?.group_write || l.perm?.other_write)
+		return false;
+	chmod(dir, 0700);
+	return true;
+}
+function collector_pid(pid) {
+	if (!alive(pid))
+		return false;
+	let c = cmdline(pid);
+	return index(c, '/unisoc-modem/cell') >= 0 || index(c, 'mu300-modemd') >= 0;
+}
+// the boot's SIM slot as mu300-sim active says it (the pinned file; the selector itself only when it is not 0)
+let sim_cache = null;
+function sim_slot() {
+	if (!executable('/opt/mu300/bin/mu300-sim'))
+		return '0';
+	let pinned = rd(RUN + '/mu300/sim-slot');
+	if (pinned == '0')
+		return '0';
+	let s = stat(RUN + '/mu300/sim-slot');
+	let sig = s ? s.mtime + '/' + pinned : '-';
+	if (sim_cache && sim_cache.sig == sig)
+		return sim_cache.slot;
+	let p = popen('/opt/mu300/bin/mu300-sim active 2>/dev/null', 'r');
+	let out = p ? rtrim(p.read('all') ?? '', '\n') : '';
+	if (!p || p.close() != 0)
+		return null;
+	sim_cache = { sig: sig, slot: out };
+	return out;
+}
+function uget(conf, sec, opt) {
+	let uci = null;
+	try { uci = require('uci'); } catch (e) { return ''; }
+	let v = uci.cursor().get(conf, sec, opt);
+	return (type(v) == 'array') ? join(' ', v) : ((v == null) ? '' : '' + v);
+}
+function file_age(path) { let s = stat(path); return time() - (s ? s.mtime : 0); }
+function ident_complete(path) {
+	let s = readfile(path) ?? '';
+	return match(s, /"imei":"[0-9]/) && match(s, /"imsi":"[0-9]/) && match(s, /"iccid":"[0-9A-F]/);
+}
+function jparse(s) { try { let v = json(s); return (type(v) == 'object') ? v : null; } catch (e) { return null; } }
+
+// run_steps STEPS CTX DONE: each step(ctx, next) calls next() when it is through
+function run_steps(steps, ctx, done) {
+	let i = 0;
+	let next;
+	next = () => {
+		if (i >= length(steps)) { done(ctx); return; }
+		let s = steps[i++];
+		try { s(ctx, next); }
+		catch (e) { log('collector step failed: ' + e); done(ctx); }
+	};
+	next();
+}
+
+function round_end(R) {
+	for (let p in R.held)
+		rm_rf(p);
+	round = null;
+}
+
+// at on the round's channels: the assigned one first, then the fallbacks (a silent one fails in about T + 1 s);
+// '' for no answer, as the collector's at()
+function round_at(R, cmd, t, cb) {
+	let i = 0;
+	let tryit;
+	tryit = () => {
+		while (i < length(R.cands) && !R.cands[i].served) i++;
+		if (i >= length(R.cands)) { cb(''); return; }
+		let left = R.deadline - time();
+		if (left < 1) { cb(''); return; }
+		if (left > t + 4) left = t + 4;
+		let b = R.cands[i++];
+		internal_at(b, cmd, t, (text, clean) => {
+			if (text == null || !match(text, cp.FINAL)) { tryit(); return; }
+			cb(replace(text, /\r/g, ''));
+		});
+	};
+	tryit();
+}
+// the standard reads in one request, each on its own when the modem refuses the combination
+function round_group(R, cmds, t, cb) {
+	let prefix = (c) => replace(replace(c, /^AT/, ''), /[?=].*$/, '') + ':';
+	round_at(R, 'AT' + join(';', map(cmds, (c) => substr(c, 2))), t + 1, (all) => {
+		let ok = match(all, /(^|\n)OK(\n|$)/) != null;
+		for (let c in cmds)
+			if (cp.first_with(all, prefix(c)) == '')
+				ok = false;
+		if (ok) { cb(map(cmds, () => all)); return; }
+		let out = [], k = 0;
+		let one;
+		one = () => {
+			if (k >= length(cmds)) { cb(out); return; }
+			round_at(R, cmds[k], t, (r) => { push(out, r); k++; one(); });
+		};
+		one();
+	});
+}
+
+function run_round(R) {
+	let SIGF = R.dir + '/sig.json', CELL = R.dir + '/cell.json';
+	let jstr = (v) => sprintf('%J', v);
+	let X = { CFUN: '', CEREG: '', C5GREG: '', CESQ: '', COPS: '', SP_LTE: '', SP_LTEPHY: '', SP_NR: '', SP_LN: '',
+		SP_NRNB: '', QOS: '', OPN: [ '', '' ], IDENT_JSON: null, msisdn: '', msisdn_src: '' };
+	let full = (R.mode == 'full');
+	let steps = [
+		// the cheap core first (one request); a full round publishes it before its slower tier
+		(x, next) => round_group(R, full ? [ 'AT+CFUN?', 'AT+CEREG?', 'AT+C5GREG?', 'AT+CESQ', 'AT+COPS?' ]
+		                                 : [ 'AT+CFUN?', 'AT+CEREG?', 'AT+C5GREG?', 'AT+CESQ' ], 2, (core) => {
+			x.CFUN = cp.after_prefix(core[0], '+CFUN:');
+			x.CEREG = cp.first_with(core[1], '+CEREG:');
+			x.C5GREG = cp.first_with(core[2], '+C5GREG:');
+			x.CESQ = cp.first_with(core[3], '+CESQ:');
+			if (full)
+				x.COPS = cp.first_with(core[4], '+COPS:');
+			x.REG = cp.reg_fragment(x.CEREG); x.REG5 = cp.reg_fragment(x.C5GREG);
+			x.CESQJ = cp.cesq_fragment(x.CESQ); x.CFUNN = cp.n_or_null(x.CFUN);
+			if (full)
+				publish(SIGF, jstr({ ts: time(), partial: 1, cfun: x.CFUNN, reg: x.REG, reg5g: x.REG5, sig_src: 'cesq',
+					sig: x.CESQJ, lte: null, nr: null }) + '\n');
+			let R4 = cp.reg_stat(x.CEREG), R5 = cp.reg_stat(x.C5GREG);
+			x.REGISTERED = (R4 in [ '1', '5', '10' ]) || (R5 in [ '1', '5', '10' ]);
+			x.NR_SA = x.REG != null && x.REG.act == 11;
+			next();
+		}),
+		(x, next) => {
+			if (!x.REGISTERED || x.NR_SA) { next(); return; }
+			round_at(R, 'AT+SPENGMD=0,6,0', 2, (r) => { x.SP_LTE = cp.eng_line(r);
+				round_at(R, 'AT+SPENGMD=0,0,6', 2, (r2) => { x.SP_LTEPHY = cp.eng_line(r2); next(); }); });
+		},
+		(x, next) => {
+			if (!x.REGISTERED) { next(); return; }
+			round_at(R, 'AT+SPENGMD=0,14,1', 2, (r) => { x.SP_NR = cp.eng_line(r); next(); });
+		},
+		// the operator's long name once per PLMN, when the modem answers in the numeric format
+		(x, next) => {
+			if (!full) { next(); return; }
+			let f = R.dir + '/operator';
+			if (match(x.COPS, /^\+COPS: [0-9],[01],"/)) {
+				if (!match(x.COPS, /^[^"]*"([0-9A-Fa-f]{4})+"/)) { next(); return; }
+				let cscs = rd(R.dir + '/cscs');
+				if (cscs != '') { x.OPN = [ '', cscs ]; next(); return; }
+				round_at(R, 'AT+CSCS?', 2, (r) => {
+					let m = match(cp.after_prefix(r, '+CSCS:'), /^"([A-Za-z0-9_]*)"/);
+					let cs = m ? m[1] : '';
+					if (cs != '')
+						publish(R.dir + '/cscs', cs + '\n');
+					x.OPN = [ '', cs ];
+					next();
+				});
+				return;
+			}
+			let m = match(x.COPS, /^\+COPS: *[0-9]*, *2, *"([0-9]{5,6})"/);
+			if (!m) { next(); return; }
+			let plmn = m[1];
+			let cached = cp.lines(readfile(f) ?? '');
+			if (length(cached) && replace(cached[0], / .*/, '') == plmn) {
+				x.OPN = [ cached[1] ?? '', (index(cached[0], ' ') >= 0) ? replace(cached[0], /^[^ ]* /, '') : '' ];
+				next();
+				return;
+			}
+			round_at(R, 'AT+CSCS?;+COPS=3,0;+COPS?;+COPS=3,2', 3, (out) => {
+				let named = '', cs = '';
+				for (let l in cp.lines(out))
+					if (named == '' && match(l, /^\+COPS: *[0-9]*, *[01], *"/)) named = l;
+				for (let l in cp.lines(out)) {
+					let c = match(l, /^\+CSCS: *"([A-Za-z0-9_]*)"/);
+					if (c && cs == '') cs = c[1];
+				}
+				if (named != '') {
+					publish(f, plmn + ' ' + ((cs != '') ? cs : 'unknown') + '\n' + named + '\n');
+					x.OPN = [ named, (cs != '') ? cs : 'unknown' ];
+				}
+				next();
+			});
+		},
+		(x, next) => {
+			if (!full || !x.REGISTERED) { next(); return; }
+			round_at(R, 'AT+SPENGMD=0,6,6', 2, (r) => { x.SP_LN = cp.eng_line(r);
+				round_at(R, 'AT+SPQ5GNCELLEX', 2, (r2) => { x.SP_NRNB = cp.after_prefix(r2, '+SPQ5GNCELLEX:'); next(); }); });
+		},
+		// the bearer's QoS: the CID of netifd's live device, and the WAN still the same connection afterwards
+		(x, next) => {
+			if (!full || !x.REGISTERED || !bus) { next(); return; }
+			let iface = cp.safe_iface(uget('unisoc_modem', 'main', 'data_interface'), 'wan');
+			let st = bus.call('network.interface.' + iface, 'status', {});
+			if (!st || st.up !== true || type(st.uptime) != 'int') { next(); return; }
+			let dev = cp.safe_iface(st.l3_device, '');
+			let cid = cp.data_cid(dev, R.slot);
+			if (cid == null) { next(); return; }
+			round_at(R, 'AT+CGEQOSRDP=' + cid, 2, (r) => {
+				let reply = cp.after_prefix(r, '+CGEQOSRDP:');
+				let c = replace(reply, /,.*/, '');
+				let st2 = bus.call('network.interface.' + iface, 'status', {});
+				if ((c == '' + cid || c == ' ' + cid || c == cid + ' ') && st2 && st2.up === true && st2.l3_device == dev &&
+				    type(st2.uptime) == 'int' && st2.uptime >= st.uptime)
+					x.QOS = reply;
+				next();
+			});
+		},
+		// the identity: the 6 h cache on flash holds a complete one only; a partial read is kept a minute in RAM
+		(x, next) => {
+			if (!full) { next(); return; }
+			let IDENT = R.ident, PART = R.dir + '/' + basename(IDENT) + '.partial';
+			mkdir(R.ident_dir);
+			if (stat(IDENT)?.size > 0 && ident_complete(IDENT) && file_age(IDENT) <= IDENT_MAXAGE) {
+				x.IDENT_JSON = jparse(readfile(IDENT)); next(); return;
+			}
+			if (stat(PART)?.size > 0 && file_age(PART) <= IDENT_RETRY) {
+				x.IDENT_JSON = jparse(readfile(PART)); next(); return;
+			}
+			let first_ok = (t) => { for (let l in cp.lines(t)) if (!match(l, /^OK/)) return l; return ''; };
+			let I = {};
+			round_at(R, 'AT+CGMI', 2, (a) => { I.mfg = first_ok(a);
+			round_at(R, 'AT+CGMM', 2, (b) => { I.model = first_ok(b);
+			round_at(R, 'AT+CGMR', 2, (c) => { I.fw = first_ok(c);
+			round_at(R, 'AT+CGSN', 2, (d) => { I.imei = substr(cp.ident_token(d, /^[0-9]{15,17}$/), 0, 15);
+			round_at(R, 'AT+CIMI', 2, (e) => { I.imsi = cp.ident_token(e, /^[0-9]{6,15}$/);
+			round_at(R, 'AT+CCID', 2, (g) => { I.iccid = cp.iccid_value(cp.ident_token(g, /^[0-9A-Fa-f]{18,22}$/));
+				let q = (s) => (s == '') ? null : s;
+				x.IDENT_JSON = { ts: time(), mfg: q(I.mfg), model: q(I.model), fw: q(I.fw), imei: q(I.imei), imsi: q(I.imsi),
+					iccid: q(I.iccid) };
+				let text = sprintf('{"ts":%d,"mfg":%J,"model":%J,"fw":%J,"imei":%J,"imsi":%J,"iccid":%J}', x.IDENT_JSON.ts,
+					x.IDENT_JSON.mfg, x.IDENT_JSON.model, x.IDENT_JSON.fw, x.IDENT_JSON.imei, x.IDENT_JSON.imsi, x.IDENT_JSON.iccid);
+				if (I.imei != '' && I.imsi != '' && I.iccid != '') {
+					publish(IDENT, text + '\n');
+					unlink(PART);
+				}
+				else {
+					if (stat(IDENT)?.size > 0 && ident_complete(IDENT)) {
+						x.IDENT_JSON = jparse(readfile(IDENT));
+						text = rtrim(readfile(IDENT) ?? '', '\n');
+					}
+					else if (I.imei == '' && I.imsi == '' && I.iccid == '') {
+						x.IDENT_JSON = null;
+						text = 'null';
+					}
+					publish(PART, text + '\n');
+				}
+				next();
+			}); }); }); }); }); });
+		},
+		// the SIM's own number: AT+CNUM, else the IMS public identity; a number found is kept for the boot (RAM)
+		(x, next) => {
+			if (!full) { next(); return; }
+			let OWN = R.dir + '/own-number';
+			if (stat(OWN)?.size > 0) {
+				let m = match(cp.lines(readfile(OWN) ?? '')[0] ?? '', /^([^ ]*) +(.*)$/);
+				if (m) { x.msisdn_src = m[1]; x.msisdn = m[2]; next(); return; }
+			}
+			round_at(R, 'AT+CNUM', 2, (r) => {
+				x.msisdn = cp.cnum_number(r); x.msisdn_src = 'sim';
+				let done = () => {
+					if (x.msisdn != '')
+						publish(OWN, x.msisdn_src + ' ' + x.msisdn + '\n');
+					else
+						x.msisdn_src = '';
+					next();
+				};
+				if (x.msisdn != '') { done(); return; }
+				round_at(R, 'AT+SPPAURI?', 2, (r2) => { x.msisdn = cp.ims_number(r2); x.msisdn_src = 'ims'; done(); });
+			});
+		},
+	];
+	// the files: sig.json always, cell.json in a full round (the same JSON as the collector program's)
+	let write_out = (x) => {
+		// "no answer at all" is a modem/daemon problem, not "no signal"
+		if ((x.CFUN ?? '') + (x.CEREG ?? '') + (x.CESQ ?? '') + x.SP_LTE + x.SP_NR + x.COPS == '') {
+			let err = jstr({ ts: time(), error: 'AT backend did not answer (radio off, modem restarting, or adapter unavailable)' }) + '\n';
+			publish(SIGF, err);
+			if (full)
+				publish(CELL, err);
+			return;
+		}
+		let LTE = cp.sp_lte(x.SP_LTE, x.SP_LTEPHY), NR = cp.sp_nr(x.SP_NR);
+		let SIG = x.CESQJ, SRC = 'cesq';
+		if (NR != null) { SIG = NR; SRC = 'nr'; }
+		else if (LTE != null) { SIG = LTE; SRC = 'lte'; }
+		publish(SIGF, jstr({ ts: time(), cfun: x.CFUNN, reg: x.REG, reg5g: x.REG5, sig_src: SRC, sig: SIG, lte: LTE, nr: NR }) + '\n');
+		if (!full)
+			return;
+		let NEIGH = [ ...cp.nr_neighbours(x.SP_NRNB), ...cp.sp_ltenb(x.SP_LN) ];
+		if (!length(NEIGH))
+			NEIGH = null;
+		let q = (s) => (s == '') ? null : s;
+		publish(CELL, jstr({ ts: time(), cfun: x.CFUNN, reg: x.REG, reg5g: x.REG5,
+			operator: cp.cops_fragment(x.COPS, x.OPN[0], x.OPN[1]), sig_src: SRC, sig: SIG, lte: LTE, nr: NR,
+			qos: cp.qos_fragment(x.QOS), neigh: NEIGH, ident: x.IDENT_JSON, msisdn: q(x.msisdn),
+			msisdn_src: q(x.msisdn_src) }) + '\n');
+	};
+	run_steps(steps, X, (x) => {
+		try {
+			write_out(x);
+		}
+		catch (e) {
+			log('collector round failed: ' + e);
+		}
+		// every way out of a round ends here: its locks go
+		round_end(R);
+	});
+}
+
+function start_round(mode) {
+	if (round)
+		return 'busy';
+	let DIR = env('MU300_DASH_DIR', RUN_DIR);
+	if (!private_dir(DIR))
+		return 'the runtime directory is not safe';
+	let slot = sim_slot();
+	if (slot == null)
+		return 'the SIM selector did not answer';
+	let native = exists(RUN + '/mu300-radio-freeze');
+	let ATC = '', channels = [ '6', '7' ], fallbacks = [ RUN + '/mu300-at6', RUN + '/mu300-at7', RUN + '/mu300-at' ];
+	let state_dir = cp.safe_state_dir(uget('unisoc_modem', 'main', 'state_dir'), '');
+	let ident_dir = env('MU300_DASH_IDENT_DIR', replace(state_dir, /\/lock-state\.d$/, ''));
+	if (ident_dir == '')
+		ident_dir = '/etc/unisoc-modem';
+	let IDENT = ident_dir + '/sim.json';
+	if (slot == '1') {
+		ATC = RUN + '/mu300-at'; channels = [ '4' ]; fallbacks = [ RUN + '/mu300-at' ];
+		IDENT = ident_dir + '/sim-slot1.json';
+	}
+	if (native) {
+		if (slot == '0') { channels = [ '1' ]; fallbacks = [ RUN + '/mu300-at' ]; }
+		else if (slot == '1') { channels = [ '4' ]; fallbacks = [ RUN + '/mu300-at4' ]; }
+		else return 'invalid SIM slot';
+	}
+	// one collector at a time for this directory (the same lock as the collector program's)
+	let LOCK = DIR + '/collect.lck';
+	while (!mkdir(LOCK)) {
+		let owner = rd(LOCK + '/pid');
+		if (owner == '' || collector_pid(owner))
+			return 'busy';
+		rm_rf(LOCK);
+	}
+	write_small(LOCK + '/pid', MYPID + '\n');
+	let R = { mode: mode, dir: DIR, ident: IDENT, ident_dir: ident_dir, slot: slot, held: [ LOCK ], cands: [],
+		deadline: time() + ((mode == 'fast') ? 12 : 25) };
+	// one of the dashboard's channels, claimed without waiting (the pool the collector program uses too)
+	let POOL = env('MU300_DASH_POOL_DIR', RUN + '/unisoc-modem-at-pool');
+	mkdir(POOL);
+	let SLOT = null;
+	for (let n in channels) {
+		let channel_dir = RUN + '/mu300-at' + n;
+		if (slot == '1' && !native)
+			channel_dir = RUN + '/mu300-at';
+		let s = POOL + '/nr' + n;
+		if (mkdir(s)) { SLOT = s; ATC = channel_dir; break; }
+		let owner = rd(s + '/pid');
+		if (owner != '' && !collector_pid(owner)) {
+			rm_rf(s);
+			if (mkdir(s)) { SLOT = s; ATC = channel_dir; break; }
+		}
+	}
+	if (!SLOT) {
+		round_end(R);
+		return 'busy';
+	}
+	push(R.held, SLOT);
+	write_small(SLOT + '/pid', MYPID + '\n');
+	let seen = {};
+	for (let d in [ ATC, ...fallbacks ]) {
+		if (d == '' || seen[d]) continue;
+		seen[d] = true;
+		let b = broker_by(d);
+		if (b) push(R.cands, b);
+	}
+	if (!length(R.cands)) {
+		round_end(R);
+		return 'none of this daemon\'s channels serves the dashboard';
+	}
+	round = R;
+	run_round(R);
+	return null;
+}
+
+
+// ------------------------------------------------------------------ ubus object
+function status_reply() {
+	let out = { bridge: io ? 'connected' : 'waiting', bridge_pid: io_pid, round: round ? round.mode : null, brokers: [] };
+	for (let b in brokers)
+		push(out.brokers, { name: b.name, dev: b.dev, dir: b.dir, state: chans[b.chan].state, phase: b.phase,
+			queued: length(b.queue) + (b.cur ? 1 : 0), silent: b.silent, clean: b.clean });
+	out.urc = {};
+	for (let name in chans)
+		if (chans[name].kind == 'urc')
+			out.urc[name] = chans[name].state;
+	return out;
+}
+function ubus_setup() {
+	if (!ubusmod)
+		return;
+	bus = ubusmod.connect(getenv('MU300_UBUS_SOCKET'));
+	if (!bus || type(bus.publish) != 'function') {
+		bus = null;
+		uloop.timer(2000, () => ubus_setup());
+		return;
+	}
+	let obj = bus.publish('mu300.modem', {
+		status: { call: (req) => req.reply(status_reply()) },
+		// at { cmd, timeout, channel }: one command on a broker (its name, channel or directory; the first broker
+		// without one), under the client lock; answered once the reply is in
+		at: {
+			args: { cmd: '', timeout: 0, channel: '' },
+			call: (req, msg) => {
+				msg ??= req.args;
+				let cmd = msg?.cmd ?? '', t = msg?.timeout ?? 8;
+				let b = (msg?.channel != null && msg.channel != '') ? broker_by(msg.channel) : brokers[0];
+				if (!b) return req.reply({ ok: 0, error: 'no such channel' });
+				if (type(cmd) != 'string' || !match(cmd, /^AT/i) || !one_request(cmd))
+					return req.reply({ ok: 0, error: 'one AT command, please' });
+				if (type(t) != 'int' || t < 1 || t > 99) t = 8;
+				req.defer();
+				internal_at(b, cmd, t, (text, clean) => {
+					if (text == null)
+						req.reply({ ok: 0, busy: 1 });
+					else
+						req.reply({ ok: clean ? 1 : 0, reply: text });
+				});
+			}
+		},
+		// cell { mode }: a collection round now (fast: the serving cell; full: neighbours, operator, QoS, identity),
+		// unless one is running; the round writes sig.json/cell.json, the caller reads them
+		cell: {
+			args: { mode: '' },
+			call: (req, msg) => {
+				msg ??= req.args;
+				let why = start_round((msg?.mode == 'full') ? 'full' : 'fast');
+				req.reply((why == null) ? { started: 1 } : { started: 0, busy: (why == 'busy') ? 1 : 0, error: (why == 'busy') ? null : why });
+			}
+		}
+	});
+	if (!obj)
+		log('the ubus object mu300.modem could not be published');
+}
+
+// ------------------------------------------------------------------ main
+uloop.init();
+let stopping = false;
+function stop() {
+	if (stopping)
+		return;
+	stopping = true;
+	for (let b in brokers)
+		if (rd(b.dir + '/owner/pid') == '' + io_pid)
+			rm_rf(b.dir + '/owner');
+	uloop.end();
+}
+uloop.signal('SIGTERM', () => stop());
+uloop.signal('SIGINT', () => stop());
+ubus_setup();
+io_connect();
+uloop.run();

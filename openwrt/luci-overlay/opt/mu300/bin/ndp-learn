@@ -189,15 +189,205 @@ case ${1:-} in
     --once) learn_once; exit 0 ;;
 esac
 
+# The daemon (FINDINGS 215). A round looks at the kernel's addresses (/proc/net/if_inet6, a few lines, read by the shell
+# itself) and, every ROUTE_EVERY rounds, at the routing table's lines of the bearer's /64s (one grep); learn_once (two
+# ip calls per prefix, the host routes, the withdrawal) runs only when one of them changed since its last run, or a
+# withdrawal still has rounds to go. A route someone removed comes back within ROUTE_EVERY rounds (30 s), a new or
+# changed prefix within one round, as before; an unchanged bearer costs no process at all, where every round used to
+# start a dozen (ip, awk, grep, subshells: 11 ticks a minute).
+ROUTE_EVERY=${MU300_NDP_ROUTE_EVERY:-3}
+INTERVAL=${MU300_NDP_INTERVAL:-10}   # seconds between two rounds
+IPV6_ROUTE=${MU300_IPV6_ROUTE:-/proc/net/ipv6_route}
+# bearer_look: the addresses as they are (_addrs), the bearer's global /64s as the routing table writes them (_stems:
+# the first 16 hex digits of each 2000::/3 address) and whether it has any global address (_global)
+bearer_look() {
+    _addrs= _stems= _global=0
+    { while read -r _ad _ix _pl _sc _fl _nm; do
+        _addrs="$_addrs $_ad/$_pl/$_sc/$_nm"
+        [ "$_nm" = "$IFACE" ] && [ "$_sc" = 00 ] || continue
+        _global=1
+        case $_ad in [23]???????????????????????????????) ;; *) continue ;; esac
+        _s=${_ad%????????????????}
+        case " $_stems " in *" $_s "*) ;; *) _stems="$_stems $_s" ;; esac
+    done < "$IF_INET6"; } 2>/dev/null
+}
+# routes_now: the routing table's lines of those /64s (ours on br-lan, the RA's, host routes), into _routes
+routes_now() {
+    _routes=
+    [ -n "$_stems" ] || return 0
+    set --
+    for _s in $_stems; do set -- "$@" -e "$_s"; done
+    _routes=$(grep -F "$@" "$IPV6_ROUTE" 2>/dev/null)
+}
+# nap SECONDS: on a fifo nobody writes to (read -t: no sleep process) where the shell has it, else sleep; the wait's
+# timer may fire up to half a second late, so the kernel can serve the timers of several daemons with one wakeup
+wait_for() { sleep "$1"; }
+read_t=0
+nap_d=$(mktemp -d "${TMPDIR:-/tmp}/ndp-learn.XXXXXX" 2>/dev/null) || nap_d=
+if [ -n "$nap_d" ] && mkfifo "$nap_d/wait" 2>/dev/null; then
+    exec 9<>"$nap_d/wait"
+    if { read -t 0 _n <&9; [ $? = 1 ]; } 2>/dev/null; then
+        read_t=1
+        wait_for() { read -t "$1" _n <&9 || :; }
+    else
+        exec 9<&-
+    fi
+fi
+[ -z "$nap_d" ] || rm -rf "$nap_d"
+slack=; { read -r slack < /proc/$$/timerslack_ns; } 2>/dev/null || slack=
+nap() {
+    [ -z "$slack" ] || { echo 500000000 > /proc/$$/timerslack_ns; } 2>/dev/null
+    wait_for "$1"
+    [ -z "$slack" ] || { echo "$slack" > /proc/$$/timerslack_ns; } 2>/dev/null
+}
+
+# The kernel's word instead of a round every INTERVAL seconds (FINDINGS 216). With iproute2's monitor (OpenWrt's
+# ip-full; busybox's ip has none) `ip -o -6 monitor address route` runs as a child and writes a line per change into a
+# fifo this reads with read -t: no process and no wakeup while the kernel says nothing. An address line (any
+# interface's: the round compares them all, as before) starts a round, which reads if_inet6 itself; a route line of
+# br-lan or the bearer starts one that also greps the routing table's lines of the /64s (one process). So a new or
+# changed prefix is routed at once instead of within 10 s, and a route someone removed comes back at once instead of
+# within 30 s; the routes learn_once itself replaces come back as lines too, and find nothing changed. The lines of one
+# change come in a burst (an ifup, a flush): the round comes once they have stopped for a second (at most 5 s).
+# Timers stay for what no line says: a round that also looks at the routes every SAFETY seconds (300), the
+# withdrawal's rounds INTERVAL apart, and the self-heal below - while the bearer has no global address it solicits
+# after INTERVAL seconds, then after twice as long each time up to SAFETY, and from INTERVAL again when the addresses
+# change (a bearer that comes up gets its link-local address first). Every 10 s for ever was what an IPv4-only bearer
+# got: a router solicitation sent over the radio, and a sleep process, six times a minute.
+# Without a monitor (busybox's ip, a shell whose read has no timeout, a monitor that ended) the rounds come every
+# INTERVAL seconds as before; a monitor that ended after it ran is started again after SAFETY seconds, one that ended
+# at once (an ip without monitor) is not. The monitor goes with this process (procd stops it with SIGTERM).
+SAFETY=${MU300_NDP_SAFETY:-300}
+T=0
+now() { { read -r _up _ < /proc/uptime; } 2>/dev/null && T=${_up%%.*}; }
+# cs: centiseconds of uptime in $C - a read of the monitor that fails before half a second has passed met the end of
+# its stream, not its timeout (busybox's read says 1 for both)
+C=0
+cs() { { read -r _up _ < /proc/uptime; } 2>/dev/null && C=$((${_up%.*} * 100 + 1${_up#*.} - 100)); }
+mon=0 mon_pid= mon_off=0 mon_t0=0 mon_retry=0 ml=
+mon_start() {
+    [ "$mon" = 0 ] && [ "$mon_off" = 0 ] && [ "$read_t" = 1 ] && [ "${MU300_NDP_MONITOR:-1}" = 1 ] || return 1
+    # (whole seconds: the timers below count them, and OpenWrt's busybox read takes no other)
+    case $INTERVAL$SAFETY in *[!0-9]*) return 1 ;; esac
+    [ -r /proc/uptime ] || return 1
+    _d=$(mktemp -d "${TMPDIR:-/tmp}/ndp-learn.XXXXXX" 2>/dev/null) || return 1
+    if mkfifo "$_d/monitor" 2>/dev/null; then
+        # (the monitor's open of the fifo waits for this one's, and this one's for the monitor's)
+        ip -o -6 monitor address route > "$_d/monitor" 2>/dev/null < /dev/null 9<&- &
+        mon_pid=$!
+        exec 8< "$_d/monitor"
+        mon=1 mon_t0=
+        now; safety_at=$((T + SAFETY))
+    fi
+    rm -rf "$_d"
+    [ "$mon" = 1 ]
+}
+mon_stop() {
+    [ "$mon" = 1 ] || return 0
+    kill "$mon_pid" 2>/dev/null
+    exec 8<&-
+    mon=0
+}
+# mon_next SECONDS: the monitor's next line in $ml; false when none came in that time or the stream ended (within 2 s
+# of the first read: it never ran)
+mon_next() {
+    [ -n "$mon_t0" ] || { now; mon_t0=$T; }
+    cs; _c0=$C
+    [ -z "$slack" ] || { echo 500000000 > /proc/$$/timerslack_ns; } 2>/dev/null
+    IFS= read -r -t "$1" ml <&8; _r=$?
+    [ -z "$slack" ] || { echo "$slack" > /proc/$$/timerslack_ns; } 2>/dev/null
+    [ "$_r" != 0 ] || return 0
+    cs
+    [ $((C - _c0)) -lt 50 ] || return 1
+    mon_stop
+    now
+    if [ $((T - mon_t0)) -lt 2 ]; then
+        mon_off=1
+        logger -t ndp-learn "no address and route monitor (ip -6 monitor); a round every $INTERVAL s"
+    else
+        mon_retry=$((T + SAFETY))
+        logger -t ndp-learn "the address and route monitor ended; a round every $INTERVAL s"
+    fi
+    return 1
+}
+# mon_line: the line in $ml says something a round looks at (route_due: a route of br-lan or the bearer)
+mon_line() {
+    case " $ml " in
+        *" inet6 "*) return 0 ;;
+        *" br-lan "*|*" $IFACE "*) route_due=1; return 0 ;;
+    esac
+    return 1
+}
+# mon_wait: until a line says something a round looks at (and the rest of its burst), or a timer
+mon_wait() {
+    route_due=0
+    now
+    _due=$safety_at
+    [ "$withdraw_rounds" -le 0 ] || [ $((T + INTERVAL)) -ge "$_due" ] || _due=$((T + INTERVAL))
+    [ "$_global" = 1 ] || [ "$heal_at" -ge "$_due" ] || _due=$heal_at
+    while [ "$T" -lt "$_due" ]; do
+        mon_next $((_due - T)) || break
+        now
+        mon_line || continue
+        _end=$((T + 5))
+        while [ "$T" -lt "$_end" ] && mon_next 1; do
+            mon_line || :
+            now
+        done
+        break
+    done
+    now
+    [ "$T" -lt "$safety_at" ] || route_due=1
+}
+solicit() {
+    echo 0 > "/proc/sys/net/ipv6/conf/$IFACE/accept_ra" 2>/dev/null
+    sleep 1
+    echo 2 > "/proc/sys/net/ipv6/conf/$IFACE/accept_ra" 2>/dev/null
+}
+trap mon_stop EXIT
+trap 'exit 0' INT TERM
+
+seen_addrs=- seen_routes=- n=0 route_due=0 safety_at=0 heal=$INTERVAL heal_at=0
+mon_start || :
 while :; do
-    learn_once
+    now
+    bearer_look
+    n=$((n + 1))
+    full=0
+    [ "$_addrs" = "$seen_addrs" ] || full=1
+    [ "$withdraw_rounds" -le 0 ] || full=1
+    if [ "$mon" = 1 ]; then rd=$route_due; else rd=0; [ $((n % ROUTE_EVERY)) != 0 ] || rd=1; fi
+    if [ "$full" = 0 ] && [ "$rd" = 1 ]; then
+        routes_now
+        [ "$_routes" = "$seen_routes" ] || full=1
+    fi
+    if [ "$full" = 1 ]; then
+        # new addresses: the self-heal's solicitations start over (with the monitor)
+        [ "$_addrs" = "$seen_addrs" ] || heal=$INTERVAL heal_at=0
+        learn_once
+        seen_addrs=$_addrs
+        routes_now; seen_routes=$_routes   # what learn_once left, as the next look compares it
+    fi
+    # (with the monitor: the routes were looked at, the next safety round is SAFETY seconds away)
+    [ "$mon" = 0 ] || [ "$full$rd" = 00 ] || safety_at=$((T + SAFETY))
     # Self-heal the bearer's own public address: the carrier's RA can be missed while the
     # bearer settles after boot, and nothing else ever re-solicits - flip accept_ra to send
-    # a fresh router solicitation whenever the bearer has no global address.
-    if ! ip -6 addr show "$IFACE" 2>/dev/null | grep -q 'scope global'; then
-        echo 0 > "/proc/sys/net/ipv6/conf/$IFACE/accept_ra" 2>/dev/null
-        sleep 1
-        echo 2 > "/proc/sys/net/ipv6/conf/$IFACE/accept_ra" 2>/dev/null
+    # a fresh router solicitation whenever the bearer has no global address (with the
+    # monitor: when the self-heal's time has come, see above).
+    if [ "$mon" = 0 ]; then
+        [ "$_global" = 1 ] || solicit
+    else
+        if [ "$_global" = 1 ]; then
+            heal=$INTERVAL heal_at=0
+        elif [ "$T" -ge "$heal_at" ]; then
+            solicit
+            heal_at=$((T + heal)); heal=$((heal * 2)); [ "$heal" -le "$SAFETY" ] || heal=$SAFETY
+        fi
     fi
-    sleep 10
+    if [ "$mon" = 1 ]; then
+        mon_wait
+    else
+        nap "$INTERVAL"
+        [ "$mon_retry" = 0 ] || { now; [ "$T" -lt "$mon_retry" ] || { mon_retry=0; mon_start || :; }; }
+    fi
 done

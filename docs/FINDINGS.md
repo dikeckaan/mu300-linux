@@ -192,6 +192,9 @@ what replaced it. The table below gives each section's state.
 | 204 | The ZTE V50's SIM cards (#332): ZTE's four board variants, a third built-in card behind SIM2 and the external card behind SIM1, switched by board GPIOs; chosen per boot, the switch set before the modem's CP starts (kanoqwq's f0ed60ff, b4c051c8) | offline only (no V50 here): unit tests, the driver built for 6.18.57 and 7.2.11; on a V50 by the #332 reporter |
 | 205 | The U30 Air's USB 3 link in **device** mode follows the plug orientation (#54): SuperSpeed only in the orientation the PHY/redriver latched at power-on; `mu300-usb pd on` (0020) gives CC and the roles but does not flip the lanes, and a replug does not bring SuperSpeed back (7.2.11) | measured on a U30 Air, 7.2.11; no fix here. #341 on the same unit: orientation A at 10 Gbps, B not seen at all (worse than the USB 2 fallback); the PTN38003A does not answer at i2c 0x30 there |
 | 206 | Linux 7.3 as a fourth kernel: every patch applies unchanged (none upstream, none dropped); `PROC_SYSCTL` folded into `SYSCTL` (`config-ignored.txt`, checked only where the kernel lacks the symbol), the cfg80211 cookie handed in by value, `dma_capable()` with DMA attributes, `IIO_CONSUMER` for the audio extra; the checksum list from www.kernel.org (the CDN lagged) | current (F50-B Ubuntu: all checks, call audio with the 7.3 extra, the boot fallback; the one hang in a reboot loop was the board's plug pulled by accident, not 7.3; the U30 Air openwrt-luci with the VPN and its kill switch, 2026-10-19; `sprd_wlan_combo` for 6.18.57 and 7.2.11 byte for byte v2026.10.19.3's; released in v2026.10.22.1, F50-B 10/10 boots on 7.3 in a reboot soak) |
+| 215 | Idle CPU of the shell daemons: a look that finds nothing new starts no process (builtin reads, `read -t` on a fifo for the wait, timer slack during it); mu300-smsd asks AT+CNMI? every 2 min instead of a full sync and AT+CNMI? every 30 s, mu300-power asks iw and hostapd once a minute, the LED tick runs only on a change, thermal-guard's interval grows with the distance from its thresholds; mobile-data's watch and mu300-at as proposals | unit tests; the old and new rounds measured on a U30 Air in one shell; on our U30 Air since 2026-10-22 |
+| 216 | The home page's CPU (70.7 % of a core, a fifth on the A76s) and the modem daemon: the panel's status in rpcd itself (mu300status, ucode), the collector and dashboard-info in ucode, the services on the A55s; mu300-modemd (ucode) and mu300-atd-io (C) instead of the shell AT brokers, opt-in with /etc/mu300/modemd; a bridge that closed every SIPC channel at the first ENODATA, fixed; mobile-data's watch on the modem's events; a stale page's old calls answered by the plugin. Idle 1.3 %, the page open 2.8 % | unit tests; on our U30 Air (dual-SIM boot, SIM2) since 2026-10-23 |
+| 217 | The system daemons without a clock: mu300-sysd (ucode; keys, the LED tick, the thermal guard; `mu300-keys -u power_supply` for the uevents; opt-in with /etc/mu300/sysd), mu300-smsd and ndp-learn on events (modemd's, `ip monitor`), mu300-power's loops 30-60 s apart while nothing is close. Idle 0.3 %, the page open 2.6 % | unit tests; on our U30 Air since 2026-10-23 (an injected key press and a synthetic power_supply uevent went through sysd; a physical plug not yet seen) |
 
 ## Hardware and firmware facts
 
@@ -1494,7 +1497,8 @@ there go to Android.
   the first seconds of systemd leaves no log. `mu300-early-recorder.service` keeps writing `dmesg` to the boot_b log area
   for the first five minutes.
 
-  **Update 2026-10-07:** it now writes every 2 s for the first 90 s, then every 10 s (§31d). It runs up to 300 s on
+  **Update 2026-10-07:** it now writes every 2 s for the first 90 s, then every 10 s (§31d; every 30 s since §217,
+  on the little CPUs). It runs up to 300 s on
   Ubuntu (`mu300-early-recorder.service`) and up to 420 s from OpenWrt's preinit
   (`openwrt/overlay/lib/preinit/05_mu300_early_recorder`). It writes only what it has collected, not the full
   8 MiB.
@@ -12762,3 +12766,263 @@ the missing name. v2026.10.23.1 ships all eight in each mainline bundle (built o
 A system installed with an earlier mainline bundle, or from macOS or Windows before this fix, gets the four modules
 with its next kernel update (`mu300-update kernel 6.18|7.2|7.3` from v2026.10.23.1 on, which unpacks on the device).
 `tests/test_case_sensitive.py`.
+
+### 215. Idle CPU of the shell daemons: no process for a look that finds nothing new
+
+On a U30 Air on the charger, idle (5G SA, the hotspot up with two clients), the userspace daemons together used about
+5 % of one core: 300-odd ticks a minute (USER_HZ 100) summed over every process, of which the vendor's
+`cp_diskserver` is 28. Measured per process over 60 s, a process's own time plus its reaped children's
+(`/proc/PID/stat` utime+stime+cutime+cstime, two snapshots): mu300-smsd 89-93, mu300-power 52-56, mobile-data's watch
+43-46, mu300-buttons 29-40, thermal-guard 26-29, mu300-adbd 27-32, ndp-learn 11-13, mu300-traffic 6-8. The sys time
+was about three times the user time: the cost is processes, not work. On this SoC a fork and exec of a small binary
+(`/bin/true`, `cat`, `date`, busybox `sleep`) is 0.7-1 ms, a `$( )` 0.5 ms more, and the helpers that are scripts
+cost much more: `mu300-sim active` 12 ms on slot 1 (its short path is for slot 0 only), `mu300-sim-state get` 17 ms
+(it runs `mu300-sim active`), `mu300-device` 2 ms, one `mu300-at` command 48 ms on the client side.
+
+The rule for every daemon loop now: a look that finds nothing changed starts no process. Files are read with the
+shell's own `read` (`read -r v < file`, `read -r up _ < /proc/uptime` for the time), values travel in variables rather
+than through `$( )`, a file that rarely changes is compared with what was read last before anything is derived from
+it, and the wait is `read -t N` on a fifo that nobody writes to, opened read-write (it never reaches end of file),
+where the shell has `read -t` (busybox ash, bash; OpenWrt's busybox takes whole seconds only, `read -t 0.5` is
+"invalid timeout"), else `sleep` (dash). A signal still ends that wait at once. During the wait the daemon's timer
+slack is 500 ms (`/proc/$$/timerslack_ns`, set around the wait only, so what the loop starts keeps the default):
+the kernel can serve the wakeups of several daemons with one.
+
+- **mu300-smsd**: every 5 s it asked `mu300-sim-state get` (17 ms) and checksummed the URC logs (`cat | grep |
+  md5sum`), every 30 s it ran a full `mu300-sms sync` (four AT commands: CPMS twice, CMGF, CMGL; 250 ms) and
+  `AT+CNMI?`. Now the 5 s look is the spool's glob, the three files `mu300-sim-state` answers from (the helper runs
+  when one changed) and the URC logs' times against a stamp of the last look (`test -nt`; two stamps take turns, so a
+  line written during a look is seen by the next; busybox compares whole seconds, so a log of the stamp's second
+  counts as changed). The checksum is taken only when a log changed. The safety nets are `AT+CNMI?` every 120 s
+  (`MU300_SMS_CHECK_INTERVAL`), and at once (at most every 30 s) when a URC log changed without a new +CMTI - a modem
+  that restarted announces itself there: when the routing is not what was asked (direct: mt 2; the SIM path, which
+  was not looked at before: mt 1) it is asked again and a full sync takes what was stored in silence. A full sync
+  runs every 1800 s (`MU300_SMS_SYNC_INTERVAL`, was 30), at every check while parts are parked in `$POOL/parts`, and at
+  the next check after one that failed. The direct path is unchanged: a spooled `+CMT` is pooled and acknowledged
+  within 5 s. What is slower: a message the modem stored in silence after it dropped the routing is found within
+  2 minutes instead of 30 s; a +CMTI lost from a log that was emptied between two looks, within 30 minutes. AT
+  commands: 10 a minute before, 0.5-0.6 now.
+- **mu300-power**: one loop started about forty processes (`cat`, `sed | tail` per setting, `mu300-device` several
+  times, `$( )` around every helper, `od | tr` for the shutdown voltage, `rm -f` of files that were not there). The
+  loop now reads with builtins (`rv`, `nv`, `conf_load`/`conf_v` over the file read once a loop, `psy_scan`,
+  `battery_v`, `plugged_v`...; the echo helpers stay for `status`), finds the charge switch and the device once, and
+  asks iw for the stations and hostapd (ubus) for the hotspot only every sixth loop (`MU300_POWER_SAMPLE_EVERY`, a
+  minute) - and at once when wlan0 is gone, and always before the idle timer runs out (a client that came since the
+  last look keeps the hotspot up, as before). The battery's low-voltage and low-capacity checks, the charge guard,
+  the plug edge, a computer on USB and the wake flag are every loop, every 10 s, as before. What is slower: a station
+  that wakes an idle device is seen within a minute (in idle the hotspot is normally down), a hotspot that went down
+  by itself while it should stay up is restored up to a minute later. On the device, 60 loops against a fake root with
+  its own readings: 546 ticks before, 17 now.
+- **mu300-buttons / mu300-led**: the tick every 5 s ran `mu300-led tick`, which ran `mu300-device` and then itself
+  again (`exec "$0" sleep --if-due`). The tick now leaves `$STATE/.tick-hint`: the files it depends on (the battery's
+  and the charger's readings, its own state files, the siren's pid file) with what each held, and the uptime from
+  which it has something to do anyway (a timeout that runs out; a minute at the latest). mu300-buttons keeps the hint
+  (read at its start and after each tick it starts: busybox reads a byte per system call) and starts `mu300-led tick`
+  only when one of those files changed or that time came. Keys are not touched: they never waited for the tick.
+- **thermal-guard**: a round read the zones with builtins already, but around them `$(hottest)`, `$(battery)` (a
+  `cat` per power supply) and `$(native_cpu_cooling)` (a `cat` per trip point). Now no process at all; and the round
+  comes every 5 s near a threshold or while a cap or the alarm of this guard is on, further away a second more per 2 C
+  the SoC is under HOT (per 1 C the battery is under BATT_HOT), up to 30 s while the kernel throttles itself
+  (soc-thmzone's passive trips at 70 and 85 C, section 166) and up to 10 s where this guard is the thermal policy. At
+  40 C: every 25 s. The power-off at CRIT stays; at 85 C the guard looks every 5 s as before.
+- **mu300-adbd**: `cat` of the role and of UDC and a `sleep 1` every second. Now builtins, and a look every 3 s while
+  the gadget is bound with adb in it (`MU300_ADBD_IDLE_TICK`), every second otherwise; an unbound gadget (an adb
+  connection that ended) is bound again up to 2 s later than before (the GRACE looks follow at 1 s).
+- **ndp-learn**: `awk | sort`, two `ip` calls per prefix, `ip | awk` and `ip | grep` every 10 s. Now a round reads
+  `/proc/net/if_inet6` itself, and every third round greps the routing table's lines of the bearer's /64s
+  (`/proc/net/ipv6_route` read by the shell is 3.5 KB a byte at a time: 3.8 ms, a grep is less); `learn_once` runs only
+  when one of them changed or a withdrawal has rounds to go. A route someone removed comes back within 30 s (was 10).
+- **mu300-traffic**: the settings file is read again only when it changed (nine `sed | tail` and `grep` before), one
+  `date '+%s %z'` gives the time and the offset (two dates and an awk before), the summary is read by the shell.
+
+Measured on the device, the same work in one shell, old against new: smsd's 5 s look 2.4 ticks -> 0.05;
+thermal-guard's round 2.6 -> 0.4 (most of what is left is the kernel reading twenty sensors); ndp-learn's round
+1.95 -> 0.15; a traffic round 7.1 -> 1.35. Expected per minute now: smsd about 4 (AT+CNMI? and the half-hourly sync:
+mu300-at's 48 ms a command is most of it), power about 2, thermal-guard about 1, buttons about 1, adbd about 1,
+ndp-learn about 1, traffic about 1.5.
+
+Not done here: **mobile-data's watch** (43 ticks a minute) asks AT+CGACT?, AT+CGPADDR, AT+CEREG? and on 5G SA
+AT+C5GREG? every 30 s - 8 AT commands a minute, 4 x 48 ms a round - and runs `mu300-led data 5g` (a whole mu300-led)
+every round, with `mu300-sim-state get` (17 ms) and `mu300-sim-radio allowed` before. The changes that would take most
+of it: on the U30 Air the network LED shows the SIM in use, not 4G/5G (section 154), so led_up need not ask
+CEREG/C5GREG there, and `mu300-led data` need not run when `/run/mu300/led/<led>` already says so; a round whose
+`rx_packets` grew since the last has a working bearer with the address the modem gave it (the stale-address case the
+watch looks for reads rx 0), so CGACT?/CGPADDR can wait for a round without downlink traffic; the SIM state and the
+slot read from their files. And **mu300-at** itself: 48 ms a command, of which `mu300-sim active` is 12 ms on slot 1
+and the answer wait polls with a `date` and a busybox `sleep 0.01` per 10 ms.
+
+Tests: `tests/test_sms_pool.py` (the routing put back at the check, the SIM path's too, an idle daemon asking nothing
+between checks and checksumming nothing while the logs stay, parked parts and a failed sync synced at the next check,
+the SIM state helper asked only when its files change), `tests/test_power.py` (the stations and the hotspot every
+sixth loop and every loop without wlan0, the stations asked before the idle timer runs out, four loops start no more
+`cat`/`sed`/`grep`/`rm`... than one), `tests/test_device_scripts.py` (`Buttons`: mu300-led started only when its
+hint says so - timeouts, the plug, a minute, a key; `ThermalGuard`: the interval), `tests/test_adb.py` (an idle gadget
+is looked at without `cat`, and without `sleep` where read has a timeout), `tests/test_mu300cell.py` (ndp-learn's
+daemon calls ip only when the addresses or the routes changed).
+
+### 216. The home page's CPU and the modem daemon: the panel's status in rpcd, the AT channels in one event-driven process
+
+With the LuCI home page open (status every 1.5 s, the rates every second, the SMS watcher every 5 s), a U30 Air on
+the charger used 70.7 % of one core, about a fifth of it on the A76 cluster; idle (no page) 9.5-11 %. Per process over
+60 s, own time plus reaped children (`/proc/PID/stat` utime+stime+cutime+cstime): rpcd's `mu300dash` (a shell script
+started per call) and what it started were most of it - about 700 processes a minute: `dashboard-info` (a shell
+script reading forty files through `cat`, `sed`, `awk`), the collector `unisoc-modem/cell` (shell; 500 ms a fast
+round, ten mu300-at commands of 48 ms each), and mu300-atd's own forks per command (`date`, `sleep`, `cat`, `mv`).
+
+Three layers, each one handing work to the one below:
+
+- **Layer 2, the panel: rpcd only reads.** `mu300status` (rpcd-mod-ucode, `usr/share/rpcd/ucode/mu300status.uc`) answers
+  `status`, `sysinfo` and `sms_head` inside rpcd with the module `mu300.dash` (`usr/share/ucode/mu300/dash.uc`): the
+  snapshot dashboard-info printed, field for field (compared on the device: no difference), each part cached for as
+  long as it can change (the cursor 10 s, the identity 300 s, the CPU count 10 s, the storage 30 s, the temperatures
+  5 s, the power 3 s, the internet check 5 s, ...), the SIM selector's answer kept while its files' times and sizes
+  stay. A call is about 5.4 ms. The cell data is read from the collector's cache (sig.json/cell.json); a stale cache
+  asks for a new round (`ubus call mu300.modem cell`, or the collector program in the background without the daemon)
+  and answers from what is there: a call never waits for the modem. The SMS watcher asks `sms_head` (the pool's next
+  id, count and directory time) and reads the list only when that changed. `dashboard-info` and `cell` are ucode
+  programs now (the same output; `cell`'s fast round 40-60 ms: the reads grouped into one command,
+  `AT+CFUN?;+CEREG?;+C5GREG?;+CESQ`, with the separate commands as the fallback, the LTE reads skipped on 5G SA), so
+  the Ubuntu panel and anything else that runs them gains too.
+- **Layer 1, the modem: one daemon, no process per command.** `mu300-modemd` (ucode, uloop; docs/MODEMD.md) serves
+  every AT broker of the boot in one process - the same channels, directories, request FIFOs, answer files, URC logs,
+  +CMT spool and SIM-state hook as the shell `mu300-atd` instances, so every client (mu300-at, mobile-data, the SIM
+  scripts, mu300-sms) is unchanged. It publishes `mu300.modem` on ubus (`status`, `at`, `cell`: the panel's collection
+  round in-process) and every unsolicited line as the event `mu300.modem.urc`. ucode cannot make a descriptor
+  non-blocking, and closing a SIPC channel silences it until a reboot (13b), so the channels are held by a small C
+  bridge, `mu300-atd-io` (tools/atd-io), that moves bytes between them, mu300-at's FIFOs and one client over a unix
+  socket and decides nothing; a restarted modemd takes the bridge's open channels over. Opt-in: `/etc/mu300/modemd`
+  (init.d/mu300-atd), else the shell daemons as before.
+- **Layer 0, the kernel's share.** procd's services run on the A55 cluster (`mu300-cpu services`, default `little`:
+  the services cgroup's `cpuset.cpus` = the lowest-capacity CPUs): the panel's bursts no longer wake an A76.
+
+**The first boot with modemd lost every channel.** The bridge opened the SIPC channels O_NONBLOCK and took any read
+error other than EAGAIN for an end of file, as a pty's EIO is. The spipe driver's non-blocking read
+(`sbuf_read(..., timeout 0)`) answers **ENODATA** when the ring is empty, so the second read after the first line
+closed all three channels for good - 5G never came up (the bridge's log: "read failed (No data available)"). Now
+EAGAIN, ENODATA and EBUSY all mean "nothing now", and a channel that is not a terminal (the stty_nr channels are misc
+devices: `/sys/class/tty` has none of them) is never closed by a read: after an error, a read of 0 bytes or a hangup
+it stays open and out of the poll for 1 s, one line per new error; a channel that wakes the loop eight times in a row
+with nothing to read waits 200 ms, so a poll that keeps saying POLLIN cannot spin either. Rolled back by
+`rm /etc/mu300/modemd` and a reboot. Tests: `tests/test_atd_io.py` reads ptys through a preload shim that turns
+EAGAIN into ENODATA and, optionally, says "not a terminal".
+
+**mobile-data's watch waits for events.** With mu300.modem on ubus the watchdog no longer asks CGACT/CGPADDR/CEREG
+every 30 s: it listens (`ubus -S listen mu300.modem.urc network.interface`) and looks in full on a +CGEV, NO CARRIER
+or a registration loss (and its end) on the card in use's URC channel, on a netifd event of the wan, every 300 s
+(MU300_WATCH_FULL), after a round that found trouble, and when the data device sent packets without receiving one
+in an interval (two sysfs reads every 30 s, no process). Without modemd, every round is a full one as before.
+
+**A page from before the plugin.** LuCI loads a view with its own version in the URL, and an update of this app does
+not change it: a browser that had the home page open kept running the old home.js from its cache and polled
+`mu300dash status` every 1.5 s - on the device 100 forks a second and 20 % of a core with the page "closed".
+`mu300dash` now answers status and sysinfo through mu300status (one `ubus call`) before it reads the rest of itself.
+
+Measured on the U30 Air (5G SA, SIM2 of a dual-SIM boot, the hotspot up, on the charger; one core = 100 %, USER_HZ
+100, every process's own time plus its reaped children's; the page through uhttpd's /ubus with a session as the
+browser does it, status every 1.5 s after the reply, the rates every second, the SMS head every 5 s):
+
+| | idle | home page open |
+|---|---|---|
+| before (shell panel, shell daemons) | 9.5-11 % | 70.7 % (A76 ~20 %) |
+| the rpcd plugin, the services on the A55s | | 13.0 % (A76 ~0) |
+| + FINDINGS 215 (daemons without idle forks) | 7.2 % | 11.0 % |
+| + modemd, the event-driven watch (60 s each) | 1.3 % (A76 0) | 2.8 % (A76 2 ticks a minute) |
+
+(The last row was measured with the system counters read right around the wait: the earlier rows include the
+measuring script's own process snapshots, about one point.) Idle, the whole system starts about one process a
+second; with the page open the busiest are rpcd (68 ticks a minute: 112 calls), modemd (27: a fast collection round
+every 3 s while the page asks), uhttpd (15) and ubusd (8). The little cluster's clock changes 4-5 times a second
+(57 before, mostly the process storms): schedutil's `rate_limit_us` at 10000 instead of the driver's 1000 made no
+measurable difference, so it is left alone. The boot is not slower: the data address at 14.2 s with modemd (16.9 s
+in the boot before, with the shell brokers).
+
+Tests: `tests/test_modemd.py` (the daemon against a stand-in bridge: requests, answer files, the drain and collect
+rules, URC logs, +CMT, the SIM hook, the ubus methods, a collection round equal to `cell`'s), `tests/test_atd_io.py`
+(the bridge), `tests/test_sim2.py` (the init script's brokers with and without the daemon), `tests/test_device_scripts.py`
+(MobileData: the event wait), `tests/test_mu300dash_security.py` (the plugin's ACL, a stale page answered by it).
+
+### 217. The system daemons without a clock: mu300-sysd, and smsd, ndp-learn and mu300-power on events
+
+After 215 and 216 the U30 Air at rest still woke about 50 times a minute for loops that found nothing: mu300-keys'
+5 s tick and the mu300-buttons shell behind it (with `mu300-led tick` at least once a minute), thermal-guard every
+22-30 s, mu300-smsd's look every 5 s, ndp-learn every 10 s and mu300-power every 10 s. Each of them now waits for what
+it is there for.
+
+- **mu300-sysd** (ucode + uloop, `rootfs/overlay/opt/mu300/bin/mu300-sysd`, opted into with `/etc/mu300/sysd`) does
+  the keys, the LED tick and the thermal guard in one process. One helper, `mu300-keys -u power_supply,extcon`,
+  reports the presses and the kernel's power_supply and extcon uevents in its one poll loop (the device's ucode socket
+  module has no AF_NETLINK); it accepts kernel messages only (sender port 0), says `uevent overflow - -` when the kernel dropped
+  some, and ends with its reader. Its lines reach sysd through a socket pair, not a popen pipe: a popen pipe is a
+  stdio stream, and lines that arrive together wait in its buffer where the event loop never sees them. Presses do
+  exactly what mu300-buttons did (its own tests run against sysd). The LED tick runs when the hint says it has
+  something to do, looked at on a power_supply uevent (0.5 s coalesced), at the hint's due time, at the end of a
+  key's wake and every 90 s in case a uevent was lost; battery readings count by what the LED shows, so a 1 % step
+  starts nothing. thermal-guard's rounds are timers with in-process sysfs reads, 3 ms a round (a sysfs read is about
+  60 µs from ucode, a pattern match about 0.1 ms: matching every trip file made one version take 30 ms); thresholds,
+  caps, ceiling, alarm, the power-off at CRIT, the adaptive interval and the log lines (still tagged thermal-guard)
+  are those of the shell. mu300-buttons and mu300-post's thermal guard step aside only when the marker is there and
+  `mu300-sysd --check` passes (the modules and calls it needs, a mu300-keys with `-u`); Ubuntu keeps the old daemons.
+- **mu300-smsd** listens to modemd's events (`ubus -S listen mu300.modem.urc ubus.object.remove` into a fifo it reads
+  with `read -t`): modemd now announces a spooled direct delivery in the log's fixed words (`+CMT (PDU spooled)`,
+  never the header or the PDU), and the spool is pooled and acknowledged within the second (was up to 5 s); a
+  `+CMTI` on any channel but the other card's unsolicited one starts a sync (slot 1 of a dual-SIM boot included,
+  whose URCs the log look never read; modemd also announces a `+CMTI`/`+CDSI` that comes on a command channel between
+  commands, and nothing else from there); `+ECIND: 3,`/`+SIND:` have the SIM state followed for 30 s and the routing
+  asked once they stop. AT+CNMI? every 600 s instead of 120 s: a modem that restarts announces its SIM again, and it
+  drops direct routing only after an acknowledgement that never came. Without modemd: the 5 s look as before.
+- **ndp-learn** runs `ip -o -6 monitor address route` (ip-full) the same way: an address line, or a route line for
+  br-lan or the bearer, starts a round once the burst has been quiet for 1 s (a removed route comes back at once, was
+  up to 30 s), with a safety round every 300 s. While the bearer has no global address, the router solicitations back
+  off from 10 s to 300 s and start over when the addresses change: an IPv4-only bearer solicited over the radio every
+  10 s for ever. Without a monitor, rounds every 10 s as before.
+- **mu300-power: the loops follow what is close.** The base interval (10 s) stays where only a loop would see an
+  event or a deadline is near: idle (a plug, a computer on USB), the charging boot, a battery off the charger at 20 %
+  or less (or Low, Critical, unreadable), a retry, a wake or an idle asked for. Otherwise the next loop comes in 30 s
+  on the charger (the charge guard) and in 60 s on a battery above 20 %, never past the idle timer's end; the stations
+  and the hotspot are still asked at most once a minute, and a key still restores at once by itself. One log line
+  when the reason changes ("the next loop in 30 s (plugged)").
+
+All listeners are children that die with their daemon (an EXIT trap; a TERM trap where there was none), and one left
+behind by a SIGKILL ends at its next event on SIGPIPE.
+
+Measured on the U30 Air after a cold boot with everything on (5G SA, dual-SIM boot on SIM2, hotspot up, on the
+charger; 60 s, the system counters read right around the wait, after the boot's early-recorder had ended):
+
+| | idle | home page open (through uhttpd) |
+|---|---|---|
+| 2026-10-22, before 215 | 9.5-11 % of a core | 70.7 % (A76 ~20 %) |
+| modemd (216) | 1.3 % | 2.8 % |
+| sysd, events (217) | **0.3 %** (18 ticks a minute, no process started) | **2.6 %** (A76 5 ticks a minute) |
+
+What is left at rest is the kernel and the radio stack's own (rcu_sched 4 ticks a minute, sugov 3-4, netifd 3,
+the USB interrupt thread 3, hostapd 2) and each mu300 daemon at 2 ticks or less.
+
+- **early-recorder** (the boot partition's log of the first 420 s, sections 20 and 31d) was the boot's largest cost
+  once everything else was quiet: about 95 ticks a minute 300 s after boot, a third of it on the A76s. A round read
+  the kernel's and logd's whole logs (`dmesg | tail -c 1000000` about 0.45 s of CPU with 260 KB of kernel log,
+  `logread | grep | tail -300` about 0.27 s for 450 KB). It now pins itself to the little CPUs (preinit starts it
+  before mu300-cpu puts the services there; `taskset`, the CPUs of the lowest cpu_capacity), asks logd for its last
+  300 lines (`logread -l 300`: the same text, 0.01-0.03 s) and the kernel for its last MB without the pipe
+  (`dmesg -s 1000000`, 0.28 s), and after the first 90 s (still every 2 s there, the early hangs' window) writes
+  every 30 s instead of 10 s, to the same end. 300-360 s after boot: the whole system 75 ticks (was 156), the
+  recorder 16 (was 97), the A76s 1 (was 53); the snapshot read back from boot_a has every section. Checked on the device without touching it: a short power-key press written into the gpio-keys event
+device (press, 150 ms, release) reached sysd, which woke the LEDs and mu300-power ("active: woken by the power key"),
+and at the wake's end the timer ran the LED tick (a new hint, due in 600 s); with a file of the hint changed by hand
+nothing ran for 3 s, and a `change` written to the fuel gauge's `uevent` reached mu300-keys and had the tick run
+0.5 s later (the coalescing), which put the file right.
+
+  **The charger sends no uevent.** Charging switched off and on (`charge_type` N/A, Fast) changed the charger's and
+  the gauge's status at once, but no uevent came, and the LED followed only at the next look: 73 s late in the first
+  version, whose safety look was 90 s (mu300-buttons' tick had been 5 s). The U30 Air's charger is an SGM41513 under
+  the bq256xx driver with no interrupt in `/proc/interrupts`; the gauge's interrupt counts 1 % steps only. What has
+  an interrupt is the plug: extcon-gpio, which sends an **extcon** uevent. So the helper is now
+  `mu300-keys -u power_supply,extcon`, and on the charger the look comes every 30 s (`MU300_SYSD_SAFETY_PLUGGED`;
+  90 s on the battery), a few sysfs reads in the process. On the device: a `change` on extcon0's `uevent` had the
+  LED put right 1.2 s later; charging off and on again had the battery LED steady, then breathing, 30 s after each
+  (no uevent either time). Not seen yet: a physical plug (the device is on its USB cable to the computer).
+
+Tests: `tests/test_sysd.py` (mu300-buttons' and thermal-guard's tests against sysd, the daemon, `--check`, the init
+wiring, `mu300-keys -u` with real kernel uevents and a fake userspace datagram that must be dropped),
+`tests/test_sms_pool.py` and `tests/test_mu300cell.py` (the event waits, the fallbacks, no process while nothing
+comes, the listener gone after SIGTERM), `tests/test_power.py` (the wait follows what is close),
+`tests/test_modemd.py` (the +CMT and +CMTI events, never a PDU or a late reply).

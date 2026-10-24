@@ -679,6 +679,52 @@ sleep() {{ :; }}
         self.assertEqual((self.run / 'mu300/sim-slot').read_text(), '0\n')
         self.assertNotIn('instance atd4', r.stdout)
 
+    # --- the modem daemon (FINDINGS 216, docs/MODEMD.md): the same brokers as arguments of one mu300-modemd
+    MODEMD_ON = 'modemd_on() { return 0; }; '
+
+    def modemd_command(self, r):
+        cmd = [l for l in r.stdout.splitlines() if l.startswith('param command /usr/bin/ucode /opt/mu300/bin/mu300-modemd')]
+        self.assertEqual(len(cmd), 1, r.stdout)
+        return cmd[0].split()[6:]   # after "param command /usr/bin/ucode PROGRAM -s SOCKET"
+
+    def test_modemd_sim2_brokers_without_reopen_and_a_bridge_without_respawn(self):
+        (self.etc / 'uci-slot').write_text('1\n')
+        r = self.init_service(self.MODEMD_ON + 'start_service')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.instances(r), ['atd-io', 'modemd', 'sim2-cold-start'])
+        run = str(self.run)
+        self.assertEqual(self.modemd_command(r), [
+            f'name=atd,dev=/dev/stty_nr1,dir={run}/mu300-at,urc=0,live={run}/mu300-at/urc/stty_nr0.log,reopen=0,ready=sbuf:sbuf_5_006',
+            f'name=atd2,dev=/dev/stty_nr2,dir={run}/mu300-at2,live={run}/mu300-at/urc/stty_nr0.log,reopen=0,ready=sbuf:sbuf_5_006',
+            f'name=atd4,dev=/dev/stty_nr4,dir={run}/mu300-at4,urc=3,live={run}/mu300-at4/urc/stty_nr3.log,reopen=0,ready=sbuf:sbuf_5_006',
+            f'name=atd5,dev=/dev/stty_nr5,dir={run}/mu300-at5,live={run}/mu300-at4/urc/stty_nr3.log,reopen=0,ready=sbuf:sbuf_5_006'])
+        io = r.stdout[r.stdout.index('instance atd-io'):r.stdout.index('instance modemd')]
+        self.assertNotIn('respawn', io)                    # a new bridge would reopen the channels
+        md = r.stdout[r.stdout.index('instance modemd'):r.stdout.index('instance sim2-cold-start')]
+        self.assertIn('param respawn 3600 5 0', md)        # the daemon holds no channel
+        self.assertNotIn('/opt/mu300/bin/mu300-atd"', r.stdout)
+        self.assertNotIn('exec /opt/mu300/bin/mu300-atd', r.stdout)
+
+    def test_modemd_sim1_brokers_with_reopen_and_a_respawned_bridge(self):
+        (self.etc / 'uci-slot').write_text('0\n')
+        r = self.init_service(self.MODEMD_ON + 'start_service')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.instances(r), ['atd-io', 'modemd', 'radio-warmup'])
+        run = str(self.run)
+        self.assertEqual(self.modemd_command(r), [f'name=atd,dev=/dev/stty_nr1,dir={run}/mu300-at,urc=0,reopen=1',
+                                                  f'name=atd2,dev=/dev/stty_nr2,dir={run}/mu300-at2,reopen=1'])
+        io = r.stdout[r.stdout.index('instance atd-io'):r.stdout.index('instance modemd')]
+        self.assertIn('param command /opt/mu300/bin/mu300-atd-io -s ' + run + '/mu300-modem/io.sock', io)
+        self.assertIn('param respawn 3600 10 0', io)       # as the shell daemons of a SIM1 boot were
+
+    def test_modemd_is_opt_in(self):
+        # no /etc/mu300/modemd (or no ucode): the shell daemons, exactly as before
+        (self.etc / 'uci-slot').write_text('0\n')
+        text = (TOP / 'openwrt/overlay/etc/init.d/mu300-atd').read_text()
+        self.assertIn('[ -e /etc/mu300/modemd ] && [ -x /opt/mu300/bin/mu300-atd-io ] && [ -x /opt/mu300/bin/mu300-modemd ]', text)
+        r = self.init_service('modemd_on() { return 1; }; start_service')
+        self.assertEqual(self.instances(r), ['atd', 'atd2', 'radio-warmup'])
+
     def test_sim2_owners_are_persistent_and_not_respawned(self):
         (self.etc / 'uci-slot').write_text('1\n')
         r = self.init_service()

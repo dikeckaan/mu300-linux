@@ -273,12 +273,28 @@ class Inventory(Mu300Dash):
 
     def test_the_changed_scripts_parse(self):
         for shell in self.each_shell():
-            for p in [DASH, LIB] + [ADAPTERS / n for n in ('action', 'at', 'boot-replay', 'cell', 'dashboard-info',
+            for p in [DASH, LIB] + [ADAPTERS / n for n in ('action', 'at', 'boot-replay',
                                                          'device-usb', 'lock', 'languages', 'power', 'ttl',
                                                          'cpu', 'forward', 'traffic', 'packages', 'update')]:
                 with self.subTest(p=p.name):
                     r = subprocess.run(shell + ['-n', str(p)], capture_output=True, text=True)
                     self.assertEqual(r.returncode, 0, r.stderr)
+        # the collector and the snapshot are ucode programs (FINDINGS 216), the plugin and its modules ucode too:
+        # each compiles (ucode -c), where there is a ucode
+        from helpers import ucode, ucode_paths
+        u = ucode()
+        if not u:
+            return
+        paths = ucode_paths()[2:]   # the tree's modules, the interpreter's own (no stand-ins: nothing runs here)
+        share = APP / 'usr' / 'share'
+        for p in [ADAPTERS / 'cell', ADAPTERS / 'dashboard-info', share / 'rpcd' / 'ucode' / 'mu300status.uc']:
+            with self.subTest(p=p.name):
+                r = subprocess.run(u + paths + ['-c', '-o', os.devnull, str(p)], capture_output=True, text=True)
+                self.assertEqual(r.returncode, 0, r.stderr)
+        for m in ('mu300.dash', 'mu300.cellparse'):
+            with self.subTest(m=m):
+                r = subprocess.run(u + paths + ['-e', f"import * as m from '{m}';"], capture_output=True, text=True)
+                self.assertEqual(r.returncode, 0, r.stderr)
 
 
 class Refusals(Mu300Dash):
@@ -851,6 +867,29 @@ class Replies(Mu300Dash):
             r, _, _ = self.call(shell, 'status', {})
             self.assertEqual(self.reply(r)['info'], want)
 
+    def test_a_stale_page_is_answered_by_the_rpcd_plugin(self):
+        # FINDINGS 216: a browser still running the old home.js polls status and sysinfo here; with mu300status
+        # there, each is one ubus call to it and nothing else runs (no dashboard-info, no collector)
+        plugin = self.tmp / 'mu300status.uc'
+        plugin.write_text('')
+        self.stub('ubus', 'f=$(mktemp "$STUB_CALLS/call.XXXXXX"); printf "%s\\0" ubus "$@" > "$f"\n'
+                          '[ -f "$STUB_OUT/ubus.rc" ] && exit "$(cat "$STUB_OUT/ubus.rc")"\n'
+                          'echo \'{"info":{"plugin":1},"cell":{},"sig":{},"cell_age":0,"sig_age":0,"refreshing":0}\'')
+        for shell in self.each_shell():
+            for m in ('status', 'sysinfo'):
+                with self.subTest(method=m):
+                    r, calls, _ = self.call(shell, m, {}, MU300_STATUS_PLUGIN=plugin)
+                    self.assertEqual(self.reply(r)['info'], {'plugin': 1})
+                    self.assertEqual(calls, [['ubus', '-t', '25', 'call', 'mu300status', m]])
+            # the plugin's call failing, or no plugin: the shell's own snapshot, as before
+            self.output('ubus.rc', '4')
+            r, calls, _ = self.call(shell, 'status', {}, MU300_STATUS_PLUGIN=plugin)
+            self.assertEqual(self.reply(r)['info'], json.loads(DEFAULTS['dashboard-info']))
+            (self.out / 'ubus.rc').unlink()
+            r, calls, _ = self.call(shell, 'status', {}, MU300_STATUS_PLUGIN=self.tmp / 'none.uc')
+            self.assertNotIn('ubus', [c[0] for c in calls])
+            self.assertEqual(self.reply(r)['info'], json.loads(DEFAULTS['dashboard-info']))
+
     def test_modem_and_sms_text_is_escaped(self):
         text = NASTY.replace('\r', '')
         for shell in self.each_shell():
@@ -1227,8 +1266,11 @@ class Acl(unittest.TestCase):
                                                     '/tmp/mu300-vpn-upload': ['write'],
                                                     '/tmp/mu300-vpn-extra.tar.gz': ['write'],
                                                     '/mnt/mu300-disk/.mu300-upload/update.zip': ['write']})
-        self.assertEqual(set(acl['read']['ubus']), {'mu300dash', 'mu300rates', 'mu300vpn'})
-        self.assertEqual(set(acl['write']['ubus']), {'mu300dash', 'mu300vpn'})
+        self.assertEqual(set(acl['read']['ubus']), {'mu300dash', 'mu300rates', 'mu300status', 'mu300vpn'})
+        self.assertEqual(set(acl['write']['ubus']), {'mu300dash', 'mu300status', 'mu300vpn'})
+        # the status plugin in rpcd (FINDINGS 216): the snapshot is a read, the SMS pool's head a write like sms_list
+        self.assertEqual(acl['read']['ubus'].get('mu300status'), ['status', 'sysinfo'])
+        self.assertEqual(acl['write']['ubus'].get('mu300status'), ['sms_head'])
         self.assertNotIn('cgi-io', acl['read'])
         # the dashboard's live rates come from one fixed method that takes no argument: no file read access at all
         # (a /proc/<pid> glob would have matched paths far beyond the interface counters)
@@ -1541,9 +1583,15 @@ class RuntimeDir(Mu300Dash):
         return self.sh(shell, f'. "{LIB}"; private_dir "$D"; echo "rc=$?"', D=path)
 
     def test_the_default_is_under_var_run_not_tmp(self):
-        for path in (DASH, ADAPTERS / 'cell', ADAPTERS / 'lock'):
+        for path in (DASH, ADAPTERS / 'lock'):
             text = path.read_text()
             self.assertTrue('${MU300_DASH_DIR:-$RUN_DIR}' in text, path.name)
+            self.assertFalse('/tmp/unisoc-modem' in text, path.name)
+        # the ucode collector and the status module (FINDINGS 216): the same directory, the same override
+        for path in (ADAPTERS / 'cell', APP / 'usr' / 'share' / 'ucode' / 'mu300' / 'dash.uc'):
+            text = path.read_text()
+            self.assertIn("'/var/run/unisoc-modem'", text, path.name)
+            self.assertIn("env('MU300_DASH_DIR'", text, path.name)
             self.assertFalse('/tmp/unisoc-modem' in text, path.name)
         self.assertIn('RUN_DIR=/var/run/unisoc-modem', LIB.read_text())
         if not GIT_CHECKOUT:
