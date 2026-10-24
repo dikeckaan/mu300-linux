@@ -60,6 +60,7 @@ IDENT_DIR=${MU300_DASH_IDENT_DIR:-${STATE_DIR%/lock-state.d}}
 [ -n "$IDENT_DIR" ] || IDENT_DIR=/etc/unisoc-modem
 IDENT=$IDENT_DIR/sim.json
 AT=${MU300_AT:-/usr/libexec/unisoc-modem/at}
+IMEI_DIAG=${MU300_IMEI_DIAG:-/usr/libexec/unisoc-modem/imei-diag}
 IDENT_MAXAGE=21600   # seconds; a SIM change goes through a reboot, 6 h is plenty
 IDENT_RETRY=60       # seconds a partial identity (modem or SIM not ready) is shown before it is asked again
 
@@ -149,7 +150,9 @@ iccid_value() {
 }
 # ident_complete FILE: the identity cache holds IMEI, IMSI and ICCID
 ident_complete() {
-    grep -q '"imei":"[0-9]' "$1" && grep -q '"imsi":"[0-9]' "$1" && grep -q '"iccid":"[0-9A-F]' "$1"
+    # a leading 0 is not an IMEI: fifteen zeros (a modem that answers AT+CGSN with nothing) is no identity, and
+    # keeping it in the 6 h cache would hide the diag read below for hours (FINDINGS 213)
+    grep -q '"imei":"[1-9]' "$1" && grep -q '"imsi":"[0-9]' "$1" && grep -q '"iccid":"[0-9A-F]' "$1"
 }
 file_age() { echo $(( $(now) - $(date -r "$1" +%s 2>/dev/null || echo 0) )); }
 
@@ -568,6 +571,12 @@ if [ "$MODE" = full ]; then
         i_model=$(at 'AT+CGMM' 2 | grep -v '^OK' | head -n1)
         i_fw=$(at 'AT+CGMR' 2 | grep -v '^OK' | head -n1)
         i_imei=$(ident_token "$(at 'AT+CGSN' 2)" '[0-9]{15,17}' | cut -c1-15)
+        # Some U30 Air firmware answers AT+CGSN with fifteen zeros -- on both SIM slots, and through the vendor's
+        # own miscserver path -- while the NV holds the IMEI and the diag port reads it (FINDINGS 213). Only then
+        # is the diag read asked for; a modem that answers AT is untouched.
+        case $i_imei in ''|000000000000000)
+            [ -x "$IMEI_DIAG" ] && i_imei=$("$IMEI_DIAG" "$SIM_SLOT" 2>/dev/null) ;;
+        esac
         i_imsi=$(ident_token "$(at 'AT+CIMI' 2)" '[0-9]{6,15}')
         i_iccid=$(iccid_value "$(ident_token "$(at 'AT+CCID' 2)" '[0-9A-Fa-f]{18,22}')")
         IDENT_JSON=$(printf '{"ts":%d,"mfg":%s,"model":%s,"fw":%s,"imei":%s,"imsi":%s,"iccid":%s}' \
