@@ -421,6 +421,44 @@ tsum() { sed -n "s/^$1=//p" "$TSUM" 2>/dev/null | head -n1; }
 tint() { v=$(tsum "$1"); case $v in ''|*[!0-9]*|0?*) echo 0 ;; *) echo "$v" ;; esac; }
 T_LEVEL=$(tsum level); case $T_LEVEL in ok|warn|over|none) ;; *) T_LEVEL= ;; esac
 
+# ------------------------------------------------------------------ USB link
+# The USB-C port's link speed as negotiated with whatever sits at the other end of the cable. Device
+# mode: the gadget's UDC reports it ("high-speed", "super-speed", "super-speed-plus"). Host mode (mu300-usb host) has
+# no UDC, and the attached device's own speed file is the answer. A USB 2.0 only cable or host port caps a 10 Gbps
+# capable port at 480 Mbps, which is why the page shows this as a downgrade instead of hiding it.
+USB_UDC_DIR=${MU300_UDC_DIR:-/sys/class/udc}
+USB_DEV_DIR=${MU300_USB_DEVICES_DIR:-/sys/bus/usb/devices}
+usb_mbps() {  # a speed word from sysfs, or a number already in Mbps -> integer Mbps (empty when unknown)
+    case $1 in
+        low-speed) echo 1 ;;
+        full-speed) echo 12 ;;
+        high-speed) echo 480 ;;
+        super-speed) echo 5000 ;;
+        super-speed-plus) echo 10000 ;;
+        ''|*[!0-9]*) ;;
+        *) echo "$1" ;;
+    esac
+}
+usb_link() {  # -> {"role":"device","speed":"high-speed","mbps":480,"max":"super-speed-plus","max_mbps":10000} | null
+    local u s m best best_s
+    for u in "$USB_UDC_DIR"/*; do
+        [ -r "$u/current_speed" ] || continue
+        s=$(rd "$u/current_speed"); m=$(rd "$u/maximum_speed")
+        printf '{"role":"device","speed":%s,"mbps":%s,"max":%s,"max_mbps":%s}' \
+            "$(qs "$s")" "$(n_or_null "$(usb_mbps "$s")")" "$(qs "$m")" "$(n_or_null "$(usb_mbps "$m")")"
+        return
+    done
+    # host mode: the fastest attached device; a root hub (1d6b) reports the port's own speed, not a device's
+    for u in "$USB_DEV_DIR"/*/speed; do
+        [ -r "$u" ] || continue
+        [ "$(rd "${u%/speed}/idVendor")" = 1d6b ] && continue
+        s=$(rd "$u"); m=$(usb_mbps "$s"); [ -n "$m" ] || continue
+        if [ -z "$best" ] || [ "$m" -gt "$best" ] 2>/dev/null; then best=$m; best_s=$s; fi
+    done
+    [ -n "$best" ] || { echo null; return; }
+    printf '{"role":"host","speed":%s,"mbps":%s,"max":null,"max_mbps":null}' "$(qs "$best_s")" "$best"
+}
+
 # ------------------------------------------------------------------ output
 printf '{"ts":%d,"uptime":%d,"host":%s,"model":%s,"fw":%s,"kernel":%s,' \
     "$NOW" "$UPTIME" "$(qs "$HOST")" "$(qs "$MODEL")" "$(qs "$FW")" "$(qs "$(uname -r)")"
@@ -434,6 +472,7 @@ printf '"power":{"present":%d,"capacity":%s,"status":%s,"volt":%s,"ua":%s,"w":%s
     "$(n_or_null "$P_W")" "$(n_or_null "$P_USB")" "$(n_or_null "$P_IN_V")" "$(n_or_null "$P_IN_I")" "$(n_or_null "$P_IN_W")"
 printf '"net":{"mobile":%s,"sipa_eth0":%s,"brlan":%s,"wlan0":%s,"usb0":%s},' \
     "$(net_obj "$DATA_DEVICE")" "$(net_obj "$DATA_DEVICE")" "$(net_obj "$LAN_DEVICE")" "$(net_obj "$WIFI_DEVICE")" "$(net_obj "$USB_DEVICE")"
+printf '"usblink":%s,' "$(usb_link)"
 # the interface the page reads its live rates of (from /proc/net/dev, every second)
 printf '"data_device":%s,' "$(qs "$DATA_DEVICE")"
 printf '"sim":%s,' "$SIM_JSON"

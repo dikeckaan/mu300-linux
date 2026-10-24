@@ -267,6 +267,14 @@ html.mud-bootstrap-theme{--surface:var(--background-color-high);--surface-sunken
 .mud-lockbtn.locked{opacity:.45;pointer-events:none;background:var(--surface-sunken,rgba(127,127,127,.1));color:var(--text-muted,var(--text-light,#888));border-color:transparent}
 .mud-hero-l{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:5px}
 .mud-hero-r{flex:0 0 auto;text-align:right;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+/* The USB link pill in the hero's status line */
+.mud-vsep{display:inline-block;width:1px;height:11px;margin:0 8px 0 2px;vertical-align:-1px;background:color-mix(in oklab,var(--hairline,var(--border,#ddd)) 85%,transparent)}
+.mud-usb{display:inline-flex;align-items:center;gap:5px;padding:1px 8px;border-radius:999px;background:var(--surface,var(--background,#fff));border:1px solid color-mix(in oklab,var(--hairline,var(--border,#ddd)) 80%,transparent);font-size:.72rem;color:var(--text-muted,var(--text-light,#777));white-space:nowrap;vertical-align:1px}
+.mud-usb[hidden],.mud-vsep[hidden]{display:none}
+.mud-usb i{width:6px;height:6px;border-radius:50%;flex:0 0 auto;background:var(--text-subtle,var(--text-light,#999))}
+.mud-usb b{font-weight:600;color:var(--text,#222);font-variant-numeric:tabular-nums}
+.mud-usb.warn i{background:var(--warning,#f59e0b)}
+.mud-usb.ok i{background:var(--success,#2FBF71)}
 .mud-rat{font-size:1.7rem;font-weight:700;line-height:1.1;letter-spacing:.01em}
 .mud-op{color:var(--text-muted,var(--text-light,#777));font-size:.85rem}
 .mud-cellline{font-size:.78rem;color:var(--text-muted,var(--text-light,#777));font-variant-numeric:tabular-nums;line-height:1.55}

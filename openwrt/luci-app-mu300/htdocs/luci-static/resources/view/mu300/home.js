@@ -205,7 +205,7 @@ return view.extend({
   <div class="mud-hero-l">
     <div style="font-size:.78rem;color:var(--text-muted,var(--text-light,#777))">
       <span class="mud-dot" id="mud-dot"></span><b id="mud-host" style="color:var(--text,#222)">--</b>
-      <span id="mud-uptime"></span></div>
+      <span id="mud-uptime"></span><span class="mud-vsep" id="mud-vsep" hidden></span><span class="mud-usb" id="mud-usb" hidden></span></div>
     <div class="mud-rat" id="mud-rat">--<span class="mud-bars" id="mud-bars"><i style="height:25%"></i><i style="height:45%"></i><i style="height:65%"></i><i style="height:85%"></i><i style="height:100%"></i></span></div>
     <div class="mud-op" id="mud-op">--</div>
     <div class="mud-cellline" id="mud-cellline"></div>
@@ -568,6 +568,27 @@ return view.extend({
 		if (el && this.lastCell) el.innerHTML = M.neighborRows(this.lastCell, this.lockedCell);
 	},
 
+	/* The USB cable's link speed (dashboard-info's usblink). Device mode reports the gadget's negotiated
+	 * speed, host mode the attached device's. Hidden with nothing plugged in; amber when the link is below what the
+	 * port can do -- a USB 2.0 cable or host port caps a 10 Gbps port at 480 Mbps. */
+	paintUsb: function(l) {
+		var el = M.v('usb'), sep = M.v('vsep');
+		if (!el) return;
+		var mbps = l && typeof l.mbps === 'number' ? l.mbps : null;
+		if (mbps == null) { el.hidden = true; if (sep) sep.hidden = true; return; }
+		var names = { 'low-speed': 'Low Speed', 'full-speed': 'Full Speed', 'high-speed': 'High Speed',
+			'super-speed': 'SuperSpeed', 'super-speed-plus': 'SuperSpeed+' };
+		var rate = function(n) { return n >= 1000 ? (n / 1000) + ' Gbps' : n + ' Mbps'; };
+		var max = typeof l.max_mbps === 'number' ? l.max_mbps : null;
+		var name = names[l.speed] || (l.role === 'host' ? 'Host' : 'link');
+		el.className = 'mud-usb' + (max == null ? '' : (mbps >= max ? ' ok' : ' warn'));
+		el.innerHTML = '<i></i><b>' + M.esc('USB ' + name + ' \u00b7 ' + rate(mbps)) + '</b>';
+		el.title = l.role === 'host'
+			? 'USB host mode, attached device ' + rate(mbps)
+			: 'USB ' + rate(mbps) + ' now, port maximum ' + (max == null ? '--' : (names[l.max] ? names[l.max] + ' ' : '') + rate(max));
+		el.hidden = false;
+		if (sep) sep.hidden = false;
+	},
 	update: function(st) {
 		var i = st.info || {};
 		this.lastInfo = i;
@@ -598,6 +619,7 @@ return view.extend({
 		M.set('host', i.host);
 		M.set('uptime', i.uptime ? _('Uptime %s').format(M.fmtUptime(i.uptime)) : '');
 		M.v('dot').className = 'mud-dot' + (i.modem && i.modem.alive ? ' on' : '');
+		this.paintUsb(i.usblink);
 
 		var sig = c && !c.error ? (c.sig || {}) : {};
 		var rsrp = sig.rsrp, rsrq = sig.rsrq, sinr = sig.sinr;

@@ -7,6 +7,9 @@
 - Connections: the kernel's nf_conntrack_count (mainline has no /proc/net/nf_conntrack), the table as fallback,
   null when neither can be read.
 
+- USB link: the speed the USB-C cable negotiated (the gadget's UDC in device mode, the attached device in host mode,
+  a root hub never standing in for it), and nothing at all with the port empty.
+
 The SIM's own number (cell, the collector; home.js, the row; FINDINGS 49, after kanoqwq@0d93695): AT+CNUM on full
 rounds only, the IMS public identity (AT+SPPAURI?) when the SIM has none, nothing when neither has one; never in
 the fast tier, never on flash, never in a log."""
@@ -116,7 +119,8 @@ class Info(ShellTest):
     def info(self, shell, **env):
         base = dict(MU300_DHCP_LEASES=self.leases, MU300_POWER_SUPPLY_DIR=self.tmp / 'psy',
                     MU300_CONNTRACK_COUNT=self.tmp / 'nf_conntrack_count',
-                    MU300_CONNTRACK_TABLE=self.tmp / 'nf_conntrack')
+                    MU300_CONNTRACK_TABLE=self.tmp / 'nf_conntrack',
+                    MU300_UDC_DIR=self.tmp / 'udc', MU300_USB_DEVICES_DIR=self.tmp / 'usb')
         base.update(env)
         r = self.script(shell, INFO, **base)
         self.assertEqual(r.returncode, 0, r.stderr)
@@ -185,6 +189,55 @@ class Info(ShellTest):
             self.assertEqual(self.info(shell)['conns'], 42)
             count.write_text('x\n')
             self.assertEqual(self.info(shell)['conns'], 3)
+
+    def usb_udc(self, current, maximum):
+        u = self.tmp / 'udc' / '25100000.dwc3'
+        u.mkdir(parents=True, exist_ok=True)
+        (u / 'current_speed').write_text(current + '\n')
+        (u / 'maximum_speed').write_text(maximum + '\n')
+
+    def usb_device(self, name, speed, vendor):
+        d = self.tmp / 'usb' / name
+        d.mkdir(parents=True, exist_ok=True)
+        (d / 'speed').write_text(str(speed) + '\n')
+        (d / 'idVendor').write_text(vendor + '\n')
+
+    def test_usb_link_device_mode(self):
+        self.usb_udc('high-speed', 'super-speed-plus')
+        for shell in self.each_shell():
+            self.assertEqual(self.info(shell)['usblink'],
+                             {'role': 'device', 'speed': 'high-speed', 'mbps': 480,
+                              'max': 'super-speed-plus', 'max_mbps': 10000})
+        self.usb_udc('super-speed-plus', 'super-speed-plus')
+        for shell in self.each_shell():
+            self.assertEqual(self.info(shell)['usblink']['mbps'], 10000)
+
+    def test_usb_link_unplugged_is_not_a_link(self):
+        """dwc3 keeps the UDC registered without a cable: current_speed says so and there is no rate to show."""
+        self.usb_udc('not attached', 'super-speed-plus')
+        for shell in self.each_shell():
+            link = self.info(shell)['usblink']
+            self.assertIsNone(link['mbps'])
+            self.assertEqual(link['speed'], 'not attached')
+
+    def test_usb_link_host_mode_ignores_the_root_hub(self):
+        """A root hub reports the port's own speed, not the attached device's: a 5 Gbps hub around a 480 Mbps stick
+        must not read as 5 Gbps."""
+        self.usb_device('1-0', 5000, '1d6b')
+        self.usb_device('1-1', 480, '05e3')
+        for shell in self.each_shell():
+            self.assertEqual(self.info(shell)['usblink'],
+                             {'role': 'host', 'speed': '480', 'mbps': 480, 'max': None, 'max_mbps': None})
+
+    def test_usb_link_host_mode_takes_the_fastest_device(self):
+        self.usb_device('1-1', 480, '05e3')
+        self.usb_device('2-1', 10000, '0781')
+        for shell in self.each_shell():
+            self.assertEqual(self.info(shell)['usblink']['mbps'], 10000)
+
+    def test_usb_link_nothing_attached(self):
+        for shell in self.each_shell():
+            self.assertIsNone(self.info(shell)['usblink'])
 
 
 class OwnNumber(ShellTest):
@@ -662,3 +715,4 @@ esac""")
                 (info.tmp / 'wan.json').write_text(WAN)
         finally:
             info.tearDown()
+

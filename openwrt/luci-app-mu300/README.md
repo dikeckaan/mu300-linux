@@ -180,6 +180,15 @@ commits `network`, and reloads networking. The selected port is reattached
 on USB netdev hotplug and LAN ifup, without a polling daemon or another
 network reload. The action is idempotent and only available in host mode.
 
+The dashboard's hero line carries the link the USB-C cable negotiated, so a USB 2.0
+cable or host port behind a 10 Gbps capable port is visible instead of only turning
+up later as a throughput ceiling: `USB High Speed · 480 Mbps` with an amber dot while
+the link is below the port's own maximum, `USB SuperSpeed+ · 10 Gbps` with a green one
+at it, and nothing at all while the port is empty. The status snapshot reports it as
+`usblink` (`speed`/`mbps` and `max`/`max_mbps`): the gadget's UDC in device mode, the
+attached device in host mode - a root hub is never taken for the device - and `null`
+when there is no link to report.
+
 ## Build
 
 Copy this directory alone to `package/luci-app-mu300` in any compatible OpenWrt
