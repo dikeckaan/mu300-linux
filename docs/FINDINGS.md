@@ -1,10 +1,5 @@
 # Findings: running Linux on the ZTE F50 / MU300 (Unisoc T760)
 
-> Call-audio entries in this notebook are historical. The current source no longer
-> integrates the call-audio stack or its optional extra. USB sound cards and the
-> Bluetooth stack are separate and remain available.
-
-
 Everything below was verified on a ZTE F50 (hardware MU300, firmware `MU300_ZYV1.0.0B09`,
 Android 13, stock kernel `5.4.254-android12-9-g9c6342244991`) during September 2026.
 Each item lists the symptom, the root cause and the fix, so it can be reused for other
@@ -131,7 +126,7 @@ what replaced it. The table below gives each section's state.
 | 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
 | 57 | A 64 GB unit whose partition table has `userdata` filling the disk, and no way to make room from Windows (#32) | current (fixed; the erase of Android's data superseded by §112; unit tests against a table built from #9's figures, not measured on a device) |
 | 58 | A service's own error in an HTTP 200 answer to the SMS webhook: a KEY=VALUE check of the answer; a button that clears the delivery log (#171) | current (unit tests; measured on the U30 Air against a fake webhook, not against the real services) |
-| 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149) | current (fixed for mu300-atd and mu300-voice, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
+| 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way | current (fixed for mu300-atd, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
 | 63 | A reused SMS reference number mixed long messages, or kept them from ever being joined; a part delivered again | current (fixed; unit tests only, not measured on a device) |
 | 64 | An update dropped the panel's saved locks (`/etc/unisoc-modem`) | current (fixed; unit tests only, not reproduced on a device) |
 | 65 | An APN with a user name and a password (`AT+CGPCO`), and what else kanoqwq's APN page does | current (unit tests only; never sent to a modem) |
@@ -196,7 +191,7 @@ what replaced it. The table below gives each section's state.
 | 203 | OpenWrt hotspot: U-APSD off on every access point, new and kept configurations (kanoqwq 2d3f7438); his U30 Air's beacon still announced it, so a configuration policy only | unit tests; not yet on our boards |
 | 204 | The ZTE V50's SIM cards (#332): ZTE's four board variants, a third built-in card behind SIM2 and the external card behind SIM1, switched by board GPIOs; chosen per boot, the switch set before the modem's CP starts (kanoqwq's f0ed60ff, b4c051c8) | offline only (no V50 here): unit tests, the driver built for 6.18.57 and 7.2.11; on a V50 by the #332 reporter |
 | 205 | The U30 Air's USB 3 link in **device** mode follows the plug orientation (#54): SuperSpeed only in the orientation the PHY/redriver latched at power-on; `mu300-usb pd on` (0020) gives CC and the roles but does not flip the lanes, and a replug does not bring SuperSpeed back (7.2.11) | measured on a U30 Air, 7.2.11; no fix here. #341 on the same unit: orientation A at 10 Gbps, B not seen at all (worse than the USB 2 fallback); the PTN38003A does not answer at i2c 0x30 there |
-| 206 | Linux 7.3 as a fourth kernel: every patch applies unchanged (none upstream, none dropped); `PROC_SYSCTL` folded into `SYSCTL` (`config-ignored.txt`, checked only where the kernel lacks the symbol), the cfg80211 cookie handed in by value, `dma_capable()` with DMA attributes, `IIO_CONSUMER` for the audio extra; the checksum list from www.kernel.org (the CDN lagged) | current (F50-B Ubuntu: all checks, call audio with the 7.3 extra, the boot fallback; the one hang in a reboot loop was the board's plug pulled by accident, not 7.3; the U30 Air openwrt-luci with the VPN and its kill switch, 2026-10-19; `sprd_wlan_combo` for 6.18.57 and 7.2.11 byte for byte v2026.10.19.3's; released in v2026.10.22.1, F50-B 10/10 boots on 7.3 in a reboot soak) |
+| 206 | Linux 7.3 as a fourth kernel: every patch applies unchanged (none upstream, none dropped); `PROC_SYSCTL` folded into `SYSCTL` (`config-ignored.txt`, checked only where the kernel lacks the symbol), the cfg80211 cookie handed in by value, `dma_capable()` with DMA attributes; the checksum list from www.kernel.org (the CDN lagged) | current (F50-B Ubuntu: all checks, the boot fallback; the one hang in a reboot loop was the board's plug pulled by accident, not 7.3; the U30 Air openwrt-luci with the VPN and its kill switch, 2026-10-19; `sprd_wlan_combo` for 6.18.57 and 7.2.11 byte for byte v2026.10.19.3's; released in v2026.10.22.1, F50-B 10/10 boots on 7.3 in a reboot soak) |
 | 213 | A kernel oops on a restart of mu300-adbd: f_ncm and f_rndis free `os_desc_table` at unbind and keep the pointer, and a bind without MS OS descriptors (adbd's `without_adb` wrote `os_desc/use` 0) leaves it for the next unbind to free again - a kmalloc-16 double free that came back as `kstrdup()` oopsing in the UDC store; patch 0027 clears the pointer (6.18.57, 7.2.11 and 7.3 all have the bug), mu300-adbd keeps the descriptors on for every kernel | current (F50 Ubuntu, 2026-10-24: unpatched 7.3 with the release's mu300-adbd went down within 11 restarts of it once, and oopsed at restart 118 a second time - "Unable to handle kernel paging request" at an address made of string bytes; 6.18.58 with 0027 and the same mu300-adbd 200 restarts clean; unpatched 7.3 with the new mu300-adbd 150 restarts clean. A U30 Air on OpenWrt 6.18.58 dropped off the air during the same loop) |
 | 218 | CPU0's cluster power-down: USB, IPA and the Wi-Fi's PCIe were not wake sources of LP_AP_INTC (TF-A's IRQ_EN table); `ums9620_lpintc` adds every SPI the kernel enabled | current (U30 Air OpenWrt 6.18.57: USB pings 9.5 ms avg / 42 ms max instead of 15.7 / 69; F50 Ubuntu 6.18.58: 1.2 / 1.5 ms instead of 30.6 / 150; builds for 7.2.12; suspend path not run) |
 
@@ -1694,19 +1689,6 @@ Three separate traps, and the first one hid the other two for an evening. `mu300
 * A first-generation install (Ubuntu directly in the filesystem root) is replaced by `/ubuntu`; `init` still boots the
   old layout if no `/ubuntu` exists.
 
-## Audio
-
-### 24. (removed)
-
-### 24b. (removed)
-
-### 24c. (removed)
-
-### 24d. (removed)
-
-### 24e. (removed)
-
-### 188. (removed)
 
 ## Bluetooth
 
@@ -5120,18 +5102,16 @@ engines on IPv4, as the old sentence said. **Not looked at in a browser:** the p
 (one string; `tools/luci-i18n.py check` passes), and the translations of the new sentence were written with it,
 not read by a speaker of each language.
 
-### 60. `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149)
+### 60. `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way
 
-Found while reviewing two daemon branches on F50-B (2026-10-13).
+Found while checking daemon runtime directories on F50-B (2026-10-13).
 
 * `boot/init` mounts `/run` as a plain tmpfs, which is mode 1777 - like `/tmp`, not the 0755 systemd would give it.
   Any local user (a service account, the vendor daemons' own account of 41) can make `/run/<name>` before the
   daemon that expects to own it: measured, an unprivileged user created a file there.
-* `mu300-voice` moved its state from `/tmp/mu300-voice` to `/run/mu300-voice`, which was the same exposure under
-  another name: pid files it kills, files root writes there. `mu300-atd` did
-  `mkdir -p /run/mu300-at` and looked no further: in a stranger's directory, or behind his symlink, the command
+* `mu300-atd` did `mkdir -p /run/mu300-at` and looked no further: in a stranger's directory, or behind his symlink, the command
   fifo is his to write (AT commands, as root's daemon) and every answer his to read.
-* `rootfs/overlay/opt/mu300/lib/run-dir.sh`, one helper for both so the two cannot drift: `run_dir_ours` (a real
+* `rootfs/overlay/opt/mu300/lib/run-dir.sh`, the shared runtime-directory helper: `run_dir_ours` (a real
   directory, not a symlink; the daemon's own uid; not writable by group or others) and `run_dir_take`, which makes
   the directory that - a plain `mkdir`, never `mkdir -p` (through a symlink that makes the directory where it
   points). The first version of the check refused a foreign directory and stayed down until somebody removed it,
@@ -5140,16 +5120,14 @@ Found while reviewing two daemon branches on F50-B (2026-10-13).
   seen and nothing is deleted recursively: a non-directory goes with `rm -f --`, an empty directory with `rmdir`
   (neither follows a symlink at that name, each fails harmlessly on the other kind), a directory with contents is
   moved whole into `/run/.<name>.foreign.<pid>` (made by `mkdir`: ours and 0700, or nothing is moved) and left
-  there to be looked at, and what counts in the end is the check again. A caller who is not the owner (a member
-  of the voice group running `mu300-voice events`) gets the check alone and never creates the directory.
-* The headset's control fifo moved from `/run/mu300-hfp.ctl` into `/run/mu300-voice`, and
-  `/etc/tmpfiles.d/mu300-run.conf` makes both directories at boot.
-* `/run/mu300-at/urc` is 0700 now: with caller id on (`AT+CLIP=1`, which `mu300-voice` sets) every ring writes
+  there to be looked at, and what counts in the end is the check again. A caller who is not the owner
+  gets the check alone and never creates the directory.
+* `/run/mu300-at/urc` is 0700 now: with caller id enabled every ring writes
   the caller's number into that log, which was world-readable. Every reader is root.
 
 Measured on F50-B as root under dash, bash and busybox ash: a directory made first by another user (with a fifo
 named `cmd` in it) and a symlink to `/etc` were both put out of the way, `/etc` untouched, the second call silent;
-`mu300-voice status` then answered. Open: `/run` is still 1777 - `mount -t tmpfs -o mode=755` in `boot/init` is
+the AT daemon remained available. Open: `/run` is still 1777 - `mount -t tmpfs -o mode=755` in `boot/init` is
 the real fix, and it is a boot change that wants its own device test. `/run/mu300-at/answer.<pid>` and
 `/run/mu300/` are as they were.
 ### 58. A service's own error in an HTTP 200 answer to the SMS webhook, and a button that clears the delivery log (#171)
@@ -11069,8 +11047,6 @@ release's init read back from `boot_b`). The partition path itself is not device
 
 ### 193. (removed)
 
-### 194. (removed)
-
 ### 195. Wi-Fi PCIe RX: the push interrupt skipped what the chip completed, and a full EDMA ring held the RX refill for up to a second
 
 **Status: built, not yet measured on a device** (2026-10-19). From kanoqwq's clean-tf-7.2 2d3f7438 and cf4dcd61,
@@ -11479,7 +11455,7 @@ over the SS link, and 244 Mbps over the 480 Mbps fallback on the same mirror.
 ### 206. Linux 7.3 as a fourth kernel: what 7.3 changed, and the boards on it
 Mainline Linux 7.3 came out on 2026-10-18. It is a fourth kernel choice from the release after v2026.10.19.2 on:
 `sudo mu300-update kernel 7.3`, choice 4 in the installers, `mu300-kernel-7.3.tar.gz`, Magisk zips `-k7.3` (15 zips
-instead of 11), and the audio extra's `mu300-audio-7.3.tar.gz` (mu300-audio PR #4). 5.4, 6.18.57 and 7.2.11 stay as
+instead of 11). 5.4, 6.18.57 and 7.2.11 stay as
 they are.
 
 **The patches.** Every patch of `upstream/patches` applies to 7.3 unchanged, in order (a dry run of each alone fails
@@ -11496,7 +11472,6 @@ for the ones that build on another: 0011 on 0010, 0012/0015/0016/0019 on 0009, 0
 | `CONFIG_PROC_SYSCTL` | gone: `/proc/sys` is `SYSCTL` itself (`fs/proc/Makefile`: `proc-$(CONFIG_SYSCTL) += proc_sysctl.o`) | `config-ignored.txt` lists it; `build.sh` and `audit-bundle.py` let a listed option be unset only where the kernel has no such symbol at all (not even "is not set"); the fragment also asks `CONFIG_SYSCTL=y`, so `/proc/sys` is checked on every kernel |
 | cfg80211 `remain_on_channel`, `mgmt_tx` | the cookie is chosen by nl80211 (`cfg80211_assign_cookie`) and handed to the driver by value | `sprd_wlan_combo`: the old ops keep choosing it, the 7.3 ones take nl80211's (`MU300_COOKIE`, the by-value ops in `common/cfg80211.h`) |
 | `dma_capable()` | a fifth argument, the DMA attributes | `sc2355/tx.h` passes 0 (a plain mapping) on 7.3; `tx.c` is unchanged |
-| the IIO consumer API | in the symbol namespace `IIO_CONSUMER` | a driver of the audio extra imports it (mu300-audio) |
 | kernel.org's CDN | its `sha256sums.asc` still had 7.2.11's day hours after 7.3 was out: no line for `linux-7.3.tar.xz` | `build.sh` takes the signed list from www.kernel.org (the tarball and its signature from the CDN; the list is signed, so where it comes from changes nothing that is checked) |
 | the release's version picker | a mainline release is `7.3` (kernel release `7.3.0`) until 7.3.1 | `release.yml` takes `X.Y` or `X.Y.Z` of each series (6.18, 7.2, 7.3); `mainline.yml` builds the longterm, the stable, the mainline (never a release candidate) and the newest of each shipped series |
 
@@ -11509,9 +11484,8 @@ columns). 6.18 and 7.2 therefore did not change with 7.3.
 The kernel and all its out-of-tree modules build with no new warning (690 in the module build against 691 for
 7.2.11); `all-modules.py` turns 2457 options into modules (7.2.11: 2442). The bundle: 3054 modules (no audio
 drivers), 135 MiB unpacked, 56.3 MB; the Image as LK loads it 25 860 104 bytes. `make-release.sh`'s audit
-(the sample modules, no driver of the audio stack, the features) passes on it.
+(the sample modules, prohibited-module checks, the features) passes on it.
 
-**The audio extra on 7.3.** mu300-audio builds its drivers against a 7.3 kit made from the release's build tree.
 
 **On the boards, 2026-10-19** (v2026.10.19.2 with this branch's `mu300-update`, the 7.3 bundle installed with
 `MU300_KERNEL_BUNDLE`; the previous image kept each time was the release's own):
@@ -11524,8 +11498,6 @@ drivers), 135 MiB unpacked, 56.3 MB; the Image as LK loads it 25 860 104 bytes. 
   module sample loads 93 of 99 (the same 6 not built as on 7.2.11), no oops; Docker 29.1.3 runs a container
   (overlay2, cgroup v2, an address on `docker0`; the container cannot reach the host, which `mu300_filter` drops on
   purpose). Boot 41.3 s (7.2.11: 52.8 s).
-  - **Call audio.** `mu300-extra install audio --from DIR` with mu300-audio's 7.3 tarball installed the extra and it
-    started, after a reboot too.
   - **The boot fallback.** With `mu300-next-boot attempts 1` and `mu300-boot-ok` disabled for the test, the next boot
     of 7.3 came up with slot b at `tries 1` (`1f`), and the one after it went to Android by itself; `su -c
     mu300-linux` there armed Linux again and 7.3 booted. `mu300-boot-ok` and 5 attempts back: slot b `6f`, as before.
@@ -11542,15 +11514,15 @@ drivers), 135 MiB unpacked, 56.3 MB; the Image as LK loads it 25 860 104 bytes. 
   the same checks pass there.
 
 **The release, v2026.10.22.1 (2026-10-23).** 5.4.254, 6.18.57 and 7.2.11 are v2026.10.19.3's builds: every file of
-their bundles is the same (the outputs reused, the Wi-Fi module shown identical above); 7.3.0 was built fresh, and its
-kit for the audio extra came from that build tree (`kits-v2026.10.22.1`). On F50-B (Ubuntu 24.04, offline), updated from v2026.10.19.2 with the release's `mu300-update`,
-then `mu300-update kernel 7.3`: 7.3.0 boots, the audio extra's 7.3 set loads, mobile data,
+their bundles is the same (the outputs reused, the Wi-Fi module shown identical above); 7.3.0 was built fresh.
+On F50-B (Ubuntu 24.04, offline), updated from v2026.10.19.2 with the release's `mu300-update`,
+then `mu300-update kernel 7.3`: 7.3.0 boots, mobile data,
 the access point and Cockpit are up; a reboot soak of 10 boots on 7.3 came back 10 times (about 42 s each), every boot
 with the same checks passing, no oops, no failed unit. F50-B stays on 7.3. (During the update's download, still on
 v2026.10.19.2's 7.2.11, F50-B reset once by itself, with nothing in the journal or pstore; the second try went through.)
 
 Not tried on 7.3 yet: the CPU voltage offset, the U30 Air's USB host mode, dae (7.3 has BTF and the BPF JIT, as the
-fragment asks), a reading of the F50's SD card, a call.
+fragment asks), a reading of the F50's SD card.
 
 ### 207. The U30 Air's charger: the battery's CV and the stock safety-timer policy (and 3 A, off unless asked for)
 
@@ -11910,8 +11882,6 @@ So with the module cluster-pd on CPU0 is as fast as the workaround and near what
 CPU0 still entered cluster-pd (3600 to 6600 entries over 60 pings). An earlier test with only INTC4 bit 14 set by hand gave
 85 pings of 85 at 1 ms or less (its link not recorded). With the module loaded the workaround can go: CPU0 keeps
 its cluster-pd.
-
-### 219. (removed)
 
 ### 220. The U30 Air's AT+CGSN answers fifteen zeros: the IMEI is read over diag
 

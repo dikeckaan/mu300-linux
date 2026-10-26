@@ -1075,7 +1075,7 @@ Like the installer, it offers to reboot the device from Linux into Android first
 | Web panels | ✅ OpenWrt: LuCI, and the MU300 control panel on `openwrt-luci` (with a terminal in the browser); Ubuntu: Cockpit with an MU300 page as the panel extra; adb to Linux over USB on both (off by default) |
 | Back to Android, automatic rollback | ✅ |
 | Screen output (HDMI over USB-C) | ✗ the USB-C power chip never answers, so no display |
-| Call audio | Not supported. The board has no speaker or microphone. USB audio drivers remain available, untested here |
+| Sound | No built-in speaker or microphone. USB audio drivers remain available, untested here |
 
 ## How it works, in short
 
