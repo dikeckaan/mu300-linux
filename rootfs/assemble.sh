@@ -90,12 +90,6 @@ done
 for c in $(cat $R/opt/mu300/lib/path-commands); do ln -sfn /opt/mu300/bin/$c $R/usr/local/bin/$c; done
 # no graphical/serial login noise on a headless dongle; keep ttyS1 console for debugging
 ln -sfn /dev/null $R/etc/systemd/system/getty@tty1.service
-# The sound card's state is the audio extra's (https://github.com/dikeckaan/mu300-audio), not alsactl's: alsa-utils'
-# restore at boot runs too early for it and stalls its start.
-ln -sfn /dev/null $R/etc/systemd/system/alsa-restore.service
-ln -sfn /dev/null $R/etc/systemd/system/alsa-state.service
-mkdir -p $R/etc/udev/rules.d
-ln -sfn /dev/null $R/etc/udev/rules.d/90-alsa-restore.rules
 # The manifest of the image: every file it holds, with type, mode, owner, size and sha256 (tools/image-manifest.py has
 # the format and makes the same lines from the tarball; make-release.sh holds the two against each other). The next
 # update reads it to tell the image's files from the user's. Last, when nothing in $R changes any more.

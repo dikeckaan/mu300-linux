@@ -110,8 +110,7 @@ extra).
   Ubuntu boot that died early before the crash capture existed (31d) is unexplained, and has not recurred in the
   reboot loops since (Ubuntu 6/6, OpenWrt 4/4).
 - Power-off works through the PMIC (FINDINGS 31h); on a powered USB port the battery-less F50 starts again.
-- Audio: call audio is the audio extra ([mu300-audio](https://github.com/dikeckaan/mu300-audio),
-  `mu300-extra install audio`).
+- Voice calls are not supported. USB audio support is unchanged.
 
 ## Earlier status notes
 Clocks, pinctrl, power domains, USB 3.1 gadget, eMMC, PCIe, thermal, cpufreq, watchdog, LEDs and Wi-Fi/BT are
@@ -122,7 +121,7 @@ working (see the status below). What is still missing:
 - **PM co-processor**: without Android's `modem_control` the board powers off after ~290 s, so the vendor chroot is
   still required.
 - ~~**GPU**~~: works since 2026-09-19 (DDK r40p0 ported to 6.18, OpenCL verified on the device).
-- **Audio**: the audio extra (mu300-audio).
+- **Call audio**: not supported.
 - **Bluetooth**: built as an out-of-tree module, untested on 6.18.
 
 ## Modem on 6.18: working (2026-09-19)

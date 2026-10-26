@@ -7,7 +7,7 @@ Date: 2026-10-05. Branch `mu300-extra` (on top of driver-fixes, PR #28 stack).
 The user (translated): "the VPN tool should not come embedded in the system; it should be downloadable with
 mu300-extra". Today every image carries Xray-core (34 MB), hev-socks5-tunnel (0.4 MB) and sing-box (86 MB) in
 `/opt/mu300/bin`, about 120 MB per system whether the VPN is used or not. Second, smaller problem: `mu300-ussd`
-(and `sms`, `mu300-voice`) are not on the PATH of OpenWrt (and Ubuntu): only `/etc/profile.d` adds `/opt/mu300/bin`,
+(and `sms`) are not on the PATH of OpenWrt (and Ubuntu): only `/etc/profile.d` adds `/opt/mu300/bin`,
 which a non-login shell (`ssh root@... mu300-ussd`) and sudo never see.
 
 ## Decisions
@@ -31,7 +31,7 @@ which a non-login shell (`ssh root@... mu300-ussd`) and sudo never see.
 4. **PATH.** One list of the system's commands, `/opt/mu300/lib/path-commands`, read by `rootfs/assemble.sh`,
    `openwrt/build-rootfs.sh` and at boot by `mu300-extra link` (replaces rootfs-fixups' copy of the list;
    OpenWrt's `mu300-post` runs it too, so installed OpenWrt systems get new links without an update). It adds
-   `mu300-ussd`, `sms`, `mu300-voice`, `mu300-extra`. `mu300-extra link` also links the commands of installed extras
+   `mu300-ussd`, `sms`, `mu300-extra`. `mu300-extra link` also links the commands of installed extras
    (`xray`, `sing-box`, `hev-socks5-tunnel`) into the PATH directory (Ubuntu `/usr/local/bin`, OpenWrt `/usr/bin`)
    and removes links into the extras that no longer resolve. mu300-vpn itself does not use the PATH: it looks in
    `/mnt/mu300-disk/extra/vpn/bin` first and then `/opt/mu300/bin` (images from before this change).

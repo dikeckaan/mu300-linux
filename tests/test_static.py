@@ -324,7 +324,7 @@ class Rules(unittest.TestCase):
         # mu300-update knows the module (fixed asset names, the repository's latest release, MU300_VPN_URL), and
         # mu300-extra lists vpn and its engine extras from it (module v2: the core, and the bundle as the fallback)
         up = (BIN / 'mu300-update').read_text()
-        self.assertRegex(up, r'(?m)^EXTRAS="vpn lang vpn-mihomo panel vpn-xray vpn-singbox vpn-dae audio"$')
+        self.assertRegex(up, r'(?m)^EXTRAS="vpn lang vpn-mihomo panel vpn-xray vpn-singbox vpn-dae"$')
         self.assertRegex(up, r'(?m)^VPN_ENGINE_EXTRAS="vpn-xray vpn-singbox vpn-mihomo vpn-dae"$')
         self.assertRegex(up, r'(?m)^VPN_REPO=dikeckaan/mu300-linux-vpn$')
         self.assertIn('VPN_URL=${MU300_VPN_URL:-https://github.com/$VPN_REPO/releases/latest/download}', up)
@@ -446,7 +446,7 @@ class Rules(unittest.TestCase):
         self.assertIn('[ -e /etc/mu300/docker-zone ] && exit 0', zone)
 
     def test_release_audit_refuses_the_audio_stack(self):
-        # make-release.sh: no kernel bundle carries a driver of the audio extra, and no image its programs or
+        # make-release.sh: no kernel bundle carries a driver of the removed call-audio stack, and no image its programs or
         # services. The audit's own lines, run against bundles made here.
         rel = (TOP / 'tools' / 'make-release.sh').read_text()
         audit = rel[rel.index('AUDIO_KO="'):rel.index('[ $fail = 0 ] || { echo "audit failed')]

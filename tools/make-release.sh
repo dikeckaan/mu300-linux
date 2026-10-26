@@ -299,8 +299,8 @@ for a in mu300-kernel-6.18 mu300-kernel-7.2 mu300-kernel-7.3; do
     done
     rm -f "$D/modules.check"
 done
-# Call audio is the audio extra's (https://github.com/dikeckaan/mu300-audio): no kernel bundle carries its drivers
-# (mainline's sprd-dma.ko is one of them; 5.4's is the vendor kernel's own and stays), and no image its programs.
+# Call audio is not supported: reject leftover drivers, programs and services in release inputs.
+# The vendor kernel keeps its native DMA driver; mainline has no call-audio DMA module.
 AUDIO_KO="audio_mem agdsp_access audio_sipc sprd_audcp_boot sprd_audcp_dvfs audio-dsp-dump audio-pipe sprd_apipe
 mcdt_hw_r2p0 saudio sprd-dmaengine-pcm sprd-platform-pcm-routing sprd-compr-2stage-dma snd-soc-sprd-dai snd-soc-sprd-vaudio
 snd-soc-sprd-vbc-v4 snd-soc-sprd-vbc-fe snd-soc-sprd-codec-ump9620-power snd-soc-sprd-codec-ump9620-power-dev
@@ -309,13 +309,13 @@ for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.2 mu300-kernel-7.3; do
     l=$(tar -tzf "$D/$a.tar.gz")
     extra=; [ "$a" = mu300-kernel ] || extra=sprd-dma
     for m in $AUDIO_KO $extra; do
-        ! printf '%s\n' "$l" | grep -Eq "/$m\.ko\$" || { echo "$a carries $m.ko, which is the audio extra's"; fail=1; }
+        ! printf '%s\n' "$l" | grep -Eq "/$m\.ko\$" || { echo "$a carries $m.ko, which belongs to the removed call-audio stack"; fail=1; }
     done
 done
 for m in mu300-ubuntu-rootfs mu300-ubuntu-26.04-rootfs mu300-openwrt-rootfs mu300-openwrt-luci-rootfs; do
     [ -f "$D/$m.manifest.gz" ] || continue
     ! gzip -dc "$D/$m.manifest.gz" | grep -Eq '(opt/mu300/bin/(mu300-audio-dsp|mu300-voice|pcmhost|ctlset|mu300-hfp)|systemd/system/mu300-(audio|voice)\.service|init\.d/mu300-(audio|voice)|modprobe\.d/mu300-audio\.conf)( |$)' ||
-        { echo "$m carries the audio extra's programs or services"; fail=1; }
+        { echo "$m carries removed call-audio programs or services"; fail=1; }
 done
 [ $fail = 0 ] || { echo "audit failed, nothing published" >&2; exit 1; }
 rm -rf "$IN"

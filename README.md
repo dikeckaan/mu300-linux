@@ -132,7 +132,7 @@ trying it costs you the server.
 * **The hardware stays what it is**, under either system:
   * no screen output: HDMI over USB-C does not work (the power-delivery chip never answers), so it is a headless
     machine you use over SSH or the web interface;
-  * no speaker or microphone; call audio is the optional audio extra (`sudo mu300-extra install audio`);
+  * no speaker or microphone; voice calls are not supported;
   * about 1.4 GB of RAM, because the modem firmware reserves most of the rest. Compressed swap in RAM (zram, half the
     RAM, lz4) is on by default and stretches it; `sudo mu300-zram off` turns it off.
 
@@ -472,7 +472,7 @@ the archive once online). `mu300-panel status` says where it is.
 | Go back to Android | `sudo mu300-next-boot android`, then `sudo reboot` |
 | Return to Linux from Android | `su -c mu300-linux` on the device (see below), or `boot/android-boot-linux.sh work/boot-linux-slotb.img` from a computer |
 | Send all traffic through a VPN | see below (`sudo mu300-extra install vpn` first) |
-| Add or remove optional parts (the VPN module, call audio, more web interface languages) | `mu300-extra list`, `sudo mu300-extra install vpn`, `sudo mu300-extra remove vpn` (`audio` for call audio, `lang` for the languages) |
+| Add or remove optional parts (the VPN module, more web interface languages) | `mu300-extra list`, `sudo mu300-extra install vpn`, `sudo mu300-extra remove vpn` (`lang` for the languages) |
 | Save battery: profiles, radios that go idle when nobody is connected, a charge limit | `mu300-power status`, `sudo mu300-power profile battery` (`plugged`, `saver`, `auto`), `sudo mu300-power set battery.WIFI_IDLE 10`, `mu300-power log 5 /tmp/power.csv`; on `openwrt-luci` the page System -> Power. A boot that started from a charger stays a charging boot (LED blinking, hotspot and modem down) until the Wi-Fi key is pressed; see FINDINGS 36 |
 | Language of the web interface (OpenWrt) | System -> System -> Language and Style; more languages: see Languages below |
 | Find out which LED is which | `sudo mu300-led test` |
@@ -879,18 +879,6 @@ works all the same). On OpenWrt every Docker network is in the firewall zone `do
 is given there), which reaches the internet but not the LAN, and one Docker network does not reach another; to publish
 to the mobile network, add a forwarding `wan -> docker`. Docker works on all four kernels (5.4, 6.18, 7.2, 7.3).
 
-### Call audio (the audio extra)
-
-Call audio is an optional extra, [mu300-audio](https://github.com/dikeckaan/mu300-audio), for every kernel:
-
-```sh
-sudo mu300-extra install audio                       # the kernel this device uses
-sudo mu300-extra install audio --from /mnt/usb/      # offline: the release's files in one directory
-sudo mu300-extra remove audio
-```
-
-`mu300-update` keeps it in step with the kernel.
-
 ### Languages
 
 Both OpenWrt systems speak **English, Turkish and Simplified Chinese** out of the box: LuCI's own pages (from
@@ -1087,7 +1075,7 @@ Like the installer, it offers to reboot the device from Linux into Android first
 | Web panels | ✅ OpenWrt: LuCI, and the MU300 control panel on `openwrt-luci` (with a terminal in the browser); Ubuntu: Cockpit with an MU300 page as the panel extra; adb to Linux over USB on both (off by default) |
 | Back to Android, automatic rollback | ✅ |
 | Screen output (HDMI over USB-C) | ✗ the USB-C power chip never answers, so no display |
-| Call audio | ⚠️ the board has no speaker and no microphone; call audio is the optional audio extra: `sudo mu300-extra install audio` ([mu300-audio](https://github.com/dikeckaan/mu300-audio)). The kernels have USB audio drivers, not tried here |
+| Call audio | Not supported. The board has no speaker or microphone. USB audio drivers remain available, untested here |
 
 ## How it works, in short
 

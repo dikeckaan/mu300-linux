@@ -11,11 +11,6 @@
 #                                 directory with the tarballs and their SHA256SUMS (then they are verified)
 #   mu300-extra install panel --from FILE|DIR   offline: mu300-extra-panel-offline.tar.gz of the release (Cockpit's
 #                                 packages for Ubuntu 24.04 and 26.04 in it), or a directory with it and SHA256SUMS
-#   mu300-extra install audio [--from FILE|DIR]   call audio: the latest release of github.com/dikeckaan/mu300-audio for
-#                                 the kernel this device uses (mu300-audio-KERNEL.tar.gz, checked against its
-#                                 SHA256SUMS), linked into every system, and the DSP firmware fetched along (pinned
-#                                 sha256). Offline: DIR with the tarball, SHA256SUMS and agdsp.bin. MU300_AUDIO_FIRMWARE=
-#                                 none fetches no firmware, =FILE installs your own image instead
 #   mu300-extra install NAME --from FILE|DIR   an extra of your own (any other NAME): a tarball copied onto the device
 #                                 with ./name (NAME), ./release, ./manifest (sha256sum lines of every other file) and
 #                                 programs in ./bin; its hooks/link and hooks/unlink (optional) run for every system, as
@@ -43,13 +38,10 @@
 #               (https://LAN-ADDRESS:9090, the Ubuntu account's password). Its command, mu300-panel, installs Cockpit's
 #               packages into the system (from the extra when it carries them, else from Ubuntu's archive) and, after
 #               an update replaced the system, again in the background at its first boot (mu300-extra link).
-#   audio       call audio: the drivers for one kernel, the programs and their services, the module of github.com/dikeckaan/mu300-audio. It follows the kernel: mu300-update
-#               kernel X installs the one of X. Removing it takes it out of every system again (and the firmware it
-#               had put there).
 #
 # MU300_RELEASE=TAG takes another release, MU300_RELEASE_URL=URL another server with the same files and SHA256SUMS,
 # MU300_VPN_URL=URL another place for the VPN module (a pinned tag: .../releases/download/v1.0.0), MU300_VPN_MODULE
-# the same as --from, MU300_AUDIO_URL and MU300_AUDIO_MODULE the same for the audio extra, MU300_EXTRA_FILE=FILE a
+# the same as --from, MU300_EXTRA_FILE=FILE a
 # mu300-extra-NAME.tar.gz on this device (not checked: you chose it).
 # The download, the checks and the installation are mu300-update's own (fetch_verified, module_get, extra_unpack).
 BIN=${MU300_BIN:-/opt/mu300/bin}
@@ -77,7 +69,7 @@ link_dir() {
 
 # link: the system's commands (one list, the same the images are built with) and every installed extra's. A file
 # or a link of somebody else's is never replaced; a link into an extra that is gone is removed.
-do_link() { do_link_commands; do_link_modules; do_link_panel; }
+do_link() { retire_call_audio || return 1; do_link_commands; do_link_modules; do_link_panel; }
 # the panel into this system (Ubuntu): its page, and Cockpit again in the background after an update (mu300-panel)
 do_link_panel() {
     [ -f "$EXTRA/panel/bin/mu300-panel" ] || return 0
@@ -299,35 +291,6 @@ EOF
     printf '%s %s installed in %s\n' "$name" "$(extra_release "$name")" "$EXTRA/$name"
 }
 
-# install audio [FROM]: the audio extra of the kernel this device uses, from FROM (a file, or a directory with
-# SHA256SUMS) or its latest release, with the DSP firmware (audio_firmware: before the systems are linked, so
-# hooks/link finds it); the firmware is never fatal, the extra is
-do_install_audio() {
-    from=${1:-${MU300_AUDIO_MODULE:-}}
-    [ -n "$from" ] || say "downloading $(module_asset audio) (call audio for kernel $(kernel_choice)) from $AUDIO_URL"
-    audio_get "$STAGE" "$from"; r=$?
-    case $r in
-        0|3) ;;
-        1) rm -rf "$STAGE"; die "audio was not installed: the audio extra could not be downloaded ($(offline_why); offline: mu300-extra install audio --from DIR, a directory with $(module_asset audio), the release's SHA256SUMS and agdsp.bin copied onto the device)" ;;
-        *) rm -rf "$STAGE"; die "audio was not installed" ;;
-    esac
-    [ "$r" = 0 ] || echo "audio $(extra_release audio) for kernel $(kernel_choice) is the latest release already"
-    _mf=$MODULE_FILE _ms=$MODULE_SHA
-    audio_firmware "$from"
-    if [ "$r" = 0 ]; then
-        module_install audio "$_mf" "$_ms" "$(system_release)" || { rm -rf "$STAGE"; module_vdir_clean; die "audio was not installed"; }
-    fi
-    rm -rf "$STAGE"
-    module_vdir_clean
-    do_link_commands
-    module_hook_all audio link || echo "audio: a system it could not be linked into gets it at its next boot (mu300-extra link)" >&2
-    printf 'audio %s (kernel %s) installed in %s\n' "$(extra_release audio)" "$(cat "$EXTRA/audio/kernel" 2>/dev/null)" "$EXTRA/audio"
-    for _o in $(installed_systems); do
-        [ -f "$DISK/$_o/lib/firmware/agdsp.bin" ] || echo "note: $_o has no DSP firmware: the DSP stays down there (mu300-audio-dsp install FILE|--download)"
-    done
-    echo "the sound card and the DSP start now in the background, and at every boot (mu300-audio-dsp status)"
-}
-
 # panel_from FILE|DIR: PANEL_FILE, the offline panel extra. A directory must hold mu300-extra-panel-offline.tar.gz and
 # a SHA256SUMS that lists it; a file is checked against a SHA256SUMS next to it when that lists it (else it is the
 # user's own choice).
@@ -382,17 +345,12 @@ do_install() {
         return
     fi
     [ "$name" != lang ] || is_openwrt || die "the lang extra is LuCI's languages, for OpenWrt only: install it from an OpenWrt system"
-    if [ "$name" = audio ]; then
-        [ -z "${MU300_EXTRA_FILE:-}" ] || die "MU300_EXTRA_FILE is not for the audio extra: mu300-extra install audio --from FILE|DIR"
-        do_install_audio "${2:-}"
-        return
-    fi
     if extra_is_module "$name" && [ -z "${MU300_EXTRA_FILE:-}" ]; then
         do_install_module "$name" "${2:-}"
         return
     fi
     [ "$name" != panel ] || ! is_openwrt || die "the panel extra is Cockpit, for Ubuntu: OpenWrt has its own panel (openwrt-luci)"
-    [ -z "${2:-}" ] || [ "$name" = panel ] || die "--from is for the VPN module (vpn and its engines vpn-*), the audio extra and the panel; for $name: MU300_EXTRA_FILE=FILE"
+    [ -z "${2:-}" ] || [ "$name" = panel ] || die "--from is for the VPN module (vpn and its engines vpn-*), the panel; for $name: MU300_EXTRA_FILE=FILE"
     if [ -n "${2:-}" ]; then
         # panel offline: the release's offline tarball (Cockpit's packages in it), checked as the module's copies are
         panel_from "$2" || die "panel was not installed"
@@ -451,6 +409,7 @@ luci_menu_refresh() {
 }
 
 do_remove() {
+    if [ "$1" = audio ]; then retire_call_audio; return; fi
     [ -d "$EXTRA/$1" ] || { echo "$1 is not installed"; return 0; }
     # a VPN that is on loses its tunnel, and (kill switch up) the device its connection, until they are back
     if [ "$1" = vpn ] && [ "${2:-}" != --force ] && extra_vpn_wanted "$SYSROOT"; then
@@ -469,8 +428,6 @@ do_remove() {
     { extra_is_module "$1" || extra_own "$1"; } && module_hook_all "$1" unlink
     rm -rf "$EXTRA/$1" "$EXTRA/.$1.new" "$EXTRA/.$1.old" "$EXTRA/.$1.sha256"
     [ "$1" != lang ] || rm -f "$LANGS_ON"
-    # the firmware the audio extra fetched (the copies it put into the systems went with hooks/unlink)
-    [ "$1" != audio ] || rm -rf "${AUDIO_FW_CACHE%/*}"
     sync
     do_link
     [ "$1" != vpn ] || luci_menu_refresh
@@ -486,11 +443,6 @@ do_list() {
         esac
         [ "$x" != lang ] || is_openwrt || st="$st - for OpenWrt only: Ubuntu has no LuCI"
         [ "$x" != panel ] || ! is_openwrt || st="$st - for Ubuntu only: OpenWrt has its own panel"
-        if [ "$x" = audio ] && [ -d "$EXTRA/audio/bin" ] && [ "$(cat "$EXTRA/audio/kernel" 2>/dev/null)" != "$(kernel_choice)" ]; then
-            st="$st - for kernel $(cat "$EXTRA/audio/kernel" 2>/dev/null), and this device uses $(kernel_choice): mu300-extra install audio"
-        elif [ "$x" = audio ] && [ -d "$EXTRA/audio/bin" ]; then
-            st="$st, kernel $(kernel_choice)"
-        fi
         printf '%-6s %s\n       %s\n' "$x" "$st" "$(extra_desc "$x")"
     done
 }
@@ -533,11 +485,11 @@ case ${1:-list} in
              extra_own "$2" && [ -n "$from${MU300_EXTRA_FILE:-}" ] || known "$2"
              need_root install; need_disk; do_install "$2" "$from" ;;
     remove) [ -n "${2:-}" ] || die "usage: mu300-extra remove NAME"
-            { extra_own "$2" && [ -d "$EXTRA/$2" ]; } || known "$2"; need_root remove; need_disk; do_remove "$2" "${3:-}" ;;
+            { { extra_own "$2" || [ "$2" = audio ]; } && [ -d "$EXTRA/$2" ]; } || known "$2"; need_root remove; need_disk; do_remove "$2" "${3:-}" ;;
     link) need_root link; do_link ;;
     # gone: the VPN module carries its engines (an older mu300-vpn asks for it, then installs the extra)
     adopt) echo "nothing to adopt: the VPN module carries its own engines (mu300-extra install vpn)" >&2; exit 1 ;;
     lang) shift; do_lang "$@" ;;
-    -h|--help|help) sed -n '2,55s/^# \{0,1\}//p' "$0" ;;
+    -h|--help|help) sed -n '2,/^BIN=/{ /^BIN=/q; s/^# \{0,1\}//p; }' "$0" ;;
     *) echo "usage: mu300-extra list|status|install NAME [--from FILE|DIR]|remove NAME|link|lang ..." >&2; exit 2 ;;
 esac

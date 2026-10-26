@@ -1,5 +1,10 @@
 # Findings: running Linux on the ZTE F50 / MU300 (Unisoc T760)
 
+> Call-audio entries in this notebook are historical. The current source no longer
+> integrates the call-audio stack or its optional extra. USB sound cards and the
+> Bluetooth stack are separate and remain available.
+
+
 Everything below was verified on a ZTE F50 (hardware MU300, firmware `MU300_ZYV1.0.0B09`,
 Android 13, stock kernel `5.4.254-android12-9-g9c6342244991`) during September 2026.
 Each item lists the symptom, the root cause and the fix, so it can be reused for other

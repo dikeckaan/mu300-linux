@@ -101,9 +101,3 @@ The modem's text mode garbles senders that are names rather than numbers and can
 are one long message, so `sms` uses PDU mode and decodes the frames itself, including the Turkish national language
 shift. Sending picks GSM 7-bit when every character fits, UCS-2 otherwise. Details:
 [FINDINGS 26c](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md#26c-sms-needs-pdu-mode-and-turkish-needs-more-than-that).
-
-## Voice calls
-
-The board has no speaker or microphone. Call audio is the optional audio extra: `sudo mu300-extra install audio`
-([mu300-audio](https://github.com/dikeckaan/mu300-audio)).
-See [Hardware Notes](Hardware-Notes#no-sound-no-screen).

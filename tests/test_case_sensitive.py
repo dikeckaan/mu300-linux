@@ -160,7 +160,7 @@ class ReleaseAudit(unittest.TestCase):
     def setUp(self):
         rel = (TOP / 'tools/make-release.sh').read_text()
         start = rel.index('# every module a mainline build made')
-        self.audit = rel[start:rel.index("# Call audio is the audio extra's", start)]
+        self.audit = rel[start:rel.index("# Call audio is not supported:", start)]
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.d = Path(self.tmp.name)

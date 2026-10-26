@@ -1,4 +1,4 @@
-"""/run/mu300-at (and the audio extra's /run/mu300-voice): lib/run-dir.sh, the one check the daemons that keep a
+"""/run/mu300-at: lib/run-dir.sh, the one check the daemons that keep a
 directory under the world-writable /run use."""
 import subprocess
 import tempfile
@@ -12,8 +12,8 @@ ATD = TOP / 'rootfs' / 'overlay' / 'opt' / 'mu300' / 'bin' / 'mu300-atd'
 
 
 class RunDirectory(unittest.TestCase):
-    """/run is world-writable on the images, so /run/mu300-voice (and /run/mu300-at) may be a directory somebody
-    else made first. lib/run-dir.sh is the one check both daemons use."""
+    """/run is world-writable on the images, so /run/mu300-at may be a directory somebody
+    else made first. lib/run-dir.sh is the shared directory ownership check."""
 
     def call(self, fn, path, uid, pre=''):
         return subprocess.run(['sh', '-c', '. "$0"; %s\n%s "$1" "$2" test' % (pre, fn), str(RUN_DIR_LIB), str(path),
@@ -160,7 +160,6 @@ class RunDirectory(unittest.TestCase):
                 self.assertFalse(r.returncode == 0 and (d / 'at').is_symlink(), r.stderr)
 
     def test_mu300_atd_uses_the_helper_before_it_writes(self):
-        # (mu300-voice, the other user, is the audio extra's now: github.com/dikeckaan/mu300-audio tests it there)
         atd = ATD.read_text()
         check = atd.index('run_dir_take "$DIR"')
         for first_use in ('mkdir "$LOCK"', 'mkfifo -m 600 "$CMD"', 'mkdir -p "$URCDIR"'):

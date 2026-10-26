@@ -1,45 +1,83 @@
-"""Call audio and the kernels: call audio is the audio extra's (github.com/dikeckaan/mu300-audio). What stays here is
-the memory reserved at boot and the sound core options its drivers build against."""
+"""The unsupported call-audio stack must not return through builds or extras."""
 import re
-import subprocess
-import tempfile
 import unittest
-from pathlib import Path
-
 from helpers import TOP
+from test_extra import ExtrasBase
 
 UP = TOP / 'upstream'
 OVERLAY = TOP / 'rootfs' / 'overlay'
 
 
-class StaysInTheKernel(unittest.TestCase):
-    def test_kernel_config(self):
+class NoCallAudio(ExtrasBase):
+    def test_extra_list_keeps_other_components_but_not_call_audio(self):
+        for shell in self.each_shell():
+            r = self.up(shell, 'printf "%s\n" "$EXTRAS"; extra_known audio && exit 4; '
+                        'extra_is_module audio && exit 5; '
+                        'extra_known lang && extra_known vpn && extra_known panel')
+            self.assertEqual(r.returncode, 0, (r.stdout, r.stderr))
+            self.assertNotIn('audio', r.stdout.split())
+            r = self.ex(shell, 'install', 'audio')
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn("no extra called 'audio'", r.stderr)
+
+    def test_audio_assets_are_not_accepted_as_official_modules(self):
+        for shell in self.each_shell():
+            r = self.up(shell, 'module_asset_ok mu300-audio-7.2.tar.gz && exit 4; '
+                        'module_asset_ok mu300-linux-vpn-core.tar.gz')
+            self.assertEqual(r.returncode, 0, (r.stdout, r.stderr))
+
+    def test_legacy_extra_is_unlinked_before_removal_and_is_not_relinked(self):
+        for shell in self.each_shell():
+            old = self.disk / 'extra/audio'
+            (old / 'hooks').mkdir(parents=True)
+            (old / 'bin').mkdir()
+            (old / 'hooks/unlink').write_text('echo "unlink [$1]" >> "$STUBLOG/hooks"\n')
+            (old / 'hooks/link').write_text('echo BAD-LINK >> "$STUBLOG/hooks"\n')
+            (old / 'bin/mu300-voice').write_text('#!/bin/sh\n')
+            (old / 'bin/mu300-voice').chmod(0o755)
+            cache = self.disk / 'extra/.audio-firmware'
+            cache.mkdir()
+            (cache / 'agdsp.bin').write_bytes(b'old DSP')
+            r = self.ex(shell, 'link')
+            self.assertEqual(r.returncode, 0, (r.stdout, r.stderr))
+            self.assertFalse(old.exists())
+            self.assertFalse(cache.exists())
+            self.assertFalse((self.links / 'mu300-voice').exists())
+            self.assertNotIn('BAD-LINK', self.hooks())
+            self.assertEqual(self.ex(shell, 'link').returncode, 0)
+
+    def test_failed_legacy_uninstall_preserves_files_for_retry(self):
+        for shell in self.each_shell():
+            old = self.disk / 'extra/audio'
+            (old / 'hooks').mkdir(parents=True, exist_ok=True)
+            (old / 'hooks/unlink').write_text('exit 1\n')
+            r = self.up(shell, 'retire_call_audio')
+            self.assertNotEqual(r.returncode, 0)
+            self.assertTrue(old.exists())
+            (old / 'hooks/unlink').write_text('exit 0\n')
+            self.assertEqual(self.up(shell, 'retire_call_audio').returncode, 0)
+            self.assertFalse(old.exists())
+
+    def test_help_stops_before_shell_implementation(self):
+        for shell in self.each_shell():
+            r = self.ex(shell, '--help')
+            self.assertEqual(r.returncode, 0)
+            self.assertIn('mu300-extra install NAME', r.stdout)
+            self.assertNotIn('BIN=', r.stdout)
+            self.assertNotIn('install audio', r.stdout)
+
+    def test_no_call_audio_kernel_reservations_or_build_hooks(self):
+        for f in ('upstream/mu300-mainline.config', 'kernel/mu300-linux.fragment'):
+            text = (TOP / f).read_text()
+            self.assertNotIn('CONFIG_OF_RESERVED_MEM_ADD=', text)
+            self.assertNotIn('CONFIG_SND_SOC_SPRD=m', text)
+        self.assertFalse((UP / 'patches/0022-of-reserved-mem-add.patch').exists())
+        self.assertFalse((TOP / 'kernel/patches/of-reserved-mem-add.patch').exists())
+        self.assertNotIn('of-reserved-mem-add', (TOP / 'kernel/build-all.sh').read_text())
+        # External USB sound cards and Bluetooth are independent of the removed DSP stack.
         cfg = (UP / 'mu300-mainline.config').read_text()
-        for opt in ('CONFIG_SND_SOC=m', 'CONFIG_SND_SOC_SPRD=m', 'CONFIG_SND_DYNAMIC_MINORS=y', 'CONFIG_DMADEVICES=y',
-                    'CONFIG_OF_RESERVED_MEM_ADD="0xaf600000,3M;0xaf900000,7M"'):
-            self.assertIn(opt + '\n', cfg)
-        # the 5.4 kernel reserves the same ranges
-        self.assertIn('CONFIG_OF_RESERVED_MEM_ADD="0xaf600000,3M;0xaf900000,7M"',
-                      (TOP / 'kernel' / 'mu300-linux.fragment').read_text())
-        exclude = (UP / 'all-modules.exclude').read_text()
-        self.assertRegex(exclude, r'(?m)^dir sound/soc$')
-
-    def test_reservation_patch(self):
-        patch = (UP / 'patches' / '0022-of-reserved-mem-add.patch').read_text()
-        self.assertIn('+config OF_RESERVED_MEM_ADD', patch)
-        self.assertIn('+	reserved_mem_add_regions();', patch)
-        # pages kept (memblock_reserve, not no-map)
-        self.assertIn('memblock_reserve(base, size)', patch)
-        self.assertTrue((TOP / 'kernel' / 'patches' / 'of-reserved-mem-add.patch').is_file())
-
-    def test_the_kernel_checks_every_control_write(self):
-        self.assertIn('CONFIG_SND_CTL_INPUT_VALIDATION=y\n', (UP / 'mu300-mainline.config').read_text())
-
-    def test_the_guard_never_blocks_what_the_stack_needs(self):
-        blocked = {l.split('#')[0].strip() for l in
-                   (OVERLAY / 'opt' / 'mu300' / 'lib' / 'autoload-blocked').read_text().splitlines()}
-        for m in ('snd_soc_core', 'snd_compress', 'snd_pcm', 'snd_timer', 'snd'):
-            self.assertNotIn(m, blocked)
+        self.assertIn('CONFIG_SND_USB_AUDIO=m', cfg)
+        self.assertIn('CONFIG_BT_HCIBTUSB=m', cfg)
 
 
 class NotHereAnyMore(unittest.TestCase):
@@ -64,23 +102,6 @@ class NotHereAnyMore(unittest.TestCase):
         self.assertNotIn('mu300-voice', (OVERLAY / 'opt/mu300/lib/path-commands').read_text().split())
         self.assertNotIn('mu300-audio.service', (TOP / 'rootfs' / 'assemble.sh').read_text())
         self.assertNotIn('mu300-voice', (OVERLAY / 'etc/tmpfiles.d/mu300-run.conf').read_text().split('\n', 3)[-1])
-
-    def test_ubuntu_leaves_the_card_state_alone(self):
-        # the image masks alsa-utils' restore service and udev rule (harmless without the audio extra, needed with
-        # it); run its lines.
-        src = (TOP / 'rootfs' / 'assemble.sh').read_text()
-        lines = [l for l in src.splitlines()
-                 if ('alsa' in l or l == 'mkdir -p $R/etc/udev/rules.d') and not l.lstrip().startswith('#')]
-        self.assertEqual(len(lines), 4)
-        with tempfile.TemporaryDirectory() as d:
-            r = Path(d) / 'root'
-            subprocess.run(['sh', '-ec', 'mkdir -p $R/etc/systemd/system\n' + '\n'.join(lines)],
-                           env={'R': str(r), 'PATH': '/usr/bin:/bin'}, check=True)
-            for f in ('etc/systemd/system/alsa-restore.service', 'etc/systemd/system/alsa-state.service',
-                      'etc/udev/rules.d/90-alsa-restore.rules'):
-                self.assertTrue((r / f).is_symlink(), f)
-                self.assertEqual(str((r / f).readlink()), '/dev/null', f)
-        self.assertLess(src.index('90-alsa-restore.rules'), src.index('tar --numeric-owner'))
 
 
 if __name__ == '__main__':

@@ -506,13 +506,6 @@ check() {
     _xs=; for x in $(extra_installed); do extra_known "$x" && _xs="$_xs $x ($(extra_release "$x"))"; done
     printf 'extras           %s\n' "${_xs:- none (mu300-extra list)}"
     printf 'kernel            %s (boot image: %s; kernel choice %s)\n' "$(uname -r)" "$(cat "$BOOTDIR/installed.tag" 2>/dev/null || echo "from the installer")" "$(kernel_choice)"
-    # call audio in use (a DSP firmware is installed) without the audio extra: the releases since v2026.10.19.1 do not
-    # carry it, and the update could not install it
-    if [ ! -d "$EXTRA/audio/bin" ] && audio_in_use ""; then
-        printf 'call audio        the DSP firmware is installed, the audio extra is not: sudo mu300-extra install audio\n'
-    elif [ -d "$EXTRA/audio/bin" ] && [ "$(cat "$EXTRA/audio/kernel" 2>/dev/null)" != "$(kernel_choice)" ]; then
-        printf 'call audio        the audio extra is for kernel %s, the kernel choice is %s: sudo mu300-extra install audio\n' "$(cat "$EXTRA/audio/kernel" 2>/dev/null)" "$(kernel_choice)"
-    fi
     _up=${MU300_BIN:-/opt/mu300/bin}/mu300-user-packages
     [ ! -x "$_up" ] || [ ! -s "$CONF/user-packages/wanted" ] || printf 'your packages     %s\n' "$("$_up" brief)"
     for os in $(installed_systems); do
@@ -2090,16 +2083,8 @@ apply_one() {  # apply_one OS TAG
 #                at all. mu300-linux-vpn.tar.gz is vpn as module v1 was, the core with xray and sing-box in it (the
 #                bundle, which mu300-extra and mu300-update from before the engine extras download): taken when the
 #                core is not to be had (a pinned v1 release, a copy brought by hand), and as the fallback of a set.
-#   audio        call audio: its drivers, programs and services, released on its own by github.com/dikeckaan/mu300-audio as
-#                one tarball per kernel, mu300-audio-KERNEL.tar.gz (5.4, 6.18, 7.2, 7.3) with SHA256SUMS: a module like the
-#                VPN's (./VERSION, ./requires, ./hooks/link and ./hooks/unlink, ./manifest), and ./kernel, the kernel
-#                choice its drivers (./modules/<release>/) were built for. The one of the kernel this device uses
-#                (kernel_choice) is installed, and it follows the kernel: mu300-update kernel X takes the one of X. Its
-#                DSP firmware is not in it: mu300-extra fetches that at install time, checked against its pinned
-#                sha256 (AUDIO_FW_SHA256), into EXTRA/.audio-firmware, and hooks/link copies it into a system that
-#                has none.
 EXTRA=$DISK/extra
-EXTRAS="vpn lang vpn-mihomo panel vpn-xray vpn-singbox vpn-dae audio"
+EXTRAS="vpn lang vpn-mihomo panel vpn-xray vpn-singbox vpn-dae"
 # the engines, each an extra of the VPN module
 VPN_ENGINE_EXTRAS="vpn-xray vpn-singbox vpn-mihomo vpn-dae"
 VPN_REPO=dikeckaan/mu300-linux-vpn
@@ -2108,15 +2093,6 @@ VPN_REPO=dikeckaan/mu300-linux-vpn
 VPN_URL=${MU300_VPN_URL:-https://github.com/$VPN_REPO/releases/latest/download}
 # where an update looks for a module copied onto the device by hand (the tarball and its SHA256SUMS)
 VPN_STAGED=$DISK/.mu300-update/vpn
-# the audio extra: its repository, the place its files are taken from (MU300_AUDIO_URL: another one, e.g. a pinned
-# tag .../releases/download/v1.0.0, or a local server), and where an update looks for a copy brought by hand
-AUDIO_REPO=dikeckaan/mu300-audio
-AUDIO_URL=${MU300_AUDIO_URL:-https://github.com/$AUDIO_REPO/releases/latest/download}
-AUDIO_STAGED=$DISK/.mu300-update/audio
-# the DSP firmware the audio extra fetches; nothing with another sha256 is ever installed from there
-AUDIO_FW_URL=${MU300_AUDIO_FW_URL:-https://github.com/dikeckaan/mu300-audio-firmware/releases/download/v1.0/agdsp.bin}
-AUDIO_FW_SHA256=378ceea78dbf013e10625e71efd6fab487d727e371884ae8daf078da2828b937
-AUDIO_FW_CACHE=$EXTRA/.audio-firmware/agdsp.bin
 extra_desc() {
     case $1 in
         vpn) echo "the VPN toolkit (mu300-vpn: profiles, kill switch), the module of github.com/$VPN_REPO; the engines are the vpn-* extras, the ones the profiles need come along (about 0.1 MB, with xray 15 MB)" ;;
@@ -2126,23 +2102,21 @@ extra_desc() {
         vpn-mihomo) echo "mihomo (Clash.Meta), the engine of mu300-vpn's mihomo profiles, from the same module repository (about 15 MB to download, 40 MB installed)" ;;
         vpn-dae) echo "dae (eBPF transparent proxy) with its geodata, for mu300-vpn's dae profiles; needs a kernel with BTF (mainline) (about 25 MB to download, 60 MB installed)" ;;
         panel) echo "the web panel for Ubuntu: Cockpit (terminal, logs, services) and the MU300 page, on the LAN only (port 9090); Cockpit from Ubuntu's archive (about 12 MB, 45 MB installed), or offline with --from mu300-extra-panel-offline.tar.gz" ;;
-        audio) echo "call audio through the audio DSP (a Bluetooth headset, or the taps on the call): its drivers for this kernel, mu300-audio-dsp and mu300-voice, from github.com/$AUDIO_REPO; the DSP firmware is fetched with it (about 1 MB, and 6 MB of firmware)" ;;
     esac
 }
 extra_asset() { echo "mu300-extra-$1.tar.gz"; }
-extra_is_module() { case $1 in vpn|vpn-mihomo|vpn-xray|vpn-singbox|vpn-dae|audio) return 0 ;; esac; return 1; }
+extra_is_module() { case $1 in vpn|vpn-mihomo|vpn-xray|vpn-singbox|vpn-dae) return 0 ;; esac; return 1; }
 # module_asset NAME: the release file of a module extra (vpn-bundle: the vpn extra as the bundle)
 module_asset() {
     case $1 in
         vpn) echo mu300-linux-vpn-core.tar.gz ;; vpn-bundle) echo mu300-linux-vpn.tar.gz ;;
         vpn-mihomo|vpn-xray|vpn-singbox|vpn-dae) echo "mu300-linux-$1.tar.gz" ;;
-        audio) echo "mu300-audio-$(kernel_choice).tar.gz" ;;
     esac
 }
-# module_url NAME: where a module's release files are (the audio extra's repository, or the VPN module's)
-module_url() { case $1 in audio) echo "$AUDIO_URL" ;; *) echo "$VPN_URL" ;; esac; }
+# module_url NAME: where the VPN module's release files are
+module_url() { echo "$VPN_URL"; }
 # module_what NAME: what the messages call it
-module_what() { case $1 in audio) echo "the audio extra ($AUDIO_URL)" ;; *) echo "the VPN module ($VPN_URL)" ;; esac; }
+module_what() { echo "the VPN module ($VPN_URL)"; }
 extra_known() { case " $EXTRAS " in *" $1 "*) return 0 ;; esac; return 1; }
 # extra_own NAME: NAME can be an extra of the user's own - one that is not in this list, installed from a file the user
 # copied onto the device (mu300-extra install NAME --from FILE). It is never downloaded, never updated by mu300-update,
@@ -2151,7 +2125,7 @@ extra_known() { case " $EXTRAS " in *" $1 "*) return 0 ;; esac; return 1; }
 # hooks/link and hooks/unlink run for every system like the VPN module's.
 extra_own() {
     extra_known "$1" && return 1
-    case $1 in ''|-*|vpn-*|*[!a-z0-9-]*) return 1 ;; esac
+    case $1 in ''|audio|-*|vpn-*|*[!a-z0-9-]*) return 1 ;; esac
     [ ${#1} -le 32 ]
 }
 extra_installed() {
@@ -2328,11 +2302,6 @@ extra_unpack() {
         if [ "$1" = vpn ] && { ! vpn_module_in "$_new" || [ ! -f "$_new/hooks/link" ] || [ ! -f "$_new/hooks/unlink" ]; }; then
             rm -rf "$_new"; echo "extra $1: $2 is not the VPN module (bin/mu300-vpn, hooks/link or hooks/unlink missing)" >&2; return 1
         fi
-        # the audio extra: its programs, its hooks, and the kernel its drivers are for, one of KERNELS
-        if [ "$1" = audio ] && { [ ! -x "$_new/bin/mu300-audio-dsp" ] || [ ! -f "$_new/hooks/link" ] ||
-                [ ! -f "$_new/hooks/unlink" ] || ! audio_key_ok "$(cat "$_new/kernel" 2>/dev/null)"; }; then
-            rm -rf "$_new"; echo "extra $1: $2 is not the audio extra (bin/mu300-audio-dsp, hooks or ./kernel missing)" >&2; return 1
-        fi
         _need=$(module_needs "$_new")
         if ! version_ok "$_need" "${3:-}"; then
             rm -rf "$_new"
@@ -2403,9 +2372,6 @@ sums_want() { _sw=$(awk -v f="$2" '$2 == f || $2 == "*" f {print $1; exit}' "$1"
 module_asset_ok() {
     case $1 in
         mu300-linux-vpn.tar.gz|mu300-linux-vpn-*.tar.gz) case ${1%.tar.gz} in *[!a-z0-9-]*) return 1 ;; esac ;;
-        # the audio extra of one kernel: mu300-audio-6.18.tar.gz
-        mu300-audio-*.tar.gz) _ak=${1#mu300-audio-}; _ak=${_ak%.tar.gz}
-            case $_ak in ''|.*|*.|*..*|*[!0-9.]*) return 1 ;; esac ;;
         *) return 1 ;;
     esac
 }
@@ -2452,9 +2418,8 @@ module_from() {
     case $1 in */*) _d=${1%/*}; [ -n "$_d" ] || _d=/ ;; *) _d=. ;; esac
     _w=
     if _sc=$(module_copy "$_d/SHA256SUMS" SHA256SUMS 2>/dev/null); then _w=$(sums_want "$_sc" "${1##*/}"); fi
-    # a file that no SHA256SUMS next to it vouches for is refused, unless MU300_VPN_UNVERIFIED=1 (the audio extra:
-    # MU300_AUDIO_UNVERIFIED=1) says it is wanted unchecked (a build of one's own)
-    _uv=MU300_VPN_UNVERIFIED; [ "$2" != audio ] || _uv=MU300_AUDIO_UNVERIFIED
+    # A local build without SHA256SUMS needs explicit permission to install unchecked.
+    _uv=MU300_VPN_UNVERIFIED
     if [ -z "$_w" ] && [ "$(eval "echo \${$_uv:-}")" != 1 ]; then
         echo "no SHA256SUMS next to $1 lists it: not installed unverified (copy the release's SHA256SUMS next to it, or $_uv=1 for a build of your own)" >&2
         return 2
@@ -2684,6 +2649,19 @@ module_hook_all() {
     return $_rc
 }
 
+# Retire the former optional call-audio module before a system or kernel update. Its
+# drivers must not restart with a kernel that no longer reserves their DSP memory.
+# Use its own uninstall hook; if it fails, keep its files for an explicit retry.
+retire_call_audio() {
+    [ -d "$EXTRA/audio" ] || return 0
+    [ -f "$EXTRA/audio/hooks/unlink" ] || {
+        echo "cannot remove legacy call audio: hooks/unlink is missing; uninstall it before updating" >&2
+        return 1
+    }
+    module_hook_all audio unlink && module_hook audio unlink "${MU300_SYSROOT:-}" || return 1
+    rm -rf "$EXTRA/audio" "$EXTRA/.audio.new" "$EXTRA/.audio.old" "$EXTRA/.audio.sha256" "$EXTRA/.audio-firmware"
+}
+
 # vpn_in_use "OS...": must the device have the VPN module after an update of OS...? A vpn extra is installed (the
 # module, or the engines alone of an older release), mu300-vpn of the running system says it is enabled, or a system
 # being updated has ENABLE=1.
@@ -2791,7 +2769,7 @@ EOF
 # modules_link "OS...": the updated systems use the module (their images have no mu300-vpn); one the hook could not
 # link gets another try at its first boot (mu300-extra link)
 modules_link() {
-    for _x in vpn $VPN_ENGINE_EXTRAS audio; do
+    for _x in vpn $VPN_ENGINE_EXTRAS; do
         [ -f "$EXTRA/$_x/hooks/link" ] || continue
         for _o in $1; do
             module_hook_fits "$_x" link "$DISK/$_o" "$(cat "$DISK/$_o$VERSION_FILE" 2>/dev/null || echo unknown)" ||
@@ -2812,167 +2790,6 @@ modules_link() {
         fi
     done
     return 0
-}
-
-# ---- the audio extra ---------------------------------------------------------------------------------------------
-# audio_key_ok KEY: a kernel choice an audio extra can be for
-audio_key_ok() { case " $KERNELS " in *" $1 "*) [ -n "$1" ] ;; *) return 1 ;; esac; }
-# audio_get DIR [FROM]: the audio extra of the kernel this device uses (kernel_choice) as MODULE_FILE / MODULE_SHA, as
-# module_get gets the VPN's (status 0, 3 when the installed one is that file already, 1 not to be had, 2 a check
-# failed) - and only the one built for that kernel: a tarball whose ./kernel is another's is refused (2)
-audio_get() {
-    module_get audio "$1" "${2:-}"; _ag=$?
-    [ "$_ag" = 0 ] || return "$_ag"
-    _ak=$(untar -xzOf "$MODULE_FILE" ./kernel 2>/dev/null)
-    if [ "$_ak" != "$(kernel_choice)" ]; then
-        rm -f "$MODULE_FILE"; MODULE_FILE=
-        echo "that is the audio extra for kernel ${_ak:-?}, and this device uses $(kernel_choice): not installed" >&2
-        return 2
-    fi
-}
-# audio_from_staged: the copy of the audio extra brought onto the device by hand for an update (MU300_AUDIO_MODULE, a
-# file or a directory with SHA256SUMS; else AUDIO_STAGED when the tarball of this kernel is there)
-audio_from_staged() {
-    if [ -n "${MU300_AUDIO_MODULE:-}" ]; then echo "$MU300_AUDIO_MODULE"
-    elif [ -s "$AUDIO_STAGED/$(module_asset audio)" ]; then echo "$AUDIO_STAGED"; fi
-}
-# audio_in_use "OS...": does the device use call audio? The audio extra is installed, or a system has the DSP
-# firmware (mu300-audio-dsp install put it at /lib/firmware/agdsp.bin; a release up to v2026.10.19.1 carried the
-# stack itself, and on 5.4 mu300-audio's installer put the drivers into /lib/modules/<release>/audio)
-audio_in_use() {
-    [ -d "$EXTRA/audio/bin" ] && return 0
-    for _o in $1 $(installed_systems); do
-        [ -f "$DISK/$_o/lib/firmware/agdsp.bin" ] && return 0
-        for _m in "$DISK/$_o"/lib/modules/*/audio/sprd_audcp_boot.ko; do [ -f "$_m" ] && return 0; done
-    done
-    return 1
-}
-audio_hint() {
-    printf '\nCall audio is the audio extra now. Copy SHA256SUMS and %s from\n' "$(module_asset audio)" >&2
-    printf 'https://github.com/%s/releases/latest into %s/ on this device (or:\n' "$AUDIO_REPO" "$AUDIO_STAGED" >&2
-    printf 'MU300_AUDIO_MODULE=/path/to/that/directory), or get the device online, then: mu300-extra install audio\n' >&2
-}
-# audio_fetch "OS...": before anything is changed, the audio extra the device will have after the update (AUDIO_NEW:
-# "audio FILE SHA"). Only for a device that uses call audio (audio_in_use). Never fatal: without it the device works,
-# call audio does not start until the extra is installed (AUDIO_MISSING: said loudly at the end).
-AUDIO_NEW=
-AUDIO_MISSING=
-audio_fetch() {
-    AUDIO_NEW=
-    AUDIO_MISSING=
-    audio_in_use "$1" || return 0
-    _r=0; audio_get "$STAGE/module" "$(audio_from_staged)" || _r=$?
-    case $_r in
-        0) AUDIO_NEW="audio $MODULE_FILE $MODULE_SHA" ;;
-        3) ;;
-        *) if [ -d "$EXTRA/audio/bin" ]; then
-               echo "extra audio: could not be updated; the installed one ($(extra_release audio)) stays" >&2
-           else
-               AUDIO_MISSING=1
-               echo "extra audio: this device uses call audio, and the audio extra could not be had (see above)" >&2
-           fi ;;
-    esac
-    return 0
-}
-# audio_install TAG: what audio_fetch got, before the systems are switched (an extra that fails its checks is said
-# and skipped: the device goes on without it)
-audio_install() {
-    [ -n "$AUDIO_NEW" ] || return 0
-    set -- $AUDIO_NEW "$1"
-    if module_install audio "$2" "$3" "$4"; then
-        printf 'extra audio: %s (kernel %s)\n' "$(extra_release audio)" "$(cat "$EXTRA/audio/kernel")"
-        EXTRA_CHANGED=1
-    else
-        echo "extra audio: not installed (see above)" >&2
-        [ -d "$EXTRA/audio/bin" ] || AUDIO_MISSING=1
-    fi
-    rm -f "$2"
-}
-# audio_missing_say: the loud end of an update that left a device using call audio without the extra
-audio_missing_say() {
-    [ -n "$AUDIO_MISSING" ] && [ ! -d "$EXTRA/audio/bin" ] || return 0
-    printf '\n!!! Call audio: this device used it, and the new release does not carry it any more - it is the audio\n' >&2
-    printf '!!! extra now. Until it is installed, the sound card and the DSP do not start. Install it with:\n' >&2
-    printf '!!!     sudo mu300-extra install audio\n' >&2
-    audio_hint
-}
-# audio_follow: after a kernel switch (mu300-update kernel X, rollback-boot), the audio extra of the kernel the device
-# will boot now; the extra of the other kernel stays when that one cannot be had, and call audio waits for it
-audio_follow() {
-    [ -d "$EXTRA/audio/bin" ] || return 0
-    [ "$(cat "$EXTRA/audio/kernel" 2>/dev/null)" != "$(kernel_choice)" ] || return 0
-    printf '\n==> the audio extra for kernel %s\n' "$(kernel_choice)"
-    _r=0; audio_get "$STAGE/module" "$(audio_from_staged)" || _r=$?
-    if { [ "$_r" = 0 ] && module_install audio "$MODULE_FILE" "$MODULE_SHA" "$(installed_version)"; } || [ "$_r" = 3 ]; then
-        module_vdir_clean
-        module_hook_all audio link || echo "extra audio: a system it could not be linked into gets it at its next boot (mu300-extra link)" >&2
-        printf 'extra audio: %s for kernel %s\n' "$(extra_release audio)" "$(kernel_choice)"
-        return 0
-    fi
-    module_vdir_clean
-    printf 'WARNING: the audio extra for kernel %s could not be had: call audio does not start on that kernel until it is\n' "$(kernel_choice)" >&2
-    printf 'installed (mu300-extra install audio, offline --from DIR with %s and SHA256SUMS)\n' "$(module_asset audio)" >&2
-    return 0
-}
-# audio_fw_ok FILE [own]: FILE is the pinned DSP image (AUDIO_FW_SHA256); with "own", any image that looks like an
-# AGDSP image for this board instead (1 to 6 MiB, the reserved region's size, and an AUDCP header in its first 64 KiB),
-# as mu300-audio-dsp install checks the user's own
-audio_fw_ok() {
-    [ -f "$1" ] && [ ! -L "$1" ] || return 1
-    if [ "${2:-}" = own ]; then
-        _fs=$(wc -c < "$1" | tr -d ' ')
-        [ "$_fs" -ge 1048576 ] && [ "$_fs" -le 6291456 ] || { echo "$1 is $_fs bytes; an AGDSP image is 1 to 6 MiB" >&2; return 1; }
-        head -c 65536 "$1" | LC_ALL=C tr -c 'A-Za-z0-9_' '\n' | grep -q AUDCP ||
-            { echo "$1 has no AUDCP header in its first 64 KiB: not an AGDSP image" >&2; return 1; }
-        return 0
-    fi
-    [ "$(sha_of "$1")" = "$AUDIO_FW_SHA256" ] || { echo "$1 is not the pinned DSP image (sha256 $AUDIO_FW_SHA256): refused" >&2; return 1; }
-}
-# audio_fw_everywhere: every installed system has a DSP firmware already
-audio_fw_everywhere() {
-    for _o in $(installed_systems); do [ -f "$DISK/$_o/lib/firmware/agdsp.bin" ] || return 1; done
-    return 0
-}
-# audio_firmware [FROM]: the DSP firmware into AUDIO_FW_CACHE, where hooks/link takes it from for a system that has
-# none. MU300_AUDIO_FIRMWARE=none: not at all; =FILE: your own image (checked as audio_fw_ok own does). Else, when a
-# system lacks one: agdsp.bin next to FROM (the --from directory, or the file's), or the download of AUDIO_FW_URL -
-# either only when its sha256 is AUDIO_FW_SHA256. Never fatal: the extra works without it, the DSP stays down.
-audio_firmware() {
-    case ${MU300_AUDIO_FIRMWARE:-} in
-        none|no|0|skip) echo "the DSP firmware was not fetched (MU300_AUDIO_FIRMWARE=${MU300_AUDIO_FIRMWARE}): put one with mu300-audio-dsp install FILE|--download"; return 0 ;;
-    esac
-    if [ -z "${MU300_AUDIO_FIRMWARE:-}" ]; then
-        audio_fw_everywhere && return 0
-        [ -f "$AUDIO_FW_CACHE" ] && audio_fw_ok "$AUDIO_FW_CACHE" 2>/dev/null && return 0
-    fi
-    module_vdir || { echo "cannot create a private directory under $EXTRA" >&2; return 0; }
-    _fv=$MODULE_VDIR/agdsp.bin; rm -f "$_fv"
-    _own=
-    if [ -n "${MU300_AUDIO_FIRMWARE:-}" ]; then
-        _own=own
-        [ -f "$MU300_AUDIO_FIRMWARE" ] && [ ! -L "$MU300_AUDIO_FIRMWARE" ] && ( umask 077; cat < "$MU300_AUDIO_FIRMWARE" > "$_fv" ) 2>/dev/null ||
-            { echo "the DSP firmware was not installed: cannot read $MU300_AUDIO_FIRMWARE (a regular file)" >&2; return 0; }
-    elif [ -n "${1:-}" ]; then
-        _fd=$1; [ -d "$_fd" ] || _fd=$(dirname "$1")
-        if [ ! -f "$_fd/agdsp.bin" ] || [ -L "$_fd/agdsp.bin" ]; then
-            echo "no agdsp.bin in $_fd: the DSP firmware was not installed (copy it there and install again, or later: mu300-audio-dsp install FILE|--download)" >&2
-            return 0
-        fi
-        ( umask 077; cat < "$_fd/agdsp.bin" > "$_fv" ) 2>/dev/null || { echo "cannot read $_fd/agdsp.bin" >&2; return 0; }
-    else
-        say "downloading the DSP firmware from $AUDIO_FW_URL"
-        if ! ( umask 077; fetch_file "$AUDIO_FW_URL" "$_fv" ); then
-            rm -f "$_fv"
-            echo "the DSP firmware could not be downloaded ($(offline_why)): the DSP stays down until it is installed (mu300-extra install audio again, or mu300-audio-dsp install FILE|--download)" >&2
-            return 0
-        fi
-    fi
-    if ! audio_fw_ok "$_fv" $_own; then rm -f "$_fv"; echo "the DSP firmware was not installed" >&2; return 0; fi
-    mkdir -p "${AUDIO_FW_CACHE%/*}" && chmod 700 "${AUDIO_FW_CACHE%/*}" &&
-        cp "$_fv" "$AUDIO_FW_CACHE.new" && chmod 644 "$AUDIO_FW_CACHE.new" && mv -f "$AUDIO_FW_CACHE.new" "$AUDIO_FW_CACHE" ||
-        { rm -f "$_fv" "$AUDIO_FW_CACHE.new"; echo "could not keep the DSP firmware in ${AUDIO_FW_CACHE%/*}" >&2; return 0; }
-    rm -f "$_fv"
-    echo "DSP firmware: $(sha_of "$AUDIO_FW_CACHE")${_own:+ (your own image)}"
 }
 
 # extras_install TAG "NAMES": after the systems are in place, the extras of the release downloaded into $STAGE
@@ -3497,6 +3314,7 @@ boot_update_run() {
     # keep the current image and the module set it runs with for rollback-boot, then the new modules, then write.
     # Until the image is kept (prev_modules_commit with prev.body) a failure puts the set in place back and leaves
     # the kept image and its set as they were.
+    retire_call_audio || { echo "boot: legacy call audio could not be removed" >&2; return 1; }
     prev_modules_save "$tmp" || { echo "boot: keeping the modules in place failed; nothing was changed" >&2; return 1; }
     BOOT_MODS_PENDING=1
     if [ -n "$mods" ] && ! kernel_modules_into_systems "$tmp"; then
@@ -3558,8 +3376,6 @@ kernel_cmd() {  # kernel [5.4|6.18|7.2|7.3]: show or change the kernel, and inst
         echo "$old" > "$KERNEL_CHOICE"
         die "the $1 kernel was not installed; staying on $old"
     fi
-    # the audio extra follows the kernel: its drivers are built for one (never fatal)
-    audio_follow
     rm -rf "$STAGE"
     sync
     printf '\nkernel %s selected. ' "$1"
@@ -3576,6 +3392,7 @@ rollback_boot() {
         die "the previous boot image was taken from slot $ps, Linux now runs from $(linux_slot); nothing was written"
     dev=$(boot_dev "boot_$(linux_slot)") || die "nothing was written"
     psize=$(part_bytes "$dev")
+    retire_call_audio || die "legacy call audio could not be removed; boot was not changed"
     unlock_for_trial
     write_boot "$dev" "$psize" "$BOOTDIR/prev.body" "$BOOTDIR/prev.vbmeta" "$BOOTDIR/prev.footer" ||
         die "writing the previous boot image failed verification"
@@ -3589,7 +3406,6 @@ rollback_boot() {
         cat "$BOOTDIR/prev.kernel" > "$KERNEL_CHOICE"
         cat "$BOOTDIR/prev.kernel" > "$BOOTDIR/installed.kernel"
     fi
-    audio_follow
     sync
     printf 'boot: previous boot image (%s) restored. ' "$(cat "$BOOTDIR/prev.tag" 2>/dev/null || echo unknown)"
     reboot_goes_to_android || printf 'Reboot to start it.\n'
@@ -3803,8 +3619,6 @@ apply() {
     done
     # the VPN module, from its own repository: a device that uses the VPN gets it, or the update stops here
     modules_fetch "$tag" "$todo"
-    # the audio extra, from its own repository: a device that uses call audio gets it (never fatal, said at the end)
-    audio_fetch "$todo"
     boot_asset=
     if [ -z "${MU300_KERNEL_BUNDLE:-}" ]; then
         boot_asset=$(kernel_asset)
@@ -3823,11 +3637,11 @@ apply() {
     rm -f "$STAGE/kernel.list"
     echo "all files are here and verified; from now on the network is not needed"
 
+    retire_call_audio || die "legacy call audio could not be removed; update stopped before replacing systems"
     pause_data
     EXTRA_CHANGED=
     modules_install "$tag"
-    audio_install "$tag"
-    # (the verified copies of both: gone once they are installed)
+    # the verified module copies are gone once installed
     rm -rf "$STAGE/module"
     module_vdir_clean
     for os in $todo; do
@@ -3842,7 +3656,6 @@ apply() {
     boot_update "$tag" || { boot_ok=; printf '\nThe boot image was not updated (see above)%s.\n' "${SYSTEM_CHANGED:+; the systems were}"; }
     resume_data
     [ -z "$boot_ok" ] || rm -rf "$STAGE"
-    audio_missing_say
     if [ -z "$SYSTEM_CHANGED$BOOT_CHANGED" ]; then
         [ -n "$boot_ok" ] || return 1
         if [ -n "$EXTRA_CHANGED" ]; then printf '\nThe extras are up to date now.\n'; else printf '\nNothing to do.\n'; fi

@@ -568,7 +568,7 @@ class Atd(ShellTest):
             self.assertIn('malformed request', self.err.read_text())
 
     def test_the_urc_logs_are_roots_alone(self):
-        """What the modem says unasked is the owner's to read and nobody else's: with caller id on (mu300-voice
+        """What the modem says unasked is the owner's to read and nobody else's: with caller id enabled (an AT client
         watch) every ring puts the caller's number into this log."""
         for shell in self.shells:
             logs, m = self.start(shell)

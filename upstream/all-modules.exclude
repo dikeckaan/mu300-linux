@@ -10,9 +10,7 @@ DEBUG
 LKDTM
 INJECT
 ^(KASAN|KCSAN|KMSAN|UBSAN|KCOV|GCOV)
-# ASoC: codecs, DAIs and machine glue work only wired up by a board's device tree; the SoC's own call audio is the
-# vendor stack (the audio extra, github.com/dikeckaan/mu300-audio), and the fragment switches on the ASoC core it needs. Everything else under
-# sound/soc stays off, whatever its symbol is called (SND_SIMPLE_CARD, SND_DESIGNWARE_I2S, ...)
+# ASoC codecs, DAIs and machine glue need board-specific wiring; keep them out.
 ^SND_SOC
 dir sound/soc
 # display panels and bridges: wired to a board; there is no display

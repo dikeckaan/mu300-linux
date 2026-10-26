@@ -176,7 +176,7 @@ trying it costs you the server.
 
 * **Android stays.** Only one of the two runs at a time, and a reboot switches between them.
 * **The hardware stays what it is,** under either system: no screen output (HDMI over USB-C does not work), no
-  speaker or microphone (call audio is the optional audio extra), about 1.4 GB
+  speaker or microphone (voice calls are not supported), about 1.4 GB
   of the 2 GB RAM usable, because the modem keeps the rest.
 
 ## A hobby project, at your own risk

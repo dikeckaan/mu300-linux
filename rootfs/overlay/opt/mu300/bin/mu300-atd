@@ -73,7 +73,7 @@ one_request() {
 # $DIR is ours alone, or it is made so: /run takes files from every user on these images, and in a directory
 # somebody else made first (or behind his symlink) the command fifo would be his to write - AT commands, to the
 # modem, as us - and every answer his to read. Recovered from, not refused: without this daemon there is no
-# modem at all. The same helper as mu300-voice (lib/run-dir.sh); the owner asked for is whoever runs this (root).
+# modem at all. The shared helper (lib/run-dir.sh); the owner asked for is whoever runs this (root).
 RUN_DIR_LIB=${MU300_RUN_DIR_LIB:-/opt/mu300/lib/run-dir.sh}
 if [ -r "$RUN_DIR_LIB" ]; then
     # shellcheck disable=SC1090
@@ -175,8 +175,8 @@ done
 URCDIR=$DIR/urc
 URCMAX=${MU300_AT_URC_MAX:-65536}
 mkdir -p "$URCDIR"
-# root's alone: with caller id on (AT+CLIP=1, mu300-voice watch) every ring writes the caller's number here, and
-# +CUSD answers and +CMTI were always in it. Every reader is root (mobile-data, mu300-ussd, mu300-voice, the panel).
+# root's alone: with caller id on (AT+CLIP=1, an AT client) every ring writes the caller's number here, and
+# +CUSD answers and +CMTI were always in it. Every reader is root (mobile-data, mu300-ussd, the panel).
 chmod 700 "$URCDIR"
 # A message the modem delivers directly (mu300-smsd asks for that with AT+CNMI mt=2, openwrt-luci only) is a two-line
 # frame: "+CMT: <alpha>,<length>" and the PDU on the next line, on whichever channel the modem's unsolicited output
