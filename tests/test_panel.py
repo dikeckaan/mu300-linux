@@ -503,7 +503,7 @@ class Static(unittest.TestCase):
         rel = (TOP / 'tools/make-release.sh').read_text()
         self.assertIn('make-extra.sh" panel "$D/mu300-extra-panel.tar.gz"', rel)
         self.assertIn('make-extra.sh" panel-offline "$D/mu300-extra-panel-offline.tar.gz"', rel)
-        self.assertIn('EXTRAS="vpn lang vpn-mihomo panel vpn-xray vpn-singbox vpn-dae audio"', (BIN / 'mu300-update').read_text())
+        self.assertIn('EXTRAS="vpn lang vpn-mihomo panel vpn-xray vpn-singbox vpn-dae"', (BIN / 'mu300-update').read_text())
         sh = (TOP / 'install.sh').read_text()
         self.assertIn('adb push "$EXTRA_PANEL" $T/mu300-extra-panel.tar.gz', sh)
         self.assertIn("Install the web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)? (yes/no)')\" no", sh)
