@@ -116,6 +116,23 @@ return view.extend({
 		var first = L.resolveDefault(M.callStatus()).then(function(st) {
 			self.update(st || {});
 		});
+		/* LBS reads the same background registration cache as the status collector; this does not issue another AT command. */
+		function lbs() {
+			if (!document.documentElement.contains(root)) return;
+			L.resolveDefault(M.callLbsGet(), null).then(function(data) {
+				var tac = root.querySelector('#mud-lbs-tac');
+				var cid = root.querySelector('#mud-lbs-cid');
+				var state = root.querySelector('#mud-lbs-state');
+				var valid = data && data.available === 1 && Number.isSafeInteger(data.tac) && data.tac >= 0 &&
+					Number.isSafeInteger(data.cid) && data.cid >= 0;
+				if (tac) tac.textContent = valid ? String(data.tac) : '--';
+				if (cid) cid.textContent = valid ? String(data.cid) : '--';
+				if (state) state.textContent = valid ? (data.rat === 'nr' ? '5G' : 'LTE') : _('Cell identity unavailable');
+			}).finally(function() {
+				if (document.documentElement.contains(root)) self._lbsTimer = setTimeout(lbs, 10000);
+			});
+		}
+		first.finally(function() { self._lbsTimer = setTimeout(lbs, 500); });
 		/* LuCI poll.add() truncates intervals to whole seconds. Use a one-shot
 		 * timer so 1.5 s remains 1.5 s and slow requests never overlap; after a
 		 * failed snapshot the next one waits longer (M.backoff), up to 18 s. */
@@ -155,6 +172,7 @@ return view.extend({
 	unload: function() {
 		clearTimeout(this._refreshTimer);
 		clearTimeout(this._rateTimer);
+		clearTimeout(this._lbsTimer);
 	},
 
 	/* One reading of the fast lane: rates over the time since the last one (a counter that went down - the interface
@@ -209,6 +227,7 @@ return view.extend({
     <div class="mud-rat" id="mud-rat">--<span class="mud-bars" id="mud-bars"><i style="height:25%"></i><i style="height:45%"></i><i style="height:65%"></i><i style="height:85%"></i><i style="height:100%"></i></span></div>
     <div class="mud-op" id="mud-op">--</div>
     <div class="mud-cellline" id="mud-cellline"></div>
+    <div class="mud-note" style="margin-top:4px" aria-live="polite">${_('Cell identity')} · ${_('TAC')}: <b id="mud-lbs-tac">--</b> · ${_('Cell ID')}: <b id="mud-lbs-cid">--</b> <span id="mud-lbs-state" style="color:var(--text-muted,var(--text-light,#777))">${_('Loading…')}</span></div>
     <div class="mud-note" id="mud-stale" style="display:none;margin:4px 0 0;color:var(--warning,#f59e0b)"></div>
     <a class="mud-note" id="mud-update" href="${L.url('admin/system/mu300-update')}" style="display:none;margin:4px 0 0;color:var(--brand,var(--primary,#2f7bf6))"></a>
   </div>

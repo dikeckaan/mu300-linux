@@ -229,6 +229,43 @@ m_signal() {
     rm -rf "$live"
 }
 
+# Read serving-cell identifiers from the collector cache. Never issue a second AT read here: dashboard status already
+# refreshes this cache in the background, and concurrent modem requests can contend with the dialer.
+m_lbs_get() {
+    local reg tac cid stat age rat dec_tac dec_cid
+    age=$(age_of "$SIGF")
+    case $age in -1|*[!0-9]*) age=-1 ;; esac
+    if [ -s "$SIGF" ]; then
+        reg=$(jsonfilter -i "$SIGF" -e '@.reg5g' 2>/dev/null)
+        stat=$(printf '%s' "$reg" | jsonfilter -e '@.stat' 2>/dev/null)
+        case $stat in
+            1|5) rat=nr ;;
+            *)
+                reg=$(jsonfilter -i "$SIGF" -e '@.reg' 2>/dev/null)
+                stat=$(printf '%s' "$reg" | jsonfilter -e '@.stat' 2>/dev/null)
+                rat=lte
+                ;;
+        esac
+        tac=$(printf '%s' "$reg" | jsonfilter -e '@.tac' 2>/dev/null | tr 'A-F' 'a-f')
+        cid=$(printf '%s' "$reg" | jsonfilter -e '@.cid' 2>/dev/null | tr 'A-F' 'a-f')
+        case $stat in 1|5) ;; *) tac=; cid= ;; esac
+    else
+        tac=; cid=; rat=unknown
+    fi
+    # The cache stores AT+CEREG / AT+C5GREG TAC and cell IDs as quoted hexadecimal strings. Bound width before
+    # arithmetic to reject malformed values and keep conversion within a 32-bit cell identity.
+    case $tac in ''|*[!0123456789abcdef]*|?????????*) tac= ;; esac
+    case $cid in ''|*[!0123456789abcdef]*|?????????*) cid= ;; esac
+    if [ -n "$tac" ] && [ -n "$cid" ] && [ "$age" -ge 0 ] && [ "$age" -le 30 ]; then
+        dec_tac=$((0x$tac))
+        dec_cid=$((0x$cid))
+        printf '{"ok":1,"available":1,"rat":"%s","tac":%s,"cid":%s,"age":%d}\n' \
+            "$rat" "$dec_tac" "$dec_cid" "$age"
+    else
+        printf '{"ok":1,"available":0,"error":"Cell identity unavailable","age":%d}\n' "$age"
+    fi
+}
+
 m_act() {
     local op arg out
     inp '@.op'; op=$V
@@ -978,6 +1015,7 @@ do_list() {
 	"sysinfo": { },
 	"status": { },
 	"signal": { },
+	"lbs_get": { },
 	"act": { "op": "String", "arg": "String" },
 	"at": { "cmd": "String", "confirm": "String" },
 	"at_job": { },
@@ -1270,6 +1308,7 @@ call)
         sysinfo)      run_m sysinfo      m_sysinfo ;;
         status)       run_m status       m_status ;;
         signal)       run_m signal       m_signal ;;
+        lbs_get)      run_m lbs_get      m_lbs_get ;;
         act)          run_m act          m_act ;;
         at)           run_m at           m_at ;;
         at_job)       run_m at_job       m_at_job ;;

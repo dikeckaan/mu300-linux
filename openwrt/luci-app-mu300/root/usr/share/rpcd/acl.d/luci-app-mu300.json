@@ -3,7 +3,7 @@
   "description": "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN",
   "read": {
    "ubus": {
-    "mu300dash": [ "sysinfo", "status", "signal", "lock_get", "usb_get", "usb_net_list", "lang_get", "power_get", "ttl_get", "cpu_get", "cpu_voltage_get", "traffic_get", "ops_log", "packages_get", "sim_get", "simcard_get", "update_get", "update_job" ],
+    "mu300dash": [ "sysinfo", "status", "signal", "lbs_get", "lock_get", "usb_get", "usb_net_list", "lang_get", "power_get", "ttl_get", "cpu_get", "cpu_voltage_get", "traffic_get", "ops_log", "packages_get", "sim_get", "simcard_get", "update_get", "update_job" ],
     "mu300rates": [ "netdev" ],
     "mu300vpn": [ "status", "profiles", "engines", "subscriptions", "settings" ]
    },

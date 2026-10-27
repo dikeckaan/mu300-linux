@@ -19,6 +19,7 @@
 
 var callStatus = rpc.declare({ object: 'mu300dash', method: 'status', expect: { '': {} }, nobatch: true });
 var callSignal = rpc.declare({ object: 'mu300dash', method: 'signal', expect: { '': {} }, nobatch: true });
+var callLbsGet = rpc.declare({ object: 'mu300dash', method: 'lbs_get', expect: { '': {} }, nobatch: true });
 var callSysinfo = rpc.declare({ object: 'mu300dash', method: 'sysinfo', expect: { '': {} }, nobatch: true });
 var callAct    = rpc.declare({ object: 'mu300dash', method: 'act', params: [ 'op', 'arg' ], expect: { '': {} }, nobatch: true });
 var callAt     = rpc.declare({ object: 'mu300dash', method: 'at', params: [ 'cmd', 'confirm' ], expect: { '': {} }, nobatch: true });
@@ -743,7 +744,7 @@ function choiceBox(title, message, choices, opts) {
 /* LuCI's require treats a module as a class factory: it must return a baseclass subclass, and the loader hands out
  * an instance of it */
 return baseclass.extend({
-	callStatus: callStatus, callSignal: callSignal, callSysinfo: callSysinfo, callAct: callAct, callAt: callAt, callAtHist: callAtHist,
+	callStatus: callStatus, callSignal: callSignal, callLbsGet: callLbsGet, callSysinfo: callSysinfo, callAct: callAct, callAt: callAt, callAtHist: callAtHist,
 	callAtJob: callAtJob, callOpsLog: callOpsLog, backoff: backoff, ageText: ageText,
 	callLockGet: callLockGet, callLockFresh: callLockFresh, callLockSet: callLockSet,
 	callSmsList: callSmsList, callSmsShow: callSmsShow, callSmsSend: callSmsSend, callSmsJob: callSmsJob,
