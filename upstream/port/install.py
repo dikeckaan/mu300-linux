@@ -59,6 +59,12 @@ if 'SPRD_UMS9620_IPA_PD' not in k:
     k = k[:i] + ('config SPRD_UMS9620_IPA_PD\n\tbool "Unisoc UMS9620 IPA subsystem power domain"\n'
                  '\tdepends on ARCH_SPRD && PM\n\tselect PM_GENERIC_DOMAINS\n\tselect MFD_SYSCON\n\tdefault y\n\n') + k[i:]
     open(kp, 'w').write(k)
+k = open(kp).read()
+if 'SPRD_UMS9620_UNUSED_PD' not in k:
+    i = k.rindex('endmenu')
+    k = k[:i] + ('config SPRD_UMS9620_UNUSED_PD\n\tbool "Unisoc UMS9620: power off the unused camera and DPU/VSP domains"\n'
+                 '\tdepends on ARCH_SPRD\n\tselect MFD_SYSCON\n\tdefault y\n\n') + k[i:]
+    open(kp, 'w').write(k)
 
 # UMP9620 PMIC: MFD match data (IRQ base 0x80, 11 IRQs) and the ported regulator driver
 mfd = os.path.join(tree, 'drivers/mfd/sprd-sc27xx-spi.c')

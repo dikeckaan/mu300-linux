@@ -204,10 +204,10 @@ hwrng 202e0000.rng ok cfg:HW_RANDOM_SPRD has:hwrng/202e0000.rng # /dev/hwrng, th
 
 # ---------------------------------------------------------------------------------------------------------------------
 # DDR, modem and multimedia DVFS (power)
-module sprd_ddr_dvfs missing group:dvfs boards:f50,u30air,v50 # DDR frequency scaling (scene-frequency devfreq, sprd,ddr-dvfs); mainline leaves DDR at the bootloader's frequency
-driver platform/sprd-ddr-dvfs missing group:dvfs boards:f50,u30air,v50 # see sprd_ddr_dvfs
-devfreq scene-frequency missing group:dvfs boards:f50,u30air,v50 # see sprd_ddr_dvfs
-class dvfs missing group:dvfs boards:f50,u30air,v50 # the vendor dvfs class of the DDR scaling
+module sprd_ddr_dvfs ok ko:sprd_ddr_dfs # DDR frequency scaling (scene-frequency devfreq, sprd,ddr-dvfs) through the PM_SYS firmware: upstream/modules/sprd_ddr_dfs (FINDINGS 238)
+driver platform/sprd-ddr-dvfs ok ko:sprd_ddr_dfs # the port's driver is sprd-ddr-dfs, on the same node
+devfreq scene-frequency ok ko:sprd_ddr_dfs # the same name, governor sprd_ddr_auto
+class dvfs na # the vendor dvfs class of the DDR scaling (scenes, boost); sprd_ddr_dfs offers devfreq's interface instead
 builtin governor_passive missing group:dvfs boards:f50,u30air,v50 # DEVFREQ_GOV_PASSIVE: the devfreq governor the vendor scaling uses (config only, of no use without it)
 builtin dmc_drv missing group:dvfs boards:f50,u30air,v50 # the DDR controller driver (dmc-controller@60050000: bandwidth statistics for the scaling)
 driver platform/sprd-dmc missing group:dvfs boards:f50,u30air,v50 # see dmc_drv

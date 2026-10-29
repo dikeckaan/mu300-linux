@@ -194,6 +194,7 @@ what replaced it. The table below gives each section's state.
 | 206 | Linux 7.3 as a fourth kernel: every patch applies unchanged (none upstream, none dropped); `PROC_SYSCTL` folded into `SYSCTL` (`config-ignored.txt`, checked only where the kernel lacks the symbol), the cfg80211 cookie handed in by value, `dma_capable()` with DMA attributes; the checksum list from www.kernel.org (the CDN lagged) | current (F50-B Ubuntu: all checks, the boot fallback; the one hang in a reboot loop was the board's plug pulled by accident, not 7.3; the U30 Air openwrt-luci with the VPN and its kill switch, 2026-10-19; `sprd_wlan_combo` for 6.18.57 and 7.2.11 byte for byte v2026.10.19.3's; released in v2026.10.22.1, F50-B 10/10 boots on 7.3 in a reboot soak) |
 | 213 | A kernel oops on a restart of mu300-adbd: f_ncm and f_rndis free `os_desc_table` at unbind and keep the pointer, and a bind without MS OS descriptors (adbd's `without_adb` wrote `os_desc/use` 0) leaves it for the next unbind to free again - a kmalloc-16 double free that came back as `kstrdup()` oopsing in the UDC store; patch 0027 clears the pointer (6.18.57, 7.2.11 and 7.3 all have the bug), mu300-adbd keeps the descriptors on for every kernel | current (F50 Ubuntu, 2026-10-24: unpatched 7.3 with the release's mu300-adbd went down within 11 restarts of it once, and oopsed at restart 118 a second time - "Unable to handle kernel paging request" at an address made of string bytes; 6.18.58 with 0027 and the same mu300-adbd 200 restarts clean; unpatched 7.3 with the new mu300-adbd 150 restarts clean. A U30 Air on OpenWrt 6.18.58 dropped off the air during the same loop) |
 | 218 | CPU0's cluster power-down: USB, IPA and the Wi-Fi's PCIe were not wake sources of LP_AP_INTC (TF-A's IRQ_EN table); `ums9620_lpintc` adds every SPI the kernel enabled | current (U30 Air OpenWrt 6.18.57: USB pings 9.5 ms avg / 42 ms max instead of 15.7 / 69; F50 Ubuntu 6.18.58: 1.2 / 1.5 ms instead of 30.6 / 150; builds for 7.2.12; suspend path not run) |
+| 238 | DDR frequency scaling through the PM_SYS firmware (`sprd_ddr_dfs`), and the unused camera (MM) and DPU/VSP power domains powered off (ported from liuwang97/mu300-wrt) | current (U30 Air, OpenWrt 25.12.6, 7.3.0: the DDR idles at 533/1536 MHz instead of 1866, both domains off; builds for 6.18 and 7.2; idle on the battery with the 5 GHz AP up 8-9 mA, about 30-40 mW, under the DDR pinned at 1866; with it down no difference) |
 
 ## Hardware and firmware facts
 
@@ -12450,3 +12451,63 @@ is not known (the counters were read only at the end).
 
 Not covered: the other rebinders (`mu300-usb-reset`, `mu300-usb` mode changes, the U30 Air's role switch) do not take
 the lock; they run on request or 25 s after boot, not in the window above.
+
+### 238. DDR frequency scaling through the PM_SYS firmware, and the unused MM and DPU/VSP power domains off
+
+**Status: built for 7.3.0 (and the new code for 6.18 and 7.2) and run on a U30 Air (OpenWrt 25.12.6, v2026.10.29.50,
+a build of this branch, 2026-10-29): the DDR scales, both domains are off, Wi-Fi AP, mobile data and USB work. On
+the battery, idle, with the 5 GHz access point up, auto DFS draws 8-9 mA (about 30-40 mW) less than the DDR pinned at
+1866 MHz; with the access point down no difference shows (within 3 mA). The domains have no number of their own. Ported from liuwang97/mu300-wrt (3578c3c7, 113dfe55, d520f386), where it was written and first
+measured on 7.2.11.**
+
+**DDR.** The PM_SYS co-processor's firmware scales the DDR, but only once the AP turns its DFS on: on 5.4 the vendor
+`sprd_ddr_dvfs` did that, on mainline nothing did, and the DDR sat at 1866 MHz. `upstream/modules/sprd_ddr_dfs`
+binds to the stock tree's `/scene-frequency` (`sprd,ddr-dvfs`, no modalias: loaded by name from
+`upstream/module-order.txt`, after `sipc-core`), opens SIPC channel 22 (`SMSG_CH_PM_CTRL`) to pm_sys from a thread of
+its own, reads the firmware's table and state, turns DFS on and registers the devfreq device `scene-frequency`. Its
+governor `sprd_ddr_auto` (the default) hands the scaling to the firmware's auto DFS with `min_freq` as the AP's vote
+(a floor); `performance`, `powersave` and `userspace` pin a frequency (`SET_DDR_FREQ`, which turns auto DFS off);
+`rmmod` puts back the state it found. The protocol, as measured, is in `ddr_dfs.h`.
+
+* The firmware answers the OPEN handshake once per boot and ignores CLOSE: the channel is never closed, and a reload
+  finds it open in sipc. `smsg_recv()` with a finite timeout returned the jiffies left for a message that came in
+  time, and `smsg_ch_open()` took that for an error, so a finite-timeout open broke the one handshake there is:
+  `smsg_recv()` now returns 0 in every mode, and the driver opens with `-1` (no timeout; removal ends the wait).
+* The governor API (`devfreq_add_governor`, `struct devfreq_governor`) is in `include/linux/devfreq-governor.h` from 7.x
+  on; on 6.18 it is `drivers/devfreq/governor.h`, which the module takes through `__has_include`.
+* On the U30 Air, 7.3.0, from the boot ramdisk at 5.3 s: `384-1866 MHz (7 steps), found DFS off, auto off, 1866 MHz,
+  vote 0; now auto`. Idle 533 or 1536 MHz; 64 MiB blocks through `dd` lift it to 1866 within a second, and it is back
+  at 1536 two seconds after. mu300-wrt measured on 7.2.11: read 6.2 GB/s, copy 10.6 GB/s under auto DFS, the same as
+  pinned at 1866.
+* Power, the same U30 Air, 2026-10-29: on the battery (the SGM41513 in HIZ, USB unplugged), 5 GHz VHT80 access point
+  without a client, NR SA registered, about 4.17 V, 120 s per governor, the fuel gauge's current. The run means say
+  nothing here: the modem goes into RRC-connected bursts of 10-30 s at random (+300-600 mW), and two runs of auto DFS
+  differed by 280 mW. The floor with the modem idle does (current percentiles p10/p25/p50): `sprd_ddr_auto`
+  145/148/171 mA, `performance` (1866 MHz) 153/157/178 mA, `powersave` (384 MHz) 148/157/199 mA. Auto DFS is 8-9 mA
+  under the pinned 1866, about 30-40 mW (+-10) at idle; pinning 384 gains nothing over auto, which idles at 533 MHz.
+  Two more auto runs with the access point up: 144/156/178 and 141/145/166 mA (p10/p50/p90). With the access point
+  down (`wifi down`, otherwise the same) there is no difference: auto 45/54/66 mA (p10/p50/p90, mean 57),
+  `performance` 42/55/69 mA (mean 56). The saving shows only while the access point runs.
+  The unused domains are off in every run and have no number of their own.
+
+**Power domains.** LK leaves the camera (MM, PMU APB `0x508[28:24]`) and the DPU/VSP (`0x510[28:24]`) top domains on,
+with their bus enables and the pixel PLL running; the boards have no display, camera or codec driver, and the forced
+`pd_ignore_unused clk_ignore_unused` kept them so. `upstream/port/drivers/pmdomain/sprd/ums9620-unused-pd.c` (built
+in, `CONFIG_SPRD_UMS9620_UNUSED_PD`) runs the Unisoc 5.4 sequence - bus enable off, auto shutdown off, force shutdown
+on, state 7 within 15 ms, then the pixel PLL off - only on a domain that is on with every sub-domain off, and switches
+a domain that does not reach 7 back on. It takes regmaps of the PMU and AON APB only and registers no genpd provider,
+so no driver of a device in those domains can probe. A read of a block without power hangs the bus, so `ums9620-clk`
+no longer registers the MM (`0x30000000`, `0x30010000`) and DPU/VSP (`0x30100000`, `0x30110000`) clock controllers
+(debugfs `clk_summary` read their gates).
+
+* On the U30 Air, 7.3.0: `soc:mm:mm_domain: powered off`, `soc:mm:power-domain@0: powered off` at 0.14 s. The three
+  VPU sub-domain nodes (`power-domain@1-3`, `sprd,vpu-pd` with `power-domains` to `@0`) each log `deferred probe
+  timeout, ignoring dependency` and `probe ... failed with error -110`: the platform bus attaches their power domain
+  before the probe, and `@0` has no provider. The driver would leave them alone anyway; only the log lines are new.
+
+Tests: `tests/test_sprd_ddr_dfs.py` (the protocol of `ddr_dfs.h` compiled on the host: result codes, the table, the
+frequency for a request, the requests that restore the found state; loaded by name only, no polling, the channel
+closed only while the open waits, built and loaded after SIPC), `tests/test_unused_pd.py` (no clock controller of the
+two domains, the vendor's order, regmaps of the PMU and AON APB only, no genpd provider, built in).
+`upstream/parity-5.4.txt`: `sprd_ddr_dvfs`, its driver and the `scene-frequency` devfreq are covered by
+`sprd_ddr_dfs`; the vendor `dvfs` class is not applicable.

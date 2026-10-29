@@ -23,4 +23,5 @@ sprd_modem_loader.ko
 sipa-sys.ko
 sipa-core.ko
 sipa_eth.ko
+sprd_ddr_dfs.ko
 sprd_pmic_wdt.ko
