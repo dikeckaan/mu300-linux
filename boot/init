@@ -70,7 +70,9 @@ log "stage=init-start pid=$$"
 mkdir -p /dev/pts
 mount -t devpts -o mode=0620,ptmxmode=0666 devpts /dev/pts
 ln -sf pts/ptmx /dev/ptmx
-mount -t tmpfs tmpfs /run
+# /run is root's (0755), as systemd and procd make it: a tmpfs is 1777 without a mode, and the whole system keeps
+# this one (moved into the new root below), where any user could then take the names root services lock with
+mount -t tmpfs -o mode=0755,nosuid,nodev tmpfs /run
 mount -t tmpfs tmpfs /tmp
 mount -t debugfs debugfs /sys/kernel/debug
 echo /bin/mdev > /proc/sys/kernel/hotplug
