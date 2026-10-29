@@ -235,6 +235,14 @@ Fixes needed on top of the port:
   `modules/ums9620_lpintc` makes the interrupts the kernel enabled wake sources of the cluster power-down, which TF-A
   left at its own list without USB, IPA and PCIe (docs/FINDINGS.md 218).
   Idle temperature dropped from ~54 C to ~48 C.
+- DDR: the PM_SYS firmware scales it, but only once the AP turns its DFS on; until then it stays at 1866 MHz.
+  `modules/sprd_ddr_dfs` (loaded from `module-order.txt`, over SIPC to pm_sys) does that and offers it as the devfreq
+  device `scene-frequency`: governor `sprd_ddr_auto` leaves the scaling to the firmware with `min_freq` as the AP's
+  floor; performance, powersave and userspace pin a frequency (docs/FINDINGS.md 238).
+- Power domains: the bootloader leaves the camera (MM) and DPU/VSP domains on, which nothing on these boards uses.
+  `port/drivers/pmdomain/sprd/ums9620-unused-pd.c` (built in) powers them off with the vendor's sequence, and
+  `ums9620-clk` registers no clock controller inside them: a read of a block without power hangs the bus
+  (docs/FINDINGS.md 238).
 - The stock DT has trip points only on the vendor virtual zone (`soc-thmzone`: passive 70/85 C, critical 110 C,
   cooling maps to the three clusters), whose sensor driver mainline lacks: `modules/mu300_thermal` brings it back
   (the hottest of the eleven zones the DT names), so the kernel's `step_wise` throttles at 85 C. `extra-modules`
