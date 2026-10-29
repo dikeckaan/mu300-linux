@@ -194,7 +194,7 @@ what replaced it. The table below gives each section's state.
 | 206 | Linux 7.3 as a fourth kernel: every patch applies unchanged (none upstream, none dropped); `PROC_SYSCTL` folded into `SYSCTL` (`config-ignored.txt`, checked only where the kernel lacks the symbol), the cfg80211 cookie handed in by value, `dma_capable()` with DMA attributes; the checksum list from www.kernel.org (the CDN lagged) | current (F50-B Ubuntu: all checks, the boot fallback; the one hang in a reboot loop was the board's plug pulled by accident, not 7.3; the U30 Air openwrt-luci with the VPN and its kill switch, 2026-10-19; `sprd_wlan_combo` for 6.18.57 and 7.2.11 byte for byte v2026.10.19.3's; released in v2026.10.22.1, F50-B 10/10 boots on 7.3 in a reboot soak) |
 | 213 | A kernel oops on a restart of mu300-adbd: f_ncm and f_rndis free `os_desc_table` at unbind and keep the pointer, and a bind without MS OS descriptors (adbd's `without_adb` wrote `os_desc/use` 0) leaves it for the next unbind to free again - a kmalloc-16 double free that came back as `kstrdup()` oopsing in the UDC store; patch 0027 clears the pointer (6.18.57, 7.2.11 and 7.3 all have the bug), mu300-adbd keeps the descriptors on for every kernel | current (F50 Ubuntu, 2026-10-24: unpatched 7.3 with the release's mu300-adbd went down within 11 restarts of it once, and oopsed at restart 118 a second time - "Unable to handle kernel paging request" at an address made of string bytes; 6.18.58 with 0027 and the same mu300-adbd 200 restarts clean; unpatched 7.3 with the new mu300-adbd 150 restarts clean. A U30 Air on OpenWrt 6.18.58 dropped off the air during the same loop) |
 | 218 | CPU0's cluster power-down: USB, IPA and the Wi-Fi's PCIe were not wake sources of LP_AP_INTC (TF-A's IRQ_EN table); `ums9620_lpintc` adds every SPI the kernel enabled | current (U30 Air OpenWrt 6.18.57: USB pings 9.5 ms avg / 42 ms max instead of 15.7 / 69; F50 Ubuntu 6.18.58: 1.2 / 1.5 ms instead of 30.6 / 150; builds for 7.2.12; suspend path not run) |
-| 238 | DDR frequency scaling through the PM_SYS firmware (`sprd_ddr_dfs`), and the unused camera (MM) and DPU/VSP power domains powered off (ported from liuwang97/mu300-wrt) | current (U30 Air, OpenWrt 25.12.6, 7.3.0: the DDR idles at 533/1536 MHz instead of 1866, both domains off; builds for 6.18 and 7.2; idle on the battery 8-9 mA, about 30-40 mW, under the DDR pinned at 1866) |
+| 238 | DDR frequency scaling through the PM_SYS firmware (`sprd_ddr_dfs`), and the unused camera (MM) and DPU/VSP power domains powered off (ported from liuwang97/mu300-wrt) | current (U30 Air, OpenWrt 25.12.6, 7.3.0: the DDR idles at 533/1536 MHz instead of 1866, both domains off; builds for 6.18 and 7.2; idle on the battery with the 5 GHz AP up 8-9 mA, about 30-40 mW, under the DDR pinned at 1866; with it down no difference) |
 
 ## Hardware and firmware facts
 
@@ -12456,8 +12456,8 @@ the lock; they run on request or 25 s after boot, not in the window above.
 
 **Status: built for 7.3.0 (and the new code for 6.18 and 7.2) and run on a U30 Air (OpenWrt 25.12.6, v2026.10.29.50,
 a build of this branch, 2026-10-29): the DDR scales, both domains are off, Wi-Fi AP, mobile data and USB work. On
-the battery, idle, auto DFS draws 8-9 mA (about 30-40 mW) less than the DDR pinned at 1866 MHz; the domains have no
-number of their own. Ported from liuwang97/mu300-wrt (3578c3c7, 113dfe55, d520f386), where it was written and first
+the battery, idle, with the 5 GHz access point up, auto DFS draws 8-9 mA (about 30-40 mW) less than the DDR pinned at
+1866 MHz; with the access point down no difference shows (within 3 mA). The domains have no number of their own. Ported from liuwang97/mu300-wrt (3578c3c7, 113dfe55, d520f386), where it was written and first
 measured on 7.2.11.**
 
 **DDR.** The PM_SYS co-processor's firmware scales the DDR, but only once the AP turns its DFS on: on 5.4 the vendor
@@ -12485,6 +12485,9 @@ governor `sprd_ddr_auto` (the default) hands the scaling to the firmware's auto 
   differed by 280 mW. The floor with the modem idle does (current percentiles p10/p25/p50): `sprd_ddr_auto`
   145/148/171 mA, `performance` (1866 MHz) 153/157/178 mA, `powersave` (384 MHz) 148/157/199 mA. Auto DFS is 8-9 mA
   under the pinned 1866, about 30-40 mW (+-10) at idle; pinning 384 gains nothing over auto, which idles at 533 MHz.
+  Two more auto runs with the access point up: 144/156/178 and 141/145/166 mA (p10/p50/p90). With the access point
+  down (`wifi down`, otherwise the same) there is no difference: auto 45/54/66 mA (p10/p50/p90, mean 57),
+  `performance` 42/55/69 mA (mean 56). The saving shows only while the access point runs.
   The unused domains are off in every run and have no number of their own.
 
 **Power domains.** LK leaves the camera (MM, PMU APB `0x508[28:24]`) and the DPU/VSP (`0x510[28:24]`) top domains on,
