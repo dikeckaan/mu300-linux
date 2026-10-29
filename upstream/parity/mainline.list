@@ -566,6 +566,7 @@ ko spipe 6.18 7.2 7.3
 ko spool 6.18 7.2 7.3
 ko sprd_7sreset 6.18 7.2 7.3
 ko sprd_bc1p2 6.18 7.2 7.3
+ko sprd_ddr_dfs 6.18 7.2 7.3
 ko sprd_hwspinlock 6.18 7.2 7.3
 ko sprd_modem_loader 6.18 7.2 7.3
 ko sprd_pmic_syscon 6.18 7.2 7.3

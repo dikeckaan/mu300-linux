@@ -855,6 +855,8 @@ int smsg_recv(u8 dst, struct smsg *msg, int timeout)
 
 			goto recv_failed;
 		}
+		/* the wait left jiffies over; success is 0 as in the other modes, which smsg_ch_open relies on */
+		rval = 0;
 	}
 
 	/* read smsg from cache */

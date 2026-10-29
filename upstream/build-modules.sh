@@ -7,10 +7,10 @@ KV=${KV:-6.18.59}
 K=/src/linux-$KV
 O=/src/out-$KV
 OUT=/work/${OUTDIR:-out}   # as in build.sh
-# every out-of-tree module, in dependency order (wlan/bt use wcn_bsp, the PMIC watchdog and Mali the modem's headers;
-# mu300_thermal, the stock virtual thermal zone, ums9620_lpintc and zte_sar_stk (the U30 Air's SAR sensor) need only
-# the kernel.
-mods=${*:-wcn_bsp sprd_wlan_combo sprdbt_tty sprd_modem sprd_pmic_wdt mali mu300_thermal ums9620_lpintc zte_sar_stk}
+# every out-of-tree module, in dependency order (wlan/bt use wcn_bsp, the PMIC watchdog, the DDR DFS driver and Mali
+# the modem's headers; mu300_thermal, the stock virtual thermal zone, ums9620_lpintc and zte_sar_stk (the U30 Air's
+# SAR sensor) need only the kernel.
+mods=${*:-wcn_bsp sprd_wlan_combo sprdbt_tty sprd_modem sprd_pmic_wdt sprd_ddr_dfs mali mu300_thermal ums9620_lpintc zte_sar_stk}
 mkdir -p $OUT/modules
 # xt_HL.ko and xt_hl.ko (and three more pairs) must stay two files: not on a host directory that ignores case
 . /work/case-sensitive.sh
@@ -44,7 +44,8 @@ for m in $mods; do
     rm -rf /src/mod-build/$m && mkdir -p /src/mod-build && cp -r /work/modules/$m /src/mod-build/$m
     # wlan/bt use wcn_bsp's exports and its vendor headers (../wcn_bsp/kinclude)
     [ -d /src/mod-build/wcn_bsp ] || cp -r /work/modules/wcn_bsp /src/mod-build/wcn_bsp
-    # the PMIC watchdog talks to pm_sys over SIPC, so it needs the modem stack's headers next to it
+    # the PMIC watchdog and the DDR DFS driver talk to pm_sys over SIPC, so they need the modem stack's headers next
+    # to them
     [ -d /src/mod-build/sprd_modem ] || cp -r /work/modules/sprd_modem /src/mod-build/sprd_modem
     # the Mali DDK needs its own configuration switches (same ones the 5.4 build uses)
     margs=
