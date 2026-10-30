@@ -13,6 +13,9 @@ The layouts are built from the figures the project has, not from a dump of a dev
   part64      factory64 with a 128 MiB partition named mu300root right behind userdata, 1 MiB aligned: the layout of
               kanoqwq's desktop installer (FINDINGS 179), small so that a test may erase it
   small64     vendor64 with userdata so small that there is nothing to split (4 GiB for Android + 800 MiB)
+  ufs1t       the 1 TB UFS U30 Air of issue #396: 4096-byte logical blocks (the table in them: 6 blocks at the start,
+              5 at the end, 48 and 40 sectors), 1999372288 sectors, userdata from sector 12275712 to the last usable
+              one (LBA 249921023)
 Only the names, the order and userdata's sectors matter here; the other partitions' sizes are made up.
 """
 import binascii
@@ -21,6 +24,9 @@ import sys
 
 SECTOR = 512
 DISK64 = 122159104
+DISK1T = 1999372288                          # sectors of 512 bytes; 249921536 blocks of 4096
+USABLE_LAST1T = (249921023 + 1) * 8 - 1
+USERDATA_FIRST1T = 1534464 * 8
 USABLE_LAST64 = 122155007
 USERDATA_FIRST = 54218752 - (20 << 21)       # 20 GiB that end at sector 54218752
 # the partitions in front of userdata, NV and calibration among them: none of them may change
@@ -29,7 +35,12 @@ BEFORE = ['prodnv', 'miscdata', 'l_fixnv1_a', 'l_fixnv1_b', 'l_runtimenv1_a', 'l
 
 
 def layout(name):
-    """(disk sectors, last usable LBA, [(name, first, last), ...])"""
+    """(disk sectors, last usable sector, [(name, first, last), ...]), in 512-byte sectors (block_size: the table's)"""
+    if name == 'ufs1t':
+        step = (USERDATA_FIRST1T - 2048) // len(BEFORE) // 8 * 8
+        parts = [(n, 2048 + i * step, 2048 + (i + 1) * step - 1) for i, n in enumerate(BEFORE)]
+        parts.append(('userdata', USERDATA_FIRST1T, USABLE_LAST1T))
+        return DISK1T, USABLE_LAST1T, parts
     step = (USERDATA_FIRST - 2048) // len(BEFORE)
     parts = [(n, 2048 + i * step, 2048 + (i + 1) * step - 1) for i, n in enumerate(BEFORE)]
     if name == 'factory64':
@@ -50,8 +61,17 @@ def layout(name):
     return DISK64, USABLE_LAST64, parts
 
 
-def make(disk, usable_last, parts, nents=128, esize=128):
-    """(head, tail): LBA 0..33 and the last 33 LBAs of a disk with this table, every CRC right."""
+def block_size(name):
+    """The logical block size of the disk of that layout."""
+    return 4096 if name == 'ufs1t' else SECTOR
+
+
+def make(disk, usable_last, parts, lbs=SECTOR, nents=128, esize=128):
+    """(head, tail): LBA 0..33 and the last 33 LBAs of a disk with this table, every CRC right (with 4096-byte
+    blocks: LBA 0..5 and the last 5). DISK, USABLE_LAST and PARTS in 512-byte sectors."""
+    k = lbs // SECTOR
+    disk, usable_last = disk // k, (usable_last + 1) // k - 1
+    parts = [(n, first // k, (last + 1) // k - 1) for n, first, last in parts]
     entries = bytearray(nents * esize)
     for i, (name, first, last) in enumerate(parts):
         o = i * esize
@@ -62,20 +82,21 @@ def make(disk, usable_last, parts, nents=128, esize=128):
     ecrc = binascii.crc32(bytes(entries)) & 0xffffffff
 
     def header(cur, bak, entries_lba):
-        h = bytearray(struct.pack('<8sIIII QQQQ16s QIII', b'EFI PART', 0x10000, 92, 0, 0, cur, bak, 34, usable_last,
+        h = bytearray(struct.pack('<8sIIII QQQQ16s QIII', b'EFI PART', 0x10000, 92, 0, 0, cur, bak, 2 + esectors,
+                                  usable_last,
                                   b'\x77' * 16, entries_lba, nents, esize, ecrc))
         struct.pack_into('<I', h, 16, binascii.crc32(bytes(h)) & 0xffffffff)
-        return bytes(h).ljust(SECTOR, b'\0')
+        return bytes(h).ljust(lbs, b'\0')
 
-    esectors = nents * esize // SECTOR
-    head = b'\0' * SECTOR + header(1, disk - 1, 2) + bytes(entries)
+    esectors = nents * esize // lbs
+    head = b'\0' * lbs + header(1, disk - 1, 2) + bytes(entries)
     tail = bytes(entries) + header(disk - 1, 1, disk - 1 - esectors)
-    assert len(head) == 34 * SECTOR and len(tail) == 33 * SECTOR
+    assert len(head) == (2 + esectors) * lbs and len(tail) == (1 + esectors) * lbs
     return head, tail
 
 
 def write(out, name):
-    head, tail = make(*layout(name))
+    head, tail = make(*layout(name), lbs=block_size(name))
     with open(out + '.head', 'wb') as f:
         f.write(head)
     with open(out + '.tail', 'wb') as f:

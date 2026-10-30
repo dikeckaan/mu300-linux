@@ -828,11 +828,14 @@ Say (T 'Locating free eMMC space after the last partition')
 # installer's image file in Android's data (FINDINGS 179)
 # (no double quotes in a device command: Windows PowerShell 5.1 drops them on the way to adb)
 # The internal disk, as Android's by-name links have it (tools/storage.sh's internal_disk): the disk that holds misc -
-# mmcblk0 on an eMMC unit, sda on a UFS one (issue #396) - and what its partitions are named after. mmcblk0 when
-# Android does not say.
-$IDISK = ([string](SuDo 'd=$(readlink -f /dev/block/by-name/misc); d=$(readlink -f /sys/class/block/${d##*/}/..); echo ${d##*/}')).Trim()
+# mmcblk0 on an eMMC unit, sda on a UFS one (issue #396) - what its partitions are named after, and its logical block
+# size. mmcblk0 (512) when Android does not say.
+$dk = @(([string](SuDo 'd=$(readlink -f /dev/block/by-name/misc); d=$(readlink -f /sys/class/block/${d##*/}/..); echo ${d##*/} $(cat $d/queue/logical_block_size)')).Trim() -split '\s+')
+$IDISK = [string]$dk[0]; $ILBS = $(if ($dk.Count -gt 1 -and $dk[1] -eq '4096') { 4096 } else { 512 })
 if ($IDISK -cnotmatch '^(mmcblk[0-9]|sd[a-z])$') { $IDISK = 'mmcblk0' }
 $IPART = $(if ($IDISK -like 'mmcblk*') { "${IDISK}p" } else { $IDISK })
+# its GPT in 512-byte sectors: the first $GPT_HEAD and the last $GPT_TAIL (on 4096-byte blocks 6 and 5 of those)
+$GPT_HEAD = $(if ($ILBS -eq 4096) { 48 } else { 34 }); $GPT_TAIL = $(if ($ILBS -eq 4096) { 40 } else { 33 })
 $parts = @((SuDo ('e=0; for p in /sys/block/' + "$IDISK/$IPART" + '*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/' + $IDISK + '/size)')).Trim() -split '\s+')
 $nums = @($parts | Where-Object { $_ -match '^[0-9]+$' })
 $partList = @($parts | Where-Object { $_ -match '^part:[0-9]+:[0-9]+$' })
@@ -847,7 +850,7 @@ if ($nums.Count -ne 2 -or ($nums.Count + $partList.Count + [int]$FOREIGN_IMAGE) 
 # region but an empty one (the card is offered, or room is made), whose start is never read (RegionOnDisk).
 function FreeRegion([int64]$LastEnd, [int64]$Disk) {
     [int64]$start = [math]::Floor($LastEnd / 4096 + 1) * 4096
-    [int64]$end = [math]::Floor(($Disk - 34) / 4096 - 1) * 4096
+    [int64]$end = [math]::Floor(($Disk - $GPT_TAIL - 1) / 4096 - 1) * 4096
     if ($end -le $start) { $end = $start }
     return @{ Start = $start; End = $end }
 }
@@ -874,20 +877,25 @@ function ResumePy {
 }
 # what identifies the device and its userdata, and how Android keeps its data: the same command as install.sh's
 # (sysfs, properties, /proc/mounts; read only, and no double quotes - see the data check)
-$script:FactsCmd = 'd=$(readlink -f /dev/block/by-name/userdata); n=${d##*/}; b=${n%p*}; echo NODE=$n; echo CID=$(cat /sys/class/block/$b/device/cid); echo START=$(cat /sys/class/block/$n/start); echo SIZE=$(cat /sys/class/block/$n/size); echo STATE=$(getprop ro.crypto.state); echo TYPE=$(getprop ro.crypto.type); while read s m r; do case $m in /data) echo SOURCE=$s; break ;; esac; done < /proc/mounts; echo MAGIC=$(dd if=$d bs=1 skip=1024 count=4 2>/dev/null | od -An -tx1 | tr -d \\040\\012); echo EXT=$(dd if=$d bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d \\040\\012)'
+$script:FactsCmd = 'd=$(readlink -f /dev/block/by-name/userdata); n=${d##*/}; b=${n%p*}; case $n in sd*) b=${n%%[0-9]*} ;; esac; echo NODE=$n; echo CID=$(cat /sys/class/block/$b/device/cid 2>/dev/null); u=/sys/class/block/$b/device/../../../string_descriptors; echo UFS=$(cat $u/manufacturer_name 2>/dev/null):$(cat $u/serial_number 2>/dev/null); echo START=$(cat /sys/class/block/$n/start); echo SIZE=$(cat /sys/class/block/$n/size); echo STATE=$(getprop ro.crypto.state); echo TYPE=$(getprop ro.crypto.type); while read s m r; do case $m in /data) echo SOURCE=$s; break ;; esac; done < /proc/mounts; echo MAGIC=$(dd if=$d bs=1 skip=1024 count=4 2>/dev/null | od -An -tx1 | tr -d \\040\\012); echo EXT=$(dd if=$d bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d \\040\\012)'
 function ParseFacts([string]$Text) {
     $f = @{}
     foreach ($l in ($Text -split "`n")) { if ($l -match '^([A-Z]+)=(.*)$') { if (-not $f.ContainsKey($Matches[1])) { $f[$Matches[1]] = $Matches[2].Trim() } } }
     return $f
 }
-# FactsOk: the identity is one kano's checks take (an eMMC partition node, a 128-bit CID, numbers, a serial)
+# FactsOk: the identity is one kano's checks take (an eMMC partition node, a 128-bit CID, numbers, a serial; a UFS
+# partition node and the hash of the UFS's manufacturer and serial number, tools/resume.sh's resume_facts)
 function FactsOk($F) {
-    return ([string]$F.NODE -cmatch '^mmcblk[0-9]p[0-9]+$' -and [string]$F.CID -cmatch '^[0-9a-f]{32}$' -and
+    return ([string]$F.NODE -cmatch '^(mmcblk[0-9]p|sd[a-z])[0-9]+$' -and [string]$F.CID -cmatch '^[0-9a-f]{32}$' -and
         [string]$F.START -match '^[0-9]+$' -and [string]$F.SIZE -match '^[0-9]+$' -and [string]$F.SERIAL)
 }
 function ResumeFacts {
     $f = ParseFacts (SuDo $script:FactsCmd)
     $f.SERIAL = AdbProp 'ro.serialno'
+    if ([string]$f.NODE -cmatch '^sd' -and [string]$f.UFS -cmatch '^.+:.+$') {
+        $sha = [System.Security.Cryptography.SHA256]::Create()
+        $f.CID = (-join ($sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes("ufs:$($f.UFS)")) | ForEach-Object { $_.ToString('x2') })).Substring(0, 32)
+    }
     if (-not (FactsOk $f)) { return $null }
     $magic = if ($f.EXT -eq '53ef') { '53ef' } else { [string]$f.MAGIC }
     $f.CRYPTO = [string]((ResumePy encrypted "state=$($f.STATE)" "type=$($f.TYPE)" "source=$($f.SOURCE)" "magic=$magic") | Select-Object -First 1)
@@ -974,7 +982,7 @@ function LayoutFigures([int64]$Disk, [int64]$LastEnd, [int64]$Size, $Info, $Plan
 # names only: it takes "head,tail" apart at the comma, and a Windows path may hold one.
 function GptTool([string]$Dir, [string[]]$ToolArgs) {
     $ErrorActionPreference = 'Continue'
-    $argv = @("$Top\tools\resize-last-partition.py") + $ToolArgs
+    $argv = @("$Top\tools\resize-last-partition.py") + $ToolArgs + @('--sector-size', "$ILBS")
     $out = @()
     Push-Location $Dir
     try { $out = @(Python @argv 2>&1 | ForEach-Object { "$_" }); $script:GptRc = $LASTEXITCODE }
@@ -985,10 +993,10 @@ function GptTool([string]$Dir, [string[]]$ToolArgs) {
 # $Prefix.tail. A file from an earlier run never stands in for one that could not be read.
 function GptDump([int64]$Disk, [string]$Prefix) {
     Remove-Item -Force "$Prefix.head", "$Prefix.tail" -ErrorAction SilentlyContinue
-    SuDoToFile "dd if=/dev/block/$IDISK bs=512 count=34 2>/dev/null" "$Prefix.head"
-    SuDoToFile "dd if=/dev/block/$IDISK bs=512 skip=$($Disk - 33) count=33 2>/dev/null" "$Prefix.tail"
+    SuDoToFile "dd if=/dev/block/$IDISK bs=512 count=$GPT_HEAD 2>/dev/null" "$Prefix.head"
+    SuDoToFile "dd if=/dev/block/$IDISK bs=512 skip=$($Disk - $GPT_TAIL) count=$GPT_TAIL 2>/dev/null" "$Prefix.tail"
     if (-not (Test-Path "$Prefix.head") -or -not (Test-Path "$Prefix.tail")) { return $false }
-    return ((Get-Item "$Prefix.head").Length -eq 34 * 512 -and (Get-Item "$Prefix.tail").Length -eq 33 * 512)
+    return ((Get-Item "$Prefix.head").Length -eq $GPT_HEAD * 512 -and (Get-Item "$Prefix.tail").Length -eq $GPT_TAIL * 512)
 }
 # a prepared installation waiting for this device (the make-room path below, on an earlier run): its checks first
 $RESUMING = 0; $RESUME_TX = ''
@@ -1334,7 +1342,7 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
             # userdata ends where the region the installers find behind it (FreeRegion) is the size asked for: it
             # starts one 2 MiB block after userdata and stops one block short of the disk's end, so a userdata that
             # ended that many sectors before the usable end left 4 MiB or more less (install.sh; FINDINGS 112)
-            [int64]$newEnd = [math]::Floor(($Disk - 34) / 4096 - 1) * 4096 - $lin.Sectors - 4096 - 1
+            [int64]$newEnd = [math]::Floor(($Disk - $GPT_TAIL - 1) / 4096 - 1) * 4096 - $lin.Sectors - 4096 - 1
             if ($newEnd -gt $info.UsableEnd) { $newEnd = $info.UsableEnd - $lin.Sectors }
             $linRegion = FreeRegion ($newEnd + 1) $Disk
             if (($linRegion.End - $linRegion.Start) -lt $plan.MinLinux) { $lin.State = 'small' }
@@ -1383,7 +1391,7 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     Remove-Item -Force "$g\new.head", "$g\new.tail" -ErrorAction SilentlyContinue
     GptTool $g @('gpt.head,gpt.tail', '--disk-sectors', "$Disk", '--name', 'userdata', '--end-sector', "$newEnd", '--out', 'new') | ForEach-Object { Write-Host "  $_" }
     $made = $script:GptRc -eq 0 -and (Test-Path "$g\new.head") -and (Test-Path "$g\new.tail")
-    if ($made) { $made = (Get-Item "$g\new.head").Length -eq 34 * 512 -and (Get-Item "$g\new.tail").Length -eq 33 * 512 }
+    if ($made) { $made = (Get-Item "$g\new.head").Length -eq $GPT_HEAD * 512 -and (Get-Item "$g\new.tail").Length -eq $GPT_TAIL * 512 }
     if (-not $made) { Die (T 'the resize was refused; nothing is changed') }
     # what goes to the device is what was made here, byte for byte (a push that stopped halfway leaves a short file)
     foreach ($n in 'new.head', 'new.tail', 'marker.bin', 'bcb.bin') {
@@ -1395,7 +1403,7 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     $abBefore = (SuDo 'dd if=/dev/block/by-name/misc bs=1 skip=2048 count=32 2>/dev/null | od -An -tx1 -v') -replace '\s', ''
     # the backup copy first: if power is lost between the two, the primary is still the old table and the device
     # boots, which is the recoverable order
-    SuDo "dd if=$T/mu300-new.tail of=/dev/block/$IDISK bs=512 seek=$($Disk - 33) conv=fsync 2>/dev/null" | Out-Null
+    SuDo "dd if=$T/mu300-new.tail of=/dev/block/$IDISK bs=512 seek=$($Disk - $GPT_TAIL) conv=fsync 2>/dev/null" | Out-Null
     SuDo "dd if=$T/mu300-new.head of=/dev/block/$IDISK bs=512 conv=fsync 2>/dev/null" | Out-Null
 
     Say (T 'Verifying')

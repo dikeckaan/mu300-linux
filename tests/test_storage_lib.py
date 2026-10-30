@@ -162,21 +162,21 @@ class AndroidSide(ShellTest):
         blocks = {f: block((TOP / f).read_text(), 'android-disk') for f in self.FILES}
         self.assertEqual(len(set(blocks.values())), 1, list(blocks))
         st = (TOP / 'tools' / 'storage.sh').read_text()
-        self.assertIn("su_do 'd=$(readlink -f /dev/block/by-name/misc); d=$(readlink -f /sys/class/block/${d##*/}/..); "
-                      "echo ${d##*/}'", st)
+        probe = ("'d=$(readlink -f /dev/block/by-name/misc); d=$(readlink -f /sys/class/block/${d##*/}/..); "
+                 "echo ${d##*/} $(cat $d/queue/logical_block_size)'")
+        self.assertIn('su_do ' + probe, st)
         for ps in ('install.ps1', 'uninstall.ps1'):
-            self.assertIn("SuDo 'd=$(readlink -f /dev/block/by-name/misc); d=$(readlink -f /sys/class/block/${d##*/}/..); "
-                          "echo ${d##*/}'", (TOP / ps).read_text(encoding='utf-8'))
+            self.assertIn('SuDo ' + probe, (TOP / ps).read_text(encoding='utf-8'))
 
     def test_found(self):
-        code = block((TOP / self.FILES[0]).read_text(), 'android-disk') + '\necho "$IDISK $IPART"'
+        code = block((TOP / self.FILES[0]).read_text(), 'android-disk') + '\necho "$IDISK $IPART $GPT_HEAD $GPT_TAIL"'
         f = Fake(self.tmp / 'r'); f.ufs()
         by = self.tmp / 'by-name'; by.mkdir()
         os.symlink(f.sys / 'class' / 'block' / 'sda3', by / 'misc')
         for shell in self.each_shell():
-            self.assertEqual(self.sh(shell, 'set -e\n' + code, MU300_BY_NAME=by, MU300_SYSFS=f.sys).stdout, 'sda sda\n')
+            self.assertEqual(self.sh(shell, 'set -e\n' + code, MU300_BY_NAME=by, MU300_SYSFS=f.sys).stdout, 'sda sda 48 40\n')
             # Android says nothing (no by-name): mmcblk0, as every installer had it
             self.assertEqual(self.sh(shell, 'set -e\n' + code, MU300_BY_NAME=self.tmp / 'none',
-                                     MU300_SYSFS=f.sys).stdout, 'mmcblk0 mmcblk0p\n')
+                                     MU300_SYSFS=f.sys).stdout, 'mmcblk0 mmcblk0p 34 33\n')
             self.assertEqual(self.sh(shell, 'set -e\n' + code, MU300_DISK='sdb', MU300_BY_NAME=by,
-                                     MU300_SYSFS=f.sys).stdout, 'sdb sdb\n')
+                                     MU300_SYSFS=f.sys).stdout, 'sdb sdb 48 40\n')
