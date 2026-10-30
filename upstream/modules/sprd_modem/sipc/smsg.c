@@ -521,7 +521,9 @@ int smsg_ch_open(u8 dst, u8 channel, int timeout)
 	do {
 		smsg_set(&mrecv, channel, 0, 0, 0);
 		rval = smsg_recv(dst, &mrecv, timeout);
-		if (rval != 0) {
+		/* MU300: with a finite timeout smsg_recv returns the jiffies left (> 0) on success; only the
+		 * sprd_ddr_dvfs start-up opens with one, every other caller waits forever (0) */
+		if (rval < 0) {
 			pr_err("channel %d-%d smsg receive error = %d!\n",
 			       dst, channel, rval);
 			ipc->states[ch_index] = CHAN_STATE_UNUSED;

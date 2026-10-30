@@ -24,3 +24,4 @@ sipa-sys.ko
 sipa-core.ko
 sipa_eth.ko
 sprd_pmic_wdt.ko
+sprd_cp_dvfs.ko
