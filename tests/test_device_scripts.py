@@ -1521,6 +1521,19 @@ at() {
         self.assertEqual({w[1] for w in waits}, {'500000000'})
         self.assertNotIn('500000000', (self.tmp / 'at-slack').read_text().split())
 
+    def test_a_stopped_watchdog_exits_and_leaves_no_lock(self):
+        # kanoqwq's f0b5ad43: the EXIT trap ran after watch's locals were gone ("wlock: unbound variable", status 1,
+        # the lock left behind - seen on F50-B at every "systemctl restart")
+        (self.tmp / 'run').mkdir(exist_ok=True)
+        t0 = time.monotonic()
+        r, sent = self.lib('watch & p=$!; for i in 1 2 3 4 5 6 7 8 9 10; do [ -e "$STUBLOG/run/mu300-mobile-data-watch.lock/pid" ] && break; '
+                           '/bin/sleep 0.2; done; kill $p; wait $p; echo "rc=$?"',
+                           modem=self.WATCH_MODEM, MU300_AT_DEV='/dev/null', MU300_WATCH_INTERVAL='30')
+        self.assertIn("rc=0", r.stdout, r.stderr)
+        self.assertLess(time.monotonic() - t0, 20)       # not after the 30 s sleep: the wait is cut short
+        self.assertNotIn('unbound variable', r.stderr)
+        self.assertFalse((self.tmp / 'run' / 'mu300-mobile-data-watch.lock').exists())
+
     # FINDINGS 90: AT+CGACT? as the watchdog reads it. $CGACT is the answer's lines ("none": no final result code,
     # mu300-at's exit 1); the interface has its address unless NOADDR is set. radio_on, up and ifup only log.
     WATCH_MODEM = r'''
