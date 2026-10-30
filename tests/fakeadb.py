@@ -64,6 +64,8 @@ DEFAULT = {
     'disk_name': 'mmcblk0',      # the internal disk tools/storage.sh's internal_disk is told (sda: a UFS unit)
     'disk_lbs': 512,             # and its logical block size (4096: a UFS)
     'emmc': None,                # a directory standing for the device's storage (tests/fakeemmc.py): see above
+    'online': '',                # what tools/android-online-shrink.sh inspect says (the online way of making room);
+                                 # empty: ONLINE=no, as on a device whose kernel cannot
     'passwords': None,           # the current passwords of the installed systems' own accounts, for android-pwcheck.sh:
                                  # {"openwrt": "", "ubuntu": "secret1"}; "" is none (EMPTY), "!" a locked account, a
                                  # system not named has no account (NOUSER)
@@ -165,6 +167,21 @@ def pending_is_gpt(flag=None):
     elif os.path.exists(p):
         os.remove(p)
     return flag
+
+
+def pushed(update=None):
+    """{device path: sha256} of what was pushed into the online way's directory (no "emmc")"""
+    path = state_path() + '.pushed'
+    try:
+        with open(path, encoding='utf-8') as f:
+            have = json.load(f)
+    except (OSError, ValueError):
+        have = {}
+    if update:
+        have.update(update)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(have, f)
+    return have
 
 
 def emmc_run(st, cmd):
@@ -322,6 +339,16 @@ def su(st, cmd, argv):
             pending(st, data)
             pending_is_gpt(True)
         return '', 'read'
+    # the online way's inspection (tools/resume.sh online_inspect, install.ps1's OnlineInspect): its files in the
+    # installer's own directory under /data/local/tmp, and what the device script says
+    OT = T + '/mu300-online'
+    if cmd in ('rm -rf %s; mkdir -p %s; chmod 777 %s' % (OT, OT, OT), 'chmod 700 %s/mu300-f2fs-online' % OT):
+        return '', 'read'
+    m = re.fullmatch(r'sha256sum (%s/\S+)' % re.escape(OT), cmd)
+    if m:
+        return pushed().get(m.group(1), '') + '  ' + m.group(1), 'read'
+    if cmd == 'sh %s/android-online-shrink.sh inspect %s' % (OT, OT):
+        return st.get('online') or 'ONLINE=no\nREASON=the fake device cannot shrink online', 'read'
     if re.fullmatch(r'rm -f( %s/\S+)+' % T, cmd) or re.fullmatch(r'rm -rf %s/mu300-bootchain-backup' % T, cmd):
         return '', 'read'       # the installer's own leftovers in /data/local/tmp
     if re.search(r'\bof=/dev/|\bdd\b.*\bof=|>\s*/|\brm\b|\bsh \S+android-install\.sh|\bmkdir\b|\bcp\b|\btouch\b|blkdiscard', cmd):
@@ -438,6 +465,9 @@ def main(argv):
         return 0
     if cmd == 'push':
         log('push', argv)
+        if rest[-1].startswith(T + '/mu300-online/') and not st.get('emmc'):
+            with open(rest[0], 'rb') as f:
+                pushed({rest[-1]: hashlib.sha256(f.read()).hexdigest()})
         if rest[-1:] == [T + '/mu300-pwcheck.in'] and not st.get('emmc'):
             import shutil
             shutil.copy(rest[0], state_path() + '.pwin')     # what su's pw_check reads (android-pwcheck.sh above)
