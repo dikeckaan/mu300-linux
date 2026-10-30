@@ -62,7 +62,8 @@ conf_set() {
     default "$1" >/dev/null || { echo "mu300-cpu: no such key: $1" >&2; return 2; }
     valid "$1" "$2" || { echo "mu300-cpu: bad value for $1: $2" >&2; return 2; }
     mkdir -p "${CONF%/*}" 2>/dev/null
-    [ -f "$CONF" ] || : > "$CONF"
+    # (true, not ":": a failed redirection of a special builtin ends a POSIX shell, and the caller must get the failure)
+    [ -f "$CONF" ] || true > "$CONF" || return 1
     if grep -q "^$1=" "$CONF"; then
         sed "s/^$1=.*\$/$1=$2/" "$CONF" > "$CONF.tmp" && mv "$CONF.tmp" "$CONF"
     else
