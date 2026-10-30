@@ -12492,7 +12492,11 @@ a timeout on a private fifo (busybox ash, bash; `sleep` under dash), with 500 ms
 
 **Data watchdog** (`mobile-data watch`; his `data-events.sh`). His watchdog wakes on the modem daemon's URC and netifd
 events; ours keeps its AT look every 30 s, and the sleep between two looks now runs with 500 ms of timer slack (set by
-the sleep's own subshell; the AT and route work keeps the default).
+the sleep's own subshell; the AT and route work keeps the default). His `watch_cleanup` fixes a bug ours had too: the
+EXIT trap removed a lock path that was a local of `watch()`, gone by then, so under `set -u` every stop died on
+`wlock: unbound variable` with status 1 and left the lock behind (F50-B, at each `systemctl restart`). The path is now
+at process scope, TERM exits 0 (a stop) and INT 130, and the lock goes only while it is still this process's. The
+sleep runs in the background and is waited for, so the TERM trap runs at once rather than after up to 30 s.
 
 **Already here, or not taken:**
 - Already in: thermal-guard's "no reading is unknown" rule (#399), the LED tick hint (FINDINGS 235), ndp-learn on
@@ -12510,3 +12514,12 @@ Tests: `test_cpu.CoresAndLatency` (all or nothing, nothing saved, `mixed`), `tes
 with the switch, `up` and the good request; `mark-good` writes `up`; the switch is root's and off by default),
 `test_wifi.HwRestart` (`hw_bringup` itself with stubs), `test_sms_pool.Daemon.test_an_idle_look_starts_no_process`
 (dash, bash, busybox ash; Linux only), `test_device_scripts.MobileData.test_only_the_watch_wait_gets_timer_slack`.
+
+**On the boards** (scripts deployed live, the originals put back after):
+- F50-B, Ubuntu 24.04, 7.3.0. CPU0's states are `WFI`, `core-sleep-lit` and `cluster-pd`. `lowlatency on` turned all
+  three off and `off` turned them back on, with `active` and `mixed` right each time. One state switched off by hand
+  read `partly off` (`mixed: 1`). `voltage keep-good` was off, then on (`keep_good: 1`), then off again. `mark-good`
+  with nothing armed did nothing. The watchdog's sleep child ran with 500000000 ns of slack and the watchdog itself
+  with 50000. `systemctl restart` of the watchdog: the old script stopped with status 1 (`wlock: unbound variable`),
+  the new one "Deactivated successfully" at once.
+- Not tried on a board: keep-good across a real power cut (it needs the initramfs of this branch and an offset).
