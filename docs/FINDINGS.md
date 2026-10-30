@@ -12466,7 +12466,7 @@ the lock; they run on request or 25 s after boot, not in the window above.
 **Status: the PHY driver, patch 0032 and sipa_v3 build on 6.18.59 and 7.2.13 here (no new warning);
 tests/test_u30air_bc12.py, tests/test_sipa_worker_lifecycle.py. kanoqwq ran the BC1.2 change on his U30 Air (7.2.8)
 over several plug cycles. Here on the U30 Air (OpenWrt v2026.10.30.1, 6.18.59 with this change), 2026-10-31: three
-boots and 15 VBUS cycles of the Mac port (uhubctl, 1-15 s off); see below.**
+boots and 16 VBUS cycles of the Mac port (uhubctl, 1-15 s off); see below.**
 From kanoqwq's `b4748534` (his PHY driver, `ums9620-bc12.h` and patch 0026) and `fe52afe3` (SIPA).
 
 **Two detectors on the gadget's lines.** The mainline PHY switched D+/D- from the PMIC's charger detector to the USB
@@ -12509,9 +12509,9 @@ detection while host.
 every boot logged `BC1.2 complete` (type 3, CDP, or type 1, SDP) at 0.17 s and came up with NCM, adb and mobile data
 through the VPN; the charger read `usb_type 3` with 1.5-2 A (the Rp). On each port power cycle the charger first took
 the Rp current with type 0 while the PHY detected, and about 0.4 s later the PHY logged `BC1.2 complete: type 3,
-DP/DM USB` and the charger CDP. 14 of 15 cycles brought NCM back by themselves. The other came in a burst of quick
-VBUS changes: the gadget was `configured` at high speed with adb working, but `usb0` had no carrier (the Mac never
-started NCM), and `mu300-usb-reset` did not change that; a reboot did. Three cycles on the release kernel did not
-show it, and 10 more on this one did not either. This looks like the Mac's NCM state (as in 237), but it is not
-proven. Not covered here: a wall charger (DCP), a PD charger and the host role (`mu300-usb host`), which need
+DP/DM USB` and the charger CDP. In the first series the second cycle (3 s off, both hub ports switched back
+on with the USB 2 one first) left the gadget `configured` at high speed with adb working but `usb0` without carrier
+(the Mac never started NCM); two more cycles and `mu300-usb-reset` did not change that, a reboot did. The 12 cycles
+after that (both orders, 1-15 s off) all brought NCM back by themselves, and three on the release kernel did too.
+This looks like the Mac's NCM state (as in 237), but it is not proven. Not covered here: a wall charger (DCP), a PD charger and the host role (`mu300-usb host`), which need
 someone at the device.
