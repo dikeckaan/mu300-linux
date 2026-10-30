@@ -12463,8 +12463,10 @@ the lock; they run on request or 25 s after boot, not in the window above.
 
 ### 238. The U30 Air's charger detection (BC1.2) belongs to the USB PHY; the SIPA threads can be stopped
 
-**Status: the PHY driver and patch 0032 build on 7.2.13 here (no new warning); tests/test_u30air_bc12.py,
-tests/test_sipa_worker_lifecycle.py. kanoqwq ran the BC1.2 change on his U30 Air (7.2.8) over several plug cycles.**
+**Status: the PHY driver, patch 0032 and sipa_v3 build on 6.18.59 and 7.2.13 here (no new warning);
+tests/test_u30air_bc12.py, tests/test_sipa_worker_lifecycle.py. kanoqwq ran the BC1.2 change on his U30 Air (7.2.8)
+over several plug cycles. Here on the U30 Air (OpenWrt v2026.10.30.1, 6.18.59 with this change), 2026-10-31: three
+boots and 15 VBUS cycles of the Mac port (uhubctl, 1-15 s off); see below.**
 From kanoqwq's `b4748534` (his PHY driver, `ums9620-bc12.h` and patch 0026) and `fe52afe3` (SIPA).
 
 **Two detectors on the gadget's lines.** The mainline PHY switched D+/D- from the PMIC's charger detector to the USB
@@ -12502,3 +12504,14 @@ longer `kfree()` devm memory. Their start before the first resume was already th
 **Device check (U30 Air, mainline):** boot on a computer: `BC1.2 complete: type 1, DP/DM USB` in dmesg, NCM up, the
 charger at 500 mA (or the Rp current); unplug and plug again; a wall charger: type 2, 2 A; `mu300-usb host`: no
 detection while host.
+
+**Measured** on the U30 Air at a Mac port (6.18.59 with this change, OpenWrt v2026.10.30.1, VPN and kill switch on):
+every boot logged `BC1.2 complete` (type 3, CDP, or type 1, SDP) at 0.17 s and came up with NCM, adb and mobile data
+through the VPN; the charger read `usb_type 3` with 1.5-2 A (the Rp). On each port power cycle the charger first took
+the Rp current with type 0 while the PHY detected, and about 0.4 s later the PHY logged `BC1.2 complete: type 3,
+DP/DM USB` and the charger CDP. 14 of 15 cycles brought NCM back by themselves. The other came in a burst of quick
+VBUS changes: the gadget was `configured` at high speed with adb working, but `usb0` had no carrier (the Mac never
+started NCM), and `mu300-usb-reset` did not change that; a reboot did. Three cycles on the release kernel did not
+show it, and 10 more on this one did not either. This looks like the Mac's NCM state (as in 237), but it is not
+proven. Not covered here: a wall charger (DCP), a PD charger and the host role (`mu300-usb host`), which need
+someone at the device.
