@@ -37,7 +37,7 @@ MODULES=/proc/modules
 
 log() { echo "sipa-dele-start: $*"; }
 
-# The delegate's own word on its channel (kanoqwq's 0043a5d8, docs/FINDINGS.md 238): a module built from this tree
+# The delegate's own word on its channel (kanoqwq's 0043a5d8, docs/FINDINGS.md 241): a module built from this tree
 # has sipa_dele_wait in sysfs, and reading it waits on the kernel's wait queue until the channel-120 handshake with
 # the CP is done and the resource callbacks are in place - at once when they are, at most 3 s otherwise - and fails
 # for an open that failed, a channel the CP closed, or no answer in time. That is what the PDP context needs; the

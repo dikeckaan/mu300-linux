@@ -12451,7 +12451,7 @@ is not known (the counters were read only at the end).
 Not covered: the other rebinders (`mu300-usb-reset`, `mu300-usb` mode changes, the U30 Air's role switch) do not take
 the lock; they run on request or 25 s after boot, not in the window above.
 
-### 238. The IPA delegate says when its channel is open; the dashboard says "No SIM card" and whether it roams
+### 241. The IPA delegate says when its channel is open; the dashboard says "No SIM card" and whether it roams
 
 **Status: the delegate part checked by kanoqwq on a U30 Air (7.2.8) and here on a U30 Air (OpenWrt, 6.18.59); the
 dashboard parts here on the same U30 Air, "No SIM card" offline only.** From his `0043a5d8`, `c84da8ba`, `fe52afe3` and `b9f71e72`,
