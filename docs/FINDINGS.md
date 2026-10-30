@@ -12451,7 +12451,7 @@ is not known (the counters were read only at the end).
 Not covered: the other rebinders (`mu300-usb-reset`, `mu300-usb` mode changes, the U30 Air's role switch) do not take
 the lock; they run on request or 25 s after boot, not in the window above.
 
-### 238. Making room without losing Android's data: userdata's F2FS shrunk while Android runs
+### 239. Making room without losing Android's data: userdata's F2FS shrunk while Android runs
 
 **Status: EXPERIMENTAL, offered by install.sh, install.ps1 and the graphical installer next to the reset of FINDINGS
 112 (`MU300_ANS_MAKE_ROOM_METHOD=keep|reset`); tested in tests/test_online_shrink.py, tests/online-shrink-e2e.sh (the
@@ -12472,6 +12472,10 @@ in shell) on the device; `tools/resume.sh` / install.ps1 and `tools/resume.py` o
   node whose only slave is userdata and which covers all of it (file-based plus metadata encryption, as on the F50);
   never with block encryption, a layered or offset mapping, or a read-only `/data`. The F2FS must be whole sections.
 * The target is whole sections, smaller than now, and keeps 2 GiB more than what is used (kano's margin).
+* The disk is the internal one of tools/storage.sh's `internal_disk` (mmcblk0, or sda on a UFS, #396), and the table
+  is read, rebuilt and committed in its logical blocks (`resize-last-partition.py --sector-size`; on 4096-byte blocks
+  the first 48 and the last 40 sectors, and the worker is given the backup table's place by that count). F2FS blocks
+  are 4096 bytes either way.
 * Before anything is written: the backup of FINDINGS 112, and a transaction with both tables (before and after) and
   the F2FS's UUID and size, on the computer.
 * On the device everything runs from `/dev/mu300-online-TOKEN` (tmpfs), never from the userdata being resized. First

@@ -705,6 +705,30 @@ class OnlineShrink(ResetAndResume):
             self.assertIn('the answer in MU300_ANS_LINUX_GIB was not accepted', ev[-1]['message'])
             self.assertEqual((fakeemmc.table(self.emmc), self.writes()), (before, []))
 
+    def test_on_a_ufs_of_4096_byte_blocks(self):
+        # issue #396's 1 TB U30 Air (sda, 4096-byte blocks): the table is 48 and 40 sectors, the worker gets the
+        # backup table's place at the disk's end - 40 sectors, and userdata's new end falls on a block
+        for shell in self.each_shell():
+            shutil.rmtree(self.emmc); self.emmc = fakeemmc.make(self.tmp / 'emmc', layout='ufs1t')
+            shutil.rmtree(self.backups, ignore_errors=True)
+            self.device(pull=True, layout='ufs1t')
+            before = fakeemmc.table(self.emmc)
+            r, ev, facts = self.inst(shell, KEEP)
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:] + r.stderr)
+            self.assertEqual(facts['makeroom.method'], 'keep')
+            rec = json.loads(Path(ev[-1]['transaction']).read_text())
+            after = fakeemmc.table(self.emmc)
+            self.assertTrue(tables_equal_but_userdata(before, after))
+            ud = [p for p in after if p[0] == 'userdata'][0]
+            self.assertEqual(((ud[2] + 1) % 8, ud[2] - ud[1] + 1), (0, rec['target']))
+            self.assertIn('start %s ' % rec['token'], ' '.join(c['cmd'] for c in self.calls()))
+            self.assertTrue(any(c['cmd'].endswith(' 40') and 'android-online-shrink.sh start' in c['cmd'] for c in self.calls()))
+            self.assertEqual(fakeemmc.f2fs_blocks(self.emmc), rec['fs_target'])
+            fakeemmc.reset(self.emmc, wipe=False)
+            self.device(pull='noboot', layout='ufs1t')
+            r, ev, facts = self.inst(shell, INSTALL)
+            self.assertEqual(facts['resume.check'], 'RESUME-OK', r.stdout[-3000:])
+
     def test_without_the_helper_only_the_reset_is_offered(self):
         for shell in self.each_shell():
             self.fresh()
