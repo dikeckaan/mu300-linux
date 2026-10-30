@@ -12453,8 +12453,8 @@ the lock; they run on request or 25 s after boot, not in the window above.
 
 ### 238. The IPA delegate says when its channel is open; the dashboard says "No SIM card" and whether it roams
 
-**Status: the delegate part checked by kanoqwq on a U30 Air (7.2.8: `sipa_dele_ready=1`, SIM1 dial, IPv4/IPv6 and
-traffic); the rest offline here. Device checks below.** From his `0043a5d8`, `c84da8ba`, `fe52afe3` and `b9f71e72`,
+**Status: the delegate part checked by kanoqwq on a U30 Air (7.2.8) and here on a U30 Air (OpenWrt, 6.18.59); the
+dashboard parts here on the same U30 Air, "No SIM card" offline only.** From his `0043a5d8`, `c84da8ba`, `fe52afe3` and `b9f71e72`,
 taken into this tree's code.
 
 - **sipa_dele has a readiness interface** (`0043a5d8`). The delegate module now keeps a channel status (0 handshake
@@ -12502,7 +12502,15 @@ argument (his native modemd; ours is an rpcd shell backend); the VPN removal in 
 `tests/test_device_scripts.py` (`SipaDele`: the readiness of a loaded and a freshly loaded delegate; `MobileData`: a
 loaded delegate is asked), `tests/test_dashboard_info.py` (`sim_state`, `SimAbsent`, `RoamingNow`),
 `tests/test_mu300dash_security.py` (the busy signal reply).
-**Device check before merge:** a mainline board with the rebuilt `sipa-dele.ko`: `cat .../sipa_dele_ready` reads 1
+**Checked here** (U30 Air, OpenWrt 25.12.6, 6.18.59, SIM in, VPN on): the module built from this tree, a reboot:
+the loader logged "packet domain attached", "loaded sipa-dele", "delegate channel and resource callbacks ready",
+`sipa_dele_ready` read 1, data through the VPN (HTTP 204), no oops. `ifdown wan; ifup wan`: the ready check passed
+(`/tmp/mu300-sipa-dele-ready.log`) and data came back. The vendor DT's "get resource failed for remote-base" / "dts
+parsing failed" line is in the boot log with the old module as well. Dashboard: `sim_state` "ready", "absent" from a
+state file given by hand; the data roaming row read "Allowed · Home network"; with every dashboard channel held,
+`mu300dash signal` answered busy. Everything was put back afterwards. Not checked on a board: the page with a card
+taken out, and an F50.
+**Device check before merge (still open):** a mainline board with the rebuilt `sipa-dele.ko`: `cat .../sipa_dele_ready` reads 1
 after the dial, `/tmp/mu300-sipa-dele.log` says "delegate channel and resource callbacks ready", data flows; `ifdown
 wan; ifup wan` passes the ready check (`/tmp/mu300-sipa-dele-ready.log`). The dashboard of a board with its card taken
 out (or an empty slot selected) says "No SIM card", the IMEIs stay.
