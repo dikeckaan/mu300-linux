@@ -462,8 +462,9 @@ info bootchain "$BC_LINE"
 offer_repartition() {
     say "$(t 'Not enough free space - this looks like the 32 GB variant')"
     mkdir -p "$WORK/gpt"
-    su_do "dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
-    su_do "dd if=/dev/block/mmcblk0 bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
+    internal_disk
+    su_do "dd if=/dev/block/$IDISK bs=512 count=$GPT_HEAD 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - GPT_TAIL)) count=$GPT_TAIL 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
     adb pull /data/local/tmp/gpt.head "$WORK/gpt/gpt.head" >/dev/null 2>&1 || true
     adb pull /data/local/tmp/gpt.tail "$WORK/gpt/gpt.tail" >/dev/null 2>&1 || true
     su_do 'rm -f /data/local/tmp/gpt.head /data/local/tmp/gpt.tail' >/dev/null
@@ -471,7 +472,7 @@ offer_repartition() {
 
     # resize-last-partition.py validates both GPT copies and every CRC before it says anything
     info=$(python3 "$TOP/tools/resize-last-partition.py" "$WORK/gpt/gpt.head,$WORK/gpt/gpt.tail" \
-             --disk-sectors "$disk" --name userdata --show) || die "$info"
+             --disk-sectors "$disk" --sector-size "$ILBS" --name userdata --show) || die "$info"
     LAST_FIRST=$(echo "$info" | sed -n 's/^LAST_FIRST=//p')
     LAST_END=$(echo "$info" | sed -n 's/^LAST_END=//p')
     USABLE_END=$(echo "$info" | sed -n 's/^USABLE_END=//p')
@@ -533,7 +534,7 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
         # disk's end, so a userdata that ended lin_s before the usable end left a region 4 MiB or more smaller
         # than asked - 0.79 GiB for OpenWrt's 0.78 was 804 MiB, 0.78125 would have been 796 and the resumed run
         # would have refused it after the reset (FINDINGS 112, the first device run)
-        new_end=$(( ((disk - 34) / 4096 - 1) * 4096 - lin_s - 4096 - 1 ))
+        new_end=$(( ((disk - ${GPT_TAIL:-33} - 1) / 4096 - 1) * 4096 - lin_s - 4096 - 1 ))
         [ $new_end -le "$USABLE_END" ] || new_end=$((USABLE_END - lin_s))
         resume_region $((new_end + 1))
         if [ $((RG_END - RG_START)) -lt $MIN_LINUX ]; then
@@ -581,7 +582,7 @@ if [ $RESUME = 1 ]; then
     if [ $CHECK_ONLY = 1 ]; then resume_validate soft || RESUME=0; else resume_validate; fi
 fi
 # the partitions, for a picture of the eMMC: "name:first sector:sectors" of each (the stream only; sysfs, read only)
-[ -z "$PROGRESS_FD" ] || info partitions "$(su_do 'for p in /sys/block/mmcblk0/mmcblk0p*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done' | tr '\n' ' ')"
+[ -z "$PROGRESS_FD" ] || info partitions "$(su_do 'for p in /sys/block/'"$IDISK/$IPART"'*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done' | tr '\n' ' ')"
 gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
 # What each choice needs: the installed systems measure ~320 MiB (OpenWrt) and ~580 MiB (Ubuntu), and an update
 # keeps the previous one as <os>.old while the new one is unpacked, so allow for two of each plus working room.
@@ -648,7 +649,7 @@ if [ $SD_MODE = 0 ] && [ $existing = no ] && [ $RESUME = 0 ]; then
     echo "$(t 'data check: {1} of 16 samples contain data' "$DIRTY")"
     info region.dirty "$DIRTY"
     # what is there, for a report: the first bytes of the region
-    [ "$DIRTY" -gt 0 ] && echo "  $(t 'start of the region: {1}' "$(su_do "dd if=/dev/block/mmcblk0 bs=1048576 skip=$(( OFF / 1048576 )) count=1 2>/dev/null | od -An -tx1 -N32" | tr -s ' \n' ' ')")"
+    [ "$DIRTY" -gt 0 ] && echo "  $(t 'start of the region: {1}' "$(su_do "dd if=/dev/block/$IDISK bs=1048576 skip=$(( OFF / 1048576 )) count=1 2>/dev/null | od -An -tx1 -N32" | tr -s ' \n' ' ')")"
 fi
 if [ $RESUME = 1 ]; then
     # (what the region holds is what was userdata, erased with the word ERASE when it was prepared, and the token)

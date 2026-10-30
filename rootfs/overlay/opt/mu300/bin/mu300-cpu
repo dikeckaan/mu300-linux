@@ -383,21 +383,18 @@ cpuv_limit() {  # cpuv_limit KEY: a value of the kernel's voltage_limits (min ma
 cpuv_head() { head -n1 "$1" 2>/dev/null | tr -d '\r'; }
 snum() { case ${1#-} in ''|*[!0-9]*) echo 0 ;; *) echo "$1" ;; esac; }   # a signed integer, else 0
 
-# the eMMC's sml_a and sml_b (only the eMMC's: a card can carry the same names), checked against the known builds;
-# known, unknown or unreadable (not root). Cached for the boot: the partitions do not change under a running system.
+# the internal disk's sml_a and sml_b (only its own: a card can carry the same names; lib/storage.sh), checked against
+# the known builds; known, unknown or unreadable (not root). Cached for the boot: the partitions do not change under a
+# running system.
 cpuv_firmware() {
     _c=$RUNROOT/mu300/cpu-voltage-firmware
     [ -s "$_c" ] && { cat "$_c"; return; }
     _r=unknown _n=0
-    for _b in "$R"/sys/block/mmcblk*; do
-        [ "$(cat "$_b/device/type" 2>/dev/null)" = MMC ] || continue
-        for _u in "$_b"/"${_b##*/}"p*/uevent; do
-            _s=$(sed -n 's/^PARTNAME=sml_\([ab]\)$/\1/p' "$_u" 2>/dev/null)
-            [ -n "$_s" ] || continue
-            _p=${_u%/uevent}; _p=$R/dev/${_p##*/}
-            if ! _h=$(sha256sum < "$_p" 2>/dev/null); then _r=unreadable; break 2; fi
-            case " $CPUV_SML_KNOWN " in *" ${_h%% *} "*) _n=$((_n + 1)) ;; *) _r=unknown; break 2 ;; esac
-        done
+    for _p in $(MU300_SYS=$R/sys; . "${MU300_STORAGE_LIB:-/opt/mu300/lib/storage.sh}" &&
+                _d=$(mu300_storage_disk) && mu300_storage_part sml_a "$_d" && mu300_storage_part sml_b "$_d"); do
+        _p=$R/dev/$_p
+        if ! _h=$(sha256sum < "$_p" 2>/dev/null); then _r=unreadable; break; fi
+        case " $CPUV_SML_KNOWN " in *" ${_h%% *} "*) _n=$((_n + 1)) ;; *) _r=unknown; break ;; esac
     done
     [ "$_r" = unknown ] && [ "$_n" = 2 ] && _r=known
     [ "$_r" = unreadable ] || { mkdir -p "${_c%/*}" 2>/dev/null; echo "$_r" > "$_c" 2>/dev/null; }

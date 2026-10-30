@@ -61,6 +61,8 @@ DEFAULT = {
     'crypto_state': 'encrypted',     # ro.crypto.state (the F50's Android 13: file-based encryption)
     'crypto_type': 'file',           # ro.crypto.type
     'data_source': '/dev/block/dm-6',    # what /data is mounted from
+    'disk_name': 'mmcblk0',      # the internal disk tools/storage.sh's internal_disk is told (sda: a UFS unit)
+    'disk_lbs': 512,             # and its logical block size (4096: a UFS)
     'emmc': None,                # a directory standing for the device's storage (tests/fakeemmc.py): see above
     'passwords': None,           # the current passwords of the installed systems' own accounts, for android-pwcheck.sh:
                                  # {"openwrt": "", "ubuntu": "secret1"}; "" is none (EMPTY), "!" a locked account, a
@@ -203,6 +205,7 @@ def facts(st):
 
 
 FACTS_CMD = 'd=$(readlink -f /dev/block/by-name/userdata);'
+DISK_CMD = 'd=$(readlink -f /dev/block/by-name/misc);'
 
 
 def su(st, cmd, argv):
@@ -215,6 +218,8 @@ def su(st, cmd, argv):
         return '0', 'read'
     if cmd.startswith(FACTS_CMD):
         return facts(st), 'read'
+    if cmd.startswith(DISK_CMD):     # tools/storage.sh's internal_disk: the disk that holds misc
+        return '%s %d' % (st['disk_name'], st['disk_lbs']), 'read'
     m = re.fullmatch(r'getprop (\S+)', cmd)
     if m:
         return prop(st, m.group(1)), 'read'

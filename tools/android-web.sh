@@ -90,7 +90,20 @@ DEVSH=${MU300_DEVICE_SH:-/system/bin/sh}
 ANDROID_SH=${MU300_ANDROID_SH:-/system/bin/sh}
 APATH=${MU300_ANDROID_PATH:-/system/bin:/system/xbin:/vendor/bin}
 DROP_CACHES=${MU300_DROP_CACHES:-/proc/sys/vm/drop_caches}
-EMMC=${MU300_EMMC:-/dev/block/mmcblk0}
+# --- android-disk begin
+# The internal disk, as Android's by-name links have it: the disk that holds misc - mmcblk0 on an eMMC unit, sda on a
+# UFS one (issue #396; tools/storage.sh's internal_disk asks the same) - and what its partitions are named after
+# (mmcblk0p, sda). mmcblk0 when Android does not say; MU300_DISK names it.
+_ad=$(readlink -f "${MU300_BY_NAME:-/dev/block/by-name}/misc" 2>/dev/null) || _ad=
+_ad=$(readlink -f "${MU300_SYSFS:-/sys}/class/block/${_ad##*/}/.." 2>/dev/null) || _ad=
+IDISK=${MU300_DISK:-${_ad##*/}}
+case $IDISK in mmcblk[0-9]|sd[a-z]) ;; *) IDISK=mmcblk0 ;; esac
+case $IDISK in mmcblk*) IPART=${IDISK}p ;; *) IPART=$IDISK ;; esac
+# its logical block size, and its GPT in 512-byte sectors: the first GPT_HEAD and the last GPT_TAIL
+ILBS=$(cat "${MU300_SYSFS:-/sys}/block/$IDISK/queue/logical_block_size" 2>/dev/null) || ILBS=
+case $ILBS in 4096) GPT_HEAD=48 GPT_TAIL=40 ;; *) ILBS=512 GPT_HEAD=34 GPT_TAIL=33 ;; esac
+# --- android-disk end
+EMMC=${MU300_EMMC:-/dev/block/$IDISK}
 JOB=$R/job
 LINUX_CMDLINE=6c6f676c6576656c3d3500      # "loglevel=5\0" at offset 44: the header of every Linux boot image
 
@@ -293,7 +306,7 @@ cancel() {
 parts_json() {  # [["name",start,size],...] of the eMMC, in sectors, from sysfs (the partition table is not read)
     _first=1
     printf '['
-    for _p in "$SYSFS"/block/mmcblk0/mmcblk0p*; do
+    for _p in "$SYSFS/block/$IDISK/$IPART"*; do
         [ -e "$_p/start" ] || continue
         _n=$(sed -n 's/^PARTNAME=//p' "$_p/uevent" 2>/dev/null | head -n1)
         [ -n "$_first" ] || printf ','
@@ -854,10 +867,10 @@ backup() {
     done
     dd if="$MISC" of="$_o/misc-head.bin" bs=4096 count=1 2>/dev/null || { rm -rf "$_o"; fail read-failed misc; }
     _emit misc-head.bin
-    dd if="$EMMC" of="$_o/gpt-head.bin" bs=512 count=34 2>/dev/null &&
-        dd if="$EMMC" of="$_o/gpt-tail.bin" bs=512 skip=$((disk - 33)) count=33 2>/dev/null || { rm -rf "$_o"; fail read-failed gpt; }
+    dd if="$EMMC" of="$_o/gpt-head.bin" bs=512 count=$GPT_HEAD 2>/dev/null &&
+        dd if="$EMMC" of="$_o/gpt-tail.bin" bs=512 skip=$((disk - GPT_TAIL)) count=$GPT_TAIL 2>/dev/null || { rm -rf "$_o"; fail read-failed gpt; }
     _emit gpt-head.bin; _emit gpt-tail.bin
-    for _p in "$SYSFS"/block/mmcblk0/mmcblk0p*; do
+    for _p in "$SYSFS/block/$IDISK/$IPART"*; do
         [ -e "$_p/start" ] || continue
         echo "${_p##*/} $(sed -n 's/^PARTNAME=//p' "$_p/uevent" 2>/dev/null | head -n1) $(cat "$_p/start") $(cat "$_p/size")"
     done > "$_o/partitions.txt"

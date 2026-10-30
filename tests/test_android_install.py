@@ -13,6 +13,11 @@ from test_boot_init import fake_ext4
 SRC = (TOP / 'tools' / 'android-install.sh').read_text()
 
 
+def disk_block():
+    """the script's lookup of the internal disk (IDISK, IPART: mmcblk0 where Android's by-name says nothing)"""
+    return re.search(r'# --- android-disk begin\n(.*?)# --- android-disk end', SRC, re.S).group(1)
+
+
 def stage_block():
     """the bounded-stage functions (stage_run, stall_check, ...), cut out between their markers"""
     m = re.search(r'# --- stage begin\n(.*?)# --- stage end', SRC, re.S)
@@ -40,7 +45,8 @@ class SdCard(ShellTest):
                         'unmount) echo "sm unmount $2" >> "$STUBLOG/calls"; cp "$STUBLOG/volumes.after" "$STUBLOG/volumes" ;; esac')
         # the stage block too: sd_prepare runs its mke2fs through stage_run (plainly: STAGE_DISK is empty here)
         code = ('say() { echo "[device] $*"; }\n' + f'MU300_MOUNTS="{self.tmp}/mounts"\nMU300_SYSFS="{self.tmp}/sys"\n'
-                + f'T="{self.tmp}"\n' + stage_block() + self.fn + f'\n{pre}\n{call}\necho "rc=$?"')
+                + f'T="{self.tmp}"\nMU300_BY_NAME="{self.tmp}/no-by-name"\n' + disk_block() + stage_block() + self.fn
+                + f'\n{pre}\n{call}\necho "rc=$?"')
         r = self.sh(shell, code)
         calls = (self.tmp / 'calls').read_text() if (self.tmp / 'calls').exists() else ''
         (self.tmp / 'calls').unlink(missing_ok=True)
@@ -506,7 +512,8 @@ class RegionGuard(ShellTest):
             (d / 'uevent').write_text(f'PARTN={n}\nPARTNAME={name}\n')
         block = re.search(r'# --- region-guard begin\n(.*?)# --- region-guard end', SRC, re.S).group(1)
         block = block.replace('/sys/block/', f'{self.tmp}/sys/block/')
-        return self.sh(shell, f'say() {{ echo "[device] $*"; }}\nOFF_S={off_s}; SIZE_S={size_s}\n{block}echo PASSED')
+        return self.sh(shell, f'say() {{ echo "[device] $*"; }}\nOFF_S={off_s}; SIZE_S={size_s}\n'
+                              f'MU300_BY_NAME={self.tmp}/no-by-name; MU300_SYSFS={self.tmp}/sys\n{disk_block()}{block}echo PASSED')
 
     def test_free_space_or_the_partition_named_mu300root_nothing_else(self):
         ud = ('userdata', 2048, 8 << 21)

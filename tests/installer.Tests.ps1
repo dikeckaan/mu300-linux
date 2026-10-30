@@ -275,6 +275,8 @@ foreach ($w in $rnames) {
     if (-not (Get-Command $w -CommandType Function -ErrorAction SilentlyContinue)) { Write-Host "FAIL: $w not found in install.ps1"; exit 99 }
 }
 LoadLanguage 'en'
+# the internal disk as install.ps1's probe found it before the make-room path runs (an eMMC unit)
+$IDISK = 'mmcblk0'; $IPART = 'mmcblk0p'; $ILBS = 512; $GPT_HEAD = 34; $GPT_TAIL = 33
 # what the make-room path reads to identify the device, as install.ps1 sends it (the same text as tools/resume.sh's)
 $FactsCmd = [regex]::Match([IO.File]::ReadAllText((Join-Path $Top 'install.ps1')), "(?m)^\`$script:FactsCmd = '([^']*)'").Groups[1].Value
 $script:FactsCmd = $FactsCmd
@@ -285,7 +287,10 @@ $pf = ParseFacts "NODE=mmcblk0p18`r`nCID=15010053454d36344720c1a6b7d2e900`nSTART
 Check 'facts: read'             "$($pf.NODE) $($pf.START) $($pf.SIZE) $($pf.STATE) $($pf.TYPE) [$($pf.MAGIC)]" 'mmcblk0p18 12275712 109879296 encrypted file []'
 $pf.SERIAL = '324950664950'
 Check 'facts: ok'               (FactsOk $pf) $true
-foreach ($bad in @(@{ NODE = 'sda1' }, @{ NODE = 'mmcblk0p18;x' }, @{ CID = 'XYZ' }, @{ CID = ('a' * 31) }, @{ START = '' }, @{ SIZE = '1e3' }, @{ SERIAL = '' })) {
+# a UFS unit (issue #396): its partition node and the hash of its manufacturer and serial number in the CID's place
+$uf = $pf.Clone(); $uf.NODE = 'sda75'
+Check 'facts: ufs ok'           (FactsOk $uf) $true
+foreach ($bad in @(@{ NODE = 'vda1' }, @{ NODE = 'sdA1' }, @{ NODE = 'mmcblk0p18;x' }, @{ CID = 'XYZ' }, @{ CID = ('a' * 31) }, @{ START = '' }, @{ SIZE = '1e3' }, @{ SERIAL = '' })) {
     $b = $pf.Clone(); foreach ($k in $bad.Keys) { $b[$k] = $bad[$k] }
     Check "facts: refused $(@($bad.Keys) -join ',')" (FactsOk $b) $false
 }

@@ -295,7 +295,14 @@ Say 'Looking for the Linux installation'
 # command as install.ps1's): the free region behind the last partition, a GPT partition named mu300root that another
 # installer made (kanoqwq's desktop installer, FINDINGS 179), the old fixed offset
 # (no double quotes in a device command: Windows PowerShell 5.1 drops them on the way to adb)
-$parts = @((SuDo 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/mmcblk0/size)').Trim() -split '\s+')
+# The internal disk, as Android's by-name links have it (tools/storage.sh's internal_disk): the disk that holds misc -
+# mmcblk0 on an eMMC unit, sda on a UFS one (issue #396) - and what its partitions are named after. mmcblk0 when
+# Android does not say.
+$dk = @(([string](SuDo 'd=$(readlink -f /dev/block/by-name/misc); d=$(readlink -f /sys/class/block/${d##*/}/..); echo ${d##*/} $(cat $d/queue/logical_block_size)')).Trim() -split '\s+')
+$IDISK = [string]$dk[0]; $GPT_TAIL = $(if ($dk.Count -gt 1 -and $dk[1] -eq '4096') { 40 } else { 33 })
+if ($IDISK -cnotmatch '^(mmcblk[0-9]|sd[a-z])$') { $IDISK = 'mmcblk0' }
+$IPART = $(if ($IDISK -like 'mmcblk*') { "${IDISK}p" } else { $IDISK })
+$parts = @((SuDo ('e=0; for p in /sys/block/' + "$IDISK/$IPART" + '*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/' + $IDISK + '/size)')).Trim() -split '\s+')
 $nums = @($parts | Where-Object { $_ -match '^[0-9]+$' })
 $partList = @($parts | Where-Object { $_ -match '^part:[0-9]+:[0-9]+$' })
 $image = @($parts | Where-Object { $_ -eq 'image' }).Count
@@ -314,20 +321,20 @@ if ($partList.Count -eq 1) {
 function RegionOnDisk([int64]$bytes) { [math]::Floor(($bytes + 2048) / 512) -le $disk }
 # the free space behind the last partition and before the backup GPT, or wholly inside the partition named mu300root
 function RegionInBounds([int64]$o, [int64]$z) {
-    (([math]::Floor($o / 512) -ge $lastEnd) -and ([math]::Floor(($o + $z) / 512) -le ($disk - 34))) -or
+    (([math]::Floor($o / 512) -ge $lastEnd) -and ([math]::Floor(($o + $z) / 512) -le ($disk - $GPT_TAIL - 1))) -or
         (($PART_OFF -ge 0) -and ($o -ge $PART_OFF) -and (($o + $z) -le ($PART_OFF + $PART_SIZE)))
 }
 $cands = @($start); if ($PART_OFF -ge 0) { $cands += $PART_OFF }; $cands += [int64]27762098176
 foreach ($cand in $cands) {
     if (-not (RegionOnDisk $cand)) { continue }
     if ($cand -eq 27762098176 -and $PART_OFF -ge 0 -and $cand -ge $PART_OFF -and $cand -lt ($PART_OFF + $PART_SIZE)) { continue }
-    $m = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
+    $m = (SuDo "dd if=/dev/block/$IDISK bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
     # two bytes on the disk always read as four hex digits: anything else is no answer, never "no installation"
     if ($m -notmatch '^[0-9a-f]{4}$') { Die 'no answer from the device while looking for the Linux filesystem; nothing was changed' }
-    $l = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
+    $l = (SuDo "dd if=/dev/block/$IDISK bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
     if ($cand -eq $PART_OFF -and $m -eq '53ef') { $PART_FS = $(if ($l.Trim() -eq 'mu300root') { 'mu300root' } else { 'ext4' }) }
     if ($m -eq '53ef' -and $l.Trim() -eq 'mu300root') {
-        $blocks = [int64]((SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1028) count=4 2>/dev/null | od -An -tu4").Trim())
+        $blocks = [int64]((SuDo "dd if=/dev/block/$IDISK bs=1 skip=$($cand + 1028) count=4 2>/dev/null | od -An -tu4").Trim())
         $OFF = $cand; $SIZE = $blocks * 4096
         # a filesystem in the partition is never larger than the partition
         if ($cand -eq $PART_OFF) { $IN_PART = 1; if ($SIZE -gt $PART_SIZE) { $SIZE = $PART_SIZE } }
@@ -453,16 +460,16 @@ if ($wipe -ne 'keep') {
     if ($wipe -eq 'quick') {
         # (never more than the filesystem: in a partition named mu300root that is the partition's end)
         $n = [math]::Min(64, $mib)
-        SuDo "dd if=/dev/zero of=/dev/block/mmcblk0 bs=1048576 seek=$skip count=$n conv=notrunc 2>/dev/null; sync" | Out-Null
+        SuDo "dd if=/dev/zero of=/dev/block/$IDISK bs=1048576 seek=$skip count=$n conv=notrunc 2>/dev/null; sync" | Out-Null
     } else {
         Write-Host "overwriting $mib MiB, this takes a few minutes"
-        SuDo "command -v blkdiscard >/dev/null && blkdiscard -o $OFF -l $SIZE /dev/block/mmcblk0 2>/dev/null; dd if=/dev/zero of=/dev/block/mmcblk0 bs=1048576 seek=$skip count=$mib conv=notrunc 2>/dev/null; sync" | Out-Null
+        SuDo "command -v blkdiscard >/dev/null && blkdiscard -o $OFF -l $SIZE /dev/block/$IDISK 2>/dev/null; dd if=/dev/zero of=/dev/block/$IDISK bs=1048576 seek=$skip count=$mib conv=notrunc 2>/dev/null; sync" | Out-Null
     }
-    $m = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($OFF + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
+    $m = (SuDo "dd if=/dev/block/$IDISK bs=1 skip=$($OFF + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
     if ($m -eq '53ef') { Die 'the filesystem signature is still there' }
     if ($wipe -eq 'secure') {
         $step = [int64]($mib / 32) + 1
-        $left = [int](SuDo "n=0; s=$skip; e=$($skip + $mib); while [ `$s -lt `$e ]; do c=`$(dd if=/dev/block/mmcblk0 bs=1048576 skip=`$s count=1 2>/dev/null | tr -d \\000 | wc -c); [ `$c -gt 0 ] && n=`$((n + 1)); s=`$((s + $step)); done; echo `$n").Trim()
+        $left = [int](SuDo "n=0; s=$skip; e=$($skip + $mib); while [ `$s -lt `$e ]; do c=`$(dd if=/dev/block/$IDISK bs=1048576 skip=`$s count=1 2>/dev/null | tr -d \\000 | wc -c); [ `$c -gt 0 ] && n=`$((n + 1)); s=`$((s + $step)); done; echo `$n").Trim()
         if ($left -ne 0) { Die "$left of 32 samples still contain data; run the secure erase again" }
         Write-Host 'erased and verified (32 samples across the region are empty)'
     } else {
