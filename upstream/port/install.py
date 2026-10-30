@@ -486,3 +486,27 @@ for sym, obj, title, deps, text in LED_DRIVERS:
         i = kls.rindex('endif # NEW_LEDS')
         kls = kls[:i] + f'config {sym}\n\ttristate "{title}"\n\tdepends on {deps}\n\thelp\n\t  {text}\n\n' + kls[i:]
 open(kl, 'w').write(kls)
+
+# DVFS of the vendor 5.4 kernel (parity group dvfs, FINDINGS 234): the DDR controller's information and bandwidth
+# statistics (dmc_drv, dmc-controller@60050000, built in as on 5.4) and the top-level DVFS set-up (sprd-top-dvfs,
+# a module as on 5.4, which binds nothing on these boards). The DDR and modem DVFS themselves talk to the
+# co-processors over SIPC and are out-of-tree modules next to the modem stack (upstream/modules/sprd_dvfs).
+append_once('drivers/soc/sprd/Makefile', 'dmc_drv.o', 'obj-$(CONFIG_SPRD_DMC_DRV) += dmc_drv.o\n')
+append_once('drivers/soc/Kconfig', 'config SPRD_DMC_DRV', '''
+config SPRD_DMC_DRV
+	tristate "Unisoc DDR controller information and bandwidth statistics"
+	depends on (ARCH_SPRD && OF) || COMPILE_TEST
+	help
+	  /proc/sprd_dmc (the DDR's size, type and mode registers), the PUB status monitor in debugfs
+	  (sprd_pub_monitor) and the DDR frequency at a panic, as the Unisoc 5.4 kernel's dmc_drv (sprd,pub-dmc).
+''')
+append_once('drivers/devfreq/Makefile', 'sprd-top-dvfs.o', 'obj-$(CONFIG_SPRD_TOP_DVFS_DEVFREQ) += sprd-top-dvfs.o\n')
+dk = os.path.join(tree, 'drivers/devfreq/Kconfig')
+d = open(dk).read()
+if 'config SPRD_TOP_DVFS_DEVFREQ\n' not in d:
+    i = d.rindex('source "drivers/devfreq/event/Kconfig"')
+    d = d[:i] + ('config SPRD_TOP_DVFS_DEVFREQ\n\ttristate "Unisoc top-level DVFS set-up"\n'
+                 '\tdepends on (ARCH_SPRD && OF && MFD_SYSCON) || COMPILE_TEST\n\thelp\n'
+                 '\t  Enables the top DVFS module and the DCDCs\' DVFS a sprd,topdvfs-dev node describes, as the\n'
+                 '\t  Unisoc 5.4 kernel\'s sprd-top-dvfs.\n\n') + d[i:]
+    open(dk, 'w').write(d)
