@@ -2558,7 +2558,8 @@ the bq25601's data, and patch 0009 changes the following for that node only:
   CDP 1.5 A, DCP 2 A, and `usb_type` from the same result. The charger's own input detection (IINDET_EN in REG07,
   then VBUS_STAT in REG08) drives D+/D-, which on this board are the USB gadget's lines to the computer. It runs
   only when the PMIC device or its result is missing, and the driver says so once. With it, SDP or unknown is
-  500 mA, CDP 1.5 A, DCP 2 A and non-standard 1 A. The type is read at probe and again on every VBUS change. With no interrupt, those changes come from the extcon. If the node's
+  500 mA, CDP 1.5 A, DCP 2 A and non-standard 1 A. (Since 238 the USB PHY runs the PMIC's detection and the
+  charger takes its result; IINDET_EN is no longer used.) The type is read at probe and again on every VBUS change. With no interrupt, those changes come from the extcon. If the node's
   extcon is not the `extcon-usb-gpio` device (on the U30 Air the PHY's points at the PMIC's Type-C block, which has
   no driver, 33c), the driver uses that device, as the USB PHY does. Each run also switches charging on.
 - `charge_type` on `/sys/class/power_supply/bq256xx-charger` is the userspace switch: `N/A` stops charging, also
@@ -12023,6 +12024,15 @@ information it uses the chip default, and every other board is unchanged. The ch
 4.352 V (not 3.856 V + 15 x 32 mV), both when it is chosen and when it is read back, as in ZTE's driver. The
 difference is 32 mV more at the top of the charge, the stock value.
 
+**Not 4.4 V.** The U30 Air's battery label says 3.85 V nominal and a 4.4 V charge limit, and the device tree's
+`batt_cap_learn` nodes carry `bcl,battery-limit-charge-voltage = 4400`. That is not what the stock firmware charges
+to (kanoqwq's `fe52afe3`, his charge-voltage audit of 2026-10-28, on a U30 Air with UFS): its `sqc_daemon` (SHA-256
+`aa7263f4...`) reads `sqc,max_vbat_mv` and the per-stage `sqc,fcv` table from `/vendor/etc/.tp/sqc_charger.conf`
+(`4a20fee6...`), and both stop at 4300 mV; the 4400 of the capacity-learning node is only reported upwards
+(`VOLTAGE_MAX_DESIGN`). So 4.3 V, encoded as above (4.304 V, REG04 `0x70`), is the stock target, and the 4.4 V of the
+label is not raised to. The battery node's `ir-cv-offset-microvolt` (100 mV) is ZTE's charger manager's IR
+compensation (base voltage plus average current times resistance, bounded), not a fixed 100 mV more; it is not ported.
+
 **A PD frame before the FIFO has it.** The PD block's packet-received interrupt can come before the receive FIFO
 holds the frame. Unisoc's receive path first polls `PD_STS1` (50 us steps, 2 ms at most) until the FIFO is not empty.
 Our port controller (patch 0020, FINDINGS 150) read the header at once and could hand TCPM a frame of empty words.
@@ -12450,3 +12460,58 @@ is not known (the counters were read only at the end).
 
 Not covered: the other rebinders (`mu300-usb-reset`, `mu300-usb` mode changes, the U30 Air's role switch) do not take
 the lock; they run on request or 25 s after boot, not in the window above.
+
+### 238. The U30 Air's charger detection (BC1.2) belongs to the USB PHY; the SIPA threads can be stopped
+
+**Status: the PHY driver, patch 0032 and sipa_v3 build on 6.18.59 and 7.2.13 here (no new warning);
+tests/test_u30air_bc12.py, tests/test_sipa_worker_lifecycle.py. kanoqwq ran the BC1.2 change on his U30 Air (7.2.8)
+over several plug cycles. Here on the U30 Air (OpenWrt v2026.10.30.1, 6.18.59 with this change), 2026-10-31: three
+boots and 16 VBUS cycles of the Mac port (uhubctl, 1-15 s off); see below.**
+From kanoqwq's `b4748534` (his PHY driver, `ums9620-bc12.h` and patch 0026) and `fe52afe3` (SIPA).
+
+**Two detectors on the gadget's lines.** The mainline PHY switched D+/D- from the PMIC's charger detector to the USB
+PHY at probe and left BC1.2 out. The charger (patch 0009) then read the PMIC's result itself, and when there was
+none it started the BQ chip's own input detection (`IINDET_EN`), which drives D+/D- under a USB link that is already
+up. ZTE's 5.4 kernel does it the other way round: its PHY hands D+/D- to the detector first, and its dwc3 takes them
+for USB only when the detector found a USB port (SDP, CDP); a charger (DCP) or no answer stays on the charger side.
+
+**Now** (U30 Air only: the board with `/charger_policy_service`; F50 and V50 switch D+/D- to USB at probe as before):
+
+* The PHY runs one detection per VBUS event, from a work item (the extcon notifier is atomic): D+/D- to the detector,
+  the PMIC's status (0x239c) every 20 ms until DONE, at most 60 times; SDP or CDP gives D+/D- to USB and only then
+  says VBUS valid to the gadget. "No answer" is detected once more with the stock 960 ms delay; a real SDP is never
+  redetected as a DCP. Every plug, unplug and role change starts a new generation, and a result of an older one is
+  never published. The USB host role (`mu300-usb host`, a powered dock) owns D+/D- and no detection runs there.
+* The result is the PHY's `chg_type`/`chg_state`; its charger notifier tells the charger (patch 0032), which takes
+  SDP 500 mA, CDP 1.5 A, DCP 2 A, and 500 mA while it runs or when it found nothing. `IINDET` is gone, and so is the
+  charger's own extcon notifier. The Type-C Rp current, a PD contract (ump9620-tcpc), 0025's 3 A switch, a charge
+  stopped from userspace and the boost are as before.
+* Where kanoqwq's PHY failed its probe (detector setup, no VBUS extcon), this one goes on with D+/D- on USB and no
+  detection: USB comes first (the charger then keeps a USB port's 500 mA or the Rp current).
+
+kanoqwq saw `BC1.2 complete: type 1, DP/DM USB` 0.19 s into the boot on a computer, then NCM; DCP and 2 A (REG00
+`0x13`) on a wall charger, PD 5 V/2 A on a C-C charger, and OTG, over several plug cycles. A remaining slow charge
+he looked into was the same under stock Android with the same battery and charger (DCP, 2 A, about 0.4 A into a
+battery at 4.27 V): near its CV the battery takes no more, whatever the input limit.
+
+**The SIPA threads.** The sender's and the receiver's threads (sipa_v3) waited in the main loop on a condition that
+did not include a stop, so `kthread_stop()` would have waited for ever, and nothing stopped them before their devm
+memory was freed (a failed probe). They are now stopped by a devm action, the main loop's wait ends on a stop, a
+failed receive-array allocation fails the creation instead of leaving a NULL array, and the sender's error paths no
+longer `kfree()` devm memory. Their start before the first resume was already this tree's (`fill_started`,
+`free_started`).
+
+**Device check (U30 Air, mainline):** boot on a computer: `BC1.2 complete: type 1, DP/DM USB` in dmesg, NCM up, the
+charger at 500 mA (or the Rp current); unplug and plug again; a wall charger: type 2, 2 A; `mu300-usb host`: no
+detection while host.
+
+**Measured** on the U30 Air at a Mac port (6.18.59 with this change, OpenWrt v2026.10.30.1, VPN and kill switch on):
+every boot logged `BC1.2 complete` (type 3, CDP, or type 1, SDP) at 0.17 s and came up with NCM, adb and mobile data
+through the VPN; the charger read `usb_type 3` with 1.5-2 A (the Rp). On each port power cycle the charger first took
+the Rp current with type 0 while the PHY detected, and about 0.4 s later the PHY logged `BC1.2 complete: type 3,
+DP/DM USB` and the charger CDP. In the first series the second cycle (3 s off, both hub ports switched back
+on with the USB 2 one first) left the gadget `configured` at high speed with adb working but `usb0` without carrier
+(the Mac never started NCM); two more cycles and `mu300-usb-reset` did not change that, a reboot did. The 12 cycles
+after that (both orders, 1-15 s off) all brought NCM back by themselves, and three on the release kernel did too.
+This looks like the Mac's NCM state (as in 237), but it is not proven. Not covered here: a wall charger (DCP), a PD charger and the host role (`mu300-usb host`), which need
+someone at the device.

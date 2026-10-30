@@ -794,14 +794,24 @@ static int sipa_fill_recv_thread(void *data)
 		wait_event_interruptible(receiver->fill_recv_waitq,
 					 READ_ONCE(receiver->fill_started) || kthread_should_stop());
 	while (!kthread_should_stop()) {
-		wait_event_interruptible(receiver->fill_recv_waitq,
-					 sipa_check_need_fill_cnt());
+		/* MU300 (kanoqwq fe52afe3): a stop is part of the condition, else kthread_stop() waited for ever */
+		if (wait_event_interruptible(receiver->fill_recv_waitq,
+					     kthread_should_stop() || sipa_check_need_fill_cnt()))
+			continue;
+		if (kthread_should_stop())
+			break;
 
 		if (sipa_fill_all_free_fifo())
 			usleep_range(1000, 2000);
 	}
 
 	return 0;
+}
+
+/* MU300 (kanoqwq fe52afe3): the thread ends before the devm memory it works on is freed (a failed probe, unbind) */
+static void sipa_stop_receiver_thread(void *data)
+{
+	kthread_stop(data);
 }
 
 int sipa_receiver_prepare_suspend(struct sipa_skb_receiver *receiver)
@@ -905,6 +915,7 @@ int sipa_create_skb_receiver(struct sipa_plat_drv_cfg *ipa,
 			     struct sipa_skb_receiver **receiver_pp)
 {
 	struct sipa_skb_receiver *receiver = NULL;
+	int ret;
 
 	dev_info(ipa->dev, "ep->id = %d start\n", ep->id);
 	receiver = devm_kzalloc(ipa->dev,
@@ -916,8 +927,11 @@ int sipa_create_skb_receiver(struct sipa_plat_drv_cfg *ipa,
 	receiver->ep = ep;
 	receiver->rsvd = SIPA_RECV_RSVD_LEN;
 
-	sipa_init_recv_array(receiver,
-			     receiver->ep->recv_fifo.rx_fifo.fifo_depth);
+	/* MU300 (kanoqwq fe52afe3): a failed allocation used to be ignored and the thread filled a NULL array */
+	ret = sipa_init_recv_array(receiver,
+				   receiver->ep->recv_fifo.rx_fifo.fifo_depth);
+	if (ret)
+		return ret;
 
 	spin_lock_init(&receiver->lock);
 
@@ -935,6 +949,9 @@ int sipa_create_skb_receiver(struct sipa_plat_drv_cfg *ipa,
 		return PTR_ERR(receiver->fill_recv_thread);
 	}
 	wake_up_process(receiver->fill_recv_thread);	/* MU300: it waits for fill_started */
+	ret = devm_add_action_or_reset(ipa->dev, sipa_stop_receiver_thread, receiver->fill_recv_thread);
+	if (ret)
+		return ret;
 
 	*receiver_pp = receiver;
 	return 0;
