@@ -1006,7 +1006,8 @@ stops a boot: anything unclear is `0,0,0`. Files in `.mu300` of the Linux disk: 
   stopping - `systemctl stop` is not a shutdown -, and on OpenWrt the K10 link's `shutdown` action, never `stop`). A
   boot that finds `armed` - a crash, a panic (`panic=5`, the lockup panics), a watchdog reset, `reboot -f`, a power
   cut - drops the offset: `0,0,0`, the request cleared, the reason in `rejected` for the panels. The power cut is
-  counted too: it cannot be told from a hang, and the price is setting the value again.
+  counted too: it cannot be told from a hang, and the price is setting the value again (`mu300-cpu voltage keep-good on`,
+  off by default, keeps a good value whose boot was up its 10 minutes: FINDINGS 238).
 * A value the initramfs cannot check is never written: not three whole steps in range (the same check as the CLI,
   kept identical by a test), or a **SoC firmware not known**: both `sml_a` and `sml_b` of the eMMC must have the
   SHA-256 of the F50 build kano read (`ff4782690fd805ff54fe34853ef8ee5c7e51c3259e20077c55373b50a4b259c2`). The U30
@@ -12450,3 +12451,62 @@ is not known (the counters were read only at the end).
 
 Not covered: the other rebinders (`mu300-usb-reset`, `mu300-usb` mode changes, the U30 Air's role switch) do not take
 the lock; they run on request or 25 s after boot, not in the window above.
+
+### 238. kanoqwq's power and services work of October 23-25: what is taken, and how
+
+What was still missing of kanoqwq's `cc0ecce7` (CPU0 idle controls, fewer background wakeups), `f0b5ad43` (event-driven
+services, boot work) and the CPU part of `fb0b28e7` ("preserve confirmed CPU settings"), after #399, #402, #405, #408,
+#416 and the liuwang97 work of FINDINGS 235. His tree runs a modem daemon (`mu300-modemd`, a ubus object) and a system
+daemon (`mu300-sysd`); ours has neither, so his behaviour goes into our scripts and nothing that needs them is taken.
+
+**CPU0's low latency** (`cpu-idle.uc`, cc0ecce7; FINDINGS 200 has the switch). `mu300-cpu lowlatency on|off` is all or
+nothing: a state that does not take the value (written, read back) puts every state of CPU0 back as it was, and a
+setting that cannot be saved is undone the same way. `status --json` has `lowlatency.mixed` (some states off, some on).
+His web switch leaves WFI alone and writes only `core-sleep-*` and `cluster-pd`; ours writes every state, which comes to
+the same: with every state disabled the menu governor still takes state 0. His UMS9621 (T158) refusal is not needed (no
+such board here).
+
+**The CPU voltage offset after a power cut** (fb0b28e7). Ours dropped an offset after any boot that ended without a
+clean shutdown (FINDINGS 133), and on a board without a battery (F50, V50) pulling the cable is that. kano's version
+confirms a value at S99 and then keeps it through any later end. He did not try it on a device, so here it is a switch,
+**off by default**: `mu300-cpu voltage keep-good on|off` (`.mu300/cpu-voltage-keep-good` on the Linux disk, `keep_good` in
+`status --json`; CLI only). `mark-good` now writes `up` under the armed value at every boot that reaches its 10
+minutes with the good value; with keep-good on, the initramfs keeps a good value when the armed mark of the boot that
+ended says `up` (`stage=cpu-voltage-kept`). A boot that ended before its 10 minutes still drops the value, so an
+offset that crashes early cannot loop the boots; one that crashes later is kept, as in his version, until
+`mu300-cpu voltage off`.
+
+**Wi-Fi at boot** (mu300-hw, f0b5ad43). The "no restart" shortcut (unchanged settings, the access point up) also needs
+the country to be live: an access point that came up under the world rules is restarted under the country's. A
+settings file whose checksum cannot be read never counts as unchanged.
+
+**SMS receiver** (`mu300-smsd`; his `sms-events.sh`, f0b5ad43, and its 500 ms slack, cc0ecce7). His receiver listens to
+the modem daemon's ubus events. Ours keeps its look every 5 s, but a look that finds nothing new starts no process:
+before, every look ran `mu300-sim-state get` (and through it `mu300-sim active`, `head`, `tr`) and `cat | grep | md5sum`
+over the URC logs. Now the logs are checksummed again only when one of them was written since the last checksum, and
+the card is asked about again only when its state files (`/run/mu300/sim-slot`, `sim0.state`, `sim1.state`) changed,
+and at every periodic sync. The times are compared by the shell's own `test FILE -ot MARK` against a mark in the lock
+directory, written before the look, so a write during the look is seen at the next one; a write in the mark's second
+counts as new. Without a mark (it could not be written) every look is as before. The wait is FINDINGS 235's: a read with
+a timeout on a private fifo (busybox ash, bash; `sleep` under dash), with 500 ms of timer slack during the wait only.
+
+**Data watchdog** (`mobile-data watch`; his `data-events.sh`). His watchdog wakes on the modem daemon's URC and netifd
+events; ours keeps its AT look every 30 s, and the sleep between two looks now runs with 500 ms of timer slack (set by
+the sleep's own subshell; the AT and route work keeps the default).
+
+**Already here, or not taken:**
+- Already in: thermal-guard's "no reading is unknown" rule (#399), the LED tick hint (FINDINGS 235), ndp-learn on
+  `ip monitor` with slack, early-recorder's `logread -l 300` and 30 s rounds, `mu300-cpu services`, the boot work
+  (printk 4, the entropy kick, the eMMC wait at 100 ms, no `sleep 1` before the UDC bind, the module prefetch, regdb
+  before the PHY, `iw reg set` before `wifi-start`, no wait for a firmware class the kernel lacks), sipa-dele's 0.5 s
+  polling and its 0.1 s handshake check, `ums9620_lpintc`, the 7.x link-wait patch, the NCM/RNDIS `os_desc` patch.
+- Not taken: his adaptive 5-30 s thermal cadence (as in #399); everything on `mu300-modemd`/`mu300-sysd` and the ubus
+  objects (the native AT owner `mu300-atd-io`, dashboard RPCs, the uevent mode of `mu300-keys`, the LED deadline
+  scheduling inside sysd); the native U30 dual-SIM changes; his TTL engine; calls, SIP and audio; the Chinese reports.
+- His explicit-off replay of CPU0 idle at boot: ours never disables CPU0's idle states unless asked, so off needs no
+  replay.
+
+Tests: `test_cpu.CoresAndLatency` (all or nothing, nothing saved, `mixed`), `test_cpu_voltage` (keep-good: kept only
+with the switch, `up` and the good request; `mark-good` writes `up`; the switch is root's and off by default),
+`test_wifi.HwRestart` (`hw_bringup` itself with stubs), `test_sms_pool.Daemon.test_an_idle_look_starts_no_process`
+(dash, bash, busybox ash; Linux only), `test_device_scripts.MobileData.test_only_the_watch_wait_gets_timer_slack`.
