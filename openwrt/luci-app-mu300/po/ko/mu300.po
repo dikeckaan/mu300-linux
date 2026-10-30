@@ -3604,6 +3604,9 @@ msgstr "알 수 없는 잠금 종류"
 msgid "Invalid value for this lock kind"
 msgstr "이 잠금 종류에 대해 잘못된 값입니다"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "SIM2 전체 초기화는 검증되지 않았습니다. NR 대역 잠금과 NR 셀 잠금을 각각 해제하세요"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "밴드, 모드, 셀 잠금은 아직 SIM2에서 지원되지 않습니다"
 

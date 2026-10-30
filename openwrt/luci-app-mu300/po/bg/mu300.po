@@ -3604,6 +3604,9 @@ msgstr "Неизвестен вид заключване"
 msgid "Invalid value for this lock kind"
 msgstr "Невалидна стойност за този вид заключване"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Пълното нулиране на SIM2 не е проверено; премахнете отделно ограниченията за NR ленти и NR клетки"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Заключването на обхват, режим и клетка все още не се поддържа за SIM2"
 

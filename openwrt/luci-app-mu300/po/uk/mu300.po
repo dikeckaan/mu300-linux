@@ -3604,6 +3604,9 @@ msgstr "Невідомий тип фіксації"
 msgid "Invalid value for this lock kind"
 msgstr "Неприпустиме значення для цього типу фіксації"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Повне скидання SIM2 не перевірено; зніміть блокування діапазонів NR і комірок NR окремо"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Блокування діапазонів, режиму й соти ще не підтримується для SIM2"
 

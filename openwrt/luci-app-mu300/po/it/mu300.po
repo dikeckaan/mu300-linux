@@ -3604,6 +3604,9 @@ msgstr "Tipo di blocco sconosciuto"
 msgid "Invalid value for this lock kind"
 msgstr "Valore non valido per questo tipo di blocco"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Il ripristino completo di SIM2 non è stato verificato; rimuovere separatamente i blocchi delle bande NR e delle celle NR"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "I blocchi di banda, modalità e cella non sono ancora supportati per la SIM2"
 

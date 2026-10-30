@@ -3597,6 +3597,9 @@ msgstr "未知的鎖定類型"
 msgid "Invalid value for this lock kind"
 msgstr "此鎖定類型的值無效"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "SIM2 的全部重設功能尚未驗證；請分別解除 NR 頻段和 NR 小區鎖定"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "SIM2 暫不支援頻段、模式和基地台鎖定"
 

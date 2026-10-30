@@ -3604,6 +3604,9 @@ msgstr "Ismeretlen zárolástípus"
 msgid "Invalid value for this lock kind"
 msgstr "Érvénytelen érték ehhez a zárolástípushoz"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "A SIM2 teljes visszaállítása nincs ellenőrizve; az NR-sávok és NR-cellák zárolását külön oldja fel"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "A sáv-, mód- és cellazár a SIM2-nél még nem támogatott"
 

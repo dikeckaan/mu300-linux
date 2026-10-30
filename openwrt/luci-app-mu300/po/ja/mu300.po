@@ -3604,6 +3604,9 @@ msgstr "不明なロック種別"
 msgid "Invalid value for this lock kind"
 msgstr "このロック種別に対して無効な値です"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "SIM2 の全設定リセットは未検証です。NR バンドと NR セルのロックを個別に解除してください"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "バンド・モード・セルのロックは SIM2 ではまだサポートされていません"
 

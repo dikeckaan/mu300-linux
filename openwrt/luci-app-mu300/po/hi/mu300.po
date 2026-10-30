@@ -3604,6 +3604,9 @@ msgstr "अज्ञात लॉक प्रकार"
 msgid "Invalid value for this lock kind"
 msgstr "इस लॉक प्रकार के लिए अमान्य मान"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "SIM2 का पूर्ण रीसेट सत्यापित नहीं है; NR बैंड और NR सेल लॉक अलग-अलग हटाएँ"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "बैंड, मोड और सेल लॉक अभी SIM2 के लिए समर्थित नहीं हैं"
 

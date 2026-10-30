@@ -3604,6 +3604,9 @@ msgstr "Naməlum kilid növü"
 msgid "Invalid value for this lock kind"
 msgstr "Bu kilid növü üçün yanlış dəyər"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "SIM2 üçün tam sıfırlama yoxlanılmayıb; NR diapazonu və NR hüceyrə kilidlərini ayrı-ayrılıqda silin"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Diapazon, rejim və hüceyrə kilidləri SIM2 üçün hələ dəstəklənmir"
 

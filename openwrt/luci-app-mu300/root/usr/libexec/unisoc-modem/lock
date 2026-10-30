@@ -462,6 +462,12 @@ do_apply() {  # do_apply KIND VALUE
         say "boot auto-apply -> $2"
         return 0
     fi
+    if "$SIM2_LOCK" supported "$1" >/dev/null 2>&1; then
+        apply_lock
+        trap 'rm -rf "$APPLY_DIR" 2>/dev/null' EXIT INT TERM
+        "$SIM2_LOCK" apply "$1" "$2"
+        return $?
+    fi
     # #356: these refusals ran detached and said nothing anywhere; the rpcd backend now refuses the same two cases
     # before it starts us (the page shows why), and the log says it for every other caller
     [ "${MU300_SIM_SLOT:-$(cat "$SIM_RUN/sim-slot" 2>/dev/null || echo 0)}" != 1 ] || {
@@ -1079,7 +1085,12 @@ case "${1:-}" in
     status) job_status "${2:-}" ;;
     # run by job_start, detached
     job)    job_worker "${2:-}" "${3:-}" "${4:-}" ;;
-    reset)  do_reset; rc=$?; reset_status; exit "$rc" ;;
+    reset)
+        if "$SIM2_LOCK" supported nr >/dev/null 2>&1; then
+            echo '{"ok":0,"error":"SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"}'
+            exit 1
+        fi
+        do_reset; rc=$?; reset_status; exit "$rc" ;;
     replay) do_replay "${2:-late}" ;;
     # run by sfun_restart_locked, under the radio lock
     sfun-restart) sfun_restart "${2:-late}" ;;

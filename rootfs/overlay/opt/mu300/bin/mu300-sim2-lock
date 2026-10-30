@@ -1,0 +1,230 @@
+#!/bin/bash
+# U30 Air/M3 native SIM2 NR locks: serialize with SIM control and mobile-data.
+# Read-back before/after the RF restart; save only after the selected bearer returns.
+set -euo pipefail
+export PATH="$PATH:/opt/mu300/busybox-bin"
+R=/run/mu300
+BASE=/etc/unisoc-modem/lock-state.d
+DATA_IFACE=wan
+BACKEND=auto
+# The platform controller shares the panel's validated state directory/interface.
+if [[ -r /usr/share/unisoc-modem/lib.sh ]]; then
+ . /usr/share/unisoc-modem/lib.sh
+ BASE=$(safe_state_dir "$(uci_get state_dir)" "$BASE")
+ DATA_IFACE=$(safe_iface "$(uci_get data_interface)" wan)
+ BACKEND=$(uci_get at_backend); BACKEND=${BACKEND:-auto}
+fi
+STATE=$BASE/sim2-native
+umask 077
+RECOVERY=/etc/mu300/sim2-native-recovery
+AT=/opt/mu300/bin/mu300-at
+SELF=/opt/mu300/bin/mu300-sim2-lock
+platform_supported() {
+ [[ -e /etc/openwrt_release && $(/opt/mu300/bin/mu300-device) == u30air ]] || return 1
+ [[ -e /run/mu300-radio-freeze ]] || return 1
+ case $BACKEND in auto|mu300) ;; *) return 1;; esac
+}
+supported() {
+ platform_supported || return 1
+ [[ $(cat "$R/sim-slot") == 1 ]] || return 1
+ case ${1:-} in nr|cell) ;; *) return 1;; esac
+}
+error() { printf '{"ok":0,"error":"%s"}\n' "$1"; }
+at() {
+ local port=$1 q=$2 seconds=${3:-5} out
+ [[ -p $port/cmd && -s $port/owner/pid ]] || return 1
+ kill -0 "$(cat "$port/owner/pid")" 2>/dev/null || return 1
+ out=$(MU300_SIM_CONTROL=1 MU300_AT_DIR="$port" MU300_AT_LOCK_WAIT=2 MU300_AT_BUDGET=$((seconds+4)) "$AT" -t "$seconds" "AT+SPACTCARD=1;+$q") || return 1
+ out=$(tr -d '\r' <<< "$out")
+ [[ $(tail -1 <<< "$out") == OK ]] || return 1
+ printf '%s\n' "$out"
+}
+main() { at /run/mu300-at4 "$@"; }
+field() { local out;out=$(main "$1") || return 1;sed -n "s/^+$2: *//p" <<< "$out"; }
+wan_up() { local s;s=$(ubus call "network.interface.$DATA_IFACE" status);[[ $(jsonfilter -s "$s" -e '@.up') == true && $(jsonfilter -s "$s" -e '@.l3_device') == sipa_eth8 ]]; }
+wait_wan() { local i;for ((i=0;i<45;i++));do wan_up && return 0;sleep 1;done;return 1; }
+# A missing/malformed response is a failure, never an empty (unlocked) cell list.
+cell_pairs() {
+ local raw pair
+ raw=$(cat)
+ [[ $raw =~ ^16,3(,[1-9][0-9]*,[0-9]+)*$ ]] || return 1
+ while read -r pair; do
+  [[ -n $pair ]] || continue
+  valid_cell "$pair" || return 1
+  printf '%s\n' "$pair"
+ done < <(awk -F, 'NF>=4 {for(i=3;i<NF;i+=2) print $i","$(i+1)}' <<< "$raw")
+}
+valid_cell() {
+ [[ $1 =~ ^[1-9][0-9]{0,6},(0|[1-9][0-9]{0,3})$ ]] || return 1
+ local fr=${1%,*} pc=${1#*,};((fr<=3279165 && pc<=1007))
+}
+nr_masks() {
+ local v=$1 a=0 b=0 n
+ [[ -z $v || $v =~ ^[0-9]+(,[0-9]+)*$ ]] || return 1
+ local seen=,
+ for n in ${v//,/ };do
+  [[ $seen != *,"$n",* ]] || continue;seen+="$n,"
+  case $n in 1) ((a|=1));;5) ((a|=8));;8) ((a|=32));;28) ((a|=512));;41) ((b|=16));;78) ((b|=256));;*) return 1;;esac
+ done
+ printf '%s,0,%s,0' "$a" "$b"
+}
+radio_allowed() {
+ [[ ! -x /opt/mu300/bin/mu300-sim-radio ]] || /opt/mu300/bin/mu300-sim-radio allowed 1
+}
+restart_rf() {
+ radio_allowed || return 1
+ main 'SFUN=5' 10 >/dev/null || return 1
+ [[ $(field 'CFUN?' CFUN) == 0 ]] || return 1
+ radio_allowed || return 1
+ at /run/mu300-at5 'SFUN=4' 20 >/dev/null || return 1
+ [[ $(field 'CFUN?' CFUN) == 1 ]]
+}
+restore_values() {
+ local raw pair
+ raw=$(cat "$WORK/nr.before");[[ $raw =~ ^[0-9]+,0,[0-9]+(,[0-9]+)?$ ]] || return 1
+ [[ $(awk -F, '{print NF}' <<< "$raw") == 4 ]] || raw+=,0
+ main "SPLBAND=2,$raw" >/dev/null || return 1
+ main 'SPFORCEFRQ=16,4' >/dev/null || return 1
+ while read -r pair;do [[ -n $pair ]] || continue;valid_cell "$pair" || return 1;main "SPFORCEFRQ=16,6,$pair" >/dev/null || return 1;done < "$WORK/cell.before"
+ verify_nr "$(field 'SPLBAND=3' SPLBAND)" "$raw" || return 1
+ cmp -s "$WORK/cell.before" <(field 'SPFORCEFRQ=16,3' SPFORCEFRQ | cell_pairs) >/dev/null
+}
+restore() {
+ restore_values || return 1
+ restart_rf || return 1
+ verify_nr "$(field 'SPLBAND=3' SPLBAND)" "$(cat "$WORK/nr.before")" || return 1
+ field 'SPFORCEFRQ=16,3' SPFORCEFRQ | cell_pairs > "$WORK/cell.restored" || return 1
+ cmp -s "$WORK/cell.before" "$WORK/cell.restored" || return 1
+ rm -f "$RECOVERY"
+}
+verify_nr() {
+ local got=$1 want=$2
+ want=$(awk -F, 'NF==3 {print $0",0"} NF==4 {print $0}' <<< "$want")
+ got=$(awk -F, 'NF==3 {print $0",0"} NF==4 {print $0}' <<< "$got")
+ [[ $got == "$want" ]]
+}
+apply_setting() {
+ local kind=$1 value=$2 raw pair
+ if [[ $kind == nr ]];then
+  raw=$(nr_masks "$value") || { error 'This SIM2 path supports encodable NR bands 1,5,8,28,41,78';return 1; }
+  main "SPLBAND=2,$raw" >/dev/null || return 1
+  verify_nr "$(field 'SPLBAND=3' SPLBAND)" "$raw"
+ else
+  case $value in
+   off|off-nr) main 'SPFORCEFRQ=16,4' >/dev/null || return 1;[[ $(field 'SPFORCEFRQ=16,3' SPFORCEFRQ) == 16,3 ]];;
+   nr:*) pair=${value#nr:};valid_cell "$pair";main "SPFORCEFRQ=16,6,$pair" >/dev/null;field 'SPFORCEFRQ=16,3' SPFORCEFRQ | cell_pairs | grep -Fx "$pair" >/dev/null;;
+   *) error 'SIM2 currently supports NR cell locking; LTE and reset-all remain unvalidated';return 1;;
+  esac
+ fi
+}
+# replay is called only in the native sequence, with the shared radio lock held.
+case ${1:-} in
+ supported) supported "${2:-}";exit $?;;
+ replay)
+  [[ ${MU300_NATIVE_EARLY:-0} == 1 ]] || exit 0
+  platform_supported || exit 0
+  [[ ${MU300_SIM_SLOT:-$(cat "$R/sim-slot")} == 1 ]] || exit 0
+  [[ -s "$RECOVERY" || -f "$STATE/nr" || -f "$STATE/cell" ]] || exit 0
+  [[ $(field 'CFUN?' CFUN) == 0 ]] || exit 1
+  if [[ -s "$RECOVERY" ]];then
+   WORK=$(mktemp -d /run/mu300/native-recover.XXXXXX)
+   head -1 "$RECOVERY" > "$WORK/nr.before";tail -n +2 "$RECOVERY" > "$WORK/cell.before"
+   restore_values
+   rm -f "$RECOVERY";rm -rf "$WORK"
+  fi
+  [[ $(cat "$BASE/auto_apply" 2>/dev/null || true) != off ]] || exit 0
+  [[ ! -f $STATE/nr ]] || apply_setting nr "$(cat "$STATE/nr")"
+  if [[ -f $STATE/cell ]];then
+   apply_setting cell off-nr
+   while read -r pair;do [[ -n $pair ]] || continue;apply_setting cell "nr:$pair";done < "$STATE/cell"
+  fi
+  exit 0;;
+ --run)
+  [[ ${MU300_NATIVE_TRANSACTION:-0} == 1 && -n ${WORK:-} && $(cat "$R/sim-slot") == 1 ]]
+  kind=$2;value=$3
+  field 'SPLBAND=3' SPLBAND > "$WORK/nr.before"
+  field 'SPFORCEFRQ=16,3' SPFORCEFRQ | cell_pairs > "$WORK/cell.before"
+  grep -Eq '^[0-9]+,0,[0-9]+(,[0-9]+)?$' "$WORK/nr.before"
+  { cat "$WORK/nr.before";cat "$WORK/cell.before"; } > "$RECOVERY.new"
+  mv "$RECOVERY.new" "$RECOVERY"
+  sync  # persist the rollback journal before the first modem write
+  apply_setting "$kind" "$value"
+  restart_rf
+  if [[ $kind == nr ]];then
+   verify_nr "$(field 'SPLBAND=3' SPLBAND)" "$(nr_masks "$value")"
+  else verify_nr "$(field 'SPLBAND=3' SPLBAND)" "$(cat "$WORK/nr.before")";fi
+  field 'SPFORCEFRQ=16,3' SPFORCEFRQ | cell_pairs > "$WORK/cell.after"
+  if [[ $kind == cell ]];then
+   case $value in
+    off|off-nr) [[ ! -s $WORK/cell.after ]];;
+    nr:*) grep -Fx "${value#nr:}" "$WORK/cell.after" >/dev/null;;
+   esac
+  else cmp -s "$WORK/cell.before" "$WORK/cell.after";fi
+  exit 0;;
+ --restore)
+  [[ ${MU300_NATIVE_TRANSACTION:-0} == 1 && -n ${WORK:-} ]]
+  restore;exit $?;;
+ apply) ;;
+ *) exit 2;;
+esac
+kind=${2:-};value=${3:-}
+supported "$kind" || { error 'Native SIM2 transaction unavailable';exit 1; }
+[[ ! -e $R/sim-switching && ! -e $R/sim-active-unknown ]] || { error 'SIM control is busy';exit 1; }
+[[ ! -s $RECOVERY ]] || { error 'An interrupted SIM2 lock needs a reboot to restore its previous state';exit 1; }
+# Lock ordering matches mu300-sim-u30: SIM control first, then the radio lock.
+exec 9>"$R/sim-control.lock";flock -n 9 || { error 'SIM control is busy';exit 1; }
+[[ ! -e $R/sim-sequence ]] || { error 'SIM sequence is busy';exit 1; }
+radio_allowed || { error 'SIM2 radio is disabled';exit 1; }
+wan_up || { error 'SIM2 must be online for this validated live-lock path';exit 1; }
+# The panel's generic "off" means both RATs: never report success over an LTE lock.
+if [[ $kind == cell && $value == off ]];then
+ [[ $(field 'SPFORCEFRQ=12,3' SPFORCEFRQ) == 12,3 ]] || { error 'SIM2 LTE cell unlock is not validated; use NR unlock separately';exit 1; }
+ value=off-nr
+fi
+if [[ $kind == cell && $value == auto ]];then
+ serving=$(main 'SPENGMD=0,14,1');line=${serving%%$'\n'*};IFS=- read -r band fr pc rest <<< "$line";value="nr:${fr%%,*},${pc%%,*}"
+fi
+if [[ $kind == nr ]];then nr_masks "$value" >/dev/null || { error 'Unsupported NR band';exit 1; }
+else case $value in off|off-nr) ;;nr:*) valid_cell "${value#nr:}" || { error 'Invalid NR cell';exit 1; };;*) error 'Only NR cell locking is validated on SIM2';exit 1;;esac;fi
+umask 077
+WORK=$(mktemp -d /run/mu300/native-lock.XXXXXX);export WORK MU300_NATIVE_TRANSACTION=1
+dirty=1
+rollback_attempted=0
+cleanup() {
+ rc=$?
+ if [[ $rc != 0 && $dirty == 1 && $rollback_attempted == 0 && -s $RECOVERY && -s $WORK/nr.before ]];then
+  MU300_RADIO_LOCK_WAIT=10 /opt/mu300/bin/mobile-data radio-locked "$SELF" --restore || true
+ fi
+ [[ $(cat "$R/sim-sequence" 2>/dev/null) != $$ ]] || rm -f "$R/sim-sequence"
+ # ifup restarts an already-up netifd interface. Never bounce it after success.
+ if [[ $rc != 0 ]] && ! wan_up;then ifup "$DATA_IFACE" >/dev/null 2>&1 || true;fi
+ rm -rf "$WORK"
+ exit "$rc"
+}
+trap cleanup EXIT;trap 'exit 130' INT TERM HUP
+printf '%s\n' $$ > "$R/sim-sequence"
+ifdown "$DATA_IFACE"
+rc=0
+MU300_RADIO_LOCK_WAIT=10 /opt/mu300/bin/mobile-data radio-locked "$SELF" --run "$kind" "$value" || rc=$?
+rm -f "$R/sim-sequence";ifup "$DATA_IFACE"
+if [[ $rc != 0 ]] || ! wait_wan;then
+ printf '%s\n' $$ > "$R/sim-sequence"
+ rollback_attempted=1
+ if [[ -s $RECOVERY && -s $WORK/nr.before ]];then
+  MU300_RADIO_LOCK_WAIT=10 /opt/mu300/bin/mobile-data radio-locked "$SELF" --restore || true
+ fi
+ rm -f "$R/sim-sequence";ifup "$DATA_IFACE"
+ # No reboot for a missing bearer: coverage/APN failures must not create a boot loop.
+ wait_wan || true
+ error 'SIM2 lock failed; previous NR settings were restored where the modem answered; saved state unchanged'
+ exit 1
+fi
+mkdir -p "$STATE"
+if [[ $kind == nr ]];then printf '%s' "$value" > "$STATE/nr.new";mv "$STATE/nr.new" "$STATE/nr"
+else cp "$WORK/cell.after" "$STATE/cell.new";mv "$STATE/cell.new" "$STATE/cell";fi
+sync  # persist the per-SIM commit before discarding its rollback journal
+dirty=0
+rm -f "$RECOVERY"
+sync
+setsid /usr/libexec/unisoc-modem/lock refresh 9>&- >/dev/null 2>&1 &
+printf '{"ok":1,"native_sim":2,"readback_verified":true,"wan_restored":true}\n'

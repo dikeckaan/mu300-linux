@@ -3604,6 +3604,9 @@ msgstr "Tip de blocare necunoscut"
 msgid "Invalid value for this lock kind"
 msgstr "Valoare invalidă pentru acest tip de blocare"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Resetarea completă a SIM2 nu este validată; eliminați separat blocările benzilor NR și ale celulelor NR"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Blocările de bandă, mod și celulă nu sunt încă acceptate pentru SIM2"
 

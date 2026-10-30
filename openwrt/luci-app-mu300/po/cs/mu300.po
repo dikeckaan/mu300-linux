@@ -3604,6 +3604,9 @@ msgstr "Neznámý druh zámku"
 msgid "Invalid value for this lock kind"
 msgstr "Neplatná hodnota pro tento druh zámku"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Úplný reset SIM2 není ověřen; zrušte omezení pásem NR a buněk NR samostatně"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Zámky pásem, režimu a buňky zatím nejsou pro SIM2 podporovány"
 

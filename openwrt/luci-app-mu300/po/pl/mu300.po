@@ -3604,6 +3604,9 @@ msgstr "Nieznany rodzaj blokady"
 msgid "Invalid value for this lock kind"
 msgstr "Nieprawidłowa wartość dla tego rodzaju blokady"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Pełny reset SIM2 nie został zweryfikowany; usuń osobno blokady pasm NR i komórek NR"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Blokady pasma, trybu i komórki nie są jeszcze obsługiwane dla SIM2"
 

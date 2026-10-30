@@ -3604,6 +3604,9 @@ msgstr "Άγνωστο είδος κλειδώματος"
 msgid "Invalid value for this lock kind"
 msgstr "Μη έγκυρη τιμή για αυτό το είδος κλειδώματος"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Η πλήρης επαναφορά της SIM2 δεν έχει επαληθευτεί· καταργήστε ξεχωριστά τα κλειδώματα ζωνών NR και κυψελών NR"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Τα κλειδώματα ζώνης, λειτουργίας και κυψέλης δεν υποστηρίζονται ακόμη για τη SIM2"
 

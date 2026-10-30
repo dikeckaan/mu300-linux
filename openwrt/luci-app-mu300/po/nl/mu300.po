@@ -3604,6 +3604,9 @@ msgstr "Onbekend type vergrendeling"
 msgid "Invalid value for this lock kind"
 msgstr "Ongeldige waarde voor dit type vergrendeling"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Volledig resetten van SIM2 is niet gevalideerd; hef NR-band- en NR-celvergrendelingen afzonderlijk op"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Band-, modus- en celvergrendeling wordt nog niet ondersteund voor SIM2"
 

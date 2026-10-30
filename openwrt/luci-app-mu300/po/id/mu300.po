@@ -3604,6 +3604,9 @@ msgstr "Jenis kunci tidak diketahui"
 msgid "Invalid value for this lock kind"
 msgstr "Nilai tidak valid untuk jenis kunci ini"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Reset penuh SIM2 belum divalidasi; hapus penguncian pita NR dan sel NR secara terpisah"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Kunci band, mode, dan sel belum didukung untuk SIM2"
 

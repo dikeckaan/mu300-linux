@@ -3604,6 +3604,9 @@ msgstr "Неизвестный тип фиксации"
 msgid "Invalid value for this lock kind"
 msgstr "Недопустимое значение для этого типа фиксации"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Полный сброс SIM2 не проверен; снимите блокировки диапазонов NR и ячеек NR по отдельности"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Блокировка диапазонов, режима и соты пока не поддерживается для SIM2"
 

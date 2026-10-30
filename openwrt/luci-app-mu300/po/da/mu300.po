@@ -3604,6 +3604,9 @@ msgstr "Ukendt låsetype"
 msgid "Invalid value for this lock kind"
 msgstr "Ugyldig værdi for denne låsetype"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Fuld nulstilling af SIM2 er ikke valideret; fjern låsning af NR-bånd og NR-celler separat"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Lås af bånd, tilstand og celle understøttes endnu ikke for SIM2"
 

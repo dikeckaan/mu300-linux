@@ -3604,6 +3604,9 @@ msgstr "Loại khóa không xác định"
 msgid "Invalid value for this lock kind"
 msgstr "Giá trị không hợp lệ cho loại khóa này"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Chưa xác minh việc đặt lại toàn bộ SIM2; hãy bỏ khóa băng tần NR và ô NR riêng biệt"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Khóa băng tần, chế độ và cell chưa được hỗ trợ cho SIM2"
 

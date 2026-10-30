@@ -3583,6 +3583,9 @@ msgstr "未知的锁定类型"
 msgid "Invalid value for this lock kind"
 msgstr "此锁定类型的值无效"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "SIM2 的全部重置功能尚未验证；请分别解除 NR 频段和 NR 小区锁定"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "SIM2 暂不支持频段、模式和小区锁定"
 

@@ -3604,6 +3604,9 @@ msgstr "Tuntematon lukitustyyppi"
 msgid "Invalid value for this lock kind"
 msgstr "Virheellinen arvo tälle lukitustyypille"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "SIM2:n täydellistä nollausta ei ole varmennettu; poista NR-taajuusalueiden ja NR-solujen lukitukset erikseen"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Taajuusalueen, tilan ja solun lukitusta ei vielä tueta SIM2:lle"
 

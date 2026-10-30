@@ -3597,6 +3597,9 @@ msgstr "Bilinmeyen kilit türü"
 msgid "Invalid value for this lock kind"
 msgstr "Bu kilit türü için geçersiz değer"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "SIM2 için tam sıfırlama doğrulanmadı; NR bant ve NR hücre kilitlerini ayrı ayrı kaldırın"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Bant, mod ve hücre kilitleri SIM2 için henüz desteklenmiyor"
 

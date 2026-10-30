@@ -3604,6 +3604,9 @@ msgstr "Белгісіз бекіту түрі"
 msgid "Invalid value for this lock kind"
 msgstr "Бұл бекіту түрі үшін жарамсыз мән"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "SIM2 толық қалпына келтіруі тексерілмеген; NR диапазондары мен NR ұяшықтарының құлыптарын бөлек алып тастаңыз"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Жолақ, режим және ұяшық құлыптары SIM2 үшін әлі қолдау көрсетілмейді"
 

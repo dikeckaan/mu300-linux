@@ -3604,6 +3604,9 @@ msgstr "Type de verrouillage inconnu"
 msgid "Invalid value for this lock kind"
 msgstr "Valeur invalide pour ce type de verrouillage"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "La réinitialisation complète de SIM2 n’est pas validée ; supprimez séparément les verrouillages des bandes NR et des cellules NR"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Les verrous de bande, de mode et de cellule ne sont pas encore pris en charge pour la SIM2"
 

@@ -3604,6 +3604,9 @@ msgstr "نوع قفل غير معروف"
 msgid "Invalid value for this lock kind"
 msgstr "قيمة غير صالحة لنوع القفل هذا"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "لم يتم التحقق من إعادة ضبط SIM2 بالكامل؛ أزل قيود نطاقات NR وخلايا NR كلًّا على حدة"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "أقفال النطاق والوضع والخلية غير مدعومة لبطاقة SIM2 بعد"
 

@@ -3604,6 +3604,9 @@ msgstr "סוג נעילה לא ידוע"
 msgid "Invalid value for this lock kind"
 msgstr "ערך לא חוקי לסוג נעילה זה"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "איפוס מלא של SIM2 לא אומת; יש להסיר בנפרד את נעילות תחומי NR ותאי NR"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "נעילות פס, מצב ותא עדיין אינן נתמכות עבור SIM2"
 

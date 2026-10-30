@@ -508,9 +508,14 @@ m_lock_set() {
         *) refuse 'Unknown lock kind'; return ;;
     esac
     lock_val_ok "$kind" "$val" || { refuse 'Invalid value for this lock kind'; return; }
+    if [ "$kind" = reset ] && "$SIM2_LOCK" supported nr >/dev/null 2>&1; then
+        refuse 'SIM2 reset-all is not validated; clear NR bands and NR cell locks separately'
+        return
+    fi
     # #356: the lock helper refuses these two cases before it writes anything, but it runs detached, so the page
     # got ok and the read-back quietly put the old bands back. Say it here instead.
-    if [ "$kind" != auto_apply ] && [ "$kind" != reset ]; then
+    if [ "$kind" != auto_apply ] && [ "$kind" != reset ] &&
+       ! "$SIM2_LOCK" supported "$kind" >/dev/null 2>&1; then
         [ "$(cat "${MU300_SIM_RUN:-/run/mu300}/sim-slot" 2>/dev/null)" != 1 ] ||
             { refuse 'Band, mode and cell locks are not supported for SIM2 yet'; return; }
         [ ! -e "${MU300_SIM_RUN:-/run/mu300}/sim-managed" ] ||

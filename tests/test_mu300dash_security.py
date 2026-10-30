@@ -641,6 +641,27 @@ class LockSetSim(Mu300Dash):
 
     JOB = '{"ok":1,"started":1,"id":"AbCdE12345","kind":"nr"}\n'
 
+    def test_native_sim2_only_delegates_nr_and_cell_to_jobs(self):
+        native = self.tmp / 'native-lock'
+        native.write_text('#!/bin/sh\n[ "$1" = supported ] || exit 1\n'
+                          'case $2 in nr|cell) exit 0;; *) exit 1;; esac\n')
+        native.chmod(0o755)
+        sim = self.tmp / 'sim-run'
+        sim.mkdir()
+        (sim / 'sim-slot').write_text('1\n')
+        self.output('lock', self.JOB)
+        for shell in self.each_shell():
+            for kind, val in [('nr', '41'), ('cell', 'auto'), ('cell', 'off-nr')]:
+                r, calls, _ = self.call(shell, 'lock_set', {'kind': kind, 'val': val},
+                                        MU300_SIM2_LOCK_BIN=native)
+                self.assertEqual(self.reply(r).get('job'), 'AbCdE12345', r.stdout)
+                self.assertIn(['lock', 'start', kind, val], calls)
+            for kind, val in [('lte', '41'), ('mode', 'sa'), ('endc', 'on'), ('reset', 'auto')]:
+                r, calls, _ = self.call(shell, 'lock_set', {'kind': kind, 'val': val},
+                                        MU300_SIM2_LOCK_BIN=native)
+                self.assertEqual(self.reply(r).get('ok'), 0, r.stdout)
+                self.assertEqual(calls, [])
+
     def test_sim1_on_the_u30_air_starts_the_apply(self):
         self.output('lock', self.JOB)
         sim = self.tmp / 'sim-run'

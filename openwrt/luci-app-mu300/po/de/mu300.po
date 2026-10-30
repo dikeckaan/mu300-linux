@@ -3604,6 +3604,9 @@ msgstr "Unbekannte Sperrart"
 msgid "Invalid value for this lock kind"
 msgstr "Ungültiger Wert für diese Sperrart"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Das vollständige Zurücksetzen von SIM2 wurde nicht geprüft; NR-Band- und NR-Zellsperren separat aufheben"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Band-, Modus- und Zellsperren werden für SIM2 noch nicht unterstützt"
 

@@ -169,6 +169,19 @@ esac""")
         # and every one of them went through mu300-at's gate as the switch's own (MU300_SIM_CONTROL)
         self.assertFalse((self.tmp/'at-ungated').exists())
 
+    def test_native_nr_replay_uses_the_target_before_publication(self):
+        self.assertEqual(self.ctl('switch', '1').returncode, 0)
+        self.stub('native-lock', '''
+[ "$MU300_NATIVE_EARLY:$MU300_SIM_SLOT:$*" = 1:1:replay ] || exit 1
+[ "$(cat "$STUBLOG/run/mu300/sim-slot")" = 0 ] || exit 1
+echo NR-REPLAY >> "$STUBLOG/at"
+''')
+        r = self.ctl('switch', '2', MU300_SIM2_LOCK_BIN=self.stubs / 'native-lock')
+        self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
+        calls = self.calls()
+        self.assertLess(calls.index('NR-REPLAY'), calls.index('1 AT+SFUN=4'))
+        self.assertEqual((self.run / 'mu300/sim-slot').read_text().strip(), '1')
+
     def test_wrong_bearer_is_not_saved_as_success(self):
         result = self.ctl('switch', '1', T_BEARER='sipa_eth8')
         self.assertNotEqual(result.returncode, 0)
