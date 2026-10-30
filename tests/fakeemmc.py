@@ -12,6 +12,10 @@ writes (tools/resume.sh) and the checks of the installation that resumes after t
     bin/                       getprop, dd (never truncates a file it writes into, takes no conv=fsync), sha256sum
     tmp/                       /data/local/tmp
 
+The layout ufs1t is the 1 TB UFS U30 Air of issue #396 instead: dev/block/sda, partitions sdaN, 4096-byte logical blocks
+(the table in its first 6 and last 5 of them), misc a link to its partition node as by-name has it, no CID but the
+UFS's string descriptors - where "/sys/class/block/sda/device/../../.." leads in this directory, sys/class.
+
 reset(d) does what the device does on the next start after the make-room path: the kernel reads the partition table
 again (sysfs follows the table in the eMMC), and Android's recovery, asked by the bootloader message in misc,
 formats userdata and clears the message. Nothing here runs on, or reaches, a real device.
@@ -46,27 +50,53 @@ def _exe(path, text):
     path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
+UFS_SERIAL = ('SAMSUNG', 'unit-0001')
+
+
+def disk_of(d):
+    """(name, partition prefix, logical block size) of the fake device's internal disk"""
+    return ('sda', 'sda', 4096) if (Path(d) / 'dev/block/sda').exists() else ('mmcblk0', 'mmcblk0p', SECTOR)
+
+
+def gpt_sectors(lbs):
+    """the first and the last 512-byte sectors that hold the table"""
+    return (48, 40) if lbs == 4096 else (34, 33)
+
+
 def make(d, layout='vendor64', crypto=('encrypted', 'file'), source='/dev/block/dm-6', cid=CID, slot='a'):
     """The directory D standing for a device with this partition table; returns D."""
     d = Path(d)
     disk, usable, parts = fakegpt.layout(layout)
-    for sub in ('dev/block/by-name', 'sys/block/mmcblk0', 'sys/class/block/mmcblk0/device', 'proc', 'bin', 'tmp'):
+    lbs = fakegpt.block_size(layout)
+    name, prefix = ('sda', 'sda') if lbs == 4096 else ('mmcblk0', 'mmcblk0p')
+    for sub in ('dev/block/by-name', f'sys/block/{name}/queue', f'sys/class/block/{name}/device', 'proc', 'bin', 'tmp'):
         (d / sub).mkdir(parents=True, exist_ok=True)
-    head, tail = fakegpt.make(disk, usable, parts)
-    with open(d / 'dev/block/mmcblk0', 'wb') as f:
+    head, tail = fakegpt.make(disk, usable, parts, lbs=lbs)
+    with open(d / 'dev/block' / name, 'wb') as f:
         f.truncate(disk * SECTOR)
         f.write(head)
-        f.seek((disk - 33) * SECTOR)
+        f.seek(disk * SECTOR - len(tail))
         f.write(tail)
-    (d / 'sys/block/mmcblk0/size').write_text('%d\n' % disk)
-    (d / 'sys/class/block/mmcblk0/device/cid').write_text(cid + '\n')
+    (d / f'sys/block/{name}/size').write_text('%d\n' % disk)
+    (d / f'sys/block/{name}/queue/logical_block_size').write_text('%d\n' % lbs)
+    if lbs == 4096:
+        (d / 'sys/class/string_descriptors').mkdir(parents=True)
+        (d / 'sys/class/string_descriptors/manufacturer_name').write_text(UFS_SERIAL[0] + '\n')
+        (d / 'sys/class/string_descriptors/serial_number').write_text(UFS_SERIAL[1] + '\n')
+    else:
+        (d / f'sys/class/block/{name}/device/cid').write_text(cid + '\n')
     sysfs(d, parts)
-    for i, (name, _first, _last) in enumerate(parts, 1):
-        if name == 'userdata':
-            node = d / 'dev/block' / ('mmcblk0p%d' % i)
+    for i, (pname, _first, _last) in enumerate(parts, 1):
+        if pname == 'userdata':
+            node = d / 'dev/block' / ('%s%d' % (prefix, i))
             node.write_bytes(bytes(1024) + bytes.fromhex('1020f5f2') + bytes(4096 - 1028))
-            os.symlink('../mmcblk0p%d' % i, d / 'dev/block/by-name/userdata')
-    (d / 'dev/block/by-name/misc').write_bytes(_misc(slot))
+            os.symlink('../%s%d' % (prefix, i), d / 'dev/block/by-name/userdata')
+    if lbs == 4096:   # misc a link to its node, and that node's sysfs entry below the disk, as on the device
+        i = [n for n, _, _ in parts].index('misc') + 1
+        (d / 'dev/block' / ('sda%d' % i)).write_bytes(_misc(slot))
+        os.symlink('../sda%d' % i, d / 'dev/block/by-name/misc')
+    else:
+        (d / 'dev/block/by-name/misc').write_bytes(_misc(slot))
     for s in ('a', 'b'):
         (d / 'dev/block/by-name' / ('boot_' + s)).write_bytes(('boot_%s ' % s).encode() * 100000)
         for p in CHAIN:
@@ -93,35 +123,46 @@ if conv:
 def sysfs(d, parts):
     """sysfs as the kernel shows the table PARTS"""
     d = Path(d)
-    for p in (d / 'sys/block/mmcblk0').glob('mmcblk0p*'):
+    disk, prefix, lbs = disk_of(d)
+    for p in (d / 'sys/block' / disk).glob(prefix + '[0-9]*'):
         shutil.rmtree(p)
-    for p in (d / 'sys/class/block').glob('mmcblk0p*'):
-        shutil.rmtree(p)
+    for p in (d / 'sys/class/block').glob(prefix + '[0-9]*'):
+        if p.is_symlink():
+            p.unlink()
+        else:
+            shutil.rmtree(p)
     for i, (name, first, last) in enumerate(parts, 1):
-        for base in (d / 'sys/block/mmcblk0' / ('mmcblk0p%d' % i), d / 'sys/class/block' / ('mmcblk0p%d' % i)):
-            base.mkdir(parents=True)
-            (base / 'start').write_text('%d\n' % first)
-            (base / 'size').write_text('%d\n' % (last - first + 1))
-            (base / 'uevent').write_text('MAJOR=179\nMINOR=%d\nDEVNAME=mmcblk0p%d\nDEVTYPE=partition\nPARTN=%d\nPARTNAME=%s\n'
-                                         % (i, i, i, name))
+        base = d / 'sys/block' / disk / ('%s%d' % (prefix, i))
+        base.mkdir(parents=True)
+        (base / 'start').write_text('%d\n' % first)
+        (base / 'size').write_text('%d\n' % (last - first + 1))
+        (base / 'uevent').write_text('MAJOR=179\nMINOR=%d\nDEVNAME=%s%d\nDEVTYPE=partition\nPARTN=%d\nPARTNAME=%s\n'
+                                     % (i, prefix, i, i, name))
+        if lbs == 4096:   # a link into the disk's directory, as the kernel has it (".." is the disk)
+            os.symlink('../../block/%s/%s%d' % (disk, prefix, i), d / 'sys/class/block' / ('%s%d' % (prefix, i)))
+        else:
+            shutil.copytree(base, d / 'sys/class/block' / ('%s%d' % (prefix, i)))
 
 
 def table(d):
     """the partition table in the fake eMMC, as [(name, first, last)] (both copies must agree)"""
     d = Path(d)
-    disk = int((d / 'sys/block/mmcblk0/size').read_text())
-    with open(d / 'dev/block/mmcblk0', 'rb') as f:
-        head = f.read(34 * SECTOR)
-        f.seek((disk - 33) * SECTOR)
-        tail = f.read(33 * SECTOR)
-    nents, esize = struct.unpack_from('<II', head, SECTOR + 80)
+    name, _prefix, lbs = disk_of(d)
+    nhead, ntail = gpt_sectors(lbs)
+    k = lbs // SECTOR
+    disk = int((d / 'sys/block' / name / 'size').read_text())
+    with open(d / 'dev/block' / name, 'rb') as f:
+        head = f.read(nhead * SECTOR)
+        f.seek((disk - ntail) * SECTOR)
+        tail = f.read(ntail * SECTOR)
+    nents, esize = struct.unpack_from('<II', head, lbs + 80)
     parts, back = [], []
     for i in range(nents):
-        for buf, base, out in ((head, 2 * SECTOR, parts), (tail, 0, back)):
+        for buf, base, out in ((head, 2 * lbs, parts), (tail, 0, back)):
             e = buf[base + i * esize:base + (i + 1) * esize]
             if e[:16] != bytes(16):
-                first, last = struct.unpack_from('<QQ', e, 32)
-                out.append((e[56:128].decode('utf-16-le').rstrip('\0'), first, last))
+                first, last = struct.unpack_from('<QQ', e, 32)       # in 512-byte sectors, as sysfs counts
+                out.append((e[56:128].decode('utf-16-le').rstrip('\0'), first * k, (last + 1) * k - 1))
     assert parts == back, 'the two copies of the table differ'
     return parts
 
@@ -144,6 +185,6 @@ def reset(d, wipe=True):
 
 
 def read(d, sector, count):
-    with open(Path(d) / 'dev/block/mmcblk0', 'rb') as f:
+    with open(Path(d) / 'dev/block' / disk_of(d)[0], 'rb') as f:
         f.seek(sector * SECTOR)
         return f.read(count * SECTOR)

@@ -99,6 +99,9 @@ _ad=$(readlink -f "${MU300_SYSFS:-/sys}/class/block/${_ad##*/}/.." 2>/dev/null) 
 IDISK=${MU300_DISK:-${_ad##*/}}
 case $IDISK in mmcblk[0-9]|sd[a-z]) ;; *) IDISK=mmcblk0 ;; esac
 case $IDISK in mmcblk*) IPART=${IDISK}p ;; *) IPART=$IDISK ;; esac
+# its logical block size, and its GPT in 512-byte sectors: the first GPT_HEAD and the last GPT_TAIL
+ILBS=$(cat "${MU300_SYSFS:-/sys}/block/$IDISK/queue/logical_block_size" 2>/dev/null) || ILBS=
+case $ILBS in 4096) GPT_HEAD=48 GPT_TAIL=40 ;; *) ILBS=512 GPT_HEAD=34 GPT_TAIL=33 ;; esac
 # --- android-disk end
 EMMC=${MU300_EMMC:-/dev/block/$IDISK}
 JOB=$R/job
@@ -864,8 +867,8 @@ backup() {
     done
     dd if="$MISC" of="$_o/misc-head.bin" bs=4096 count=1 2>/dev/null || { rm -rf "$_o"; fail read-failed misc; }
     _emit misc-head.bin
-    dd if="$EMMC" of="$_o/gpt-head.bin" bs=512 count=34 2>/dev/null &&
-        dd if="$EMMC" of="$_o/gpt-tail.bin" bs=512 skip=$((disk - 33)) count=33 2>/dev/null || { rm -rf "$_o"; fail read-failed gpt; }
+    dd if="$EMMC" of="$_o/gpt-head.bin" bs=512 count=$GPT_HEAD 2>/dev/null &&
+        dd if="$EMMC" of="$_o/gpt-tail.bin" bs=512 skip=$((disk - GPT_TAIL)) count=$GPT_TAIL 2>/dev/null || { rm -rf "$_o"; fail read-failed gpt; }
     _emit gpt-head.bin; _emit gpt-tail.bin
     for _p in "$SYSFS/block/$IDISK/$IPART"*; do
         [ -e "$_p/start" ] || continue

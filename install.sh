@@ -463,8 +463,8 @@ offer_repartition() {
     say "$(t 'Not enough free space - this looks like the 32 GB variant')"
     mkdir -p "$WORK/gpt"
     internal_disk
-    su_do "dd if=/dev/block/$IDISK bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
-    su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 count=$GPT_HEAD 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - GPT_TAIL)) count=$GPT_TAIL 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
     adb pull /data/local/tmp/gpt.head "$WORK/gpt/gpt.head" >/dev/null 2>&1 || true
     adb pull /data/local/tmp/gpt.tail "$WORK/gpt/gpt.tail" >/dev/null 2>&1 || true
     su_do 'rm -f /data/local/tmp/gpt.head /data/local/tmp/gpt.tail' >/dev/null
@@ -472,7 +472,7 @@ offer_repartition() {
 
     # resize-last-partition.py validates both GPT copies and every CRC before it says anything
     info=$(python3 "$TOP/tools/resize-last-partition.py" "$WORK/gpt/gpt.head,$WORK/gpt/gpt.tail" \
-             --disk-sectors "$disk" --name userdata --show) || die "$info"
+             --disk-sectors "$disk" --sector-size "$ILBS" --name userdata --show) || die "$info"
     LAST_FIRST=$(echo "$info" | sed -n 's/^LAST_FIRST=//p')
     LAST_END=$(echo "$info" | sed -n 's/^LAST_END=//p')
     USABLE_END=$(echo "$info" | sed -n 's/^USABLE_END=//p')
@@ -534,7 +534,7 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
         # disk's end, so a userdata that ended lin_s before the usable end left a region 4 MiB or more smaller
         # than asked - 0.79 GiB for OpenWrt's 0.78 was 804 MiB, 0.78125 would have been 796 and the resumed run
         # would have refused it after the reset (FINDINGS 112, the first device run)
-        new_end=$(( ((disk - 34) / 4096 - 1) * 4096 - lin_s - 4096 - 1 ))
+        new_end=$(( ((disk - ${GPT_TAIL:-33} - 1) / 4096 - 1) * 4096 - lin_s - 4096 - 1 ))
         [ $new_end -le "$USABLE_END" ] || new_end=$((USABLE_END - lin_s))
         resume_region $((new_end + 1))
         if [ $((RG_END - RG_START)) -lt $MIN_LINUX ]; then

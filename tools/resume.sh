@@ -33,14 +33,20 @@ resume_pending() {
 # read only): SERIAL CID UD_NODE UD_START UD_SIZE CRYPTO (yes|no|unknown) CRYPTO_STATE CRYPTO_TYPE DATA_SOURCE
 resume_facts() {
     # (no double quotes: install.ps1 sends the same text, and Windows PowerShell 5.1 drops them on the way to adb)
-    _rf=$(su_do 'd=$(readlink -f /dev/block/by-name/userdata); n=${d##*/}; b=${n%p*}; echo NODE=$n; echo CID=$(cat /sys/class/block/$b/device/cid); echo START=$(cat /sys/class/block/$n/start); echo SIZE=$(cat /sys/class/block/$n/size); echo STATE=$(getprop ro.crypto.state); echo TYPE=$(getprop ro.crypto.type); while read s m r; do case $m in /data) echo SOURCE=$s; break ;; esac; done < /proc/mounts; echo MAGIC=$(dd if=$d bs=1 skip=1024 count=4 2>/dev/null | od -An -tx1 | tr -d \\040\\012); echo EXT=$(dd if=$d bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d \\040\\012)')
+    _rf=$(su_do 'd=$(readlink -f /dev/block/by-name/userdata); n=${d##*/}; b=${n%p*}; case $n in sd*) b=${n%%[0-9]*} ;; esac; echo NODE=$n; echo CID=$(cat /sys/class/block/$b/device/cid 2>/dev/null); u=/sys/class/block/$b/device/../../../string_descriptors; echo UFS=$(cat $u/manufacturer_name 2>/dev/null):$(cat $u/serial_number 2>/dev/null); echo START=$(cat /sys/class/block/$n/start); echo SIZE=$(cat /sys/class/block/$n/size); echo STATE=$(getprop ro.crypto.state); echo TYPE=$(getprop ro.crypto.type); while read s m r; do case $m in /data) echo SOURCE=$s; break ;; esac; done < /proc/mounts; echo MAGIC=$(dd if=$d bs=1 skip=1024 count=4 2>/dev/null | od -An -tx1 | tr -d \\040\\012); echo EXT=$(dd if=$d bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d \\040\\012)')
     _rv() { printf '%s\n' "$_rf" | sed -n "s/^$1=//p" | head -n1; }
     UD_NODE=$(_rv NODE); CID=$(_rv CID); UD_START=$(_rv START); UD_SIZE=$(_rv SIZE)
+    # a UFS has no CID: its manufacturer and serial number (string descriptors), hashed to the same 32 hex digits
+    # (issue #396; the GPT disk GUID of such a unit is a placeholder, 11111111-2222-..., shared by every one)
+    case $UD_NODE:$(_rv UFS) in
+        sd*:?*:?*) CID=$(python3 -c 'import hashlib, sys; print(hashlib.sha256(sys.argv[1].encode()).hexdigest()[:32])' \
+                         "ufs:$(_rv UFS)") || CID= ;;
+    esac
     CRYPTO_STATE=$(_rv STATE); CRYPTO_TYPE=$(_rv TYPE); DATA_SOURCE=$(_rv SOURCE)
     _m=$(_rv EXT); [ "$_m" = 53ef ] || _m=$(_rv MAGIC)
     SERIAL=$(adb_prop ro.serialno)
-    # (kano's checks of the identity: an eMMC partition node and the eMMC's 128-bit CID)
-    case $UD_NODE in mmcblk[0-9]p[0-9]*) ;; *) return 1 ;; esac
+    # (kano's checks of the identity: an eMMC partition node and the eMMC's 128-bit CID - or a UFS one's, and its hash)
+    case $UD_NODE in mmcblk[0-9]p[0-9]*|sd[a-z][0-9]*) ;; *) return 1 ;; esac
     case $UD_NODE in *[!a-z0-9]*) return 1 ;; esac
     [ ${#CID} = 32 ] || return 1
     case $CID in *[!0-9a-f]*) return 1 ;; esac
@@ -53,7 +59,7 @@ resume_facts() {
 # sector NEW_LAST_END - tools/storage.sh's region_probe arithmetic
 resume_region() {
     RG_START=$(( ($1 / 4096 + 1) * 4096 ))
-    RG_END=$(( ((disk - 34) / 4096 - 1) * 4096 ))
+    RG_END=$(( ((disk - ${GPT_TAIL:-33} - 1) / 4096 - 1) * 4096 ))
     [ $RG_END -gt $RG_START ] || RG_END=$RG_START
 }
 
@@ -112,7 +118,7 @@ resume_prepare() {
     step repartition 50
     say "$(t 'Rewriting the partition table')"
     python3 "$TOP/tools/resize-last-partition.py" "$WORK/gpt/gpt.head,$WORK/gpt/gpt.tail" \
-        --disk-sectors "$disk" --name userdata --end-sector "$_ne" --out "$WORK/gpt/new" || die "$(t 'the resize was refused; nothing is changed')"
+        --disk-sectors "$disk" --sector-size "$ILBS" --name userdata --end-sector "$_ne" --out "$WORK/gpt/new" || die "$(t 'the resize was refused; nothing is changed')"
     for _f in new.head new.tail marker.bin bcb.bin; do
         resume_push "$WORK/gpt/$_f" "$T/mu300-$_f" ||
             { su_do "rm -f $T/mu300-new.head $T/mu300-new.tail $T/mu300-marker.bin $T/mu300-bcb.bin" >/dev/null
@@ -121,17 +127,17 @@ resume_prepare() {
     _bc=$(su_do 'dd if=/dev/block/by-name/misc bs=1 skip=2048 count=32 2>/dev/null | od -An -tx1 -v' | tr -d ' \n')
     # the backup copy first: if power is lost between the two, the primary is still the old table and the device
     # boots, which is the recoverable order
-    su_do "dd if=$T/mu300-new.tail of=/dev/block/$IDISK bs=512 seek=$((disk - 33)) conv=fsync 2>/dev/null" >/dev/null
+    su_do "dd if=$T/mu300-new.tail of=/dev/block/$IDISK bs=512 seek=$((disk - GPT_TAIL)) conv=fsync 2>/dev/null" >/dev/null
     su_do "dd if=$T/mu300-new.head of=/dev/block/$IDISK bs=512 conv=fsync 2>/dev/null" >/dev/null
 
     say "$(t 'Verifying')"
-    su_do "dd if=/dev/block/$IDISK bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
-    su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 count=$GPT_HEAD 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - GPT_TAIL)) count=$GPT_TAIL 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
     adb pull /data/local/tmp/gpt.head "$WORK/gpt/after.head" >/dev/null 2>&1 || true
     adb pull /data/local/tmp/gpt.tail "$WORK/gpt/after.tail" >/dev/null 2>&1 || true
     su_do 'rm -f /data/local/tmp/gpt.head /data/local/tmp/gpt.tail' >/dev/null
     check=$(python3 "$TOP/tools/resize-last-partition.py" "$WORK/gpt/after.head,$WORK/gpt/after.tail" \
-              --disk-sectors "$disk" --name userdata --show) || die "$(t 'the table on the device does not read back as valid GPT.')
+              --disk-sectors "$disk" --sector-size "$ILBS" --name userdata --show) || die "$(t 'the table on the device does not read back as valid GPT.')
 $(t "The backup copy at the end of the disk was written first, so Android's own repair may still fix this. Do not power off.")"
     got=$(echo "$check" | sed -n 's/^LAST_END=//p')
     [ "$got" = "$_ne" ] || die "$(t 'the table did not take (userdata still ends at {1}). Nothing else was changed.' "$got")"
@@ -181,13 +187,13 @@ resume_lookup() {
 resume_validate() {
     mkdir -p "$WORK/gpt"
     rm -f "$WORK/gpt/resume.head" "$WORK/gpt/resume.tail" "$WORK/gpt/resume-marker.bin" "$WORK/gpt/resume-bcb.bin"
-    su_do "dd if=/dev/block/$IDISK bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
-    su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 count=$GPT_HEAD 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - GPT_TAIL)) count=$GPT_TAIL 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
     adb pull /data/local/tmp/gpt.head "$WORK/gpt/resume.head" >/dev/null 2>&1 || true
     adb pull /data/local/tmp/gpt.tail "$WORK/gpt/resume.tail" >/dev/null 2>&1 || true
     su_do 'rm -f /data/local/tmp/gpt.head /data/local/tmp/gpt.tail' >/dev/null
     _rs=$(python3 "$TOP/tools/resize-last-partition.py" "$WORK/gpt/resume.head,$WORK/gpt/resume.tail" \
-            --disk-sectors "$disk" --name userdata --show 2>&1) || _rs=
+            --disk-sectors "$disk" --sector-size "$ILBS" --name userdata --show 2>&1) || _rs=
     [ -n "$_rs" ] || die "$(t 'could not read the partition table')"
     _rg() { printf '%s\n' "$_rs" | sed -n "s/^$1=//p"; }
     _rr=$(resume_py get "$RESUME_FILE" region_start) || die "$(t 'could not read the transaction {1}' "$RESUME_FILE")"

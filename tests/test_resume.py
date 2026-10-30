@@ -409,6 +409,61 @@ class ResetAndResume(Device):
 
 
 
+class ResetAndResumeUfs(ResetAndResume):
+    """The same on the 1 TB UFS U30 Air of issue #396 (fakeemmc's ufs1t): sda, 4096-byte logical blocks - the table
+    in 48 sectors at the start and 40 at the end - and no CID, the UFS's string descriptors in its place."""
+
+    def setUp(self):
+        Device.setUp(self)
+        self.emmc = fakeemmc.make(self.tmp / 'emmc', layout='ufs1t')
+        self.backups = self.tmp / 'home' / 'mu300-backups'
+
+    def device(self, **keys):
+        keys.setdefault('layout', 'ufs1t')
+        keys.setdefault('model', 'U30_Air')
+        super().device(**keys)
+
+    def test_prepare_and_resume_on_the_ufs(self):
+        for shell in self.each_shell():
+            shutil.rmtree(self.emmc); self.emmc = fakeemmc.make(self.tmp / 'emmc', layout='ufs1t')
+            shutil.rmtree(self.backups, ignore_errors=True)
+            r, ev, facts, before, _ = self.prepare(shell)
+            self.assertEqual((ev[-1]['repartitioned'], ev[-1]['resume']), ('yes', 'pending'), r.stdout[-3000:])
+            rec = json.loads(Path(ev[-1]['transaction']).read_text())
+            want_cid = hashlib.sha256(b'ufs:%s:%s' % tuple(x.encode() for x in fakeemmc.UFS_SERIAL)).hexdigest()[:32]
+            self.assertEqual((rec['cid'], rec['node']), (want_cid, 'sda%d' % len(before)))
+            after = fakeemmc.table(self.emmc)
+            self.assertTrue(tables_equal_but_userdata(before, after))
+            ud = [p for p in after if p[0] == 'userdata'][0]
+            self.assertEqual((ud[2] + 1) % 8, 0)                      # on a 4096-byte block
+            start = ((ud[2] + 1) // 4096 + 1) * 4096
+            self.assertEqual((rec['region_start'], rec['region_end'] - rec['region_start']), (start, 4 << 21))
+            self.assertEqual(fakeemmc.read(self.emmc, start, 8), resume.marker(rec['token']))
+            targets = [('tail' if 'of=/dev/block/sda bs=512 seek=%d ' % (fakegpt.DISK1T - 40) in c else
+                        'head' if 'of=/dev/block/sda bs=512 conv' in c else
+                        'token' if 'mu300-marker.bin' in c else 'misc' if 'of=/dev/block/by-name/misc' in c else c)
+                       for c in self.writes() if 'of=/dev/block/' in c]
+            self.assertEqual(targets, ['tail', 'head', 'token', 'misc'])
+            # nothing asked of an eMMC (the card's lookup, mmcblk1 and up, aside)
+            self.assertFalse([c for c in self.calls() if 'mmcblk' in c['cmd'] and
+                              not c['cmd'].startswith('for b in /sys/block/mmcblk[1-9];')])
+            # after the reset the same unit is found again and the installation continues
+            fakeemmc.reset(self.emmc)
+            self.device(pull='noboot')
+            r, ev, facts = self.inst(shell, INSTALL)
+            self.assertEqual(facts.get('resume.check'), 'RESUME-OK', r.stdout[-3000:])
+            self.assertEqual(int(facts['region.offset']), rec['region_start'] * 512)
+
+    # the eMMC's figures and messages are covered above; on this layout only the test of its own
+    test_prepare_writes_the_table_the_token_and_the_request_and_saves_the_transaction = None
+    test_the_smallest_size_leaves_a_region_openwrt_fits_and_the_figures_add_up = None
+    test_resumed_after_the_reset_and_refused_before_it = None
+    test_an_encryption_state_that_cannot_be_told_changes_nothing = None
+    test_kanos_rule_on_the_device = None
+    test_nothing_is_written_without_every_word = None
+    test_the_self_update_waits_while_a_transaction_does = None
+
+
 class FromAnUnpackedZip(ResetAndResume):
     """The two together (tools/package.sh, §111): room made from an unpacked Magisk zip's own installer, and the
     installation resumed by it after the reset. The transaction is bound to that zip's payload (kano's payload

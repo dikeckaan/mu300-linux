@@ -298,7 +298,8 @@ Say 'Looking for the Linux installation'
 # The internal disk, as Android's by-name links have it (tools/storage.sh's internal_disk): the disk that holds misc -
 # mmcblk0 on an eMMC unit, sda on a UFS one (issue #396) - and what its partitions are named after. mmcblk0 when
 # Android does not say.
-$IDISK = ([string](SuDo 'd=$(readlink -f /dev/block/by-name/misc); d=$(readlink -f /sys/class/block/${d##*/}/..); echo ${d##*/}')).Trim()
+$dk = @(([string](SuDo 'd=$(readlink -f /dev/block/by-name/misc); d=$(readlink -f /sys/class/block/${d##*/}/..); echo ${d##*/} $(cat $d/queue/logical_block_size)')).Trim() -split '\s+')
+$IDISK = [string]$dk[0]; $GPT_TAIL = $(if ($dk.Count -gt 1 -and $dk[1] -eq '4096') { 40 } else { 33 })
 if ($IDISK -cnotmatch '^(mmcblk[0-9]|sd[a-z])$') { $IDISK = 'mmcblk0' }
 $IPART = $(if ($IDISK -like 'mmcblk*') { "${IDISK}p" } else { $IDISK })
 $parts = @((SuDo ('e=0; for p in /sys/block/' + "$IDISK/$IPART" + '*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/' + $IDISK + '/size)')).Trim() -split '\s+')
@@ -320,7 +321,7 @@ if ($partList.Count -eq 1) {
 function RegionOnDisk([int64]$bytes) { [math]::Floor(($bytes + 2048) / 512) -le $disk }
 # the free space behind the last partition and before the backup GPT, or wholly inside the partition named mu300root
 function RegionInBounds([int64]$o, [int64]$z) {
-    (([math]::Floor($o / 512) -ge $lastEnd) -and ([math]::Floor(($o + $z) / 512) -le ($disk - 34))) -or
+    (([math]::Floor($o / 512) -ge $lastEnd) -and ([math]::Floor(($o + $z) / 512) -le ($disk - $GPT_TAIL - 1))) -or
         (($PART_OFF -ge 0) -and ($o -ge $PART_OFF) -and (($o + $z) -le ($PART_OFF + $PART_SIZE)))
 }
 $cands = @($start); if ($PART_OFF -ge 0) { $cands += $PART_OFF }; $cands += [int64]27762098176

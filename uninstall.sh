@@ -254,14 +254,14 @@ if [ "${PART_COUNT:-0}" -gt 0 ]; then
     # userdata is not the last partition then, and only the last one can grow (resize-last-partition.py)
     echo "  a GPT partition named mu300root (another installer's) lies behind userdata: the partition table is left alone"
 else
-    su_do "dd if=/dev/block/$IDISK bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
-    su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 count=$GPT_HEAD 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - GPT_TAIL)) count=$GPT_TAIL 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
     adb pull /data/local/tmp/gpt.head "$GPTW/gpt.head" >/dev/null 2>&1
     adb pull /data/local/tmp/gpt.tail "$GPTW/gpt.tail" >/dev/null 2>&1
     su_do 'rm -f /data/local/tmp/gpt.head /data/local/tmp/gpt.tail' >/dev/null
     if [ -s "$GPTW/gpt.head" ] && [ -s "$GPTW/gpt.tail" ] &&
        info=$(python3 "$TOP/tools/resize-last-partition.py" "$GPTW/gpt.head,$GPTW/gpt.tail" \
-                --disk-sectors "$disk" --name userdata --show 2>/dev/null); then
+                --disk-sectors "$disk" --sector-size "$ILBS" --name userdata --show 2>/dev/null); then
         u_first=$(echo "$info" | sed -n 's/^LAST_FIRST=//p')
         u_end=$(echo "$info" | sed -n 's/^LAST_END=//p')
         u_usable=$(echo "$info" | sed -n 's/^USABLE_END=//p')
@@ -283,20 +283,20 @@ else
             ask sure2 "Type ERASE to rewrite the partition table and wipe Android's data" "" MU300_ANS_ERASE_ANDROID
             [ "$sure2" = ERASE ] || die "nothing was changed."
             python3 "$TOP/tools/resize-last-partition.py" "$GPTW/gpt.head,$GPTW/gpt.tail" \
-                --disk-sectors "$disk" --name userdata --fill --out "$GPTW/new" || die "the resize was refused; nothing is changed"
+                --disk-sectors "$disk" --sector-size "$ILBS" --name userdata --fill --out "$GPTW/new" || die "the resize was refused; nothing is changed"
             adb push "$GPTW/new.head" /data/local/tmp/new.head >/dev/null 2>&1
             adb push "$GPTW/new.tail" /data/local/tmp/new.tail >/dev/null 2>&1
             # backup copy first, so a power cut between the two leaves the old primary table and a bootable device
-            su_do "dd if=/data/local/tmp/new.tail of=/dev/block/$IDISK bs=512 seek=$((disk - 33)) conv=fsync 2>/dev/null" >/dev/null
+            su_do "dd if=/data/local/tmp/new.tail of=/dev/block/$IDISK bs=512 seek=$((disk - GPT_TAIL)) conv=fsync 2>/dev/null" >/dev/null
             su_do "dd if=/data/local/tmp/new.head of=/dev/block/$IDISK bs=512 conv=fsync 2>/dev/null" >/dev/null
             su_do 'sync; rm -f /data/local/tmp/new.head /data/local/tmp/new.tail' >/dev/null
-            su_do "dd if=/dev/block/$IDISK bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
-            su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
+            su_do "dd if=/dev/block/$IDISK bs=512 count=$GPT_HEAD 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
+            su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - GPT_TAIL)) count=$GPT_TAIL 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
             adb pull /data/local/tmp/gpt.head "$GPTW/after.head" >/dev/null 2>&1
             adb pull /data/local/tmp/gpt.tail "$GPTW/after.tail" >/dev/null 2>&1
             su_do 'rm -f /data/local/tmp/gpt.head /data/local/tmp/gpt.tail' >/dev/null
             chk=$(python3 "$TOP/tools/resize-last-partition.py" "$GPTW/after.head,$GPTW/after.tail" \
-                    --disk-sectors "$disk" --name userdata --show) || die "the table on the device does not read back as valid GPT.
+                    --disk-sectors "$disk" --sector-size "$ILBS" --name userdata --show) || die "the table on the device does not read back as valid GPT.
 The backup copy was written first, so Android's own repair may still fix this. Do not power off."
             [ "$(echo "$chk" | sed -n 's/^LAST_END=//p')" = "$u_usable" ] || die "the table did not take; nothing else was changed."
             echo "  userdata now ends at sector $u_usable"

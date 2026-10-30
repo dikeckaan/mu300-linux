@@ -50,6 +50,9 @@ _ad=$(readlink -f "${MU300_SYSFS:-/sys}/class/block/${_ad##*/}/.." 2>/dev/null) 
 IDISK=${MU300_DISK:-${_ad##*/}}
 case $IDISK in mmcblk[0-9]|sd[a-z]) ;; *) IDISK=mmcblk0 ;; esac
 case $IDISK in mmcblk*) IPART=${IDISK}p ;; *) IPART=$IDISK ;; esac
+# its logical block size, and its GPT in 512-byte sectors: the first GPT_HEAD and the last GPT_TAIL
+ILBS=$(cat "${MU300_SYSFS:-/sys}/block/$IDISK/queue/logical_block_size" 2>/dev/null) || ILBS=
+case $ILBS in 4096) GPT_HEAD=48 GPT_TAIL=40 ;; *) ILBS=512 GPT_HEAD=34 GPT_TAIL=33 ;; esac
 # --- android-disk end
 M=$T/mu300root
 say() { echo "[device] $*"; }
@@ -290,7 +293,7 @@ for p in /sys/block/$IDISK/$IPART*; do
     grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && { pn=$((pn + 1)); ps=$(cat $p/start); pz=$(cat $p/size); }
 done
 disk=$(cat /sys/block/$IDISK/size)
-if [ "$OFF_S" -ge $end ] && [ $((OFF_S + SIZE_S)) -le $((disk - 34)) ]; then :
+if [ "$OFF_S" -ge $end ] && [ $((OFF_S + SIZE_S)) -le $((disk - GPT_TAIL - 1)) ]; then :
 elif [ $pn = 1 ] && [ "$OFF_S" -ge $ps ] && [ $((OFF_S + SIZE_S)) -le $((ps + pz)) ]; then
     say "the Linux filesystem goes into the GPT partition named mu300root (sectors $ps + $pz)"
 else
