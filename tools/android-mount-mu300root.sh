@@ -15,6 +15,16 @@ SIZE=${MU300_SIZE:-}
 # a Linux that went down without unmounting (OpenWrt's reboot does: needs_recovery stays set) leaves its last changes
 # in the journal, and a noload view shows the files from before them - an /etc/shadow with the password before the
 # last passwd (needs_recovery was set on an F50, FINDINGS 126). The password check of an update uses this.
+# --- android-disk begin
+# The internal disk, as Android's by-name links have it: the disk that holds misc - mmcblk0 on an eMMC unit, sda on a
+# UFS one (issue #396; tools/storage.sh's internal_disk asks the same) - and what its partitions are named after
+# (mmcblk0p, sda). mmcblk0 when Android does not say; MU300_DISK names it.
+_ad=$(readlink -f "${MU300_BY_NAME:-/dev/block/by-name}/misc" 2>/dev/null) || _ad=
+_ad=$(readlink -f "${MU300_SYSFS:-/sys}/class/block/${_ad##*/}/.." 2>/dev/null) || _ad=
+IDISK=${MU300_DISK:-${_ad##*/}}
+case $IDISK in mmcblk[0-9]|sd[a-z]) ;; *) IDISK=mmcblk0 ;; esac
+case $IDISK in mmcblk*) IPART=${IDISK}p ;; *) IPART=$IDISK ;; esac
+# --- android-disk end
 MOUNT_OPTS=noatime
 [ "${MU300_RO:-}" != 1 ] || MOUNT_OPTS=ro,noload
 [ "${MU300_RO:-}" != recover ] || MOUNT_OPTS=ro
@@ -67,11 +77,11 @@ L=/dev/block/loop$n
 [ -b "$L" ] || mknod "$L" b $(cut -d: -f1 /sys/block/loop$n/dev) $(cut -d: -f2 /sys/block/loop$n/dev) 2>/dev/null || [ -b "$L" ]
 [ ! -e /sys/block/loop$n/loop/backing_file ] || { echo LOOP-BUSY-$L; exit 1; }
 if [ -n "$SIZE" ]; then
-    losetup -o $OFF -S $SIZE "$L" /dev/block/mmcblk0
+    losetup -o $OFF -S $SIZE "$L" /dev/block/$IDISK
 else
-    losetup -o $OFF "$L" /dev/block/mmcblk0
+    losetup -o $OFF "$L" /dev/block/$IDISK
 fi
-[ "$(cat /sys/block/loop$n/loop/offset)" = "$OFF" ] && [ "$(cat /sys/block/loop$n/loop/backing_file)" = /dev/block/mmcblk0 ] || { echo LOOP-MISMATCH; losetup -d "$L"; exit 1; }
+[ "$(cat /sys/block/loop$n/loop/offset)" = "$OFF" ] && [ "$(cat /sys/block/loop$n/loop/backing_file)" = /dev/block/$IDISK ] || { echo LOOP-MISMATCH; losetup -d "$L"; exit 1; }
 [ -z "$SIZE" ] || [ "$(blockdev --getsize64 $L)" = "$SIZE" ] || { echo LOOP-SIZE-MISMATCH; losetup -d "$L"; exit 1; }
 # ext4 superblock at 1024: s_magic @+56 (0xEF53), s_volume_name @+120 (16 bytes)
 magic=$(dd if="$L" bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d ' \n')
