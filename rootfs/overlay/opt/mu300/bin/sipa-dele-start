@@ -21,8 +21,10 @@
 # after AT+CGACT had made the SIPA resources active, the delegate's probe hit a reproducible CFI panic (kanoqwq's
 # fork, cd4fb28). So the only caller is now mobile-data, between the registration and the PDP context, on every
 # system; and when the packet domain does not come up within MU300_DELE_WAIT seconds this refuses (exit 1) instead
-# of loading anyway: the dial stops there and its next attempt calls this again. Exit 0: loaded now, already loaded,
-# or a kernel without the module. Exit 1: not loaded, and the PDP context must not be activated.
+# of loading anyway: the dial stops there and its next attempt calls this again. Exit 0: loaded now (or before) and
+# its channel ready, or a module that cannot say (see ready()), or a kernel without the module. Exit 1: not loaded,
+# or loaded with its channel not open: the PDP context must not be activated.
+# MU300_DELE_SYSFS: the tests.
 set -u
 export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/sbin:/sbin"
 
@@ -30,10 +32,41 @@ M=/lib/modules/$(uname -r)
 KO=$M/sipa-dele.ko
 [ -f "$KO" ] || KO=$M/extra/sipa-dele.ko   # the Ubuntu image keeps modules under extra/
 WAIT=${MU300_DELE_WAIT:-180}
+SYSFS=${MU300_DELE_SYSFS:-/sys/bus/platform/drivers/sipa_delegate}
+MODULES=/proc/modules
 
 log() { echo "sipa-dele-start: $*"; }
 
-grep -q '^sipa_dele ' /proc/modules && { log "already loaded"; exit 0; }
+# The delegate's own word on its channel (kanoqwq's 0043a5d8, docs/FINDINGS.md 238): a module built from this tree
+# has sipa_dele_wait in sysfs, and reading it waits on the kernel's wait queue until the channel-120 handshake with
+# the CP is done and the resource callbacks are in place - at once when they are, at most 3 s otherwise - and fails
+# for an open that failed, a channel the CP closed, or no answer in time. That is what the PDP context needs; the
+# dmesg line this looked for before only said that the OPEN had been sent.
+# ready: 0 ready, 1 not ready (no PDP context now; the dial's next attempt asks again), 2 no such interface (an older
+# module, the 5.4 vendor one): the caller goes on as before, so an older module never keeps a board off the network.
+ready() {
+    local f node= n=0 state
+    for f in "$SYSFS"/*/sipa_dele_wait; do
+        [ -r "$f" ] || continue
+        node=$f; n=$((n + 1))
+    done
+    [ "$n" = 1 ] || return 2
+    if state=$(cat "$node" 2>/dev/null) && [ "$state" = 1 ]; then
+        log "delegate channel and resource callbacks ready"
+        return 0
+    fi
+    log "delegate handshake not done (sipa_dele_ready: $(cat "${node%/*}/sipa_dele_ready" 2>/dev/null || echo '?'))"
+    return 1
+}
+
+if grep -q '^sipa_dele ' "$MODULES" 2>/dev/null; then
+    ready; rc=$?
+    case $rc in
+        0) exit 0 ;;
+        2) log "already loaded"; exit 0 ;;
+        *) exit 1 ;;
+    esac
+fi
 [ -f "$KO" ] || { log "no $KO (a kernel without the modem stack)"; exit 0; }
 
 # What counts as "the CP is talking" has to be the modem answering, not a log line on the way there.
@@ -84,8 +117,10 @@ while :; do
             exit 1
         fi
         log "loaded sipa-dele"
-        # Both halves of the handshake are pr_info, so this says immediately whether it took. Looked for every
-        # 0.1 s for up to 3 s (a fixed 3 s sleep here was 3 s of every boot's dial: the line is there at once).
+        ready; rc=$?
+        [ "$rc" = 2 ] || exit "$rc"
+        # A module without that interface: both halves of the handshake are pr_info, so this says whether it took.
+        # Looked for every 0.1 s for up to 3 s (a fixed 3 s sleep here was 3 s of every boot's dial: the line is there at once).
         n=0
         while [ $n -lt 30 ] && ! dmesg | grep -q 'channel 5-120 send open msg'; do
             /opt/mu300/bin/busybox sleep 0.1 2>/dev/null || sleep 0.1 2>/dev/null || { sleep 1; n=$((n + 9)); }

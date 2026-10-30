@@ -1173,10 +1173,18 @@ up_locked() {
     # the next attempt tries again. It is [permanent]: once in /proc/modules, a reconnect goes straight on.
     # R35: only a kernel that has the module (as the fork checks): without it there is nothing to load, and the
     # dial-sipa-dele mark would claim a delegate that is not there.
+    # Already loaded, a module built from this tree is asked whether its channel to the CP is open (sipa-dele-start's
+    # ready, after kanoqwq's 0043a5d8): not open, no PDP context this round; an older module cannot say and goes on.
     local ko=/lib/modules/$(uname -r)
     if [ ! -f "$ko/sipa-dele.ko" ] && [ ! -f "$ko/extra/sipa-dele.ko" ]; then
         radio_say "no sipa-dele.ko in this kernel ($(uname -r)); dialling without the IPA delegate"
-    elif ! grep -q '^sipa_dele ' /proc/modules 2>/dev/null; then
+    elif grep -q '^sipa_dele ' /proc/modules 2>/dev/null; then
+        if ! /opt/mu300/bin/sipa-dele-start >/tmp/mu300-sipa-dele-ready.log 2>&1; then
+            radio_say "the IPA delegate's channel is not open (/tmp/mu300-sipa-dele-ready.log); no PDP context yet"
+            echo "the IPA delegate (sipa-dele) is not ready; not activating the PDP context" >&2
+            exit 1
+        fi
+    else
         if ! MU300_DELE_WAIT=${MU300_DELE_WAIT:-20} /opt/mu300/bin/sipa-dele-start >/tmp/mu300-sipa-dele.log 2>&1; then
             radio_say "the IPA delegate did not load (see /tmp/mu300-sipa-dele.log); no PDP context without it"
             led error
