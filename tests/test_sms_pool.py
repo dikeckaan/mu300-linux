@@ -1859,6 +1859,46 @@ class Daemon(ShellTest):
                 out, err = d.communicate(timeout=10)
             self.assertNotIn('not found', err + out)
 
+    def test_an_idle_look_starts_no_process(self):
+        # kanoqwq's sms-events (f0b5ad43, cc0ecce7): nothing new, nothing started; a +CMTI or a card change still is
+        self.stub('md5sum', 'echo x >> "$STUBLOG/md5.log"; exec cksum')
+        self.stub('sim-state', 'echo x >> "$STUBLOG/simstate.log"; echo ready')
+        self.stub('sleep', 'echo x >> "$STUBLOG/sleep.log"; exec /bin/sleep "$@"')
+        simrun = self.tmp / 'simrun'
+        simrun.mkdir(exist_ok=True)
+        (simrun / 'sim0.state').write_text('ready\n')
+
+        def count(name):
+            p = self.tmp / name
+            return len(p.read_text().splitlines()) if p.exists() else 0
+        for shell in self.each_shell():
+            self.fresh()
+            for n in ('md5.log', 'simstate.log', 'sleep.log'):
+                (self.tmp / n).unlink(missing_ok=True)
+            (self.atdir / 'urc' / 'stty_nr0.log').write_text('+CREG: 1\n')
+            d = self.start(shell, MU300_SIM_STATE_BIN=self.stubs / 'sim-state', MU300_RUN=simrun)
+            try:
+                self.wait_for(lambda: self.flag.exists(), 'direct delivery was not asked for')
+                time.sleep(3)                        # the looks in the marks' second are done again once
+                before = (count('md5.log'), count('simstate.log'))
+                sleeps = count('sleep.log')
+                time.sleep(3.5)
+                self.assertEqual((count('md5.log'), count('simstate.log')), before)
+                if 'dash' not in shell[0]:           # dash has no read -t: it sleeps
+                    self.assertEqual(count('sleep.log'), sleeps)
+                # radio traffic that is no +CMTI: checksummed again, no sync
+                with open(self.atdir / 'urc' / 'stty_nr0.log', 'a') as f:
+                    f.write('+CREG: 5\n')
+                self.wait_for(lambda: count('md5.log') > before[0], 'the written log was not looked at')
+                # a card change: asked again
+                (simrun / 'sim0.state').write_text('ready\n')
+                self.wait_for(lambda: count('simstate.log') > before[1], 'the card was not asked about again')
+                with open(self.atdir / 'urc' / 'stty_nr0.log', 'a') as f:
+                    f.write('+CMTI: "SM",4\n')
+                self.wait_for(lambda: self.syncs() == ['sync', 'sync'], 'no sync after +CMTI', timeout=15)
+            finally:
+                self.stop(d)
+
     def test_a_dead_holder_is_taken_over(self):
         for shell in self.each_shell():
             self.lock.mkdir()

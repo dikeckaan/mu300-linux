@@ -1506,6 +1506,21 @@ at() {
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(sent, [])
 
+    @unittest.skipUnless(os.path.exists('/proc/self/timerslack_ns'), 'needs Linux timer slack')
+    def test_only_the_watch_wait_gets_timer_slack(self):
+        # kanoqwq's data-events (cc0ecce7): the sleep between two looks has 500 ms of slack, the watchdog itself not
+        self.stub('sleep', 'echo "$* $(cat /proc/self/timerslack_ns)" >> "$STUBLOG/sleep-slack"')
+        modem = self.WATCH_MODEM.replace('echo "$SECONDS $1" >> "$STUBLOG/at"',
+                                         'echo "$SECONDS $1" >> "$STUBLOG/at"; cat /proc/self/timerslack_ns >> "$STUBLOG/at-slack"')
+        self.stub('ip', 'echo "2: sipa_eth0    inet 10.1.2.3/24 scope global sipa_eth0"')
+        r, sent = self.lib('watch', modem=modem, MU300_AT_DEV='/dev/null', MU300_WATCH_INTERVAL='0',
+                           MU300_WATCH_ROUNDS='2')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        waits = [l.split() for l in (self.tmp / 'sleep-slack').read_text().splitlines() if l.split()[0] == '0']
+        self.assertGreaterEqual(len(waits), 2)                     # the interval (MU300_WATCH_INTERVAL=0)
+        self.assertEqual({w[1] for w in waits}, {'500000000'})
+        self.assertNotIn('500000000', (self.tmp / 'at-slack').read_text().split())
+
     # FINDINGS 90: AT+CGACT? as the watchdog reads it. $CGACT is the answer's lines ("none": no final result code,
     # mu300-at's exit 1); the interface has its address unless NOADDR is set. radio_on, up and ifup only log.
     WATCH_MODEM = r'''

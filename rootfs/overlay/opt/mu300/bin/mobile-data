@@ -21,6 +21,10 @@ export PATH="$PATH:/opt/mu300/busybox-bin"
 # nap SECONDS: a fraction of a second where a sleep takes one. OpenWrt's /bin/sleep (and bash has no sleep of its
 # own) refuses "0.2", so "sleep 0.2 || sleep 1" waited a whole second there; the static busybox next to us takes it.
 nap() { "${MU300_BUSYBOX:-/opt/mu300/bin/busybox}" sleep "$1" 2>/dev/null || sleep "$1" 2>/dev/null || sleep 1; }
+# idle_sleep SECONDS: the watchdog's wait between two looks, with 500 ms of timer slack (kanoqwq's data-events,
+# cc0ecce7: only the idle wait, the AT and route work keeps the default), so the kernel can serve it with the wakeup of
+# another daemon. The sleep is the subshell itself (exec), which set the slack on itself: the watchdog keeps its own.
+idle_sleep() { ( { echo 500000000 > /proc/self/timerslack_ns; } 2>/dev/null || :; exec sleep "$1" ); }
 set -euo pipefail
 # The APN credentials (define_context) come in the environment, from systemd's EnvironmentFile or from mu300cell.sh.
 # They are taken out of it before anything is started, so that no child of this script (mu300-at, mu300-sim, the LED,
@@ -1688,7 +1692,7 @@ watch() {
     trap 'rm -rf "$wlock"' EXIT INT TERM
     modem_stack || { echo "no modem stack in this kernel ($(uname -r)), not watching" >&2; exit 0; }
     while :; do
-        sleep "${MU300_WATCH_INTERVAL:-30}"
+        idle_sleep "${MU300_WATCH_INTERVAL:-30}"
         if [ -n "${MU300_WATCH_ROUNDS:-}" ]; then   # tests only: stop after that many rounds
             rounds=$((rounds + 1))
             if [ "$rounds" -gt "$MU300_WATCH_ROUNDS" ]; then rm -rf "$wlock"; trap - EXIT INT TERM; break; fi
