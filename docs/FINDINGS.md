@@ -1007,7 +1007,7 @@ stops a boot: anything unclear is `0,0,0`. Files in `.mu300` of the Linux disk: 
   boot that finds `armed` - a crash, a panic (`panic=5`, the lockup panics), a watchdog reset, `reboot -f`, a power
   cut - drops the offset: `0,0,0`, the request cleared, the reason in `rejected` for the panels. The power cut is
   counted too: it cannot be told from a hang, and the price is setting the value again (`mu300-cpu voltage keep-good on`,
-  off by default, keeps a good value whose boot was up its 10 minutes: FINDINGS 238).
+  off by default, keeps a good value whose boot was up its 10 minutes: FINDINGS 240).
 * A value the initramfs cannot check is never written: not three whole steps in range (the same check as the CLI,
   kept identical by a test), or a **SoC firmware not known**: both `sml_a` and `sml_b` of the eMMC must have the
   SHA-256 of the F50 build kano read (`ff4782690fd805ff54fe34853ef8ee5c7e51c3259e20077c55373b50a4b259c2`). The U30
@@ -12452,7 +12452,7 @@ is not known (the counters were read only at the end).
 Not covered: the other rebinders (`mu300-usb-reset`, `mu300-usb` mode changes, the U30 Air's role switch) do not take
 the lock; they run on request or 25 s after boot, not in the window above.
 
-### 238. kanoqwq's power and services work of October 23-25: what is taken, and how
+### 240. kanoqwq's power and services work of October 23-25: what is taken, and how
 
 What was still missing of kanoqwq's `cc0ecce7` (CPU0 idle controls, fewer background wakeups), `f0b5ad43` (event-driven
 services, boot work) and the CPU part of `fb0b28e7` ("preserve confirmed CPU settings"), after #399, #402, #405, #408,
