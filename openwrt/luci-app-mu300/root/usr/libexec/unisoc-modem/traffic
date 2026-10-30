@@ -4,7 +4,10 @@
 #   traffic get               mu300-traffic json, as it is
 #   traffic set OP VALUE      reset_day 1-31 | cap BYTES (0: none) | warn 1-100 | cut on|off | used BYTES | clear yes
 #                             | daily BYTES (0: none) | daily_cut on|off | count total|rx|tx | plan NAME (one line,
-#                             at most 96 bytes, UTF-8, no control character; empty: none)
+#                             at most 96 bytes, UTF-8, no control character; empty: none) | yearly BYTES (0: none)
+#                             | yearly_start MM-DD (a real day; 02-29 allowed) | yearly_cut on|off
+#                             | used_remaining BYTES | yearly_used BYTES | yearly_used_remaining BYTES (the three
+#                             corrections: 0 is a value, not "none")
 #                             -> {"ok":1}, or {"ok":0,"error":...}; checked here again
 set -u
 export PATH="$PATH:/opt/mu300/bin:/usr/sbin:/sbin"
@@ -13,6 +16,8 @@ LIB=${0%/*}/../../share/unisoc-modem/lib.sh
 . "$LIB"
 
 TRAFFIC_CMD=${MU300_TRAFFIC_CMD:-/opt/mu300/bin/mu300-traffic}
+# the day a billing year starts: MM-DD, a real day (02-29 is a leap day, and allowed)
+DATE_ERE='((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01])|(0[469]|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-9]))'
 
 error() { printf '{"ok":0,"error":%s}\n' "$(json_str "$1")"; exit 0; }
 # ok VALUE ERE: VALUE is one line matching ^ERE$
@@ -39,6 +44,15 @@ do_set() {
         plan)      text_ok "$v" || error 'Invalid value for this setting'; set -- set plan "$v" ;;
         used)      ok "$v" '0|[1-9][0-9]{0,15}' || error 'Invalid value for this setting'; set -- used "$v" ;;
         clear)     ok "$v" 'yes' || error 'Invalid value for this setting'; set -- clear --yes ;;
+        yearly)    ok "$v" '0|[1-9][0-9]{0,15}' || error 'Invalid value for this setting'
+                   [ "$v" != 0 ] || v=off; set -- set yearly "$v" ;;
+        yearly_start) ok "$v" "$DATE_ERE" || error 'Invalid value for this setting'; set -- set yearly-start "$v" ;;
+        yearly_cut) ok "$v" 'on|off' || error 'Invalid value for this setting'; set -- set yearly-cut "$v" ;;
+        used_remaining) ok "$v" '0|[1-9][0-9]{0,15}' || error 'Invalid value for this setting'
+                   set -- set used-remaining "$v" ;;
+        yearly_used) ok "$v" '0|[1-9][0-9]{0,15}' || error 'Invalid value for this setting'; set -- yearly-used "$v" ;;
+        yearly_used_remaining) ok "$v" '0|[1-9][0-9]{0,15}' || error 'Invalid value for this setting'
+                   set -- set yearly-used-remaining "$v" ;;
         *)         error 'Unknown data usage setting' ;;
     esac
     if out=$("$TRAFFIC_CMD" "$@" 2>&1 >/dev/null); then

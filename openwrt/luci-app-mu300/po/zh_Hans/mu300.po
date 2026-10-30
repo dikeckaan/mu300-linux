@@ -1056,17 +1056,32 @@ msgstr "可写入"
 msgid "This boot image cannot change the boot"
 msgstr "当前启动镜像不支持更改启动设置"
 
+msgid "Remaining this year"
+msgstr "本年度剩余"
+
+msgid "Remaining this cycle"
+msgstr "本周期剩余"
+
 msgid "%s of %s"
 msgstr "%s / %s"
+
+msgid "The yearly cap is reached"
+msgstr "已达到年度流量上限"
 
 msgid "The monthly cap is reached"
 msgstr "已达到每月流量上限"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "已用年度上限的 %d%%"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "已用每月上限的 %d%%"
 
-msgid "This billing cycle"
-msgstr "本计费周期"
+msgid "Used this year"
+msgstr "本年度已用"
+
+msgid "Used this cycle"
+msgstr "本周期已用"
 
 msgid "Link & traffic"
 msgstr "链路与流量"
@@ -1083,8 +1098,8 @@ msgstr "累计接收"
 msgid "Total sent"
 msgstr "累计发送"
 
-msgid "Used today"
-msgstr "今日已用"
+msgid "Today"
+msgstr "今天"
 
 msgid "SIM source"
 msgstr "SIM 来源"
@@ -2371,8 +2386,17 @@ msgstr "此页面通过 HTTPS 打开，而终端在局域网上通过 HTTP 提�
 msgid "The data usage could not be read"
 msgstr "无法读取流量统计"
 
-msgid "Today"
-msgstr "今天"
+msgid "Year"
+msgstr "年"
+
+msgid "Month"
+msgstr "月"
+
+msgid "Used"
+msgstr "已用"
+
+msgid "Days left this year"
+msgstr "本年度剩余天数"
 
 msgid "Days left in this cycle"
 msgstr "本周期剩余天数"
@@ -2392,11 +2416,17 @@ msgstr "每月上限"
 msgid "%s, warning at %d%%"
 msgstr "%s，%d%% 时提醒"
 
+msgid "Yearly cap"
+msgstr "年度上限"
+
 msgid "Daily quota"
 msgstr "每日额度"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "已达到每月流量上限：移动数据已关闭，下一个周期开始时自动恢复。"
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "已达到年度流量上限：移动数据已关闭，下一个计费年度开始时自动恢复。"
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "已达每日额度：移动数据已关闭，午夜后自动恢复。"
@@ -2464,6 +2494,15 @@ msgstr "达到每日额度时关闭移动数据"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "当天用量达到每日额度时，移动数据会关闭，直到午夜、额度调高或再次关闭此项。手动重新打开移动数据后，它会保持开启直到下次重启。"
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "运营商显示为剩余的量按已用计：统计将校正为上限减去该值。"
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "达到年度上限时关闭移动数据"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "本计费年度达到年度上限时将关闭移动数据：在下一个计费年度开始、提高年度上限或关闭此选项之前，无法通过运营商上网。手动重新打开移动数据后，它会保持开启直到下次重启。"
+
 msgid "Both ways"
 msgstr "上下行合计"
 
@@ -2482,9 +2521,6 @@ msgstr "清除统计"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "迄今统计的所有日期和计费周期都将被清除，从现在起重新统计。"
 
-msgid "Billing cycle and cap"
-msgstr "计费周期与上限"
-
 msgid "A billing cycle starts on day"
 msgstr "计费周期开始于每月第几天"
 
@@ -2494,11 +2530,20 @@ msgstr "31：每月最后一天"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "每月上限（GB，0 表示无）"
 
-msgid "Warning at this percentage of the cap"
-msgstr "达到上限的此百分比时提醒"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "达到上限和年度上限的此百分比时提醒"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "每日额度（GB，0 表示无）"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "年度上限（GB，0 表示无）"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "计费年度开始于（MM-DD）"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "例如 01-01；02-29 在平年中为 02-28。"
 
 msgid "The cap and the daily quota count"
 msgstr "套餐计量方式"
@@ -2511,6 +2556,18 @@ msgstr "本周期已用（GB）"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "运营商显示的本周期用量（例如统计从周期中途开始时），统计将据此校正。"
+
+msgid "Used so far this year (GB)"
+msgstr "本年度已用（GB）"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "本周期按运营商显示的剩余（GB）"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "本年度按运营商显示的剩余（GB）"
+
+msgid "Billing cycle and cap"
+msgstr "计费周期与上限"
 
 msgid "Current setting"
 msgstr "当前设置"

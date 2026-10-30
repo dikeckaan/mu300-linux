@@ -1057,17 +1057,32 @@ msgstr "Beschreibbar"
 msgid "This boot image cannot change the boot"
 msgstr "Dieses Boot-Image kann den Start nicht ändern"
 
+msgid "Remaining this year"
+msgstr "Verbleibend in diesem Jahr"
+
+msgid "Remaining this cycle"
+msgstr "Verbleibend in diesem Zeitraum"
+
 msgid "%s of %s"
 msgstr "%s von %s"
+
+msgid "The yearly cap is reached"
+msgstr "Das jährliche Limit ist erreicht"
 
 msgid "The monthly cap is reached"
 msgstr "Das monatliche Limit ist erreicht"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "%d%% des jährlichen Limits verbraucht"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "%d%% des monatlichen Limits verbraucht"
 
-msgid "This billing cycle"
-msgstr "Dieser Abrechnungszeitraum"
+msgid "Used this year"
+msgstr "In diesem Jahr verbraucht"
+
+msgid "Used this cycle"
+msgstr "In diesem Zeitraum verbraucht"
 
 msgid "Link & traffic"
 msgstr "Verbindung & Datenverkehr"
@@ -1084,8 +1099,8 @@ msgstr "Insgesamt empfangen"
 msgid "Total sent"
 msgstr "Insgesamt gesendet"
 
-msgid "Used today"
-msgstr "Heute verbraucht"
+msgid "Today"
+msgstr "Heute"
 
 msgid "SIM source"
 msgstr "SIM-Quelle"
@@ -2390,8 +2405,17 @@ msgstr "Diese Seite wurde über HTTPS geöffnet, das Terminal läuft im LAN übe
 msgid "The data usage could not be read"
 msgstr "Der Datenverbrauch konnte nicht gelesen werden"
 
-msgid "Today"
-msgstr "Heute"
+msgid "Year"
+msgstr "Jahr"
+
+msgid "Month"
+msgstr "Monat"
+
+msgid "Used"
+msgstr "Verbraucht"
+
+msgid "Days left this year"
+msgstr "Verbleibende Tage in diesem Jahr"
 
 msgid "Days left in this cycle"
 msgstr "Verbleibende Tage in diesem Zeitraum"
@@ -2411,11 +2435,17 @@ msgstr "Monatliches Limit"
 msgid "%s, warning at %d%%"
 msgstr "%s, Warnung bei %d%%"
 
+msgid "Yearly cap"
+msgstr "Jährliches Limit"
+
 msgid "Daily quota"
 msgstr "Tageskontingent"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Das monatliche Limit ist erreicht: Mobile Daten wurden ausgeschaltet. Sie gehen zu Beginn des nächsten Zeitraums wieder an."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Das jährliche Limit ist erreicht: Mobile Daten wurden ausgeschaltet. Sie gehen zu Beginn des nächsten Jahres wieder an."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Das Tageskontingent ist erreicht: Mobile Daten wurden ausgeschaltet. Sie gehen um Mitternacht wieder an."
@@ -2483,6 +2513,15 @@ msgstr "Mobile Daten beim Tageskontingent ausschalten"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Erreicht der heutige Verbrauch das Tageskontingent, werden mobile Daten bis Mitternacht ausgeschaltet, bis das Kontingent erhöht oder dies wieder ausgeschaltet wird. Wer mobile Daten von Hand wieder einschaltet, behält sie bis zum nächsten Neustart."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Was der Betreiber als verbleibend anzeigt, gilt als verbraucht: der Zählerstand wird auf das Limit minus diesen Wert korrigiert."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Mobile Daten beim jährlichen Limit ausschalten"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Erreicht dieses Jahr das jährliche Limit, werden mobile Daten ausgeschaltet: kein Internet über den Betreiber, bis das nächste Jahr beginnt, das jährliche Limit erhöht oder dies wieder ausgeschaltet wird. Werden mobile Daten von Hand wieder eingeschaltet, bleiben sie bis zum nächsten Neustart an."
+
 msgid "Both ways"
 msgstr "Beide Richtungen"
 
@@ -2501,9 +2540,6 @@ msgstr "Zählerstand löschen"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Alle bisher gezählten Tage und Abrechnungszeiträume werden vergessen. Ab jetzt wird weitergezählt."
 
-msgid "Billing cycle and cap"
-msgstr "Abrechnungszeitraum und Limit"
-
 msgid "A billing cycle starts on day"
 msgstr "Ein Abrechnungszeitraum beginnt am Tag"
 
@@ -2513,11 +2549,20 @@ msgstr "31: am letzten Tag jedes Monats"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Monatliches Limit (GB, 0: keines)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Warnung bei diesem Prozentsatz des Limits"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Warnung bei diesem Prozentsatz des Limits und des jährlichen Limits"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Tageskontingent (GB, 0: keines)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Jährliches Limit (GB, 0: keines)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Ein Abrechnungsjahr beginnt am (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Zum Beispiel 01-01; der 02-29 ist im Gemeinjahr der 02-28."
 
 msgid "The cap and the daily quota count"
 msgstr "Was Limit und Tageskontingent zählen"
@@ -2530,6 +2575,18 @@ msgstr "Bisher in diesem Zeitraum verbraucht (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Was der Betreiber für diesen Zeitraum anzeigt (zum Beispiel wenn die Zählung mitten darin begann); der Zählerstand wird darauf korrigiert."
+
+msgid "Used so far this year (GB)"
+msgstr "Bisher in diesem Jahr verbraucht (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Verbleibend in diesem Zeitraum, wie der Betreiber es anzeigt (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Verbleibend in diesem Jahr, wie der Betreiber es anzeigt (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Abrechnungszeitraum und Limit"
 
 msgid "Current setting"
 msgstr "Aktuelle Einstellung"

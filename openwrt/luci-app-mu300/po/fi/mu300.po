@@ -1057,17 +1057,32 @@ msgstr "Kirjoitettavissa"
 msgid "This boot image cannot change the boot"
 msgstr "Tämä käynnistyskuva ei voi muuttaa käynnistystä"
 
+msgid "Remaining this year"
+msgstr "Jäljellä tänä vuonna"
+
+msgid "Remaining this cycle"
+msgstr "Jäljellä tässä jaksossa"
+
 msgid "%s of %s"
 msgstr "%s / %s"
+
+msgid "The yearly cap is reached"
+msgstr "Vuosiraja on täynnä"
 
 msgid "The monthly cap is reached"
 msgstr "Kuukausiraja on täynnä"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "%d%% vuosirajasta käytetty"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "%d%% kuukausirajasta käytetty"
 
-msgid "This billing cycle"
-msgstr "Tämä laskutusjakso"
+msgid "Used this year"
+msgstr "Käytetty tänä vuonna"
+
+msgid "Used this cycle"
+msgstr "Käytetty tässä jaksossa"
 
 msgid "Link & traffic"
 msgstr "Linkki ja liikenne"
@@ -1084,8 +1099,8 @@ msgstr "Vastaanotettu yhteensä"
 msgid "Total sent"
 msgstr "Lähetetty yhteensä"
 
-msgid "Used today"
-msgstr "Käytetty tänään"
+msgid "Today"
+msgstr "Tänään"
 
 msgid "SIM source"
 msgstr "SIM-lähde"
@@ -2390,8 +2405,17 @@ msgstr "Tämä sivu avattiin HTTPS:n kautta, ja pääte toimii lähiverkossa HTT
 msgid "The data usage could not be read"
 msgstr "Datan käyttöä ei voitu lukea"
 
-msgid "Today"
-msgstr "Tänään"
+msgid "Year"
+msgstr "Vuosi"
+
+msgid "Month"
+msgstr "Kuukausi"
+
+msgid "Used"
+msgstr "Käytetty"
+
+msgid "Days left this year"
+msgstr "Päiviä jäljellä tänä vuonna"
 
 msgid "Days left in this cycle"
 msgstr "Päiviä jäljellä jaksossa"
@@ -2411,11 +2435,17 @@ msgstr "Kuukausiraja"
 msgid "%s, warning at %d%%"
 msgstr "%s, varoitus %d%%:ssa"
 
+msgid "Yearly cap"
+msgstr "Vuosiraja"
+
 msgid "Daily quota"
 msgstr "Päiväkiintiö"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Kuukausiraja on täynnä: mobiilidata kytkettiin pois. Se kytkeytyy takaisin, kun seuraava jakso alkaa."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Vuosiraja on täynnä: mobiilidata kytkettiin pois. Se kytkeytyy takaisin, kun seuraava vuosi alkaa."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Päiväkiintiö on täynnä: mobiilidata kytkettiin pois. Se palaa keskiyöllä."
@@ -2483,6 +2513,15 @@ msgstr "Katkaise mobiilidata päiväkiintiön täyttyessä"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Kun päivän käyttö saavuttaa päiväkiintiön, mobiilidata katkaistaan keskiyöhön asti, kunnes kiintiötä nostetaan tai tämä kytketään pois. Jos kytket mobiilidatan käsin takaisin, se pysyy päällä seuraavaan uudelleenkäynnistykseen asti."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Se, minkä operaattori näyttää jäljellä olevana, lasketaan käytetyksi: laskuri korjataan rajaan miinus se."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Katkaise mobiilidata vuosirajalla"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Kun tämä vuosi saavuttaa vuosirajan, mobiilidata katkaistaan: ei internetiä operaattorin kautta ennen kuin seuraava vuosi alkaa, vuosirajaa nostetaan tai tämä kytketään taas pois. Käsin uudelleen kytketty mobiilidata pysyy päällä seuraavaan uudelleenkäynnistykseen asti."
+
 msgid "Both ways"
 msgstr "Molemmat suunnat"
 
@@ -2501,9 +2540,6 @@ msgstr "Tyhjennä laskuri"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Kaikki tähän asti lasketut päivät ja laskutusjaksot unohdetaan. Laskenta jatkuu tästä eteenpäin."
 
-msgid "Billing cycle and cap"
-msgstr "Laskutusjakso ja raja"
-
 msgid "A billing cycle starts on day"
 msgstr "Laskutusjakso alkaa päivänä"
 
@@ -2513,11 +2549,20 @@ msgstr "31: kunkin kuukauden viimeisenä päivänä"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Kuukausiraja (GB, 0: ei rajaa)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Varoita tällä prosentilla rajasta"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Varoita tällä prosentilla rajasta ja vuosirajasta"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Päiväkiintiö (GB, 0: ei kiintiötä)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Vuosiraja (GB, 0: ei rajaa)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Laskutusvuosi alkaa (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Esimerkiksi 01-01; 02-29 on 02-28 tavallisena vuonna."
 
 msgid "The cap and the daily quota count"
 msgstr "Mitä raja ja päiväkiintiö laskevat"
@@ -2530,6 +2575,18 @@ msgstr "Käytetty tähän mennessä tässä jaksossa (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Mitä operaattori näyttää tälle jaksolle (esimerkiksi jos laskenta alkoi kesken jakson); laskuri korjataan siihen."
+
+msgid "Used so far this year (GB)"
+msgstr "Käytetty tähän mennessä tänä vuonna (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Jäljellä tässä jaksossa operaattorin mukaan (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Jäljellä tänä vuonna operaattorin mukaan (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Laskutusjakso ja raja"
 
 msgid "Current setting"
 msgstr "Nykyinen asetus"

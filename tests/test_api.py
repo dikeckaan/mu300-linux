@@ -1185,7 +1185,21 @@ class ModemTools(ApiCase):
                               ({'key': 'daily_cut', 'value': 'on'}, ['set', 'daily-cut', 'on']),
                               ({'key': 'count', 'value': 'rx'}, ['set', 'count', 'rx']),
                               ({'key': 'plan', 'value': 'Gece "50" \u6708'}, ['set', 'plan', 'Gece "50" \u6708']),
-                              ({'key': 'plan', 'value': ''}, ['set', 'plan', ''])):
+                              ({'key': 'plan', 'value': ''}, ['set', 'plan', '']),
+                              # the yearly plan and the corrections by the remaining
+                              ({'key': 'yearly', 'value': '0'}, ['set', 'yearly', 'off']),
+                              ({'key': 'yearly', 'value': '53687091200'}, ['set', 'yearly', '53687091200']),
+                              ({'key': 'yearly', 'value': 53687091200}, ['set', 'yearly', '53687091200']),
+                              ({'key': 'yearly', 'value': 0}, ['set', 'yearly', 'off']),
+                              ({'key': 'yearly_start', 'value': '02-29'}, ['set', 'yearly-start', '02-29']),
+                              ({'key': 'yearly_start', 'value': '01-01'}, ['set', 'yearly-start', '01-01']),
+                              ({'key': 'yearly_cut', 'value': 'on'}, ['set', 'yearly-cut', 'on']),
+                              ({'key': 'used_remaining', 'value': '0'}, ['set', 'used-remaining', '0']),
+                              ({'key': 'used_remaining', 'value': 53687091200}, ['set', 'used-remaining', '53687091200']),
+                              ({'key': 'yearly_used', 'value': '1073741824'}, ['yearly-used', '1073741824']),
+                              ({'key': 'yearly_used', 'value': 0}, ['yearly-used', '0']),
+                              ({'key': 'yearly_used_remaining', 'value': '53687091200'},
+                               ['set', 'yearly-used-remaining', '53687091200'])):
                 self.ok(shell, 'traffic.set', req)
                 self.assertEqual(self.calls('mu300-traffic')[-1], ['mu300-traffic'] + argv, req)
             for req in ({'key': 'reset_day', 'value': 32}, {'key': 'cap', 'value': '-1'}, {'key': 'cut', 'value': 'x'},
@@ -1193,7 +1207,16 @@ class ModemTools(ApiCase):
                         {'key': 'daily', 'value': '1.5'}, {'key': 'daily', 'value': 1.5}, {'key': 'daily', 'value': -1},
                         {'key': 'daily', 'value': 1e9}, {'key': 'cap', 'value': True}, {'key': 'count', 'value': 'both'},
                         {'key': 'daily_cut', 'value': 'yes'}, {'key': 'plan', 'value': 'a\nb'},
-                        {'key': 'plan', 'value': 'x' * 97}, {'key': 'plan', 'value': 'a\tb'}):
+                        {'key': 'plan', 'value': 'x' * 97}, {'key': 'plan', 'value': 'a\tb'},
+                        {'key': 'yearly', 'value': '-1'}, {'key': 'yearly', 'value': '1.5'},
+                        {'key': 'yearly', 'value': '01'}, {'key': 'yearly', 'value': True},
+                        {'key': 'yearly_start', 'value': '13-01'}, {'key': 'yearly_start', 'value': '02-30'},
+                        {'key': 'yearly_start', 'value': '02-31'}, {'key': 'yearly_start', 'value': '04-31'},
+                        {'key': 'yearly_start', 'value': '1-01'}, {'key': 'yearly_start', 'value': '01-00'},
+                        {'key': 'yearly_start', 'value': ''}, {'key': 'yearly_start', 'value': 229},
+                        {'key': 'yearly_cut', 'value': 'yes'}, {'key': 'used_remaining', 'value': '1.5'},
+                        {'key': 'used_remaining', 'value': -1}, {'key': 'yearly_used', 'value': '050'},
+                        {'key': 'yearly_used_remaining', 'value': ''}):
                 self.assertEqual(self.call(shell, 'traffic.set', req)[1]['error'], 'bad-value', req)
             self.out('mu300-traffic', 'nope\n')
             self.refused(shell, 'traffic.get', {}, 'failed')

@@ -965,11 +965,32 @@ msgstr "历史"
 msgid "Plan"
 msgstr "套餐"
 
+msgid "Remaining"
+msgstr "剩余"
+
+msgid "Month"
+msgstr "月"
+
+msgid "Year"
+msgstr "年"
+
+msgid "Used this year"
+msgstr "今年已用"
+
 msgid "$0 days left"
 msgstr "剩余 $0 天"
 
 msgid "Of the cap"
 msgstr "占上限"
+
+msgid "Yearly cap"
+msgstr "每年上限"
+
+msgid "Month remaining $0"
+msgstr "本月剩余 $0"
+
+msgid "Year remaining $0"
+msgstr "本年剩余 $0"
 
 msgid "The cap is reached: mobile data is off until the next cycle."
 msgstr "已达到上限：移动数据将关闭至下一周期。"
@@ -989,6 +1010,15 @@ msgstr "已达每日额度。"
 msgid "Close to the daily quota."
 msgstr "接近每日额度。"
 
+msgid "The yearly cap is reached: mobile data is off until the next year."
+msgstr "已达到每年上限：移动数据将关闭至下一年。"
+
+msgid "The yearly cap is reached."
+msgstr "已达到每年上限。"
+
+msgid "Close to the yearly cap."
+msgstr "接近每年上限。"
+
 msgid "The cap and the daily quota count downloads only."
 msgstr "上限和每日额度仅统计下行。"
 
@@ -1006,6 +1036,9 @@ msgstr "达到上限时关闭移动数据，直到下一周期"
 
 msgid "Turn mobile data off at the daily quota until midnight"
 msgstr "达到每日额度时关闭移动数据至午夜"
+
+msgid "Turn mobile data off at the yearly cap until the next year"
+msgstr "达到每年上限时关闭移动数据，直到下一年"
 
 msgid "Both ways"
 msgstr "上下行合计"
@@ -1031,20 +1064,38 @@ msgstr "达到上限的此百分比时提醒"
 msgid "Daily quota in GiB (0: none)"
 msgstr "每日额度，单位 GiB（0：无）"
 
+msgid "Yearly cap in GiB (0: none)"
+msgstr "每年上限，单位 GiB（0：无）"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "计费年度的起始日（MM-DD）"
+
 msgid "The cap and the daily quota count"
 msgstr "套餐计量方式"
 
 msgid "Check the values: a day from 1 to 31, a cap of 0 or more, a percentage from 1 to 100."
 msgstr "请检查数值：日期为 1 到 31，上限为 0 或以上，百分比为 1 到 100。"
 
-msgid "What the operator says this cycle has used, in GiB (corrects the count)"
-msgstr "运营商显示本周期已用量，单位 GiB（用于校正统计）"
+msgid "A billing year starts on a date MM-DD like 01-01."
+msgstr "计费年度从 MM-DD 形式的日期开始，例如 01-01。"
 
 msgid "Correct the count"
 msgstr "校正统计"
 
 msgid "Enter an amount in GiB."
 msgstr "请输入以 GiB 为单位的数值。"
+
+msgid "What the operator says this cycle has used, in GiB (corrects the count)"
+msgstr "运营商显示本周期已用量，单位 GiB（用于校正统计）"
+
+msgid "What the operator says this year has used, in GiB (corrects the count)"
+msgstr "运营商显示今年已用量，单位 GiB（用于校正统计）"
+
+msgid "What the operator shows as left this cycle, in GiB (corrects the count)"
+msgstr "运营商显示本周期剩余量，单位 GiB（用于校正统计）"
+
+msgid "What the operator shows as left this year, in GiB (corrects the count)"
+msgstr "运营商显示今年剩余量，单位 GiB（用于校正统计）"
 
 msgid "Forget every count"
 msgstr "清除所有统计"

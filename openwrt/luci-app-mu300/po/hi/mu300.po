@@ -1057,17 +1057,32 @@ msgstr "लिखने योग्य"
 msgid "This boot image cannot change the boot"
 msgstr "यह बूट इमेज बूट नहीं बदल सकती"
 
+msgid "Remaining this year"
+msgstr "इस वर्ष शेष"
+
+msgid "Remaining this cycle"
+msgstr "इस चक्र में शेष"
+
 msgid "%s of %s"
 msgstr "%s / %s"
+
+msgid "The yearly cap is reached"
+msgstr "वार्षिक सीमा पूरी हो गई"
 
 msgid "The monthly cap is reached"
 msgstr "मासिक सीमा पूरी हो गई"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "वार्षिक सीमा का %d%% उपयोग हुआ"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "मासिक सीमा का %d%% उपयोग हुआ"
 
-msgid "This billing cycle"
-msgstr "यह बिलिंग चक्र"
+msgid "Used this year"
+msgstr "इस वर्ष उपयोग"
+
+msgid "Used this cycle"
+msgstr "इस चक्र में उपयोग"
 
 msgid "Link & traffic"
 msgstr "लिंक और ट्रैफ़िक"
@@ -1084,8 +1099,8 @@ msgstr "कुल प्राप्त"
 msgid "Total sent"
 msgstr "कुल भेजा गया"
 
-msgid "Used today"
-msgstr "आज उपयोग किया"
+msgid "Today"
+msgstr "आज"
 
 msgid "SIM source"
 msgstr "SIM स्रोत"
@@ -2390,8 +2405,17 @@ msgstr "यह पेज HTTPS से खोला गया है, और ट�
 msgid "The data usage could not be read"
 msgstr "डेटा उपयोग पढ़ा नहीं जा सका"
 
-msgid "Today"
-msgstr "आज"
+msgid "Year"
+msgstr "वर्ष"
+
+msgid "Month"
+msgstr "माह"
+
+msgid "Used"
+msgstr "उपयोग"
+
+msgid "Days left this year"
+msgstr "इस वर्ष शेष दिन"
 
 msgid "Days left in this cycle"
 msgstr "चक्र में शेष दिन"
@@ -2411,11 +2435,17 @@ msgstr "मासिक सीमा"
 msgid "%s, warning at %d%%"
 msgstr "%s, %d%% पर चेतावनी"
 
+msgid "Yearly cap"
+msgstr "वार्षिक सीमा"
+
 msgid "Daily quota"
 msgstr "दैनिक कोटा"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "मासिक सीमा पूरी हो गई: मोबाइल डेटा बंद कर दिया गया। अगला चक्र शुरू होने पर यह फिर चालू होगा।"
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "वार्षिक सीमा पूरी हो गई: मोबाइल डेटा बंद कर दिया गया। अगला वर्ष शुरू होने पर यह फिर चालू होगा।"
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "दैनिक कोटा पूरा हो गया: मोबाइल डेटा बंद कर दिया गया। यह आधी रात को फिर चालू होगा।"
@@ -2483,6 +2513,15 @@ msgstr "दैनिक कोटे पर मोबाइल डेटा ब�
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "जब आज का उपयोग दैनिक कोटे तक पहुँचता है, तो मोबाइल डेटा आधी रात तक, कोटा बढ़ाए जाने तक या इसे फिर से बंद किए जाने तक बंद रहता है। मोबाइल डेटा को हाथ से चालू करने पर वह अगले रीबूट तक चालू रहता है।"
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "ऑपरेटर जो शेष दिखाता है वह उपयोग हुआ माना जाता है: गिनती को सीमा में से उस मान को घटाकर सुधारा जाता है।"
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "वार्षिक सीमा पर मोबाइल डेटा बंद करें"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "जब यह वर्ष वार्षिक सीमा तक पहुँचेगा, मोबाइल डेटा बंद हो जाएगा: अगला वर्ष शुरू होने, वार्षिक सीमा बढ़ाने या यह विकल्प फिर बंद करने तक ऑपरेटर से इंटरनेट नहीं मिलेगा। मोबाइल डेटा हाथ से फिर चालू करने पर वह अगले रीबूट तक चालू रहता है।"
+
 msgid "Both ways"
 msgstr "दोनों दिशाएँ"
 
@@ -2501,9 +2540,6 @@ msgstr "गिनती साफ़ करें"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "अब तक गिने गए सभी दिन और बिलिंग चक्र भुला दिए जाएँगे। गिनती अभी से जारी रहेगी।"
 
-msgid "Billing cycle and cap"
-msgstr "बिलिंग चक्र और सीमा"
-
 msgid "A billing cycle starts on day"
 msgstr "बिलिंग चक्र इस दिन शुरू होता है"
 
@@ -2513,11 +2549,20 @@ msgstr "31: हर महीने के अंतिम दिन"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "मासिक सीमा (GB, 0: कोई नहीं)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "सीमा के इस प्रतिशत पर चेतावनी दें"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "सीमा और वार्षिक सीमा के इस प्रतिशत पर चेतावनी दें"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "दैनिक कोटा (GB, 0: कोई नहीं)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "वार्षिक सीमा (GB, 0: कोई नहीं)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "बिलिंग वर्ष इस दिन शुरू होता है (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "उदाहरण के लिए 01-01; सामान्य वर्ष में 02-29 के स्थान पर 02-28 होता है।"
 
 msgid "The cap and the daily quota count"
 msgstr "सीमा और दैनिक कोटा क्या गिनते हैं"
@@ -2530,6 +2575,18 @@ msgstr "इस चक्र में अब तक उपयोग (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "ऑपरेटर इस चक्र के लिए जो दिखाता है (उदाहरण के लिए जब गिनती चक्र के बीच में शुरू हुई); गिनती उसी के अनुसार सुधारी जाती है।"
+
+msgid "Used so far this year (GB)"
+msgstr "इस वर्ष अब तक उपयोग (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "इस चक्र में ऑपरेटर के अनुसार शेष (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "इस वर्ष ऑपरेटर के अनुसार शेष (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "बिलिंग चक्र और सीमा"
 
 msgid "Current setting"
 msgstr "वर्तमान सेटिंग"

@@ -378,6 +378,14 @@ class Refusals(Mu300Dash):
         ('traffic_set', {'op': 'daily', 'value': '1024'}, 'value', '1024'),
         ('traffic_set', {'op': 'daily_cut', 'value': 'on'}, 'value', 'on'),
         ('traffic_set', {'op': 'count', 'value': 'rx'}, 'value', 'rx'),
+        # the yearly plan and the corrections by the remaining (02-29 is a real day a year can start on)
+        ('traffic_set', {'op': 'yearly', 'value': '53687091200'}, 'op', 'yearly'),
+        ('traffic_set', {'op': 'yearly', 'value': '53687091200'}, 'value', '53687091200'),
+        ('traffic_set', {'op': 'yearly_start', 'value': '02-29'}, 'value', '02-29'),
+        ('traffic_set', {'op': 'yearly_cut', 'value': 'on'}, 'value', 'on'),
+        ('traffic_set', {'op': 'used_remaining', 'value': '0'}, 'value', '0'),
+        ('traffic_set', {'op': 'yearly_used', 'value': '1073741824'}, 'value', '1073741824'),
+        ('traffic_set', {'op': 'yearly_used_remaining', 'value': '53687091200'}, 'value', '53687091200'),
         # the CPU voltage offset (EXPERIMENTAL): three signed numbers, the confirmation word, the minutes
         ('cpu_voltage_set', {'op': 'set', 'offsets': '-3125,0,0', 'confirm': 'EXPERIMENTAL'}, 'op', 'set'),
         ('cpu_voltage_set', {'op': 'set', 'offsets': '-3125,0,0', 'confirm': 'EXPERIMENTAL'}, 'offsets', '-3125,0,0'),
@@ -448,6 +456,26 @@ class Refusals(Mu300Dash):
             ('traffic plan tab', 'traffic_set', {'op': 'plan', 'value': 'a\tb'}),
             ('traffic plan nul', 'traffic_set', {'op': 'plan', 'value': 'a\x00b'}),
             ('traffic plan 97 bytes', 'traffic_set', {'op': 'plan', 'value': 'x' * 97}),
+            ('traffic yearly negative', 'traffic_set', {'op': 'yearly', 'value': '-1'}),
+            ('traffic yearly decimal', 'traffic_set', {'op': 'yearly', 'value': '1.5'}),
+            ('traffic yearly leading zero', 'traffic_set', {'op': 'yearly', 'value': '01'}),
+            ('traffic yearly 17 digits', 'traffic_set', {'op': 'yearly', 'value': '1' * 17}),
+            ('traffic yearly start month 13', 'traffic_set', {'op': 'yearly_start', 'value': '13-01'}),
+            ('traffic yearly start 02-30', 'traffic_set', {'op': 'yearly_start', 'value': '02-30'}),
+            ('traffic yearly start 02-31', 'traffic_set', {'op': 'yearly_start', 'value': '02-31'}),
+            ('traffic yearly start 04-31', 'traffic_set', {'op': 'yearly_start', 'value': '04-31'}),
+            ('traffic yearly start month 0', 'traffic_set', {'op': 'yearly_start', 'value': '00-01'}),
+            ('traffic yearly start one digit', 'traffic_set', {'op': 'yearly_start', 'value': '1-01'}),
+            ('traffic yearly start day 0', 'traffic_set', {'op': 'yearly_start', 'value': '01-00'}),
+            ('traffic yearly start day 32', 'traffic_set', {'op': 'yearly_start', 'value': '01-32'}),
+            ('traffic yearly start a word', 'traffic_set', {'op': 'yearly_start', 'value': 'today'}),
+            ('traffic yearly cut yes', 'traffic_set', {'op': 'yearly_cut', 'value': 'yes'}),
+            ('traffic used remaining decimal', 'traffic_set', {'op': 'used_remaining', 'value': '1.5'}),
+            ('traffic used remaining negative', 'traffic_set', {'op': 'used_remaining', 'value': '-1'}),
+            ('traffic used remaining empty', 'traffic_set', {'op': 'used_remaining', 'value': ''}),
+            ('traffic yearly used leading zero', 'traffic_set', {'op': 'yearly_used', 'value': '050'}),
+            ('traffic yearly used decimal', 'traffic_set', {'op': 'yearly_used', 'value': '1.5'}),
+            ('traffic yearly used remaining empty', 'traffic_set', {'op': 'yearly_used_remaining', 'value': ''}),
             ('usb net role', 'usb_set', {'kind': 'net', 'value': 'host', 'scope': 'once', 'auto': '0'}),
             ('usb iface dots', 'usb_net_add', {'iface': '..'}),
             ('usb iface slash', 'usb_net_add', {'iface': 'eth1/../x'}),
@@ -813,6 +841,15 @@ class Passthrough(Mu300Dash):
         ('traffic_set', {'op': 'count', 'value': 'tx'}, [['traffic', 'set', 'count', 'tx']]),
         ('traffic_set', {'op': 'plan', 'value': 'Gece 50GB "x" $(id) \u6708'}, [['traffic', 'set', 'plan', 'Gece 50GB "x" $(id) \u6708']]),
         ('traffic_set', {'op': 'plan', 'value': ''}, [['traffic', 'set', 'plan', '']]),
+        # the yearly plan and the corrections by the remaining: the adapter converts the op to its CLI line
+        ('traffic_set', {'op': 'yearly', 'value': '0'}, [['traffic', 'set', 'yearly', '0']]),
+        ('traffic_set', {'op': 'yearly', 'value': '53687091200'}, [['traffic', 'set', 'yearly', '53687091200']]),
+        ('traffic_set', {'op': 'yearly_start', 'value': '02-29'}, [['traffic', 'set', 'yearly_start', '02-29']]),
+        ('traffic_set', {'op': 'yearly_cut', 'value': 'off'}, [['traffic', 'set', 'yearly_cut', 'off']]),
+        ('traffic_set', {'op': 'used_remaining', 'value': '0'}, [['traffic', 'set', 'used_remaining', '0']]),
+        ('traffic_set', {'op': 'yearly_used', 'value': '1073741824'}, [['traffic', 'set', 'yearly_used', '1073741824']]),
+        ('traffic_set', {'op': 'yearly_used_remaining', 'value': '53687091200'},
+         [['traffic', 'set', 'yearly_used_remaining', '53687091200']]),
         ('forward_get', {}, [['forward', 'get']]),
         ('forward_set', {'enabled': '1', 'telegram_token': 'x'}, [['forward', 'set']]),
         ('forward_test', {}, [['forward', 'test']]),
@@ -1379,7 +1416,16 @@ class TrafficAdapter(ShellTest):
                                (('cut', 'on'), 'set cut on'), (('used', '5'), 'used 5'), (('clear', 'yes'), 'clear --yes'),
                                (('daily', '0'), 'set daily off'), (('daily', '1024'), 'set daily 1024'),
                                (('daily_cut', 'on'), 'set daily-cut on'), (('count', 'rx'), 'set count rx'),
-                               (('plan', 'Gece \u6708'), 'set plan Gece \u6708'), (('plan', ''), 'set plan ')):
+                               (('plan', 'Gece \u6708'), 'set plan Gece \u6708'), (('plan', ''), 'set plan '),
+                               (('yearly', '0'), 'set yearly off'), (('yearly', '53687091200'), 'set yearly 53687091200'),
+                               (('yearly_start', '01-01'), 'set yearly-start 01-01'),
+                               (('yearly_start', '02-29'), 'set yearly-start 02-29'),
+                               (('yearly_cut', 'on'), 'set yearly-cut on'),
+                               (('used_remaining', '0'), 'set used-remaining 0'),
+                               (('used_remaining', '53687091200'), 'set used-remaining 53687091200'),
+                               (('yearly_used', '0'), 'yearly-used 0'),
+                               (('yearly_used', '1073741824'), 'yearly-used 1073741824'),
+                               (('yearly_used_remaining', '53687091200'), 'set yearly-used-remaining 53687091200')):
                 self.assertEqual(self.run_ad(shell, 'get') and self.run_ad(shell, 'set', *args), {'ok': 1}, args)
                 self.assertEqual(self.log().splitlines()[-1], want)
 
@@ -1388,7 +1434,12 @@ class TrafficAdapter(ShellTest):
             self.log()
             for op, v in (('reset_day', '0'), ('cap', '-1'), ('cap', '1.5'), ('warn', '101'), ('cut', 'yes'),
                           ('used', '$(id)'), ('clear', ''), ('cap', '5\n6'), ('device', 'wwan0'), ('daily', '1.5'),
-                          ('daily_cut', 'yes'), ('count', 'both'), ('plan', 'a\nb'), ('plan', 'a\x1bb'), ('plan', 'x' * 97)):
+                          ('daily_cut', 'yes'), ('count', 'both'), ('plan', 'a\nb'), ('plan', 'a\x1bb'), ('plan', 'x' * 97),
+                          ('yearly', '-1'), ('yearly', '1.5'), ('yearly', '01'), ('yearly_start', '13-01'),
+                          ('yearly_start', '02-30'), ('yearly_start', '02-31'), ('yearly_start', '04-31'),
+                          ('yearly_start', '1-01'), ('yearly_start', ''), ('yearly_cut', 'yes'),
+                          ('used_remaining', '1.5'), ('used_remaining', ''), ('yearly_used', '050'),
+                          ('yearly_used_remaining', '')):
                 with self.subTest(op=op, v=v):
                     self.assertEqual(self.run_ad(shell, 'set', op, v)['ok'], 0)
                     self.assertEqual(self.log(), '')

@@ -1057,17 +1057,32 @@ msgstr "قابل للكتابة"
 msgid "This boot image cannot change the boot"
 msgstr "لا تستطيع صورة الإقلاع هذه تغيير الإقلاع"
 
+msgid "Remaining this year"
+msgstr "المتبقي هذا العام"
+
+msgid "Remaining this cycle"
+msgstr "المتبقي في هذه الدورة"
+
 msgid "%s of %s"
 msgstr "%s من %s"
+
+msgid "The yearly cap is reached"
+msgstr "تم بلوغ الحد السنوي"
 
 msgid "The monthly cap is reached"
 msgstr "تم بلوغ الحد الشهري"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "تم استخدام %d%% من الحد السنوي"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "تم استخدام %d%% من الحد الشهري"
 
-msgid "This billing cycle"
-msgstr "دورة الفوترة الحالية"
+msgid "Used this year"
+msgstr "المستخدم هذا العام"
+
+msgid "Used this cycle"
+msgstr "المستخدم في هذه الدورة"
 
 msgid "Link & traffic"
 msgstr "الرابط وحركة المرور"
@@ -1084,8 +1099,8 @@ msgstr "إجمالي المستلَم"
 msgid "Total sent"
 msgstr "إجمالي المرسَل"
 
-msgid "Used today"
-msgstr "المستخدم اليوم"
+msgid "Today"
+msgstr "اليوم"
 
 msgid "SIM source"
 msgstr "مصدر SIM"
@@ -2390,8 +2405,17 @@ msgstr "فُتحت هذه الصفحة عبر HTTPS، والطرفية تُقد�
 msgid "The data usage could not be read"
 msgstr "تعذرت قراءة استهلاك البيانات"
 
-msgid "Today"
-msgstr "اليوم"
+msgid "Year"
+msgstr "سنة"
+
+msgid "Month"
+msgstr "شهر"
+
+msgid "Used"
+msgstr "المستخدم"
+
+msgid "Days left this year"
+msgstr "الأيام المتبقية هذا العام"
 
 msgid "Days left in this cycle"
 msgstr "الأيام المتبقية في الدورة"
@@ -2411,11 +2435,17 @@ msgstr "الحد الشهري"
 msgid "%s, warning at %d%%"
 msgstr "%s، تنبيه عند %d%%"
 
+msgid "Yearly cap"
+msgstr "الحد السنوي"
+
 msgid "Daily quota"
 msgstr "الحصة اليومية"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "تم بلوغ الحد الشهري: أُوقفت بيانات الجوال. ستعود عند بدء الدورة التالية."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "تم بلوغ الحد السنوي: أُوقفت بيانات الجوال. ستعود عند بدء العام التالي."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "تم بلوغ الحصة اليومية: أُوقفت بيانات الجوال. تعود عند منتصف الليل."
@@ -2483,6 +2513,15 @@ msgstr "إيقاف بيانات الجوال عند بلوغ الحصة اليو
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "عندما يبلغ استهلاك اليوم الحصة اليومية، تُوقف بيانات الجوال حتى منتصف الليل أو رفع الحصة أو إيقاف هذا الخيار. تشغيل بيانات الجوال يدويًا يبقيها تعمل حتى إعادة التشغيل التالية."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "ما يعرضه المشغل كمتبقٍ يُحتسب مستخدماً: يُصحح العداد إلى الحد ناقص هذه القيمة."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "إيقاف بيانات الجوال عند بلوغ الحد السنوي"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "عندما يبلغ هذا العام الحد السنوي، تُوقف بيانات الجوال: لا إنترنت عبر المشغل حتى يبدأ العام التالي أو يُرفع الحد السنوي أو يُعطّل هذا الخيار. إعادة تشغيل بيانات الجوال يدوياً تبقيها مفعلة حتى إعادة التشغيل التالية."
+
 msgid "Both ways"
 msgstr "الاتجاهين"
 
@@ -2501,9 +2540,6 @@ msgstr "مسح العداد"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "تُنسى كل الأيام ودورات الفوترة المحسوبة حتى الآن. يستمر الحساب من الآن."
 
-msgid "Billing cycle and cap"
-msgstr "دورة الفوترة والحد"
-
 msgid "A billing cycle starts on day"
 msgstr "تبدأ دورة الفوترة في اليوم"
 
@@ -2513,11 +2549,20 @@ msgstr "31: في آخر يوم من كل شهر"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "الحد الشهري (غيغابايت، 0: لا يوجد)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "التنبيه عند هذه النسبة من الحد"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "التنبيه عند هذه النسبة من الحد والحد السنوي"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "الحصة اليومية (غيغابايت، 0: لا يوجد)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "الحد السنوي (غيغابايت، 0: لا يوجد)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "تبدأ سنة الفوترة في (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "مثلاً 01-01؛ 02-29 تصبح 02-28 في السنة غير الكبيسة."
 
 msgid "The cap and the daily quota count"
 msgstr "ما يحتسبه الحد الشهري والحصة اليومية"
@@ -2530,6 +2575,18 @@ msgstr "المستخدم حتى الآن في هذه الدورة (غيغابا�
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "ما يعرضه المشغل لهذه الدورة (مثلاً إذا بدأ الحساب في منتصفها)؛ يُصحح العداد وفقاً له."
+
+msgid "Used so far this year (GB)"
+msgstr "المستخدم حتى الآن هذا العام (غيغابايت)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "المتبقي في هذه الدورة كما يعرضه المشغل (غيغابايت)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "المتبقي هذا العام كما يعرضه المشغل (غيغابايت)"
+
+msgid "Billing cycle and cap"
+msgstr "دورة الفوترة والحد"
 
 msgid "Current setting"
 msgstr "الإعداد الحالي"

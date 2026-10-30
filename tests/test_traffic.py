@@ -531,7 +531,7 @@ class Cap(CapBase):
             self.round(shell, 3 << 30, 160)
             out = self.run_tool(shell, now=self.now + 160).stdout
             self.assertIn('today         2026-10-10  down 3.0 GB, up 0 B', out)
-            self.assertIn('this cycle    2026-10-01 - 2026-10-31  3.0 GB used of 50.0 GB (6%), 22 days left', out)
+            self.assertIn('this cycle    2026-10-01 - 2026-10-31  3.0 GB used of 50.0 GB (6%), 47.0 GB left, 22 days left', out)
             self.assertIn('2026-10-10  down    3.0 GB', self.run_tool(shell, 'days', now=self.now + 160).stdout)
 
 
@@ -709,7 +709,9 @@ class Service(TrafficBase):
             self.sample(shell, 0, 0, 100, self.now)
             self.sample(shell, 950, 0, 160, self.now + 60)
             s = (self.root / 'run/mu300/traffic/summary').read_text()
-            for line in ('level=warn', 'used=950', 'cap=1000', 'today_rx=950', 'clock=1', 'cycle_start=2026-10-01'):
+            for line in ('level=warn', 'used=950', 'cap=1000', 'today_rx=950', 'clock=1', 'cycle_start=2026-10-01',
+                         'remaining=50', 'yearly=0', 'yearly_level=none', 'yearly_used=950', 'yearly_remaining=0',
+                         'yearly_cut=0'):
                 self.assertIn(line + '\n', s)
 
 
@@ -731,6 +733,321 @@ class Json(TrafficBase):
             self.sample(shell, 0, 0, 100, self.now)
             self.assertTrue((self.root / 'etc/mu300/traffic/ledger').exists())
             (self.root / 'mnt/mu300-disk/.mu300').mkdir(parents=True)
+
+
+class Remaining(TrafficBase):
+    """the remaining shown by the operator: cap.remaining (cap - used) and the correction the other way around
+    (used = cap - remaining), in the count mode it was made in, as "used" is"""
+
+    def test_remaining_is_the_cap_less_used(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.sample(shell, 0, 0, 100, self.now)
+            self.sample(shell, 300, 200, 160, self.now + 60)
+            v = self.view(shell, self.now + 60)
+            self.assertEqual((v['cap']['bytes'], v['cap']['remaining']), (0, 0))
+            self.set(shell, 'cap', '1000')
+            v = self.view(shell, self.now + 60)
+            self.assertEqual((v['cycle']['used'], v['cap']['remaining']), (500, 500))
+            self.sample(shell, 1300, 200, 220, self.now + 120)
+            self.assertEqual(self.view(shell, self.now + 120)['cap']['remaining'], -500)   # over the cap: negative
+
+    def test_used_remaining_corrects_the_cycle(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.set(shell, 'cap', '1000')
+            self.sample(shell, 0, 0, 100, self.now)
+            self.sample(shell, 300, 200, 160, self.now + 60)
+            self.run_tool(shell, 'set', 'used-remaining', '600', now=self.now + 60)
+            v = self.view(shell, self.now + 60)
+            self.assertEqual((v['cycle']['used'], v['cycle']['adj']), (400, -100))    # used = 1000 - 600
+            self.assertIn('adj 2026-10-01 -100\n', self.ledger())
+            # the correction belongs to the count mode it was made in, as "used" does
+            self.set(shell, 'count', 'tx')
+            self.assertEqual(self.view(shell, self.now + 60)['cycle']['used'], 200)
+            self.run_tool(shell, 'set', 'used-remaining', '700', now=self.now + 60)
+            self.assertEqual(self.view(shell, self.now + 60)['cycle']['used'], 300)    # used = 1000 - 700
+            self.assertIn('adj 2026-10-01 100 tx\n', self.ledger())
+            self.set(shell, 'count', 'total')
+            self.assertEqual(self.view(shell, self.now + 60)['cycle']['used'], 500)    # the tx correction is gone
+
+    def test_refused_without_a_cap_and_for_a_remaining_over_the_cap(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.sample(shell, 0, 0, 100, self.now)
+            r = self.run_tool(shell, 'set', 'used-remaining', '100', ok=False)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('no cap is set', r.stderr)
+            self.set(shell, 'cap', '1000')
+            r = self.run_tool(shell, 'set', 'used-remaining', '2000', ok=False)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('more than the cap', r.stderr)
+            self.assertEqual(self.view(shell)['cycle']['adj'], 0)     # nothing was written
+            self.assertNotEqual(self.run_tool(shell, 'set', 'used-remaining', '1.5G', ok=False).returncode, 0)
+
+    def test_the_used_correction_and_the_yearly_one_are_separate(self):
+        # used corrects the cycle only; yearly-used corrects the year only (the operator shows the two apart)
+        for shell in self.each_shell():
+            self.fresh()
+            self.set(shell, 'cap', '1000')
+            self.set(shell, 'yearly', '2000')
+            self.sample(shell, 0, 0, 100, self.now)
+            self.sample(shell, 300, 0, 160, self.now + 60)
+            self.run_tool(shell, 'used', '500', now=self.now + 60)
+            v = self.view(shell, self.now + 60)
+            self.assertEqual((v['cycle']['used'], v['yearly']['used']), (500, 300))
+            self.run_tool(shell, 'yearly-used', '800', now=self.now + 60)
+            v = self.view(shell, self.now + 60)
+            self.assertEqual((v['cycle']['used'], v['yearly']['used']), (500, 800))
+
+
+class Yearly(CapBase):
+    """the yearly plan: the same count as the monthly cap for one billing year (yearly-start MM-DD), its own warning
+    percentage and cut, off by default - and no ledger line of its own unless it is set"""
+
+    def test_off_by_default_and_no_ledger_line_of_its_own(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.round(shell, 0, 100)
+            self.round(shell, 900, 160)
+            v = self.view(shell, self.now + 160)
+            self.assertEqual(v['yearly'], {'start_day': '01-01', 'start': '2026-01-01', 'last': '2026-12-31',
+                                           'days_left': 83, 'bytes': 0, 'used': 900, 'remaining': 0, 'cut': 0,
+                                           'level': 'none', 'cut_active': 0})
+            for line in ('yadj ', 'ycut ', 'yalert '):
+                self.assertNotIn('\n' + line, self.ledger())
+            self.assertIn('yearly        none', self.run_tool(shell, now=self.now + 160).stdout)
+            self.assertEqual(v['cap']['remaining'], 0)
+
+    def test_warning_and_cut_once(self):
+        for shell in self.each_shell():
+            self.fresh()
+            (self.root / 'run/mu300-mobile-data-down').unlink(missing_ok=True)
+            self.set(shell, 'yearly', '1000')
+            self.set(shell, 'warn', '80')
+            self.set(shell, 'yearly-cut', 'on')
+            self.round(shell, 0, 100)
+            self.round(shell, 850, 160)
+            v = self.view(shell, self.now + 160)
+            self.assertEqual((v['yearly']['level'], v['yearly']['remaining'], v['yearly']['cut']), ('warn', 150, 1))
+            self.assertIn('80% of the yearly cap', self.log())
+            self.assertEqual(self.calls(), [])
+            self.round(shell, 1000, 220)
+            v = self.view(shell, self.now + 220)
+            self.assertEqual((v['yearly']['level'], v['yearly']['remaining'], v['yearly']['cut_active']), ('over', 0, 1))
+            self.assertEqual(self.calls(), ['ifdown wan'])
+            self.assertIn('the yearly cap is reached', self.log())
+            # mobile-data down marks it: a further round cuts nothing more and does not warn again
+            (self.root / 'run/mu300-mobile-data-down').write_text('')
+            self.round(shell, 1010, 280)
+            self.assertEqual(self.calls(), ['ifdown wan'])
+            self.assertEqual(self.log().count('the yearly cap is reached ('), 1)
+            self.assertIn('\nycut ', self.ledger())
+            self.assertIn('\nyalert 2026-01-01 over', self.ledger())
+
+    def test_a_reboot_cuts_again_and_the_next_year_restores(self):
+        for shell in self.each_shell():
+            self.fresh()
+            (self.root / 'run/mu300-mobile-data-down').unlink(missing_ok=True)
+            self.set(shell, 'yearly', '1000')
+            self.set(shell, 'yearly-cut', 'on')
+            self.round(shell, 0, 100)
+            self.round(shell, 2000, 160)
+            subprocess.run(['rm', '-rf', str(self.root / 'run/mu300/traffic')])
+            self.round(shell, 10, 30, now=self.now + 600, boot='bbbb-2', idx=9)
+            self.assertEqual(self.calls(), ['ifdown wan', 'ifdown wan'])
+            (self.root / 'run/mu300-mobile-data-down').write_text('')
+            self.round(shell, 10, 90, now=at(2027, 1, 1, 0, 1), boot='bbbb-2', idx=9)
+            self.assertEqual(self.calls(), ['ifdown wan', 'ifdown wan', 'ifup wan'])
+            self.assertIn('back on', self.log())
+            self.assertEqual(self.view(shell, at(2027, 1, 1, 0, 1))['yearly']['cut_active'], 0)
+
+    def test_raising_the_yearly_cap_or_cut_off_restores(self):
+        for shell in self.each_shell():
+            self.fresh()
+            (self.root / 'run/mu300-mobile-data-down').unlink(missing_ok=True)
+            self.set(shell, 'yearly', '1000')
+            self.set(shell, 'yearly-cut', 'on')
+            self.round(shell, 0, 100)
+            self.round(shell, 2000, 160)
+            (self.root / 'run/mu300-mobile-data-down').write_text('')
+            self.set(shell, 'yearly', '1G')       # 1073741824 bytes: well over what was counted
+            self.round(shell, 2000, 220)
+            self.assertEqual(self.calls(), ['ifdown wan', 'ifup wan'])
+            self.set(shell, 'yearly-cut', 'off')
+            self.assertEqual(self.view(shell, self.now + 220)['yearly']['cut'], 0)
+
+    def test_anniversary_rolls_over(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.store.mkdir(parents=True)
+            (self.store / 'ledger').write_text('mu300-traffic 1\nbase aaaa-1 7 sipa_eth0 0 0 100\n'
+                                              'd 2026-09-30 100 0\nd 2026-10-01 200 0\n'
+                                              'd 2027-09-30 300 0\nd 2027-10-01 400 0\n')
+            self.counters(0, 0, 100)
+            self.set(shell, 'yearly-start', '10-01')
+            self.set(shell, 'yearly', '1000')
+            v = self.view(shell, at(2027, 9, 30, 12))
+            self.assertEqual((v['yearly']['start_day'], v['yearly']['used'], v['yearly']['remaining']), ('10-01', 500, 500))
+            self.assertEqual((v['yearly']['start'], v['yearly']['last'], v['yearly']['days_left']),
+                             ('2026-10-01', '2027-09-30', 1))
+            # the correction of a year ends with it
+            self.run_tool(shell, 'yearly-used', '700', now=at(2027, 9, 30, 12))
+            self.assertEqual(self.view(shell, at(2027, 9, 30, 12))['yearly']['used'], 700)
+            v = self.view(shell, at(2027, 10, 1, 12))
+            self.assertEqual((v['yearly']['used'], v['yearly']['remaining']), (400, 600))
+            self.assertEqual((v['yearly']['start'], v['yearly']['last']), ('2027-10-01', '2028-09-30'))
+            self.assertEqual(v['cycle']['adj'], 0)
+
+    def test_the_anniversary_of_29_february(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.store.mkdir(parents=True)
+            (self.store / 'ledger').write_text('mu300-traffic 1\nbase aaaa-1 7 sipa_eth0 0 0 100\n'
+                                              'd 2027-02-27 100 0\nd 2027-02-28 200 0\n')
+            self.counters(0, 0, 100)
+            self.set(shell, 'yearly-start', '02-29')
+            self.set(shell, 'yearly', '1000')
+            # 2027 has no 29 February: the billing year that starts in 2027 starts on 28 February
+            v = self.view(shell, at(2027, 3, 1, 12))['yearly']
+            self.assertEqual((v['used'], v['start'], v['last']), (200, '2027-02-28', '2028-02-28'))
+            v = self.view(shell, at(2028, 2, 28, 12))['yearly']
+            self.assertEqual((v['used'], v['start']), (200, '2027-02-28'))
+            v = self.view(shell, at(2028, 2, 29, 12))['yearly']
+            self.assertEqual((v['used'], v['start'], v['last']), (0, '2028-02-29', '2029-02-27'))
+
+    def test_yearly_used_corrects_the_year(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.set(shell, 'yearly', '2000')
+            self.sample(shell, 0, 0, 100, self.now)
+            self.sample(shell, 300, 0, 160, self.now + 60)
+            self.run_tool(shell, 'yearly-used', '800', now=self.now + 60)
+            v = self.view(shell, self.now + 60)
+            self.assertEqual((v['yearly']['used'], v['yearly']['remaining']), (800, 1200))
+            self.assertIn('yadj 2026-01-01 500\n', self.ledger())
+            r = self.run_tool(shell, 'yearly-used', 'nope', ok=False)
+            self.assertNotEqual(r.returncode, 0)
+
+    def test_yearly_used_remaining_corrects_the_year(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.set(shell, 'yearly', '2000')
+            self.sample(shell, 0, 0, 100, self.now)
+            self.sample(shell, 300, 0, 160, self.now + 60)
+            self.run_tool(shell, 'set', 'yearly-used-remaining', '1000', now=self.now + 60)
+            v = self.view(shell, self.now + 60)
+            self.assertEqual((v['yearly']['used'], v['yearly']['remaining']), (1000, 1000))
+            self.assertIn('yadj 2026-01-01 700\n', self.ledger())
+            # a remaining over the yearly cap is refused, and writes nothing
+            r = self.run_tool(shell, 'set', 'yearly-used-remaining', '3000', ok=False)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('more than the yearly cap', r.stderr)
+            self.assertEqual(self.view(shell, self.now + 60)['yearly']['used'], 1000)
+
+    def test_refused_without_a_yearly_cap(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.sample(shell, 0, 0, 100, self.now)
+            for args in (('yearly-used', '500'), ('set', 'yearly-used-remaining', '500')):
+                r = self.run_tool(shell, *args, ok=False)
+                self.assertNotEqual(r.returncode, 0, args)
+                self.assertIn('no yearly cap is set', r.stderr, args)
+            self.assertNotIn('\nyadj ', self.ledger())
+
+    def test_yearly_count_mode(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.set(shell, 'yearly', '1000')
+            self.set(shell, 'count', 'rx')
+            self.sample(shell, 0, 0, 100, self.now)
+            self.sample(shell, 700, 600, 160, self.now + 60)
+            self.assertEqual(self.view(shell, self.now + 60)['yearly']['used'], 700)
+            self.run_tool(shell, 'yearly-used', '500', now=self.now + 60)
+            self.assertEqual(self.view(shell, self.now + 60)['yearly']['used'], 500)
+            self.assertIn('yadj 2026-01-01 -200 rx\n', self.ledger())
+            self.set(shell, 'count', 'tx')
+            self.assertEqual(self.view(shell, self.now + 60)['yearly']['used'], 600)   # the rx correction is gone
+            self.set(shell, 'count', 'total')
+            self.assertEqual(self.view(shell, self.now + 60)['yearly']['used'], 1300)
+
+    def test_settings_are_checked(self):
+        for shell in self.each_shell():
+            self.fresh()
+            for key, value in (('yearly', '-1'), ('yearly', '5X'), ('yearly-start', '13-01'), ('yearly-start', '02-30'),
+                               ('yearly-start', '04-31'), ('yearly-start', '1-01'), ('yearly-start', '01-32'),
+                               ('yearly-start', '02-29x'), ('yearly-cut', 'yes'), ('yearly-cut', '1')):
+                self.assertNotEqual(self.run_tool(shell, 'set', key, value, ok=False).returncode, 0, (key, value))
+            self.set(shell, 'yearly', '1.5T')
+            self.assertIn('YEARLY=1649267441664\n', (self.store / 'conf').read_text())
+            self.set(shell, 'yearly-start', '02-29')
+            self.assertIn('YEARLY_START=02-29\n', (self.store / 'conf').read_text())
+            self.set(shell, 'yearly-cut', 'on')
+            self.assertIn('YEARLY_CUT=1\n', (self.store / 'conf').read_text())
+            # a file edited by hand with a day no month has: the default
+            (self.store / 'conf').write_text('YEARLY=0\nYEARLY_START=02-30\n')
+            self.counters(0, 0, 100)
+            self.assertEqual(self.view(shell)['yearly']['start_day'], '01-01')
+
+    def test_old_conf_and_old_ledger_still_read(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.store.mkdir(parents=True)
+            (self.store / 'conf').write_text('RESET_DAY=1\nCAP=1000\nWARN=80\nCUT=0\nDAILY=0\nDAILY_CUT=0\n'
+                                             'COUNT=total\nPLAN=\nDEVICE=auto\n')
+            (self.store / 'ledger').write_text('mu300-traffic 1\nsince 1790000000\n'
+                                               'base aaaa-1 7 sipa_eth0 0 0 100\nd 2026-10-01 500 0\n')
+            self.counters(0, 0, 100)
+            v = self.view(shell)
+            self.assertEqual((v['cap']['bytes'], v['cap']['remaining'], v['yearly']['bytes']), (1000, 500, 0))
+            self.assertEqual([d['date'] for d in v['days']], ['2026-10-01'])
+            self.run_tool(shell, 'save')
+            self.assertNotIn('\nyadj ', self.ledger())   # an old ledger is not given new lines for nothing
+
+    def test_text_view(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.set(shell, 'yearly', '1G')
+            self.set(shell, 'yearly-start', '07-01')
+            self.round(shell, 0, 100)
+            self.round(shell, 1 << 30, 160)
+            out = self.run_tool(shell, now=self.now + 160).stdout
+            self.assertIn('this year     2026-07-01 - 2027-06-30  1.0 GB used of 1.0 GB (100%)', out)
+            self.assertIn('yearly cap    1.0 GB, warning at 90%; at the yearly cap mobile data stays on', out)
+            self.assertIn('the yearly cap is reached', out)
+
+    def test_clear_forgets_the_yearly_correction(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.set(shell, 'yearly', '2000')
+            self.sample(shell, 0, 0, 100, self.now)
+            self.sample(shell, 300, 0, 160, self.now + 60)
+            self.run_tool(shell, 'yearly-used', '800', now=self.now + 60)
+            self.run_tool(shell, 'clear', '--yes', now=self.now + 60)
+            self.assertNotIn('\nyadj ', self.ledger())
+            self.assertEqual(self.view(shell, self.now + 60)['yearly']['used'], 0)
+
+
+class YearlyOff(TrafficBase):
+    """a yearly plan switched off again leaves no ledger line behind, and the year's count is the days'"""
+
+    def test_off_drops_the_yearly_lines_and_keeps_counting(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.set(shell, 'yearly', '1000')
+            self.set(shell, 'yearly-cut', 'on')
+            self.sample(shell, 0, 0, 100, self.now)
+            self.sample(shell, 300, 0, 160, self.now + 60)
+            self.sample(shell, 1000, 0, 220, self.now + 120)      # over the yearly cap: the cut is written
+            self.assertIn('\nycut ', self.ledger())
+            self.set(shell, 'yearly', 'off')
+            self.sample(shell, 1100, 0, 280, self.now + 180)
+            v = self.view(shell, self.now + 180)
+            self.assertEqual((v['yearly']['bytes'], v['yearly']['cut'], v['yearly']['cut_active']), (0, 1, 0))
+            self.assertEqual(v['yearly']['used'], 1100)           # the year still counts, it has no cap
+            for line in ('yadj ', 'ycut ', 'yalert '):
+                self.assertNotIn('\n' + line, self.ledger())
+
 
 
 if __name__ == '__main__':

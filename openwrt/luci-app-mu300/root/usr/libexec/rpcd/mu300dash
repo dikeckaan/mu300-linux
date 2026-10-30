@@ -35,8 +35,8 @@
 #   boot_get          the dual boot's state, read only (unisoc-modem/boot, mu300-next-boot status)
 #   led_get, led_set key value  the LED settings (unisoc-modem/led, mu300-led): the lamps' switches and brightness,
 #                     the timeout, the boot indicator, the heat alarm's light
-#   traffic_get, traffic_set op value  the mobile data count, its billing cycle and cap (unisoc-modem/traffic,
-#                     mu300-traffic)
+#   traffic_get, traffic_set op value  the mobile data count, its billing cycle, its cap and yearly plan
+#                     (unisoc-modem/traffic, mu300-traffic)
 #   forward_get, forward_set ..., forward_test, forward_log_clear  SMS forwarding (unisoc-modem/forward,
 #                     mu300-sms-forward); the settings go to the adapter on stdin, as sent: they hold secrets, never
 #                     an argument. forward_log_clear empties the delivery log and takes nothing.
@@ -899,6 +899,8 @@ m_led_set() {
 # --------------------------------------------------------------- data usage
 # The Data usage page: mu300-traffic through the adapter, which checks every value again. Sizes are whole bytes.
 TRAFA=${MU300_TRAFFIC_ADAPTER:-$DASH/traffic}
+# the day a billing year starts: MM-DD, a real day (02-29 is a leap day, and allowed)
+TRA_DATE='((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01])|(0[469]|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-9]))'
 m_traffic_get() { reply_obj "$("$TRAFA" get 2>/dev/null)" 'The data usage adapter gave no valid reply'; }
 m_traffic_set() {
     local op value
@@ -906,10 +908,11 @@ m_traffic_set() {
     inp '@.value'; value=$V
     case $op in
         reset_day) allowed "$value" '([1-9]|[12][0-9]|3[01])' ;;
-        cap|used|daily) allowed "$value" '(0|[1-9][0-9]{0,15})' ;;
+        cap|used|daily|yearly|used_remaining|yearly_used|yearly_used_remaining) allowed "$value" '(0|[1-9][0-9]{0,15})' ;;
         warn)      allowed "$value" '([1-9]|[1-9][0-9]|100)' ;;
-        cut|daily_cut) allowed "$value" '(on|off)' ;;
+        cut|daily_cut|yearly_cut) allowed "$value" '(on|off)' ;;
         count)     allowed "$value" '(total|rx|tx)' ;;
+        yearly_start) allowed "$value" "$TRA_DATE" ;;
         # the plan's name: one line of text (UTF-8 allowed), no control character, at most 96 bytes; empty: none
         plan)      [ "$(printf '%s' "$value" | LC_ALL=C tr -d '\040-\176\200-\377'; echo x)" = x ] &&
                        [ "$(printf '%s' "$value" | wc -c)" -le 96 ] ;;

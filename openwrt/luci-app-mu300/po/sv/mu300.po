@@ -1057,17 +1057,32 @@ msgstr "Skrivbar"
 msgid "This boot image cannot change the boot"
 msgstr "Den här startavbildningen kan inte ändra starten"
 
+msgid "Remaining this year"
+msgstr "Kvar i år"
+
+msgid "Remaining this cycle"
+msgstr "Kvar i denna period"
+
 msgid "%s of %s"
 msgstr "%s av %s"
+
+msgid "The yearly cap is reached"
+msgstr "Årsgränsen är nådd"
 
 msgid "The monthly cap is reached"
 msgstr "Månadsgränsen är nådd"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "%d%% av årsgränsen använt"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "%d%% av månadsgränsen använt"
 
-msgid "This billing cycle"
-msgstr "Denna faktureringsperiod"
+msgid "Used this year"
+msgstr "Använt i år"
+
+msgid "Used this cycle"
+msgstr "Använt i denna period"
 
 msgid "Link & traffic"
 msgstr "Länk & trafik"
@@ -1084,8 +1099,8 @@ msgstr "Totalt mottaget"
 msgid "Total sent"
 msgstr "Totalt skickat"
 
-msgid "Used today"
-msgstr "Använt i dag"
+msgid "Today"
+msgstr "I dag"
 
 msgid "SIM source"
 msgstr "SIM-källa"
@@ -2390,8 +2405,17 @@ msgstr "Den här sidan öppnades via HTTPS, och terminalen levereras via HTTP p�
 msgid "The data usage could not be read"
 msgstr "Dataförbrukningen kunde inte läsas"
 
-msgid "Today"
-msgstr "I dag"
+msgid "Year"
+msgstr "År"
+
+msgid "Month"
+msgstr "Månad"
+
+msgid "Used"
+msgstr "Använt"
+
+msgid "Days left this year"
+msgstr "Dagar kvar i år"
 
 msgid "Days left in this cycle"
 msgstr "Dagar kvar i perioden"
@@ -2411,11 +2435,17 @@ msgstr "Månadsgräns"
 msgid "%s, warning at %d%%"
 msgstr "%s, varning vid %d%%"
 
+msgid "Yearly cap"
+msgstr "Årsgräns"
+
 msgid "Daily quota"
 msgstr "Daglig kvot"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Månadsgränsen är nådd: mobildata stängdes av. Den slås på igen när nästa period börjar."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Årsgränsen är nådd: mobildata stängdes av. Den slås på igen när nästa år börjar."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Den dagliga kvoten är nådd: mobildata stängdes av. Den slås på igen vid midnatt."
@@ -2483,6 +2513,15 @@ msgstr "Stäng av mobildata vid den dagliga kvoten"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "När dagens förbrukning når den dagliga kvoten stängs mobildata av till midnatt, tills kvoten höjs eller detta stängs av igen. Slår du på mobildata för hand förblir den på till nästa omstart."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Det operatören visar som kvar räknas som använt: räkningen korrigeras till gränsen minus det."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Stäng av mobildata vid årsgränsen"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "När detta år når årsgränsen stängs mobildata av: inget internet via operatören förrän nästa år börjar, årsgränsen höjs eller detta stängs av igen. Mobildata som slås på igen för hand förblir på till nästa omstart."
+
 msgid "Both ways"
 msgstr "Båda riktningarna"
 
@@ -2501,9 +2540,6 @@ msgstr "Rensa räkningen"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Alla dagar och faktureringsperioder som räknats hittills glöms. Räkningen fortsätter från nu."
 
-msgid "Billing cycle and cap"
-msgstr "Faktureringsperiod och gräns"
-
 msgid "A billing cycle starts on day"
 msgstr "En faktureringsperiod börjar dag"
 
@@ -2513,11 +2549,20 @@ msgstr "31: på den sista dagen i varje månad"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Månadsgräns (GB, 0: ingen)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Varna vid denna procent av gränsen"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Varna vid denna procent av gränsen och årsgränsen"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Daglig kvot (GB, 0: ingen)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Årsgräns (GB, 0: ingen)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Ett faktureringsår börjar (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Till exempel 01-01; 02-29 är 02-28 under ett vanligt år."
 
 msgid "The cap and the daily quota count"
 msgstr "Vad gränsen och den dagliga kvoten räknar"
@@ -2530,6 +2575,18 @@ msgstr "Använt hittills i denna period (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Det operatören visar för denna period (till exempel om räkningen började mitt i den); räkningen korrigeras till det."
+
+msgid "Used so far this year (GB)"
+msgstr "Använt hittills i år (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Kvar i denna period enligt operatören (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Kvar i år enligt operatören (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Faktureringsperiod och gräns"
 
 msgid "Current setting"
 msgstr "Aktuell inställning"

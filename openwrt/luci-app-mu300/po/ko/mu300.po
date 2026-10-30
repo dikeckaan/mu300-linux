@@ -1057,17 +1057,32 @@ msgstr "쓰기 가능"
 msgid "This boot image cannot change the boot"
 msgstr "이 부트 이미지로는 부팅 설정을 바꿀 수 없습니다"
 
+msgid "Remaining this year"
+msgstr "올해 남은 양"
+
+msgid "Remaining this cycle"
+msgstr "이번 기간 남은 양"
+
 msgid "%s of %s"
 msgstr "%s / %s"
+
+msgid "The yearly cap is reached"
+msgstr "연간 한도에 도달했습니다"
 
 msgid "The monthly cap is reached"
 msgstr "월 한도에 도달했습니다"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "연간 한도의 %d%% 사용"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "월 한도의 %d%% 사용"
 
-msgid "This billing cycle"
-msgstr "이번 청구 기간"
+msgid "Used this year"
+msgstr "올해 사용량"
+
+msgid "Used this cycle"
+msgstr "이번 기간 사용량"
 
 msgid "Link & traffic"
 msgstr "링크 및 트래픽"
@@ -1084,8 +1099,8 @@ msgstr "총 수신량"
 msgid "Total sent"
 msgstr "총 송신량"
 
-msgid "Used today"
-msgstr "오늘 사용량"
+msgid "Today"
+msgstr "오늘"
 
 msgid "SIM source"
 msgstr "SIM 소스"
@@ -2390,8 +2405,17 @@ msgstr "이 페이지는 HTTPS로 열렸고 터미널은 LAN에서 HTTP로 제�
 msgid "The data usage could not be read"
 msgstr "데이터 사용량을 읽을 수 없습니다"
 
-msgid "Today"
-msgstr "오늘"
+msgid "Year"
+msgstr "연도"
+
+msgid "Month"
+msgstr "월"
+
+msgid "Used"
+msgstr "사용량"
+
+msgid "Days left this year"
+msgstr "올해 남은 일수"
 
 msgid "Days left in this cycle"
 msgstr "이번 기간 남은 일수"
@@ -2411,11 +2435,17 @@ msgstr "월 한도"
 msgid "%s, warning at %d%%"
 msgstr "%s, %d%%에서 경고"
 
+msgid "Yearly cap"
+msgstr "연간 한도"
+
 msgid "Daily quota"
 msgstr "일일 한도"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "월 한도에 도달했습니다: 모바일 데이터를 껐습니다. 다음 기간이 시작되면 다시 켜집니다."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "연간 한도에 도달했습니다: 모바일 데이터를 껐습니다. 다음 연도가 시작되면 다시 켜집니다."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "일일 한도에 도달했습니다: 모바일 데이터를 껐습니다. 자정에 다시 켜집니다."
@@ -2483,6 +2513,15 @@ msgstr "일일 한도에서 모바일 데이터 끄기"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "오늘 사용량이 일일 한도에 도달하면 자정까지, 한도를 올리거나 이 기능을 끌 때까지 모바일 데이터가 꺼집니다. 모바일 데이터를 직접 다시 켜면 다음 재부팅까지 켜진 상태로 유지됩니다."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "통신사가 남은 양으로 표시하는 값은 사용한 것으로 계산됩니다: 집계는 한도에서 그 값을 뺀 값으로 보정됩니다."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "연간 한도에서 모바일 데이터 끄기"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "올해가 연간 한도에 도달하면 모바일 데이터가 꺼집니다: 다음 연도가 시작되거나, 연간 한도를 올리거나, 이 옵션을 다시 끌 때까지 통신사를 통한 인터넷을 사용할 수 없습니다. 모바일 데이터를 수동으로 다시 켜면 다음 재부팅까지 켜진 상태로 유지됩니다."
+
 msgid "Both ways"
 msgstr "양방향"
 
@@ -2501,9 +2540,6 @@ msgstr "집계 지우기"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "지금까지 집계된 모든 날짜와 청구 기간이 삭제됩니다. 지금부터 다시 집계합니다."
 
-msgid "Billing cycle and cap"
-msgstr "청구 기간과 한도"
-
 msgid "A billing cycle starts on day"
 msgstr "청구 기간 시작일"
 
@@ -2513,11 +2549,20 @@ msgstr "31: 매월 마지막 날"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "월 한도 (GB, 0: 없음)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "한도의 이 백분율에서 경고"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "한도와 연간 한도의 이 백분율에서 경고"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "일일 한도 (GB, 0: 없음)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "연간 한도 (GB, 0: 없음)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "청구 연도 시작일 (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "예: 01-01. 02-29는 평년에는 02-28입니다."
 
 msgid "The cap and the daily quota count"
 msgstr "한도와 일일 한도의 집계 방식"
@@ -2530,6 +2575,18 @@ msgstr "이번 기간 지금까지 사용량 (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "통신사가 이번 기간에 대해 표시하는 사용량 (예: 기간 중간에 집계를 시작한 경우). 집계가 이 값으로 보정됩니다."
+
+msgid "Used so far this year (GB)"
+msgstr "올해 지금까지 사용량 (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "통신사 표시 기준 이번 기간 남은 양 (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "통신사 표시 기준 올해 남은 양 (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "청구 기간과 한도"
 
 msgid "Current setting"
 msgstr "현재 설정"

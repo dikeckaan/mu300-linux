@@ -415,11 +415,29 @@ printf '%s\n' "$UPDATE_TAG" | LC_ALL=C grep -Eqx -- 'v[0-9]{4}\.[0-9]{2}\.[0-9]{
 
 # ------------------------------------------------------------- data usage
 # mu300-traffic's service writes this summary after each of its readings (RAM, once a minute): today and the
-# billing cycle, against the cap. Numbers and fixed words only; anything else is left out.
+# billing cycle against the cap, and the billing year's own numbers. Numbers and fixed words only; anything else is
+# left out. A summary from before the yearly plan has no yearly lines, and then the yearly object is null.
 TSUM=${MU300_TRAFFIC_SUMMARY:-/run/mu300/traffic/summary}
 tsum() { sed -n "s/^$1=//p" "$TSUM" 2>/dev/null | head -n1; }
 tint() { v=$(tsum "$1"); case $v in ''|*[!0-9]*|0?*) echo 0 ;; *) echo "$v" ;; esac; }
+# sint: a signed whole number (the remaining is below zero while the cap is passed), 0 for anything else
+sint() {
+    v=$(tsum "$1"); s=
+    case $v in -*) s=- v=${v#-} ;; esac
+    case $v in ''|*[!0-9]*|0?*) echo 0 ;; *) echo "$s$v" ;; esac
+}
 T_LEVEL=$(tsum level); case $T_LEVEL in ok|warn|over|none) ;; *) T_LEVEL= ;; esac
+# the monthly remaining may be negative; an old summary has no line, and it is the cap less the used count then
+if [ -n "$(tsum remaining)" ]; then T_REM=$(sint remaining)
+elif [ "$(tint cap)" = 0 ]; then T_REM=0
+else T_REM=$(( $(tint cap) - $(tint used) )); fi
+# the yearly plan: an old summary has no line, and the page shows nothing of it
+if [ -n "$(tsum yearly)" ]; then
+    T_YLEVEL=$(tsum yearly_level); case $T_YLEVEL in ok|warn|over|none) ;; *) T_YLEVEL=none ;; esac
+    [ "$(tint yearly_cut)" = 1 ] && T_YCUT=1 || T_YCUT=0
+    T_YEARLY=$(printf '{"bytes":%s,"used":%s,"remaining":%s,"level":"%s","cut_active":%d}' \
+        "$(tint yearly)" "$(tint yearly_used)" "$(sint yearly_remaining)" "$T_YLEVEL" "$T_YCUT")
+fi
 
 # ------------------------------------------------------------------ USB link
 # The USB-C port's link speed as negotiated with whatever sits at the other end of the cable. Device
@@ -477,8 +495,9 @@ printf '"usblink":%s,' "$(usb_link)"
 printf '"data_device":%s,' "$(qs "$DATA_DEVICE")"
 printf '"sim":%s,' "$SIM_JSON"
 if [ -n "$T_LEVEL" ]; then
-    printf '"traffic":{"level":"%s","today":%s,"used":%s,"cap":%s,"warn":%s,"clock":%s},' "$T_LEVEL" \
-        "$(( $(tint today_rx) + $(tint today_tx) ))" "$(tint used)" "$(tint cap)" "$(tint warn)" "$(tint clock)"
+    printf '"traffic":{"level":"%s","today":%s,"used":%s,"cap":%s,"warn":%s,"clock":%s,"remaining":%s,"yearly":%s},' \
+        "$T_LEVEL" "$(( $(tint today_rx) + $(tint today_tx) ))" "$(tint used)" "$(tint cap)" "$(tint warn)" \
+        "$(tint clock)" "$T_REM" "${T_YEARLY:-null}"
 else
     printf '"traffic":null,'
 fi

@@ -1057,17 +1057,32 @@ msgstr "Zapisovatelné"
 msgid "This boot image cannot change the boot"
 msgstr "Tento zaváděcí obraz nemůže změnit spouštění"
 
+msgid "Remaining this year"
+msgstr "Zbývá letos"
+
+msgid "Remaining this cycle"
+msgstr "Zbývá v tomto období"
+
 msgid "%s of %s"
 msgstr "%s z %s"
+
+msgid "The yearly cap is reached"
+msgstr "Roční limit je vyčerpán"
 
 msgid "The monthly cap is reached"
 msgstr "Měsíční limit je vyčerpán"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "Využito %d%% ročního limitu"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "Využito %d%% měsíčního limitu"
 
-msgid "This billing cycle"
-msgstr "Toto zúčtovací období"
+msgid "Used this year"
+msgstr "Využito v tomto roce"
+
+msgid "Used this cycle"
+msgstr "Využito v tomto období"
 
 msgid "Link & traffic"
 msgstr "Linka a provoz"
@@ -1084,8 +1099,8 @@ msgstr "Celkem přijato"
 msgid "Total sent"
 msgstr "Celkem odesláno"
 
-msgid "Used today"
-msgstr "Dnes spotřebováno"
+msgid "Today"
+msgstr "Dnes"
 
 msgid "SIM source"
 msgstr "Zdroj SIM"
@@ -2390,8 +2405,17 @@ msgstr "Tato stránka byla otevřena přes HTTPS a terminál běží v LAN přes
 msgid "The data usage could not be read"
 msgstr "Spotřebu dat nelze načíst"
 
-msgid "Today"
-msgstr "Dnes"
+msgid "Year"
+msgstr "Rok"
+
+msgid "Month"
+msgstr "Měsíc"
+
+msgid "Used"
+msgstr "Využito"
+
+msgid "Days left this year"
+msgstr "Zbývající dny v tomto roce"
 
 msgid "Days left in this cycle"
 msgstr "Zbývající dny v období"
@@ -2411,11 +2435,17 @@ msgstr "Měsíční limit"
 msgid "%s, warning at %d%%"
 msgstr "%s, varování při %d%%"
 
+msgid "Yearly cap"
+msgstr "Roční limit"
+
 msgid "Daily quota"
 msgstr "Denní kvóta"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Měsíční limit je vyčerpán: mobilní data byla vypnuta. Znovu se zapnou na začátku dalšího období."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Roční limit je vyčerpán: mobilní data byla vypnuta. Znovu se zapnou na začátku dalšího roku."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Denní kvóta je vyčerpána: mobilní data byla vypnuta. Znovu se zapnou o půlnoci."
@@ -2483,6 +2513,15 @@ msgstr "Vypnout mobilní data při denní kvótě"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Když dnešní provoz dosáhne denní kvóty, mobilní data se vypnou do půlnoci, do zvýšení kvóty nebo do vypnutí této volby. Ruční zapnutí mobilních dat je ponechá zapnutá do dalšího restartu."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Co operátor ukazuje jako zbývající, se počítá jako využité: počet se opraví na limit minus tato hodnota."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Vypnout mobilní data při dosažení ročního limitu"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Když tento rok dosáhne ročního limitu, mobilní data se vypnou: žádný internet přes operátora, dokud nezačne další rok, nezvýší se roční limit nebo se tato volba znovu nevypne. Ručně znovu zapnutá mobilní data zůstanou zapnutá do dalšího restartu."
+
 msgid "Both ways"
 msgstr "Oba směry"
 
@@ -2501,9 +2540,6 @@ msgstr "Vymazat počet"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Všechny dosud započtené dny a zúčtovací období budou zapomenuty. Počítání pokračuje od teď."
 
-msgid "Billing cycle and cap"
-msgstr "Zúčtovací období a limit"
-
 msgid "A billing cycle starts on day"
 msgstr "Zúčtovací období začíná dne"
 
@@ -2513,11 +2549,20 @@ msgstr "31: poslední den každého měsíce"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Měsíční limit (GB, 0: žádný)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Varovat při tomto procentu limitu"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Varovat při tomto procentu limitu a ročního limitu"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Denní kvóta (GB, 0: žádná)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Roční limit (GB, 0: žádný)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Zúčtovací rok začíná (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Například 01-01; 02-29 je v nepřestupném roce 02-28."
 
 msgid "The cap and the daily quota count"
 msgstr "Co počítá limit a denní kvóta"
@@ -2530,6 +2575,18 @@ msgstr "Dosud spotřebováno v tomto období (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Co operátor ukazuje pro toto období (například když počítání začalo uprostřed); počet se na to opraví."
+
+msgid "Used so far this year (GB)"
+msgstr "Dosud spotřebováno v tomto roce (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Zbývá v tomto období podle operátora (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Zbývá letos podle operátora (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Zúčtovací období a limit"
 
 msgid "Current setting"
 msgstr "Aktuální nastavení"

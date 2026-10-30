@@ -1057,17 +1057,32 @@ msgstr "書き込み可能"
 msgid "This boot image cannot change the boot"
 msgstr "このブートイメージでは起動先を変更できません"
 
+msgid "Remaining this year"
+msgstr "今年の残り"
+
+msgid "Remaining this cycle"
+msgstr "今回の期間の残り"
+
 msgid "%s of %s"
 msgstr "%s / %s"
+
+msgid "The yearly cap is reached"
+msgstr "年間上限に達しました"
 
 msgid "The monthly cap is reached"
 msgstr "月間上限に達しました"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "年間上限の %d%% を使用"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "月間上限の %d%% を使用"
 
-msgid "This billing cycle"
-msgstr "今回の請求期間"
+msgid "Used this year"
+msgstr "今年の使用量"
+
+msgid "Used this cycle"
+msgstr "今回の期間の使用量"
 
 msgid "Link & traffic"
 msgstr "リンクとトラフィック"
@@ -1084,8 +1099,8 @@ msgstr "受信合計"
 msgid "Total sent"
 msgstr "送信合計"
 
-msgid "Used today"
-msgstr "今日の使用量"
+msgid "Today"
+msgstr "今日"
 
 msgid "SIM source"
 msgstr "SIM の選択"
@@ -2390,8 +2405,17 @@ msgstr "このページは HTTPS で開かれていますが、ターミナル�
 msgid "The data usage could not be read"
 msgstr "データ使用量を読み取れませんでした"
 
-msgid "Today"
-msgstr "今日"
+msgid "Year"
+msgstr "年"
+
+msgid "Month"
+msgstr "月"
+
+msgid "Used"
+msgstr "使用量"
+
+msgid "Days left this year"
+msgstr "今年の残り日数"
 
 msgid "Days left in this cycle"
 msgstr "期間の残り日数"
@@ -2411,11 +2435,17 @@ msgstr "月間上限"
 msgid "%s, warning at %d%%"
 msgstr "%s、%d%% で警告"
 
+msgid "Yearly cap"
+msgstr "年間上限"
+
 msgid "Daily quota"
 msgstr "1日の上限"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "月間上限に達しました: モバイルデータをオフにしました。次の期間が始まるとオンに戻ります。"
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "年間上限に達しました: モバイルデータをオフにしました。次の年度が始まるとオンに戻ります。"
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "1日の上限に達しました: モバイルデータをオフにしました。午前0時に再びオンになります。"
@@ -2483,6 +2513,15 @@ msgstr "1日の上限でモバイルデータをオフにする"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "今日の使用量が1日の上限に達すると、午前0時まで、上限を引き上げるまで、またはこれをオフにするまでモバイルデータをオフにします。手動でモバイルデータをオンにすると、次の再起動までオンのままです。"
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "通信事業者が残りとして表示する量は使用済みとして扱われます: カウントは上限からその値を引いた値に補正されます。"
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "年間上限でモバイルデータをオフにする"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "今年が年間上限に達するとモバイルデータをオフにします: 次の年度が始まる、年間上限を上げる、またはこの設定をオフにするまで、通信事業者経由のインターネットは使えません。手動でモバイルデータをオンに戻すと、次の再起動までオンのままです。"
+
 msgid "Both ways"
 msgstr "上下合計"
 
@@ -2501,9 +2540,6 @@ msgstr "カウントを消去"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "これまでに計上したすべての日と請求期間を消去します。今から計上を続けます。"
 
-msgid "Billing cycle and cap"
-msgstr "請求期間と上限"
-
 msgid "A billing cycle starts on day"
 msgstr "請求期間の開始日"
 
@@ -2513,11 +2549,20 @@ msgstr "31: 毎月の最終日"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "月間上限 (GB、0: なし)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "上限のこのパーセントで警告"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "上限と年間上限のこのパーセントで警告"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "1日の上限 (GB、0: なし)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "年間上限 (GB、0: なし)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "請求年度の開始日 (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "例: 01-01。02-29 は平年では 02-28 です。"
 
 msgid "The cap and the daily quota count"
 msgstr "上限と1日の上限の計量方法"
@@ -2530,6 +2575,18 @@ msgstr "今回の期間のこれまでの使用量 (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "通信事業者が今回の期間について表示している量 (例えば期間の途中で計上を始めた場合)。カウントがこの値に補正されます。"
+
+msgid "Used so far this year (GB)"
+msgstr "今年のこれまでの使用量 (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "通信事業者の表示どおりの今回の期間の残り (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "通信事業者の表示どおりの今年の残り (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "請求期間と上限"
 
 msgid "Current setting"
 msgstr "現在の設定"

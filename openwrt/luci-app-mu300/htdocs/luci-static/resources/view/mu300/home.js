@@ -19,6 +19,9 @@ var DEFAULT_POLL_S = 1.5;
 var RATE_WIN = 40;
 var RATE_MS = 1000;
 
+/* the caps' levels, the worse first: the usage kpis show the cap closer to its limit, the year on a tie */
+var LEVEL_RANK = { over: 3, warn: 2, ok: 1, none: 0 };
+
 function pollSeconds(value) {
 	var seconds = Number(value);
 	return Number.isFinite(seconds) && seconds >= 0.5 && seconds <= 60 ? seconds : DEFAULT_POLL_S;
@@ -199,23 +202,37 @@ return view.extend({
 		M.spark(M.v('spark-ul'), this.ulHist, 0, peak, RATE_WIN);
 	},
 
-	/* Today's and this billing cycle's mobile data (mu300-traffic's summary in the status snapshot), against the cap */
+	/* Today's mobile data and one cap's numbers (mu300-traffic's summary in the status snapshot): what is left of the
+	 * more urgent period first, then what is used of that same period. The monthly and the yearly cap are never shown
+	 * side by side; the year wins a tie, as the longer commitment. An older snapshot has no remaining and no yearly. */
 	paintUsage: function(u) {
 		var box = M.v('usage');
 		if (!box) return;
 		box.style.display = u ? '' : 'none';
 		if (!u) return;
 		M.set('usage-today', M.fmtBytes(u.today));
-		var cap = u.cap > 0 ? u.cap : 0, pct = cap ? Math.min(100, Math.round(u.used * 100 / cap)) : null;
-		M.set('usage-cycle', cap ? _('%s of %s').format(M.fmtBytes(u.used), M.fmtBytes(cap)) : M.fmtBytes(u.used));
-		var col = u.level === 'over' ? 'var(--danger,#E25555)' : u.level === 'warn' ? 'var(--warning,#f59e0b)' : '';
+		var cap = u.cap > 0 ? u.cap : 0;
+		var y = u.yearly, yB = y && y.bytes > 0 ? y.bytes : 0;
+		/* an older snapshot has no remaining: cap - used; no cap, nothing left to show */
+		var leftM = Math.max(0, u.remaining != null ? u.remaining : cap - u.used);
+		var leftY = yB ? Math.max(0, y.remaining != null ? y.remaining : yB - y.used) : 0;
+		var year = yB > 0 && (!cap || (LEVEL_RANK[y.level] || 0) >= (LEVEL_RANK[u.level] || 0));
+		var used = year ? y.used : u.used, sel = year ? yB : cap;
+		var left = year ? leftY : leftM, level = year ? y.level : u.level;
+		var pct = sel ? Math.min(100, Math.round(used * 100 / sel)) : null;
+		var col = level === 'over' ? 'var(--danger,#E25555)' : level === 'warn' ? 'var(--warning,#f59e0b)' : '';
+		M.v('usage-rem-kpi').style.display = sel ? '' : 'none';
+		M.set('usage-remaining', M.fmtBytes(left), col);
+		M.set('usage-rem-label', year ? _('Remaining this year') : _('Remaining this cycle'));
+		M.set('usage-cycle', sel ? _('%s of %s').format(M.fmtBytes(used), M.fmtBytes(sel)) : M.fmtBytes(used));
 		M.v('usage-cycle').style.color = col;
 		var bar = M.v('usage-bar');
-		M.v('usage-meter').style.display = cap ? '' : 'none';
+		M.v('usage-meter').style.display = sel ? '' : 'none';
 		bar.style.width = (pct || 0) + '%';
 		bar.style.background = col || 'var(--brand,var(--primary,#3b82f6))';
-		M.set('usage-note', u.level === 'over' ? _('The monthly cap is reached') :
-			u.level === 'warn' ? _('%d%% of the monthly cap is used').format(pct) : _('This billing cycle'));
+		M.set('usage-note', level === 'over' ? (year ? _('The yearly cap is reached') : _('The monthly cap is reached')) :
+			level === 'warn' ? (year ? _('%d%% of the yearly cap is used') : _('%d%% of the monthly cap is used')).format(pct) :
+			(year ? _('Used this year') : _('Used this cycle')));
 	},
 
 	html: function() {
@@ -257,8 +274,9 @@ return view.extend({
     <div class="mud-kpi"><b id="mud-tx">--</b><span>${_('Total sent')}</span></div>
   </div>
   <a class="mud-kpis" id="mud-usage" href="${L.url('admin/modem/traffic')}" style="display:none;color:inherit;text-decoration:none">
-    <div class="mud-kpi"><b id="mud-usage-today">--</b><span>${_('Used today')}</span></div>
-    <div class="mud-kpi"><b id="mud-usage-cycle">--</b><span id="mud-usage-note">${_('This billing cycle')}</span><div class="mud-meter" id="mud-usage-meter"><i id="mud-usage-bar"></i></div></div>
+    <div class="mud-kpi"><b id="mud-usage-today">--</b><span>${_('Today')}</span></div>
+    <div class="mud-kpi" id="mud-usage-rem-kpi" style="display:none"><b id="mud-usage-remaining">--</b><span id="mud-usage-rem-label">${_('Remaining this cycle')}</span></div>
+    <div class="mud-kpi"><b id="mud-usage-cycle">--</b><span id="mud-usage-note">${_('Used this cycle')}</span><div class="mud-meter" id="mud-usage-meter"><i id="mud-usage-bar"></i></div></div>
   </a>
   <div class="mud-cols">
     <div>

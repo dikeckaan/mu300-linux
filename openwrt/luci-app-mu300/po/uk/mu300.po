@@ -1057,17 +1057,32 @@ msgstr "Доступне для запису"
 msgid "This boot image cannot change the boot"
 msgstr "Цей завантажувальний образ не може змінювати завантаження"
 
+msgid "Remaining this year"
+msgstr "Залишилося цього року"
+
+msgid "Remaining this cycle"
+msgstr "Залишилося в цьому періоді"
+
 msgid "%s of %s"
 msgstr "%s з %s"
+
+msgid "The yearly cap is reached"
+msgstr "Річний ліміт вичерпано"
 
 msgid "The monthly cap is reached"
 msgstr "Місячний ліміт вичерпано"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "Використано %d%% річного ліміту"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "Використано %d%% місячного ліміту"
 
-msgid "This billing cycle"
-msgstr "Поточний розрахунковий період"
+msgid "Used this year"
+msgstr "Використано цього року"
+
+msgid "Used this cycle"
+msgstr "Використано в цьому періоді"
 
 msgid "Link & traffic"
 msgstr "Канал і трафік"
@@ -1084,8 +1099,8 @@ msgstr "Усього отримано"
 msgid "Total sent"
 msgstr "Усього надіслано"
 
-msgid "Used today"
-msgstr "Використано сьогодні"
+msgid "Today"
+msgstr "Сьогодні"
 
 msgid "SIM source"
 msgstr "Джерело SIM"
@@ -2390,8 +2405,17 @@ msgstr "Цю сторінку відкрито через HTTPS, а термін
 msgid "The data usage could not be read"
 msgstr "Не вдалося прочитати використання даних"
 
-msgid "Today"
-msgstr "Сьогодні"
+msgid "Year"
+msgstr "Рік"
+
+msgid "Month"
+msgstr "Місяць"
+
+msgid "Used"
+msgstr "Використано"
+
+msgid "Days left this year"
+msgstr "Залишилося днів цього року"
 
 msgid "Days left in this cycle"
 msgstr "Залишилося днів у періоді"
@@ -2411,11 +2435,17 @@ msgstr "Місячний ліміт"
 msgid "%s, warning at %d%%"
 msgstr "%s, попередження при %d%%"
 
+msgid "Yearly cap"
+msgstr "Річний ліміт"
+
 msgid "Daily quota"
 msgstr "Денна квота"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Місячний ліміт вичерпано: мобільні дані вимкнено. Вони ввімкнуться знову на початку наступного періоду."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Річний ліміт вичерпано: мобільні дані вимкнено. Вони ввімкнуться знову на початку наступного року."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Денну квоту вичерпано: мобільні дані вимкнено. Вони ввімкнуться опівночі."
@@ -2483,6 +2513,15 @@ msgstr "Вимикати мобільні дані при денній квот�
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Коли сьогоднішній трафік досягає денної квоти, мобільні дані вимикаються до опівночі, доки квоту не збільшать або доки це не вимкнуть. Якщо ввімкнути мобільні дані вручну, вони залишаться ввімкненими до наступного перезавантаження."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Те, що оператор показує як залишок, вважається використаним: лічильник виправляється на ліміт мінус це значення."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Вимикати мобільні дані при досягненні річного ліміту"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Коли цього року буде досягнуто річний ліміт, мобільні дані вимкнуться: інтернету через оператора не буде, доки не почнеться наступний рік, не буде збільшено річний ліміт або не буде вимкнено цей параметр. Якщо ввімкнути мобільні дані вручну, вони залишаться ввімкненими до наступного перезавантаження."
+
 msgid "Both ways"
 msgstr "В обидва боки"
 
@@ -2501,9 +2540,6 @@ msgstr "Скинути лічильник"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Усі враховані дні й розрахункові періоди буде забуто. Облік продовжиться з цього моменту."
 
-msgid "Billing cycle and cap"
-msgstr "Розрахунковий період і ліміт"
-
 msgid "A billing cycle starts on day"
 msgstr "Розрахунковий період починається в день"
 
@@ -2513,11 +2549,20 @@ msgstr "31: в останній день кожного місяця"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Місячний ліміт (ГБ, 0: немає)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Попереджати при цьому відсотку ліміту"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Попереджати при цьому відсотку ліміту та річного ліміту"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Денна квота (ГБ, 0: немає)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Річний ліміт (ГБ, 0: немає)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Розрахунковий рік починається (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Наприклад, 01-01; 02-29 у невисокосний рік — це 02-28."
 
 msgid "The cap and the daily quota count"
 msgstr "Що враховують ліміт і денна квота"
@@ -2530,6 +2575,18 @@ msgstr "Уже використано в цьому періоді (ГБ)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Скільки показує оператор за цей період (наприклад, якщо облік почався посередині); лічильник буде виправлено до цього значення."
+
+msgid "Used so far this year (GB)"
+msgstr "Уже використано цього року (ГБ)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Залишилося в цьому періоді за даними оператора (ГБ)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Залишилося цього року за даними оператора (ГБ)"
+
+msgid "Billing cycle and cap"
+msgstr "Розрахунковий період і ліміт"
 
 msgid "Current setting"
 msgstr "Поточне налаштування"

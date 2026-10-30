@@ -965,11 +965,32 @@ msgstr "Geçmiş"
 msgid "Plan"
 msgstr "Tarife"
 
+msgid "Remaining"
+msgstr "Kalan"
+
+msgid "Month"
+msgstr "Ay"
+
+msgid "Year"
+msgstr "Yıl"
+
+msgid "Used this year"
+msgstr "Bu yıl kullanılan"
+
 msgid "$0 days left"
 msgstr "$0 gün kaldı"
 
 msgid "Of the cap"
 msgstr "Kotanın"
+
+msgid "Yearly cap"
+msgstr "Yıllık kota"
+
+msgid "Month remaining $0"
+msgstr "Bu aydan kalan $0"
+
+msgid "Year remaining $0"
+msgstr "Bu yıldan kalan $0"
 
 msgid "The cap is reached: mobile data is off until the next cycle."
 msgstr "Kotaya ulaşıldı: mobil veri sonraki döneme kadar kapalı."
@@ -989,6 +1010,15 @@ msgstr "Günlük kotaya ulaşıldı."
 msgid "Close to the daily quota."
 msgstr "Günlük kotaya yaklaşıldı."
 
+msgid "The yearly cap is reached: mobile data is off until the next year."
+msgstr "Yıllık kotaya ulaşıldı: mobil veri gelecek yıla kadar kapalı."
+
+msgid "The yearly cap is reached."
+msgstr "Yıllık kotaya ulaşıldı."
+
+msgid "Close to the yearly cap."
+msgstr "Yıllık kotaya yaklaşıldı."
+
 msgid "The cap and the daily quota count downloads only."
 msgstr "Kota ve günlük kota yalnızca indirmeleri sayar."
 
@@ -1006,6 +1036,9 @@ msgstr "Kotaya ulaşınca mobil veriyi sonraki döneme kadar kapat"
 
 msgid "Turn mobile data off at the daily quota until midnight"
 msgstr "Günlük kotada mobil veriyi gece yarısına kadar kapat"
+
+msgid "Turn mobile data off at the yearly cap until the next year"
+msgstr "Yıllık kotaya ulaşınca mobil veriyi gelecek yıla kadar kapat"
 
 msgid "Both ways"
 msgstr "İki yön"
@@ -1031,20 +1064,38 @@ msgstr "Kotanın bu yüzdesinde uyar"
 msgid "Daily quota in GiB (0: none)"
 msgstr "GiB cinsinden günlük kota (0: yok)"
 
+msgid "Yearly cap in GiB (0: none)"
+msgstr "GiB cinsinden yıllık kota (0: yok)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Fatura yılı şu tarihte başlar (MM-DD)"
+
 msgid "The cap and the daily quota count"
 msgstr "Kota ve günlük kotanın saydığı"
 
 msgid "Check the values: a day from 1 to 31, a cap of 0 or more, a percentage from 1 to 100."
 msgstr "Değerleri kontrol edin: 1 ile 31 arası bir gün, 0 veya daha büyük bir kota, 1 ile 100 arası bir yüzde."
 
-msgid "What the operator says this cycle has used, in GiB (corrects the count)"
-msgstr "Operatörün bu dönemde kullanıldığını söylediği miktar, GiB cinsinden (sayacı düzeltir)"
+msgid "A billing year starts on a date MM-DD like 01-01."
+msgstr "Fatura yılı 01-01 gibi MM-DD biçiminde bir tarihte başlar."
 
 msgid "Correct the count"
 msgstr "Sayacı düzelt"
 
 msgid "Enter an amount in GiB."
 msgstr "GiB cinsinden bir miktar girin."
+
+msgid "What the operator says this cycle has used, in GiB (corrects the count)"
+msgstr "Operatörün bu dönemde kullanıldığını söylediği miktar, GiB cinsinden (sayacı düzeltir)"
+
+msgid "What the operator says this year has used, in GiB (corrects the count)"
+msgstr "Operatörün bu yıl kullanıldığını söylediği miktar, GiB cinsinden (sayacı düzeltir)"
+
+msgid "What the operator shows as left this cycle, in GiB (corrects the count)"
+msgstr "Operatörün bu dönemde kaldığını gösterdiği miktar, GiB cinsinden (sayacı düzeltir)"
+
+msgid "What the operator shows as left this year, in GiB (corrects the count)"
+msgstr "Operatörün bu yıl kaldığını gösterdiği miktar, GiB cinsinden (sayacı düzeltir)"
 
 msgid "Forget every count"
 msgstr "Tüm sayaçları unut"

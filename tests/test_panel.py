@@ -636,7 +636,39 @@ const flush = async (n = 4) => { for (let i = 0; i < n; i++) await new Promise((
         'data.get': {'ok': 1, 'state': 'up', 'apn': 'internet', 'pdp': 'IP', 'auth': '', 'user': '', 'password_set': True,
                      'sim': None, 'roaming': None, 'roaming_switch': False},
         'data.set': {'ok': 1, 'restart': True},
+        # the Data usage page: a monthly cap and a yearly plan (the month's level is the worse one, so it is shown first)
+        'traffic.get': {'ok': 1, 'traffic': {'device': 'sipa_eth0', 'available': 1, 'clock': 1, 'since': 1700000000,
+                                             'reset_day': 1, 'plan': 'Night 50GB', 'count': 'total',
+                                             'today': {'date': '2026-10-29', 'rx': 1073741824, 'tx': 536870912},
+                                             'pending': {'rx': 0, 'tx': 0},
+                                             'cycle': {'start': '2026-10-01', 'last': '2026-10-31', 'days_left': 3,
+                                                       'rx': 5368709120, 'tx': 0, 'adj': 0, 'used': 5368709120},
+                                             'cap': {'bytes': 21474836480, 'remaining': 16106127360, 'warn': 90,
+                                                     'cut': 0, 'level': 'warn', 'cut_active': 0},
+                                             'daily': {'bytes': 0, 'used': 0, 'cut': 0, 'level': 'none', 'cut_active': 0},
+                                             'yearly': {'start_day': '03-15', 'start': '2026-03-15', 'last': '2027-03-14',
+                                                        'days_left': 138, 'bytes': 536870912000, 'used': 107374182400,
+                                                        'remaining': 429496729600, 'level': 'ok', 'cut_active': 0,
+                                                        'cut': 0},
+                                             'days': [{'date': '2026-10-29', 'rx': 1073741824, 'tx': 536870912}],
+                                             'cycles': [{'start': '2026-10-01', 'last': '2026-10-31',
+                                                         'rx': 5368709120, 'tx': 0, 'used': 5368709120}]}},
+        'traffic.set': {'ok': 1},
     }
+
+    # the Data usage page's rows as the tests read them: one Remaining row (the period switch is inside its label), the
+    # other rows by their label, and the small notes
+    USAGE = r"""
+const card = ids['mu-traffic'];
+const rows = () => all(card, (n) => n.tag === 'div' && n.attrs['class'] === 'mu-row');
+const label = (r) => r.children[0].textContent;
+const row = (name) => { const r = rows().filter((n) => label(n) === name)[0]; return r ? r.children[r.children.length - 1].textContent : null; };
+const rem = () => rows().filter((n) => label(n).indexOf('Remaining') === 0);
+const remValue = () => rem()[0].children[rem()[0].children.length - 1].textContent;
+const switches = () => all(rem()[0].children[0], (n) => n.tag === 'button')
+    .map((b) => b.textContent + (String(b.attrs['class'] || '').indexOf('mu-primary') >= 0 ? '!' : ''));
+const notes = () => all(card, (n) => n.tag === 'p' && (n.attrs['class'] || '').indexOf('mu-note') === 0).map((n) => n.textContent);
+"""
 
     def run_page(self, body, out=None, admin='true'):
         h = (self.HARNESS.replace('__OUT__', json.dumps(self.OUT if out is None else out)).replace('__BODY__', body)
@@ -859,6 +891,126 @@ return [M.netDev('Inter-|\n  lo: 1 0 0 0 0 0 0 0 2 0\n sipa_eth0: 300 5 0 0 0 0 
         M.fmtBytes(1536), M.fmtRate(125000), M.mask('8612345678901234')];""")
         self.assertEqual(out['result'], [{'lo': {'rx': 1, 'tx': 2}, 'sipa_eth0': {'rx': 300, 'tx': 400}}, '1.5 KiB',
                                          '1.0 Mbit/s', '8612****234'])
+
+    def test_usage_page_with_an_old_answer(self):
+        """an older traffic.get (no cap.remaining, no yearly): the cap less the count is the remaining, no switch, the
+        yearly settings show their defaults; a yearly plan without dates (before `start_day`) still renders"""
+        old = {'ok': 1, 'traffic': {'device': 'sipa_eth0', 'clock': 1, 'reset_day': 1, 'count': 'total',
+                                    'cycle': {'start': '2026-10-01', 'last': '2026-10-31', 'days_left': 3,
+                                              'rx': 0, 'tx': 0, 'used': 5368709120},
+                                    'cap': {'bytes': 21474836480, 'warn': 90, 'cut': 0, 'level': 'ok', 'cut_active': 0}}}
+        body = "window.MU300.show('usage'); await flush();" + self.USAGE + r"""
+return [rem().length, remValue(), row('This billing cycle'), row('Yearly cap'), switches(), notes().join('|'),
+    ids['mu-tr-yearly'].value, ids['mu-tr-ystart'].value, ids['mu-tr-ycut'].checked];"""
+        r = self.run_page(body, dict(self.OUT, **{'traffic.get': old}))
+        self.assertEqual(r['result'][:4], [1, '15.0 GiB', '5.0 GiB', None])
+        self.assertEqual(r['result'][4:], [[], '', '0', '01-01', False])
+        # a yearly plan with no dates (the answer from before start_day/last): the old `start` held the day, no period row
+        nodates = {'ok': 1, 'traffic': dict(old['traffic'], cap=dict(old['traffic']['cap'], level='warn'),
+                                            yearly={'bytes': 536870912000, 'used': 107374182400,
+                                                    'remaining': 429496729600, 'level': 'ok', 'cut_active': 0,
+                                                    'start': '03-15', 'cut': 0})}
+        body = "window.MU300.show('usage'); await flush();" + self.USAGE + r"""
+const first = [remValue(), switches(), ids['mu-tr-ystart'].value];
+all(card, (n) => n.tag === 'button' && n.textContent === 'Year')[0].click(); await flush(8);
+return [first, remValue(), row('Used this year'), row('Year'), notes()];"""
+        r = self.run_page(body, dict(self.OUT, **{'traffic.get': nodates}))
+        self.assertEqual(r['result'][0], ['15.0 GiB', ['Month!', 'Year'], '03-15'])
+        self.assertEqual(r['result'][1:4], ['400.0 GiB', '100.0 GiB', None])
+        self.assertIn('Month remaining 15.0 GiB', r['result'][4])
+
+    def test_usage_page_one_remaining_number_and_the_switch(self):
+        """both caps: one Remaining number at a time, the month first (its level is worse); the switch moves the used
+        row, the period row, the cap's share and the other period's one small note with it"""
+        body = "window.MU300.show('usage'); await flush();" + self.USAGE + r"""
+const month = [rem().length, remValue(), switches(), row('This billing cycle'), row('Cycle'), row('Of the cap'),
+    row('Yearly cap'), notes()];
+all(card, (n) => n.tag === 'button' && n.textContent === 'Year')[0].click(); await flush(8);
+const year = [rem().length, remValue(), switches(), row('Used this year'), row('Year'), row('Of the cap'), notes()];
+ids['mu-tr-used'].value = '7';
+all(ids['mu-traffic-set'], (n) => n.tag === 'button' && n.textContent === 'Correct the count')[0].click(); await flush(8);
+const kept = [remValue(), switches()];
+all(card, (n) => n.tag === 'button' && n.textContent === 'Month')[0].click(); await flush(8);
+return [month, year, kept, remValue()];"""
+        r = self.run_page(body)
+        self.assertEqual(r['result'][0][:3], [1, '15.0 GiB', ['Month!', 'Year']])
+        self.assertEqual(r['result'][0][3:6], ['5.0 GiB', '2026-10-01 - 2026-10-31 (3 days left)', '25 %'])
+        self.assertEqual(r['result'][0][6], '500.0 GiB')
+        self.assertIn('Year remaining 400.0 GiB', r['result'][0][7])
+        self.assertEqual(r['result'][1][:3], [1, '400.0 GiB', ['Month', 'Year!']])
+        self.assertEqual(r['result'][1][3:6], ['100.0 GiB', '2026-03-15 - 2027-03-14 (138 days left)', '20 %'])
+        self.assertIn('Month remaining 15.0 GiB', r['result'][1][6])
+        # the operator's choice stays after a refresh (a correction reloads the counts)
+        self.assertEqual(r['result'][2], ['400.0 GiB', ['Month', 'Year!']])
+        self.assertEqual(r['result'][3], '15.0 GiB')
+        # the two co-equal Remaining rows of the first design are gone
+        self.assertNotIn('Remaining this cycle', ' '.join(r['result'][0][7]))
+        self.assertNotIn('Remaining this year', ' '.join(r['result'][0][7]))
+
+    def test_usage_page_starts_on_the_worse_period(self):
+        """no earlier choice: over > warn > ok decides the period, and a tie goes to the year"""
+        base = self.OUT['traffic.get']['traffic']
+        body = "window.MU300.show('usage'); await flush();" + self.USAGE + r"""
+return [rem().length, remValue(), switches(), notes()];"""
+        for mlevel, ylevel, value, names, note in (
+                ('ok', 'ok', '400.0 GiB', ['Month', 'Year!'], 'Month remaining 15.0 GiB'),
+                ('ok', 'warn', '400.0 GiB', ['Month', 'Year!'], 'Month remaining 15.0 GiB'),
+                ('warn', 'ok', '15.0 GiB', ['Month!', 'Year'], 'Year remaining 400.0 GiB'),
+                ('over', 'warn', '15.0 GiB', ['Month!', 'Year'], 'Year remaining 400.0 GiB')):
+            out = {'ok': 1, 'traffic': dict(base, cap=dict(base['cap'], level=mlevel),
+                                            yearly=dict(base['yearly'], level=ylevel))}
+            r = self.run_page(body, dict(self.OUT, **{'traffic.get': out}))
+            self.assertEqual(r['result'][:3], [1, value, names], (mlevel, ylevel))
+            self.assertIn(note, r['result'][3], (mlevel, ylevel))
+
+    def test_usage_page_with_one_cap_has_no_switch(self):
+        """the month alone: no switch and nothing about the year; the year alone: the month's count is not there"""
+        base = self.OUT['traffic.get']['traffic']
+        body = "window.MU300.show('usage'); await flush();" + self.USAGE + r"""
+return [rem().length, remValue(), switches(), row('Yearly cap'), row('Used this year'), notes()];"""
+        r = self.run_page(body, dict(self.OUT, **{'traffic.get': {'ok': 1, 'traffic': dict(base, yearly=None)}}))
+        self.assertEqual(r['result'][:4], [1, '15.0 GiB', [], None])
+        self.assertIsNone(r['result'][4])
+        self.assertFalse([n for n in r['result'][5] if 'remaining' in n])
+        onlyyear = dict(base, cap={'bytes': 0, 'warn': 90, 'cut': 0, 'level': 'none', 'cut_active': 0})
+        r = self.run_page(body, dict(self.OUT, **{'traffic.get': {'ok': 1, 'traffic': onlyyear}}))
+        self.assertEqual(r['result'][:4], [1, '400.0 GiB', [], '500.0 GiB'])
+        self.assertEqual(r['result'][4], '100.0 GiB')
+
+    def test_usage_page_yearly_notes(self):
+        """warn, over, and the cut's own note, each when the yearly plan has it (shown whatever period is selected)"""
+        yearly = self.OUT['traffic.get']['traffic']['yearly']
+        for level, cut, note in (('warn', 0, 'Close to the yearly cap.'),
+                                 ('over', 0, 'The yearly cap is reached.'),
+                                 ('over', 1, 'The yearly cap is reached: mobile data is off until the next year.')):
+            out = {'ok': 1, 'traffic': dict(self.OUT['traffic.get']['traffic'],
+                                            yearly=dict(yearly, level=level, cut_active=cut))}
+            r = self.run_page(r"""window.MU300.show('usage'); await flush(); return ids['mu-traffic'].textContent;""",
+                              dict(self.OUT, **{'traffic.get': out}))
+            self.assertIn(note, r['result'])
+
+    def test_usage_settings_save_the_yearly_plan_and_the_corrections(self):
+        r = self.run_page(r"""
+window.MU300.show('usage'); await flush();
+ids['mu-tr-ystart'].value = '02-30'; btn(ids['mu-traffic-set'], 'Save').click(); await flush();
+const bad = calls.filter((c) => c.argv[1] === 'traffic.set').length;
+ids['mu-tr-yearly'].value = '500'; ids['mu-tr-ystart'].value = '03-15'; ids['mu-tr-ycut'].checked = true;
+btn(ids['mu-traffic-set'], 'Save').click(); await flush(20);
+ids['mu-tr-yused'].value = '120';
+all(ids['mu-traffic-set'], (n) => n.tag === 'button' && n.textContent === 'Correct the count')[1].click(); await flush(8);
+ids['mu-tr-yurem'].value = '40';
+all(ids['mu-traffic-set'], (n) => n.tag === 'button' && n.textContent === 'Correct the count')[3].click(); await flush(8);
+return bad;""")
+        # a year start the year does not have (02-30) sends nothing
+        self.assertEqual(r['result'], 0)
+        sets = [q for m, q in self.api_calls(r, 'traffic.set')]
+        self.assertEqual([(q['key'], q['value']) for q in sets[:11]], [
+            ('reset_day', 1), ('cap', '21474836480'), ('warn', 90), ('cut', 'off'), ('daily', '0'), ('daily_cut', 'off'),
+            ('yearly', '536870912000'), ('yearly_start', '03-15'), ('yearly_cut', 'on'), ('count', 'total'),
+            ('plan', 'Night 50GB')])
+        # the corrections by the operator's numbers: what the year used, and what is left this year
+        self.assertEqual([(q['key'], q['value']) for q in sets[11:]],
+                         [('yearly_used', '128849018880'), ('yearly_used_remaining', '42949672960')])
 
     def test_every_page_renders(self):
         """each tab against answers of the right shape, and against a device that refuses everything"""
