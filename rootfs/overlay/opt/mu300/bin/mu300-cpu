@@ -170,13 +170,25 @@ cores_json() {
 # on average (100 ms at worst); with them off, 0.6 ms (2 ms); the stock firmware the other way round. The power cost
 # was not measured, so it stays off unless the owner switches it on.
 lowlat_nodes() { for n in "$CPUDIR"/cpu0/cpuidle/state*/disable; do [ -f "$n" ] && echo "$n"; done; }
+# All or nothing (kanoqwq's cpu-idle, cc0ecce7): when a state does not take the value (written, then read back), every
+# state gets back what it had, so a failed switch never leaves CPU0 half in one setting and half in the other; and a
+# setting that cannot be saved is undone the same way (what runs is what the next boot applies).
+lowlat_snapshot() { _lw_was=; for n in $(lowlat_nodes); do _lw_was="$_lw_was $n=$(rd "$n")"; done; }
+lowlat_restore() {  # back to the last lowlat_snapshot
+    for _nv in $_lw_was; do
+        [ "$(rd "${_nv%=*}")" = "${_nv##*=}" ] || { echo "${_nv##*=}" > "${_nv%=*}"; } 2>/dev/null
+    done
+    return 0
+}
 lowlat_write() {  # lowlat_write 0|1: 1 disables every state of CPU0
-    _st=0
+    lowlat_snapshot
     for n in $(lowlat_nodes); do
         [ "$(rd "$n")" = "$1" ] && continue
-        echo "$1" > "$n" 2>/dev/null || _st=1
+        { echo "$1" > "$n"; } 2>/dev/null && [ "$(rd "$n")" = "$1" ] && continue
+        lowlat_restore
+        return 1
     done
-    return $_st
+    return 0
 }
 lowlat_supported() { [ -n "$(lowlat_nodes)" ]; }
 lowlat_active() {  # every state of CPU0 disabled
@@ -184,11 +196,17 @@ lowlat_active() {  # every state of CPU0 disabled
     for n in $(lowlat_nodes); do _any=1; [ "$(rd "$n")" = 1 ] || return 1; done
     [ -n "$_any" ]
 }
+lowlat_mixed() {  # some of CPU0's states disabled and some not (by hand, or by something else)
+    _on= _off=
+    for n in $(lowlat_nodes); do if [ "$(rd "$n")" = 1 ]; then _off=1; else _on=1; fi; done
+    [ -n "$_on" ] && [ -n "$_off" ]
+}
 lowlat_set() {
     case ${1:-} in on) _v=1 ;; off) _v=0 ;; *) echo "usage: mu300-cpu lowlatency [on|off]" >&2; return 2 ;; esac
     lowlat_supported || { echo "mu300-cpu: this kernel has no cpuidle states for CPU0" >&2; return 1; }
-    lowlat_write "$_v" || { echo "mu300-cpu: CPU0's idle states could not be written" >&2; return 1; }
-    if [ "$_v" = 1 ]; then conf_set LOWLATENCY 1; else conf_del LOWLATENCY; fi
+    lowlat_write "$_v" || { echo "mu300-cpu: CPU0's idle states could not be written; they are as they were, nothing saved" >&2; return 1; }
+    if [ "$_v" = 1 ]; then conf_set LOWLATENCY 1; else conf_del LOWLATENCY; fi ||
+        { lowlat_restore; echo "mu300-cpu: the setting could not be saved; CPU0's idle states are as they were" >&2; return 1; }
     say "low latency $1 (CPU0 idle states $([ "$_v" = 1 ] && echo off || echo on)), saved"
 }
 lowlat_apply() {  # at boot: only an "on" is applied; off leaves the kernel's own settings alone
@@ -283,9 +301,9 @@ status_json() {
     _saved=$(conf_get PROFILE)
     printf '{"ok":1,"profile":%s,"profiles":["saving","balanced","performance"],"throttling":%s,"thermal":%s,' \
         "$(jstr "$_saved")" "$(throttling)" "$(thermal_json)"
-    printf '"cores":%s,"cores_off":%s,"lowlatency":{"saved":%s,"active":%s,"supported":%s},"policies":[' \
+    printf '"cores":%s,"cores_off":%s,"lowlatency":{"saved":%s,"active":%s,"mixed":%s,"supported":%s},"policies":[' \
         "$(cores_json)" "$(jstr "$(conf_get CORES_OFF)")" "$(conf_get LOWLATENCY)" \
-        "$(lowlat_active && echo 1 || echo 0)" "$(lowlat_supported && echo 1 || echo 0)"
+        "$(lowlat_active && echo 1 || echo 0)" "$(lowlat_mixed && echo 1 || echo 0)" "$(lowlat_supported && echo 1 || echo 0)"
     _sep=
     for pol in $(policies); do
         _rel=$(rd "$pol/related_cpus")
@@ -313,7 +331,7 @@ status_human() {
     _offl=; for _c in $(cpus); do [ "$(rd "$CPUDIR/cpu$_c/online")" = 0 ] && _offl="$_offl cpu$_c"; done
     echo "offline cores:${_offl:- none} (kept offline: $(conf_get CORES_OFF | sed 's/^$/none/'))"
     if lowlat_supported; then
-        echo "low latency: $([ "$(conf_get LOWLATENCY)" = 1 ] && echo on || echo off) (CPU0 idle states $(lowlat_active && echo off || echo on))"
+        echo "low latency: $([ "$(conf_get LOWLATENCY)" = 1 ] && echo on || echo off) (CPU0 idle states $(lowlat_active && echo off || { lowlat_mixed && echo 'partly off' || echo on; }))"
     fi
 }
 
