@@ -607,7 +607,9 @@ pick_root() {
 #                         4-6, 7); none or 0,0,0: off
 #   cpu-voltage-trial     the one trial boot of a new value: written before that boot applies it
 #   cpu-voltage-good      the value whose boot reached the good mark (mu300-cpu voltage mark-good, 10 minutes up)
-#   cpu-voltage-armed     the value of the running boot; only a clean shutdown removes it (mu300-cpu voltage shutdown)
+#   cpu-voltage-armed     the value of the running boot; only a clean shutdown removes it (mu300-cpu voltage shutdown);
+#                         a second line "up" once that boot had its 10 minutes with the good value (mark-good)
+#   cpu-voltage-keep-good "1": such a boot's good value survives its end without a clean shutdown (off by default)
 #   cpu-voltage-rejected  "A,B,C reason": what this block took back by itself, and why (for the panel)
 # A value runs only as its trial boot or once it is good. An armed value at boot means the last boot with an offset
 # ended without a clean shutdown - a crash, a watchdog reset, a power cut: the offset is dropped (back to 0,0,0 and
@@ -666,6 +668,16 @@ cpu_voltage_boot() {  # cpu_voltage_boot DIR: DIR is .mu300 on the mounted Linux
     _d=$1 _want=0,0,0
     _req=$(head -n1 "$_d/cpu-voltage" 2>/dev/null)
     [ -n "$_req" ] || _req=0,0,0
+    # keep-good (mu300-cpu voltage keep-good, off by default; kanoqwq's fb0b28e7): the good value of a boot that was up
+    # its 10 minutes ("up" under the armed value, mark-good) survives that boot's end without a clean shutdown - a
+    # pulled cable on a board without a battery. A boot that died before its 10 minutes still drops it below.
+    if [ -e "$_d/cpu-voltage-armed" ] && [ "$(head -n1 "$_d/cpu-voltage-keep-good" 2>/dev/null)" = 1 ] &&
+       [ "$(sed -n 2p "$_d/cpu-voltage-armed" 2>/dev/null)" = up ] &&
+       [ "$(head -n1 "$_d/cpu-voltage-armed" 2>/dev/null)" = "$_req" ] &&
+       [ "$(head -n1 "$_d/cpu-voltage-good" 2>/dev/null)" = "$_req" ] && cpuv_valid "$_req"; then
+        rm -f "$_d/cpu-voltage-armed"
+        log "stage=cpu-voltage-kept $_req (the last boot was up its 10 minutes and did not shut down cleanly: keep-good)"
+    fi
     if [ -e "$_d/cpu-voltage-armed" ]; then
         cpuv_reject "$_d" "$(head -n1 "$_d/cpu-voltage-armed")" unclean-end
     elif [ "$_req" = 0,0,0 ]; then

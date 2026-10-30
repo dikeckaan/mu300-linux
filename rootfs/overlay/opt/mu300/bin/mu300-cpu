@@ -341,6 +341,7 @@ status_human() {
 #   mu300-cpu voltage set A,B,C --confirm EXPERIMENTAL
 #                                       offsets in uV for domains 0, 1, 2 (CPUs 0-3, 4-6, 7), from the next boot on
 #   mu300-cpu voltage off               back to 0,0,0 from the next boot on
+#   mu300-cpu voltage keep-good [on|off]  a good value survives a power cut after 10 minutes up (off by default)
 #   mu300-cpu voltage stress [MINUTES] [--background]   mu300-toolkit's CPU stress test (10 minutes)
 #   mu300-cpu voltage warning           the warning (English, Turkish, Chinese)
 #   (services) voltage mark-good: 10 minutes after boot; voltage shutdown: a clean shutdown or reboot
@@ -425,10 +426,11 @@ voltage_status_json() {
     _good=$(cpuv_head "$_d/cpu-voltage-good"); _trial=$(cpuv_head "$_d/cpu-voltage-trial")
     _rej=$(cpuv_head "$_d/cpu-voltage-rejected")
     _kst=$(cpuv_head "$CPUV_SYS/voltage_state")
-    printf '{"ok":1,"kernel":%s,"state":%s,"phase":%s,"applied":%s,"requested":%s,"good":%s,"trial":%s,"armed":%s,' \
+    printf '{"ok":1,"kernel":%s,"state":%s,"phase":%s,"applied":%s,"requested":%s,"good":%s,"trial":%s,"armed":%s,"keep_good":%s,' \
         "$(cpuv_kernel && echo 1 || echo 0)" "$(jstr "${_kst:-none}")" "$(jstr "$(cpuv_phase "$_app" "$_req" "$_good")")" \
         "$(cpuv_arr "$_app")" "$(cpuv_arr "$_req")" "$(cpuv_arr "$_good")" "$(cpuv_arr "$_trial")" \
-        "$([ -n "$_d" ] && [ -e "$_d/cpu-voltage-armed" ] && echo 1 || echo 0)"
+        "$([ -n "$_d" ] && [ -e "$_d/cpu-voltage-armed" ] && echo 1 || echo 0)" \
+        "$([ -n "$_d" ] && cpuv_keep_good "$_d" && echo 1 || echo 0)"
     if [ -n "$_rej" ]; then
         printf '"rejected":{"offsets":%s,"reason":%s},' "$(cpuv_arr "${_rej%% *}")" "$(jstr "${_rej#* }")"
     else
@@ -463,7 +465,14 @@ voltage_status_human() {
     echo "  running now:  $_app ($(cpuv_head "$CPUV_SYS/voltage_state"))"
     echo "  asked for:    $_req   phase: $(cpuv_phase "$_app" "$_req" "$_good")"
     [ -n "$_good" ] && echo "  good mark:    $_good"
-    [ -n "$_d" ] && [ -e "$_d/cpu-voltage-armed" ] && echo "  armed:        $(cpuv_head "$_d/cpu-voltage-armed") (a boot that ends without a clean shutdown drops it)"
+    if [ -n "$_d" ] && [ -e "$_d/cpu-voltage-armed" ]; then
+        if cpuv_keep_good "$_d" && [ "$(sed -n 2p "$_d/cpu-voltage-armed" 2>/dev/null)" = up ]; then
+            echo "  armed:        $(cpuv_head "$_d/cpu-voltage-armed") (good, and this boot was up $CPUV_GOOD_MIN minutes: keep-good keeps it after a power cut)"
+        else
+            echo "  armed:        $(cpuv_head "$_d/cpu-voltage-armed") (a boot that ends without a clean shutdown drops it)"
+        fi
+    fi
+    [ -n "$_d" ] && echo "  keep-good:    $(cpuv_keep_good "$_d" && echo on || echo off)"
     [ -n "$_d" ] && [ -s "$_d/cpu-voltage-rejected" ] && echo "  taken back:   $(cpuv_head "$_d/cpu-voltage-rejected")"
     echo "  limits:       $(cpuv_head "$CPUV_SYS/voltage_limits")"
     echo "  firmware:     $(cpuv_firmware)"
@@ -546,9 +555,39 @@ voltage_mark_good() {  # 10 minutes after boot (mu300-cpu-voltage.timer, the Ope
     [ "$_a" = "$_k" ] || { say "armed $_a but the kernel runs ${_k:-nothing}: no good mark"; return 0; }
     _up=$(cut -d. -f1 "$R/proc/uptime" 2>/dev/null)
     [ "${_up:-0}" -ge $((CPUV_GOOD_MIN * 60)) ] 2>/dev/null || { say "up ${_up:-?} s, the good mark needs $CPUV_GOOD_MIN minutes"; return 1; }
-    [ "$(cpuv_head "$_d/cpu-voltage-good")" = "$_a" ] && return 0
-    echo "$_a" > "$_d/cpu-voltage-good" && rm -f "$_d/cpu-voltage-trial" && sync
-    say "CPU voltage offset $_a: good mark after ${_up} s up"
+    if [ "$(cpuv_head "$_d/cpu-voltage-good")" != "$_a" ]; then
+        echo "$_a" > "$_d/cpu-voltage-good" && rm -f "$_d/cpu-voltage-trial" && sync
+        say "CPU voltage offset $_a: good mark after ${_up} s up"
+    fi
+    # this boot, too, was up its 10 minutes with the good value: "up" under the armed value (what keep-good asks of a
+    # boot that then ends without a clean shutdown; every boot earns it again, the initramfs arms without it)
+    [ "$(sed -n 2p "$_d/cpu-voltage-armed" 2>/dev/null)" = up ] && return 0
+    printf '%s\nup\n' "$_a" > "$_d/cpu-voltage-armed.tmp" && mv "$_d/cpu-voltage-armed.tmp" "$_d/cpu-voltage-armed" && sync
+    return 0
+}
+
+# keep-good (kanoqwq's fb0b28e7, "preserve confirmed CPU settings"; off by default, not tried on a device by him or
+# here): a good value is not dropped when a boot that was up its 10 minutes with it ends without a clean shutdown. A
+# board without a battery (the F50, the V50) is switched off by pulling its cable, and each time that dropped the
+# value. A boot that ends before its 10 minutes still drops it, so a value that crashes early cannot loop the boots.
+cpuv_keep_good() { [ "$(cpuv_head "$1/cpu-voltage-keep-good")" = 1 ]; }
+voltage_keep_good() {  # voltage_keep_good [on|off]
+    _d=$(cpuv_dir) || { echo "mu300-cpu: the Linux disk (.mu300) was not found" >&2; return 1; }
+    case ${1:-} in
+        '') cpuv_keep_good "$_d" && echo on || echo off; return 0 ;;
+        on|off) ;;
+        *) echo "usage: mu300-cpu voltage keep-good [on|off]" >&2; return 2 ;;
+    esac
+    cpuv_is_root || { echo "mu300-cpu: the CPU voltage offset is root only" >&2; return 1; }
+    if [ "$1" = on ]; then
+        echo 1 > "$_d/cpu-voltage-keep-good" || return 1
+        echo "keep-good on: a good offset stays after a power cut, once its boot was up $CPUV_GOOD_MIN minutes (a crash then counts the same: mu300-cpu voltage off takes it back)"
+    else
+        rm -f "$_d/cpu-voltage-keep-good" || return 1
+        echo "keep-good off: any boot that ends without a clean shutdown drops the offset"
+    fi
+    sync
+    say "voltage keep-good $1"
 }
 
 voltage_shutdown() {  # a clean shutdown or reboot only: the armed mark goes; a stopped service is not a shutdown
@@ -584,10 +623,11 @@ voltage_main() {
              voltage_set "$@" ;;
         off) voltage_off ;;
         mark-good) voltage_mark_good ;;
+        keep-good) voltage_keep_good "${2:-}" ;;
         shutdown) voltage_shutdown ;;
         stress) shift; voltage_stress "$@" ;;
         warning) voltage_warning ;;
-        *) echo "usage: mu300-cpu voltage [status [--json]|set A,B,C --confirm $CPUV_WORD|off|stress [MINUTES] [--background]|warning]" >&2; return 2 ;;
+        *) echo "usage: mu300-cpu voltage [status [--json]|set A,B,C --confirm $CPUV_WORD|off|keep-good [on|off]|stress [MINUTES] [--background]|warning]" >&2; return 2 ;;
     esac
 }
 
