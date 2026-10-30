@@ -12493,8 +12493,9 @@ a timeout on a private fifo (busybox ash, bash; `sleep` under dash), with 500 ms
 **Data watchdog** (`mobile-data watch`; his `data-events.sh`). His watchdog wakes on the modem daemon's URC and netifd
 events; ours keeps its AT look every 30 s, and the sleep between two looks now runs with 500 ms of timer slack (set by
 the sleep's own subshell; the AT and route work keeps the default). His `watch_cleanup` fixes a bug ours had too: the
-EXIT trap removed a lock path that was a local of `watch()`, gone by then, so under `set -u` every stop died on
-`wlock: unbound variable` with status 1 and left the lock behind (F50-B, at each `systemctl restart`). The path is now
+traps removed a lock path that was a local of `watch()`. On F50-B every `systemctl restart` ended in
+`wlock: unbound variable` (the EXIT trap, after the locals were gone) and status 1; on the U30 Air the TERM trap
+removed the lock and the watchdog went on without it, until a KILL. The path is now
 at process scope, TERM exits 0 (a stop) and INT 130, and the lock goes only while it is still this process's. The
 sleep runs in the background and is waited for, so the TERM trap runs at once rather than after up to 30 s.
 
@@ -12522,4 +12523,12 @@ with the switch, `up` and the good request; `mark-good` writes `up`; the switch 
   with nothing armed did nothing. The watchdog's sleep child ran with 500000000 ns of slack and the watchdog itself
   with 50000. `systemctl restart` of the watchdog: the old script stopped with status 1 (`wlock: unbound variable`),
   the new one "Deactivated successfully" at once.
+- U30 Air, OpenWrt 25.12.6, 6.18.59, the VPN (sing-box) and its kill switch up throughout. `mu300-smsd`: 169 CPU ticks
+  in 120 s before, 141 after (what is left is the full sync every 30 s, not touched here); in the looks between two
+  syncs it had no child at all, and its slack read 500000000 during the wait. The OpenWrt busybox does
+  `test -ot` to the second and `read -t` on the fifo (also checked in the 25.12.6 image). A real receive:
+  `mu300-sms send 7000 KALAN`, and the operator's two-part answer came by direct delivery, joined into one message, in
+  the pool 8 s later. The data watchdog's sleep had 500000000 ns of slack. The old watchdog ignored TERM there: its
+  trap removed the lock and the loop went on (it took a KILL); the new one exited, and procd started it again.
+  `mu300-hw`, a reboot with the hotspot on: "no restart" (the country, TR, live), the access point up, the VPN up.
 - Not tried on a board: keep-good across a real power cut (it needs the initramfs of this branch and an offset).
