@@ -497,6 +497,9 @@ if (-not $py) {
     $bcbFile = Join-Path $fx 'bcb.bin'
     & $py (Join-Path (Join-Path $Top 'tools') 'resume.py') bcb $bcbFile
 
+    # the online way (Android keeps its data) is not on offer here: no helper (its own checks are answers.Tests.ps1's
+    # and tests/test_resume.py's), so OnlineInspect says no without asking the device anything
+    $OnlineBin = Join-Path $fx 'no-mu300-f2fs-online'; $OnlineSh = Join-Path $fx 'no-android-online-shrink.sh'; $OnlineT = '/data/local/tmp/mu300-online'
     # -Check: the figures, no question, nothing written
     $Check = $true
     FakeDevice 'vendor64'; RunOffer @()
@@ -510,7 +513,8 @@ if (-not $py) {
     Check 'check: no question'      $script:asked.Count 0
     Check 'check: device untouched' (Untouched) $true
     Check 'check: reads the table and what identifies the device' (($script:dev.cmds -join '|')) "pull: dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null|pull: dd if=/dev/block/mmcblk0 bs=512 skip=$($D64 - 33) count=33 2>/dev/null|su: $FactsCmd"
-    Check 'check: the reset, it says' (Printed "Android's own recovery erases Android's data") $true
+    Check 'check: the reset, it says' (Printed "Android's own recovery resets it") $true
+    Check 'check: keep is not possible, it says' (Printed '^    keep   not possible on this device: this installer has no mu300-f2fs-online') $true
     Check 'check: encrypted, it says' (Printed "^  Android's data:       encrypted \(encrypted/file\)$") $true
     Check 'check: nothing unexpected' $script:dev.bad 0
 
