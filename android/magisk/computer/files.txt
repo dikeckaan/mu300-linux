@@ -50,4 +50,5 @@ gui/mu300-gui.py
 gui/mu300gui
 android/magisk/mu300-linux-switch
 android/magisk/installer/module.prop.in
+rootfs/overlay/opt/mu300/lib/storage.sh
 rootfs/overlay/opt/mu300/lib/vpn-orphan.sh

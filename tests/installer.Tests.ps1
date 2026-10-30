@@ -275,6 +275,8 @@ foreach ($w in $rnames) {
     if (-not (Get-Command $w -CommandType Function -ErrorAction SilentlyContinue)) { Write-Host "FAIL: $w not found in install.ps1"; exit 99 }
 }
 LoadLanguage 'en'
+# the internal disk as install.ps1's probe found it before the make-room path runs (an eMMC unit)
+$IDISK = 'mmcblk0'; $IPART = 'mmcblk0p'
 # what the make-room path reads to identify the device, as install.ps1 sends it (the same text as tools/resume.sh's)
 $FactsCmd = [regex]::Match([IO.File]::ReadAllText((Join-Path $Top 'install.ps1')), "(?m)^\`$script:FactsCmd = '([^']*)'").Groups[1].Value
 $script:FactsCmd = $FactsCmd

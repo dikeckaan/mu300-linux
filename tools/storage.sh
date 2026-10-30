@@ -21,6 +21,17 @@
 
 SD_MIN=$((700 * 1024 * 1024))
 
+# internal_disk: IDISK, the device's internal disk as Android's by-name links have it - the disk that holds misc:
+# mmcblk0 on an eMMC unit, sda on a UFS one (issue #396; boot/init and the systems find the same disk with
+# lib/storage.sh) - and IPART, what its partitions are named after (mmcblk0p, sda). mmcblk0 when Android does not say.
+# Asked once; every command here that reads or writes the whole disk names it.
+internal_disk() {
+    [ -z "${IDISK:-}" ] || return 0
+    IDISK=$(su_do 'd=$(readlink -f /dev/block/by-name/misc); d=$(readlink -f /sys/class/block/${d##*/}/..); echo ${d##*/}' | tr -d '\r')
+    case $IDISK in mmcblk[0-9]|sd[a-z]) ;; *) IDISK=mmcblk0 ;; esac
+    case $IDISK in mmcblk*) IPART=${IDISK}p ;; *) IPART=$IDISK ;; esac
+}
+
 # One line from the device: "<block device> <512-byte sectors> <type>" for the first mmc disk that is not the
 # eMMC - its first partition when it has one, the whole card otherwise. The type keeps a second eMMC or an SDIO
 # function out.
@@ -229,7 +240,8 @@ pw_check() {
 region_probe() {
     # (the same command as install.ps1's: no double quotes, which Windows PowerShell 5.1 drops on the way to adb) the
     # last line is the end of the last partition and the eMMC's size
-    set -- $(su_do 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/mmcblk0/size)')
+    internal_disk
+    set -- $(su_do 'e=0; for p in /sys/block/'"$IDISK/$IPART"'*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/'"$IDISK"'/size)')
     PART_OFF=; PART_SIZE=; PART_COUNT=0; FOREIGN_IMAGE=0; IN_PART=0; last_end=; disk=
     for _w; do
         case $_w in
@@ -281,12 +293,12 @@ region_find_existing() {
         region_on_disk "$cand" || continue
         if [ "$cand" = 27762098176 ] && [ -n "${PART_OFF:-}" ] && [ "$cand" -ge "$PART_OFF" ] &&
            [ "$cand" -lt $((PART_OFF + PART_SIZE)) ]; then continue; fi
-        m=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1080)) count=2 2>/dev/null | od -An -tx1" | tr -d ' \n')
+        m=$(su_do "dd if=/dev/block/$IDISK bs=1 skip=$((cand + 1080)) count=2 2>/dev/null | od -An -tx1" | tr -d ' \n')
         case $m in [0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;; *) existing=; return 2 ;; esac
-        l=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1144)) count=16 2>/dev/null" | LC_ALL=C tr -d '\000')
+        l=$(su_do "dd if=/dev/block/$IDISK bs=1 skip=$((cand + 1144)) count=16 2>/dev/null" | LC_ALL=C tr -d '\000')
         if [ "$cand" = "${PART_OFF:-}" ] && [ "$m" = 53ef ]; then PART_FS=ext4; [ "$l" = mu300root ] && PART_FS=mu300root; fi
         if [ "$m" = 53ef ] && [ "$l" = mu300root ]; then
-            blocks=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1028)) count=4 2>/dev/null | od -An -tu4" | tr -d ' ')
+            blocks=$(su_do "dd if=/dev/block/$IDISK bs=1 skip=$((cand + 1028)) count=4 2>/dev/null | od -An -tu4" | tr -d ' ')
             OFF=$cand; SIZE=$((blocks * 4096)); existing=yes; IN_PART=0
             if [ "$cand" = "${PART_OFF:-}" ]; then
                 IN_PART=1; [ "$SIZE" -le "$PART_SIZE" ] || SIZE=$PART_SIZE
@@ -324,7 +336,7 @@ region_dirty() {
     step=$(( SIZE / 1048576 / 16 ))
     probe=""; i=0
     while [ $i -lt 16 ]; do probe="$probe $(( OFF / 1048576 + i * step ))"; i=$((i + 1)); done
-    DIRTY=$(su_do "n=0; for s in $probe; do c=\$(dd if=/dev/block/mmcblk0 bs=1048576 skip=\$s count=1 2>/dev/null | tr -d \"\\000\\377\" | wc -c); [ \$c -gt 0 ] && n=\$((n + 1)); done; echo \$n")
+    DIRTY=$(su_do "n=0; for s in $probe; do c=\$(dd if=/dev/block/$IDISK bs=1048576 skip=\$s count=1 2>/dev/null | tr -d \"\\000\\377\" | wc -c); [ \$c -gt 0 ] && n=\$((n + 1)); done; echo \$n")
     # a count, or no answer (status 2): an empty DIRTY compared as "0" and the region passed as empty
     case $DIRTY in ''|*[!0-9]*) DIRTY=; return 2 ;; esac
 }

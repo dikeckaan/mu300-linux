@@ -41,6 +41,16 @@ umask 022
 # can write (MU300_DEVICE_WORK): files in /data/local/tmp can be replaced by the shell user after they were checked.
 T=${MU300_DEVICE_WORK:-/data/local/tmp}
 . $T/mu300-install.env
+# --- android-disk begin
+# The internal disk, as Android's by-name links have it: the disk that holds misc - mmcblk0 on an eMMC unit, sda on a
+# UFS one (issue #396; tools/storage.sh's internal_disk asks the same) - and what its partitions are named after
+# (mmcblk0p, sda). mmcblk0 when Android does not say; MU300_DISK names it.
+_ad=$(readlink -f "${MU300_BY_NAME:-/dev/block/by-name}/misc" 2>/dev/null) || _ad=
+_ad=$(readlink -f "${MU300_SYSFS:-/sys}/class/block/${_ad##*/}/.." 2>/dev/null) || _ad=
+IDISK=${MU300_DISK:-${_ad##*/}}
+case $IDISK in mmcblk[0-9]|sd[a-z]) ;; *) IDISK=mmcblk0 ;; esac
+case $IDISK in mmcblk*) IPART=${IDISK}p ;; *) IPART=$IDISK ;; esac
+# --- android-disk end
 M=$T/mu300root
 say() { echo "[device] $*"; }
 # --- stage begin
@@ -173,7 +183,7 @@ sd_disk() {  # sd_disk DEV: the disk of a partition (mmcblk1p1 -> mmcblk1); a wh
 }
 sd_check() {  # sd_check DEV: DEV must be on an SD card, never on the eMMC this Android runs from
     case $1 in
-        */mmcblk0|*/mmcblk0p*) say "refusing $1: that is the internal eMMC, not the SD card"; return 1 ;;
+        */"$IDISK"|*/"$IPART"[0-9]*) say "refusing $1: that is the internal eMMC, not the SD card"; return 1 ;;
     esac
     d=$(sd_disk "$1")
     # the MMC core names the card type: SD for a memory card (the eMMC says MMC, a Wi-Fi chip SDIO)
@@ -274,12 +284,12 @@ else
 # inside the one GPT partition named mu300root: another installer's place for this filesystem (tools/storage.sh's
 # region_in_bounds, FINDINGS 179)
 end=0; pn=0; ps=0; pz=0
-for p in /sys/block/mmcblk0/mmcblk0p*; do
+for p in /sys/block/$IDISK/$IPART*; do
     e=$(( $(cat $p/start) + $(cat $p/size) ))
     [ $e -gt $end ] && end=$e
     grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && { pn=$((pn + 1)); ps=$(cat $p/start); pz=$(cat $p/size); }
 done
-disk=$(cat /sys/block/mmcblk0/size)
+disk=$(cat /sys/block/$IDISK/size)
 if [ "$OFF_S" -ge $end ] && [ $((OFF_S + SIZE_S)) -le $((disk - 34)) ]; then :
 elif [ $pn = 1 ] && [ "$OFF_S" -ge $ps ] && [ $((OFF_S + SIZE_S)) -le $((ps + pz)) ]; then
     say "the Linux filesystem goes into the GPT partition named mu300root (sectors $ps + $pz)"
@@ -295,11 +305,11 @@ attach() {
     f=$(losetup -f 2>&1 | grep -o '/dev/block/loop[0-9]*' | head -1); n=${f##*loop}
     L=/dev/block/loop$n
     [ -b "$L" ] || mknod "$L" b $(cut -d: -f1 /sys/block/loop$n/dev) $(cut -d: -f2 /sys/block/loop$n/dev) 2>/dev/null || [ -b "$L" ]
-    losetup -o $OFF -S $SIZE "$L" /dev/block/mmcblk0
+    losetup -o $OFF -S $SIZE "$L" /dev/block/$IDISK
     [ "$(cat /sys/block/loop$n/loop/offset)" = "$OFF" ] && [ "$(blockdev --getsize64 $L)" = "$SIZE" ] || { losetup -d $L; say "loop setup mismatch"; exit 1; }
 }
 
-sb() { dd if=/dev/block/mmcblk0 bs=512 skip=$OFF_S count=4 2>/dev/null | dd bs=1 skip=$1 count=$2 2>/dev/null; }
+sb() { dd if=/dev/block/$IDISK bs=512 skip=$OFF_S count=4 2>/dev/null | dd bs=1 skip=$1 count=$2 2>/dev/null; }
 magic=$(sb 1080 2 | od -An -tx1 | tr -d ' \n')
 label=$(sb 1144 16 | tr -d '\000')
 if [ "$FORMAT" = 1 ]; then

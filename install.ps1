@@ -827,7 +827,13 @@ Say (T 'Locating free eMMC space after the last partition')
 # the eMMC's size (the last line), each GPT partition named mu300root as part:START:SECTORS, and "image" for another
 # installer's image file in Android's data (FINDINGS 179)
 # (no double quotes in a device command: Windows PowerShell 5.1 drops them on the way to adb)
-$parts = @((SuDo 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/mmcblk0/size)').Trim() -split '\s+')
+# The internal disk, as Android's by-name links have it (tools/storage.sh's internal_disk): the disk that holds misc -
+# mmcblk0 on an eMMC unit, sda on a UFS one (issue #396) - and what its partitions are named after. mmcblk0 when
+# Android does not say.
+$IDISK = ([string](SuDo 'd=$(readlink -f /dev/block/by-name/misc); d=$(readlink -f /sys/class/block/${d##*/}/..); echo ${d##*/}')).Trim()
+if ($IDISK -cnotmatch '^(mmcblk[0-9]|sd[a-z])$') { $IDISK = 'mmcblk0' }
+$IPART = $(if ($IDISK -like 'mmcblk*') { "${IDISK}p" } else { $IDISK })
+$parts = @((SuDo ('e=0; for p in /sys/block/' + "$IDISK/$IPART" + '*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/' + $IDISK + '/size)')).Trim() -split '\s+')
 $nums = @($parts | Where-Object { $_ -match '^[0-9]+$' })
 $partList = @($parts | Where-Object { $_ -match '^part:[0-9]+:[0-9]+$' })
 $FOREIGN_IMAGE = @($parts | Where-Object { $_ -eq 'image' }).Count -gt 0
@@ -979,8 +985,8 @@ function GptTool([string]$Dir, [string[]]$ToolArgs) {
 # $Prefix.tail. A file from an earlier run never stands in for one that could not be read.
 function GptDump([int64]$Disk, [string]$Prefix) {
     Remove-Item -Force "$Prefix.head", "$Prefix.tail" -ErrorAction SilentlyContinue
-    SuDoToFile 'dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null' "$Prefix.head"
-    SuDoToFile "dd if=/dev/block/mmcblk0 bs=512 skip=$($Disk - 33) count=33 2>/dev/null" "$Prefix.tail"
+    SuDoToFile "dd if=/dev/block/$IDISK bs=512 count=34 2>/dev/null" "$Prefix.head"
+    SuDoToFile "dd if=/dev/block/$IDISK bs=512 skip=$($Disk - 33) count=33 2>/dev/null" "$Prefix.tail"
     if (-not (Test-Path "$Prefix.head") -or -not (Test-Path "$Prefix.tail")) { return $false }
     return ((Get-Item "$Prefix.head").Length -eq 34 * 512 -and (Get-Item "$Prefix.tail").Length -eq 33 * 512)
 }
@@ -1010,7 +1016,7 @@ if ($ResumeWanted -ne '0' -and ($ResumeWanted -eq '1' -or $resumeWaits)) {
             $rr = [string]((ResumePy get $RESUME_TX region_start) | Select-Object -First 1) -replace '^region_start=', ''
             if ($rr -notmatch '^[0-9]+$') { Die (T 'could not read the transaction {1}' $RESUME_TX) }
             Remove-Item -Force "$g\resume-marker.bin", "$g\resume-bcb.bin" -ErrorAction SilentlyContinue
-            SuDoToFile "dd if=/dev/block/mmcblk0 bs=512 skip=$rr count=8 2>/dev/null" "$g\resume-marker.bin"
+            SuDoToFile "dd if=/dev/block/$IDISK bs=512 skip=$rr count=8 2>/dev/null" "$g\resume-marker.bin"
             SuDoToFile 'dd if=/dev/block/by-name/misc bs=2048 count=1 2>/dev/null' "$g\resume-bcb.bin"
             $idArgs = @('identity', $Top)
             if ($PKG) { $idArgs += (Join-Path $PKG 'mu300\manifest') }
@@ -1036,7 +1042,7 @@ if ($ResumeWanted -ne '0' -and ($ResumeWanted -eq '1' -or $resumeWaits)) {
     }
 }
 # the partitions, for a picture of the eMMC: "name:first sector:sectors" of each (the stream only; sysfs, read only)
-if ($script:MuProgress) { Info 'partitions' ((SuDo 'for p in /sys/block/mmcblk0/mmcblk0p*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done') -replace "`n", ' ') }
+if ($script:MuProgress) { Info 'partitions' ((SuDo ('for p in /sys/block/' + "$IDISK/$IPART" + '*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done')) -replace "`n", ' ') }
 function Gib([int64]$b) { '{0:N1} GiB' -f ($b / 1GB) }
 # Where the Linux filesystem goes (tools/storage.sh's choose_storage). The caller asks; an empty answer is the
 # default (StorageDefault): internal storage; the card when there is too little room inside (the way that needs no
@@ -1389,8 +1395,8 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     $abBefore = (SuDo 'dd if=/dev/block/by-name/misc bs=1 skip=2048 count=32 2>/dev/null | od -An -tx1 -v') -replace '\s', ''
     # the backup copy first: if power is lost between the two, the primary is still the old table and the device
     # boots, which is the recoverable order
-    SuDo "dd if=$T/mu300-new.tail of=/dev/block/mmcblk0 bs=512 seek=$($Disk - 33) conv=fsync 2>/dev/null" | Out-Null
-    SuDo "dd if=$T/mu300-new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null" | Out-Null
+    SuDo "dd if=$T/mu300-new.tail of=/dev/block/$IDISK bs=512 seek=$($Disk - 33) conv=fsync 2>/dev/null" | Out-Null
+    SuDo "dd if=$T/mu300-new.head of=/dev/block/$IDISK bs=512 conv=fsync 2>/dev/null" | Out-Null
 
     Say (T 'Verifying')
     $null = GptDump $Disk "$g\after"
@@ -1402,8 +1408,8 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     Write-Host ('  ' + (T 'userdata now ends at sector {1}' $after.End))
 
     # the token: the first 4 KiB of the region, outside every partition from now on
-    SuDo "dd if=$T/mu300-marker.bin of=/dev/block/mmcblk0 bs=512 seek=$($rg.Start) count=8 conv=notrunc,fsync 2>/dev/null" | Out-Null
-    if ((ResumeSha "dd if=/dev/block/mmcblk0 bs=512 skip=$($rg.Start) count=8 2>/dev/null | sha256sum") -ne (Get-FileHash "$g\marker.bin" -Algorithm SHA256).Hash.ToLower()) {
+    SuDo "dd if=$T/mu300-marker.bin of=/dev/block/$IDISK bs=512 seek=$($rg.Start) count=8 conv=notrunc,fsync 2>/dev/null" | Out-Null
+    if ((ResumeSha "dd if=/dev/block/$IDISK bs=512 skip=$($rg.Start) count=8 2>/dev/null | sha256sum") -ne (Get-FileHash "$g\marker.bin" -Algorithm SHA256).Hash.ToLower()) {
         Die (T 'the token did not read back from the device; misc was not changed, Android keeps its data. Run the installer again.')
     }
     # the reset, by Android's own recovery: the bootloader message in the first 2 KiB of misc
@@ -1513,13 +1519,13 @@ $cands = @($REG_OFF); if ($IN_PART -eq 1) { $cands += $PART_OFF }; $cands += [in
 foreach ($cand in $cands) {
     if (-not (RegionOnDisk $cand)) { continue }
     if ($cand -eq 27762098176 -and $IN_PART -eq 1 -and $cand -ge $PART_OFF -and $cand -lt ($PART_OFF + $PART_SIZE)) { continue }
-    $m = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
+    $m = (SuDo "dd if=/dev/block/$IDISK bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
     # two bytes on the disk always read as four hex digits: anything else is no answer, never "no installation"
     if ($m -notmatch '^[0-9a-f]{4}$') { Die (T 'no answer from the device') }
-    $l = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
+    $l = (SuDo "dd if=/dev/block/$IDISK bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
     if ($IN_PART -eq 1 -and $cand -eq $PART_OFF -and $m -eq '53ef') { $PART_FS = $(if ($l.Trim() -eq 'mu300root') { 'mu300root' } else { 'ext4' }) }
     if ($m -eq '53ef' -and $l.Trim() -eq 'mu300root') {
-        $blocks = [int64]((SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1028) count=4 2>/dev/null | od -An -tu4").Trim())
+        $blocks = [int64]((SuDo "dd if=/dev/block/$IDISK bs=1 skip=$($cand + 1028) count=4 2>/dev/null | od -An -tu4").Trim())
         $OFF = $cand; $SIZE = $blocks * 4096; $existing = 'yes'
         if ($IN_PART -eq 1 -and $cand -eq $PART_OFF) { if ($SIZE -gt $PART_SIZE) { $SIZE = $PART_SIZE } } else { $IN_PART = 0 }
         break
@@ -1546,14 +1552,14 @@ if ($SD_MODE -eq 0 -and $existing -eq 'no' -and $RESUMING -eq 0) {
     # PowerShell 5.1 drops them on the way to adb, tr got an unquoted \000 - "delete the character 0" - and every
     # empty MiB counted as data, so on Windows an empty region was always "16 of 16 not empty". \\ reaches the
     # device's shell as one backslash, which tr then reads as the start of an octal escape.
-    $dirtyOut = (SuDo "n=0; for s in $probe; do c=`$(dd if=/dev/block/mmcblk0 bs=1048576 skip=`$s count=1 2>/dev/null | tr -d \\000\\377 | wc -c); [ `$c -gt 0 ] && n=`$((n + 1)); done; echo `$n").Trim()
+    $dirtyOut = (SuDo "n=0; for s in $probe; do c=`$(dd if=/dev/block/$IDISK bs=1048576 skip=`$s count=1 2>/dev/null | tr -d \\000\\377 | wc -c); [ `$c -gt 0 ] && n=`$((n + 1)); done; echo `$n").Trim()
     # [int]'' is 0: no answer passed as an empty region
     if ($dirtyOut -notmatch '^[0-9]+$') { Die (T 'no answer from the device') }
     $dirty = [int]$dirtyOut
     Write-Host (T 'data check: {1} of 16 samples contain data' $dirty)
     Info 'region.dirty' $dirty
     if ($dirty -gt 0) {
-        $head = (SuDo "dd if=/dev/block/mmcblk0 bs=1048576 skip=$([int64]($OFF / 1MB)) count=1 2>/dev/null | od -An -tx1 -N32") -replace '\s+', ' '
+        $head = (SuDo "dd if=/dev/block/$IDISK bs=1048576 skip=$([int64]($OFF / 1MB)) count=1 2>/dev/null | od -An -tx1 -N32") -replace '\s+', ' '
         Write-Host ('  ' + (T 'start of the region: {1}' $head.Trim()))
     }
 }

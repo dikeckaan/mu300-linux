@@ -237,40 +237,23 @@ linux_slot_detect
 # (sdhci-sprd) is one of the vendor modules - an earlier lookup found nothing (U30 Air: misc-NOT-FOUND, no persistent
 # log). So this runs after load_vendor_modules; whether Android's slot is restored is decided once the rootfs is known.
 # --- emmc begin
-# The eMMC and the card by what they are, never by number: the host index follows probe order, and under mainline
-# the card slot once took mmc0 and left mmcblk1 to the eMMC (FINDINGS 31l).
-mmc_disks() {  # mmc_disks TYPE: the whole mmcblkN disks whose card is of TYPE (MMC: the eMMC, SD: a card)
-    for b in "${MU300_SYS:-/sys}"/block/mmcblk*; do
-        case ${b##*/mmcblk} in ''|*[!0-9]*) continue ;; esac   # not mmcblk0boot0, mmcblk0rpmb, ...
-        [ "$(cat "$b/device/type" 2>/dev/null)" = "$1" ] && echo "${b##*/}"
-    done
-}
-# The eMMC's block device: the disk of type MMC, else the first mmcblk disk that is not a card, and mmcblk0 only when
-# sysfs has no mmcblk disk at all (the order every kernel had until 31l). Only cards there: nothing, status 1.
+# The internal disk - the eMMC, or the UFS of a unit that has one (issue #396) - and the cards by what they are, never
+# by number: the shared lookup in /etc/mu300-storage.sh (rootfs/overlay/opt/mu300/lib/storage.sh).
+_sl=${MU300_STORAGE_LIB:-/etc/mu300-storage.sh}
+if [ -r "$_sl" ]; then . "$_sl"; else log "stage=storage-lib-MISSING $_sl"; fi   # "." of no file would end init
+mmc_disks() { mu300_storage_mmc "$1"; }  # mmc_disks TYPE: the whole mmcblkN disks whose card is of TYPE (MMC, SD)
+# The internal disk's block device, and mmcblk0 only when sysfs has no disk at all (the order every kernel had until
+# 31l). Only cards there: nothing, status 1.
 emmc_dev() {
-    set -- $(mmc_disks MMC)
-    [ -n "${1:-}" ] && { echo "${MU300_DEV:-/dev}/$1"; return 0; }
-    _any=
-    for b in "${MU300_SYS:-/sys}"/block/mmcblk*; do
-        case ${b##*/mmcblk} in ''|*[!0-9]*) continue ;; esac
-        _any=1
-        [ "$(cat "$b/device/type" 2>/dev/null)" = SD ] || { echo "${MU300_DEV:-/dev}/${b##*/}"; return 0; }
-    done
-    [ -z "$_any" ] && { echo "${MU300_DEV:-/dev}/mmcblk0"; return 0; }
-    return 1
+    _e=$(mu300_storage_disk) && { echo "${MU300_DEV:-/dev}/$_e"; return 0; }
+    [ -n "$(mmc_disks SD)" ] && return 1
+    echo "${MU300_DEV:-/dev}/mmcblk0"
 }
-# The eMMC's partition named NAME in its GPT. Only the eMMC's: a card can carry the same names (a raw clone of a
-# device backup), and what is found here is written to - the BCB in misc, the log in boot_<slot>.
-emmc_part() {  # emmc_part NAME -> /dev/<partition>; nothing (status 1) when the eMMC has none of that name
-    _e=$(emmc_dev) || return 1
-    _e=${_e##*/}
-    for _u in "${MU300_SYS:-/sys}/block/$_e/$_e"p*/uevent; do
-        grep -qx "PARTNAME=$1" "$_u" 2>/dev/null || continue
-        _u=${_u%/uevent}
-        echo "${MU300_DEV:-/dev}/${_u##*/}"
-        return 0
-    done
-    return 1
+# The internal disk's partition named NAME in its GPT. Only that disk's: a card can carry the same names (a raw clone
+# of a device backup), and what is found here is written to - the BCB in misc, the log in boot_<slot>.
+emmc_part() {  # emmc_part NAME -> /dev/<partition>; nothing (status 1) when the internal disk has none of that name
+    _e=$(mu300_storage_part "$1") || return 1
+    echo "${MU300_DEV:-/dev}/$_e"
 }
 # --- emmc end
 misc=
@@ -528,7 +511,7 @@ is_mu300root() {  # is_mu300root OFFSET: on the eMMC ($EMMC)
 find_root_offset() {
     b=${MU300_SYS:-/sys}/block/${EMMC##*/}
     e=0
-    for p in "$b/${EMMC##*/}"p*; do
+    for p in "$b/$(mu300_storage_prefix "$EMMC")"[0-9]*; do
         [ -r "$p/start" ] || continue
         x=$(( $(cat "$p/start") + $(cat "$p/size") ))
         [ "$x" -gt "$e" ] && e=$x
@@ -1075,7 +1058,7 @@ log "stage=ready"
 A=/android
 cp -a $A/dev/__properties__ /dev/__properties__
 mkdir -p /dev/block/by-name
-for u in /sys/class/block/${EMMC##*/}p*/uevent; do
+for u in /sys/class/block/$(mu300_storage_prefix "$EMMC")[0-9]*/uevent; do
     d=$(basename "$(dirname "$u")")
     n=$(sed -n 's/^PARTNAME=//p' "$u")
     ln -sf /dev/$d /dev/block/$d

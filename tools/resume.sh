@@ -121,12 +121,12 @@ resume_prepare() {
     _bc=$(su_do 'dd if=/dev/block/by-name/misc bs=1 skip=2048 count=32 2>/dev/null | od -An -tx1 -v' | tr -d ' \n')
     # the backup copy first: if power is lost between the two, the primary is still the old table and the device
     # boots, which is the recoverable order
-    su_do "dd if=$T/mu300-new.tail of=/dev/block/mmcblk0 bs=512 seek=$((disk - 33)) conv=fsync 2>/dev/null" >/dev/null
-    su_do "dd if=$T/mu300-new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null" >/dev/null
+    su_do "dd if=$T/mu300-new.tail of=/dev/block/$IDISK bs=512 seek=$((disk - 33)) conv=fsync 2>/dev/null" >/dev/null
+    su_do "dd if=$T/mu300-new.head of=/dev/block/$IDISK bs=512 conv=fsync 2>/dev/null" >/dev/null
 
     say "$(t 'Verifying')"
-    su_do "dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
-    su_do "dd if=/dev/block/mmcblk0 bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
     adb pull /data/local/tmp/gpt.head "$WORK/gpt/after.head" >/dev/null 2>&1 || true
     adb pull /data/local/tmp/gpt.tail "$WORK/gpt/after.tail" >/dev/null 2>&1 || true
     su_do 'rm -f /data/local/tmp/gpt.head /data/local/tmp/gpt.tail' >/dev/null
@@ -138,8 +138,8 @@ $(t "The backup copy at the end of the disk was written first, so Android's own 
     echo "  $(t 'userdata now ends at sector {1}' "$got")"
 
     # the token: the first 4 KiB of the region, outside every partition from now on
-    su_do "dd if=$T/mu300-marker.bin of=/dev/block/mmcblk0 bs=512 seek=$RG_START count=8 conv=notrunc,fsync 2>/dev/null" >/dev/null
-    [ "$(su_do "dd if=/dev/block/mmcblk0 bs=512 skip=$RG_START count=8 2>/dev/null | sha256sum" | cut -d' ' -f1)" = "$(sha256_of "$WORK/gpt/marker.bin")" ] ||
+    su_do "dd if=$T/mu300-marker.bin of=/dev/block/$IDISK bs=512 seek=$RG_START count=8 conv=notrunc,fsync 2>/dev/null" >/dev/null
+    [ "$(su_do "dd if=/dev/block/$IDISK bs=512 skip=$RG_START count=8 2>/dev/null | sha256sum" | cut -d' ' -f1)" = "$(sha256_of "$WORK/gpt/marker.bin")" ] ||
         die "$(t 'the token did not read back from the device; misc was not changed, Android keeps its data. Run the installer again.')"
 
     # the reset, by Android's own recovery: the bootloader message in the first 2 KiB of misc
@@ -181,8 +181,8 @@ resume_lookup() {
 resume_validate() {
     mkdir -p "$WORK/gpt"
     rm -f "$WORK/gpt/resume.head" "$WORK/gpt/resume.tail" "$WORK/gpt/resume-marker.bin" "$WORK/gpt/resume-bcb.bin"
-    su_do "dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
-    su_do "dd if=/dev/block/mmcblk0 bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
     adb pull /data/local/tmp/gpt.head "$WORK/gpt/resume.head" >/dev/null 2>&1 || true
     adb pull /data/local/tmp/gpt.tail "$WORK/gpt/resume.tail" >/dev/null 2>&1 || true
     su_do 'rm -f /data/local/tmp/gpt.head /data/local/tmp/gpt.tail' >/dev/null
@@ -193,7 +193,7 @@ resume_validate() {
     _rr=$(resume_py get "$RESUME_FILE" region_start) || die "$(t 'could not read the transaction {1}' "$RESUME_FILE")"
     _rr=${_rr#region_start=}
     case $_rr in ''|*[!0-9]*) die "$(t 'could not read the transaction {1}' "$RESUME_FILE")" ;; esac
-    su_do "dd if=/dev/block/mmcblk0 bs=512 skip=$_rr count=8 2>/dev/null > /data/local/tmp/mu300-pull.bin" >/dev/null
+    su_do "dd if=/dev/block/$IDISK bs=512 skip=$_rr count=8 2>/dev/null > /data/local/tmp/mu300-pull.bin" >/dev/null
     adb pull /data/local/tmp/mu300-pull.bin "$WORK/gpt/resume-marker.bin" >/dev/null 2>&1 || true
     su_do 'dd if=/dev/block/by-name/misc bs=2048 count=1 2>/dev/null > /data/local/tmp/mu300-pull.bin' >/dev/null
     adb pull /data/local/tmp/mu300-pull.bin "$WORK/gpt/resume-bcb.bin" >/dev/null 2>&1 || true
