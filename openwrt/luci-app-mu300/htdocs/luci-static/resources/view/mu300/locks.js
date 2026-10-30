@@ -343,9 +343,12 @@ return view.extend({
 		var self = this;
 		if (this._skip > 0) { this._skip--; return Promise.resolve(); }
 		return Promise.resolve(M.callSignal()).catch(function() { return null; }).then(function(live) {
-			self._fails = live && !live.error ? 0 : (self._fails || 0) + 1;
+			/* "busy": both of the backend's dashboard channels were taken by other readings - not a failure of the
+			 * modem: no back-off, and the last reading stays (kanoqwq's b9f71e72) */
+			var busy = !!(live && live.busy);
+			self._fails = live && (!live.error || busy) ? 0 : (self._fails || 0) + 1;
 			self._skip = Math.round(M.backoff(1, self._fails)) - 1;
-			if (!live && self.lastCell && !self.lastCell.error) return;   // a lost request: keep what is shown
+			if ((!live || busy) && self.lastCell && !self.lastCell.error) return;   // lost or busy: keep what is shown
 			live = live || {};
 			var c = {}, meta = self.servingMeta || {};
 			Object.keys(meta).forEach(function(k) { c[k] = meta[k]; });

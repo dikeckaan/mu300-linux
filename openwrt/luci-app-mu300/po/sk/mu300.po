@@ -4333,3 +4333,15 @@ msgstr "Tento súbor je starší než to, čo je nainštalované: to vyžaduje p
 
 msgid "The release source was not changed"
 msgstr "Zdroj vydania sa nezmenil"
+
+msgid "No SIM card"
+msgstr "Žiadna SIM karta"
+
+msgid "Roaming now"
+msgstr "Teraz v roamingu"
+
+msgid "Home network"
+msgstr "Domáca sieť"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "Kanály modemu sú obsadené inými čítaniami; živý signál bude o chvíľu"
