@@ -367,10 +367,12 @@ class Model(unittest.TestCase):
         self.assertEqual((c.default_linux, c.boot_attempts), (True, 5))
         self.assertIn('yes MU300_ANS_HOTSPOT', src)
         self.assertIn('yes MU300_ANS_GPU', src)
+        self.assertIn('yes MU300_ANS_OPENCLASH', src)                       # OpenClash: on where the installer asks it
         self.assertIn('no MU300_ANS_ADB', src)
         self.assertIn('no MU300_ANS_PANEL', src)
         self.assertIn('update MU300_ANS_EXISTING', src)
-        self.assertEqual((c.hotspot, c.gpu, c.adb, c.panel, c.vpn, c.existing), (True, True, False, False, False, 'update'))
+        self.assertEqual((c.hotspot, c.gpu, c.openclash, c.adb, c.panel, c.vpn, c.existing),
+                         (True, True, True, False, False, False, 'update'))
         self.assertEqual((c.overwrite_word, c.erase_sd_word, c.internal_word, c.password), ('', '', '', ''))   # no consent by default
 
     def test_problems(self):
@@ -482,8 +484,8 @@ class Model(unittest.TestCase):
             ('MU300_LANG', 'tr'), ('ANDROID_SERIAL', '324950664950'), ('MU300_ANS_BETA', 'no'), ('MU300_ANS_SYSTEMS', '3'),
             ('MU300_OPENWRT', 'plain'), ('MU300_ANS_BOOT_OS', 'ubuntu'), ('MU300_ANS_UBUNTU', '24.04'), ('MU300_ANS_DEFAULT_LINUX', 'yes'),
             ('MU300_ANS_BOOT_ATTEMPTS', '5'), ('MU300_ANS_HOTSPOT', 'yes'), ('MU300_ANS_GPU', 'yes'), ('MU300_ANS_VPN', 'no'),
-            ('MU300_ANS_ADB', 'no'), ('MU300_ANS_PANEL', 'no'), ('MU300_ANS_KERNEL', '5.4'), ('MU300_ANS_PASSWORD', 'hunter2secret'),
-            ('MU300_ANS_CONFIRM', '@stdin')])
+            ('MU300_ANS_OPENCLASH', 'yes'), ('MU300_ANS_ADB', 'no'), ('MU300_ANS_PANEL', 'no'), ('MU300_ANS_KERNEL', '5.4'),
+            ('MU300_ANS_PASSWORD', 'hunter2secret'), ('MU300_ANS_CONFIRM', '@stdin')])
         known = self.header_variables() | {'MU300_RELEASE', 'MU300_RELEASE_URL', 'MU300_SYNC_BOOTCHAIN', 'MU300_FETCH_JOBS',
                                             'MU300_VPN_URL', 'MU300_VPN_MODULE'}
         every = model.Choices()
@@ -506,6 +508,26 @@ class Model(unittest.TestCase):
         a = model.answers(every, f, 'en', 'S')
         self.assertEqual((a['MU300_ANS_INTERNAL_OVER_CARD'], a['MU300_ANS_OVERWRITE']), ('internal', 'overwrite'))
         self.assertNotIn('MU300_ANS_ERASE_SD', a)
+
+    def test_openclash_is_answered_where_it_is_asked(self):
+        """install.sh asks OpenClash only when an OpenWrt system is chosen, default yes; in answers mode a question
+        without its variable stops the run, so the window answers it every time: its own choice with OpenWrt, and no
+        without one (the installer's not-asked case)."""
+        c = good_choices()                                      # Ubuntu and OpenWrt
+        self.assertTrue(c.openclash)                            # the installer's default
+        self.assertEqual(model.answers(c, facts(), 'en', '')['MU300_ANS_OPENCLASH'], 'yes')
+        c.openclash = False                                     # the box off
+        self.assertEqual(model.answers(c, facts(), 'en', '')['MU300_ANS_OPENCLASH'], 'no')
+        c = good_choices(); c.openwrt = False                   # Ubuntu only: the question is not asked
+        self.assertTrue(c.openclash)                            # (the choice is kept for when OpenWrt comes back)
+        self.assertEqual(model.answers(c, facts(), 'en', '')['MU300_ANS_OPENCLASH'], 'no')
+        # it shows beside the VPN module only where it will be installed
+        label = i18n._('OpenClash in OpenWrt')
+        self.assertIn(label, dict(model.summary(good_choices(), facts(), ''))['Also'])
+        c = good_choices(); c.openclash = False
+        self.assertNotIn(label, dict(model.summary(c, facts(), ''))['Also'])
+        c = good_choices(); c.openwrt = False
+        self.assertNotIn(label, dict(model.summary(c, facts(), ''))['Also'])
 
     def test_no_destructive_word_that_was_not_typed(self):
         # whatever the device looks like, the words that allow something destructive are only ever the user's own
@@ -562,6 +584,9 @@ class Model(unittest.TestCase):
             rows = model.summary(good_choices(), facts(), 'v2026.10.23')
             self.assertEqual(len(rows), 6)
             self.assertIn('Ubuntu 24.04', rows[0][1])
+            self.assertIn(i18n._('OpenClash in OpenWrt'), rows[-1][1])       # in the extras, translated
+            if lang != 'en':
+                self.assertNotEqual(i18n._('OpenClash in OpenWrt'), 'OpenClash in OpenWrt')
 
 
 class Run(unittest.TestCase):
@@ -1211,6 +1236,23 @@ class Window(unittest.TestCase):
         page = show('install', 2)
         self.assertIn('The beta: v2026.10.25', page)
         self.assertIn('Ubuntu LTS', page)
+        # OpenClash: on beside the VPN module, as the installer defaults it with an OpenWrt system
+        self.assertIn('Install OpenClash', page)
+        self.assertTrue(ctl.choices.openclash)
+        # ... and not offered without one, which is where the installer never asks it
+        a.v['openwrt'].set(False)
+        page = show('install', 2)
+        self.assertIn('Install OpenClash', page)                # shown, but not offered
+        oc = [w for w in all_widgets(root) if str(w.cget('text')).startswith('Install OpenClash')]
+        self.assertEqual(len(oc), 1)
+        self.assertIn('disabled', oc[0].state())
+        self.assertTrue(ctl.choices.openclash)                  # the choice stays for when OpenWrt is back
+        a.v['openwrt'].set(True)
+        root.update()
+        page = show('install', 2)
+        oc = [w for w in all_widgets(root) if str(w.cget('text')).startswith('Install OpenClash')]
+        self.assertEqual(len(oc), 1)
+        self.assertNotIn('disabled', oc[0].state())
         self.assertIn('disabled', a.w['next'].state())                        # no password yet
         a.v['password'].set('hunter2secret'); a.v['password2'].set('hunter2secret')
         root.update()

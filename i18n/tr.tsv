@@ -896,3 +896,10 @@ Linux goes into the GPT partition named mu300root ({1}), which another installer
 The partition named mu300root is not empty ({1} of 16 samples hold data), and it holds no Linux filesystem of this project. To use it anyway, put MU300_STORAGE=internal and MU300_REGION_OVERWRITE=yes into {2}, a file only root can change.	mu300root adlı bölüm boş değil (16 örnekten {1} tanesinde veri var) ve içinde bu projenin Linux dosya sistemi yok. Yine de kullanmak için MU300_STORAGE=internal ve MU300_REGION_OVERWRITE=yes satırlarını yalnızca root'un değiştirebildiği {2} dosyasına yazın.
 storage:        internal, the GPT partition mu300root at offset {1}, {2} ({3})	depolama:       dahili, mu300root GPT bölümü, konum {1}, {2} ({3})
 the partition mu300root	mu300root bölümü
+OpenClash (a Clash/mihomo proxy with a page in LuCI, Services > OpenClash) is the alternative to the VPN module that many use. It installs itself at OpenWrt's first boot and you add your subscription there.	OpenClash (LuCI'de Servisler > OpenClash sayfası olan bir Clash/mihomo vekil sunucusu), VPN modülüne alternatif olarak yaygın kullanılır. OpenWrt'nin ilk açılışında kendini kurar, aboneliğinizi orada eklersiniz.
+Install OpenClash (about 11 MB more to download)? (yes/no)	OpenClash kurulsun mu (yaklaşık 11 MB daha indirir)? (evet/hayır)
+Downloading OpenClash	OpenClash indiriliyor
+OpenClash needs OpenWrt: not installing it (no OpenWrt system chosen)	OpenClash OpenWrt gerektirir: OpenWrt sistemi seçilmediği için kurulmuyor
+Install OpenClash (about 11 MB more to download)	OpenClash kur (yaklaşık 11 MB daha indirir)
+The Clash/mihomo proxy page in LuCI, installed at OpenWrt's first boot. It needs OpenWrt, and it is independent of the VPN module: both can be installed.	LuCI'deki Clash/mihomo vekil sayfası, OpenWrt'nin ilk açılışında kurulur. OpenWrt gerektirir ve VPN modülünden bağımsızdır: ikisi birlikte kurulabilir.
+OpenClash in OpenWrt	OpenWrt'de OpenClash

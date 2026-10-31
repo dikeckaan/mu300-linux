@@ -46,6 +46,7 @@
 #   MU300_ANS_HOTSPOT=yes|no               copy Android's hotspot name and password
 #   MU300_ANS_GPU=yes|no                   the Mali GPU userspace
 #   MU300_ANS_VPN=yes|no                   the VPN module
+#   MU300_ANS_OPENCLASH=yes|no             OpenClash (the Clash/mihomo proxy page) in OpenWrt
 #   MU300_ANS_ADB=yes|no                   adb to Linux (on for every computer): this computer's key only
 #   MU300_ANS_PANEL=yes|no                 the web panel for Ubuntu
 #   MU300_ANS_KERNEL=5.4|6.18|7.2|7.3      the kernel
@@ -72,6 +73,9 @@
 # their sha256. When GitHub has a prerelease newer than that release it asks whether to install the beta instead
 # (default: no; tools/releases.sh). The VPN, when wanted, is the module of github.com/dikeckaan/mu300-linux-vpn: its latest release
 # (MU300_VPN_URL: another place with its files and SHA256SUMS; MU300_VPN_MODULE=FILE: a copy on this computer).
+# OpenClash, when an OpenWrt system is installed (the default), is the pinned .apk of its own release:
+# luci-app-openclash-0.48.002.apk from github.com/vernesong/OpenClash (MU300_OPENCLASH_APK=FILE: a copy on this
+# computer, checked against a SHA256SUMS next to it when there is one).
 # Build:    needs adb, docker, python3, lz4 and the kernel outputs in $MU300_KERNEL_OUT (default: out/, kernel/build-all.sh).
 # The published images contain no proprietary files: Wi-Fi/Bluetooth firmware and the Android modem/GPU userspace are
 # pulled from *your* device into $MU300_WORK (default: work/), never leave the host except to your device.
@@ -245,6 +249,41 @@ fetch_vpn_module() {
         mv "$_vd/$_f.part" "$_vd/$_f"
     fi
     EXTRA_VPN=$_vd/$_f
+}
+
+# OpenClash (luci-app-openclash, the Clash/mihomo proxy with a page in LuCI) is not in the OpenWrt feeds: the
+# installer pins its release, makes it into the openclash extra, and the extra's link hook installs it into OpenWrt
+# at the system's first boot (mu300-extra link). The hash is that of this release's .apk.
+OPENCLASH_VERSION=0.48.002
+OPENCLASH_APK_URL=https://github.com/vernesong/OpenClash/releases/download/v0.48.002/luci-app-openclash-0.48.002.apk
+OPENCLASH_APK_SHA256=f7ebbd43f9be15c5e6df26e5d0c03d50d0bb8f7fa4cc0d2c2bf048b08c0b155b
+
+# fetch_openclash: the pinned OpenClash .apk (or MU300_OPENCLASH_APK=FILE, a copy on this computer: a SHA256SUMS next
+# to it is checked when there is one) into $WORK/openclash, made into the openclash extra; sets EXTRA_OPENCLASH.
+fetch_openclash() {
+    _f=luci-app-openclash-$OPENCLASH_VERSION.apk
+    mkdir -p "$WORK"
+    apk=
+    if [ -n "${MU300_OPENCLASH_APK:-}" ]; then
+        [ -s "$MU300_OPENCLASH_APK" ] || die "$(t '{1} not found' "$MU300_OPENCLASH_APK")"
+        # (|| true: without a SHA256SUMS next to it there is nothing to check, which is not an error)
+        _ow=$(awk -v f="${MU300_OPENCLASH_APK##*/}" '$2 == f || $2 == "*" f {print $1; exit}' \
+              "$(dirname "$MU300_OPENCLASH_APK")/SHA256SUMS" 2>/dev/null || true)
+        [ -z "$_ow" ] || [ "$(sha256_of "$MU300_OPENCLASH_APK")" = "$_ow" ] ||
+            die "$(t 'checksum mismatch for {1}' "$MU300_OPENCLASH_APK")"
+        apk=$MU300_OPENCLASH_APK
+    else
+        mkdir -p "$WORK/openclash"
+        say "$(t 'Downloading OpenClash')"
+        fetch "$OPENCLASH_APK_URL" "$WORK/openclash/$_f.part" || die "$(t 'download of {1} failed' "$_f")"
+        [ "$(sha256_of "$WORK/openclash/$_f.part")" = "$OPENCLASH_APK_SHA256" ] ||
+            die "$(t 'checksum mismatch for {1}' "$_f")"
+        mv "$WORK/openclash/$_f.part" "$WORK/openclash/$_f"
+        apk=$WORK/openclash/$_f
+    fi
+    sh "$TOP/tools/make-openclash-extra.sh" "$apk" "$WORK/mu300-extra-openclash.tar.gz" "${RELEASE:-dev}" ||
+        die "$(t 'could not write {1}' "$WORK/mu300-extra-openclash.tar.gz")"
+    EXTRA_OPENCLASH=$WORK/mu300-extra-openclash.tar.gz
 }
 
 # adb shell/exec-out read stdin; never let them eat the answers typed (or piped) into this script
@@ -807,6 +846,17 @@ fi
 ask vx "$(t 'Install the VPN module (about 40 MB more to download, 120 MB on the device)? (yes/no)')" $vx_default MU300_ANS_VPN
 # its kill switch on too: without the module nothing would enforce it (android-install.sh refuses the same, later)
 [ "$vx" = yes ] || [ -z "$vpn_ks" ] || die "$(t 'The VPN is on with its kill switch in {1}: an update without the VPN module would leave it to nothing. Answer yes to install the module, or turn the VPN off there first (ENABLE=0 in /etc/mu300/vpn.conf).' "${vpn_ks% }")"
+# OpenClash is not in the OpenWrt feeds either: a package of its own release, which goes onto the Linux partition (as
+# the openclash extra) and is installed into OpenWrt at its first boot. It is offered where there is an OpenWrt system
+# (default yes, whatever the VPN answer is: the two can be installed together).
+EXTRA_OPENCLASH=
+oc=no
+case " $OSES " in *openwrt*)
+    echo "  $(t "OpenClash (a Clash/mihomo proxy with a page in LuCI, Services > OpenClash) is the alternative to the VPN module that many use. It installs itself at OpenWrt's first boot and you add your subscription there.")"
+    ask oc "$(t 'Install OpenClash (about 11 MB more to download)? (yes/no)')" yes MU300_ANS_OPENCLASH ;;
+*)
+    echo "  $(t 'OpenClash needs OpenWrt: not installing it (no OpenWrt system chosen)')" ;;
+esac
 # adb over USB to Linux is on in every system and lets every computer in, with a root shell and no password (the
 # owner's decision of 2026-10-13, FINDINGS 70; on the device: mu300-usb adb auth open|keys, mu300-usb adb off). The
 # one thing to choose here is to close it to all but this computer from the first boot on: its adb key, which the
@@ -1053,6 +1103,8 @@ for f in $files; do
 done
 fi
 [ -z "$VPN_FROM_MODULE" ] || fetch_vpn_module
+# OpenClash: the .apk of its own release, made into the openclash extra (not part of a package either)
+[ "$oc" != yes ] || fetch_openclash
 # the 5.4 bundle: its kernel, and for every kernel the busybox, logdw and modules of the boot image's first segment.
 # A package with a mainline kernel has no 5.4 bundle: its boot image is that kernel with its own generic segment,
 # which brings init's busybox, logdw and modules (build-boot-image.py checks that it does).
@@ -1107,6 +1159,8 @@ docker run --rm -v "$TOP/tools":/src:ro -v "$WORK/tools":/o mu300-kbuild sh -c '
   mkdir -p /o/carry && gcc -O2 -static -o /o/carry/mu300-carry /src/carry/mu300-carry.c'
 # the VPN: the module of its own repository, as for prebuilt images (not part of the systems)
 [ "$vx" != yes ] || fetch_vpn_module
+# OpenClash: the .apk of its own release, made into the openclash extra here as for prebuilt images
+[ "$oc" != yes ] || fetch_openclash
 # the web panel: built here without Cockpit's packages (its first boot installs them from Ubuntu's archive once online)
 if [ "$px" = yes ]; then
     say "$(t 'Building the web panel extra')"
@@ -1166,7 +1220,7 @@ say "$(t 'Ready to install')"
 echo "  $(t 'source:         {1}' "$([ $MODE = prebuilt ] && t 'prebuilt release {1} + vendor files from this device' "$RELEASE" || t 'local build')")"
 echo "  $(t 'systems:        {1} (boots: {2})' "$OSES$(case " $OSES " in (*" ubuntu "*) echo " (Ubuntu $UBUNTU)" ;; esac)" "$BOOT_OS")"
 echo "  $(t 'kernel:         {1}' "$KERNEL$([ -n "$KMAIN" ] && echo " (mainline, $(cat "$KMAIN/kernel.release"))")")"
-echo "  $(t 'extras:         {1}' "$(x=; [ -z "$EXTRA_VPN" ] || x=vpn; [ -z "$EXTRA_PANEL" ] || x="${x:+$x }panel"; [ -n "$x" ] && echo "$x" || t 'none')")"
+echo "  $(t 'extras:         {1}' "$(x=; [ -z "$EXTRA_VPN" ] || x=vpn; [ -z "$EXTRA_PANEL" ] || x="${x:+$x }panel"; [ -z "$EXTRA_OPENCLASH" ] || x="${x:+$x }openclash"; [ -n "$x" ] && echo "$x" || t 'none')")"
 echo "  $(t 'adb to Linux:   {1}' "$([ "$ADB" = 1 ] && t 'on, only for the adb key of this computer' || t 'on, for every computer: a root shell without a password (on the device: mu300-usb adb auth keys, or mu300-usb adb off)')")"
 echo "  $(t 'default boot:   {1}' "$([ $DEFAULT_LINUX = 1 ] && t 'Linux (Android after {1} failed boots in a row)' "$BOOT_ATTEMPTS" || t 'Android, Linux on demand')")"
 echo "  $(t 'filesystem:     {1}' "$([ $FORMAT = 0 ] && t 'keep existing' || { [ $SD_MODE = 1 ] && t 'CREATE new ext4 (erases the SD card)' || t 'CREATE new ext4 (erases the Linux region)'; })")"
@@ -1199,6 +1253,8 @@ done
 [ -z "$EXTRA_VPN" ] || adb push "$EXTRA_VPN" $T/mu300-extra-vpn.tar.gz >/dev/null
 # the web panel goes as the panel extra; Ubuntu's first boot installs Cockpit from it in the background (mu300-extra link)
 [ -z "$EXTRA_PANEL" ] || adb push "$EXTRA_PANEL" $T/mu300-extra-panel.tar.gz >/dev/null
+# OpenClash goes as the openclash extra; OpenWrt's first boot installs the apk into itself once it is online (mu300-extra link)
+[ -z "$EXTRA_OPENCLASH" ] || adb push "$EXTRA_OPENCLASH" $T/mu300-extra-openclash.tar.gz >/dev/null
 env=$(mktemp)
 write_install_env > "$env"
 # an update to an older release: the device refuses it unless told (tools/android-install.sh, the downgrade block)

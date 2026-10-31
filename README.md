@@ -251,7 +251,7 @@ install.cmd                   # Windows (cmd)
 ![The installer: language, checks, systems and Ubuntu release](docs/images/installer/installer-1-start.png)
 
 It asks a few questions (internal storage or SD card; Ubuntu, OpenWrt or both, and which Ubuntu, which OpenWrt and
-which kernel; which one boots; whether Linux boots by default; a password; the VPN module), downloads the ready-made images,
+which kernel; which one boots; whether Linux boots by default; a password; the VPN module and OpenClash), downloads the ready-made images,
 copies the Wi-Fi and modem files from your own device, shows exactly what it is about to write, and waits for you to
 type `INSTALL`. Then it reboots into Linux.
 
@@ -633,8 +633,8 @@ Chinese.
   is no question about the system, the kernel or the release, and the installer does not update itself. Everything
   else is the installer as always: the device's own Wi-Fi and modem files are read, the summary is shown and nothing
   is written before `INSTALL`.
-* The VPN module, when it is asked for, is still a download (it is not part of a zip), and the web panel for Ubuntu
-  is not offered (add it later: `sudo mu300-extra install panel`).
+* The VPN module and OpenClash, when they are asked for, are still downloads (they are not part of a zip), and the web
+  panel for Ubuntu is not offered (add it later: `sudo mu300-extra install panel`).
 * **adb is not in the zip**: Google's platform-tools are under the Android SDK licence, whose section 3.4 does not
   allow passing them on. Download them from https://developer.android.com/tools/releases/platform-tools and unpack
   them into the zip's folder (`platform-tools/adb` next to `START-HERE.md`), or have adb on the PATH. The computer
@@ -809,6 +809,13 @@ switch, Tailscale through the tunnel, on Ubuntu and OpenWrt alike. It is a modul
 **[dikeckaan/mu300-linux-vpn](https://github.com/dikeckaan/mu300-linux-vpn)** (commands, profiles, settings, the
 security model): the images carry none of it, and mu300-linux keeps the kernel support (TUN, WireGuard, nftables)
 and the places that work with it (mobile data, the Wi-Fi client, power saving, the toolkit, the panel).
+
+**OpenClash** is the other proxy: the [OpenClash](https://github.com/vernesong/OpenClash) LuCI app (a Clash/mihomo
+core and its page under **Services > OpenClash**). The installer asks about it too - default yes when OpenWrt is
+installed, about 11 MB more to download, pinned to its own release and checked against its hash - and it goes onto the
+Linux partition as the `openclash` extra: an OpenWrt system installs it at its first boot once the uplink is up
+(`sudo mu300-openclash install` does the same on the device), and an update does not take it away. It is independent
+of the VPN module, and its settings live in the extra's own page.
 
 Module **v2.0.0** (with mu300-linux v2026.10.20) splits it into a core and engine extras, adds subscriptions (a URL
 that yields profiles, refreshed on a schedule), a `--json` interface the control panel's VPN section is built on, and

@@ -171,8 +171,8 @@ def tables_equal_but_userdata(before, after):
 
 MAKE_ROOM = dict(MU300_ANS_MAKE_ROOM='yes', MU300_ANS_LINUX_GIB='4', MU300_ANS_ERASE_ANDROID='ERASE', MU300_ANS_REBOOT='yes')
 INSTALL = dict(MU300_ANS_SYSTEMS='2', MU300_OPENWRT='plain', MU300_ANS_DEFAULT_LINUX='yes', MU300_ANS_BOOT_ATTEMPTS='5',
-               MU300_ANS_HOTSPOT='yes', MU300_ANS_GPU='no', MU300_ANS_VPN='no', MU300_ANS_ADB='no', MU300_ANS_KERNEL='6.18',
-               MU300_ANS_PASSWORD='hunter2secret', MU300_ANS_CONFIRM='INSTALL')
+               MU300_ANS_HOTSPOT='yes', MU300_ANS_GPU='no', MU300_ANS_VPN='no', MU300_ANS_OPENCLASH='no',
+               MU300_ANS_ADB='no', MU300_ANS_KERNEL='6.18', MU300_ANS_PASSWORD='hunter2secret', MU300_ANS_CONFIRM='INSTALL')
 
 
 class ResetAndResume(Device):

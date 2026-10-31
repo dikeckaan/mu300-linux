@@ -605,7 +605,8 @@ class Check(Device):
 
 ANSWERS = dict(MU300_ANS_SYSTEMS='3', MU300_OPENWRT='luci', MU300_ANS_BOOT_OS='ubuntu', MU300_ANS_UBUNTU='26.04',
                MU300_ANS_DEFAULT_LINUX='yes', MU300_ANS_BOOT_ATTEMPTS='4', MU300_ANS_HOTSPOT='no', MU300_ANS_GPU='no',
-               MU300_ANS_VPN='no', MU300_ANS_ADB='no', MU300_ANS_PANEL='yes', MU300_ANS_KERNEL='6.18',
+               MU300_ANS_VPN='no', MU300_ANS_OPENCLASH='no', MU300_ANS_ADB='no', MU300_ANS_PANEL='yes',
+               MU300_ANS_KERNEL='6.18',
                MU300_ANS_PASSWORD='hunter2secret', MU300_ANS_CONFIRM='INSTALL')
 
 
@@ -629,8 +630,8 @@ class Install(Device):
             self.assertEqual(asked, [('MU300_ANS_SYSTEMS', '3'), ('MU300_ANS_BOOT_OS', 'ubuntu'), ('MU300_ANS_UBUNTU', '26.04'),
                                      ('MU300_ANS_DEFAULT_LINUX', 'yes'), ('MU300_ANS_BOOT_ATTEMPTS', '4'),
                                      ('MU300_ANS_HOTSPOT', 'no'), ('MU300_ANS_GPU', 'no'), ('MU300_ANS_VPN', 'no'),
-                                     ('MU300_ANS_ADB', 'no'), ('MU300_ANS_PANEL', 'yes'), ('MU300_ANS_KERNEL', '6.18'),
-                                     ('MU300_ANS_PASSWORD', None)], r.stdout + r.stderr)
+                                     ('MU300_ANS_OPENCLASH', 'no'), ('MU300_ANS_ADB', 'no'), ('MU300_ANS_PANEL', 'yes'),
+                                     ('MU300_ANS_KERNEL', '6.18'), ('MU300_ANS_PASSWORD', None)], r.stdout + r.stderr)
             self.assertEqual([e['id'] for e in ev if e['event'] == 'step' and e['id']], ['preflight', 'storage', 'choices', 'pull'])
             self.assertEqual(ev[-1]['event'], 'error')
             self.assertIn('could not read /dev/block/by-name/boot_a from the device', ev[-1]['message'])
@@ -651,7 +652,7 @@ class Install(Device):
             self.device(pull=False, locked='1', device_state='locked')
             r, ev, asked = self.install(shell, ANSWERS)
             self.assertIn('WARNING: The bootloader is locked. Did you patch TrustOS?', r.stdout)
-            self.assertEqual(len(asked), 12)                                # every question was still asked
+            self.assertEqual(len(asked), 13)                                # every question was still asked
             self.assertIn('could not read /dev/block/by-name/boot_a from the device', ev[-1]['message'])
         # ... and the plan says it again, right before the question
         src = (TOP / 'install.sh').read_text()
@@ -661,7 +662,7 @@ class Install(Device):
 
     def test_a_missing_answer_stops_before_anything_is_read_or_written(self):
         for missing in ('MU300_ANS_SYSTEMS', 'MU300_ANS_KERNEL', 'MU300_ANS_PASSWORD', 'MU300_ANS_DEFAULT_LINUX',
-                        'MU300_OPENWRT', 'MU300_ANS_VPN'):
+                        'MU300_OPENWRT', 'MU300_ANS_VPN', 'MU300_ANS_OPENCLASH'):
             answers = {k: v for k, v in ANSWERS.items() if k != missing}
             for shell in self.each_shell():
                 self.device(pull=False)
@@ -750,6 +751,15 @@ class Install(Device):
                                                     MU300_ANS_ERASE_ANDROID='ERASE'))
             self.assertIn('the answer in MU300_ANS_LINUX_GIB was not accepted: 900', ev[-1]['message'])
             self.assert_nothing_written()
+
+    def test_openclash_takes_its_default_yes(self):
+        # MU300_ANS_OPENCLASH set to nothing: the question's default (yes) is the answer, as for every question. The run
+        # still stops at the first pull from the device, before anything is downloaded.
+        for shell in self.each_shell():
+            self.device(pull=False)
+            r, ev, asked = self.install(shell, dict(ANSWERS, MU300_ANS_OPENCLASH=''))
+            self.assertIn(('MU300_ANS_OPENCLASH', 'yes'), asked, r.stdout + r.stderr)
+            self.assertIn('could not read /dev/block/by-name/boot_a', ev[-1]['message'])
 
     def test_an_answer_on_standard_input(self):
         for shell in self.each_shell():
@@ -895,8 +905,9 @@ class Install(Device):
         for shell in self.each_shell():
             self.device(pull=False, existing=True, passwords={'openwrt-luci': 'oldroot99'})
             env = dict(MU300_OPENWRT='luci', MU300_STORAGE='internal')
-            # systems, default linux, attempts, hotspot, gpu, vpn, adb, kernel, update/wipe, keep, then the passwords
-            answers = ['2', 'yes', '5', 'no', 'no', 'no', 'no', '2', 'update', 'yes', 'a1', 'b2', 'c3']
+            # systems, default linux, attempts, hotspot, gpu, vpn, openclash, adb, kernel, update/wipe, keep, then the
+            # passwords
+            answers = ['2', 'yes', '5', 'no', 'no', 'no', 'no', 'no', '2', 'update', 'yes', 'a1', 'b2', 'c3']
             r = self.run_script(shell, 'install.sh', stdin='\n'.join(answers) + '\n', **env)
             out = r.stdout + r.stderr
             self.assertEqual(out.count('that is not the current password of "root" in openwrt-luci'), 3, out)

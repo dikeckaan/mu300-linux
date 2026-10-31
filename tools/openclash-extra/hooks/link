@@ -1,0 +1,16 @@
+#!/bin/sh
+# The openclash extra's link hook (mu300-extra link, at every boot of a system): install OpenClash into this system.
+# The apk and the packages it needs come from the feeds, so only the running OpenWrt system does it, and only when it
+# is online; a system that was offline at its first boot tries again at the next one (or: mu300-openclash install).
+r=${1:-}
+[ -e "${r:-/}/etc/openwrt_release" ] || exit 0
+d=${MU300_EXTRA_DIR:-$(cd "$(dirname "$0")/.." && pwd)}
+[ -s "$d/openclash.apk" ] || exit 0
+command -v apk >/dev/null 2>&1 || exit 0
+apk info -e luci-app-openclash >/dev/null 2>&1 && exit 0
+# its dependencies come from the feeds: without an uplink there is nothing to do now
+ip route show default 2>/dev/null | grep -q . || exit 0
+apk add --allow-untrusted "$d/openclash.apk" || {
+    echo "openclash: not installed now (the uplink or the feeds were not reachable); again at the next boot, or: mu300-openclash install" >&2
+    exit 0
+}

@@ -45,6 +45,10 @@
     'internal' or 'sd' answers without asking).
     The VPN, when wanted, is the module of github.com/dikeckaan/mu300-linux-vpn: its latest release
     ($env:MU300_VPN_URL: another place with its files and SHA256SUMS; $env:MU300_VPN_MODULE: a copy on this computer).
+    OpenClash, when an OpenWrt system is installed (the default; $env:MU300_ANS_OPENCLASH = 'yes' or 'no' answers the
+    question), is the pinned .apk of its own release (luci-app-openclash-0.48.002.apk from github.com/vernesong/OpenClash;
+    $env:MU300_OPENCLASH_APK: a copy of that .apk on this computer, checked against a SHA256SUMS next to it when there
+    is one): it goes onto the Linux partition as the openclash extra and OpenWrt installs it at its first boot.
 #>
 [CmdletBinding()]
 param(
@@ -422,6 +426,53 @@ function FetchVpnModule {
         Move-Item -Force "$vd\$f.part" "$vd\$f"
     }
     $script:EXTRA_VPN = "$vd\$f"
+}
+# OpenClash (luci-app-openclash, the Clash/mihomo proxy with a page in LuCI, Services > OpenClash) is not in the
+# OpenWrt feeds: the installer pins its release, makes it into the openclash extra, and the extra's link hook installs
+# it into OpenWrt at the system's first boot (mu300-extra link). The hash is that of this release's .apk.
+$OPENCLASH_VERSION = '0.48.002'
+$OPENCLASH_APK_URL = 'https://github.com/vernesong/OpenClash/releases/download/v0.48.002/luci-app-openclash-0.48.002.apk'
+$OPENCLASH_APK_SHA256 = 'f7ebbd43f9be15c5e6df26e5d0c03d50d0bb8f7fa4cc0d2c2bf048b08c0b155b'
+# the pinned .apk (or $env:MU300_OPENCLASH_APK, a copy on this computer: a SHA256SUMS next to it is checked when there
+# is one), made into the openclash extra by tools/make-openclash-extra.py (install.sh's tools/make-openclash-extra.sh
+# builds the same one; a stock Windows has no POSIX shell to run it), as $EXTRA_OPENCLASH
+function FetchOpenClash {
+    $f = "luci-app-openclash-$OPENCLASH_VERSION.apk"
+    $apk = $null
+    if ($env:MU300_OPENCLASH_APK) {
+        if (-not (Test-Path $env:MU300_OPENCLASH_APK)) { Die (T '{1} not found' $env:MU300_OPENCLASH_APK) }
+        $sf = Join-Path (Split-Path $env:MU300_OPENCLASH_APK) 'SHA256SUMS'
+        if (Test-Path $sf) {
+            $leaf = Split-Path $env:MU300_OPENCLASH_APK -Leaf
+            foreach ($line in Get-Content $sf) {
+                $p = $line -split '\s+', 2
+                if ($p.Count -eq 2 -and $p[1].TrimStart('*') -eq $leaf -and
+                    (Get-FileHash $env:MU300_OPENCLASH_APK -Algorithm SHA256).Hash.ToLower() -ne $p[0]) {
+                    Die (T 'checksum mismatch for {1}' $env:MU300_OPENCLASH_APK)
+                }
+            }
+        }
+        $apk = $env:MU300_OPENCLASH_APK
+    } else {
+        $od = Join-Path $Work 'openclash'
+        New-Item -ItemType Directory -Force -Path $od | Out-Null
+        $apk = Join-Path $od $f
+        Say (T 'Downloading OpenClash')
+        $have = if (Test-Path $apk) { (Get-FileHash $apk -Algorithm SHA256).Hash.ToLower() } else { '' }
+        if ($have -ne $OPENCLASH_APK_SHA256) {
+            Write-Host "  $f"
+            Fetch $OPENCLASH_APK_URL "$apk.part"
+            if ((Get-FileHash "$apk.part" -Algorithm SHA256).Hash.ToLower() -ne $OPENCLASH_APK_SHA256) { Die (T 'checksum mismatch for {1}' $f) }
+            Move-Item -Force "$apk.part" $apk
+        }
+    }
+    $script:EXTRA_OPENCLASH = Join-Path $Work 'mu300-extra-openclash.tar.gz'
+    # its ./release: the release being installed (informational for an extra of the user's own)
+    $tag = if ($Release) { $Release } else { 'dev' }
+    # (Quiet: the builder says what it wrote on stderr, which Windows PowerShell 5.1 would show as an error; a
+    # redirected stderr would stop the script here instead, so the block runs under Continue with stderr dropped)
+    Quiet { Python "$Top\tools\make-openclash-extra.py" $apk $script:EXTRA_OPENCLASH $tag } | Out-Null
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $script:EXTRA_OPENCLASH)) { Die (T 'could not write {1}' $script:EXTRA_OPENCLASH) }
 }
 # GitHub's release CDN throttles single connections hard in some regions: pull large files as parallel ranges
 function Fetch($url, $out) {
@@ -1770,6 +1821,17 @@ $vx = Ask (T 'Install the VPN module (about 40 MB more to download, 120 MB on th
 if ($vx -ne 'yes' -and $vpnKs.Count -gt 0) {
     Die (T 'The VPN is on with its kill switch in {1}: an update without the VPN module would leave it to nothing. Answer yes to install the module, or turn the VPN off there first (ENABLE=0 in /etc/mu300/vpn.conf).' ($vpnKs -join ' '))
 }
+# OpenClash is not in the OpenWrt feeds either: a package of its own release, which goes onto the Linux partition (as
+# the openclash extra) and is installed into OpenWrt at its first boot. It is offered where there is an OpenWrt system
+# (default yes, whatever the VPN answer is: the two can be installed together).
+$EXTRA_OPENCLASH = $null
+$oc = 'no'
+if (@($OSES | Where-Object { $_ -like 'openwrt*' }).Count -gt 0) {
+    Write-Host ('  ' + (T 'OpenClash (a Clash/mihomo proxy with a page in LuCI, Services > OpenClash) is the alternative to the VPN module that many use. It installs itself at OpenWrt''s first boot and you add your subscription there.'))
+    $oc = Ask (T 'Install OpenClash (about 11 MB more to download)? (yes/no)') 'yes' 'MU300_ANS_OPENCLASH'
+} else {
+    Write-Host ('  ' + (T 'OpenClash needs OpenWrt: not installing it (no OpenWrt system chosen)'))
+}
 # adb over USB to Linux is on in every system and lets every computer in, with a root shell and no password (the
 # owner's decision of 2026-10-13, FINDINGS 70; on the device: mu300-usb adb auth open|keys, mu300-usb adb off). The
 # one thing to choose here is to close it to all but this computer from the first boot on: its adb key, which the
@@ -2017,6 +2079,8 @@ foreach ($f in $files) {
 }
 }
 if ($vpnFromModule) { FetchVpnModule }
+# OpenClash: the .apk of its own release, made into the openclash extra (not part of a package either)
+if ($oc -eq 'yes') { FetchOpenClash }
 # the 5.4 bundle: its kernel, and for every kernel the busybox, logdw and modules of the boot image's first segment.
 # A package with a mainline kernel has no 5.4 bundle: its boot image is that kernel with its own generic segment,
 # which brings init's busybox, logdw and modules (build-boot-image.py checks that it does).
@@ -2091,7 +2155,7 @@ Write-Host ('  ' + (T 'source:         {1}' (T 'prebuilt release {1} + vendor fi
 $sysText = ($OSES -join ' ') + $(if ($OSES -contains 'ubuntu') { " (Ubuntu $UBUNTU)" } else { '' })
 Write-Host ('  ' + (T 'systems:        {1} (boots: {2})' $sysText $BOOT_OS))
 Write-Host ('  ' + (T 'kernel:         {1}' "$KERNEL$(if ($KMAIN) { " (mainline, $((Get-Content "$KMAIN\kernel.release").Trim()))" })"))
-$extras = @($(if ($EXTRA_VPN) { 'vpn' }), $(if ($EXTRA_PANEL) { 'panel' }) | Where-Object { $_ })
+$extras = @($(if ($EXTRA_VPN) { 'vpn' }), $(if ($EXTRA_PANEL) { 'panel' }), $(if ($EXTRA_OPENCLASH) { 'openclash' }) | Where-Object { $_ })
 Write-Host ('  ' + (T 'extras:         {1}' $(if ($extras.Count -gt 0) { $extras -join ' ' } else { T 'none' })))
 Write-Host ('  ' + (T 'adb to Linux:   {1}' $(if ($ADB -eq 1) { T 'on, only for the adb key of this computer' } else { T 'on, for every computer: a root shell without a password (on the device: mu300-usb adb auth keys, or mu300-usb adb off)' })))
 Write-Host ('  ' + (T 'default boot:   {1}' $(if ($DEFAULT_LINUX -eq 1) { T 'Linux (Android after {1} failed boots in a row)' $BOOT_ATTEMPTS } else { T 'Android, Linux on demand' })))
@@ -2124,6 +2188,8 @@ foreach ($os in $OSES) {
 if ($EXTRA_VPN) { & adb push $EXTRA_VPN "$T/mu300-extra-vpn.tar.gz" | Out-Null }
 # the web panel goes as the panel extra; Ubuntu's first boot installs Cockpit from it in the background (mu300-extra link)
 if ($EXTRA_PANEL) { & adb push $EXTRA_PANEL "$T/mu300-extra-panel.tar.gz" | Out-Null }
+# OpenClash goes as the openclash extra; OpenWrt's first boot installs the apk into itself once it is online (mu300-extra link)
+if ($EXTRA_OPENCLASH) { & adb push $EXTRA_OPENCLASH "$T/mu300-extra-openclash.tar.gz" | Out-Null }
 $envFile = "$Work\mu300-install.env"
 $envText = (InstallEnvText @{ OFF = $OFF; SIZE = $SIZE; INT_SIZE = $INT_SIZE; FORMAT = $FORMAT; OSES = $OSES
     WIPE_LEGACY = $WIPE_LEGACY; UPDATE = $UPDATE; BOOT_OS = $BOOT_OS; DEFAULT_LINUX = $DEFAULT_LINUX

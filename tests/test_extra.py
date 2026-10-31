@@ -8,10 +8,11 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tarfile
 import unittest
 
-from helpers import BIN, ShellTest
+from helpers import BIN, TOP, ShellTest
 
 ENGINES = ('xray', 'hev-socks5-tunnel', 'sing-box')
 VPN_URL = 'http://10.0.0.2:8000/vpn-module'
@@ -1768,3 +1769,139 @@ class OwnExtraTest(ExtrasBase):
             self.assertIn('does not match', r.stderr)
             self.assertTrue(self.own().exists())
             shutil.rmtree(self.own())
+
+class OpenClashExtra(ExtrasBase):
+    """the openclash extra the installer builds from the pinned luci-app-openclash apk: an extra of the user's own
+    (installed from its file, never listed), whose hook installs the package into the running OpenWrt system."""
+
+    def apk(self):
+        p = self.tmp / 'luci-app-openclash-0.48.002.apk'
+        p.write_bytes(b'\x1f\x8b\x08\x00 fake apk\n')
+        return p
+
+    def build(self, tag='v2026.10.29.1'):
+        out = self.tmp / 'mu300-extra-openclash.tar.gz'
+        r = subprocess.run(['sh', str(TOP / 'tools/make-openclash-extra.sh'), str(self.apk()), str(out), tag],
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        return out
+
+    def own(self):
+        return self.disk / 'extra' / 'openclash'
+
+    def install(self, shell):
+        if not self.own().exists():
+            r = self.ex(shell, 'install', 'openclash', '--from', self.build())
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        return self.own()
+
+    def hooks(self):
+        self.stub('apk', 'echo "apk $*" >> "$STUBLOG/apk.log"\n'
+                         'case ${1:-} in info) [ -e "$STUBLOG/apk-installed" ] && exit 0; exit 1 ;; esac\nexit 0\n')
+        self.stub('ip', 'case "$*" in *"route show default"*) [ -e "$STUBLOG/no-route" ] || echo "default via 10.0.0.1" ;; esac\n')
+        (self.tmp / 'apk.log').unlink(missing_ok=True)
+
+    def apk_calls(self):
+        p = self.tmp / 'apk.log'
+        return p.read_text() if p.exists() else ''
+
+    def ocroot(self, openwrt=True):
+        r = self.tmp / 'ocroot'
+        (r / 'etc').mkdir(parents=True, exist_ok=True)
+        (r / 'etc/openwrt_release').write_text("DISTRIB_ID='OpenWrt'\n") if openwrt else (r / 'etc/openwrt_release').unlink(missing_ok=True)
+        return r
+
+    def test_the_build_tool_makes_an_extra_that_mu300_extra_installs(self):
+        f = self.build()
+        with tarfile.open(f) as t:
+            members = t.getmembers()
+            files = {m.name for m in members if m.isfile()}
+            modes = {m.name: m.mode for m in members}
+            listed = sorted(l.split('  ')[1] for l in t.extractfile('./manifest').read().decode().splitlines())
+        for n in ('./name', './release', './manifest', './openclash.apk', './hooks/link', './hooks/unlink',
+                  './bin/mu300-openclash'):
+            self.assertIn(n, files)
+        self.assertEqual(modes['./hooks/link'], 0o755)
+        self.assertEqual(modes['./bin/mu300-openclash'], 0o755)
+        # the manifest lists every other file, and the extra is a valid one of the user's own (extra_unpack checks it)
+        self.assertEqual(listed, sorted(files - {'./manifest'}))
+        for shell in self.each_shell():
+            shutil.rmtree(self.own(), ignore_errors=True)
+            r = self.ex(shell, 'install', 'openclash', '--from', f)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertTrue((self.own() / 'openclash.apk').exists())
+            self.assertTrue(os.access(self.own() / 'bin/mu300-openclash', os.X_OK))
+            self.assertEqual((self.own() / 'name').read_text(), 'openclash\n')
+            r = self.ex(shell, 'status', 'openclash')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn('v2026.10.29.1', r.stdout)
+            self.assertEqual(self.ex(shell, 'remove', 'openclash').returncode, 0)
+            self.assertFalse(self.own().exists())
+
+    def test_the_sh_and_the_python_builder_make_the_same_extra(self):
+        # install.sh has no Python to depend on and Windows has no sh: the two builders must not drift apart
+        f_sh = self.build()
+        f_py = self.tmp / 'py.tar.gz'
+        r = subprocess.run([sys.executable, str(TOP / 'tools/make-openclash-extra.py'), str(self.apk()), str(f_py),
+                            'v2026.10.29.1'], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+
+        def files(p):
+            with tarfile.open(p) as t:
+                return {m.name: (m.mode, hashlib.sha256(t.extractfile(m).read()).hexdigest())
+                        for m in t.getmembers() if m.isfile()}
+        self.assertEqual(files(f_sh), files(f_py))
+
+    def test_the_build_tool_refuses_a_file_or_tag_that_cannot_be_one(self):
+        out = self.tmp / 'x.tar.gz'
+        r = subprocess.run(['sh', str(TOP / 'tools/make-openclash-extra.sh'), str(self.tmp / 'missing.apk'), str(out)],
+                           capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertFalse(out.exists())
+        r = subprocess.run(['sh', str(TOP / 'tools/make-openclash-extra.sh'), str(self.apk()), str(out), 'bad tag'],
+                           capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+
+    def test_the_hook_installs_the_apk_into_the_running_openwrt_system(self):
+        for shell in self.each_shell():
+            self.hooks()
+            own = self.install(shell)
+            root = self.ocroot()
+            r = self.script(shell, own / 'hooks/link', str(root), MU300_EXTRA_DIR=str(own))
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn(f'apk add --allow-untrusted {own}/openclash.apk', self.apk_calls())
+            # already there: the check only, no install
+            (self.tmp / 'apk-installed').write_text('')
+            (self.tmp / 'apk.log').unlink(missing_ok=True)
+            self.assertEqual(self.script(shell, own / 'hooks/link', str(root), MU300_EXTRA_DIR=str(own)).returncode, 0)
+            self.assertNotIn('apk add', self.apk_calls())
+            # no uplink, or a system that is not OpenWrt: nothing is installed
+            (self.tmp / 'apk-installed').unlink()
+            (self.tmp / 'no-route').write_text('')
+            (self.tmp / 'apk.log').unlink(missing_ok=True)
+            self.assertEqual(self.script(shell, own / 'hooks/link', str(root), MU300_EXTRA_DIR=str(own)).returncode, 0)
+            self.assertNotIn('apk add', self.apk_calls())
+            (self.tmp / 'no-route').unlink()
+            (self.tmp / 'apk.log').unlink(missing_ok=True)
+            other = self.ocroot(openwrt=False)
+            self.assertEqual(self.script(shell, own / 'hooks/link', str(other), MU300_EXTRA_DIR=str(own)).returncode, 0)
+            self.assertEqual(self.apk_calls(), '')
+
+    def test_mu300_openclash_installs_and_reports_the_running_system(self):
+        for shell in self.each_shell():
+            self.hooks()
+            own = self.install(shell)
+            (self.tmp / 'apk-installed').write_text('')
+            r = self.script(shell, own / 'bin/mu300-openclash', 'status')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn('openclash: installed', r.stdout)
+            (self.tmp / 'apk-installed').unlink()
+            (self.tmp / 'apk.log').unlink(missing_ok=True)
+            r = self.script(shell, own / 'bin/mu300-openclash', 'install', MU300_ROOT=str(self.ocroot()))
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn(f'apk add --allow-untrusted {own}/openclash.apk', self.apk_calls())
+            # not on OpenWrt: refused
+            r = self.script(shell, own / 'bin/mu300-openclash', 'install', MU300_ROOT=str(self.ocroot(openwrt=False)))
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('OpenWrt only', r.stderr)
+            self.assertEqual(self.script(shell, own / 'bin/mu300-openclash', 'bogus').returncode, 2)

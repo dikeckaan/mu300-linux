@@ -1,0 +1,18 @@
+#!/bin/sh
+# Install, remove or look at OpenClash in the running OpenWrt system, from the openclash extra (the first boot of the
+# system runs the extra's hook too, once it is online).
+d=${MU300_EXTRA_DIR:-$(cd "$(dirname "$0")/.." && pwd)}
+case ${1:-status} in
+    status)
+        if apk info -e luci-app-openclash >/dev/null 2>&1; then
+            echo "openclash: installed ($(apk list --installed luci-app-openclash 2>/dev/null | head -n 1))"
+        else
+            echo "openclash: not installed (mu300-openclash install)"
+        fi ;;
+    install)
+        [ -e "${MU300_ROOT:-/}/etc/openwrt_release" ] || { echo "openclash: OpenWrt only" >&2; exit 1; }
+        [ -s "$d/openclash.apk" ] || { echo "openclash: $d/openclash.apk is missing (the extra)" >&2; exit 1; }
+        apk add --allow-untrusted "$d/openclash.apk" ;;
+    remove) apk del luci-app-openclash ;;
+    *) echo "usage: mu300-openclash status|install|remove" >&2; exit 2 ;;
+esac

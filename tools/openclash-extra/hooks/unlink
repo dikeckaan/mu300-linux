@@ -1,0 +1,4 @@
+#!/bin/sh
+# The openclash extra's unlink hook: the package stays in the system it was installed into (its settings and its
+# LuCI page are the system's); removing the package is the user's choice (mu300-openclash remove).
+exit 0

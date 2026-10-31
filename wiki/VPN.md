@@ -40,6 +40,31 @@ menu (see [Control Panel (LuCI)](Control-Panel-(LuCI)#the-panels-pages)); on Ubu
 page in Cockpit turns the VPN on and off and picks the profile. Both panels, like `mu300-toolkit`, show their VPN
 section only once the module is installed: without it there is nothing of a VPN in them.
 
+## OpenClash instead
+
+The other proxy many run here is **[OpenClash](https://github.com/vernesong/OpenClash)**: a Clash/mihomo core and
+its LuCI page under **Services > OpenClash**, with rules, providers, subscriptions and its own dashboard. The
+installer asks about it (*Install OpenClash?*, default **yes** when an OpenWrt system is chosen; about 11 MB more to
+download), pinned to the version its own release provides and checked against its hash (a file of your own:
+`MU300_OPENCLASH_APK=FILE` on the computer).
+
+It is an extra of the user's own on the Linux partition (`/mnt/mu300-disk/extra/openclash`), so both systems see one
+copy and an update does not take it away. At the first boot of an OpenWrt system it installs itself once the uplink is
+up - the packages it needs come from the OpenWrt feeds, `dnsmasq-full` among them, which takes the place of the image's
+`dnsmasq` (DHCP and DNS keep working). A first boot without the uplink installs nothing, and the next boot tries again;
+by hand, on the device:
+
+```sh
+sudo mu300-openclash install     # the same install the first boot runs
+mu300-openclash status
+sudo mu300-openclash remove      # the package out of this system again
+```
+
+Then add your subscription or config in **Services > OpenClash** (its core is downloaded by its own page). It is
+independent of the VPN module: both can be installed, and neither page shows the other's rules. To remove the extra
+itself: `sudo mu300-extra remove openclash` - the package and its settings stay where they are until
+`apk del luci-app-openclash`.
+
 ## Use it
 
 ```sh

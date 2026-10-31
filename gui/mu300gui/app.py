@@ -59,7 +59,7 @@ class App:
                 ('openwrt_flavor', tk.StringVar, False), ('boot_os', tk.StringVar, False), ('kernel', tk.StringVar, False),
                 ('release', tk.StringVar, False), ('release_url', tk.StringVar, False), ('default_linux', tk.BooleanVar, True),
                 ('boot_attempts', tk.StringVar, False), ('hotspot', tk.BooleanVar, False), ('gpu', tk.BooleanVar, False),
-                ('vpn', tk.BooleanVar, False), ('adb', tk.BooleanVar, False), ('panel', tk.BooleanVar, False),
+                ('vpn', tk.BooleanVar, False), ('openclash', tk.BooleanVar, False), ('adb', tk.BooleanVar, False), ('panel', tk.BooleanVar, False),
                 ('storage', tk.StringVar, True), ('existing', tk.StringVar, True), ('password', tk.StringVar, False),
                 ('password2', tk.StringVar, False), ('keep_password', tk.BooleanVar, True),
                 ('current_password', tk.StringVar, False), ('overwrite_word', tk.StringVar, False), ('erase_sd_word', tk.StringVar, False),
@@ -764,6 +764,9 @@ class App:
         check(i, _('The Mali GPU (OpenCL) userspace, about 90 MiB'), 'gpu')
         check(i, _('The VPN module (about 40 MB more to download, 120 MB on the device)'), 'vpn',
               _('mu300-vpn with Xray and sing-box. A system being replaced whose VPN is on needs it: the installer stops otherwise. It can be added later: sudo mu300-extra install vpn'))
+        check(i, _('Install OpenClash (about 11 MB more to download)'), 'openclash',
+              _('The Clash/mihomo proxy page in LuCI, installed at OpenWrt\'s first boot. It needs OpenWrt, and it is independent of the VPN module: both can be installed.'),
+              enabled=ch.openwrt)
         if not ch.package:          # (a file of the release, not of a zip)
             check(i, _('The web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)'), 'panel',
                   _('Cockpit with an MU300 page, on the LAN only. It can be added later: sudo mu300-extra install panel'), enabled=ch.ubuntu)

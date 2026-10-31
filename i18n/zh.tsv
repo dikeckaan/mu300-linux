@@ -896,3 +896,10 @@ Linux goes into the GPT partition named mu300root ({1}), which another installer
 The partition named mu300root is not empty ({1} of 16 samples hold data), and it holds no Linux filesystem of this project. To use it anyway, put MU300_STORAGE=internal and MU300_REGION_OVERWRITE=yes into {2}, a file only root can change.	名为 mu300root 的分区不为空（16 个采样中有 {1} 个含有数据），且其中没有本项目的 Linux 文件系统。如仍要使用，请把 MU300_STORAGE=internal 和 MU300_REGION_OVERWRITE=yes 写入只有 root 能修改的文件 {2}。
 storage:        internal, the GPT partition mu300root at offset {1}, {2} ({3})	存储：          内部，GPT 分区 mu300root，偏移 {1}，{2}（{3}）
 the partition mu300root	mu300root 分区
+OpenClash (a Clash/mihomo proxy with a page in LuCI, Services > OpenClash) is the alternative to the VPN module that many use. It installs itself at OpenWrt's first boot and you add your subscription there.	OpenClash（Clash/mihomo 代理，页面在 LuCI「服务 → OpenClash」）是很多人用来替代 VPN 模块的选择。它会在 OpenWrt 首次启动时自行装好，之后在页面里添加订阅即可。
+Install OpenClash (about 11 MB more to download)? (yes/no)	安装 OpenClash（多下载约 11 MB）？(是/否)
+Downloading OpenClash	正在下载 OpenClash
+OpenClash needs OpenWrt: not installing it (no OpenWrt system chosen)	OpenClash 需要 OpenWrt：未选择 OpenWrt 系统，不安装它
+Install OpenClash (about 11 MB more to download)	安装 OpenClash（多下载约 11 MB）
+The Clash/mihomo proxy page in LuCI, installed at OpenWrt's first boot. It needs OpenWrt, and it is independent of the VPN module: both can be installed.	LuCI 里的 Clash/mihomo 代理页面，在 OpenWrt 首次启动时装好。它需要 OpenWrt，并且与 VPN 模块相互独立：两个都可以装。
+OpenClash in OpenWrt	OpenWrt 中的 OpenClash

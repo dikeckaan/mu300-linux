@@ -92,6 +92,7 @@ A question is asked only where the installer asks it by hand too.
 | `MU300_ANS_HOTSPOT` | `yes`, `no` | copy Android's hotspot name and password |
 | `MU300_ANS_GPU` | `yes`, `no` | the Mali GPU userspace |
 | `MU300_ANS_VPN` | `yes`, `no` | the VPN module |
+| `MU300_ANS_OPENCLASH` | `yes`, `no` | OpenClash, the Clash/mihomo proxy page in LuCI, installed at OpenWrt's first boot (OpenWrt only; default `yes`); `MU300_OPENCLASH_APK=FILE` on the computer is a copy of its .apk instead of the pinned download |
 | `MU300_ANS_ADB` | `yes`, `no` | adb to Linux is on for every computer: let in this computer's key only |
 | `MU300_ANS_PANEL` | `yes`, `no` | the web panel for Ubuntu |
 | `MU300_ANS_KERNEL` | `5.4`, `6.18`, `7.2`, `7.3` | the kernel |
@@ -103,7 +104,7 @@ A question is asked only where the installer asks it by hand too.
 | `MU300_ANS_CONFIRM` | `INSTALL` | the summary's question |
 
 The variables that were there before work as they did (`MU300_WORK`, `MU300_RELEASE_URL`, `MU300_SYNC_BOOTCHAIN`,
-`MU300_VPN_URL`, `MU300_VPN_MODULE`, `MU300_FETCH_JOBS`, `MU300_NO_SELF_UPDATE`); `install.ps1` now reads
+`MU300_VPN_URL`, `MU300_VPN_MODULE`, `MU300_OPENCLASH_APK`, `MU300_FETCH_JOBS`, `MU300_NO_SELF_UPDATE`); `install.ps1` now reads
 `MU300_LANG`, `MU300_RELEASE`, `MU300_RELEASE_URL` and `MU300_WORK` where its parameters are not given.
 
 **The Magisk zip on the device** asks nothing (nothing can be typed while Magisk installs it). Its answers are a

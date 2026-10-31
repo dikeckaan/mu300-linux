@@ -179,6 +179,7 @@ First it brings your copy of the project up to date from GitHub and restarts its
 | *Copy Android's hotspot name and password to Linux?* | your Wi-Fi keeps its name and password | yes |
 | *Include the Mali GPU (OpenCL) userspace (~90 MiB)?* | GPU compute support | yes |
 | *Install the VPN module?* | the optional [VPN](VPN) (about 40 MB to download) | no, add it later if needed |
+| *Install OpenClash?* (OpenWrt only) | the other proxy: [OpenClash](https://github.com/vernesong/OpenClash), a Clash/mihomo page in LuCI under **Services > OpenClash** (about 11 MB more to download); it installs itself at OpenWrt's first boot and is configured there (see [VPN](VPN#openclash-instead)) | yes; `no` keeps only the VPN module, or neither |
 | *Install the web panel for Ubuntu?* (Ubuntu only) | Cockpit with the MU300 page, from the release's offline file (about 24 MB more; see [Control Panel (LuCI)](Control-Panel-(LuCI)#a-web-panel-on-ubuntu-cockpit)) | no, add it later with `mu300-extra install panel` |
 | *adb to Linux is on and lets every computer in ... Let in only this computer's adb key instead?* | adb to Linux over the cable is on by default, with a root shell and no password for anyone who plugs in a cable; `yes` closes it to all but the computer you install from (see [adb to Linux](#adb-to-linux)) | no (every computer; change it later with `mu300-usb adb auth keys` or `mu300-usb adb off`) |
 | *Which kernel?* 1) 5.4 2) 6.18 3) 7.2 4) 7.3 | the core of Linux; see [Kernels](Kernels) | 1 (5.4), or 2 (6.18) for Ubuntu 26.04 |
@@ -413,8 +414,8 @@ uninstaller.
 The zip does not contain adb: Google's platform-tools may not be passed on (section 3.4 of the Android SDK licence).
 Download them from https://developer.android.com/tools/releases/platform-tools and unpack them into the zip's folder
 (`platform-tools/adb` next to `START-HERE.md`), or have adb on the PATH. The computer also needs Python 3.8+ and lz4
-(Windows: the installer installs both when missing, which needs the internet once). The VPN module, when you ask for
-it, is still a download; the web panel for Ubuntu is not in a zip (add it later with `sudo mu300-extra install
+(Windows: the installer installs both when missing, which needs the internet once). The VPN module and OpenClash,
+when you ask for them, are still downloads; the web panel for Ubuntu is not in a zip (add it later with `sudo mu300-extra install
 panel`).
 
 ## Downloads are slow?

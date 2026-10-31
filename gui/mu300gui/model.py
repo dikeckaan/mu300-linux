@@ -171,6 +171,7 @@ class Choices:
         self.hotspot = True
         self.gpu = True
         self.vpn = False
+        self.openclash = True               # OpenWrt only (the installer asks it there): a Clash/mihomo page in LuCI
         self.adb = False                    # adb to Linux is on for every computer; True: for this computer's key only
         self.panel = False                  # the web panel for Ubuntu
         self.storage = 'internal'           # internal | sd
@@ -359,6 +360,10 @@ def answers(c, facts, lang, serial):
         a['MU300_VPN_URL'] = c.vpn_url
     if c.vpn and c.vpn_module:
         a['MU300_VPN_MODULE'] = c.vpn_module
+    # OpenClash is asked only where there is an OpenWrt system (default yes there): the answer goes every time, so the
+    # installer's question never waits on a missing variable, and no OpenWrt system means the installer's own not-asked
+    # case: no
+    a['MU300_ANS_OPENCLASH'] = yn(c.openclash and c.openwrt)
     a['MU300_ANS_ADB'] = yn(c.adb)
     if c.ubuntu and not c.package:
         a['MU300_ANS_PANEL'] = yn(c.panel)
@@ -455,7 +460,8 @@ def summary(c, facts, release):
         if c.existing == 'update':
             rows.append((_('Password'), _('kept: the current one is checked on the device') if c.keep_password else _('the new one')))
     rows.append((_('Default boot'), _('Linux (Android after {1} failed boots in a row)', c.boot_attempts) if c.default_linux else _('Android, Linux on demand')))
-    extras = [n for flag, n in ((c.vpn, _('VPN module')), (c.panel and c.ubuntu, _('web panel for Ubuntu')), (c.gpu, _('GPU userspace')),
+    extras = [n for flag, n in ((c.vpn, _('VPN module')), (c.openclash and c.openwrt, _('OpenClash in OpenWrt')),
+                                (c.panel and c.ubuntu, _('web panel for Ubuntu')), (c.gpu, _('GPU userspace')),
                                 (c.hotspot, _('hotspot name and password from Android')), (c.adb, _('adb to Linux for this computer only'))) if flag]
     rows.append((_('Also'), ', '.join(extras) if extras else _('nothing else')))
     return rows

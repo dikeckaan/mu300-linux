@@ -1393,3 +1393,175 @@ class VpnOnInTheReplacedSystem(ShellTest):
             self.assertIn('DIE The VPN is on with its kill switch in openwrt', out)
             self.assertNotIn('vx=', out)
             self.assertIn('vx=yes', self.question(shell, 'openwrt:ks', ''))
+
+
+class OpenClashOption(ShellTest):
+    """install.sh's OpenClash option: offered only where an OpenWrt system is installed, on by default
+    (MU300_ANS_OPENCLASH), taken from the pinned .apk of its own release (or MU300_OPENCLASH_APK), built into the
+    openclash extra and pushed as one; the plan lists it only when it will be installed."""
+
+    M1 = ("OpenClash (a Clash/mihomo proxy with a page in LuCI, Services > OpenClash) is the alternative to the VPN "
+          "module that many use. It installs itself at OpenWrt's first boot and you add your subscription there.")
+    M2 = 'Install OpenClash (about 11 MB more to download)? (yes/no)'
+    M3 = 'Downloading OpenClash'
+    M4 = 'OpenClash needs OpenWrt: not installing it (no OpenWrt system chosen)'
+
+    def setUp(self):
+        super().setUp()
+        self.SRC = (TOP / 'install.sh').read_text()
+
+    def test_the_header_documents_the_answer_and_the_apk(self):
+        # the answer variable is in the header block of every question
+        self.assertRegex(self.SRC, r'(?m)^#   MU300_ANS_OPENCLASH=yes\|no +\S')
+        # the local copy, next to MU300_VPN_MODULE's
+        self.assertIn('MU300_OPENCLASH_APK=FILE', self.SRC.split('set -eu', 1)[0])
+
+    def test_the_pinned_release(self):
+        self.assertIn('\nOPENCLASH_VERSION=0.48.002\n', self.SRC)
+        self.assertIn('\nOPENCLASH_APK_URL=https://github.com/vernesong/OpenClash/releases/download/v0.48.002/'
+                      'luci-app-openclash-0.48.002.apk\n', self.SRC)
+        self.assertIn('\nOPENCLASH_APK_SHA256=f7ebbd43f9be15c5e6df26e5d0c03d50d0bb8f7fa4cc0d2c2bf048b08c0b155b\n',
+                      self.SRC)
+
+    def test_the_question_is_guarded_by_openwrt_and_defaults_to_yes(self):
+        m = re.search(r'EXTRA_OPENCLASH=\noc=no\ncase " \$OSES " in \*openwrt\*\)\n(.*?)\nesac\n', self.SRC, re.S)
+        self.assertIsNotNone(m, 'install.sh has no OpenClash question guarded by an OpenWrt system')
+        yes, no = m.group(1).split('\n*)\n')
+        # OpenWrt: what it is and the question - default yes, its own variable, whatever the VPN answer is
+        self.assertIn(f'echo "  $(t "{self.M1}")"', yes)
+        self.assertIn(f"ask oc \"$(t '{self.M2}')\" yes MU300_ANS_OPENCLASH", yes)
+        self.assertNotIn('vx', m.group(1))
+        # no OpenWrt system: said, and not asked
+        self.assertIn(f"echo \"  $(t '{self.M4}')\"", no)
+        self.assertNotIn('ask ', no)
+
+    def run_block(self, shell, oses, answer=''):
+        m = re.search(r'EXTRA_OPENCLASH=\noc=no\ncase " \$OSES " in \*openwrt\*\)\n.*?\nesac\n', self.SRC, re.S)
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; OSES="{oses}"; '
+                'die() { echo "DIE $*"; exit 1; }; '
+                'ask() { printf "ASKED[%s] " "$3"; read -r _a || true; [ -n "${_a:-}" ] || _a=$3; eval "$1=\\$_a"; }\n'
+                + m.group(0) + '\necho "oc=$oc extra=[$EXTRA_OPENCLASH]"')
+        return self.sh(shell, code, stdin=answer + '\n').stdout
+
+    def test_the_question_block_under_each_shell(self):
+        for shell in self.each_shell():
+            out = self.run_block(shell, 'ubuntu openwrt')
+            self.assertIn(self.M1, out)
+            self.assertIn('ASKED[yes]', out)
+            self.assertIn('oc=yes extra=[]', out)               # Enter: yes
+            self.assertIn('oc=no extra=[]', self.run_block(shell, 'openwrt-luci', 'no'))
+            out = self.run_block(shell, 'ubuntu')
+            self.assertIn(self.M4, out)
+            self.assertIn('oc=no extra=[]', out)
+            self.assertNotIn('ASKED', out)                      # said, not asked
+
+    def test_the_extra_and_where_it_is_taken_from(self):
+        # the pinned .apk checked against its sha256, or MU300_OPENCLASH_APK with a SHA256SUMS next to it
+        self.assertIn('[ -n "${MU300_OPENCLASH_APK:-}" ]', self.SRC)
+        self.assertIn('$WORK/openclash/$_f.part', self.SRC)
+        self.assertIn('"$OPENCLASH_APK_SHA256"', self.SRC)
+        self.assertIn('say "$(t \'Downloading OpenClash\')"', self.SRC)
+        self.assertIn('sh "$TOP/tools/make-openclash-extra.sh" "$apk" "$WORK/mu300-extra-openclash.tar.gz" '
+                      '"${RELEASE:-dev}"', self.SRC)
+        self.assertIn('EXTRA_OPENCLASH=$WORK/mu300-extra-openclash.tar.gz', self.SRC)
+        # taken in both modes (a prebuilt release and a local build), and only when it was answered yes
+        self.assertEqual(self.SRC.count('[ "$oc" != yes ] || fetch_openclash'), 2)
+
+    def test_the_plan_and_the_push(self):
+        plan = self.SRC[self.SRC.index("say \"$(t 'Ready to install')\""):self.SRC.index('ask confirm')]
+        self.assertIn('[ -z "$EXTRA_OPENCLASH" ] || x="${x:+$x }openclash"', plan)   # only when it will be installed
+        extras = [l for l in plan.splitlines() if "extras:" in l][0]
+        self.assertLess(extras.index('panel'), extras.index('openclash'))             # after vpn and panel
+        self.assertIn('[ -z "$EXTRA_OPENCLASH" ] || adb push "$EXTRA_OPENCLASH" '
+                      '$T/mu300-extra-openclash.tar.gz >/dev/null', self.SRC)
+
+    def test_the_messages_are_translated(self):
+        for lang in ('tr', 'zh'):
+            table = {}
+            for line in (TOP / 'i18n' / f'{lang}.tsv').read_text(encoding='utf-8').splitlines():
+                if '\t' in line:
+                    k, v = line.split('\t', 1)
+                    table[k] = v
+            for msg in (self.M1, self.M2, self.M3, self.M4):
+                self.assertIn(msg, table, f'{lang}: {msg}')
+
+
+class OpenClashExtra(ShellTest):
+    """install.sh's fetch_openclash: the pinned .apk (checked against OPENCLASH_APK_SHA256), or a copy on the computer
+    (MU300_OPENCLASH_APK), made into the openclash extra by tools/make-openclash-extra.sh"""
+
+    def setUp(self):
+        super().setUp()
+        src = (TOP / 'install.sh').read_text()
+        m = re.search(r'\nfetch_openclash\(\) \{\n.*?\n\}\n', src, re.S)
+        self.assertIsNotNone(m, 'install.sh has no fetch_openclash')
+        self.fn = m.group(0)
+        self.data = b'openclash apk'
+        self.server = self.tmp / 'server'
+        self.server.mkdir()
+        (self.server / 'luci-app-openclash-0.48.002.apk').write_bytes(self.data)
+        # curl [-fsSL] -o OUT URL: from the server directory, by the URL's last part
+        self.stub('curl', 'out=; url=; while [ $# -gt 0 ]; do case $1 in -o) out=$2; shift ;; -*) ;; *) url=$1 ;; esac; '
+                          'shift; done; echo "$url" >> "$STUBLOG/urls"; '
+                          f'src="{self.server}/${{url##*/}}"; [ -f "$src" ] || exit 22; cat "$src" > "$out"')
+        # tools/make-openclash-extra.sh APK OUT TAG: its line is recorded, it writes its OUT
+        self.stub('sh', 'echo "$*" >> "$STUBLOG/make.log"; out=$3; [ -n "$out" ] || exit 1; echo extra > "$out"')
+
+    def run_fetch(self, shell, sha=None, release='v2026.10.28.1', **env):
+        h = sha or hashlib.sha256(self.data).hexdigest()
+        rel = f'RELEASE={release}' if release is not None else 'unset RELEASE'
+        code = (f'set -eu; TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; WORK="{self.tmp}/work"; '
+                f'mkdir -p "$WORK"; '
+                'say() { echo "SAY $*"; }; die() { echo "DIE $*"; exit 1; }; '
+                'sha256_of() { (shasum -a 256 "$1" 2>/dev/null || sha256sum "$1" 2>/dev/null) | cut -d" " -f1; }; '
+                'fetch() { curl -fL -o "$2" "$1"; }\n'
+                'OPENCLASH_VERSION=0.48.002; OPENCLASH_APK_URL=https://example.test/luci-app-openclash-0.48.002.apk; '
+                f'OPENCLASH_APK_SHA256={h}; {rel}\n' + self.fn +
+                '\nfetch_openclash; echo "EXTRA_OPENCLASH=$EXTRA_OPENCLASH"')
+        return self.sh(shell, code, **env)
+
+    def test_the_pinned_apk_is_downloaded_and_built_into_the_extra(self):
+        for shell in self.each_shell():
+            out = self.run_fetch(shell).stdout
+            self.assertIn('SAY Downloading OpenClash', out)
+            self.assertIn(f'EXTRA_OPENCLASH={self.tmp}/work/mu300-extra-openclash.tar.gz', out)
+            apk = self.tmp / 'work/openclash/luci-app-openclash-0.48.002.apk'
+            self.assertEqual(apk.read_bytes(), self.data)
+            self.assertIn('https://example.test/luci-app-openclash-0.48.002.apk', (self.tmp / 'urls').read_text())
+            self.assertIn(f'{TOP}/tools/make-openclash-extra.sh {apk} {self.tmp}/work/mu300-extra-openclash.tar.gz '
+                          'v2026.10.28.1', (self.tmp / 'make.log').read_text())
+            # a local build has no release tag: the extra's ./release falls back to dev
+            (self.tmp / 'make.log').unlink()
+            self.run_fetch(shell, release=None)
+            self.assertIn(f'{apk} {self.tmp}/work/mu300-extra-openclash.tar.gz dev',
+                          (self.tmp / 'make.log').read_text())
+
+    def test_a_bad_checksum_dies(self):
+        for shell in self.each_shell():
+            (self.tmp / 'make.log').unlink(missing_ok=True)
+            out = self.run_fetch(shell, sha='0' * 64).stdout
+            self.assertIn('DIE', out)
+            self.assertIn('checksum mismatch', out)
+            self.assertFalse((self.tmp / 'make.log').exists())          # nothing was built from it
+
+    def test_a_copy_on_the_computer(self):
+        copy = self.tmp / 'copy'
+        copy.mkdir()
+        local = copy / 'luci-app-openclash-0.48.002.apk'
+        local.write_bytes(self.data)
+        for shell in self.each_shell():
+            # taken as it is: no download and no pinned hash, the user's own choice
+            (self.tmp / 'urls').unlink(missing_ok=True)
+            out = self.run_fetch(shell, MU300_OPENCLASH_APK=local).stdout
+            self.assertIn(f'EXTRA_OPENCLASH={self.tmp}/work/mu300-extra-openclash.tar.gz', out)
+            self.assertFalse((self.tmp / 'urls').exists())
+            self.assertIn(f' {local} ', (self.tmp / 'make.log').read_text())
+            # a SHA256SUMS next to it is checked (when it names the file)
+            (copy / 'SHA256SUMS').write_text('0' * 64 + '  luci-app-openclash-0.48.002.apk\n')
+            self.assertIn('DIE checksum mismatch', self.run_fetch(shell, MU300_OPENCLASH_APK=local).stdout)
+            (copy / 'SHA256SUMS').unlink()
+            # one that does not name it says nothing about this file
+            (copy / 'SHA256SUMS').write_text('0' * 64 + '  another.apk\n')
+            self.assertIn('EXTRA_OPENCLASH=', self.run_fetch(shell, MU300_OPENCLASH_APK=local).stdout)
+            (copy / 'SHA256SUMS').unlink()
+            self.assertIn('DIE', self.run_fetch(shell, MU300_OPENCLASH_APK=copy / 'nosuch.apk').stdout)

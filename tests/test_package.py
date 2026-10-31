@@ -169,7 +169,8 @@ class FromAnUnpackedZip(Device):
         return r, ev, asked
 
     ANSWERS = dict(MU300_ANS_DEFAULT_LINUX='yes', MU300_ANS_BOOT_ATTEMPTS='5', MU300_ANS_HOTSPOT='yes', MU300_ANS_GPU='no',
-                   MU300_ANS_VPN='no', MU300_ANS_ADB='no', MU300_ANS_PASSWORD='hunter2secret', MU300_ANS_CONFIRM='INSTALL')
+                   MU300_ANS_VPN='no', MU300_ANS_OPENCLASH='no', MU300_ANS_ADB='no', MU300_ANS_PASSWORD='hunter2secret',
+                   MU300_ANS_CONFIRM='INSTALL')
 
     def test_the_package_answers_the_system_the_kernel_and_the_release(self):
         pkg = self.unpack('ubuntu-26.04-k7.2')
@@ -285,7 +286,8 @@ class Window(unittest.TestCase):
         for key in ('MU300_RELEASE', 'MU300_RELEASE_URL', 'MU300_ANS_BETA', 'MU300_ANS_SYSTEMS', 'MU300_OPENWRT',
                     'MU300_ANS_BOOT_OS', 'MU300_ANS_UBUNTU', 'MU300_ANS_KERNEL', 'MU300_ANS_PANEL'):
             self.assertNotIn(key, a)
-        for key in ('MU300_ANS_DEFAULT_LINUX', 'MU300_ANS_HOTSPOT', 'MU300_ANS_GPU', 'MU300_ANS_VPN', 'MU300_ANS_PASSWORD'):
+        for key in ('MU300_ANS_DEFAULT_LINUX', 'MU300_ANS_HOTSPOT', 'MU300_ANS_GPU', 'MU300_ANS_VPN',
+                    'MU300_ANS_OPENCLASH', 'MU300_ANS_PASSWORD'):
             self.assertIn(key, a)
         self.assertEqual(model.download_plan(c, {'mu300-kernel.tar.gz': 1000}), ([], 0))
         self.assertGreater(model.work_need(c, {}), 400 << 20)
