@@ -151,18 +151,77 @@ signature() {
     cat "$URCDIR"/*nr*.log 2>/dev/null | grep -aF '+CMTI' | { md5sum 2>/dev/null || cksum; }
 }
 
-last=$(signature)
+# The look every POLL seconds starts no process when nothing it reads has changed (kanoqwq's sms-events, f0b5ad43 and
+# cc0ecce7: radio traffic that is not for us starts nothing; the rule of FINDINGS 235). It ran mu300-sim-state (and
+# through it mu300-sim, head and tr) and cat | grep | md5sum every 5 s. Now the URC logs are checksummed again only
+# when one of them was written since the last checksum, and the card asked about again only when its state files
+# changed, or at the periodic sync. A mark file in our lock directory holds the time of the last look; the shell's own
+# test compares the times (written in the mark's second counts as changed), and the mark is written before the look,
+# so a write during the look is seen again on the next. No mark (it could not be written): every look as before.
+URC_SEEN=$LOCK/urc.seen
+SIM_SEEN=$LOCK/sim.seen
+SIMRUN=${MU300_RUN:-/run/mu300}
+changed_since() {  # changed_since MARK FILE...: one FILE written since MARK (or in its second), or no MARK
+    _cs_m=$1; shift
+    [ -e "$_cs_m" ] || return 0
+    for _cs_f; do [ -e "$_cs_f" ] && ! [ "$_cs_f" -ot "$_cs_m" ] && return 0; done
+    return 1
+}
+mark() { { : > "$1"; } 2>/dev/null || rm -f "$1"; }
+absent=
+card_absent() {  # sim_absent, asked again when the card's state files changed, at the first look, or with "again"
+    if [ -n "${1:-}" ] || [ -z "$absent" ] ||
+       changed_since "$SIM_SEEN" "$SIMRUN/sim-slot" "$SIMRUN/sim0.state" "$SIMRUN/sim1.state"; then
+        mark "$SIM_SEEN"
+        if sim_absent; then absent=1; else absent=0; fi
+    fi
+    [ "$absent" = 1 ]
+}
+urc_signature() {  # into $s: the checksum, worked out again only when a URC log was written since the last one
+    # shellcheck disable=SC2086
+    if [ -z "${s:-}" ] || changed_since "$URC_SEEN" "$URCDIR"/*nr*.log; then
+        mark "$URC_SEEN"
+        s=$(signature)
+    fi
+}
+
+# The wait (as thermal-guard's): where the shell's read takes a timeout (busybox ash, bash), a read on a fifo nobody
+# writes to, opened read-write so that it never ends either - no sleep process per look; else sleep (dash). During
+# the wait the timer slack is 500 ms, so the kernel can serve the timers of several daemons with one wakeup; what
+# this starts keeps the default.
+wait_for() { sleep "$1"; }
+slack=
+{ read -r slack < /proc/$$/timerslack_ns; } 2>/dev/null || slack=
+nap_d=$(mktemp -d "${TMPDIR:-/tmp}/mu300-smsd.XXXXXX" 2>/dev/null) || nap_d=
+if [ -n "$nap_d" ] && mkfifo "$nap_d/wait" 2>/dev/null; then
+    exec 9<>"$nap_d/wait"
+    if case ${BASH_VERSION:-} in [123].*) false ;; esac && { read -t 0 _n <&9; [ $? = 1 ]; } 2>/dev/null; then
+        wait_for() { read -t "$1" _n <&9 || :; }
+    else
+        exec 9<&-
+    fi
+fi
+[ -z "$nap_d" ] || rm -rf "$nap_d"
+nap() {
+    [ -z "$slack" ] || { echo 500000000 > /proc/$$/timerslack_ns; } 2>/dev/null
+    wait_for "$1"
+    [ -z "$slack" ] || { echo "$slack" > /proc/$$/timerslack_ns; } 2>/dev/null
+}
+
+s=
+urc_signature
+last=$s
 elapsed=0
 failures=0
 echo "mu300-smsd: pooling into $POOL (a look every ${POLL} s, a full sync every ${SYNC_INTERVAL} s)" >&2
 while :; do
-    sleep "$POLL"
-    if sim_absent; then
+    nap "$POLL"
+    if card_absent; then
         configured=0; direct=0; rm -f "$DIRECT_FLAG"
         continue
     fi
     if [ "$configured" = 0 ]; then
-        setup; configured=1; last=$(signature); elapsed=0
+        setup; configured=1; s=; urc_signature; last=$s; elapsed=0
         continue
     fi
     # the spool, whatever the mode: a frame the modem sent anyway is pooled and acknowledged like any other
@@ -178,7 +237,7 @@ while :; do
             direct_off "three rounds of pooling or acknowledging failed"
         fi
     fi
-    s=$(signature)
+    urc_signature
     if [ "$s" != "$last" ]; then
         last=$s
         sleep 2   # let the message land in the storage before listing it
@@ -189,6 +248,7 @@ while :; do
     elapsed=$((elapsed + POLL))
     if [ "$elapsed" -ge "$SYNC_INTERVAL" ]; then
         elapsed=0
+        absent=        # the card is asked about again at the next look, whatever its files say
         "$SMS" sync >/dev/null || true
         # the modem drops direct routing by itself (mt=0: no indication at all) after an acknowledgement that never
         # came; the periodic sync above still finds such a message, and the routing is put back here. Only mt is

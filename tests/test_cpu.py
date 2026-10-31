@@ -4,6 +4,7 @@ A profile is a governor and a per-cluster scaling_min/max inside the hardware fr
 changes voltage and never touches the kernel thermal trips. These tests check the bounds (nothing is set outside
 cpuinfo_min_freq..cpuinfo_max_freq), the governor fallback, the ceiling file thermal-guard reads, and the JSON."""
 import json
+import os
 import unittest
 
 from helpers import ShellTest, BIN
@@ -45,8 +46,8 @@ class CpuTest(ShellTest):
         self.policy('policy7', '7', [614400, 768000, 936000, 1105000, 1228800, 1378000, 1536000, 1703000, 1872000, 2041000, 2210000])
 
     def cpu(self, shell, args, **env):
-        return self.sh(shell, f'"{CPU}" {args}', MU300_SYSROOT=self.root, MU300_RUN=self.run_dir,
-                       MU300_CPU_CONF=self.conf, **env)
+        env = dict(dict(MU300_SYSROOT=self.root, MU300_RUN=self.run_dir, MU300_CPU_CONF=self.conf), **env)
+        return self.sh(shell, f'"{CPU}" {args}', **env)
 
     def read(self, policy, leaf):
         return (self.cpufreq / policy / leaf).read_text().strip()
@@ -291,7 +292,7 @@ class CoresAndLatency(CpuTest):
             self.assertEqual(self.cpu(shell, 'lowlatency on').returncode, 0)
             self.assertEqual({n.read_text().strip() for n in nodes}, {'1'})
             st = json.loads(self.cpu(shell, 'status --json').stdout)
-            self.assertEqual(st['lowlatency'], {'saved': 1, 'active': 1, 'supported': 1})
+            self.assertEqual(st['lowlatency'], {'saved': 1, 'active': 1, 'mixed': 0, 'supported': 1})
             for n in nodes:
                 n.write_text('0\n')                     # a boot
             self.cpu(shell, 'apply')
@@ -300,6 +301,37 @@ class CoresAndLatency(CpuTest):
             self.assertEqual({n.read_text().strip() for n in nodes}, {'0'})
             self.assertEqual(self.cpu(shell, 'lowlatency').stdout.strip(), 'off')
             self.assertNotEqual(self.cpu(shell, 'lowlatency maybe').returncode, 0)
+
+    @unittest.skipIf(os.geteuid() == 0, 'root writes a read-only file')
+    def test_a_state_the_kernel_does_not_take_puts_every_state_back(self):
+        # kanoqwq's cpu-idle (cc0ecce7): all or nothing, and nothing saved
+        for shell in self.each_shell():
+            self.conf.unlink(missing_ok=True)
+            base = self.cores()
+            nodes = [base / f'cpu0/cpuidle/state{s}/disable' for s in range(3)]
+            nodes[1].write_text('1\n')                  # mixed before: state1 off by hand
+            st = json.loads(self.cpu(shell, 'status --json').stdout)
+            self.assertEqual((st['lowlatency']['active'], st['lowlatency']['mixed']), (0, 1))
+            self.assertIn('partly off', self.cpu(shell, 'status').stdout)
+            nodes[2].chmod(0o444)
+            try:
+                r = self.cpu(shell, 'lowlatency on')
+            finally:
+                nodes[2].chmod(0o644)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('as they were', r.stderr)
+            self.assertEqual([n.read_text().strip() for n in nodes], ['0', '1', '0'])
+            self.assertFalse(self.conf.exists() and 'LOWLATENCY' in self.conf.read_text())
+
+    def test_a_setting_that_cannot_be_saved_is_undone(self):
+        for shell in self.each_shell():
+            base = self.cores()
+            nodes = [base / f'cpu0/cpuidle/state{s}/disable' for s in range(3)]
+            blocker = self.tmp / 'not-a-dir'
+            blocker.write_text('')
+            r = self.cpu(shell, 'lowlatency on', MU300_CPU_CONF=blocker / 'cpu.conf')
+            self.assertNotEqual(r.returncode, 0)
+            self.assertEqual({n.read_text().strip() for n in nodes}, {'0'})
 
     def test_low_latency_without_cpuidle_is_refused(self):
         for shell in self.each_shell():
