@@ -40,6 +40,7 @@ umask 022
 # install.sh pushes everything to /data/local/tmp. The Magisk installer runs this as root from a directory only root
 # can write (MU300_DEVICE_WORK): files in /data/local/tmp can be replaced by the shell user after they were checked.
 T=${MU300_DEVICE_WORK:-/data/local/tmp}
+if [ -z "${MU300_DEVICE_WORK:-}" ] && [ -n "${MU300_ADB_WORK_T:-}" ]; then T=$MU300_ADB_WORK_T; fi
 . $T/mu300-install.env
 # --- android-disk begin
 # The internal disk, as Android's by-name links have it: the disk that holds misc - mmcblk0 on an eMMC unit, sda on a

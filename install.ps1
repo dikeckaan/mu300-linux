@@ -4,6 +4,9 @@
 
 .DESCRIPTION
     Run with the device booted in rooted Android and connected over USB (adb).
+      .\install.ps1 -AdbAddress IP:PORT   rooted wireless adb, pinned connection and device job
+      .\install.ps1 -AdbStatus           inspect its result; never restart a write
+      .\install.ps1 -AdbRestart          explicit restart after reviewing the prior job
       .\install.ps1 -Check     only inspect the device; writes nothing
       .\install.ps1            install Ubuntu, OpenWrt or both from the prebuilt release images
       .\install.ps1 -Answers f.txt   take one answer per question from that file (run without a console; the file
@@ -49,6 +52,9 @@
 [CmdletBinding()]
 param(
     [switch]$Check,
+    [string]$AdbAddress = '', # rooted wireless adb endpoint, also MU300_ADB_ADDRESS
+    [switch]$AdbStatus,      # inspect the previous wireless job without restarting it
+    [switch]$AdbRestart,     # explicit new session after reviewing a finished/interrupted run
     [string]$Release = '',   # empty: the newest published release
     [string]$ReleaseUrl,
     [string]$Repo = 'dikeckaan/mu300-linux',
@@ -75,6 +81,13 @@ $Top = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocat
 # so it is read before anything looks at one
 . (Join-Path (Join-Path $Top 'tools') 'answers.ps1')
 AnswersSetup $AnswersFile ([bool]$NonInteractive)
+if (-not $AdbAddress -and -not $AdbStatus) { $AdbAddress = [string]$env:MU300_ADB_ADDRESS }
+if ($AdbRestart -and -not $AdbAddress) { throw '-AdbRestart requires -AdbAddress' }
+if ($AdbAddress -or $AdbStatus) {
+    $env:MU300_GUI = '0'; $env:MU300_NO_SELF_UPDATE = '1'
+    if ($AdbStatus) { $Check = $true }
+}
+
 # An error nobody caught still ends the progress stream with an event - whoever reads it must not wait for more - and
 # the script with status 1, saying where it was. (A trap that only passes the error on leaves the status of the last
 # program that ran, which is 0 more often than not.)
@@ -317,6 +330,21 @@ function Ask($question, $default, $Id) {
     if (AnswerSecret ([string]$Id)) { Progress 'question' 'id' $Id 'text' $question 'default' $default 'secret' '1' }
     else { Progress 'question' 'id' $Id 'text' $question 'default' $default 'answer' $r }
     return $r
+}
+# Python stderr carries connection/Wi-Fi/power notices. Show it without mixing it into parsed device values.
+function Network { param([Parameter(ValueFromRemainingArguments = $true)][string[]]$NetworkArgs)
+    $na = @('--adb', $script:NetworkAdb, '--state', "$Work\wireless-install.json", '--timeout', $(if ($env:MU300_ADB_TIMEOUT) { $env:MU300_ADB_TIMEOUT } else { '120' }))
+    if ($AdbAddress) { $na += @('--address', $AdbAddress) }
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { $items = @(Python "$Top\tools\adb-network.py" @na @NetworkArgs 2>&1); $netRc = $LASTEXITCODE }
+    finally { $ErrorActionPreference = $oldPreference }
+    foreach ($item in $items) {
+        if ($item -is [System.Management.Automation.ErrorRecord]) { Write-Host ([string]$item) -ForegroundColor Yellow }
+        else { Write-Output $item }
+    }
+    $global:LASTEXITCODE = $netRc
+    if ($netRc -eq 125) { Die 'Wireless adb stopped. Check Wi-Fi/power and use -AdbStatus before restarting.' }
 }
 # adb shell with root; stdin is never forwarded so prompts of this script are not eaten
 function SuDo($cmd) {
@@ -623,6 +651,15 @@ if (-not $Check) {
         Quiet { Python -c 'import lz4.block' } | Out-Null
     }
     if ($LASTEXITCODE -ne 0) { Die (T 'the lz4 Python module is required to build the boot image: pip install lz4') }
+}
+if ($AdbAddress -or $AdbStatus) {
+    $script:NetworkAdb = (Get-Command adb -CommandType Application).Source
+    if ($AdbStatus) { Network 'status'; exit $LASTEXITCODE }
+    if ($AdbRestart) { Network '--restart' 'connect' } else { Network 'connect' }
+    $env:MU300_ADB_ADDRESS = $AdbAddress
+    $env:ANDROID_SERIAL = $AdbAddress
+    $T = ([string](Network 'work')).Trim()
+    function adb { Network 'proxy' '--' @args }
 }
 Quiet { adb start-server } | Out-Null
 # The device in Linux, and only a phone or tablet in Android: that is not the one to install to - offer to send the
@@ -2112,6 +2149,7 @@ if ($BL_STATE -eq 'locked') { Write-Host ('  ' + (T 'WARNING: {1}' $BL_WARN)) }
 # the word itself, in capitals (-cne: PowerShell's -ne does not tell install from INSTALL)
 if ((Ask (T 'Type INSTALL to continue') 'no' 'MU300_ANS_CONFIRM') -cne 'INSTALL') { Die (T 'cancelled') }
 
+if ($AdbAddress) { Network 'check' }
 Step 'copy' 75
 Say (T 'Copying to the device')
 foreach ($f in 'android-mount-mu300root.sh', 'android-install.sh', 'android-bootchain.sh') { PushUnix "$Top\tools\$f" "$T/$f" | Out-Null }
@@ -2172,6 +2210,7 @@ $bcFile = "$Work\boot-linux-slot$LINUX_SLOT.misc-slot-$LINUX_SLOT-trial.bin"
 if ($bootJson.linux_slot -ne $LINUX_SLOT -or -not (Test-Path $bcFile)) {
     Die (T 'the boot image was not built for slot {1}; boot_{1} and misc were not changed' $LINUX_SLOT)
 }
+if ($AdbAddress) { Network 'check' }
 Step 'boot' 92
 Say (T 'Writing boot_{1} and arming slot {1}' $LINUX_SLOT)
 $EXP = $bootJson.sha256
@@ -2233,6 +2272,7 @@ if ((SuDo 'magisk -v')) {
     Write-Host ('  ' + (T 'no Magisk (or no root) on this device - skipped'))
 }
 
+if ($AdbAddress) { Network 'finish' }
 Step 'done' 100
 Say (T 'Done. Rebooting into {1}' $BOOT_OS)
 $ip = if ($DEVICE -eq 'u30air') { '192.168.78.1' } elseif ($DEVICE -eq 'v50') { '192.168.79.1' } else { '192.168.77.1' }

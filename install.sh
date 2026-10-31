@@ -15,6 +15,9 @@
 #   ./install.sh --build         build kernel outputs/root filesystems locally instead (see README "Build and run")
 #   ./install.sh --backup        only copy what an installation reads first to this computer: Android's boot image
 #                                and the first block of misc, checked against the device (writes nothing to it)
+#   ./install.sh --adb-address IP:PORT   rooted wireless adb; reconnect and bind to this Android device
+#   ./install.sh --adb-status    inspect a detached wireless installation; never restart a write
+#   ./install.sh --adb-restart   explicitly start over after a reviewed finished job or Android reboot
 #   ./install.sh --adb-path      print the adb this installer would use, and stop
 #   ./install.sh --package DIR   install the system and the kernel of a release's Magisk zip unpacked at DIR, from its
 #                                files and without a download (MU300_PACKAGE=DIR; the zip's own computer/install.sh,
@@ -83,12 +86,17 @@ OWRT_VER=25.12.6
 # empty: the newest published release, looked up when it is needed. It used to be a fixed tag that nobody
 # remembered to move, so new installs kept getting an old release long after fixes were published.
 T=/data/local/tmp
-MODE=prebuilt; CHECK_ONLY=0; BACKUP_ONLY=0; ADB_PATH_ONLY=0; ANSWERS_FILE=; _opt=
+MODE=prebuilt; CHECK_ONLY=0; BACKUP_ONLY=0; ADB_PATH_ONLY=0; ANSWERS_FILE=; NETWORK_STATUS=0; NETWORK_RESTART=0; NETWORK_ADDRESS_SET=0; _opt=
 for a in "$@"; do
+    if [ "$_opt" = adb_address ]; then MU300_ADB_ADDRESS=$a; NETWORK_ADDRESS_SET=1; export MU300_ADB_ADDRESS; _opt=; continue; fi
     if [ "$_opt" = answers ]; then ANSWERS_FILE=$a; _opt=; continue; fi
     if [ "$_opt" = transaction ]; then MU300_TRANSACTION=$a; export MU300_TRANSACTION; _opt=; continue; fi
     if [ "$_opt" = package ]; then MU300_PACKAGE=$a; export MU300_PACKAGE; _opt=; continue; fi
     case $a in
+        --adb-address) _opt=adb_address ;;
+        --adb-address=*) MU300_ADB_ADDRESS=${a#--adb-address=}; NETWORK_ADDRESS_SET=1; export MU300_ADB_ADDRESS ;;
+        --adb-status) NETWORK_STATUS=1; CHECK_ONLY=1 ;;
+        --adb-restart) NETWORK_RESTART=1 ;;
         --check) CHECK_ONLY=1 ;;
         --build) MODE=build ;;
         --prebuilt) MODE=prebuilt ;;
@@ -143,6 +151,10 @@ if [ -n "$PKG" ]; then
 fi
 # first of all, make this the newest installer (it restarts itself when it changed) - not from a package, and not
 # while a prepared installation waits: its transaction is bound to the tools that prepared it (tools/resume.sh)
+# Keep this session and its TCP transport helper on the same source; the wireless flow uses the text installer.
+if [ -n "${MU300_ADB_ADDRESS:-}" ] || [ "$NETWORK_STATUS" = 1 ]; then
+    MU300_GUI=0; MU300_NO_SELF_UPDATE=1; export MU300_GUI MU300_NO_SELF_UPDATE
+fi
 . "$TOP/tools/self-update.sh"
 if [ -n "$PKG" ]; then
     :
@@ -296,6 +308,7 @@ backup_only() {
 }
 
 # ---------------------------------------------------------------- preflight
+if [ "$NETWORK_RESTART" = 1 ] && [ -z "${MU300_ADB_ADDRESS:-}" ]; then die '--adb-restart requires --adb-address'; fi
 step preflight 2
 say "$(t 'Checking host tools and device')"
 need="adb"
@@ -306,6 +319,30 @@ find_adb || true
 for c in $need; do command -v $c >/dev/null || die "$(t '{1} not found' "$c")"; done
 if [ $CHECK_ONLY = 0 ] && [ $MODE = build ]; then
     [ -f "$KOUT/Image" ] && ls "$KOUT"/modules/*.ko >/dev/null 2>&1 || die "$(t 'kernel outputs missing in {1} (run kernel/build-all.sh)' "$KOUT")"
+fi
+# The shim applies only to this process and its children; USB calls keep their original path.
+if [ -n "${MU300_ADB_ADDRESS:-}" ] || [ "$NETWORK_STATUS" = 1 ]; then
+    command -v python3 >/dev/null || die 'Python 3 is required for wireless adb'
+    MU300_NETWORK_ADB=$(command -v adb)
+    MU300_NETWORK_TOOL=$TOP/tools/adb-network.py
+    MU300_NETWORK_STATE=$WORK/wireless-install.json
+    export MU300_NETWORK_ADB MU300_NETWORK_TOOL MU300_NETWORK_STATE
+    network_call() {
+        if [ -n "${MU300_ADB_ADDRESS:-}" ]; then
+            python3 "$MU300_NETWORK_TOOL" --adb "$MU300_NETWORK_ADB" --state "$MU300_NETWORK_STATE" --address "$MU300_ADB_ADDRESS" --timeout "${MU300_ADB_TIMEOUT:-120}" "$@"
+        else
+            python3 "$MU300_NETWORK_TOOL" --adb "$MU300_NETWORK_ADB" --state "$MU300_NETWORK_STATE" --timeout "${MU300_ADB_TIMEOUT:-120}" "$@"
+        fi
+    }
+    if [ "$NETWORK_STATUS" = 1 ]; then
+        if [ "$NETWORK_ADDRESS_SET" = 1 ]; then network_call status
+        else python3 "$MU300_NETWORK_TOOL" --adb "$MU300_NETWORK_ADB" --state "$MU300_NETWORK_STATE" --timeout "${MU300_ADB_TIMEOUT:-120}" status; fi
+        exit $?
+    fi
+    if [ "$NETWORK_RESTART" = 1 ]; then network_call --restart connect; else network_call connect; fi
+    ANDROID_SERIAL=$MU300_ADB_ADDRESS; export ANDROID_SERIAL
+    T=$(network_call work)
+    PATH=$TOP/tools/adb-network-bin:$PATH; export PATH
 fi
 . "$TOP/tools/linux-mode.sh"
 require_android
@@ -1183,6 +1220,7 @@ echo "  $BC_LINE"
 ask confirm "$(t 'Type INSTALL to continue')" no MU300_ANS_CONFIRM
 [ "$confirm" = INSTALL ] || die "$(t 'cancelled')"
 
+[ -z "${MU300_ADB_ADDRESS:-}" ] || network_call check
 step copy 75
 say "$(t 'Copying to the device')"
 adb push "$TOP/tools/android-mount-mu300root.sh" "$TOP/tools/android-install.sh" "$TOP/tools/android-bootchain.sh" $T/ >/dev/null
@@ -1213,6 +1251,7 @@ grep -q MU300-INSTALL-OK "$WORK/device-install.log" ||
 $(t 'the device log was kept at {1}' "$WORK/device-install.log")"
 bootchain_pull
 
+[ -z "${MU300_ADB_ADDRESS:-}" ] || network_call check
 step boot 92
 write_linux_boot "$WORK/boot-linux-slot$LINUX_SLOT.img"
 # the prepared installation is done: its transaction no longer waits (kano: state installed)
@@ -1226,6 +1265,7 @@ MU300_MODULE_TAG="${RELEASE:-}" MU300_MODULE_KERNEL="$KERNEL" \
 MU300_MODULE_SYSTEM="$(for o in $OSES; do if [ "$o" = ubuntu ]; then printf 'ubuntu-%s ' "${UBUNTU:-24.04}"; else printf '%s ' "$o"; fi; done)" \
     sh "$TOP/tools/install-magisk-module.sh" || echo "  $(t '(skipped; the installer keeps working either way)')"
 
+if [ -n "${MU300_ADB_ADDRESS:-}" ]; then network_call finish; fi
 step done 100
 say "$(t 'Done. Rebooting into {1}' "$BOOT_OS")"
 IP=192.168.77.1; [ $DEVICE = u30air ] && IP=192.168.78.1; [ $DEVICE = v50 ] && IP=192.168.79.1

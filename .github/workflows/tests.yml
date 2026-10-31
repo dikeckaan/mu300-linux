@@ -80,3 +80,8 @@ jobs:
           python -m pip install -q lz4
           cd tests
           python -m unittest test_boot_image -v
+      - name: wireless adb session and PowerShell wrapper (fake devices only)
+        shell: pwsh
+        run: |
+          cd tests
+          python -m unittest test_adb_network -v

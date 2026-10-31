@@ -1,0 +1,4 @@
+#!/bin/sh
+# Scoped to a wireless installer process and its children; never installed globally.
+exec python3 "$MU300_NETWORK_TOOL" --adb "$MU300_NETWORK_ADB" --state "$MU300_NETWORK_STATE" \
+    --address "$MU300_ADB_ADDRESS" --timeout "${MU300_ADB_TIMEOUT:-120}" proxy -- "$@"
