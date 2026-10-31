@@ -268,7 +268,8 @@ Check 'no install: no probe'    $script:suCmd ''
 
 # ---- making room (issue #32): install.sh's offer_repartition, here OfferRepartition -------------------------------
 $rnames = 'Quiet', 'FreeRegion', 'GptShow', 'RepartitionPlan', 'RepartitionSectors', 'LayoutFigures', 'GptTool', 'GptDump', 'OfferRepartition',
-    'ResumePy', 'ParseFacts', 'FactsOk', 'ResumeFacts', 'ResumeBackup', 'ResumePush', 'ResumeSha', 'WriteUnix', 'ResumePending'
+    'ResumePy', 'ParseFacts', 'FactsOk', 'ResumeFacts', 'ResumeBackup', 'ResumePush', 'ResumeSha', 'WriteUnix', 'ResumePending',
+    'Gib', 'OnlineSh', 'OnlineKv', 'FileSha', 'TxGet', 'OnlineInspect', 'OnlineTarget', 'OnlineDeclined', 'OnlineWait', 'OnlineCommit'
 $rdefs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $rnames -contains $n.Name }, $true)
 foreach ($d in $rdefs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in $rnames) {
