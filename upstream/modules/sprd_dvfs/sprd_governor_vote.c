@@ -126,9 +126,9 @@ static ssize_t scaling_overflow_show(struct device *dev,
 			data = 0;
 			dev_err(dev->parent, "get sel[%u] overflow fail: %d", i, err);
 		}
-		count += sprintf(&buf[count], "%u ", data);
+		count += sysfs_emit_at(buf, count, "%u ", data);
 	}
-	count += sprintf(&buf[count], "\n");
+	count += sysfs_emit_at(buf, count, "\n");
 
 	gov_callback->ddr_dfs_step_add(get_overflow_t,
 				0, NULL, freq_num, task_pid_nr(current));
@@ -198,9 +198,9 @@ static ssize_t scaling_underflow_show(struct device *dev,
 			data = 0;
 			dev_err(dev->parent, "get sel[%u] underflow fail: %d", i, err);
 		}
-		count += sprintf(&buf[count], "%u ", data);
+		count += sysfs_emit_at(buf, count, "%u ", data);
 	}
-	count += sprintf(&buf[count], "\n");
+	count += sysfs_emit_at(buf, count, "\n");
 
 	gov_callback->ddr_dfs_step_add(get_underflow_t,
 				0, NULL, freq_num, task_pid_nr(current));
@@ -403,9 +403,9 @@ static ssize_t ddrinfo_freq_table_show(struct device *dev,
 	for (i = 0; i < freq_num; i++) {
 		err = gov_callback->get_freq_table(&data, i);
 		if (!err && (data > 0))
-			count += sprintf(&buf[count], "%u ", data);
+			count += sysfs_emit_at(buf, count, "%u ", data);
 	}
-	count += sprintf(&buf[count], "\n");
+	count += sysfs_emit_at(buf, count, "\n");
 
 	gov_callback->ddr_dfs_step_add(get_freq_table_t,
 				0, NULL, freq_num, task_pid_nr(current));
@@ -618,7 +618,7 @@ static ssize_t scene_dfs_list_show(struct device *dev,
 	do {
 		err =  gov_callback->get_point_info(&name, &freq, &flag, i);
 		if (err == 0)
-			count += sprintf(&buf[count],
+			count += sysfs_emit_at(buf, count,
 				"%s freq %u  flag %u\n",
 				name, freq, flag);
 		i++;
@@ -647,11 +647,11 @@ static ssize_t ddrinfo_dfs_step_show(struct device *dev,
 							  &scene, &buff, &pid, i);
 
 		if (scene == NULL)
-			count += sprintf(&buf[count],
+			count += sysfs_emit_at(buf, count,
 					 "dfs_dbg_log: DDR_DFS_STEP: %s %s, buff: %u, pid: %d\n",
 					 arg, step_status, buff, pid);
 		else
-			count += sprintf(&buf[count],
+			count += sysfs_emit_at(buf, count,
 					 "dfs_dbg_log: DDR_DFS_STEP: %s %s, scene: %s, pid: %d\n",
 					 arg, step_status, scene, pid);
 		i++;
