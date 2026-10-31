@@ -79,6 +79,36 @@ class HwBringup(unittest.TestCase):
         self.assertNotIn('hostapd.wlan0', body)       # a hotspot switched off has none: 20 s and a restart for nothing
 
 
+class HwRestart(ShellTest):
+    """hw_bringup itself, with every program it calls stubbed: the "no restart" shortcut needs the country live
+    (kanoqwq's f0b5ad43) and a settings file it could read."""
+    def run_hw(self, shell, country='DE', live=True, md5='abc  /etc/config/wireless'):
+        s = HW.read_text()
+        body = s[s.index('hw_bringup() {'):s.index('\nstart()')].replace('/opt/mu300/bin/', f'{self.stubs}/')
+        for name in ('regdb-load', 'openwrt-board-check', 'wifi-start', 'extra-modules', 'zram-start',
+                     'openwrt-wifi-config', 'openwrt-wifi-wpa2-only', 'wifi-ready'):
+            self.stub(name, 'exit 0')
+        self.stub('mu300-nfc', 'exit 1')
+        self.stub('busybox', 'exit 0')
+        self.stub('sleep', 'exit 0')
+        self.stub('uci', f'echo "{country}"')
+        self.stub('iw', f'[ "$1 $2" = "reg get" ] && {"echo country " + country + ": DFS-ETSI" if live else "echo country 00:"}; exit 0')
+        self.stub('md5sum', f'echo "{md5}"' if md5 else 'exit 1')
+        self.stub('wifi', 'echo "wifi $1" >> "$STUBLOG/wifi.log"')
+        (self.tmp / 'wifi.log').unlink(missing_ok=True)
+        r = self.sh(shell, body + '\nhw_bringup\n')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        p = self.tmp / 'wifi.log'
+        return p.read_text().split() if p.exists() else []
+
+    def test_restarted_only_when_needed(self):
+        for shell in self.each_shell():
+            self.assertEqual(self.run_hw(shell), [])                                   # live, unchanged, ready
+            self.assertEqual(self.run_hw(shell, live=False), ['wifi', 'down', 'wifi', 'up'])  # world rules still
+            self.assertEqual(self.run_hw(shell, md5=None), ['wifi', 'down', 'wifi', 'up'])    # unreadable settings
+            self.assertEqual(self.run_hw(shell, country=''), [])                       # no country to wait for
+
+
 class BoardCheck(ShellTest):
     """openwrt-board-check, with ucode's JSON check played by Python (the real one ran in the OpenWrt 25.12 image)."""
 
