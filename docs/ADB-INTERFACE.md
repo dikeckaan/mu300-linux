@@ -38,6 +38,7 @@ One line of JSON on stdout, exit status 0, nothing on stderr:
 |---|---|---|
 | `mu300` | number | The version of this format: `1`. Fields may be added without changing it; it changes when a field goes away or changes meaning |
 | `device` | string | `f50`, `u30air` or `v50` (the ZTE V50, experimental: FINDINGS 95) |
+| `model` | string, optional | `m3` only for a labelled ZTE M3 / MU5352. Added after v2026.10.29.1; other models keep their existing JSON output without this field. M3 keeps `device: "u30air"` for hardware dispatch. |
 | `system` | string | `ubuntu`, `openwrt` or `openwrt-luci`: the system that is running (the name of its directory on the Linux partition; a system of the user's own has its own name) |
 | `version_id` | string | `VERSION_ID` of the system's `/etc/os-release`: `24.04` or `26.04` for Ubuntu, OpenWrt's version for OpenWrt; empty when there is none |
 | `release` | string | The mu300-linux release the running system's image came from (`/etc/mu300/image-version`), e.g. `v2026.10.23`; `unknown` when the file is missing, `dev` for an image built without a version |

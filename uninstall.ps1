@@ -103,7 +103,7 @@ function SelectDevice([switch]$Quiet) {
     if ($env:ANDROID_SERIAL) { return }
     $all = @(AndroidLines (Quiet { adb devices -l }))
     if ($all.Count -eq 0) { return }
-    $f50 = @($all | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351' })
+    $f50 = @($all | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351|device:MU5352( |$)' })
     # the only adb device, and an F50/U30 Air: nothing to ask
     if ($all.Count -eq 1 -and $f50.Count -eq 1) { $env:ANDROID_SERIAL = ($all[0] -split '\s+')[0]; return }
     # -Quiet (waiting for the device to come back): only the one F50/U30 Air. Otherwise always ask: a phone or
@@ -204,7 +204,7 @@ if (-not (Get-Command adb -ErrorAction SilentlyContinue)) { Die 'adb not found' 
 $LinuxWanted = ''
 if ($env:ANDROID_SERIAL -like 'MU300LINUX*') { $LinuxWanted = $env:ANDROID_SERIAL; Remove-Item Env:ANDROID_SERIAL }
 $devs = @(Quiet { adb devices -l })
-$target = @(AndroidLines $devs | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351' })
+$target = @(AndroidLines $devs | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351|device:MU5352( |$)' })
 $linuxAdb = @(LinuxAdbSerials $devs)
 $linuxFirst = (-not $env:ANDROID_SERIAL) -and $target.Count -eq 0 -and ($linuxAdb.Count -gt 0 -or (LinuxRunning))
 if (-not $linuxFirst) { SelectDevice }
@@ -278,7 +278,9 @@ if ((SuDo 'id -u') -ne '0') { Die 'su does not work on the device' }
 $model = "$(SuDo 'getprop ro.product.model') / $(SuDo 'getprop ro.product.device')"
 Write-Host "device: $model"
 # (the ZTE V50, experimental: FINDINGS 95, as install.ps1 takes it)
-if ($model -notmatch 'MU300|F50|mu300|U30Air|U30_Air' -and $model -cne 'V50 / MU3351') { Die 'this does not look like a ZTE F50/MU300, U30 Air or V50' }
+if ($model -ceq 'MU5352 / MU5352') {
+    if ((SuDo 'getprop ro.board.platform') -ne 'ums9620') { Die 'M3/MU5352 requires the ums9620 platform' }
+} elseif ($model -notmatch 'MU300|F50|mu300|U30Air|U30_Air' -and $model -cne 'V50 / MU3351') { Die 'this does not look like a ZTE F50/MU300, U30 Air or V50' }
 # Linux is on the slot Android is not on (install.ps1): b next to an Android on a, a next to an Android on b
 switch ((SuDo 'getprop ro.boot.slot_suffix').Trim()) {
     '_a' { $ANDROID_SLOT = 'a'; $LINUX_SLOT = 'b' }

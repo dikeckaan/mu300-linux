@@ -638,6 +638,23 @@ class Plan(InstallerCase):
         self.assertNotIn('no SD card', r.stdout)
         self.assertTrue(self.nothing_written())
 
+    def test_m3_profile_and_platform(self):
+        self.zip(devices='f50 u30air')
+        self.device(model='MU5352', product='MU5352', platform='ums9620', slot='_b')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout)
+        self.assertIn('ZTE M3 (MU5352): U30 Air hardware profile', r.stdout)
+        self.assertTrue(self.nothing_written())
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n', trusted='MU300_DEVICE=f50\n')
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertIn('requires the u30air hardware profile', r.stdout)
+        self.assertTrue(self.nothing_written())
+        self.device(model='MU5352', product='MU5352', platform='mt6789')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertIn('requires the ums9620 platform', r.stdout)
+        self.assertTrue(self.nothing_written())
+
     def test_unknown_model(self):
         self.device(model='Pixel 7')
         r = self.run_installer()

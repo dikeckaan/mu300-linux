@@ -349,6 +349,11 @@ as an optional module.</li>
 </ul>
 
 <h2 id="devices">Supported devices</h2>
+<p>The <strong>ZTE M3 (MU5352)</strong> is a separate device model using the shared U30 Air hardware profile when Android reports
+<code>MU5352 / MU5352</code> on <code>ums9620</code>. OpenWrt and kernel 7.3.0 have been tested on one M3;
+see the <a href="https://github.com/dikeckaan/mu300-linux/blob/main/docs/M3-MU5352.md">device run and untested features</a>.
+Its hardware profile and default LAN address remain <code>u30air</code> and <code>192.168.78.1</code>.
+M3 has no NFC; its owner reports normal button operation matching the U30 Air.</p>
 <div class="table-scroll"><table>
 <thead><tr><th scope="col"></th><th scope="col">ZTE F50 / MU300</th><th scope="col">ZTE U30 Air</th></tr></thead><tbody>
 <tr><th scope="row">Chip</th><td>Unisoc T760 (UMS9620)</td><td>the same</td></tr>

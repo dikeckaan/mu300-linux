@@ -789,6 +789,24 @@ stale_config_clean() {
 }
 # --- user-packages end
 # --- install-os begin
+# --- device model begin
+install_device_model() {
+    _dm_model="$(getprop ro.product.model 2>/dev/null || :) / $(getprop ro.product.device 2>/dev/null || :)"
+    case $_dm_model in
+        "MU5352 / MU5352")
+            [ "$(getprop ro.board.platform 2>/dev/null)" = ums9620 ] || return 0
+            mkdir -p "$1/etc/mu300"
+            # A carried-over label can be a symlink: unlink it before writing this device's identity.
+            rm -f "$1/etc/mu300/device-model"
+            printf 'm3\n' > "$1/etc/mu300/device-model" ;;
+        *U30Air*|*U30_Air*|*"U30 Air"*)
+            [ "$(getprop ro.board.platform 2>/dev/null)" = ums9620 ] || return 0
+            # Only clear our own stale M3 label on the shared U30 Air path.
+            [ "$(cat "$1/etc/mu300/device-model" 2>/dev/null)" != m3 ] || rm -f "$1/etc/mu300/device-model" ;;
+    esac
+    return 0
+}
+# --- device model end
 # Accounts are settings too, and etc/shadow is not in keep: an update carries them over the way mu300-update does,
 # with its own function (copied here: this runs on Android and cannot source the new system's mu300-update; tests
 # keep the two the same). The old entry of every account both systems have (hashes, group memberships merged), and
@@ -1010,6 +1028,7 @@ for os in $OSES; do
     R=$M/$os
     if [ "${SD_MODE:-0}" = 1 ]; then sd_fstab $R; fi
     mkdir -p $R/etc/mu300
+    install_device_model "$R"
     if [ -n "$ssid" ] && ! { [ "${UPDATE:-0}" = 1 ] && [ -s $R/etc/mu300/hotspot.conf ]; }; then
         umask 077
         printf 'SSID=%s\nPSK=%s\nBAND=5\nCHANNEL=auto\nCOUNTRY=TR\n' "$ssid" "$psk" > $R/etc/mu300/hotspot.conf

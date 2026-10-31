@@ -83,6 +83,15 @@ Air's charger and LEDs, which its boot image loads in place of the F50's ([`kern
 Nothing about the device has to be chosen by hand: the installer reads it from Android, and the boot image, the
 LEDs and the default address follow. The U30 **Pro** is a different chip (UMS9632) and is not supported.
 
+### ZTE M3 (MU5352): shared U30 Air hardware profile
+
+The **ZTE M3 (MU5352)** is recognized only when Android reports `MU5352 / MU5352` on `ums9620`.
+OpenWrt 25.12.6 with kernel 7.3.0, 5G, the Wi-Fi hotspot, SSH/LuCI and Android/Linux switching have been
+tested on one M3. Linux keeps the `u30air` hardware profile and `.78.1` LAN, with a separate M3 model label.
+M3 and U30 Air are separate models sharing the hardware design: M3 has no NFC, and the owner reports that its
+buttons work like the U30 Air's. The existing command, service, module and path names stay unchanged.
+See [the device run and untested features](docs/M3-MU5352.md).
+
 ### ZTE V50 (MU3351): experimental
 
 The ZTE **V50** (`ro.product.model` V50, `ro.product.device` MU3351, platform `ums9620`; not the Blade V50 phone) is
@@ -164,6 +173,10 @@ the Linux boot image and the device goes back to Android by itself after the ins
 
 **You need:**
 * A ZTE F50 / MU300 or U30 Air, rooted, connected by USB, with USB debugging enabled.
+* For the **M3 (MU5352)**, follow the same U30 Air installation path and Root/TrustOS prerequisites. The tested
+  M3 used an already enabled rooted TCP adb connection in place of USB (`adb connect <Android-IP>:5555`).
+  The project does not enable debugging or root it for you. Use the same desktop `--check` and installation
+  commands below; the installer selects `u30air` automatically, with no M3-specific directory or command.
 * A computer with `adb`:
   * **macOS or Linux:** also Python 3, `lz4` and `curl` (usually already installed).
   * **Windows 10/11:** PowerShell. The installer installs Python 3 (for your user, with winget or from
@@ -340,7 +353,7 @@ into Android for you over SSH.
 ssh ubuntu@192.168.77.1        # the password you chose during the install
 ```
 
-For OpenWrt use `ssh root@192.168.77.1`, or open `http://192.168.77.1` in a browser for LuCI. On a U30 Air the
+For OpenWrt use `ssh root@192.168.77.1`, or open `http://192.168.77.1` in a browser for LuCI. On a U30 Air or M3 the
 address is `192.168.78.1` instead.
 
 The Wi-Fi network the device broadcasts is its hotspot; unless you chose otherwise it uses the name and password

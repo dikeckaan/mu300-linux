@@ -281,7 +281,7 @@ function SelectDevice([switch]$Quiet) {
     if ($env:ANDROID_SERIAL) { return }
     $all = @(AndroidLines (Quiet { adb devices -l }))
     if ($all.Count -eq 0) { return }
-    $f50 = @($all | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351' })
+    $f50 = @($all | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351|device:MU5352( |$)' })
     # the only adb device, and an F50/U30 Air: nothing to ask
     if ($all.Count -eq 1 -and $f50.Count -eq 1) { $env:ANDROID_SERIAL = ($all[0] -split '\s+')[0]; return }
     # -Quiet (waiting for the device to come back as Android): only the one F50/U30 Air, never a question.
@@ -632,7 +632,7 @@ Quiet { adb start-server } | Out-Null
 $LinuxWanted = ''
 if ($env:ANDROID_SERIAL -like 'MU300LINUX*') { $LinuxWanted = $env:ANDROID_SERIAL; Remove-Item Env:ANDROID_SERIAL }
 $devs = @(Quiet { adb devices -l })
-$target = @(AndroidLines $devs | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351' })
+$target = @(AndroidLines $devs | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351|device:MU5352( |$)' })
 $linuxAdb = @(LinuxAdbSerials $devs)
 $linuxFirst = (-not $env:ANDROID_SERIAL) -and $target.Count -eq 0 -and ($linuxAdb.Count -gt 0 -or (LinuxRunning))
 if (-not $linuxFirst) { SelectDevice }
@@ -754,6 +754,11 @@ if ($model -ceq 'V50 / MU3351' -or $model -cmatch '^V50 / ' -or $model -cmatch '
     }
     $DEVICE = 'v50'
     Write-Host (T 'ZTE V50: EXPERIMENTAL, tested by nobody in this project (kano ported it); mainline kernel only; no second SIM, no NFC; USB network 192.168.79.1')
+} elseif ($model -ceq 'MU5352 / MU5352') {
+    if ((SuDo 'getprop ro.board.platform') -ne 'ums9620') { Die 'M3/MU5352 requires the ums9620 platform' }
+    $DEVICE = 'u30air'
+    Info 'device.label' 'ZTE M3 (MU5352)'
+    Write-Host 'ZTE M3 (MU5352): U30 Air hardware profile'
 } elseif ($model -match 'U30Air|U30_Air|U30 Air') {
     $DEVICE = 'u30air'
 } elseif ($model -notmatch 'MU300|F50|mu300') {

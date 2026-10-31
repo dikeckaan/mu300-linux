@@ -433,6 +433,20 @@ class Check(Device):
             self.assertIn('Nothing was written.', r.stdout)
             self.assert_nothing_written()
 
+    def test_m3_profile(self):
+        for shell in self.each_shell():
+            self.device(model='MU5352', device='MU5352', platform='ums9620', slot='b', locked='1', verified='green')
+            r, ev, facts = self.check(shell)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertEqual(facts['device.kind'], 'u30air')
+            self.assertEqual(facts['device.label'], 'ZTE M3 (MU5352)')
+            self.assertEqual((facts['slot.android'], facts['slot.linux']), ('b', 'a'))
+            self.assert_nothing_written()
+            self.device(model='MU5352', device='MU5352', platform='mt6789')
+            r, ev, facts = self.check(shell)
+            self.assertNotEqual(r.returncode, 0)
+            self.assert_nothing_written()
+
     def test_the_other_device_and_slot(self):
         for shell in self.each_shell():
             self.device(model='U30_Air', device='U30Air', slot='b', locked='1', verified='green')

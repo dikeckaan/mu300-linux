@@ -262,6 +262,11 @@ detect_device() {
     # the ZTE V50 (experimental, FINDINGS 95): exactly V50 / MU3351 on ums9620, and never under another name -
     # MU300_DEVICE (f50 or u30air only) cannot make it another device, and nothing makes another device a V50
     case $_m in
+        "MU5352 / MU5352")
+            [ "$(getprop ro.board.platform)" = ums9620 ] || die 'M3/MU5352 requires the ums9620 platform'
+            [ -z "${MU300_DEVICE:-}" ] || [ "$MU300_DEVICE" = u30air ] || die 'M3/MU5352 requires the u30air hardware profile'
+            DEVICE=u30air
+            say 'ZTE M3 (MU5352): U30 Air hardware profile' ;;
         "V50 / MU3351"|*" / MU3351"|"V50 / "*)
             [ "$_m" = "V50 / MU3351" ] && [ "$(getprop ro.board.platform)" = ums9620 ] ||
                 die "$(t 'This looks like a ZTE V50 but is not one this installer knows (model V50, device MU3351, platform ums9620): {1}' "$_m")"

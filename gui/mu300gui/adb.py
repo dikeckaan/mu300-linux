@@ -16,7 +16,7 @@ import sys
 from . import TOP
 
 # install.sh's select_device / install.ps1's SelectDevice
-TARGET = re.compile(r'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351')
+TARGET = re.compile(r'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351|device:MU5352( |$)')
 U30 = re.compile(r'U30Air|U30_Air|U30 Air')
 USB_IPS = {'f50': '192.168.77.1', 'u30air': '192.168.78.1', 'v50': '192.168.79.1'}
 _NO_WINDOW = 0x08000000 if sys.platform == 'win32' else 0      # CREATE_NO_WINDOW: no console flashing up
@@ -46,6 +46,8 @@ class Device:
         """f50, u30air, or '' when the list does not say (unauthorized devices say nothing about themselves)."""
         text = ' '.join(self.attrs.values())
         if U30.search(text):
+            return 'u30air'
+        if self.attrs.get('model') == 'MU5352' and self.attrs.get('device') == 'MU5352':
             return 'u30air'
         if 'MU3351' in text:                # the ZTE V50 (experimental, FINDINGS 95)
             return 'v50'

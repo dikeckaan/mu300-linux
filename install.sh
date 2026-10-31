@@ -344,6 +344,11 @@ echo "$(t 'device: {1}' "$model")"
 # taken for an F50 (a V50 that is not all three is refused, not asked about), and only with a mainline kernel.
 # --- model begin
 case "$model" in
+    "MU5352 / MU5352")
+        [ "$(su_do 'getprop ro.board.platform')" = ums9620 ] || die 'M3/MU5352 requires the ums9620 platform'
+        DEVICE=u30air
+        info device.label 'ZTE M3 (MU5352)'
+        echo 'ZTE M3 (MU5352): U30 Air hardware profile' ;;
     "V50 / MU3351"|*" / MU3351"|"V50 / "*)
         [ "$model" = "V50 / MU3351" ] && [ "$(su_do 'getprop ro.board.platform')" = ums9620 ] ||
             die "$(t 'This looks like a ZTE V50 but is not one this installer knows (model V50, device MU3351, platform ums9620): {1}' "$model")"

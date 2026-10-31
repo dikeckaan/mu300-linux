@@ -110,6 +110,11 @@ class Device(ShellTest):
             self.assertEqual(want, json.loads(out.stdout))
             # the order of the fields is not part of the contract, their names and kinds are
             self.assertEqual(list(want), list(json.loads(out.stdout)))
+        (r / 'etc/mu300/device-model').write_text('m3\n')
+        for shell in self.each_shell():
+            got = json.loads(self.script(shell, BIN / 'mu300-device', '--json', **env).stdout)
+            self.assertEqual(('u30air', 'm3'), (got['device'], got['model']))
+        (r / 'etc/mu300/device-model').unlink()
         # adb as the device has it set; not root; the copy kept by an update (ubuntu.old) is still "ubuntu"
         (r / 'etc/mu300/adb_auth').write_text('keys\n')
         (disk / 'ubuntu').unlink()
@@ -139,12 +144,24 @@ class Device(ShellTest):
             got = json.loads(self.script(shell, BIN / 'mu300-device', '--json', **env).stdout)
             self.assertEqual(('f50', 'openwrt', '25.12.5', 'v2026roottruex'),
                              (got['device'], got['system'], got['version_id'], got['release']))
+            self.assertNotIn('model', got)
             self.assertFalse(got['root'])
         (r / 'www' / 'luci-static').mkdir(parents=True)
         (r / 'etc' / 'mu300' / 'image-version').unlink()
         for shell in self.each_shell():
             got = json.loads(self.script(shell, BIN / 'mu300-device', '--json', **env).stdout)
             self.assertEqual(('openwrt-luci', 'unknown'), (got['system'], got['release']))
+
+    def test_model_variant_never_changes_hardware_profile(self):
+        for profile in ('u30air', 'f50', 'v50'):
+            r = self.root(profile)
+            (r / 'etc/mu300').mkdir(parents=True, exist_ok=True)
+            for marker in ('m3\n', 'M3Pro\n', 'm3\nother\n', ''):
+                (r / 'etc/mu300/device-model').write_text(marker)
+                expected = 'm3' if profile == 'u30air' and marker == 'm3\n' else profile
+                for shell in self.each_shell():
+                    self.assertEqual(profile, self.script(shell, BIN / 'mu300-device', MU300_SYSROOT=r).stdout.strip())
+                    self.assertEqual(expected, self.script(shell, BIN / 'mu300-device', '--model', MU300_SYSROOT=r).stdout.strip())
 
     def test_lan_ip(self):
         for device, want in (('f50', '192.168.77.1'), ('u30air', '192.168.78.1'), ('', '192.168.77.1'),
@@ -5074,6 +5091,21 @@ elif op.startswith('w'):
             self.assertIn('capability container', r.stderr)
             self.assertEqual(self.writes(), [])
 
+
+    def test_m3_without_nfc_keeps_u30air_profile_but_never_drives_the_tag(self):
+        marker = self.root / 'etc/mu300/device-model'
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        for shell in self.each_shell():
+            self.blank()
+            marker.write_text('m3\n')
+            for action in ('supported', 'wifi', 'sync', 'show'):
+                result = self.nfc(shell, action)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn('this device has no NFC tag', result.stderr)
+                self.assertEqual(self.writes(), [])
+                self.assertFalse((self.tmp / 'held').exists())
+            marker.unlink()
+            self.assertEqual(self.nfc(shell, 'supported').returncode, 0)
 
     def test_v50(self):
         # the V50's tag: the same chip on reset line 189, from ZTE's node in the device tree (kano's V50, FINDINGS 95)

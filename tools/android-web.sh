@@ -161,6 +161,9 @@ sha_ok() { [ ${#1} = 64 ] && case $1 in *[!0-9a-f]*) return 1 ;; esac; }
 detect() {
     MODEL=$(getprop ro.product.model); PRODUCT=$(getprop ro.product.device)
     case "$MODEL / $PRODUCT" in
+        "MU5352 / MU5352")
+            DEVICE=
+            [ "$(getprop ro.board.platform)" = ums9620 ] && DEVICE=u30air ;;
         # the ZTE V50 (experimental, FINDINGS 95): exactly V50 / MU3351 on ums9620; any other V50 is no device known
         "V50 / MU3351"|*" / MU3351"|"V50 / "*)
             DEVICE=

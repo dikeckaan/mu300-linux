@@ -25,13 +25,22 @@ flowchart TD
 
 ## What you need
 
-* A **ZTE F50 / MU300** or **ZTE U30 Air** that is already **rooted, and able to boot a modified boot image**: an
+The **ZTE M3 (MU5352)** is recognized by its exact Android model/device and `ums9620` platform, using the
+U30 Air profile and `192.168.78.1` LAN. One M3 has been tested with OpenWrt and kernel 7.3.0; other hardware
+features and kernels are not implied. Read [the device notes](https://github.com/dikeckaan/mu300-linux/blob/main/docs/M3-MU5352.md)
+and keep the Root, bootloader/TrustOS and backup prerequisites below.
+
+* A **ZTE F50 / MU300**, **ZTE U30 Air** or **ZTE M3 (MU5352)** that is already **rooted, and able to boot a modified boot image**: an
   unlocked bootloader, or a locked one with a patched TrustOS. Getting there is not part of this project: it does
   not root, unlock or patch devices and gives no guide for it.
   * A **locked bootloader is not refused.** `--check` and the installer print a warning - "The bootloader is
     locked. Did you patch TrustOS?" - and go on. With a patched TrustOS Linux boots on a locked bootloader; without
     it the device goes back to Android by itself after the install.
 * **USB debugging** enabled, and the device connected by USB.
+  On the tested M3, an already enabled rooted **TCP adb** connection was used instead (`adb connect <Android-IP>:5555`).
+  Follow the same desktop installer commands as for a U30 Air; it detects `u30air` automatically. This does not
+  enable debugging on the device, and USB operation on the M3 has not been validated. The M3 test used a prepared
+  4 GiB internal region; the normal backup and 32 GB repartition/reset cautions still apply.
 * A computer with **`adb`**:
   * **macOS or Linux:** also Python 3, `lz4` and `curl` (usually already there).
   * **Windows 10/11:** PowerShell. The installer installs Python 3 (for your user, with winget or from python.org)
@@ -257,7 +266,7 @@ so everything on this page about what is written and what is not holds for it to
 
 Wait about a minute, then on the computer the device is plugged into:
 
-| | F50 / MU300 | U30 Air |
+| | F50 / MU300 | U30 Air / M3 |
 |---|---|---|
 | Ubuntu | `ssh ubuntu@192.168.77.1` | `ssh ubuntu@192.168.78.1` |
 | OpenWrt | `ssh root@192.168.77.1` | `ssh root@192.168.78.1` |

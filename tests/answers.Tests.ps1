@@ -129,6 +129,18 @@ foreach ($sc in 'install.ps1', 'uninstall.ps1') {
     Check "two boards, $sc`: no SSH" ($r.Out -match 'enter the device password') $false
 }
 
+Device 'model' 'MU5352' 'device' 'MU5352' 'platform' 'ums9620' 'slot' 'b' 'locked' '1' 'verified' 'green'
+$r = RunScript 'install.ps1' '-Check -NonInteractive'
+Check 'm3: exit' $r.Rc 0
+Check 'm3: kind' $r.Facts['device.kind'] 'u30air'
+Check 'm3: label' $r.Facts['device.label'] 'ZTE M3 (MU5352)'
+Check 'm3: slots' "$($r.Facts['slot.android']) $($r.Facts['slot.linux'])" 'b a'
+Check 'm3: nothing written' (Untouched) 0
+Device 'model' 'MU5352' 'device' 'MU5352' 'platform' 'mt6789'
+$r = RunScript 'install.ps1' '-Check -NonInteractive'
+Check 'm3: wrong platform refused' $r.Rc 1
+Check 'm3: wrong platform no writes' (Untouched) 0
+
 Device 'model' 'U30_Air' 'device' 'U30Air' 'slot' 'b' 'locked' '1' 'verified' 'green'
 $r = RunScript 'install.ps1' '-Check -NonInteractive'
 Check 'u30: kind'               $r.Facts['device.kind'] 'u30air'

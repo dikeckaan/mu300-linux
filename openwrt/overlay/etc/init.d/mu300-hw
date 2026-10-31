@@ -7,6 +7,11 @@ export PATH="$PATH:/opt/mu300/busybox-bin"
 # finished, so anything slow (or hanging) in here costs the device its serial console *and* its network - which
 # is exactly what a hanging wifi-start did on the mainline kernel, leaving no way in at all.
 boot() {
+	# The M3 uses U30 Air drivers, but its user-facing board name stays its own.
+	if [ "$(/opt/mu300/bin/mu300-device --model)" = m3 ]; then
+		mkdir -p /tmp/sysinfo
+		printf 'ZTE M3 (MU5352)\n' > /tmp/sysinfo/model
+	fi
 	/opt/mu300/bin/mu300-led power on
 	/opt/mu300/bin/mu300-usb boot
 	# the kernel's module helper once its table is made (~2 s; FINDINGS 163)
