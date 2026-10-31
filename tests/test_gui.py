@@ -346,6 +346,11 @@ class Model(unittest.TestCase):
         small = model.make_room(facts(makeroom__first='113766400', makeroom__end='122155007', makeroom__usable_end='122155007',
                                       makeroom__min_android='8388608', makeroom__min_linux='1638400', makeroom__max_linux='0'))
         self.assertFalse(small['possible'])
+        self.assertEqual((r['online'], r['used']), (False, 0))
+        on = model.make_room(facts(makeroom__first='12275712', makeroom__end='122155007', makeroom__usable_end='122155007',
+                                   makeroom__min_android='8388608', makeroom__min_linux='1638400', makeroom__max_linux='101490688',
+                                   makeroom__online='yes', makeroom__android_used=str(3 << 30)))
+        self.assertEqual((on['online'], on['used']), (True, 3 << 30))
 
     def test_the_defaults_are_the_installers(self):
         c = model.Choices()
@@ -526,6 +531,14 @@ class Model(unittest.TestCase):
         self.assertNotIn('MU300_ANS_ERASE_ANDROID', a)
         self.assertEqual(a['MU300_ANS_LINUX_GIB'], '4')
         self.assertEqual(model.make_room_answers('en', 'S', 2.5, 'ERASE')['MU300_ANS_LINUX_GIB'], '2.5')
+        # the online way: keep needs no ERASE (the window asks), and a word typed for the reset never goes with it
+        a = model.make_room_answers('en', 'S', 4.0, 'ERASE', method='keep')
+        self.assertEqual((a['MU300_ANS_MAKE_ROOM_METHOD'], a['MU300_ANS_SHRINK']), ('keep', 'yes'))
+        self.assertNotIn('MU300_ANS_ERASE_ANDROID', a)
+        a = model.make_room_answers('en', 'S', 4.0, 'ERASE', method='reset')
+        self.assertEqual((a['MU300_ANS_MAKE_ROOM_METHOD'], a['MU300_ANS_ERASE_ANDROID']), ('reset', 'ERASE'))
+        self.assertNotIn('MU300_ANS_SHRINK', a)
+        self.assertNotIn('MU300_ANS_MAKE_ROOM_METHOD', model.make_room_answers('en', 'S', 4.0, 'ERASE'))
         a = model.uninstall_answers('en', 'S', 'secure', 'keep')
         self.assertEqual((a['MU300_ANS_CONFIRM'], a['MU300_ANS_GROW']), ('@stdin', 'no'))
         self.assertNotIn('MU300_ANS_ERASE_ANDROID', a)

@@ -19,8 +19,6 @@ free behind it:       {1}	其后的空闲空间：    {1}
 to share:             {1}	可分配空间：        {1}
 Linux needs at least  {1} (OpenWrt) / 1.6 GiB (Ubuntu) / 2.4 GiB (both)	Linux 至少需要        {1}（OpenWrt）/ 1.6 GiB（Ubuntu）/ 2.4 GiB（两者）
 Android keeps at least {1}	Android 至少保留 {1}
-THIS IS EXPERIMENTAL. It rewrites the partition table and ERASES everything in Android -	此功能为实验性功能。它会重写分区表并清除 Android 中的所有数据——
-apps, photos, accounts, settings. Take a full backup first:  sh tools/backup-device.sh	应用、照片、账户、设置。请先完整备份：  sh tools/backup-device.sh
 Only userdata changes size; it is the last partition, so nothing else moves.	只有 userdata 的大小会改变；它是最后一个分区，其他分区不会移动。
 --check writes nothing. Run the installer without it to make room.	--check 不会写入任何内容。去掉该参数运行安装程序即可腾出空间。
 Make room by shrinking userdata? (yes/no)	通过缩小 userdata 来腾出空间吗？(是/否)
@@ -594,7 +592,6 @@ holds another Linux (ext4) filesystem: never formatted	有另一个 Linux（ext4
 no Linux filesystem on it	卡上没有 Linux 文件系统
 The card holds an installation, which the device starts first: an installation to internal storage does not start while that card is in the slot. Type internal to install there anyway:	这张卡上已有一个安装，设备会先启动它：只要这张卡还在卡槽中，安装到内部存储的系统就不会启动。输入 internal 以仍然安装到内部存储：
 The free space is not empty: something may be using it. Installing overwrites it. Type overwrite to use it anyway:	空闲空间并非空白：可能有其他东西正在使用它。安装将覆盖它。输入 overwrite 以仍然使用它：
-userdata fills the whole disk, so there is nowhere to put Linux. The installer can shrink userdata - only userdata, the last partition, so nothing else moves. This rewrites the partition table and ERASES everything in Android: apps, photos, accounts, settings. It is experimental.	userdata 占满了整个磁盘，没有地方放 Linux。安装程序可以缩小 userdata——只动 userdata，它是最后一个分区，其他分区不会移动。这会重写分区表并清除 Android 中的所有数据：应用、照片、账户、设置。此功能为实验性功能。
 GiB for Linux:	分配给 Linux 的 GiB 数：
 Type ERASE:	输入 ERASE：
 Make room now	立即腾出空间
@@ -801,12 +798,6 @@ the partition table and the running kernel disagree about userdata; reboot Andro
 encrypted	已加密
 not encrypted	未加密
 unknown	未知
-Android's own recovery erases Android's data: the device restarts into it, resets Android (a factory	Android 的数据由 Android 自带的 recovery 清除：设备会重启进入 recovery，重置 Android（恢复
-reset) and starts Android again, which takes a few minutes and more than one restart. Then set Android up	出厂设置）再重新启动 Android，需要几分钟和不止一次重启。之后请重新设置 Android，
-again, turn USB debugging back on and bring root back (Magisk: install the Magisk app again and let	重新打开 USB 调试并恢复 root（Magisk：重新安装 Magisk 应用，并允许
-Shell have root), and run this installer again: it finds what was prepared and continues.	Shell 获取 root），然后再次运行本安装程序：它会找到已准备的内容并继续。
-What was prepared, and a backup of the partition table, misc, boot and the boot chain, are kept on this	已准备的内容，以及分区表、misc、boot 和启动链的备份，保存在本
-computer in {1} - the reset erases everything of it on the device.	电脑的 {1} 中——重置会清除设备上的所有这些内容。
 Backing up to {1}	正在备份到 {1}
 Done - the device restarts into the reset now	完成——设备现在重启并进行重置
 Android's recovery formats Android's data on the next start; then Android starts as new. Set it up,	下次启动时 Android 的 recovery 会格式化 Android 的数据，然后 Android 作为新设备启动。请完成设置，
@@ -896,3 +887,51 @@ Linux goes into the GPT partition named mu300root ({1}), which another installer
 The partition named mu300root is not empty ({1} of 16 samples hold data), and it holds no Linux filesystem of this project. To use it anyway, put MU300_STORAGE=internal and MU300_REGION_OVERWRITE=yes into {2}, a file only root can change.	名为 mu300root 的分区不为空（16 个采样中有 {1} 个含有数据），且其中没有本项目的 Linux 文件系统。如仍要使用，请把 MU300_STORAGE=internal 和 MU300_REGION_OVERWRITE=yes 写入只有 root 能修改的文件 {2}。
 storage:        internal, the GPT partition mu300root at offset {1}, {2} ({3})	存储：          内部，GPT 分区 mu300root，偏移 {1}，{2}（{3}）
 the partition mu300root	mu300root 分区
+THIS IS EXPERIMENTAL. It rewrites the partition table. Take a full backup first:  sh tools/backup-device.sh	这是实验性功能。它会改写分区表。请先做完整备份：  sh tools/backup-device.sh
+Two ways:	两种方式：
+in use now. Method: dikeckaan; implementation: kanoqwq.	已用。方法：dikeckaan；实现：kanoqwq。
+more than one restart). Then set Android up again, turn USB debugging back on and bring root back	多次重启）。之后重新设置 Android，重新打开 USB 调试并恢复 root
+(Magisk: install the Magisk app again and let Shell have root), and run this installer again.	（Magisk：重新安装 Magisk 应用并允许 Shell 获取 root），然后再次运行本安装器。
+Either way the installation continues where it was prepared. What was prepared, and a backup of the partition	两种方式下安装都会从准备好的位置继续。所准备的内容，以及分区表、
+table, misc, boot and the boot chain, are kept on this computer in {1}.	misc、boot 和启动链的备份，保存在本电脑的 {1} 中。
+keep or reset	keep（保留）或 reset（重置）
+too large: {1}	太大：{1}
+Done - Android restarts once now, with the smaller userdata, and keeps its data	完成 - Android 现在将以缩小后的 userdata 重启一次，并保留其数据
+Restart Android (adb reboot), then run the installer again: it continues from here.	请重启 Android（adb reboot），然后再次运行安装器：它会从这里继续。
+Run the installer again once Android is up: it continues from here.	Android 启动后再次运行安装器：它会从这里继续。
+Android keeps its data (apps, files, accounts, settings): its filesystem is shrunk while Android runs,	Android 保留其数据（应用、文件、账户、设置）：其文件系统在 Android 运行时
+by Android's own kernel, then the partition table is written and Android restarts once. {1} of it is	由 Android 自己的内核缩小，然后写入分区表，Android 重启一次。其中 {1}
+not possible on this device: {1}	在此设备上不可行：{1}
+ERASES everything in Android: Android's own recovery resets it (a factory reset, a few minutes and	清除 Android 中的一切：由 Android 自己的 recovery 将其重置（恢复出厂设置，需要几分钟和
+Android's data:       {1} in use, kept; its filesystem becomes {2}	Android 数据：        已用 {1}，保留；文件系统变为 {2}
+Shrink userdata now, keeping Android's data? (yes/no)	现在缩小 userdata 并保留 Android 的数据吗？(是/否)
+this installer has no mu300-f2fs-online (tools/f2fs-online)	本安装器缺少 mu300-f2fs-online（tools/f2fs-online）
+the helper did not arrive on the device as it is here	辅助程序未能原样传到设备上
+the helper gave no geometry	辅助程序未给出文件系统几何信息
+shrink: {1}	缩小：{1}
+The shrink did not start. Run the installer again, it checks where the shrink got to.	缩小没有开始。请再次运行安装器，它会检查缩小进行到哪一步。
+the helper refused to start ({1}, errno {2}).	辅助程序拒绝启动（{1}，errno {2}）。
+the table on the device is not the one that was made. Do not restart or power off the device; run the installer again, it checks where the shrink got to.	设备上的分区表不是所生成的那一份。不要重启或关闭设备；请再次运行安装器，它会检查缩小进行到哪一步。
+the token did not read back from the device; run the installer again, it continues from here.	无法从设备读回令牌；请再次运行安装器，它会从这里继续。
+The shrink of {1} did not finish: checking where it got to	{1} 的缩小没有完成：正在检查进行到哪一步
+Nothing had changed yet: the device has its old partition table and Android its data. That transaction is put aside.	尚未有任何改变：设备保持原分区表，Android 保持其数据。该事务已搁置。
+Nothing was changed: Android keeps its data and its partition table. To make room by resetting Android instead, run the installer again and answer reset.	没有任何改变：Android 保留其数据和分区表。若要改为通过重置 Android 腾出空间，请再次运行安装器并回答 reset。
+The device does not answer while Android's data is being shrunk; the shrink goes on there. Do not restart or power off the device: connect it again and run the installer again, it checks where the shrink got to.	在缩小 Android 数据期间设备没有响应；缩小仍在设备上进行。不要重启或关闭设备：重新连接后再次运行安装器，它会检查缩小进行到哪一步。
+Android's kernel refused the shrink (errno {1}); the filesystem was read back at its old size.	Android 的内核拒绝了缩小（errno {1}）；读回的文件系统仍是原来的大小。
+The shrink stopped where it cannot tell by itself what happened (errno {1}). Do not restart or power off the device. Keep {2}; run the installer again, it checks where the shrink got to.	缩小在无法自行判断结果的位置停止了（errno {1}）。不要重启或关闭设备。保留 {2}；请再次运行安装器，它会检查缩小进行到哪一步。
+Shrinking Android's data in place (Android keeps running; this can take a few minutes)	正在原地缩小 Android 的数据（Android 保持运行；可能需要几分钟）
+Android's kernel does not shrink this F2FS while it is mounted (errno {1}).	Android 的内核不支持在挂载状态下缩小此 F2FS（errno {1}）。
+Android's data is not at the size it was shrunk to ({1} blocks). Do not restart the device; run the installer again.	Android 的数据不是缩小后的大小（{1} 块）。不要重启设备；请再次运行安装器。
+Android's data: {1}, the same filesystem as before	Android 的数据：{1}，与之前是同一个文件系统
+Android's data is at its new size; the partition table is finished now	Android 的数据已是新大小；现在完成分区表
+Cannot tell where the shrink got to: the partition table and Android's data are neither before nor after it. Nothing was written. Keep the device as it is and keep {1}; the partition table from before is {2}.	无法判断缩小进行到哪一步：分区表和 Android 的数据既不是缩小前也不是缩小后的状态。没有写入任何内容。请保持设备现状并保留 {1}；之前的分区表是 {2}。
+EXPERIMENTAL: it continues the installation that made room by shrinking Android's data in place. --no-resume ignores it.	实验性：继续通过原地缩小 Android 数据腾出空间的安装。--no-resume 会忽略它。
+the shrink of Android's data did not finish; run the installer without --check, it checks where it got to	Android 数据的缩小没有完成；请不带 --check 运行安装器，它会检查进行到哪一步
+Waiting for Android to start again	正在等待 Android 重新启动
+Keep Android's data: shrink it while Android runs, then restart once ({1} in use; method: dikeckaan, implementation: kanoqwq)	保留 Android 的数据：在 Android 运行时缩小，然后重启一次（已用 {1}；方法：dikeckaan，实现：kanoqwq）
+Shrink userdata to give Linux {1} GiB? Android keeps its data; it restarts once afterwards.	缩小 userdata 给 Linux {1} GiB 吗？Android 保留其数据；之后重启一次。
+userdata fills the whole disk, so there is nowhere to put Linux. The installer can shrink userdata - only userdata, the last partition, so nothing else moves. This rewrites the partition table. It is experimental.	userdata 占满了整个磁盘，没有地方放 Linux。安装器可以缩小 userdata —— 只缩小最后一个分区 userdata，其他分区都不移动。这会改写分区表。这是实验性功能。
+Reset Android: ERASES everything in Android (apps, photos, accounts, settings)	重置 Android：清除 Android 中的一切（应用、照片、账户、设置）
+Room was made and Android kept its data. Android restarts once; when it is up again, press Refresh on the Device page: the installation continues where it was prepared.	空间已腾出，Android 保留了其数据。Android 会重启一次；启动后在“设备”页点击“刷新”：安装会从准备好的位置继续。
+Not possible on this device: {1}	在此设备上不可行：{1}
+First the partition table, misc, boot and the boot chain are backed up to this computer, with a record of what is prepared. Then Android's own kernel shrinks its data while Android runs (this can take a few minutes), the partition table is written, and Android restarts once, with everything in it kept. Then Refresh: the installation continues where it was prepared. EXPERIMENTAL.	首先把分区表、misc、boot 和启动链备份到本电脑，并记录所准备的内容。然后由 Android 自己的内核在 Android 运行时缩小其数据（可能需要几分钟），写入分区表，Android 重启一次，其中一切都会保留。之后点击“刷新”：安装会从准备好的位置继续。实验性功能。

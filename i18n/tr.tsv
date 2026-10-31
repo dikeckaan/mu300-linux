@@ -19,8 +19,6 @@ free behind it:       {1}	arkasındaki boş alan: {1}
 to share:             {1}	paylaşılacak alan:    {1}
 Linux needs at least  {1} (OpenWrt) / 1.6 GiB (Ubuntu) / 2.4 GiB (both)	Linux'un en az ihtiyacı: {1} (OpenWrt) / 1.6 GiB (Ubuntu) / 2.4 GiB (ikisi)
 Android keeps at least {1}	Android'e en az {1} kalır
-THIS IS EXPERIMENTAL. It rewrites the partition table and ERASES everything in Android -	BU DENEYSELDİR. Bölüm tablosunu yeniden yazar ve Android'deki HER ŞEYİ SİLER -
-apps, photos, accounts, settings. Take a full backup first:  sh tools/backup-device.sh	uygulamalar, fotoğraflar, hesaplar, ayarlar. Önce tam yedek alın:  sh tools/backup-device.sh
 Only userdata changes size; it is the last partition, so nothing else moves.	Yalnızca userdata'nın boyutu değişir; son bölüm olduğu için başka hiçbir şey kaymaz.
 --check writes nothing. Run the installer without it to make room.	--check hiçbir şey yazmaz. Yer açmak için yükleyiciyi onsuz çalıştırın.
 Make room by shrinking userdata? (yes/no)	userdata küçültülerek yer açılsın mı? (evet/hayır)
@@ -594,7 +592,6 @@ holds another Linux (ext4) filesystem: never formatted	başka bir Linux (ext4) d
 no Linux filesystem on it	üzerinde Linux dosya sistemi yok
 The card holds an installation, which the device starts first: an installation to internal storage does not start while that card is in the slot. Type internal to install there anyway:	Kartta bir kurulum var ve cihaz önce onu başlatır: bu kart yuvadayken dahili depolamaya yapılan kurulum başlamaz. Yine de oraya kurmak için internal yazın:
 The free space is not empty: something may be using it. Installing overwrites it. Type overwrite to use it anyway:	Boş alan boş değil: bir şey onu kullanıyor olabilir. Kurulum üzerine yazar. Yine de kullanmak için overwrite yazın:
-userdata fills the whole disk, so there is nowhere to put Linux. The installer can shrink userdata - only userdata, the last partition, so nothing else moves. This rewrites the partition table and ERASES everything in Android: apps, photos, accounts, settings. It is experimental.	userdata diskin tamamını kaplıyor, bu yüzden Linux'u koyacak yer yok. Yükleyici userdata'yı küçültebilir - yalnızca userdata'yı; son bölüm olduğu için başka hiçbir şey kaymaz. Bu işlem bölüm tablosunu yeniden yazar ve Android'deki HER ŞEYİ SİLER: uygulamalar, fotoğraflar, hesaplar, ayarlar. Deneyseldir.
 GiB for Linux:	Linux için GiB:
 Type ERASE:	ERASE yazın:
 Make room now	Şimdi yer aç
@@ -801,12 +798,6 @@ the partition table and the running kernel disagree about userdata; reboot Andro
 encrypted	şifreli
 not encrypted	şifresiz
 unknown	bilinmiyor
-Android's own recovery erases Android's data: the device restarts into it, resets Android (a factory	Android'in verilerini Android'in kendi kurtarma modu (recovery) siler: cihaz ona yeniden başlar, Android'i sıfırlar (fabrika
-reset) and starts Android again, which takes a few minutes and more than one restart. Then set Android up	ayarlarına döndürme) ve Android'i yeniden başlatır; bu birkaç dakika ve birden çok yeniden başlatma sürer. Sonra Android'i
-again, turn USB debugging back on and bring root back (Magisk: install the Magisk app again and let	yeniden kurun, USB hata ayıklamayı tekrar açın ve root'u geri getirin (Magisk: Magisk uygulamasını yeniden kurup
-Shell have root), and run this installer again: it finds what was prepared and continues.	Shell'e root izni verin) ve bu kurulum programını yeniden çalıştırın: hazırlananı bulur ve devam eder.
-What was prepared, and a backup of the partition table, misc, boot and the boot chain, are kept on this	Hazırlananlar ile bölüm tablosunun, misc'in, boot'un ve önyükleme zincirinin yedeği bu
-computer in {1} - the reset erases everything of it on the device.	bilgisayarda {1} içinde tutulur - sıfırlama cihazdaki her şeyi siler.
 Backing up to {1}	{1} konumuna yedekleniyor
 Done - the device restarts into the reset now	Bitti - cihaz şimdi sıfırlamaya yeniden başlıyor
 Android's recovery formats Android's data on the next start; then Android starts as new. Set it up,	Android'in kurtarma modu bir sonraki açılışta Android'in verilerini biçimlendirir; ardından Android sıfırdan açılır. Kurun,
@@ -896,3 +887,51 @@ Linux goes into the GPT partition named mu300root ({1}), which another installer
 The partition named mu300root is not empty ({1} of 16 samples hold data), and it holds no Linux filesystem of this project. To use it anyway, put MU300_STORAGE=internal and MU300_REGION_OVERWRITE=yes into {2}, a file only root can change.	mu300root adlı bölüm boş değil (16 örnekten {1} tanesinde veri var) ve içinde bu projenin Linux dosya sistemi yok. Yine de kullanmak için MU300_STORAGE=internal ve MU300_REGION_OVERWRITE=yes satırlarını yalnızca root'un değiştirebildiği {2} dosyasına yazın.
 storage:        internal, the GPT partition mu300root at offset {1}, {2} ({3})	depolama:       dahili, mu300root GPT bölümü, konum {1}, {2} ({3})
 the partition mu300root	mu300root bölümü
+THIS IS EXPERIMENTAL. It rewrites the partition table. Take a full backup first:  sh tools/backup-device.sh	BU DENEYSELDİR. Bölüm tablosunu yeniden yazar. Önce tam yedek alın:  sh tools/backup-device.sh
+Two ways:	İki yol:
+in use now. Method: dikeckaan; implementation: kanoqwq.	kullanılıyor. Yöntem: dikeckaan; uygulama: kanoqwq.
+more than one restart). Then set Android up again, turn USB debugging back on and bring root back	birden fazla yeniden başlatma). Sonra Android'i yeniden kurun, USB hata ayıklamayı yeniden açın, root'u geri getirin
+(Magisk: install the Magisk app again and let Shell have root), and run this installer again.	(Magisk: Magisk uygulamasını yeniden kurun ve Shell'e root verin) ve bu yükleyiciyi yeniden çalıştırın.
+Either way the installation continues where it was prepared. What was prepared, and a backup of the partition	Her iki yolda da kurulum hazırlandığı yerden devam eder. Hazırlanan bilgiler ve bölüm tablosunun,
+table, misc, boot and the boot chain, are kept on this computer in {1}.	misc, boot ve önyükleme zincirinin yedeği bu bilgisayarda {1} içinde saklanır.
+keep or reset	keep (koru) veya reset (sıfırla)
+too large: {1}	fazla büyük: {1}
+Done - Android restarts once now, with the smaller userdata, and keeps its data	Tamam - Android şimdi küçülen userdata ile bir kez yeniden başlıyor ve verilerini koruyor
+Restart Android (adb reboot), then run the installer again: it continues from here.	Android'i yeniden başlatın (adb reboot), sonra yükleyiciyi yeniden çalıştırın: buradan devam eder.
+Run the installer again once Android is up: it continues from here.	Android açıldığında yükleyiciyi yeniden çalıştırın: buradan devam eder.
+Android keeps its data (apps, files, accounts, settings): its filesystem is shrunk while Android runs,	Android verilerini korur (uygulamalar, dosyalar, hesaplar, ayarlar): dosya sistemi Android çalışırken,
+by Android's own kernel, then the partition table is written and Android restarts once. {1} of it is	Android'in kendi çekirdeği tarafından küçültülür, sonra bölüm tablosu yazılır ve Android bir kez yeniden başlar. {1}
+not possible on this device: {1}	bu cihazda mümkün değil: {1}
+ERASES everything in Android: Android's own recovery resets it (a factory reset, a few minutes and	Android'deki her şeyi SİLER: Android'in kendi kurtarma modu onu sıfırlar (fabrika ayarlarına dönüş, birkaç dakika ve
+Android's data:       {1} in use, kept; its filesystem becomes {2}	Android verileri:     {1} kullanımda, korunur; dosya sistemi {2} olur
+Shrink userdata now, keeping Android's data? (yes/no)	userdata şimdi Android'in verileri korunarak küçültülsün mü? (evet/hayır)
+this installer has no mu300-f2fs-online (tools/f2fs-online)	bu yükleyicide mu300-f2fs-online yok (tools/f2fs-online)
+the helper did not arrive on the device as it is here	yardımcı program cihaza buradaki haliyle ulaşmadı
+the helper gave no geometry	yardımcı program dosya sistemi ölçülerini vermedi
+shrink: {1}	küçültme: {1}
+The shrink did not start. Run the installer again, it checks where the shrink got to.	Küçültme başlamadı. Yükleyiciyi yeniden çalıştırın; küçültmenin nereye vardığını denetler.
+the helper refused to start ({1}, errno {2}).	yardımcı program başlamayı reddetti ({1}, errno {2}).
+the table on the device is not the one that was made. Do not restart or power off the device; run the installer again, it checks where the shrink got to.	cihazdaki tablo hazırlanan tablo değil. Cihazı yeniden başlatmayın ve kapatmayın; yükleyiciyi yeniden çalıştırın, küçültmenin nereye vardığını denetler.
+the token did not read back from the device; run the installer again, it continues from here.	belirteç cihazdan geri okunamadı; yükleyiciyi yeniden çalıştırın, buradan devam eder.
+The shrink of {1} did not finish: checking where it got to	{1} küçültmesi bitmedi: nereye vardığı denetleniyor
+Nothing had changed yet: the device has its old partition table and Android its data. That transaction is put aside.	Henüz hiçbir şey değişmemişti: cihazda eski bölüm tablosu, Android'de verileri duruyor. O işlem bir kenara kondu.
+Nothing was changed: Android keeps its data and its partition table. To make room by resetting Android instead, run the installer again and answer reset.	Hiçbir şey değiştirilmedi: Android verilerini ve bölüm tablosunu koruyor. Bunun yerine Android'i sıfırlayarak yer açmak için yükleyiciyi yeniden çalıştırıp reset yanıtını verin.
+The device does not answer while Android's data is being shrunk; the shrink goes on there. Do not restart or power off the device: connect it again and run the installer again, it checks where the shrink got to.	Android'in verileri küçültülürken cihaz yanıt vermiyor; küçültme orada sürüyor. Cihazı yeniden başlatmayın ve kapatmayın: yeniden bağlayıp yükleyiciyi yeniden çalıştırın, küçültmenin nereye vardığını denetler.
+Android's kernel refused the shrink (errno {1}); the filesystem was read back at its old size.	Android'in çekirdeği küçültmeyi reddetti (errno {1}); dosya sistemi eski boyutunda geri okundu.
+The shrink stopped where it cannot tell by itself what happened (errno {1}). Do not restart or power off the device. Keep {2}; run the installer again, it checks where the shrink got to.	Küçültme, ne olduğunu kendisinin söyleyemediği bir yerde durdu (errno {1}). Cihazı yeniden başlatmayın ve kapatmayın. {2} dosyasını saklayın; yükleyiciyi yeniden çalıştırın, küçültmenin nereye vardığını denetler.
+Shrinking Android's data in place (Android keeps running; this can take a few minutes)	Android'in verileri yerinde küçültülüyor (Android çalışmaya devam eder; birkaç dakika sürebilir)
+Android's kernel does not shrink this F2FS while it is mounted (errno {1}).	Android'in çekirdeği bu F2FS'i bağlıyken küçültmüyor (errno {1}).
+Android's data is not at the size it was shrunk to ({1} blocks). Do not restart the device; run the installer again.	Android'in verileri küçültüldüğü boyutta değil ({1} blok). Cihazı yeniden başlatmayın; yükleyiciyi yeniden çalıştırın.
+Android's data: {1}, the same filesystem as before	Android'in verileri: {1}, öncekiyle aynı dosya sistemi
+Android's data is at its new size; the partition table is finished now	Android'in verileri yeni boyutunda; bölüm tablosu şimdi tamamlanıyor
+Cannot tell where the shrink got to: the partition table and Android's data are neither before nor after it. Nothing was written. Keep the device as it is and keep {1}; the partition table from before is {2}.	Küçültmenin nereye vardığı anlaşılamıyor: bölüm tablosu ve Android'in verileri ne öncesindeki ne sonrasındaki halde. Hiçbir şey yazılmadı. Cihazı olduğu gibi bırakın ve {1} dosyasını saklayın; önceki bölüm tablosu {2}.
+EXPERIMENTAL: it continues the installation that made room by shrinking Android's data in place. --no-resume ignores it.	DENEYSEL: Android'in verilerini yerinde küçülterek yer açan kurulumu sürdürür. --no-resume bunu yok sayar.
+the shrink of Android's data did not finish; run the installer without --check, it checks where it got to	Android'in verilerinin küçültülmesi bitmedi; yükleyiciyi --check olmadan çalıştırın, nereye vardığını denetler
+Waiting for Android to start again	Android'in yeniden açılması bekleniyor
+Keep Android's data: shrink it while Android runs, then restart once ({1} in use; method: dikeckaan, implementation: kanoqwq)	Android'in verilerini koru: Android çalışırken küçült, sonra bir kez yeniden başlat ({1} kullanımda; yöntem: dikeckaan, uygulama: kanoqwq)
+Shrink userdata to give Linux {1} GiB? Android keeps its data; it restarts once afterwards.	Linux'a {1} GiB vermek için userdata küçültülsün mü? Android verilerini korur; ardından bir kez yeniden başlar.
+userdata fills the whole disk, so there is nowhere to put Linux. The installer can shrink userdata - only userdata, the last partition, so nothing else moves. This rewrites the partition table. It is experimental.	userdata tüm diski dolduruyor, Linux'u koyacak yer yok. Yükleyici userdata'yı küçültebilir - yalnızca son bölüm olan userdata'yı, böylece başka hiçbir şey yer değiştirmez. Bu, bölüm tablosunu yeniden yazar. Deneyseldir.
+Reset Android: ERASES everything in Android (apps, photos, accounts, settings)	Android'i sıfırla: Android'deki her şeyi SİLER (uygulamalar, fotoğraflar, hesaplar, ayarlar)
+Room was made and Android kept its data. Android restarts once; when it is up again, press Refresh on the Device page: the installation continues where it was prepared.	Yer açıldı ve Android verilerini korudu. Android bir kez yeniden başlar; yeniden açıldığında Cihaz sayfasında Yenile'ye basın: kurulum hazırlandığı yerden devam eder.
+Not possible on this device: {1}	Bu cihazda mümkün değil: {1}
+First the partition table, misc, boot and the boot chain are backed up to this computer, with a record of what is prepared. Then Android's own kernel shrinks its data while Android runs (this can take a few minutes), the partition table is written, and Android restarts once, with everything in it kept. Then Refresh: the installation continues where it was prepared. EXPERIMENTAL.	Önce bölüm tablosu, misc, boot ve önyükleme zinciri, hazırlananların kaydıyla birlikte bu bilgisayara yedeklenir. Sonra Android'in kendi çekirdeği Android çalışırken verilerini küçültür (birkaç dakika sürebilir), bölüm tablosu yazılır ve Android içindeki her şey korunarak bir kez yeniden başlar. Sonra Yenile: kurulum hazırlandığı yerden devam eder. DENEYSEL.

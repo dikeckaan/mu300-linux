@@ -4,10 +4,13 @@
 #   ./install.sh --check         only inspect the device: is the free eMMC region there and empty? (writes nothing)
 #
 # On the 32 GB variant there is no free region at all (userdata fills the disk). The installer then offers
-# to shrink userdata to make one - EXPERIMENTAL, it rewrites the partition table and erases everything in
-# Android, so take a full backup with tools/backup-device.sh first. Android's own recovery resets Android's data
-# (that is what works with its encryption), and the installation resumes on the next run of this installer, once
-# Android is set up again with USB debugging and root (tools/resume.sh; a transaction in ~/mu300-backups):
+# to shrink userdata to make one - EXPERIMENTAL, it rewrites the partition table. Two ways (MU300_ANS_MAKE_ROOM_METHOD):
+# keep - Android keeps its data: its F2FS is shrunk while it runs, by its own kernel, then the table is written and
+# Android restarts once (dikeckaan's method, kanoqwq's implementation; offered where /data is an F2FS on all of
+# userdata); reset - the table is written and Android's own recovery resets Android, erasing everything in it (that
+# works with any encryption). Take a full backup with tools/backup-device.sh first. The installation resumes on the
+# next run of this installer (by itself after keep, in a terminal), once Android is up again with USB debugging and
+# root (tools/resume.sh; a transaction in ~/mu300-backups):
 #   ./install.sh --resume        continue the prepared installation, or stop when there is none for this device
 #   ./install.sh --no-resume     install as if nothing had been prepared (MU300_RESUME=0)
 #   ./install.sh --transaction FILE   that transaction, not the newest one for the device (MU300_TRANSACTION)
@@ -31,9 +34,11 @@
 #   MU300_ANS_UNKNOWN_MODEL=yes|no         this is no F50 or U30 Air: continue anyway
 #   MU300_STORAGE=internal|sd              with an SD card: where the Linux filesystem goes
 #   MU300_ANS_INTERNAL_OVER_CARD=internal  internal storage although the card holds an installation
-#   MU300_ANS_MAKE_ROOM=yes|no             no free space: shrink userdata (erases Android's data), then
+#   MU300_ANS_MAKE_ROOM=yes|no             no free space: shrink userdata, then
+#   MU300_ANS_MAKE_ROOM_METHOD=keep|reset    keep Android's data (asked only where that is possible) or reset it,
 #   MU300_ANS_LINUX_GIB=<number>             how many GiB for Linux,
-#   MU300_ANS_ERASE_ANDROID=ERASE            the word that allows it, and
+#   MU300_ANS_SHRINK=yes|no                  with keep: shrink now,
+#   MU300_ANS_ERASE_ANDROID=ERASE            with reset: the word that allows it, and
 #   MU300_ANS_REBOOT=yes|no                  reboot afterwards
 #   MU300_ANS_OVERWRITE=overwrite          the free space holds data: use it anyway
 #   MU300_ANS_BETA=yes|no                  a beta is out: install it (MU300_RELEASE=<tag> names the release instead)
@@ -491,6 +496,11 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
     [ "$UD_START" = "$LAST_FIRST" ] && [ $((UD_START + UD_SIZE - 1)) = "$LAST_END" ] ||
         die "$(t 'the partition table and the running kernel disagree about userdata; reboot Android and try again')"
     info makeroom.crypto "$CRYPTO"; info makeroom.crypto_state "$CRYPTO_STATE"; info makeroom.crypto_type "$CRYPTO_TYPE"
+    # the online way: can Android keep its data? (read only; tools/resume.sh online_inspect)
+    online_inspect
+    info makeroom.online "$ONLINE"
+    [ -z "$ONLINE_REASON" ] || info makeroom.online_reason "$ONLINE_REASON"
+    [ "$ONLINE" != yes ] || info makeroom.android_used "$ON_USED"
 
     echo
     echo "  eMMC:                 $(gib $((disk * 512)))"
@@ -504,25 +514,41 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
     echo "  $(t 'Linux needs at least  {1} (OpenWrt) / 1.6 GiB (Ubuntu) / 2.4 GiB (both)' "$(gib $((MIN_LINUX * 512)))")"
     echo "  $(t 'Android keeps at least {1}' "$(gib $((MIN_ANDROID * 512)))")"
     echo
-    echo "  $(t 'THIS IS EXPERIMENTAL. It rewrites the partition table and ERASES everything in Android -')"
-    echo "  $(t 'apps, photos, accounts, settings. Take a full backup first:  sh tools/backup-device.sh')"
+    echo "  $(t 'THIS IS EXPERIMENTAL. It rewrites the partition table. Take a full backup first:  sh tools/backup-device.sh')"
     echo "  $(t 'Only userdata changes size; it is the last partition, so nothing else moves.')"
-    echo "  $(t "Android's own recovery erases Android's data: the device restarts into it, resets Android (a factory")"
-    echo "  $(t 'reset) and starts Android again, which takes a few minutes and more than one restart. Then set Android up')"
-    echo "  $(t 'again, turn USB debugging back on and bring root back (Magisk: install the Magisk app again and let')"
-    echo "  $(t 'Shell have root), and run this installer again: it finds what was prepared and continues.')"
-    echo "  $(t 'What was prepared, and a backup of the partition table, misc, boot and the boot chain, are kept on this')"
-    echo "  $(t 'computer in {1} - the reset erases everything of it on the device.' "$BACKUP_DIR")"
+    echo "  $(t 'Two ways:')"
+    if [ "$ONLINE" = yes ]; then
+        echo "    keep   $(t "Android keeps its data (apps, files, accounts, settings): its filesystem is shrunk while Android runs,")"
+        echo "           $(t "by Android's own kernel, then the partition table is written and Android restarts once. {1} of it is" "$(gib "$ON_USED")")"
+        echo "           $(t 'in use now. Method: dikeckaan; implementation: kanoqwq.')"
+    else
+        echo "    keep   $(t "not possible on this device: {1}" "$ONLINE_REASON")"
+    fi
+    echo "    reset  $(t "ERASES everything in Android: Android's own recovery resets it (a factory reset, a few minutes and")"
+    echo "           $(t 'more than one restart). Then set Android up again, turn USB debugging back on and bring root back')"
+    echo "           $(t '(Magisk: install the Magisk app again and let Shell have root), and run this installer again.')"
+    echo "  $(t 'Either way the installation continues where it was prepared. What was prepared, and a backup of the partition')"
+    echo "  $(t 'table, misc, boot and the boot chain, are kept on this computer in {1}.' "$BACKUP_DIR")"
     echo
     if [ $CHECK_ONLY = 1 ]; then
         echo "  $(t '--check writes nothing. Run the installer without it to make room.')"
         progress done result ok
         exit 0
     fi
-    # kano's rule: an encryption state that cannot be told is no ground to stand on
-    [ "$CRYPTO" != unknown ] || die "$(t "Android's encryption state is unknown ({1}); nothing is changed." "${CRYPTO_STATE:-?}/${CRYPTO_TYPE:-?}")"
+    # kano's rule for the reset: an encryption state that cannot be told is no ground to stand on
+    [ "$ONLINE" = yes ] || [ "$CRYPTO" != unknown ] || die "$(t "Android's encryption state is unknown ({1}); nothing is changed." "${CRYPTO_STATE:-?}/${CRYPTO_TYPE:-?}")"
     ask go "$(t 'Make room by shrinking userdata? (yes/no)')" no MU300_ANS_MAKE_ROOM
     [ "$go" = yes ] || die "$(t 'nothing was changed.')"
+    METHOD=reset
+    if [ "$ONLINE" = yes ]; then
+        while :; do
+            ask METHOD "$(t 'keep or reset')" keep MU300_ANS_MAKE_ROOM_METHOD
+            case $METHOD in keep|reset) break ;; esac
+            echo "  $(t 'keep or reset')"
+        done
+    fi
+    info makeroom.method "$METHOD"
+    [ "$METHOD" = keep ] || [ "$CRYPTO" != unknown ] || die "$(t "Android's encryption state is unknown ({1}); nothing is changed." "${CRYPTO_STATE:-?}/${CRYPTO_TYPE:-?}")"
 
     while :; do
         ask lin "$(t 'How many GiB for Linux? (the rest stays with Android)')" 4 MU300_ANS_LINUX_GIB
@@ -541,6 +567,8 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
             echo "  $(t 'too small: Linux needs at least {1}' "$(gib $((MIN_LINUX * 512)))")"
         elif [ "$lin_s" -gt $max_linux ] || [ $((new_end - LAST_FIRST + 1)) -lt $MIN_ANDROID ]; then
             echo "  $(t 'too large: Android would be left with less than {1}' "$(gib $((MIN_ANDROID * 512)))")"
+        elif [ "$METHOD" = keep ] && ! online_target $((new_end - LAST_FIRST + 1)); then
+            echo "  $(t 'too large: {1}' "$ON_WHY")"
         else
             break
         fi
@@ -549,8 +577,15 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
     echo "  $(t 'userdata (Android):   {1}' "$(gib $(( (new_end - LAST_FIRST + 1) * 512 )))")"
     echo "  $(t 'Linux region:         {1}' "$(gib $(( (RG_END - RG_START) * 512 )))")"
     echo
-    ask sure "$(t "Type ERASE to rewrite the partition table and wipe Android's data")" "" MU300_ANS_ERASE_ANDROID
-    [ "$sure" = ERASE ] || die "$(t 'nothing was changed.')"
+    if [ "$METHOD" = keep ]; then
+        echo "  $(t "Android's data:       {1} in use, kept; its filesystem becomes {2}" "$(gib "$ON_USED")" "$(gib $((ON_TARGET * 4096)))")"
+        echo
+        ask sure "$(t "Shrink userdata now, keeping Android's data? (yes/no)")" no MU300_ANS_SHRINK
+        [ "$sure" = yes ] || die "$(t 'nothing was changed.')"
+    else
+        ask sure "$(t "Type ERASE to rewrite the partition table and wipe Android's data")" "" MU300_ANS_ERASE_ANDROID
+        [ "$sure" = ERASE ] || die "$(t 'nothing was changed.')"
+    fi
 
     # a backup on this computer, before anything is written (kano's backup: the table, misc, boot and the boot chain
     # of both slots, checked against the device)
@@ -559,6 +594,27 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
     say "$(t 'Backing up to {1}' "$RESUME_BD")"
     resume_backup "$RESUME_BD"
     info resume.backup "$RESUME_BD"
+    if [ "$METHOD" = keep ]; then
+        online_prepare "$new_end"
+        say "$(t 'Done - Android restarts once now, with the smaller userdata, and keeps its data')"
+        echo "  $(t 'transaction: {1}' "$RESUME_FILE")"
+        ask rb "$(t 'Reboot now? (yes/no)')" yes MU300_ANS_REBOOT
+        if [ "$rb" != yes ]; then
+            progress done result ok repartitioned yes resume pending transaction "$RESUME_FILE"
+            echo "  $(t 'Restart Android (adb reboot), then run the installer again: it continues from here.')"
+            exit 0
+        fi
+        _boot=; [ $ANSWERS_MODE = 1 ] || _boot=$(adb shell cat /proc/sys/kernel/random/boot_id </dev/null 2>/dev/null | tr -d '\r')
+        adb reboot
+        # a program that drives the installer runs it again itself (the graphical installer: Refresh); a person at a
+        # terminal is taken on to the installation once Android is up again
+        if [ $ANSWERS_MODE = 1 ] || ! online_reboot_wait "$_boot"; then
+            progress done result ok repartitioned yes resume pending transaction "$RESUME_FILE"
+            echo "  $(t 'Run the installer again once Android is up: it continues from here.')"
+            exit 0
+        fi
+        return 0
+    fi
     resume_prepare "$new_end"
 
     say "$(t 'Done - the device restarts into the reset now')"
@@ -628,6 +684,13 @@ if [ $SD_MODE = 0 ] && [ $SIZE -lt $((700 * 1024 * 1024)) ]; then
         exit 0
     fi
     offer_repartition   # exits, either by installing nothing or by rebooting for a second pass
+    # it returns only after the online way in a terminal, with Android up again: the installation goes on from the
+    # transaction it made, checked as on a second run
+    region_probe || die "$(t 'could not read the partition table from the device (is su granted? try again)')"
+    MU300_RESUME=1; export MU300_RESUME; resume_lookup
+    resume_validate
+    SD_MODE=0
+    info storage internal
 fi
 region_find_existing || die "$(t 'no answer from the device')"
 # what the partition holds is known now: another ext4 in it is not this installer's to format

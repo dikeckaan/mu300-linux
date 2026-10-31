@@ -297,10 +297,11 @@ class Controller:
         self._tell('run')
         return ok
 
-    def make_room(self, gib, word, reboot=True):
+    def make_room(self, gib, word, reboot=True, method=None):
         if not self._ready_android():
             return False
-        a = make_room_answers(language(), self.serial, gib, word, reboot)
+        self.room_method = method or 'reset'
+        a = make_room_answers(language(), self.serial, gib, word, reboot, method)
         ok = self._begin('makeroom', 'install', [], MAKEROOM_STEPS, answers_=a)
         self._tell('run')
         return ok

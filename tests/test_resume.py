@@ -535,6 +535,217 @@ class FromAnUnpackedZip(ResetAndResume):
         locals()[_n] = None
     del _n
 
+KEEP = dict(MU300_ANS_MAKE_ROOM='yes', MU300_ANS_MAKE_ROOM_METHOD='keep', MU300_ANS_LINUX_GIB='4', MU300_ANS_SHRINK='yes',
+            MU300_ANS_REBOOT='yes')
+
+
+class OnlineShrink(ResetAndResume):
+    """The online way (method keep): dikeckaan's method, kanoqwq's implementation. install.sh on the fake eMMC with
+    tests/fakeonline.py in place of the device script: the transaction, the worker's table and F2FS, the token, the
+    restart instead of a reset, the run that continues, and every interruption that the next run picks up. The
+    device script and mu300-f2fs-online themselves run for real in tests/online-shrink-e2e.sh."""
+
+    def setUp(self):
+        super().setUp()
+        self.wrapper = self.tmp / 'fake-online.sh'
+        self.wrapper.write_text('#!/bin/sh\nexec "%s" "%s" "$@"\n' % (sys.executable, TOP / 'tests/fakeonline.py'))
+
+    def inst(self, shell, answers, *args, **env):
+        env.setdefault('MU300_ONLINE_SH', str(self.wrapper))
+        env.setdefault('MU300_ONLINE_POLL', '0')
+        env.setdefault('MU300_ONLINE_LOST_TRIES', '3')
+        return super().inst(shell, answers, *args, **env)
+
+    def knobs(self, **kw):
+        (self.emmc / 'online.json').write_text(json.dumps(kw))
+
+    def fresh(self):
+        shutil.rmtree(self.emmc); self.emmc = fakeemmc.make(self.tmp / 'emmc')
+        shutil.rmtree(self.backups, ignore_errors=True)
+
+    def keep(self, shell, **answers):
+        self.device(pull=True)
+        before, misc = fakeemmc.table(self.emmc), fakeemmc.bcb(self.emmc)
+        blocks = fakeemmc.f2fs_blocks(self.emmc)
+        r, ev, facts = self.inst(shell, dict(KEEP, **answers))
+        return r, ev, facts, before, misc, blocks
+
+    def test_android_keeps_its_data_and_the_installation_continues_after_a_restart(self):
+        for shell in self.each_shell():
+            self.fresh()
+            r, ev, facts, before, misc, blocks = self.keep(shell)
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:] + r.stderr)
+            self.assertEqual((facts['makeroom.online'], facts['makeroom.method']), ('yes', 'keep'))
+            self.assertEqual((ev[-1]['event'], ev[-1]['repartitioned'], ev[-1]['resume']), ('done', 'yes', 'pending'))
+            asked = [e['id'] for e in ev if e['event'] == 'question']
+            self.assertNotIn('MU300_ANS_ERASE_ANDROID', asked)
+            rec = json.loads(Path(ev[-1]['transaction']).read_text())
+            self.assertEqual((rec['state'], rec['method']), ('prepared', 'online'))
+            # only userdata's end moved; the F2FS is at its target, a whole number of sections inside it, and more
+            # than 2 GiB above what is used (kano's margin)
+            after = fakeemmc.table(self.emmc)
+            self.assertTrue(tables_equal_but_userdata(before, after))
+            ud = [p for p in after if p[0] == 'userdata'][0]
+            self.assertEqual(rec['target'], ud[2] - ud[1] + 1)
+            self.assertEqual(fakeemmc.f2fs_blocks(self.emmc), rec['fs_target'])
+            self.assertEqual(rec['fs_blocks'], blocks)
+            self.assertEqual(rec['fs_target'] % 512, 0)
+            self.assertLessEqual(rec['fs_target'] * 8, rec['target'])
+            self.assertGreater(rec['fs_target'] * 4096, (1 << 30) + (2 << 30))
+            # the token, and misc exactly as it was: no reset is asked for
+            self.assertEqual(fakeemmc.read(self.emmc, rec['region_start'], 8), resume.marker(rec['token']))
+            self.assertEqual(fakeemmc.bcb(self.emmc), misc)
+            self.assertEqual(self.calls('reboot')[0]['argv'], ['reboot'])
+            # the host wrote the token only (the worker wrote the table, checked against both tables it was given)
+            self.assertEqual([c for c in self.writes() if 'of=/dev/block/' in c and 'mu300-marker.bin' not in c], [])
+            # the backup: the tables before and after, with the rest
+            bd = Path(rec['backup'])
+            names = sorted(l.split('  ')[1] for l in (bd / 'SHA256SUMS').read_text().splitlines())
+            self.assertIn('gpt-new.head', names); self.assertIn('boot_a.img', names)
+            # Android has not restarted yet: the kernel still has the old table
+            self.device(pull='noboot')
+            r, ev, facts = self.inst(shell, INSTALL)
+            self.assertEqual(r.returncode, 1)
+            self.assertIn('has not restarted since userdata was shrunk', ev[-1]['message'])
+            self.assertEqual(self.writes(), [])
+            # the restart: nothing is reset, the kernel reads the new table; the installation continues
+            fakeemmc.reset(self.emmc, wipe=False)
+            self.device(pull='noboot')
+            r, ev, facts = self.inst(shell, INSTALL)
+            self.assertEqual((facts['resume.check'], facts['verdict.code'], facts['storage']), ('RESUME-OK', 'resume', 'internal'),
+                             r.stdout[-3000:])
+            self.assertIn('could not read /dev/block/by-name/boot_a', ev[-1]['message'])
+            self.assertEqual(self.writes(), [])
+            # an F2FS that is not the one shrunk, or not at its size, is not continued
+            raw = bytearray((self.emmc / 'dev/block/dm-6').read_bytes()); raw[1024 + 108] ^= 1
+            (self.emmc / 'dev/block/dm-6').write_bytes(bytes(raw))
+            self.device(pull='noboot')
+            r, ev, facts = self.inst(shell, INSTALL)
+            self.assertIn('not the filesystem that was shrunk', ev[-1]['message'])
+            self.assertEqual(self.writes(), [])
+
+    def test_a_kernel_that_refuses_changes_nothing(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.knobs(probe='refused')
+            r, ev, facts, before, misc, blocks = self.keep(shell)
+            self.assertEqual(r.returncode, 1)
+            self.assertIn('does not shrink this F2FS while it is mounted (errno 95)', ev[-1]['message'])
+            self.assertIn('answer reset', ev[-1]['message'])
+            self.assertEqual((fakeemmc.table(self.emmc), fakeemmc.bcb(self.emmc), fakeemmc.f2fs_blocks(self.emmc)), (before, misc, blocks))
+            self.assertEqual(self.writes(), [])
+            tx = next(self.backups.glob('*/transaction.json'))
+            self.assertEqual(json.loads(tx.read_text())['state'], 'declined')
+            # a declined transaction is not one to continue: the next run plans anew
+            self.knobs()
+            self.device(pull=True)
+            r, ev, facts = self.inst(shell, KEEP)
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:])
+            self.assertNotIn('resume.transaction', [k for k in facts if facts[k] == str(tx)])
+
+    def test_an_interrupted_shrink_is_finished_by_the_next_run(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.knobs(stop='shrunk')
+            r, ev, facts, before, misc, blocks = self.keep(shell)
+            self.assertEqual(r.returncode, 1)
+            self.assertIn('Do not restart or power off the device', ev[-1]['message'])
+            tx = next(self.backups.glob('*/transaction.json'))
+            rec = json.loads(tx.read_text())
+            self.assertEqual(rec['state'], 'prepared-request')
+            self.assertEqual(fakeemmc.table(self.emmc), before)              # the table: not yet
+            self.assertEqual(fakeemmc.f2fs_blocks(self.emmc), rec['fs_target'])
+            # --check says so and writes nothing
+            self.knobs()
+            self.device(pull=True)
+            r, ev, facts = self.inst(shell, {}, '--check')
+            self.assertIn('did not finish', r.stdout)
+            self.assertEqual(self.writes(), [])
+            # the next run finds the shrunk F2FS behind the old table, commits the table and asks for the restart
+            r, ev, facts = self.inst(shell, dict(INSTALL, MU300_ANS_REBOOT='yes'))
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:])
+            self.assertEqual(facts['online.state'], 'STATE=shrunk')
+            self.assertEqual(json.loads(tx.read_text())['state'], 'prepared')
+            ud = [p for p in fakeemmc.table(self.emmc) if p[0] == 'userdata'][0]
+            self.assertEqual(ud[2] - ud[1] + 1, rec['target'])
+            self.assertEqual(fakeemmc.read(self.emmc, rec['region_start'], 8), resume.marker(rec['token']))
+            fakeemmc.reset(self.emmc, wipe=False)
+            self.device(pull='noboot')
+            r, ev, facts = self.inst(shell, INSTALL)
+            self.assertEqual(facts['resume.check'], 'RESUME-OK', r.stdout[-3000:])
+
+    def test_nothing_happened_yet_puts_the_transaction_aside(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.knobs(lost=True, stop='shrunk')
+            # the worker never ran (stop before anything: the F2FS put back) and the device stopped answering
+            r, ev, facts, before, misc, blocks = self.keep(shell)
+            self.assertEqual(r.returncode, 1)
+            self.assertIn('does not answer', ev[-1]['message'])
+            tx = next(self.backups.glob('*/transaction.json'))
+            raw = bytearray((self.emmc / 'dev/block/dm-6').read_bytes())
+            import struct
+            struct.pack_into('<Q', raw, 1024 + 36, blocks); struct.pack_into('<Q', raw, 5120 + 36, blocks)
+            (self.emmc / 'dev/block/dm-6').write_bytes(bytes(raw))
+            self.knobs()
+            self.device(pull=True)
+            r, ev, facts = self.inst(shell, KEEP)
+            self.assertEqual(facts['online.state'], 'STATE=unchanged', r.stdout[-3000:])
+            self.assertEqual(json.loads(tx.read_text())['state'], 'declined')
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:])         # and room is made anew
+
+    def test_android_data_that_would_not_fit_is_refused(self):
+        for shell in self.each_shell():
+            self.fresh()
+            ud = [p for p in fakeemmc.table(self.emmc) if p[0] == 'userdata'][0]
+            self.knobs(used=(ud[2] - ud[1] + 1) * 512 - (5 << 30))
+            r, ev, facts, before, misc, blocks = self.keep(shell)
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("too large: Android's data takes", r.stdout)
+            self.assertIn('the answer in MU300_ANS_LINUX_GIB was not accepted', ev[-1]['message'])
+            self.assertEqual((fakeemmc.table(self.emmc), self.writes()), (before, []))
+
+    def test_on_a_ufs_of_4096_byte_blocks(self):
+        # issue #396's 1 TB U30 Air (sda, 4096-byte blocks): the table is 48 and 40 sectors, the worker gets the
+        # backup table's place at the disk's end - 40 sectors, and userdata's new end falls on a block
+        for shell in self.each_shell():
+            shutil.rmtree(self.emmc); self.emmc = fakeemmc.make(self.tmp / 'emmc', layout='ufs1t')
+            shutil.rmtree(self.backups, ignore_errors=True)
+            self.device(pull=True, layout='ufs1t')
+            before = fakeemmc.table(self.emmc)
+            r, ev, facts = self.inst(shell, KEEP)
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:] + r.stderr)
+            self.assertEqual(facts['makeroom.method'], 'keep')
+            rec = json.loads(Path(ev[-1]['transaction']).read_text())
+            after = fakeemmc.table(self.emmc)
+            self.assertTrue(tables_equal_but_userdata(before, after))
+            ud = [p for p in after if p[0] == 'userdata'][0]
+            self.assertEqual(((ud[2] + 1) % 8, ud[2] - ud[1] + 1), (0, rec['target']))
+            self.assertIn('start %s ' % rec['token'], ' '.join(c['cmd'] for c in self.calls()))
+            self.assertTrue(any(c['cmd'].endswith(' 40') and 'android-online-shrink.sh start' in c['cmd'] for c in self.calls()))
+            self.assertEqual(fakeemmc.f2fs_blocks(self.emmc), rec['fs_target'])
+            fakeemmc.reset(self.emmc, wipe=False)
+            self.device(pull='noboot', layout='ufs1t')
+            r, ev, facts = self.inst(shell, INSTALL)
+            self.assertEqual(facts['resume.check'], 'RESUME-OK', r.stdout[-3000:])
+
+    def test_without_the_helper_only_the_reset_is_offered(self):
+        for shell in self.each_shell():
+            self.fresh()
+            self.device(pull=True)
+            r, ev, facts = self.inst(shell, {}, '--check', MU300_F2FS_ONLINE=str(self.tmp / 'missing'))
+            self.assertEqual(facts['makeroom.online'], 'no')
+            self.assertIn('mu300-f2fs-online', facts['makeroom.online_reason'])
+            r, ev, facts = self.inst(shell, MAKE_ROOM, MU300_F2FS_ONLINE=str(self.tmp / 'missing'))
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:])
+            self.assertNotIn('MU300_ANS_MAKE_ROOM_METHOD', [e['id'] for e in ev if e['event'] == 'question'])
+            self.assertEqual(json.loads(Path(ev[-1]['transaction']).read_text()).get('method'), None)
+
+    for _n in [n for n in dir(ResetAndResume) if n.startswith('test_')]:
+        locals()[_n] = None
+    del _n
+
+
 class Static(unittest.TestCase):
     def test_marked_installed_only_after_the_boot_image_and_misc(self):
         src = (TOP / 'install.sh').read_text()

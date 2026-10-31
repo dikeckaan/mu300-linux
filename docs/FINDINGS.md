@@ -12450,3 +12450,59 @@ is not known (the counters were read only at the end).
 
 Not covered: the other rebinders (`mu300-usb-reset`, `mu300-usb` mode changes, the U30 Air's role switch) do not take
 the lock; they run on request or 25 s after boot, not in the window above.
+
+### 239. Making room without losing Android's data: userdata's F2FS shrunk while Android runs
+
+**Status: EXPERIMENTAL, offered by install.sh, install.ps1 and the graphical installer next to the reset of FINDINGS
+112 (`MU300_ANS_MAKE_ROOM_METHOD=keep|reset`); tested in tests/test_online_shrink.py, tests/online-shrink-e2e.sh (the
+real helper on a real F2FS, CI's arm64 job) and tests/test_resume.py (`OnlineShrink`); not run on a board of ours.
+Method: dikeckaan; implementation: kanoqwq (kanoqwq/mu300-linux fe52afe3, c69be3a3, dad8224b).**
+
+The make-room path of FINDINGS 112 erased everything in Android: the table was rewritten and Android's recovery
+reset it, because a filesystem cleared from outside is one an encrypted Android cannot mount. It need not be. Android's
+own kernel can shrink the mounted F2FS on `/data` (`F2FS_IOC_RESIZE_FS`): it works on the decrypted mapping, moves
+what lies past the new end, and leaves the files, the keys and the encryption alone. After that the partition table
+can say a smaller userdata, and on the next start Android maps the smaller partition and mounts the same filesystem.
+
+**How.** `tools/f2fs-online/mu300-f2fs-online` (kanoqwq's `f2fs-online.c`, a static arm64 program of 67 KB, built
+reproducibly by `build.sh`; CI rebuilds it and compares) and `tools/android-online-shrink.sh` (his eligibility checks
+in shell) on the device; `tools/resume.sh` / install.ps1 and `tools/resume.py` on the computer.
+
+* Offered only where `/data` is an F2FS on all of userdata: mounted from userdata itself, or from one device-mapper
+  node whose only slave is userdata and which covers all of it (file-based plus metadata encryption, as on the F50);
+  never with block encryption, a layered or offset mapping, or a read-only `/data`. The F2FS must be whole sections.
+* The target is whole sections, smaller than now, and keeps 2 GiB more than what is used (kano's margin).
+* The disk is the internal one of tools/storage.sh's `internal_disk` (mmcblk0, or sda on a UFS, #396), and the table
+  is read, rebuilt and committed in its logical blocks (`resize-last-partition.py --sector-size`; on 4096-byte blocks
+  the first 48 and the last 40 sectors, and the worker is given the backup table's place by that count). F2FS blocks
+  are 4096 bytes either way.
+* Before anything is written: the backup of FINDINGS 112, and a transaction with both tables (before and after) and
+  the F2FS's UUID and size, on the computer.
+* On the device everything runs from `/dev/mu300-online-TOKEN` (tmpfs), never from the userdata being resized. First
+  the kernel's ioctl at the current size, a no-op that shows it takes the ioctl at all; a kernel that refuses changes
+  nothing and the transaction is put aside. Then a detached worker (adb may drop) checks both copies of the table
+  against the old (or new) ones it was given, shrinks, reads the superblocks back, writes the backup table and then
+  the primary, each read back.
+* The computer then checks both copies and the F2FS again, writes the token of FINDINGS 112 into the region and asks
+  for a normal restart. In a terminal it waits for Android and goes on with the installation; the next run of a
+  program that drives the installer (the graphical one: Refresh) does the same, checked as every resumed run is, and
+  for this way also against the F2FS's UUID and size (Android not restarted yet: it says so).
+* An interrupted run is picked up from where the device is, never guessed: a worker that still runs is waited for;
+  the old table at the old size is nothing done (the transaction is put aside); the old table at the target size is a
+  worker that stopped between the two (it runs again and commits the table); the new table at the target size is
+  done; anything else stops, with the backups kept.
+
+**Evidence.** kanoqwq shrank an encrypted Android this way on a device of his line (64 GiB) and, on a user's F50,
+by 8 GiB, with the UUID, both superblocks and the data checked after a normal restart; his notes say the full
+installation after it and power cuts were not tested on hardware. Here: tests/online-shrink-e2e.sh runs the committed
+helper and script on Linux 7.0 against a 6 GiB loop disk with a GPT, the F2FS 40 % full and mounted through a
+device-mapper mapping (and directly), files written during the shrink; afterwards both table copies are the new
+table, the F2FS has its target and UUID, fsck.f2fs is clean and every file reads back. A read-only `/data` and a stale
+table are refused before anything changes. No board of ours was shrunk: that needs it in Android, and the test boards
+stay in Linux.
+
+**Not taken.** kano's growth of an encrypted userdata at uninstall (474e8018: a temporary Android boot image with a
+Magisk overlay that runs resize.f2fs before `/data` is mounted) - it changes Android's boot partition; our uninstall
+still offers the old growth (which erases Android's data) or leaving the space free. His backup of the metadata
+partition (encryption key material) is not made either: nothing here writes it.
+
