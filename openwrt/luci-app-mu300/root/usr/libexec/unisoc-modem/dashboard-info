@@ -354,6 +354,12 @@ fi
 ATD_OK=0; /usr/libexec/unisoc-modem/at --available >/dev/null 2>&1 && ATD_OK=1
 [ "$MODEM_ALIVE" = 1 ] || MODEM_ALIVE=$ATD_OK
 DATA_PAUSED=0; [ -e /run/mu300-mobile-data-down ] && DATA_PAUSED=1
+# What the card in use said of itself at its last check (mu300-sim-state, FINDINGS 186: AT+CPIN? when the dial began
+# and after each SIM event): absent, ready or locked, null when it has not been asked this boot. A file in /run, no
+# AT command. The home page says "No SIM card" by it instead of "Radio off" (kanoqwq's fe52afe3: with no card the
+# radio is off as well, and the page used to name the radio instead of the missing card).
+SIM_STATE=$(head -c 16 "${MU300_SIM_STATE_DIR:-/run/mu300}/sim$SIM_SLOT.state" 2>/dev/null | tr -cd 'a-z')
+case $SIM_STATE in absent|ready|locked) SIM_STATE="\"$SIM_STATE\"" ;; *) SIM_STATE=null ;; esac
 # Tracked connections: the kernel's counter needs no CONFIG_NF_CONNTRACK_PROCFS (the mainline kernel has no
 # /proc/net/nf_conntrack); the table is the fallback; neither readable is unknown (null), never a made-up 0. The
 # counter is read with cat in one go: a sysctl file may answer a second short read with EOF. Based on
@@ -488,7 +494,7 @@ printf '"wan":{"up":%d,"uptime":%s,"proto":%s,"apn":%s,"ip4":%s,"ip6":%s,"dns":%
 printf '"wifi":{"up":%d,"ssid":%s,"channel":%s,"band":%s,"width":%s,"country":%s,"enc":%s,"hidden":%s,"hostapd":%d,"clients":[%s],"clients_n":%d},' \
     "$W_UP" "$(qs "$W_SSID")" "$(qs "$W_CH")" "$(qs "$W_BAND")" "$(qs "$W_WIDTH")" "$(qs "$W_COUNTRY")" "$(qs "$W_ENC")" "$(n_or_null "$W_HIDDEN")" "$W_HOSTAPD" "${W_CLIST:-}" "$W_CN"
 printf '"lan":{"leases":%s,"ip":%s,"list":[%s]},' "$(n_or_null "$LAN_LEASES")" "$(qs "$LAN_IP")" "${LEASES:-}"
-printf '"modem":{"alive":%d,"atd":%d,"data_paused":%d},' "$MODEM_ALIVE" "$ATD_OK" "$DATA_PAUSED"
+printf '"modem":{"alive":%d,"atd":%d,"data_paused":%d,"sim_state":%s},' "$MODEM_ALIVE" "$ATD_OK" "$DATA_PAUSED" "$SIM_STATE"
 printf '"capabilities":{"vpn":%d,"dualboot":%d,"bootlock":%d},' "$CAP_VPN" "$CAP_DUALBOOT" "$BOOT_LOCK"
 printf '"update":%s,' "$(qs "$UPDATE_TAG")"
 printf '"conns":%s,' "$(n_or_null "$CONNS")"

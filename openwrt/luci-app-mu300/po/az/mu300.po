@@ -4333,3 +4333,15 @@ msgstr "Bu fayl quraşdırılmış olandan köhnədir: bunun üçün təsdiq laz
 
 msgid "The release source was not changed"
 msgstr "Buraxılış mənbəyi dəyişdirilmədi"
+
+msgid "No SIM card"
+msgstr "SIM kart yoxdur"
+
+msgid "Roaming now"
+msgstr "İndi rouminqdə"
+
+msgid "Home network"
+msgstr "Ev şəbəkəsi"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "Modem kanalları başqa oxumalarla məşğuldur; canlı siqnal tezliklə gələcək"

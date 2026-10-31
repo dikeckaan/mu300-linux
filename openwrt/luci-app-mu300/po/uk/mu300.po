@@ -4333,3 +4333,15 @@ msgstr "Цей файл старіший за встановлене: потрі
 
 msgid "The release source was not changed"
 msgstr "Джерело випуску не змінено"
+
+msgid "No SIM card"
+msgstr "Немає SIM-картки"
+
+msgid "Roaming now"
+msgstr "Зараз у роумінгу"
+
+msgid "Home network"
+msgstr "Домашня мережа"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "Канали модема зайняті іншими зчитуваннями; живий сигнал з'явиться незабаром"

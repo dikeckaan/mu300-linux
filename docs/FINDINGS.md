@@ -12532,3 +12532,67 @@ with the switch, `up` and the good request; `mark-good` writes `up`; the switch 
   trap removed the lock and the loop went on (it took a KILL); the new one exited, and procd started it again.
   `mu300-hw`, a reboot with the hotspot on: "no restart" (the country, TR, live), the access point up, the VPN up.
 - Not tried on a board: keep-good across a real power cut (it needs the initramfs of this branch and an offset).
+
+### 241. The IPA delegate says when its channel is open; the dashboard says "No SIM card" and whether it roams
+
+**Status: the delegate part checked by kanoqwq on a U30 Air (7.2.8) and here on a U30 Air (OpenWrt, 6.18.59); the
+dashboard parts here on the same U30 Air, "No SIM card" offline only.** From his `0043a5d8`, `c84da8ba`, `fe52afe3` and `b9f71e72`,
+taken into this tree's code.
+
+- **sipa_dele has a readiness interface** (`0043a5d8`). The delegate module now keeps a channel status (0 handshake
+  pending, 1 open, negative: the open failed) and shows it in sysfs next to `sipa_dele_reset`:
+  `/sys/bus/platform/drivers/sipa_delegate/*/sipa_dele_ready` (the number) and `sipa_dele_wait`, whose read waits on a
+  kernel wait queue until the status is not 0: `1` at once when the channel is open, `-ETIMEDOUT` after 3 s, the open's
+  error, `-EAGAIN` for a channel that closed in between. The status goes to 1 on the first OPEN and on every later one,
+  to 0 on a CLOSE or a receive that says the channel is FREE/gone (`-EIO`/`-ENODEV`); other receive errors leave it.
+  Two fixes in the same place: the connection thread is woken only after the resource graph and its callback are in
+  place (it was woken first, so a request from the CP could arrive before there was anything to take it), and a failed
+  start now frees what init made (the thread was left parked, the delegator allocated, sysfs registered after
+  success only).
+- **sipa-dele-start asks it.** After `insmod` it reads `sipa_dele_wait` instead of looking for `channel 5-120 send
+  open msg` in dmesg (that line only said the OPEN was sent): not open, exit 1, and mobile-data makes no PDP context
+  this round. mobile-data now also calls it when the module is already loaded (a reconnect), and there it only asks:
+  no wait for the packet domain, no insmod. A module without the file (an older build, the 5.4 vendor one), or more
+  than one such device, cannot say: exit 0 as before, so an image with an older module never stays off the network
+  for it (bootability over lockdown). His `SPACTCARD` prefix on the `AT+CGATT?` probe is not needed here: ours already
+  asks the selected card's own channel (`mu300-sim active`).
+- **The dashboard says "No SIM card"** (`fe52afe3`). With no card the radio is off too, and the page said "Radio off".
+  dashboard-info now reports `modem.sim_state`, the card in use's last word on itself (mu300-sim-state's
+  `/run/mu300/sim<slot>.state`, FINDINGS 186; a file, no AT command): `absent`, `ready`, `locked` or null. Absent: the
+  network and registration rows say "No SIM card", and what belongs to a card is dropped from the shown snapshot (the
+  identity cache may still hold the last card's IMSI, ICCID and number; operator, cells and signal go too). The IMEIs,
+  model, firmware and the CFUN stay. null (not asked this boot) is never taken for absent.
+- **Whether the card roams now** (`c84da8ba`). The data roaming row shows the setting (FINDINGS 120) and now the
+  network's word after it: "Roaming now" (stat 5 or 10 on the 5G or the LTE registration) or "Home network" (1 or 9);
+  nothing when neither says. Both registrations are asked: on 5G SA the LTE one may be empty while the 5G one roams.
+  The registration row also names a 5G roaming registration. His two IMEI rows with the "in use" badge were already
+  here (FINDINGS 221).
+- **The locks page's live signal: busy is not a failure** (`b9f71e72`). When both dashboard channels are taken by
+  other readings (the home page, a second browser), `cell` exits 75 and `mu300dash signal` answers
+  `{"busy":1,...}`; the page keeps its last reading and does not back off. Any other failure is shown as before.
+
+Not taken: his dual-standby switch and single-standby policy (`0043a5d8`: in this tree only the card in use has a live
+stack, FINDINGS 185, so single standby is how it already runs); his `AT+SFUN=2` presence preflight for the U30 Air
+(it lives in his dual-stack `mu300-dual-radio`; mu300-sim-state never asks the card that is not in use); the 152
+default for automatic mode (here "Automatic" stays the modem's 134, 152 is the explicit "Automatic without 2G",
+FINDINGS 198); the auto-mode ACL fix (`82c01b9e`: no page here writes uci over rpc); the voice receipt fix (`500e5ea4`,
+see FINDINGS 210); the SMS pool resolver, list column and LF fixes (`edcdeb27`, `fe52afe3`: one pool here, FINDINGS
+210, and our encoder takes the text from the environment, so a newline is encoded, not a line break); his battery
+summary in amperes (`b9f71e72`: our tile shows the direction, watts, volts and the USB input); his `ubus_rpc_session`
+argument (his native modemd; ours is an rpcd shell backend); the VPN removal in `fe52afe3`.
+
+`tests/test_device_scripts.py` (`SipaDele`: the readiness of a loaded and a freshly loaded delegate; `MobileData`: a
+loaded delegate is asked), `tests/test_dashboard_info.py` (`sim_state`, `SimAbsent`, `RoamingNow`),
+`tests/test_mu300dash_security.py` (the busy signal reply).
+**Checked here** (U30 Air, OpenWrt 25.12.6, 6.18.59, SIM in, VPN on): the module built from this tree, a reboot:
+the loader logged "packet domain attached", "loaded sipa-dele", "delegate channel and resource callbacks ready",
+`sipa_dele_ready` read 1, data through the VPN (HTTP 204), no oops. `ifdown wan; ifup wan`: the ready check passed
+(`/tmp/mu300-sipa-dele-ready.log`) and data came back. The vendor DT's "get resource failed for remote-base" / "dts
+parsing failed" line is in the boot log with the old module as well. Dashboard: `sim_state` "ready", "absent" from a
+state file given by hand; the data roaming row read "Allowed · Home network"; with every dashboard channel held,
+`mu300dash signal` answered busy. Everything was put back afterwards. Not checked on a board: the page with a card
+taken out, and an F50.
+**Device check before merge (still open):** a mainline board with the rebuilt `sipa-dele.ko`: `cat .../sipa_dele_ready` reads 1
+after the dial, `/tmp/mu300-sipa-dele.log` says "delegate channel and resource callbacks ready", data flows; `ifdown
+wan; ifup wan` passes the ready check (`/tmp/mu300-sipa-dele-ready.log`). The dashboard of a board with its card taken
+out (or an empty slot selected) says "No SIM card", the IMEIs stay.

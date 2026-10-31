@@ -4333,3 +4333,15 @@ msgstr "Tệp này cũ hơn bản đã cài: cần xác nhận"
 
 msgid "The release source was not changed"
 msgstr "Nguồn phát hành không được thay đổi"
+
+msgid "No SIM card"
+msgstr "Không có thẻ SIM"
+
+msgid "Roaming now"
+msgstr "Đang chuyển vùng"
+
+msgid "Home network"
+msgstr "Mạng nhà"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "Các kênh modem đang bận với các lần đọc khác; tín hiệu trực tiếp sẽ có ngay"

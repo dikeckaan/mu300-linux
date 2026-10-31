@@ -233,7 +233,9 @@ for n in $DASH_CHANNELS; do
         if mkdir "$s" 2>/dev/null; then SLOT=$s; ATC=$channel_dir; break; fi
     fi
 done
-[ -n "$SLOT" ] || exit 0
+# exit 75 (EX_TEMPFAIL): both taken - mu300dash's live signal read answers "busy" then, not a failure (the page keeps
+# the reading it has; kanoqwq's b9f71e72). The background refreshes do not look at the status.
+[ -n "$SLOT" ] || exit 75
 echo $$ > "$SLOT/pid"
 trap 'rm -rf "$LOCK" "$SLOT" 2>/dev/null' EXIT INT TERM
 

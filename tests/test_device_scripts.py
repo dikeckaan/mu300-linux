@@ -932,6 +932,7 @@ at() {
         text = text.replace('/opt/mu300/bin/sipa-dele-start', 'sipa-dele-start')
         text = text.replace('/proc/modules', f'{self.tmp}/proc-modules')
         text = text.replace('/tmp/mu300-sipa-dele.log', f'{self.tmp}/sipa-dele.log')
+        text = text.replace('/tmp/mu300-sipa-dele-ready.log', f'{self.tmp}/sipa-dele-ready.log')
         # R35: /lib/modules is the scratch directory's lib-modules, where this kernel has sipa-dele.ko unless a test
         # removes it; bootmark is a stub that appends its mark to $STUBLOG/marks
         text = text.replace('/lib/modules/', f'{self.tmp}/lib-modules/')
@@ -1025,7 +1026,7 @@ at() {
     def test_sipa_dele_between_registration_and_cgact(self):
         """K47: the IPA delegate is loaded by the dial itself, after the registration and before the PDP context
         (AT+CGACT=1), with a 20 s wait; when it does not load, the dial stops there and activates nothing; once it
-        is loaded, a later dial does not call the loader again."""
+        is loaded, a later dial only asks it whether the delegate's channel is open."""
         env = dict(MU300_NETIFD=1, MU300_AT_DEV='/dev/null', MU300_URC_LOG=self.tmp / 'none', MU300_CFUN_WAIT=0,
                    CEREG='+CEREG: 2,1,"1A2B","0123ABCD",7')
         r, sent = self.lib('up_locked', **env)
@@ -1047,13 +1048,19 @@ at() {
         self.assertNotIn('IP=', r.stdout)
         self.assertIn('IPA delegate', r.stderr)
         self.assertIn('IPA delegate', (self.tmp / 'run' / 'mu300' / 'radio.log').read_text())
-        # already in /proc/modules (a reconnect): straight on to the context, the loader is not called
+        # already in /proc/modules (a reconnect): the loader is asked only whether the delegate's channel is open
+        # (kanoqwq's 0043a5d8; no wait for the packet domain): open, on to the context; not open, no context
         (self.tmp / 'proc-modules').write_text('sipa_dele 16384 0 - Live 0x0000000000000000 (O)\n')
-        r, sent = self.lib('up_locked', DELE_RC=1, **env)
+        r, sent = self.lib('up_locked', **env)
         cmds = [s.split(' ', 1)[1] for s in sent]
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertFalse([c for c in cmds if c.startswith('sipa-dele-start')], cmds)
+        self.assertEqual([c for c in cmds if c.startswith('sipa-dele-start')], ['sipa-dele-start wait='], cmds)
         self.assertIn('AT+CGACT=1,1', cmds)
+        r, sent = self.lib('up_locked', DELE_RC=1, **env)
+        cmds = [s.split(' ', 1)[1] for s in sent]
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertFalse([c for c in cmds if c.startswith('AT+CGACT')], cmds)
+        self.assertIn('not ready', r.stderr)
 
     def test_up_applies_the_ttl(self):
         """Every bring-up (netifd, the watchdog's reconnect) re-applies mu300-ttl's rule: the tc backend's filters
@@ -2831,6 +2838,50 @@ class SipaDele(ShellTest):
             r, calls = self.run_script(shell, 'sipa-dele-start', MU300_DELE_WAIT=20)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertNotIn('insmod', calls)
+
+
+    def delegate(self, *states):
+        """sysfs of the delegate's platform device(s), each with sipa_dele_wait holding STATE (None: no file)"""
+        root = self.tmp / 'sysfs'
+        shutil.rmtree(root, ignore_errors=True)
+        root.mkdir()
+        for n, state in enumerate(states):
+            d = root / f'dev{n}'
+            d.mkdir()
+            if state is not None:
+                (d / 'sipa_dele_wait').write_text(state)
+                (d / 'sipa_dele_ready').write_text('1\n' if state == '1\n' else '0\n')
+        return root
+
+    def test_readiness_of_a_loaded_delegate(self):
+        """kanoqwq's 0043a5d8: a loaded module built from this tree says whether its channel to the CP is open
+        (sipa_dele_wait reads 1 once it is): open, exit 0; not open (an error or anything but 1), exit 1 and the
+        dial makes no context. A module without that file (an older one, the 5.4 vendor one), or more than one
+        device: exit 0 as before. Nothing is inserted and the modem is not asked."""
+        loaded = 'sipa_dele 16384 0 - Live 0x0 (O)\n'
+        (self.mods / 'sipa-dele.ko').write_text('')
+        for shell in self.each_shell():
+            for states, rc, said in ((('1\n',), 0, 'ready'), (('0\n',), 1, 'not done'), (('',), 1, 'not done'),
+                                     ((None,), 0, 'already loaded'), ((), 0, 'already loaded'),
+                                     (('1\n', '1\n'), 0, 'already loaded')):
+                r, calls = self.run_script(shell, 'sipa-dele-start', loaded, MU300_DELE_WAIT=20,
+                                           MU300_DELE_SYSFS=self.delegate(*states))
+                self.assertEqual(r.returncode, rc, (states, r.stdout, r.stderr))
+                self.assertIn(said, r.stdout, states)
+                self.assertEqual(calls, '', states)
+
+    def test_freshly_loaded_delegate_must_say_ready(self):
+        """After insmod, a module with the readiness file decides: not ready, exit 1 (the next dial asks again);
+        ready, exit 0. Without the file the old dmesg look stands and the exit is 0."""
+        (self.mods / 'sipa-dele.ko').write_text('')
+        for shell in self.each_shell():
+            for states, rc in ((('1\n',), 0), (('0\n',), 1), ((), 0)):
+                r, calls = self.run_script(shell, 'sipa-dele-start', MU300_DELE_WAIT=20,
+                                           MU300_DELE_SYSFS=self.delegate(*states))
+                self.assertEqual(r.returncode, rc, (states, r.stdout, r.stderr))
+                self.assertIn('insmod', calls)
+                if not states:
+                    self.assertIn('channel open sent', r.stdout)
 
 
 class Bootmark(ShellTest):

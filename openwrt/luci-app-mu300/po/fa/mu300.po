@@ -4333,3 +4333,15 @@ msgstr "این فایل از نسخهٔ نصب‌شده قدیمی‌تر است
 
 msgid "The release source was not changed"
 msgstr "منبع انتشار تغییر نکرد"
+
+msgid "No SIM card"
+msgstr "سیم‌کارت وجود ندارد"
+
+msgid "Roaming now"
+msgstr "اکنون در رومینگ"
+
+msgid "Home network"
+msgstr "شبکه خانگی"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "کانال‌های مودم مشغول خواندن‌های دیگر هستند؛ سیگنال زنده به‌زودی می‌رسد"

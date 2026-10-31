@@ -31,6 +31,12 @@
 #include <linux/completion.h>
 #include "sipa_dele_priv.h"
 
+static void sipa_dele_channel_status(struct sipa_delegator *delegator, int status)
+{
+	if (atomic_xchg(&delegator->channel_status, status) != status)
+		wake_up_interruptible_all(&delegator->channel_wait);
+}
+
 static int conn_thread(void *data)
 {
 	struct smsg mrecv;
@@ -45,20 +51,30 @@ static int conn_thread(void *data)
 		       delegator->chan);
 		/* assign NULL to thread poniter as failed to open channel */
 		delegator->thread = NULL;
+		sipa_dele_channel_status(delegator, ret);
 		return ret;
 	}
 
 	/* set connect status */
 	delegator->connected = true;
 	delegator->on_open(delegator, 0, 0);
+	sipa_dele_channel_status(delegator, 1);
 
 	/* start listen the smsg events */
 	while (!kthread_should_stop()) {
 		/* monitor seblock recv smsg */
 		smsg_set(&mrecv, delegator->chan, 0, 0, 0);
 		ret = smsg_recv(delegator->dst, &mrecv, -1);
-		if (ret == -EIO || ret == -ENODEV) {
-			/* channel state is FREE */
+		if (ret < 0) {
+			if (kthread_should_stop())
+				break;
+			/* Only FREE/missing proves loss of this channel. Other read
+			 * errors must not revoke a successfully opened connection.
+			 * Never interpret an unfilled mrecv after a failed receive. */
+			if (ret == -EIO || ret == -ENODEV) {
+				delegator->connected = false;
+				sipa_dele_channel_status(delegator, 0);
+			}
 			usleep_range(5000, 10000);
 			continue;
 		}
@@ -75,6 +91,7 @@ static int conn_thread(void *data)
 			/* set connect status */
 			delegator->connected = true;
 			delegator->on_open(delegator, mrecv.flag, mrecv.value);
+			sipa_dele_channel_status(delegator, 1);
 			break;
 		case SMSG_TYPE_CLOSE:
 			/* handle channel close */
@@ -82,6 +99,7 @@ static int conn_thread(void *data)
 			/* set disconnect status */
 			delegator->connected = false;
 			delegator->on_close(delegator, mrecv.flag, mrecv.value);
+			sipa_dele_channel_status(delegator, 0);
 			break;
 		case SMSG_TYPE_CMD:
 			/* handle commads */
@@ -420,6 +438,8 @@ int sipa_delegator_init(struct sipa_delegator *delegator,
 	delegator->dst = params->dst;
 	delegator->chan = params->chan;
 	delegator->connected = false;
+	atomic_set(&delegator->channel_status, 0);
+	init_waitqueue_head(&delegator->channel_wait);
 	delegator->is_powered = true;
 	atomic_set(&delegator->requesting_cons, 0);
 	delegator->on_open = sipa_dele_on_open;
@@ -467,9 +487,6 @@ int sipa_delegator_start(struct sipa_delegator *delegator)
 	int ret;
 
 	pr_debug("prod_id:%d\n", delegator->prod_id);
-	/* start monitor thread */
-	wake_up_process(delegator->thread);
-
 	/* sipa resource manage operations */
 	rm_params.name = delegator->prod_id;
 	rm_params.floor_voltage = 0;
@@ -488,7 +505,7 @@ int sipa_delegator_start(struct sipa_delegator *delegator)
 	 * MU300: -EINPROGRESS is not a failure. When the consumer is granted already - traffic flowing before the
 	 * delegate is loaded, which is how OpenWrt boots - adding the dependency starts requesting this producer and
 	 * the grant completes later. Treating it as an error deleted PROD_CP here, cp_delegator_init() then failed
-	 * with "SIPA_RM_RES_PROD_CP does not exist", and the thread started above ran on freed memory: a NULL call
+	 * with "SIPA_RM_RES_PROD_CP does not exist", and the prematurely started thread ran on freed memory: a NULL call
 	 * from conn_thread, or a soft lockup (docs/FINDINGS.md 31f).
 	 */
 	if (ret == -EINPROGRESS)
@@ -502,6 +519,9 @@ int sipa_delegator_start(struct sipa_delegator *delegator)
 	if (ret)
 		goto del_res;
 
+	/* Install the producer graph and completion callback before CP can send
+	 * its first resource request. on_open() will flush any pending request. */
+	wake_up_process(delegator->thread);
 	return 0;
 del_res:
 	sipa_rm_delete_resource(delegator->prod_id);

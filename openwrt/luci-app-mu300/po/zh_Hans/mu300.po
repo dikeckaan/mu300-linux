@@ -4312,3 +4312,15 @@ msgstr "此文件比已安装的版本旧：需要确认"
 
 msgid "The release source was not changed"
 msgstr "发布源未更改"
+
+msgid "No SIM card"
+msgstr "未插卡"
+
+msgid "Roaming now"
+msgstr "当前漫游"
+
+msgid "Home network"
+msgstr "本地网络"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "模组通道正被其他读取占用，实时信号稍后更新"
