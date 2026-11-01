@@ -29,6 +29,8 @@ const en = {
   "lost.job": "The work on the device does not depend on this page: it goes on by itself. Connect again and the page shows where it is.",
   "lost.expected.title": "The device is restarting",
   "lost.expected": "That is what was asked for. When it is up again (about a minute), connect again. After a switch between Android and Linux the browser lists it as a new device.",
+  "lost.usb.title": "The device turned MTP off",
+  "lost.usb": "For a steady connection it offers adb alone on USB now (no MTP file transfer), until Android restarts. It is back in a few seconds as a new USB device: connect again and choose it.",
   "failure.title": "That did not work",
 
   "button.cancel": "Cancel", "button.disconnect": "Disconnect", "button.again": "Try again", "button.back": "Back", "button.next": "Next",
@@ -736,6 +738,8 @@ const tr = {
   "lost.job": "Cihazdaki iş bu sayfaya bağlı değildir: kendi kendine sürer. Yeniden bağlanın, sayfa nerede olduğunu gösterir.",
   "lost.expected.title": "Cihaz yeniden başlıyor",
   "lost.expected": "İstenen buydu. Yeniden açıldığında (yaklaşık bir dakika) tekrar bağlanın. Android ile Linux arasında geçişten sonra tarayıcı onu yeni bir cihaz olarak listeler.",
+  "lost.usb.title": "Cihaz MTP'yi kapattı",
+  "lost.usb": "Kararlı bir bağlantı için USB'de artık yalnızca adb sunuyor (MTP dosya aktarımı yok), Android yeniden başlayana kadar. Birkaç saniye içinde yeni bir USB cihazı olarak geri gelir: yeniden bağlanın ve onu seçin.",
   "failure.title": "Bu olmadı",
 
   "button.cancel": "Vazgeç", "button.disconnect": "Bağlantıyı kes", "button.again": "Yeniden dene", "button.back": "Geri", "button.next": "İleri",
@@ -1443,6 +1447,8 @@ const zh = {
   "lost.job": "设备上的工作不依赖本页面：它会自行继续。重新连接后，页面会显示进行到哪一步。",
   "lost.expected.title": "设备正在重启",
   "lost.expected": "这正是所请求的操作。等它启动完毕（约一分钟）后请重新连接。在 Android 和 Linux 之间切换后，浏览器会把它列为一台新设备。",
+  "lost.usb.title": "设备已关闭 MTP",
+  "lost.usb": "为了连接稳定，它现在在 USB 上只提供 adb（没有 MTP 文件传输），直到 Android 重启。几秒后它会作为一台新的 USB 设备回来：请重新连接并选择它。",
   "failure.title": "没有成功",
 
   "button.cancel": "取消", "button.disconnect": "断开连接", "button.again": "重试", "button.back": "上一步", "button.next": "下一步",

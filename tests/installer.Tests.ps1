@@ -268,13 +268,16 @@ Check 'no install: no probe'    $script:suCmd ''
 
 # ---- making room (issue #32): install.sh's offer_repartition, here OfferRepartition -------------------------------
 $rnames = 'Quiet', 'FreeRegion', 'GptShow', 'RepartitionPlan', 'RepartitionSectors', 'LayoutFigures', 'GptTool', 'GptDump', 'OfferRepartition',
-    'ResumePy', 'ParseFacts', 'FactsOk', 'ResumeFacts', 'ResumeBackup', 'ResumePush', 'ResumeSha', 'WriteUnix', 'ResumePending'
+    'ResumePy', 'ParseFacts', 'FactsOk', 'ResumeFacts', 'ResumeBackup', 'ResumePush', 'ResumeSha', 'WriteUnix', 'ResumePending',
+    'Gib', 'OnlineSh', 'OnlineKv', 'FileSha', 'TxGet', 'OnlineInspect', 'OnlineTarget', 'OnlineDeclined', 'OnlineWait', 'OnlineCommit'
 $rdefs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $rnames -contains $n.Name }, $true)
 foreach ($d in $rdefs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in $rnames) {
     if (-not (Get-Command $w -CommandType Function -ErrorAction SilentlyContinue)) { Write-Host "FAIL: $w not found in install.ps1"; exit 99 }
 }
 LoadLanguage 'en'
+# the internal disk as install.ps1's probe found it before the make-room path runs (an eMMC unit)
+$IDISK = 'mmcblk0'; $IPART = 'mmcblk0p'; $ILBS = 512; $GPT_HEAD = 34; $GPT_TAIL = 33
 # what the make-room path reads to identify the device, as install.ps1 sends it (the same text as tools/resume.sh's)
 $FactsCmd = [regex]::Match([IO.File]::ReadAllText((Join-Path $Top 'install.ps1')), "(?m)^\`$script:FactsCmd = '([^']*)'").Groups[1].Value
 $script:FactsCmd = $FactsCmd
@@ -285,7 +288,10 @@ $pf = ParseFacts "NODE=mmcblk0p18`r`nCID=15010053454d36344720c1a6b7d2e900`nSTART
 Check 'facts: read'             "$($pf.NODE) $($pf.START) $($pf.SIZE) $($pf.STATE) $($pf.TYPE) [$($pf.MAGIC)]" 'mmcblk0p18 12275712 109879296 encrypted file []'
 $pf.SERIAL = '324950664950'
 Check 'facts: ok'               (FactsOk $pf) $true
-foreach ($bad in @(@{ NODE = 'sda1' }, @{ NODE = 'mmcblk0p18;x' }, @{ CID = 'XYZ' }, @{ CID = ('a' * 31) }, @{ START = '' }, @{ SIZE = '1e3' }, @{ SERIAL = '' })) {
+# a UFS unit (issue #396): its partition node and the hash of its manufacturer and serial number in the CID's place
+$uf = $pf.Clone(); $uf.NODE = 'sda75'
+Check 'facts: ufs ok'           (FactsOk $uf) $true
+foreach ($bad in @(@{ NODE = 'vda1' }, @{ NODE = 'sdA1' }, @{ NODE = 'mmcblk0p18;x' }, @{ CID = 'XYZ' }, @{ CID = ('a' * 31) }, @{ START = '' }, @{ SIZE = '1e3' }, @{ SERIAL = '' })) {
     $b = $pf.Clone(); foreach ($k in $bad.Keys) { $b[$k] = $bad[$k] }
     Check "facts: refused $(@($bad.Keys) -join ',')" (FactsOk $b) $false
 }
@@ -492,6 +498,9 @@ if (-not $py) {
     $bcbFile = Join-Path $fx 'bcb.bin'
     & $py (Join-Path (Join-Path $Top 'tools') 'resume.py') bcb $bcbFile
 
+    # the online way (Android keeps its data) is not on offer here: no helper (its own checks are answers.Tests.ps1's
+    # and tests/test_resume.py's), so OnlineInspect says no without asking the device anything
+    $OnlineBin = Join-Path $fx 'no-mu300-f2fs-online'; $OnlineSh = Join-Path $fx 'no-android-online-shrink.sh'; $OnlineT = '/data/local/tmp/mu300-online'
     # -Check: the figures, no question, nothing written
     $Check = $true
     FakeDevice 'vendor64'; RunOffer @()
@@ -505,7 +514,8 @@ if (-not $py) {
     Check 'check: no question'      $script:asked.Count 0
     Check 'check: device untouched' (Untouched) $true
     Check 'check: reads the table and what identifies the device' (($script:dev.cmds -join '|')) "pull: dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null|pull: dd if=/dev/block/mmcblk0 bs=512 skip=$($D64 - 33) count=33 2>/dev/null|su: $FactsCmd"
-    Check 'check: the reset, it says' (Printed "Android's own recovery erases Android's data") $true
+    Check 'check: the reset, it says' (Printed "Android's own recovery resets it") $true
+    Check 'check: keep is not possible, it says' (Printed '^    keep   not possible on this device: this installer has no mu300-f2fs-online') $true
     Check 'check: encrypted, it says' (Printed "^  Android's data:       encrypted \(encrypted/file\)$") $true
     Check 'check: nothing unexpected' $script:dev.bad 0
 

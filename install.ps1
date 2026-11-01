@@ -74,6 +74,7 @@ $Top = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocat
 # the answers mode and the progress stream (Progress, Info, Step, AnswerNamed); an answers file sets MU300_* variables,
 # so it is read before anything looks at one
 . (Join-Path (Join-Path $Top 'tools') 'answers.ps1')
+. (Join-Path (Join-Path $Top 'tools') 'usb-adb.ps1')   # UsbAdbOnly, UsbRestore
 AnswersSetup $AnswersFile ([bool]$NonInteractive)
 # An error nobody caught still ends the progress stream with an event - whoever reads it must not wait for more - and
 # the script with status 1, saying where it was. (A trap that only passes the error on leaves the status of the last
@@ -82,6 +83,7 @@ trap {
     $where = "$_ ($(Split-Path -Leaf $_.InvocationInfo.ScriptName) line $($_.InvocationInfo.ScriptLineNumber))"
     Progress 'error' 'message' $where
     Write-Host "`nERROR: $where" -ForegroundColor Red
+    UsbRestore
     exit 1
 }
 if (-not $Lang -and $env:MU300_LANG) { $Lang = $env:MU300_LANG }
@@ -254,7 +256,7 @@ function SelfUpdate {
     return $true
 }
 function Say($m) { ProgressSay $m; Write-Host "`n==> $m" -ForegroundColor Cyan }
-function Die($m) { Progress 'error' 'message' $m; Write-Host ("`n" + (T 'ERROR:') + " $m") -ForegroundColor Red; exit 1 }
+function Die($m) { UsbRestore; Progress 'error' 'message' $m; Write-Host ("`n" + (T 'ERROR:') + " $m") -ForegroundColor Red; exit 1 }
 # Windows PowerShell 5.1 turns every stderr line of a native command into an ErrorRecord once stderr is
 # redirected, and with ErrorActionPreference Stop that aborts the script (adb's "daemon not running",
 # "no devices", push progress). Run such commands with Continue and drop their stderr.
@@ -739,6 +741,7 @@ if ($script:MuProgress) {
     } else { Info 'root' 'no' }
 }
 if ((SuDo 'id -u') -ne '0') { Die (T 'su does not work on the device') }
+UsbAdbOnly          # adb alone on USB for this run, no MTP (tools\usb-adb.ps1); UsbRestore where the run ends in Android
 $model = "$(SuDo 'getprop ro.product.model') / $(SuDo 'getprop ro.product.device')"
 Write-Host (T 'device: {1}' $model)
 if ($BL_STATE -eq 'locked') { Write-Host (T 'WARNING: {1}' $BL_WARN) }
@@ -798,6 +801,7 @@ if ($Backup) {
     Write-Host ('  ' + (T 'Not copied, here or during an installation: the NV and calibration partitions (IMEI, radio calibration). The installer never reads or writes them.'))
     Write-Host ('  ' + (T 'Nothing was written to the device.'))
     Info 'backup.boot' $bImg; Info 'backup.misc' $bMisc; Info 'backup.sha256' $bHave
+    UsbRestore
     Progress 'done' 'result' 'ok'
     exit 0
 }
@@ -832,7 +836,16 @@ Say (T 'Locating free eMMC space after the last partition')
 # the eMMC's size (the last line), each GPT partition named mu300root as part:START:SECTORS, and "image" for another
 # installer's image file in Android's data (FINDINGS 179)
 # (no double quotes in a device command: Windows PowerShell 5.1 drops them on the way to adb)
-$parts = @((SuDo 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/mmcblk0/size)').Trim() -split '\s+')
+# The internal disk, as Android's by-name links have it (tools/storage.sh's internal_disk): the disk that holds misc -
+# mmcblk0 on an eMMC unit, sda on a UFS one (issue #396) - what its partitions are named after, and its logical block
+# size. mmcblk0 (512) when Android does not say.
+$dk = @(([string](SuDo 'd=$(readlink -f /dev/block/by-name/misc); d=$(readlink -f /sys/class/block/${d##*/}/..); echo ${d##*/} $(cat $d/queue/logical_block_size)')).Trim() -split '\s+')
+$IDISK = [string]$dk[0]; $ILBS = $(if ($dk.Count -gt 1 -and $dk[1] -eq '4096') { 4096 } else { 512 })
+if ($IDISK -cnotmatch '^(mmcblk[0-9]|sd[a-z])$') { $IDISK = 'mmcblk0' }
+$IPART = $(if ($IDISK -like 'mmcblk*') { "${IDISK}p" } else { $IDISK })
+# its GPT in 512-byte sectors: the first $GPT_HEAD and the last $GPT_TAIL (on 4096-byte blocks 6 and 5 of those)
+$GPT_HEAD = $(if ($ILBS -eq 4096) { 48 } else { 34 }); $GPT_TAIL = $(if ($ILBS -eq 4096) { 40 } else { 33 })
+$parts = @((SuDo ('e=0; for p in /sys/block/' + "$IDISK/$IPART" + '*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/' + $IDISK + '/size)')).Trim() -split '\s+')
 $nums = @($parts | Where-Object { $_ -match '^[0-9]+$' })
 $partList = @($parts | Where-Object { $_ -match '^part:[0-9]+:[0-9]+$' })
 $FOREIGN_IMAGE = @($parts | Where-Object { $_ -eq 'image' }).Count -gt 0
@@ -846,7 +859,7 @@ if ($nums.Count -ne 2 -or ($nums.Count + $partList.Count + [int]$FOREIGN_IMAGE) 
 # region but an empty one (the card is offered, or room is made), whose start is never read (RegionOnDisk).
 function FreeRegion([int64]$LastEnd, [int64]$Disk) {
     [int64]$start = [math]::Floor($LastEnd / 4096 + 1) * 4096
-    [int64]$end = [math]::Floor(($Disk - 34) / 4096 - 1) * 4096
+    [int64]$end = [math]::Floor(($Disk - $GPT_TAIL - 1) / 4096 - 1) * 4096
     if ($end -le $start) { $end = $start }
     return @{ Start = $start; End = $end }
 }
@@ -873,23 +886,32 @@ function ResumePy {
 }
 # what identifies the device and its userdata, and how Android keeps its data: the same command as install.sh's
 # (sysfs, properties, /proc/mounts; read only, and no double quotes - see the data check)
-$script:FactsCmd = 'd=$(readlink -f /dev/block/by-name/userdata); n=${d##*/}; b=${n%p*}; echo NODE=$n; echo CID=$(cat /sys/class/block/$b/device/cid); echo START=$(cat /sys/class/block/$n/start); echo SIZE=$(cat /sys/class/block/$n/size); echo STATE=$(getprop ro.crypto.state); echo TYPE=$(getprop ro.crypto.type); while read s m r; do case $m in /data) echo SOURCE=$s; break ;; esac; done < /proc/mounts; echo MAGIC=$(dd if=$d bs=1 skip=1024 count=4 2>/dev/null | od -An -tx1 | tr -d \\040\\012); echo EXT=$(dd if=$d bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d \\040\\012)'
+$script:FactsCmd = 'd=$(readlink -f /dev/block/by-name/userdata); n=${d##*/}; b=${n%p*}; case $n in sd*) b=${n%%[0-9]*} ;; esac; echo NODE=$n; echo CID=$(cat /sys/class/block/$b/device/cid 2>/dev/null); u=/sys/class/block/$b/device/../../../string_descriptors; echo UFS=$(cat $u/manufacturer_name 2>/dev/null):$(cat $u/serial_number 2>/dev/null); echo START=$(cat /sys/class/block/$n/start); echo SIZE=$(cat /sys/class/block/$n/size); echo STATE=$(getprop ro.crypto.state); echo TYPE=$(getprop ro.crypto.type); while read s m r; do case $m in /data) echo SOURCE=$s; break ;; esac; done < /proc/mounts; echo FSB=$(dd if=$s bs=4096 count=1 2>/dev/null | od -An -tu4 -j1060 -N8); echo FSU=$(dd if=$s bs=4096 count=1 2>/dev/null | od -An -tx1 -j1132 -N16 | tr -d \\040\\012); echo MAGIC=$(dd if=$d bs=1 skip=1024 count=4 2>/dev/null | od -An -tx1 | tr -d \\040\\012); echo EXT=$(dd if=$d bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d \\040\\012)'
 function ParseFacts([string]$Text) {
     $f = @{}
     foreach ($l in ($Text -split "`n")) { if ($l -match '^([A-Z]+)=(.*)$') { if (-not $f.ContainsKey($Matches[1])) { $f[$Matches[1]] = $Matches[2].Trim() } } }
     return $f
 }
-# FactsOk: the identity is one kano's checks take (an eMMC partition node, a 128-bit CID, numbers, a serial)
+# FactsOk: the identity is one kano's checks take (an eMMC partition node, a 128-bit CID, numbers, a serial; a UFS
+# partition node and the hash of the UFS's manufacturer and serial number, tools/resume.sh's resume_facts)
 function FactsOk($F) {
-    return ([string]$F.NODE -cmatch '^mmcblk[0-9]p[0-9]+$' -and [string]$F.CID -cmatch '^[0-9a-f]{32}$' -and
+    return ([string]$F.NODE -cmatch '^(mmcblk[0-9]p|sd[a-z])[0-9]+$' -and [string]$F.CID -cmatch '^[0-9a-f]{32}$' -and
         [string]$F.START -match '^[0-9]+$' -and [string]$F.SIZE -match '^[0-9]+$' -and [string]$F.SERIAL)
 }
 function ResumeFacts {
     $f = ParseFacts (SuDo $script:FactsCmd)
     $f.SERIAL = AdbProp 'ro.serialno'
+    if ([string]$f.NODE -cmatch '^sd' -and [string]$f.UFS -cmatch '^.+:.+$') {
+        $sha = [System.Security.Cryptography.SHA256]::Create()
+        $f.CID = (-join ($sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes("ufs:$($f.UFS)")) | ForEach-Object { $_.ToString('x2') })).Substring(0, 32)
+    }
     if (-not (FactsOk $f)) { return $null }
     $magic = if ($f.EXT -eq '53ef') { '53ef' } else { [string]$f.MAGIC }
     $f.CRYPTO = [string]((ResumePy encrypted "state=$($f.STATE)" "type=$($f.TYPE)" "source=$($f.SOURCE)" "magic=$magic") | Select-Object -First 1)
+    # the F2FS on /data as its superblock says now: blocks (two 32-bit halves) and UUID (the online way's checks)
+    $h = @(([string]$f.FSB).Trim() -split '\s+')
+    $f.FS_BLOCKS = if ($h.Count -eq 2 -and $h[0] -match '^[0-9]+$' -and $h[1] -match '^[0-9]+$') { [string]([uint64]$h[0] + [uint64]$h[1] * 4294967296) } else { '' }
+    $f.FS_UUID = [string]$f.FSU
     return $f
 }
 # the backup of kano's: the table (as read for the plan), the first block of misc, both slots' boot and boot chain,
@@ -973,7 +995,7 @@ function LayoutFigures([int64]$Disk, [int64]$LastEnd, [int64]$Size, $Info, $Plan
 # names only: it takes "head,tail" apart at the comma, and a Windows path may hold one.
 function GptTool([string]$Dir, [string[]]$ToolArgs) {
     $ErrorActionPreference = 'Continue'
-    $argv = @("$Top\tools\resize-last-partition.py") + $ToolArgs
+    $argv = @("$Top\tools\resize-last-partition.py") + $ToolArgs + @('--sector-size', "$ILBS")
     $out = @()
     Push-Location $Dir
     try { $out = @(Python @argv 2>&1 | ForEach-Object { "$_" }); $script:GptRc = $LASTEXITCODE }
@@ -984,10 +1006,163 @@ function GptTool([string]$Dir, [string[]]$ToolArgs) {
 # $Prefix.tail. A file from an earlier run never stands in for one that could not be read.
 function GptDump([int64]$Disk, [string]$Prefix) {
     Remove-Item -Force "$Prefix.head", "$Prefix.tail" -ErrorAction SilentlyContinue
-    SuDoToFile 'dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null' "$Prefix.head"
-    SuDoToFile "dd if=/dev/block/mmcblk0 bs=512 skip=$($Disk - 33) count=33 2>/dev/null" "$Prefix.tail"
+    SuDoToFile "dd if=/dev/block/$IDISK bs=512 count=$GPT_HEAD 2>/dev/null" "$Prefix.head"
+    SuDoToFile "dd if=/dev/block/$IDISK bs=512 skip=$($Disk - $GPT_TAIL) count=$GPT_TAIL 2>/dev/null" "$Prefix.tail"
     if (-not (Test-Path "$Prefix.head") -or -not (Test-Path "$Prefix.tail")) { return $false }
-    return ((Get-Item "$Prefix.head").Length -eq 34 * 512 -and (Get-Item "$Prefix.tail").Length -eq 33 * 512)
+    return ((Get-Item "$Prefix.head").Length -eq $GPT_HEAD * 512 -and (Get-Item "$Prefix.tail").Length -eq $GPT_TAIL * 512)
+}
+function Gib([int64]$b) { '{0:N1} GiB' -f ($b / 1GB) }
+# ---------------------------------------------------------------- the online way: Android keeps its data
+# (EXPERIMENTAL; tools\resume.sh has the whole story.) Android's F2FS is shrunk while it runs, by its own kernel
+# (tools\f2fs-online\mu300-f2fs-online, tools\android-online-shrink.sh), then the smaller table is written and Android
+# restarts once. The method is dikeckaan's; kanoqwq implemented it (kanoqwq/mu300-linux fe52afe3, c69be3a3, dad8224b).
+$OnlineBin = if ($env:MU300_F2FS_ONLINE) { $env:MU300_F2FS_ONLINE } else { Join-Path $Top 'tools\f2fs-online\mu300-f2fs-online' }
+$OnlineSh = if ($env:MU300_ONLINE_SH) { $env:MU300_ONLINE_SH } else { Join-Path $Top 'tools\android-online-shrink.sh' }
+$OnlineT = "$T/mu300-online"
+function OnlineSh([string]$Cmd) { return [string](SuDo "sh $OnlineT/android-online-shrink.sh $Cmd") }
+function OnlineKv([string]$Text) {
+    $v = @{}
+    foreach ($l in ($Text -split "`n")) { if ($l -match '^([A-Z0-9_]+)=(.*)$') { if (-not $v.ContainsKey($Matches[1])) { $v[$Matches[1]] = $Matches[2].Trim() } } }
+    return $v
+}
+function FileSha([string]$Path) { return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLower() }
+function TxGet([string]$Tx, [string]$Key) { return ([string]((ResumePy get $Tx $Key) | Select-Object -First 1)) -replace "^$Key=", '' }
+# OnlineInspect: can userdata shrink while Android keeps its data? Ok, Reason, and the F2FS: Blocks, Section, Used, Uuid
+function OnlineInspect {
+    $no = { param([string]$Why) @{ Ok = $false; Reason = $Why } }
+    if (-not (Test-Path -LiteralPath $OnlineBin) -or -not (Test-Path -LiteralPath $OnlineSh)) { return (& $no (T 'this installer has no mu300-f2fs-online (tools/f2fs-online)')) }
+    SuDo "rm -rf $OnlineT; mkdir -p $OnlineT; chmod 777 $OnlineT" | Out-Null
+    if (-not (ResumePush $OnlineBin "$OnlineT/mu300-f2fs-online") -or -not (ResumePush $OnlineSh "$OnlineT/android-online-shrink.sh")) {
+        return (& $no (T 'the helper did not arrive on the device as it is here'))
+    }
+    SuDo "chmod 700 $OnlineT/mu300-f2fs-online" | Out-Null
+    $v = OnlineKv (OnlineSh "inspect $OnlineT")
+    if ($v.ONLINE -ne 'yes') { return (& $no $(if ($v.REASON) { $v.REASON } else { T 'no answer from the device' })) }
+    if ("$($v.BLOCKS)$($v.SECTION_BLOCKS)$($v.USED_BYTES)" -notmatch '^[0-9]+$' -or "$($v.UUID)" -notmatch '^[0-9a-f]{32}$') { return (& $no (T 'the helper gave no geometry')) }
+    return @{ Ok = $true; Reason = ''; Blocks = [int64]$v.BLOCKS; Section = [int64]$v.SECTION_BLOCKS; Used = [int64]$v.USED_BYTES; Uuid = $v.UUID }
+}
+# OnlineTarget: the F2FS blocks for a userdata of $NewSize sectors (resume.py online-target): @{ Target; Why }
+function OnlineTarget($On, [int64]$NewSize) {
+    $o = [string]((ResumePy online-target "new_size=$NewSize" "section_blocks=$($On.Section)" "used_bytes=$($On.Used)" "blocks=$($On.Blocks)") | Select-Object -First 1)
+    if ($o -match '^TARGET=([0-9]+)$') { return @{ Target = [int64]$Matches[1]; Why = '' } }
+    return @{ Target = [int64]0; Why = ($o -replace '^REFUSED: ', '') }
+}
+# OnlineDeclined: the kernel or the helper said no before anything changed: the transaction is put aside
+function OnlineDeclined([string]$Tx, [string]$Why) {
+    ResumePy set $Tx 'state=declined' | Out-Null
+    OnlineSh ('cleanup ' + (TxGet $Tx 'token')) | Out-Null
+    Die ($Why + "`n" + (T "Nothing was changed: Android keeps its data and its partition table. To make room by resetting Android instead, run the installer again and answer reset."))
+}
+# OnlineWait: until the worker is done; it runs on without adb
+function OnlineWait([string]$Tx, [string]$Tok) {
+    $lost = 0; $last = ''
+    $tries = if ($env:MU300_ONLINE_LOST_TRIES) { [int]$env:MU300_ONLINE_LOST_TRIES } else { 30 }
+    $poll = if ($env:MU300_ONLINE_POLL) { [double]$env:MU300_ONLINE_POLL } else { 2 }
+    while ($true) {
+        $v = OnlineKv (OnlineSh "status $Tok")
+        $ph = [string]$v.PHASE; $busy = [string]$v.BUSY
+        if (-not "$ph$busy") {
+            $lost++
+            if ($lost -ge $tries) { Die (T "The device does not answer while Android's data is being shrunk; the shrink goes on there. Do not restart or power off the device: connect it again and run the installer again, it checks where the shrink got to.") }
+        } else { $lost = 0 }
+        if ($ph -and $ph -ne $last) { Write-Host ('  ' + (T 'shrink: {1}' $ph)); Info 'online.phase' $ph; $last = $ph }
+        if ($busy -eq '0') {
+            if ($ph -eq 'complete') { return }
+            if ($ph -eq 'unchanged' -or $ph -eq 'failed') { OnlineDeclined $Tx (T "Android's kernel refused the shrink (errno {1}); the filesystem was read back at its old size." $v.ERRNO) }
+            if ($ph -eq 'recovery' -or $ph -eq 'gone') { Die (T "The shrink stopped where it cannot tell by itself what happened (errno {1}). Do not restart or power off the device. Keep {2}; run the installer again, it checks where the shrink got to." $v.ERRNO $Tx) }
+            if (-not $ph) { Die (T 'The shrink did not start. Run the installer again, it checks where the shrink got to.') }
+        }
+        Start-Sleep -Milliseconds ([int]($poll * 1000))
+    }
+}
+# OnlineCommit: stage the helper and both tables, run the worker (the shrink, the backup table, the primary, each read
+# back), wait, check the table and the F2FS, write the token; the transaction then says "prepared"
+function OnlineCommit([string]$Tx, [int64]$Disk) {
+    $g = Join-Path $Work 'gpt'
+    $tok = TxGet $Tx 'token'; $bd = TxGet $Tx 'backup'
+    $fb = TxGet $Tx 'fs_blocks'; $ft = TxGet $Tx 'fs_target'; $fu = TxGet $Tx 'fs_uuid'; [int64]$rs = TxGet $Tx 'region_start'
+    [int64]$ne = [int64](TxGet $Tx 'start') + [int64](TxGet $Tx 'target') - 1
+    ResumePy marker $tok "$g\marker.bin" | Out-Null
+    if (-not (Test-Path "$g\marker.bin")) { Die (T 'could not prepare the files to write; nothing was changed') }
+    Step 'repartition' 50
+    Say (T "Shrinking Android's data in place (Android keeps running; this can take a few minutes)")
+    SuDo "rm -rf $OnlineT; mkdir -p $OnlineT; chmod 777 $OnlineT" | Out-Null
+    $pairs = @(@($OnlineBin, 'mu300-f2fs-online'), @($OnlineSh, 'android-online-shrink.sh'), @((Join-Path $bd 'gpt.head'), 'old-first'),
+               @((Join-Path $bd 'gpt.tail'), 'old-last'), @((Join-Path $bd 'gpt-new.head'), 'new-first'), @((Join-Path $bd 'gpt-new.tail'), 'new-last'))
+    foreach ($pr in $pairs) {
+        if (-not (ResumePush $pr[0] "$OnlineT/$($pr[1])")) { Die (T 'the new partition table did not arrive on the device as it was made; nothing is changed') }
+    }
+    $st = OnlineKv (OnlineSh "stage $OnlineT $tok")
+    if ($st.STAGE -ne 'ok' -or $st.SHA_NEW_FIRST -ne (FileSha (Join-Path $bd 'gpt-new.head')) -or $st.SHA_NEW_LAST -ne (FileSha (Join-Path $bd 'gpt-new.tail')) -or
+        $st.SHA_MU300_F2FS_ONLINE -ne (FileSha $OnlineBin)) {
+        Die (T 'the new partition table did not arrive on the device as it was made; nothing is changed')
+    }
+    $go = OnlineSh "start $tok $fb $ft $fu $Disk $GPT_TAIL"
+    Info 'online.start' (($go -split "`n") -join ' ')
+    $gv = OnlineKv $go
+    if ($gv.PROBE -eq 'refused') { OnlineDeclined $Tx (T "Android's kernel does not shrink this F2FS while it is mounted (errno {1})." $gv.ERRNO) }
+    if ($gv.LAUNCH -ne 'ok') { OnlineDeclined $Tx (T 'the helper refused to start ({1}, errno {2}).' $gv.STAGE $gv.ERRNO) }
+    OnlineWait $Tx $tok
+    Say (T 'Verifying')
+    $ok = GptDump $Disk "$g\after"
+    if (-not $ok -or (FileSha "$g\after.head") -ne (FileSha (Join-Path $bd 'gpt-new.head')) -or (FileSha "$g\after.tail") -ne (FileSha (Join-Path $bd 'gpt-new.tail'))) {
+        Die (T 'the table on the device is not the one that was made. Do not restart or power off the device; run the installer again, it checks where the shrink got to.')
+    }
+    $f = ResumeFacts
+    if (-not $f) { Die (T 'could not read what identifies this device (serial, eMMC CID, userdata)') }
+    if ($f.FS_BLOCKS -ne $ft -or $f.FS_UUID -ne $fu) { Die (T "Android's data is not at the size it was shrunk to ({1} blocks). Do not restart the device; run the installer again." $f.FS_BLOCKS) }
+    Write-Host ('  ' + (T "Android's data: {1}, the same filesystem as before" (Gib ([int64]$f.FS_BLOCKS * 4096))))
+    Write-Host ('  ' + (T 'userdata now ends at sector {1}' $ne))
+    # the token: the first 4 KiB of the region, outside the shrunk filesystem and, from Android's next start, outside
+    # every partition
+    if (-not (ResumePush "$g\marker.bin" "$T/mu300-marker.bin")) { Die (T 'the token did not read back from the device; run the installer again, it continues from here.') }
+    SuDo "dd if=$T/mu300-marker.bin of=/dev/block/$IDISK bs=512 seek=$rs count=8 conv=notrunc,fsync 2>/dev/null; rm -f $T/mu300-marker.bin" | Out-Null
+    if ((ResumeSha "dd if=/dev/block/$IDISK bs=512 skip=$rs count=8 2>/dev/null | sha256sum") -ne (FileSha "$g\marker.bin")) {
+        Die (T 'the token did not read back from the device; run the installer again, it continues from here.')
+    }
+    OnlineSh "cleanup $tok" | Out-Null
+    SuDo "rm -rf $OnlineT" | Out-Null
+    ResumePy set $Tx 'state=prepared' | Out-Null
+    if ($script:ResumeRc -ne 0) { Die (T 'could not save the transaction') }
+}
+# OnlineRecover: a transaction of the online way that did not get to "prepared": where the device is decides. $false:
+# nothing had happened, the transaction is put aside; $true: the table is committed now (the caller checks it as on any
+# second run). It exits when Android still has to restart.
+function OnlineRecover([string]$Tx, [int64]$Disk) {
+    $g = Join-Path $Work 'gpt'
+    $tok = TxGet $Tx 'token'
+    Say (T 'The shrink of {1} did not finish: checking where it got to' $Tx)
+    SuDo "mkdir -p $OnlineT; chmod 777 $OnlineT" | Out-Null
+    if (-not (ResumePush $OnlineSh "$OnlineT/android-online-shrink.sh")) { Die (T 'no answer from the device') }
+    if ((OnlineKv (OnlineSh "status $tok")).BUSY -eq '1') { OnlineWait $Tx $tok }
+    $f = ResumeFacts
+    if (-not $f) { Die (T 'could not read what identifies this device (serial, eMMC CID, userdata)') }
+    if (-not (GptDump $Disk "$g\resume")) { Die (T 'could not read the partition table') }
+    $os = [string]((ResumePy online-state $Tx "head=$g\resume.head" "tail=$g\resume.tail" "fs_blocks=$($f.FS_BLOCKS)" "fs_uuid=$($f.FS_UUID)") | Select-Object -First 1)
+    Info 'online.state' $os
+    switch ($os -replace '^STATE=', '') {
+        'unchanged' {
+            ResumePy set $Tx 'state=declined' | Out-Null
+            Write-Host ('  ' + (T 'Nothing had changed yet: the device has its old partition table and Android its data. That transaction is put aside.'))
+            return $false
+        }
+        { $_ -eq 'shrunk' -or $_ -eq 'committed' } {
+            Write-Host ('  ' + (T "Android's data is at its new size; the partition table is finished now"))
+            OnlineCommit $Tx $Disk
+            if ([string]$f.SIZE -eq (TxGet $Tx 'size')) {
+                Say (T 'Done - Android restarts once now, with the smaller userdata, and keeps its data')
+                $rb = Ask (T 'Reboot now? (yes/no)') 'yes' 'MU300_ANS_REBOOT'
+                Progress 'done' 'result' 'ok' 'repartitioned' 'yes' 'resume' 'pending' 'transaction' $Tx
+                if ($rb -eq 'yes') { Quiet { adb reboot } | Out-Null }
+                Write-Host ('  ' + (T 'Run the installer again once Android is up: it continues from here.'))
+                exit 0
+            }
+            return $true
+        }
+        default {
+            Die (T "Cannot tell where the shrink got to: the partition table and Android's data are neither before nor after it. Nothing was written. Keep the device as it is and keep {1}; the partition table from before is {2}." $Tx (Join-Path (TxGet $Tx 'backup') 'gpt.head'))
+        }
+    }
 }
 # a prepared installation waiting for this device (the make-room path below, on an earlier run): its checks first
 $RESUMING = 0; $RESUME_TX = ''
@@ -1005,25 +1180,43 @@ if ($ResumeWanted -ne '0' -and ($ResumeWanted -eq '1' -or $resumeWaits)) {
             $RESUMING = 1
             Info 'resume.transaction' $RESUME_TX
             Say (T 'A prepared installation is waiting: {1}' $RESUME_TX)
-            Write-Host ('  ' + (T 'EXPERIMENTAL: it continues the installation that made room by resetting Android. --no-resume ignores it.'))
-            # every check of the transaction against the device, read only (tools\resume.py check)
+            $txOnline = (TxGet $RESUME_TX 'method') -eq 'online'
+            if ($txOnline) { Write-Host ('  ' + (T "EXPERIMENTAL: it continues the installation that made room by shrinking Android's data in place. --no-resume ignores it.")) }
+            else { Write-Host ('  ' + (T 'EXPERIMENTAL: it continues the installation that made room by resetting Android. --no-resume ignores it.')) }
             $g = Join-Path $Work 'gpt'
             New-Item -ItemType Directory -Force -Path $g | Out-Null
+            # the online way, interrupted before "prepared": where the device is decides (never with -Check)
+            if ($txOnline -and (TxGet $RESUME_TX 'state') -eq 'prepared-request') {
+                if ($Check) {
+                    Write-Host ('  ' + (T 'The prepared installation cannot be continued: {1}' (T "the shrink of Android's data did not finish; run the installer without --check, it checks where it got to")))
+                    $RESUMING = 0
+                } elseif (-not (OnlineRecover $RESUME_TX $disk)) {
+                    $RESUMING = 0; $RESUME_TX = ''
+                } else {
+                    $rv = ResumeFacts
+                    if (-not $rv) { Die (T 'could not read what identifies this device (serial, eMMC CID, userdata)') }
+                }
+            }
+        }
+        if ($RESUMING -eq 1) {
+            # every check of the transaction against the device, read only (tools\resume.py check)
             $rs = $null
             if (GptDump $disk "$g\resume") { $rs = GptShow @(GptTool $g @('resume.head,resume.tail', '--disk-sectors', "$disk", '--name', 'userdata', '--show')) }
             if (-not $rs) { Die (T 'could not read the partition table') }
             $rr = [string]((ResumePy get $RESUME_TX region_start) | Select-Object -First 1) -replace '^region_start=', ''
             if ($rr -notmatch '^[0-9]+$') { Die (T 'could not read the transaction {1}' $RESUME_TX) }
             Remove-Item -Force "$g\resume-marker.bin", "$g\resume-bcb.bin" -ErrorAction SilentlyContinue
-            SuDoToFile "dd if=/dev/block/mmcblk0 bs=512 skip=$rr count=8 2>/dev/null" "$g\resume-marker.bin"
+            SuDoToFile "dd if=/dev/block/$IDISK bs=512 skip=$rr count=8 2>/dev/null" "$g\resume-marker.bin"
             SuDoToFile 'dd if=/dev/block/by-name/misc bs=2048 count=1 2>/dev/null' "$g\resume-bcb.bin"
             $idArgs = @('identity', $Top)
             if ($PKG) { $idArgs += (Join-Path $PKG 'mu300\manifest') }
             $id = [string]((ResumePy @idArgs) | Select-Object -First 1)
+            $fsFacts = @()
+            if ($txOnline) { $fsFacts = @("fs_blocks=$($rv.FS_BLOCKS)", "fs_uuid=$($rv.FS_UUID)") }
             $out = [string]((ResumePy check $RESUME_TX "serial=$($rv.SERIAL)" "slot=$ANDROID_SLOT" "cid=$($rv.CID)" "node=$($rv.NODE)" `
                 "start=$($rv.START)" "size=$($rv.SIZE)" "disk=$disk" "gpt_first=$($rs.First)" "gpt_end=$($rs.End)" "usable_end=$($rs.UsableEnd)" `
                 "region_start=$([int64]($OFF / 512))" "region_end=$([int64](($OFF + $SIZE) / 512))" "marker=$g\resume-marker.bin" `
-                "bcb=$g\resume-bcb.bin" "identity=$id") | Select-Object -First 1)
+                "bcb=$g\resume-bcb.bin" "identity=$id" @fsFacts) | Select-Object -First 1)
             Info 'resume.check' $out
             if ($script:ResumeRc -ne 0) {
                 $why = $out -replace '^RESUME-REFUSED: ', ''
@@ -1041,8 +1234,7 @@ if ($ResumeWanted -ne '0' -and ($ResumeWanted -eq '1' -or $resumeWaits)) {
     }
 }
 # the partitions, for a picture of the eMMC: "name:first sector:sectors" of each (the stream only; sysfs, read only)
-if ($script:MuProgress) { Info 'partitions' ((SuDo 'for p in /sys/block/mmcblk0/mmcblk0p*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done') -replace "`n", ' ') }
-function Gib([int64]$b) { '{0:N1} GiB' -f ($b / 1GB) }
+if ($script:MuProgress) { Info 'partitions' ((SuDo ('for p in /sys/block/' + "$IDISK/$IPART" + '*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done')) -replace "`n", ' ') }
 # Where the Linux filesystem goes (tools/storage.sh's choose_storage). The caller asks; an empty answer is the
 # default (StorageDefault): internal storage; the card when there is too little room inside (the way that needs no
 # repartitioning) or when it holds an installation already (that is what the device starts).
@@ -1296,6 +1488,11 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
         Die (T 'the partition table and the running kernel disagree about userdata; reboot Android and try again')
     }
     Info 'makeroom.crypto' $rf.CRYPTO; Info 'makeroom.crypto_state' $rf.STATE; Info 'makeroom.crypto_type' $rf.TYPE
+    # the online way: can Android keep its data? (read only)
+    $on = OnlineInspect
+    Info 'makeroom.online' $(if ($on.Ok) { 'yes' } else { 'no' })
+    if ($on.Reason) { Info 'makeroom.online_reason' $on.Reason }
+    if ($on.Ok) { Info 'makeroom.android_used' $on.Used }
     $cryptoText = switch ($rf.CRYPTO) { 'yes' { T 'encrypted' } 'no' { T 'not encrypted' } default { T 'unknown' } }
     Write-Host ''
     Write-Host "  eMMC:                 $(Gib ($Disk * 512))"
@@ -1307,49 +1504,78 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     Write-Host ('  ' + (T 'Linux needs at least  {1} (OpenWrt) / 1.6 GiB (Ubuntu) / 2.4 GiB (both)' (Gib ($plan.MinLinux * 512))))
     Write-Host ('  ' + (T 'Android keeps at least {1}' (Gib ($plan.MinAndroid * 512))))
     Write-Host ''
-    Write-Host ('  ' + (T 'THIS IS EXPERIMENTAL. It rewrites the partition table and ERASES everything in Android -'))
-    Write-Host ('  ' + (T 'apps, photos, accounts, settings. Take a full backup first:  sh tools/backup-device.sh'))
+    Write-Host ('  ' + (T 'THIS IS EXPERIMENTAL. It rewrites the partition table. Take a full backup first:  sh tools/backup-device.sh'))
     Write-Host ('  ' + (T 'Only userdata changes size; it is the last partition, so nothing else moves.'))
-    Write-Host ('  ' + (T "Android's own recovery erases Android's data: the device restarts into it, resets Android (a factory"))
-    Write-Host ('  ' + (T 'reset) and starts Android again, which takes a few minutes and more than one restart. Then set Android up'))
-    Write-Host ('  ' + (T 'again, turn USB debugging back on and bring root back (Magisk: install the Magisk app again and let'))
-    Write-Host ('  ' + (T 'Shell have root), and run this installer again: it finds what was prepared and continues.'))
-    Write-Host ('  ' + (T 'What was prepared, and a backup of the partition table, misc, boot and the boot chain, are kept on this'))
-    Write-Host ('  ' + (T 'computer in {1} - the reset erases everything of it on the device.' $BackupDir))
+    Write-Host ('  ' + (T 'Two ways:'))
+    if ($on.Ok) {
+        Write-Host ('    keep   ' + (T "Android keeps its data (apps, files, accounts, settings): its filesystem is shrunk while Android runs,"))
+        Write-Host ('           ' + (T "by Android's own kernel, then the partition table is written and Android restarts once. {1} of it is" (Gib $on.Used)))
+        Write-Host ('           ' + (T 'in use now. Method: dikeckaan; implementation: kanoqwq.'))
+    } else {
+        Write-Host ('    keep   ' + (T "not possible on this device: {1}" $on.Reason))
+    }
+    Write-Host ('    reset  ' + (T "ERASES everything in Android: Android's own recovery resets it (a factory reset, a few minutes and"))
+    Write-Host ('           ' + (T 'more than one restart). Then set Android up again, turn USB debugging back on and bring root back'))
+    Write-Host ('           ' + (T '(Magisk: install the Magisk app again and let Shell have root), and run this installer again.'))
+    Write-Host ('  ' + (T 'Either way the installation continues where it was prepared. What was prepared, and a backup of the partition'))
+    Write-Host ('  ' + (T 'table, misc, boot and the boot chain, are kept on this computer in {1}.' $BackupDir))
     Write-Host ''
     if ($Check) {
         Write-Host ('  ' + (T '-Check writes nothing. Run the installer without it to make room.'))
         return
     }
-    # kano's rule: an encryption state that cannot be told is no ground to stand on
-    if ($rf.CRYPTO -ne 'yes' -and $rf.CRYPTO -ne 'no') {
-        Die (T "Android's encryption state is unknown ({1}); nothing is changed." "$(if ($rf.STATE) { $rf.STATE } else { '?' })/$(if ($rf.TYPE) { $rf.TYPE } else { '?' })")
-    }
+    # kano's rule for the reset: an encryption state that cannot be told is no ground to stand on
+    $unknownCrypto = $rf.CRYPTO -ne 'yes' -and $rf.CRYPTO -ne 'no'
+    $cryptoDie = { Die (T "Android's encryption state is unknown ({1}); nothing is changed." "$(if ($rf.STATE) { $rf.STATE } else { '?' })/$(if ($rf.TYPE) { $rf.TYPE } else { '?' })") }
+    if ($unknownCrypto -and -not $on.Ok) { & $cryptoDie }
     if ((Ask (T 'Make room by shrinking userdata? (yes/no)') 'no' 'MU300_ANS_MAKE_ROOM') -ne 'yes') { Die (T 'nothing was changed.') }
+    $method = 'reset'
+    if ($on.Ok) {
+        while ($true) {
+            $method = Ask (T 'keep or reset') 'keep' 'MU300_ANS_MAKE_ROOM_METHOD'
+            if ($method -eq 'keep' -or $method -eq 'reset') { break }
+            Write-Host ('  ' + (T 'keep or reset'))
+        }
+    }
+    Info 'makeroom.method' $method
+    if ($method -eq 'reset' -and $unknownCrypto) { & $cryptoDie }
 
+    $onTarget = $null
     while ($true) {
         $lin = RepartitionSectors (Ask (T 'How many GiB for Linux? (the rest stays with Android)') '4' 'MU300_ANS_LINUX_GIB') $plan.MinLinux $plan.MaxLinux
         if ($lin.State -eq 'ok') {
             # userdata ends where the region the installers find behind it (FreeRegion) is the size asked for: it
             # starts one 2 MiB block after userdata and stops one block short of the disk's end, so a userdata that
             # ended that many sectors before the usable end left 4 MiB or more less (install.sh; FINDINGS 112)
-            [int64]$newEnd = [math]::Floor(($Disk - 34) / 4096 - 1) * 4096 - $lin.Sectors - 4096 - 1
+            [int64]$newEnd = [math]::Floor(($Disk - $GPT_TAIL - 1) / 4096 - 1) * 4096 - $lin.Sectors - 4096 - 1
             if ($newEnd -gt $info.UsableEnd) { $newEnd = $info.UsableEnd - $lin.Sectors }
             $linRegion = FreeRegion ($newEnd + 1) $Disk
             if (($linRegion.End - $linRegion.Start) -lt $plan.MinLinux) { $lin.State = 'small' }
             elseif (($newEnd - $info.First + 1) -lt $plan.MinAndroid) { $lin.State = 'large' }
+            elseif ($method -eq 'keep') {
+                $onTarget = OnlineTarget $on ($newEnd - $info.First + 1)
+                if ($onTarget.Target -gt 0) { break }
+                $lin.State = 'data'
+            }
             else { break }
         }
         if ($lin.State -eq 'nan') { Write-Host ('  ' + (T 'give a number, like 4 or 2.5')) }
         elseif ($lin.State -eq 'small') { Write-Host ('  ' + (T 'too small: Linux needs at least {1}' (Gib ($plan.MinLinux * 512)))) }
+        elseif ($lin.State -eq 'data') { Write-Host ('  ' + (T 'too large: {1}' $onTarget.Why)) }
         else { Write-Host ('  ' + (T 'too large: Android would be left with less than {1}' (Gib ($plan.MinAndroid * 512)))) }
     }
     Write-Host ''
     Write-Host ('  ' + (T 'userdata (Android):   {1}' (Gib (($newEnd - $info.First + 1) * 512))))
     Write-Host ('  ' + (T 'Linux region:         {1}' (Gib (($linRegion.End - $linRegion.Start) * 512))))
     Write-Host ''
-    # the word itself, in capitals, in every language
-    if ((Ask (T 'Type ERASE to rewrite the partition table and wipe Android''s data') '' 'MU300_ANS_ERASE_ANDROID') -cne 'ERASE') { Die (T 'nothing was changed.') }
+    if ($method -eq 'keep') {
+        Write-Host ('  ' + (T "Android's data:       {1} in use, kept; its filesystem becomes {2}" (Gib $on.Used) (Gib ($onTarget.Target * 4096))))
+        Write-Host ''
+        if ((Ask (T "Shrink userdata now, keeping Android's data? (yes/no)") 'no' 'MU300_ANS_SHRINK') -ne 'yes') { Die (T 'nothing was changed.') }
+    } else {
+        # the word itself, in capitals, in every language
+        if ((Ask (T 'Type ERASE to rewrite the partition table and wipe Android''s data') '' 'MU300_ANS_ERASE_ANDROID') -cne 'ERASE') { Die (T 'nothing was changed.') }
+    }
 
     # a backup on this computer, before anything is written
     Step 'backup' 30
@@ -1357,6 +1583,41 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     Say (T 'Backing up to {1}' $bd)
     ResumeBackup $bd $g
     Info 'resume.backup' $bd
+    if ($method -eq 'keep') {
+        # the transaction first (both tables in its backup), then the shrink and the table (OnlineCommit)
+        $rg = FreeRegion ($newEnd + 1) $Disk
+        $tok = [string]((ResumePy token) | Select-Object -First 1)
+        $idArgs = @('identity', $Top)
+        if ($PKG) { $idArgs += (Join-Path $PKG 'mu300\manifest') }
+        $id = [string]((ResumePy @idArgs) | Select-Object -First 1)
+        if ($tok -notmatch '^[0-9a-f]{32}$' -or $id -notmatch '^[0-9a-f]{64}$') { Die (T 'could not compute the installer identity') }
+        GptTool $g @('gpt.head,gpt.tail', '--disk-sectors', "$Disk", '--name', 'userdata', '--end-sector', "$newEnd", '--out', 'gpt-new') | ForEach-Object { Write-Host "  $_" }
+        if ($script:GptRc -ne 0 -or -not (Test-Path "$g\gpt-new.head") -or -not (Test-Path "$g\gpt-new.tail")) { Die (T 'the resize was refused; nothing is changed') }
+        Move-Item -Force "$g\gpt-new.head" (Join-Path $bd 'gpt-new.head'); Move-Item -Force "$g\gpt-new.tail" (Join-Path $bd 'gpt-new.tail')
+        $sums = (Get-Content -Raw (Join-Path $bd 'SHA256SUMS')) + "$(FileSha (Join-Path $bd 'gpt-new.head'))  gpt-new.head`n$(FileSha (Join-Path $bd 'gpt-new.tail'))  gpt-new.tail`n"
+        WriteUnix (Join-Path $bd 'SHA256SUMS') $sums
+        $tx = Join-Path $bd 'transaction.json'
+        ResumePy new $tx "serial=$($rf.SERIAL)" "slot=$ANDROID_SLOT" "cid=$($rf.CID)" "node=$($rf.NODE)" "start=$($rf.START)" `
+            "size=$($rf.SIZE)" "disk=$Disk" "target=$($newEnd - [int64]$rf.START + 1)" "need=$($rg.End - $rg.Start)" `
+            "usable_end=$($info.UsableEnd)" "region_start=$($rg.Start)" "region_end=$($rg.End)" "token=$tok" "identity=$id" `
+            "crypto=$($rf.CRYPTO)" "crypto_state=$($rf.STATE)" "crypto_type=$($rf.TYPE)" "backup=$bd" 'method=online' `
+            "fs_uuid=$($on.Uuid)" "fs_blocks=$($on.Blocks)" "fs_target=$($onTarget.Target)" | Out-Null
+        if ($script:ResumeRc -ne 0) { Die (T 'could not save the transaction; nothing was changed') }
+        Info 'resume.transaction' $tx
+        Write-Host ('  ' + (T 'transaction saved: {1}' $tx))
+        OnlineCommit $tx $Disk
+        Say (T 'Done - Android restarts once now, with the smaller userdata, and keeps its data')
+        Write-Host ('  ' + (T 'transaction: {1}' $tx))
+        $rb = Ask (T 'Reboot now? (yes/no)') 'yes' 'MU300_ANS_REBOOT'
+        Progress 'done' 'result' 'ok' 'repartitioned' 'yes' 'resume' 'pending' 'transaction' $tx
+        if ($rb -eq 'yes') {
+            Quiet { adb reboot } | Out-Null
+            Write-Host ('  ' + (T 'Run the installer again once Android is up: it continues from here.'))
+        } else {
+            Write-Host ('  ' + (T 'Restart Android (adb reboot), then run the installer again: it continues from here.'))
+        }
+        return
+    }
 
     # the transaction, saved before the first write; the region by the installers' arithmetic behind the new end
     $rg = FreeRegion ($newEnd + 1) $Disk
@@ -1382,7 +1643,7 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     Remove-Item -Force "$g\new.head", "$g\new.tail" -ErrorAction SilentlyContinue
     GptTool $g @('gpt.head,gpt.tail', '--disk-sectors', "$Disk", '--name', 'userdata', '--end-sector', "$newEnd", '--out', 'new') | ForEach-Object { Write-Host "  $_" }
     $made = $script:GptRc -eq 0 -and (Test-Path "$g\new.head") -and (Test-Path "$g\new.tail")
-    if ($made) { $made = (Get-Item "$g\new.head").Length -eq 34 * 512 -and (Get-Item "$g\new.tail").Length -eq 33 * 512 }
+    if ($made) { $made = (Get-Item "$g\new.head").Length -eq $GPT_HEAD * 512 -and (Get-Item "$g\new.tail").Length -eq $GPT_TAIL * 512 }
     if (-not $made) { Die (T 'the resize was refused; nothing is changed') }
     # what goes to the device is what was made here, byte for byte (a push that stopped halfway leaves a short file)
     foreach ($n in 'new.head', 'new.tail', 'marker.bin', 'bcb.bin') {
@@ -1394,8 +1655,8 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     $abBefore = (SuDo 'dd if=/dev/block/by-name/misc bs=1 skip=2048 count=32 2>/dev/null | od -An -tx1 -v') -replace '\s', ''
     # the backup copy first: if power is lost between the two, the primary is still the old table and the device
     # boots, which is the recoverable order
-    SuDo "dd if=$T/mu300-new.tail of=/dev/block/mmcblk0 bs=512 seek=$($Disk - 33) conv=fsync 2>/dev/null" | Out-Null
-    SuDo "dd if=$T/mu300-new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null" | Out-Null
+    SuDo "dd if=$T/mu300-new.tail of=/dev/block/$IDISK bs=512 seek=$($Disk - $GPT_TAIL) conv=fsync 2>/dev/null" | Out-Null
+    SuDo "dd if=$T/mu300-new.head of=/dev/block/$IDISK bs=512 conv=fsync 2>/dev/null" | Out-Null
 
     Say (T 'Verifying')
     $null = GptDump $Disk "$g\after"
@@ -1407,8 +1668,8 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     Write-Host ('  ' + (T 'userdata now ends at sector {1}' $after.End))
 
     # the token: the first 4 KiB of the region, outside every partition from now on
-    SuDo "dd if=$T/mu300-marker.bin of=/dev/block/mmcblk0 bs=512 seek=$($rg.Start) count=8 conv=notrunc,fsync 2>/dev/null" | Out-Null
-    if ((ResumeSha "dd if=/dev/block/mmcblk0 bs=512 skip=$($rg.Start) count=8 2>/dev/null | sha256sum") -ne (Get-FileHash "$g\marker.bin" -Algorithm SHA256).Hash.ToLower()) {
+    SuDo "dd if=$T/mu300-marker.bin of=/dev/block/$IDISK bs=512 seek=$($rg.Start) count=8 conv=notrunc,fsync 2>/dev/null" | Out-Null
+    if ((ResumeSha "dd if=/dev/block/$IDISK bs=512 skip=$($rg.Start) count=8 2>/dev/null | sha256sum") -ne (Get-FileHash "$g\marker.bin" -Algorithm SHA256).Hash.ToLower()) {
         Die (T 'the token did not read back from the device; misc was not changed, Android keeps its data. Run the installer again.')
     }
     # the reset, by Android's own recovery: the bootloader message in the first 2 KiB of misc
@@ -1498,10 +1759,10 @@ if ($SD_MODE -eq 0 -and $SIZE -lt 700MB) {
     if ($Check -and $SD_DEV -and $sdEx -ne 'foreign') {
         Write-Host (T 'result: {1}' (T 'too little free eMMC space for Linux; the installer will offer the SD card instead (no repartitioning needed)'))
         Write-Host ("`n" + (T 'Nothing was written. Android version: {1}' (SuDo 'getprop ro.build.display.id')))
-        Info 'verdict.code' 'sd-only'; Progress 'done' 'result' 'ok'
+        Info 'verdict.code' 'sd-only'; UsbRestore; Progress 'done' 'result' 'ok'
         exit 0
     }
-    OfferRepartition $disk $lastEnd $SIZE   # installs nothing: it refuses, or makes room for a second pass
+    OfferRepartition $disk $lastEnd $SIZE; UsbRestore   # installs nothing: it refuses, or makes room for a second pass
     Progress 'done' 'result' 'ok'
     exit 0
 }
@@ -1518,13 +1779,16 @@ $cands = @($REG_OFF); if ($IN_PART -eq 1) { $cands += $PART_OFF }; $cands += [in
 foreach ($cand in $cands) {
     if (-not (RegionOnDisk $cand)) { continue }
     if ($cand -eq 27762098176 -and $IN_PART -eq 1 -and $cand -ge $PART_OFF -and $cand -lt ($PART_OFF + $PART_SIZE)) { continue }
-    $m = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
+    # a region made by making room is the transaction's and nothing else: an old mu300root superblock left at the
+    # fixed offset inside it is not an installation (found on an F50-B, #468)
+    if ($RESUMING -eq 1 -and $cand -ne $REG_OFF) { continue }
+    $m = (SuDo "dd if=/dev/block/$IDISK bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
     # two bytes on the disk always read as four hex digits: anything else is no answer, never "no installation"
     if ($m -notmatch '^[0-9a-f]{4}$') { Die (T 'no answer from the device') }
-    $l = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
+    $l = (SuDo "dd if=/dev/block/$IDISK bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
     if ($IN_PART -eq 1 -and $cand -eq $PART_OFF -and $m -eq '53ef') { $PART_FS = $(if ($l.Trim() -eq 'mu300root') { 'mu300root' } else { 'ext4' }) }
     if ($m -eq '53ef' -and $l.Trim() -eq 'mu300root') {
-        $blocks = [int64]((SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1028) count=4 2>/dev/null | od -An -tu4").Trim())
+        $blocks = [int64]((SuDo "dd if=/dev/block/$IDISK bs=1 skip=$($cand + 1028) count=4 2>/dev/null | od -An -tu4").Trim())
         $OFF = $cand; $SIZE = $blocks * 4096; $existing = 'yes'
         if ($IN_PART -eq 1 -and $cand -eq $PART_OFF) { if ($SIZE -gt $PART_SIZE) { $SIZE = $PART_SIZE } } else { $IN_PART = 0 }
         break
@@ -1551,14 +1815,14 @@ if ($SD_MODE -eq 0 -and $existing -eq 'no' -and $RESUMING -eq 0) {
     # PowerShell 5.1 drops them on the way to adb, tr got an unquoted \000 - "delete the character 0" - and every
     # empty MiB counted as data, so on Windows an empty region was always "16 of 16 not empty". \\ reaches the
     # device's shell as one backslash, which tr then reads as the start of an octal escape.
-    $dirtyOut = (SuDo "n=0; for s in $probe; do c=`$(dd if=/dev/block/mmcblk0 bs=1048576 skip=`$s count=1 2>/dev/null | tr -d \\000\\377 | wc -c); [ `$c -gt 0 ] && n=`$((n + 1)); done; echo `$n").Trim()
+    $dirtyOut = (SuDo "n=0; for s in $probe; do c=`$(dd if=/dev/block/$IDISK bs=1048576 skip=`$s count=1 2>/dev/null | tr -d \\000\\377 | wc -c); [ `$c -gt 0 ] && n=`$((n + 1)); done; echo `$n").Trim()
     # [int]'' is 0: no answer passed as an empty region
     if ($dirtyOut -notmatch '^[0-9]+$') { Die (T 'no answer from the device') }
     $dirty = [int]$dirtyOut
     Write-Host (T 'data check: {1} of 16 samples contain data' $dirty)
     Info 'region.dirty' $dirty
     if ($dirty -gt 0) {
-        $head = (SuDo "dd if=/dev/block/mmcblk0 bs=1048576 skip=$([int64]($OFF / 1MB)) count=1 2>/dev/null | od -An -tx1 -N32") -replace '\s+', ' '
+        $head = (SuDo "dd if=/dev/block/$IDISK bs=1048576 skip=$([int64]($OFF / 1MB)) count=1 2>/dev/null | od -An -tx1 -N32") -replace '\s+', ' '
         Write-Host ('  ' + (T 'start of the region: {1}' $head.Trim()))
     }
 }
@@ -1586,6 +1850,7 @@ Write-Host (T 'result: {1}' $verdict)
 Info 'verdict' $verdict; Info 'verdict.code' $vcode
 if ($Check) {
     Write-Host ("`n" + (T 'Nothing was written. Android version: {1}' (SuDo 'getprop ro.build.display.id')))
+    UsbRestore
     Progress 'done' 'result' 'ok'
     exit 0
 }

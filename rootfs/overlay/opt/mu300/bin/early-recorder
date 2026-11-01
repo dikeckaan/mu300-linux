@@ -17,22 +17,15 @@ esac
 PART=boot_$S
 # --- slot end
 # --- part begin
-# The partition named $PART on the eMMC, whatever number the eMMC has (FINDINGS 31l): the disk of type MMC, else the
-# first mmcblk disk that is not a card. Never a card's: one can carry the same GPT names (a raw clone of a device
+# The partition named $PART on the internal disk - the eMMC whatever its number (FINDINGS 31l), or a UFS (issue #396):
+# the shared lookup (lib/storage.sh). Never a card's: one can carry the same GPT names (a raw clone of a device
 # backup), and this writes up to 8 MiB into what it finds.
 SYS=${MU300_SYS:-/sys}
-E=
-for b in "$SYS"/block/mmcblk*; do
-    case ${b##*/mmcblk} in ''|*[!0-9]*) continue ;; esac
-    t=$(cat "$b/device/type" 2>/dev/null)
-    [ "$t" = MMC ] && { E=${b##*/}; break; }
-    [ "$t" = SD ] || [ -n "$E" ] || E=${b##*/}
-done
+. "${MU300_STORAGE_LIB:-/opt/mu300/lib/storage.sh}"
 LOGDEV=
-[ -n "$E" ] && for u in "$SYS/block/$E/$E"p*/uevent; do
-    grep -qx "PARTNAME=$PART" "$u" 2>/dev/null || continue
-    u=${u%/uevent}; LOGDEV=/dev/${u##*/} LOGSYS=$u; break
-done
+if E=$(mu300_storage_disk) && u=$(mu300_storage_part "$PART" "$E"); then
+    LOGDEV=/dev/$u LOGSYS=$SYS/block/$E/$u
+fi
 # --- part end
 # --- node begin
 # node_ok: is $LOGDEV the block device, so a write goes to the eMMC? On OpenWrt procd puts an empty /dev in place once

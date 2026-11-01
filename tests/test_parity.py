@@ -45,7 +45,7 @@ class Repository(unittest.TestCase):
             if e.status == 'missing':
                 groups.setdefault(e.field('group'), []).append(e.name)
         # groups nobody has ported yet (the porting list shrinks group by group)
-        self.assertIn('dvfs', groups)
+        self.assertIn('display', groups)
         self.assertIn('debug', groups)
 
 

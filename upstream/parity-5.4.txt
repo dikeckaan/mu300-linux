@@ -204,16 +204,16 @@ hwrng 202e0000.rng ok cfg:HW_RANDOM_SPRD has:hwrng/202e0000.rng # /dev/hwrng, th
 
 # ---------------------------------------------------------------------------------------------------------------------
 # DDR, modem and multimedia DVFS (power)
-module sprd_ddr_dvfs missing group:dvfs boards:f50,u30air,v50 # DDR frequency scaling (scene-frequency devfreq, sprd,ddr-dvfs); mainline leaves DDR at the bootloader's frequency
-driver platform/sprd-ddr-dvfs missing group:dvfs boards:f50,u30air,v50 # see sprd_ddr_dvfs
-devfreq scene-frequency missing group:dvfs boards:f50,u30air,v50 # see sprd_ddr_dvfs
-class dvfs missing group:dvfs boards:f50,u30air,v50 # the vendor dvfs class of the DDR scaling
-builtin governor_passive missing group:dvfs boards:f50,u30air,v50 # DEVFREQ_GOV_PASSIVE: the devfreq governor the vendor scaling uses (config only, of no use without it)
-builtin dmc_drv missing group:dvfs boards:f50,u30air,v50 # the DDR controller driver (dmc-controller@60050000: bandwidth statistics for the scaling)
-driver platform/sprd-dmc missing group:dvfs boards:f50,u30air,v50 # see dmc_drv
-module sprd_cp_dvfs missing group:dvfs boards:f50,u30air,v50 # the modem subsystems' DVFS interface (dvfs_pscp, dvfs_phycp)
-driver platform/sprd-cp-dvfs missing group:dvfs boards:f50,u30air,v50 # see sprd_cp_dvfs
-module sprd_top_dvfs missing group:dvfs boards:f50,u30air,v50 # the top-level DVFS controller the others share (not loaded on 5.4 by itself; used by them)
+module sprd_ddr_dvfs ok = bind:platform/sprd-ddr-dvfs # DDR frequency scaling by pm_sys over SIPC (scene-frequency devfreq, sprd,ddr-dvfs, MHz as on 5.4): upstream/modules/sprd_dvfs, loaded by extra-modules after the modem stack
+driver platform/sprd-ddr-dvfs ok ko:sprd_ddr_dvfs bind:platform/sprd-ddr-dvfs
+devfreq scene-frequency ok ko:sprd_ddr_dvfs has:devfreq/scene-frequency # its sprd-governor directory: forced/requested frequency, pm_sys's DFS and automatic scaling, thresholds, scenes
+builtin governor_passive ok = cfg:DEVFREQ_GOV_PASSIVE # the passive devfreq governor, =y as on 5.4
+builtin dmc_drv ok = cfg:SPRD_DMC_DRV bind:platform/sprd-dmc # the DDR controller (dmc-controller@60050000): /proc/sprd_dmc, debugfs sprd_pub_monitor; upstream/port/drivers/soc/sprd/dmc_drv.c
+driver platform/sprd-dmc ok cfg:SPRD_DMC_DRV bind:platform/sprd-dmc
+module sprd_cp_dvfs ok = bind:platform/sprd-cp-dvfs # the modem subsystems' DVFS controls (dvfs_pscp, dvfs_phycp) over SIPC: upstream/modules/sprd_dvfs
+driver platform/sprd-cp-dvfs ok ko:sprd_cp_dvfs bind:platform/sprd-cp-dvfs
+module sprd_top_dvfs ok = cfg:SPRD_TOP_DVFS_DEVFREQ # the top-level DVFS set-up (sprd,topdvfs-dev): no such node on these boards, it binds nothing on 5.4 either; upstream/port/drivers/devfreq/sprd-top-dvfs.c
+class dvfs missing group:display boards:f50,u30air,v50 # the vendor dvfs class: apsys_dvfs creates it (its apsys device), see below
 module apsys_dvfs missing group:display boards:f50,u30air,v50 # DVFS of the display/video power domain (apsys-dvfs@30114000)
 driver platform/apsys-dvfs missing group:display boards:f50,u30air,v50 # see apsys_dvfs
 driver platform/dpu-dvfs missing group:display boards:f50,u30air,v50 # the display controller's DVFS

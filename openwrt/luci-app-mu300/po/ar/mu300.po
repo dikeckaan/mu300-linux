@@ -4333,3 +4333,15 @@ msgstr "هذا الملف أقدم من المثبت: هذا يحتاج إلى �
 
 msgid "The release source was not changed"
 msgstr "لم يتم تغيير مصدر الإصدار"
+
+msgid "No SIM card"
+msgstr "لا توجد شريحة SIM"
+
+msgid "Roaming now"
+msgstr "تجوال الآن"
+
+msgid "Home network"
+msgstr "الشبكة المحلية"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "قنوات المودم مشغولة بقراءات أخرى؛ ستصل الإشارة المباشرة قريبًا"

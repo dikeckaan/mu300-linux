@@ -219,6 +219,8 @@ def main():
         'init': (text(a.init), stat.S_IFREG | 0o755),
         'bin/sh': (b'busybox', stat.S_IFLNK | 0o777),
         'etc/ueventd-perms.sh': (text(a.ueventd_perms), stat.S_IFREG | 0o755),
+        # the internal disk's lookup, which init shares with the system (issue #396): in every segment that has an init
+        'etc/mu300-storage.sh': (text(HERE.parent / 'rootfs/overlay/opt/mu300/lib/storage.sh'), stat.S_IFREG | 0o644),
     }
     if a.busybox:
         files['bin/busybox'] = (a.busybox.read_bytes(), stat.S_IFREG | 0o755)

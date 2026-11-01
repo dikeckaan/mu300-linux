@@ -68,6 +68,8 @@ class ShellTest(unittest.TestCase):
         e['PATH'] = f'{self.stubs}{os.pathsep}{e.get("PATH", "")}'
         e['STUBLOG'] = str(self.tmp)
         e['LC_ALL'] = 'C.UTF-8' if os.name != 'nt' else e.get('LC_ALL', '')
+        # the shared internal-disk lookup that init, early-recorder, android-vendor-start and mu300-cpu source
+        e.setdefault('MU300_STORAGE_LIB', str(TOP / 'rootfs' / 'overlay' / 'opt' / 'mu300' / 'lib' / 'storage.sh'))
         e.update({k: str(v) for k, v in extra.items()})
         return e
 

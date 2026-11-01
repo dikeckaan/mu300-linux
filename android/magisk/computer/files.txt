@@ -24,12 +24,17 @@ tools/self-update.sh
 tools/gui-launch.sh
 tools/gui-launch.ps1
 tools/linux-mode.sh
+tools/usb-adb.sh
+tools/usb-adb.ps1
 tools/android-bootchain.sh
 tools/android-install.sh
 tools/android-mount-mu300root.sh
 tools/android-pwcheck.sh
+tools/android-usb.sh
 tools/install-magisk-module.sh
 tools/resize-last-partition.py
+tools/android-online-shrink.sh
+tools/f2fs-online/mu300-f2fs-online
 tools/vendor-overlay.py
 tools/sha512crypt.py
 tools/backup-device.sh
@@ -50,4 +55,5 @@ gui/mu300-gui.py
 gui/mu300gui
 android/magisk/mu300-linux-switch
 android/magisk/installer/module.prop.in
+rootfs/overlay/opt/mu300/lib/storage.sh
 rootfs/overlay/opt/mu300/lib/vpn-orphan.sh

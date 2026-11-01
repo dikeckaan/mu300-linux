@@ -948,7 +948,7 @@ class PowerShellNames(unittest.TestCase):
         # PowerShell's variables ignore case and a dot-sourced file shares its caller's scope: install.ps1's own
         # "$ans = Ask ..." once replaced the dictionary of answers ($script:Ans then) with a string
         mine = set()
-        for name in ('tools/answers.ps1', 'tools/gui-launch.ps1'):
+        for name in ('tools/answers.ps1', 'tools/gui-launch.ps1', 'tools/usb-adb.ps1'):
             mine |= {m.lower() for m in re.findall(r'\$script:([A-Za-z_][A-Za-z0-9_]*)', (TOP / name).read_text())}
         self.assertIn('muanswers', mine)
         for name in ('install.ps1', 'uninstall.ps1'):
