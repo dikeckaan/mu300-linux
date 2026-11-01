@@ -445,17 +445,22 @@ online_recover() {
 }
 
 # online_reboot_wait BOOT_ID: after the restart, until Android is up with root again, in a boot other than BOOT_ID (adb
-# can still answer from the old one for a moment); a terminal run then goes on by itself
+# can still answer from the old one for a moment); a terminal run then goes on by itself. Up means up for a while
+# (MU300_ONLINE_SETTLE checks in a row): an F50 drops off USB once some 5 s after boot_completed and su answer, when
+# its USB functions are set up again, and the installation that goes on from here lost the device there.
 online_reboot_wait() {
     say "$(t 'Waiting for Android to start again')"
-    _w=0
+    _w=0; _up=0
     while [ $_w -lt 150 ]; do
         sleep 2; _w=$((_w + 1))
-        [ "$(adb get-state 2>/dev/null)" = device ] || continue
-        [ "$(adb_prop sys.boot_completed)" = 1 ] || continue
-        _b=$(adb shell cat /proc/sys/kernel/random/boot_id </dev/null 2>/dev/null | tr -d '\r')
-        [ -n "$_b" ] && [ "$_b" != "$1" ] || continue
-        [ "$(su_do 'id -u' 2>/dev/null)" = 0 ] && return 0
+        if [ "$(adb get-state 2>/dev/null)" = device ] && [ "$(adb_prop sys.boot_completed)" = 1 ] &&
+           _b=$(adb shell cat /proc/sys/kernel/random/boot_id </dev/null 2>/dev/null | tr -d '\r') &&
+           [ -n "$_b" ] && [ "$_b" != "$1" ] && [ "$(su_do 'id -u' 2>/dev/null)" = 0 ]; then
+            _up=$((_up + 1))
+            [ $_up -lt "${MU300_ONLINE_SETTLE:-6}" ] || return 0
+        else
+            _up=0
+        fi
     done
     return 1
 }
