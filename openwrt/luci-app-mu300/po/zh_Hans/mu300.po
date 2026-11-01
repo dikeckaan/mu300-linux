@@ -3583,6 +3583,9 @@ msgstr "未知的锁定类型"
 msgid "Invalid value for this lock kind"
 msgstr "此锁定类型的值无效"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "SIM2 的全部重置功能尚未验证；请分别解除 NR 频段和 NR 小区锁定"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "SIM2 暂不支持频段、模式和小区锁定"
 
@@ -4324,3 +4327,14 @@ msgstr "本地网络"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "模组通道正被其他读取占用，实时信号稍后更新"
+
+
+
+msgid "SIM2 NR locks at startup"
+msgstr "启动时启用 SIM2 NR 锁定"
+
+msgid "Model default"
+msgstr "型号默认值"
+
+msgid "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."
+msgstr "U30 Air/M3 默认开启，其他型号默认关闭。F50/V50 为实验支持，仅通过模拟测试。保存并重启后生效。关闭前请先解除锁定；此开关不会清除基带设置，未开放 LTE。"

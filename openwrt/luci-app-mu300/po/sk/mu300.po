@@ -3604,6 +3604,9 @@ msgstr "Neznámy druh zámku"
 msgid "Invalid value for this lock kind"
 msgstr "Neplatná hodnota pre tento druh zámku"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Úplný reset SIM2 nie je overený; zrušte obmedzenia pásiem NR a buniek NR samostatne"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Zámky pásiem, režimu a bunky zatiaľ nie sú pre SIM2 podporované"
 
@@ -4345,3 +4348,14 @@ msgstr "Domáca sieť"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Kanály modemu sú obsadené inými čítaniami; živý signál bude o chvíľu"
+
+
+
+msgid "SIM2 NR locks at startup"
+msgstr "SIM2 NR locks at startup"
+
+msgid "Model default"
+msgstr "Model default"
+
+msgid "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."
+msgstr "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."

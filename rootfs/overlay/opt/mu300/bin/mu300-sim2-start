@@ -152,6 +152,10 @@ case "$route" in
     *) say 'data route read-back not available on this firmware' ;;
 esac
 [[ "$SLOT:$route" != 0:0 ]] || rm -f "$sim_route_mark"
+# Native SIM2 NR locks: restore per-SIM state while its radio is still off.
+if [[ "$SLOT" = 1 && -x ${MU300_SIM2_LOCK_BIN:-/opt/mu300/bin/mu300-sim2-lock} ]]; then
+    MU300_NATIVE_EARLY=1 MU300_SIM_SLOT="$SLOT" "${MU300_SIM2_LOCK_BIN:-/opt/mu300/bin/mu300-sim2-lock}" replay || stop modem-refused 'SIM2 lock replay failed'
+fi
 expect_ok data$SLOT 'AT+SFUN=4' 20 || stop no-radio "SIM$((SLOT+1)): the radio-on command was refused"
 
 for ((attempt=0; attempt<15; attempt++)); do

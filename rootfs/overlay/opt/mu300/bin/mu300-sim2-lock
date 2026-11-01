@@ -1,0 +1,404 @@
+#!/bin/bash
+# SIM2 NR locks: U30 Air/M3 native brokers, opt-in F50/V50 boot-pinned brokers.
+# Read-back before/after the RF restart; save only after the selected bearer returns.
+set -euo pipefail
+export PATH="$PATH:/opt/mu300/busybox-bin"
+R=/run/mu300
+BASE=/etc/unisoc-modem/lock-state.d
+DATA_IFACE=wan
+BACKEND=auto
+# The platform controller shares the panel's validated state directory/interface.
+if [[ -r /usr/share/unisoc-modem/lib.sh ]]; then
+ . /usr/share/unisoc-modem/lib.sh
+ BASE=$(safe_state_dir "$(uci_get state_dir)" "$BASE")
+ DATA_IFACE=$(safe_iface "$(uci_get data_interface)" wan)
+ BACKEND=$(uci_get at_backend); BACKEND=${BACKEND:-auto}
+fi
+STATE=$BASE/sim2-native
+umask 077
+RECOVERY=/etc/mu300/sim2-native-recovery
+AT=/opt/mu300/bin/mu300-at
+SELF=/opt/mu300/bin/mu300-sim2-lock
+DEVICE=$(/opt/mu300/bin/mu300-device 2>/dev/null) || DEVICE=
+PROFILE=u30air
+MAIN=/run/mu300-at4
+DATA=/run/mu300-at5
+BOOT_POLICY=$R/sim2-nr-locks
+V50_LIB=/opt/mu300/lib/v50-card.sh
+# Latch the GUI/UCI switch before AT owners start. Saving the checkbox alone
+# never starts a modem transaction; restarting this service cannot re-latch it.
+if [[ ${1:-} == boot-config ]];then
+ [[ -e /etc/openwrt_release ]] || exit 0
+ mkdir -p "$R"
+ [[ ! -e $BOOT_POLICY ]] || exit 0
+ enabled=off
+ policy=$(uci -q get unisoc_modem.main.sim2_nr_locks 2>/dev/null || true)
+ case $policy in
+  ''|auto) [[ $DEVICE != u30air ]] || enabled=u30air;;
+  1) case $DEVICE in u30air|f50|v50) enabled=$DEVICE;;esac;;
+  0) ;;
+  *) ;; # malformed configuration is off, never an implicit opt-in
+ esac
+ temporary=$(mktemp "$R/sim2-lock-policy.XXXXXX")
+ printf '%s\n' "$enabled" > "$temporary"
+ ln "$temporary" "$BOOT_POLICY" 2>/dev/null || [[ -e $BOOT_POLICY ]]
+ rm -f "$temporary"
+ exit 0
+fi
+# Physical cards 1/2 share logical SIM2 on the V50. Use the actual switch,
+# never the saved next-boot card, for persistence and interrupted-write recovery.
+v50_profile() {
+ local board mux chip card map
+ [[ -r $V50_LIB ]] || return 1
+ . "$V50_LIB"
+ board=$(v50_board_id) || return 1
+ mux=$(v50_mux) || return 1
+ chip=$(cat "$mux/chip_select") || return 1
+ case $chip in 0) card=1;;1) card=2;;*) return 1;;esac
+ map=$(v50_card_map "$board" "$card") || return 1
+ [[ $map == "1 chip_select $chip" ]] || return 1
+ printf 'v50-board%s-card%s' "$board" "$card"
+}
+platform_supported() {
+ [[ -e /etc/openwrt_release ]] || return 1
+ case $BACKEND in auto|mu300) ;; *) return 1;; esac
+ case $DEVICE in
+  u30air) [[ -e /run/mu300-radio-freeze && $(cat "$BOOT_POLICY" 2>/dev/null) == u30air ]] || return 1;;
+  f50|v50)
+   [[ ! -e /run/mu300-radio-freeze && $(cat "$BOOT_POLICY" 2>/dev/null) == "$DEVICE" ]] || return 1
+   [[ $(cat "$R/sim-slot" 2>/dev/null) == 1 ]] || return 1
+   PROFILE=$DEVICE
+   [[ $DEVICE != v50 ]] || PROFILE=$(v50_profile) || return 1
+   MAIN=/run/mu300-at;DATA=/run/mu300-at2
+   STATE=$BASE/sim2-$PROFILE
+   RECOVERY=/etc/mu300/sim2-$PROFILE-recovery
+   ;;
+  *) return 1;;
+ esac
+}
+profile_current() {
+ if [[ $DEVICE == u30air ]];then
+  [[ -e /run/mu300-radio-freeze && $(cat "$BOOT_POLICY" 2>/dev/null) == u30air ]]
+ else
+  [[ ! -e /run/mu300-radio-freeze && $(cat "$BOOT_POLICY" 2>/dev/null) == "$DEVICE" && $(cat "$R/sim-slot" 2>/dev/null) == 1 ]] || return 1
+  [[ $DEVICE != v50 || $(v50_profile) == "$PROFILE" ]]
+ fi
+}
+supported() {
+ profile_current || return 1
+ [[ $(cat "$R/sim-slot") == 1 ]] || return 1
+ case ${1:-} in nr|cell) ;; *) return 1;; esac
+}
+error() { printf '{"ok":0,"error":"%s"}\n' "$1"; }
+at() {
+ local port=$1 q=$2 seconds=${3:-5} out
+ profile_current || return 1
+ [[ -p $port/cmd && -s $port/owner/pid ]] || return 1
+ kill -0 "$(cat "$port/owner/pid")" 2>/dev/null || return 1
+ # Boot-pinned F50/V50 brokers already address slot 1. Do not transplant the
+ # U30 prefix or reopen TTYs; their owners must stay the same throughout.
+ local cmd="AT+$q"
+ [[ $DEVICE != u30air ]] || cmd="AT+SPACTCARD=1;+$q"
+ out=$(MU300_SIM_CONTROL=1 MU300_AT_DIR="$port" MU300_AT_LOCK_WAIT=2 MU300_AT_BUDGET=$((seconds+4)) "$AT" -t "$seconds" "$cmd") || return 1
+ out=$(tr -d '\r' <<< "$out")
+ ! grep -Eq '^(ERROR|\+CME ERROR|\+CMS ERROR)(:|$)' <<< "$out" || return 1
+ [[ $(tail -1 <<< "$out") == OK ]] || return 1
+ printf '%s\n' "$out"
+}
+main() { at "$MAIN" "$@"; }
+field() { local out;out=$(main "$1") || return 1;sed -n "s/^+$2: *//p" <<< "$out"; }
+wan_up() { local s;profile_current || return 1;s=$(ubus call "network.interface.$DATA_IFACE" status);[[ $(jsonfilter -s "$s" -e '@.up') == true && $(jsonfilter -s "$s" -e '@.l3_device') == sipa_eth8 ]]; }
+wait_wan() { local i;for ((i=0;i<45;i++));do profile_current || return 1;wan_up && return 0;sleep 1;done;return 1; }
+# A missing/malformed response is a failure, never an empty (unlocked) cell list.
+cell_pairs() {
+ local raw pair
+ raw=$(cat)
+ [[ $raw =~ ^16,3(,[1-9][0-9]*,[0-9]+)*$ ]] || return 1
+ while read -r pair; do
+  [[ -n $pair ]] || continue
+  valid_cell "$pair" || return 1
+  printf '%s\n' "$pair"
+ done < <(awk -F, 'NF>=4 {for(i=3;i<NF;i+=2) print $i","$(i+1)}' <<< "$raw")
+}
+valid_cell() {
+ [[ $1 =~ ^[1-9][0-9]{0,6},(0|[1-9][0-9]{0,3})$ ]] || return 1
+ local fr=${1%,*} pc=${1#*,};((fr<=3279165 && pc<=1007))
+}
+nr_masks() {
+ local v=$1 a=0 b=0 n
+ [[ -z $v || $v =~ ^[0-9]+(,[0-9]+)*$ ]] || return 1
+ local seen=,
+ for n in ${v//,/ };do
+  [[ $seen != *,"$n",* ]] || continue;seen+="$n,"
+  case $n in 1) ((a|=1));;5) ((a|=8));;8) ((a|=32));;28) ((a|=512));;41) ((b|=16));;78) ((b|=256));;*) return 1;;esac
+ done
+ printf '%s,0,%s,0' "$a" "$b"
+}
+radio_allowed() {
+ [[ ! -x /opt/mu300/bin/mu300-sim-radio ]] || /opt/mu300/bin/mu300-sim-radio allowed 1
+}
+card_addressed() {
+ [[ $DEVICE != u30air ]] || return 0
+ [[ $(field 'SPACTCARD?' SPACTCARD) == 1 ]] || return 1
+ local out;out=$(at "$DATA" 'SPACTCARD?') || return 1
+ [[ $(sed -n 's/^+SPACTCARD: *//p' <<< "$out") == 1 ]]
+}
+nr_supported() {
+ # Do not infer another board's RF capabilities from the U30 Air fallback.
+ local value=$1 caps count n
+ [[ $DEVICE != u30air && -n $value ]] || return 0
+ caps=$(field 'SP5GCMDS="get nr support_band"' SP5GCMDS) || return 1
+ [[ $caps =~ ^get\ nr\ support_band,[1-9][0-9]*(,[0-9]+)+$ ]] || return 1
+ caps=${caps#get nr support_band,};count=${caps%%,*};caps=${caps#*,}
+ [[ $(awk -F, '{print NF}' <<< "$caps") == "$count" ]] || return 1
+ for n in ${value//,/ };do [[ ,$caps, == *,"$n",* ]] || return 1;done
+}
+restart_rf() {
+ radio_allowed || return 1
+ main 'SFUN=5' 10 >/dev/null || return 1
+ local off;off=$(field 'CFUN?' CFUN) || return 1
+ [[ $off == 0 || ( $DEVICE != u30air && $off == 2 ) ]] || return 1
+ radio_allowed || return 1
+ at "$DATA" 'SFUN=4' 20 >/dev/null || return 1
+ [[ $(field 'CFUN?' CFUN) == 1 ]]
+}
+restore_values() {
+ local raw pair
+ raw=$(cat "$WORK/nr.before");[[ $raw =~ ^[0-9]+,0,[0-9]+(,[0-9]+)?$ ]] || return 1
+ [[ $(awk -F, '{print NF}' <<< "$raw") == 4 ]] || raw+=,0
+ main "SPLBAND=2,$raw" >/dev/null || return 1
+ main 'SPFORCEFRQ=16,4' >/dev/null || return 1
+ while read -r pair;do [[ -n $pair ]] || continue;valid_cell "$pair" || return 1;main "SPFORCEFRQ=16,6,$pair" >/dev/null || return 1;done < "$WORK/cell.before"
+ verify_nr "$(field 'SPLBAND=3' SPLBAND)" "$raw" || return 1
+ field 'SPFORCEFRQ=16,3' SPFORCEFRQ | cell_pairs > "$WORK/cell.readback" || return 1
+ cmp -s "$WORK/cell.before" "$WORK/cell.readback"
+}
+restore() {
+ restore_values || return 1
+ restart_rf || return 1
+ verify_nr "$(field 'SPLBAND=3' SPLBAND)" "$(cat "$WORK/nr.before")" || return 1
+ field 'SPFORCEFRQ=16,3' SPFORCEFRQ | cell_pairs > "$WORK/cell.restored" || return 1
+ cmp -s "$WORK/cell.before" "$WORK/cell.restored" || return 1
+ rm -f "$RECOVERY"
+}
+verify_nr() {
+ local got=$1 want=$2
+ want=$(awk -F, 'NF==3 {print $0",0"} NF==4 {print $0}' <<< "$want")
+ got=$(awk -F, 'NF==3 {print $0",0"} NF==4 {print $0}' <<< "$got")
+ [[ $got == "$want" ]]
+}
+snapshot_values() {
+ field 'SPLBAND=3' SPLBAND > "$WORK/nr.before" || return 1
+ field 'SPFORCEFRQ=16,3' SPFORCEFRQ | cell_pairs > "$WORK/cell.before" || return 1
+ grep -Eq '^[0-9]+,0,[0-9]+(,[0-9]+)?$' "$WORK/nr.before" || return 1
+ { cat "$WORK/nr.before";cat "$WORK/cell.before"; } > "$RECOVERY.new"
+ mv "$RECOVERY.new" "$RECOVERY"
+ sync  # persist the rollback journal before the first modem write
+}
+validate_saved() {
+ local pair
+ [[ ! -f $STATE/nr ]] || { nr_masks "$(cat "$STATE/nr")" >/dev/null && nr_supported "$(cat "$STATE/nr")"; } || return 1
+ if [[ -f $STATE/cell ]];then
+  while IFS= read -r pair || [[ -n $pair ]];do
+   [[ -z $pair ]] || valid_cell "$pair" || return 1
+  done < "$STATE/cell"
+ fi
+}
+apply_setting() {
+ local kind=$1 value=$2 raw pair
+ if [[ $kind == nr ]];then
+  raw=$(nr_masks "$value") || { error 'This SIM2 path supports encodable NR bands 1,5,8,28,41,78';return 1; }
+  main "SPLBAND=2,$raw" >/dev/null || return 1
+  verify_nr "$(field 'SPLBAND=3' SPLBAND)" "$raw"
+ else
+  case $value in
+   off|off-nr) main 'SPFORCEFRQ=16,4' >/dev/null || return 1;[[ $(field 'SPFORCEFRQ=16,3' SPFORCEFRQ) == 16,3 ]];;
+   nr:*) pair=${value#nr:};valid_cell "$pair";main "SPFORCEFRQ=16,6,$pair" >/dev/null;field 'SPFORCEFRQ=16,3' SPFORCEFRQ | cell_pairs | grep -Fx "$pair" >/dev/null;;
+   *) error 'SIM2 currently supports NR cell locking; LTE and reset-all remain unvalidated';return 1;;
+  esac
+ fi
+}
+# Choose the profile once, and carry its identity into the radio-locked worker.
+# A V50 card changed while waiting for that lock must never receive the old
+# card's transaction or rollback. Its journal remains for the old card's boot.
+if ! platform_supported;then
+ [[ ${1:-} != replay ]] || exit 0
+ error 'SIM2 NR locks are disabled for this boot or the profile is unavailable';exit 1
+fi
+[[ -z ${MU300_SIM2_PROFILE:-} || $MU300_SIM2_PROFILE == "$PROFILE" ]] || exit 1
+export MU300_SIM2_PROFILE=$PROFILE
+REPLAY_MARKER=$R/sim2-$PROFILE-replayed
+# Replay callers already hold mobile-data's shared radio lock.
+case ${1:-} in
+ supported) supported "${2:-}";exit $?;;
+ status) printf '{"profile":"%s","experimental":%s,"nr":true,"nr_cell":true,"lte":false}\n' "$PROFILE" "$([[ $DEVICE == u30air ]] && echo false || echo true)";exit 0;;
+ replay)
+  [[ ${MU300_NATIVE_EARLY:-0} == 1 || ( $DEVICE != u30air && ${MU300_SIM2_BOOT:-0} == 1 ) ]] || exit 0
+  profile_current || exit 1
+  [[ ${MU300_SIM_SLOT:-$(cat "$R/sim-slot")} == 1 ]] || exit 0
+  if [[ $DEVICE != u30air ]];then
+   # ifup inside a live lock runs radio_on too. Its still-uncommitted journal
+   # belongs to the live owner, not to boot recovery. Never undo that setting.
+   # Nonblocking: radio-on already owns the radio lock, and live apply takes
+   # SIM-control first. Waiting here would reverse that order and deadlock.
+   exec 8>"$R/sim-control.lock"
+   flock -n 8 || exit 0
+  fi
+  [[ $DEVICE == u30air || ! -e $REPLAY_MARKER || -s $RECOVERY ]] || exit 0
+  [[ -s "$RECOVERY" || -f "$STATE/nr" || -f "$STATE/cell" ]] || exit 0
+  if [[ $DEVICE != u30air && ! -s $RECOVERY && $(cat "$BASE/auto_apply" 2>/dev/null || true) == off ]];then
+   : > "$REPLAY_MARKER";exit 0
+  fi
+  card_addressed || exit 1
+  rf=$(field 'CFUN?' CFUN);reenable=0;pending=0
+  [[ ! -s $RECOVERY ]] || pending=1
+  if [[ $DEVICE != u30air ]];then
+   WORK=$(mktemp -d /run/mu300/boot-lock.XXXXXX)
+   trap 'rm -rf "$WORK"' EXIT
+   # First validate before switching off an already-running boot stack.
+   if [[ ! -s $RECOVERY && $(cat "$BASE/auto_apply" 2>/dev/null || true) != off ]];then
+    validate_saved
+    snapshot_values
+   fi
+   case $rf in
+    1) reenable=1;main 'SFUN=5' 10 >/dev/null;rf=$(field 'CFUN?' CFUN);;
+    0|2) ;;
+    *) exit 1;;
+   esac
+  fi
+  [[ $rf == 0 || ( $DEVICE != u30air && $rf == 2 ) ]] || exit 1
+  if [[ $pending == 1 ]];then
+   [[ $DEVICE != u30air ]] || WORK=$(mktemp -d /run/mu300/native-recover.XXXXXX)
+   head -1 "$RECOVERY" > "$WORK/nr.before";tail -n +2 "$RECOVERY" > "$WORK/cell.before"
+   restore_values
+   rm -f "$RECOVERY"
+   [[ $DEVICE != u30air ]] || rm -rf "$WORK"
+  fi
+  if [[ $(cat "$BASE/auto_apply" 2>/dev/null || true) != off ]];then
+   if [[ $DEVICE != u30air ]];then
+    validate_saved
+    [[ -s $RECOVERY ]] || snapshot_values
+   fi
+   [[ ! -f $STATE/nr ]] || apply_setting nr "$(cat "$STATE/nr")"
+   if [[ -f $STATE/cell ]];then
+    apply_setting cell off-nr
+    while read -r pair;do [[ -n $pair ]] || continue;apply_setting cell "nr:$pair";done < "$STATE/cell"
+   fi
+  fi
+  if [[ $DEVICE != u30air ]];then
+   if [[ $reenable == 1 ]];then
+    radio_allowed
+    at "$DATA" 'SFUN=4' 20 >/dev/null
+    [[ $(field 'CFUN?' CFUN) == 1 ]]
+   fi
+   rm -f "$RECOVERY";sync
+   : > "$REPLAY_MARKER"
+  fi
+  exit 0;;
+ --run)
+  [[ ${MU300_NATIVE_TRANSACTION:-0} == 1 && -n ${WORK:-} && $(cat "$R/sim-slot") == 1 ]]
+  kind=$2;value=$3
+  card_addressed
+  [[ $kind != nr ]] || nr_supported "$value"
+  snapshot_values
+  apply_setting "$kind" "$value"
+  restart_rf
+  if [[ $kind == nr ]];then
+   verify_nr "$(field 'SPLBAND=3' SPLBAND)" "$(nr_masks "$value")"
+  else verify_nr "$(field 'SPLBAND=3' SPLBAND)" "$(cat "$WORK/nr.before")";fi
+  field 'SPFORCEFRQ=16,3' SPFORCEFRQ | cell_pairs > "$WORK/cell.after"
+  if [[ $kind == cell ]];then
+   case $value in
+    off|off-nr) [[ ! -s $WORK/cell.after ]];;
+    nr:*) grep -Fx "${value#nr:}" "$WORK/cell.after" >/dev/null;;
+   esac
+  else cmp -s "$WORK/cell.before" "$WORK/cell.after";fi
+  exit 0;;
+ --restore)
+  [[ ${MU300_NATIVE_TRANSACTION:-0} == 1 && -n ${WORK:-} ]]
+  restore;exit $?;;
+ --verify)
+  [[ ${MU300_NATIVE_TRANSACTION:-0} == 1 && -n ${WORK:-} ]]
+  card_addressed
+  if [[ $2 == nr ]];then expected=$(nr_masks "$3")
+  else expected=$(cat "$WORK/nr.before");fi
+  verify_nr "$(field 'SPLBAND=3' SPLBAND)" "$expected"
+  field 'SPFORCEFRQ=16,3' SPFORCEFRQ | cell_pairs > "$WORK/cell.online"
+  cmp -s "$WORK/cell.after" "$WORK/cell.online"
+  exit 0;;
+ apply) ;;
+ *) exit 2;;
+esac
+kind=${2:-};value=${3:-}
+supported "$kind" || { error 'Native SIM2 transaction unavailable';exit 1; }
+[[ ! -e $R/sim-switching && ! -e $R/sim-active-unknown ]] || { error 'SIM control is busy';exit 1; }
+[[ ! -s $RECOVERY ]] || { error 'An interrupted SIM2 lock needs a reboot to restore its previous state';exit 1; }
+# Lock ordering matches mu300-sim-u30: SIM control first, then the radio lock.
+exec 9>"$R/sim-control.lock";flock -n 9 || { error 'SIM control is busy';exit 1; }
+[[ ! -e $R/sim-sequence ]] || { error 'SIM sequence is busy';exit 1; }
+radio_allowed || { error 'SIM2 radio is disabled';exit 1; }
+wan_up || { error 'SIM2 must be online for this validated live-lock path';exit 1; }
+card_addressed || { error 'SIM2 broker does not identify logical slot 1';exit 1; }
+# The panel's generic "off" means both RATs: never report success over an LTE lock.
+if [[ $kind == cell && $value == off ]];then
+ [[ $(field 'SPFORCEFRQ=12,3' SPFORCEFRQ) == 12,3 ]] || { error 'SIM2 LTE cell unlock is not validated; use NR unlock separately';exit 1; }
+ value=off-nr
+fi
+if [[ $kind == cell && $value == auto ]];then
+ serving=$(main 'SPENGMD=0,14,1');line=${serving%%$'\n'*};IFS=- read -r band fr pc rest <<< "$line";value="nr:${fr%%,*},${pc%%,*}"
+fi
+if [[ $kind == nr ]];then
+ nr_masks "$value" >/dev/null && nr_supported "$value" || { error 'Unsupported NR band or unavailable SIM2 capability list';exit 1; }
+else case $value in off|off-nr) ;;nr:*) valid_cell "${value#nr:}" || { error 'Invalid NR cell';exit 1; };;*) error 'Only NR cell locking is validated on SIM2';exit 1;;esac;fi
+umask 077
+WORK=$(mktemp -d /run/mu300/native-lock.XXXXXX);export WORK MU300_NATIVE_TRANSACTION=1
+dirty=1
+rollback_attempted=0
+cleanup() {
+ rc=$?
+ if [[ $rc != 0 && $dirty == 1 && $rollback_attempted == 0 && -s $RECOVERY && -s $WORK/nr.before ]];then
+  MU300_RADIO_LOCK_WAIT=10 /opt/mu300/bin/mobile-data radio-locked "$SELF" --restore || true
+ fi
+ [[ $(cat "$R/sim-sequence" 2>/dev/null) != $$ ]] || rm -f "$R/sim-sequence"
+ # ifup restarts an already-up netifd interface. Never bounce it after success.
+ if [[ $rc != 0 ]] && profile_current && ! wan_up;then ifup "$DATA_IFACE" >/dev/null 2>&1 || true;fi
+ rm -rf "$WORK"
+ exit "$rc"
+}
+trap cleanup EXIT;trap 'exit 130' INT TERM HUP
+printf '%s\n' $$ > "$R/sim-sequence"
+ifdown "$DATA_IFACE"
+rc=0
+MU300_RADIO_LOCK_WAIT=10 /opt/mu300/bin/mobile-data radio-locked "$SELF" --run "$kind" "$value" || rc=$?
+profile_current || { error 'SIM2 physical card changed; recovery journal retained for its original card';exit 1; }
+rm -f "$R/sim-sequence";ifup "$DATA_IFACE"
+if [[ $rc == 0 ]] && wait_wan;then
+ # Dial/reconnect may reset the CP again. Verify after bearer recovery too,
+ # while holding the radio lock, before saving the requested configuration.
+ MU300_RADIO_LOCK_WAIT=10 /opt/mu300/bin/mobile-data radio-locked "$SELF" --verify "$kind" "$value" || rc=$?
+else rc=1;fi
+if [[ $rc != 0 ]];then
+ printf '%s\n' $$ > "$R/sim-sequence"
+ rollback_attempted=1
+ if [[ -s $RECOVERY && -s $WORK/nr.before ]];then
+  MU300_RADIO_LOCK_WAIT=10 /opt/mu300/bin/mobile-data radio-locked "$SELF" --restore || true
+ fi
+ rm -f "$R/sim-sequence"
+ profile_current || { error 'SIM2 physical card changed; recovery journal retained for its original card';exit 1; }
+ ifup "$DATA_IFACE"
+ # No reboot for a missing bearer: coverage/APN failures must not create a boot loop.
+ wait_wan || true
+ error 'SIM2 lock failed; previous NR settings were restored where the modem answered; saved state unchanged'
+ exit 1
+fi
+profile_current || { error 'SIM2 physical card changed; saved state unchanged';exit 1; }
+mkdir -p "$STATE"
+if [[ $kind == nr ]];then printf '%s' "$value" > "$STATE/nr.new";mv "$STATE/nr.new" "$STATE/nr"
+else cp "$WORK/cell.after" "$STATE/cell.new";mv "$STATE/cell.new" "$STATE/cell";fi
+sync  # persist the per-SIM commit before discarding its rollback journal
+dirty=0
+rm -f "$RECOVERY"
+sync
+setsid /usr/libexec/unisoc-modem/lock refresh 9>&- >/dev/null 2>&1 &
+printf '{"ok":1,"native_sim":2,"profile":"%s","experimental":%s,"readback_verified":true,"wan_restored":true}\n' \
+ "$PROFILE" "$([[ $DEVICE == u30air ]] && echo false || echo true)"

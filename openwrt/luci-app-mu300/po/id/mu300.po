@@ -3604,6 +3604,9 @@ msgstr "Jenis kunci tidak diketahui"
 msgid "Invalid value for this lock kind"
 msgstr "Nilai tidak valid untuk jenis kunci ini"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "Reset penuh SIM2 belum divalidasi; hapus penguncian pita NR dan sel NR secara terpisah"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Kunci band, mode, dan sel belum didukung untuk SIM2"
 
@@ -4345,3 +4348,14 @@ msgstr "Jaringan asal"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Kanal modem sedang sibuk dengan pembacaan lain; sinyal langsung segera menyusul"
+
+
+
+msgid "SIM2 NR locks at startup"
+msgstr "SIM2 NR locks at startup"
+
+msgid "Model default"
+msgstr "Model default"
+
+msgid "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."
+msgstr "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."

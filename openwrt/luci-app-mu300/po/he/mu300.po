@@ -3604,6 +3604,9 @@ msgstr "סוג נעילה לא ידוע"
 msgid "Invalid value for this lock kind"
 msgstr "ערך לא חוקי לסוג נעילה זה"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "איפוס מלא של SIM2 לא אומת; יש להסיר בנפרד את נעילות תחומי NR ותאי NR"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "נעילות פס, מצב ותא עדיין אינן נתמכות עבור SIM2"
 
@@ -4345,3 +4348,14 @@ msgstr "רשת ביתית"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "ערוצי המודם תפוסים בקריאות אחרות; האות החי יגיע בקרוב"
+
+
+
+msgid "SIM2 NR locks at startup"
+msgstr "SIM2 NR locks at startup"
+
+msgid "Model default"
+msgstr "Model default"
+
+msgid "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."
+msgstr "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."

@@ -3604,6 +3604,9 @@ msgstr "نوع قفل نامشخص"
 msgid "Invalid value for this lock kind"
 msgstr "مقدار نامعتبر برای این نوع قفل"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "بازنشانی کامل SIM2 تأیید نشده است؛ قفل باندها و سلول‌های NR را جداگانه بردارید"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "قفل باند، حالت و سلول هنوز برای SIM2 پشتیبانی نمی‌شود"
 
@@ -4345,3 +4348,14 @@ msgstr "شبکه خانگی"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "کانال‌های مودم مشغول خواندن‌های دیگر هستند؛ سیگنال زنده به‌زودی می‌رسد"
+
+
+
+msgid "SIM2 NR locks at startup"
+msgstr "SIM2 NR locks at startup"
+
+msgid "Model default"
+msgstr "Model default"
+
+msgid "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."
+msgstr "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."

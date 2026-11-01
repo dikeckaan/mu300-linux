@@ -16,6 +16,14 @@ return view.extend({
 		o.value('atinout', _('atinout + serial port'));
 		o.value('custom', _('Custom adapter'));
 
+		o = s.option(form.ListValue, 'sim2_nr_locks', _('SIM2 NR locks at startup'));
+		o.value('auto', _('Model default'));
+		o.value('1', _('Enabled'));
+		o.value('0', _('Disabled'));
+		o.default = 'auto';
+		o.rmempty = false;
+		o.description = _('Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled.');
+
 		o = s.option(form.Value, 'at_port', _('AT serial port'));
 		o.placeholder = '/dev/stty_nr1';
 		o.depends('at_backend', 'atinout');

@@ -151,6 +151,8 @@ private_dir() {
 # the boot warm-up: K57); the panel's own radio sequences take the same lock through it (mobile-data radio-locked),
 # never a copy of its locking. A platform without it runs them unlocked, as before. MU300_MOBILE_DATA: the tests.
 MOBILE_DATA=${MU300_MOBILE_DATA:-/opt/mu300/bin/mobile-data}
+# Optional native SIM2 lock controller. Absent on generic Unisoc platforms; supported is read-only.
+SIM2_LOCK=${MU300_SIM2_LOCK_BIN:-/opt/mu300/bin/mu300-sim2-lock}
 # SIM_RADIO: each SIM's radio on or off, kept across reboots (mu300-sim-radio, docs/FINDINGS.md 185). rf_allowed: the
 # card in use's radio may be on (yes without the tool). A sequence that would switch the radio on asks it first.
 SIM_RADIO=${MU300_SIM_RADIO_BIN:-/opt/mu300/bin/mu300-sim-radio}

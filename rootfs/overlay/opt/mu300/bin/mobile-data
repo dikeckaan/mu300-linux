@@ -546,6 +546,18 @@ radio_on_locked() {
         case $out in *"+CFUN: 1"*) rf_off_locked || true ;; esac
         return 7
     fi
+    # The experimental F50/V50 SIM2 profile uses these boot-pinned brokers,
+    # not the U30 Air's native cold-start sequence. Replay once under this
+    # radio lock, before first dial (also when LK left CFUN=1). A pending
+    # journal is restored before replay; never proceed after an unknown write.
+    local sim2_lock=${MU300_SIM2_LOCK_BIN:-/opt/mu300/bin/mu300-sim2-lock}
+    if [ "$SIM_SLOT" = 1 ] && [ -x "$sim2_lock" ] && "$sim2_lock" supported nr >/dev/null 2>&1; then
+        MU300_SIM2_BOOT=1 "$sim2_lock" replay || {
+            radio_say 'SIM2 lock recovery/replay failed; ending this radio-on round'
+            return 1
+        }
+        out=$(at 'AT+CFUN?' 4 2>&1 || true)
+    fi
     case $out in
         *"+CFUN: 1"*) return 0 ;;
         *"+CFUN: 0"*|*"+CFUN: 2"*) ;;

@@ -140,6 +140,24 @@ echo OK
         self.assertNotEqual(self.boot().returncode, 0)
         self.assertEqual(len(self.calls()), 11, 'second attempt must send no commands')
 
+    def test_native_nr_replay_before_radio_on(self):
+        self.stub('native-lock', '''
+[ "$MU300_NATIVE_EARLY:$MU300_SIM_SLOT:$*" = 1:1:replay ] || exit 1
+echo NR-REPLAY >> "$STUBLOG/at"
+''')
+        r = self.boot(MU300_SIM2_LOCK_BIN=self.stubs / 'native-lock')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        calls = self.calls()
+        self.assertLess(calls.index('mu300-at4 AT+SPSWDATA?'), calls.index('NR-REPLAY'))
+        self.assertLess(calls.index('NR-REPLAY'), calls.index('mu300-at5 AT+SFUN=4'))
+
+    def test_failed_native_nr_replay_does_not_enable_the_radio(self):
+        self.stub('native-lock', 'exit 1')
+        r = self.boot(MU300_SIM2_LOCK_BIN=self.stubs / 'native-lock')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertEqual(self.reason(), 'modem-refused')
+        self.assertNotIn('mu300-at5 AT+SFUN=4', self.calls())
+
     def test_work_modes_are_the_modems_own(self):
         # a network mode locked on the Locks page (AT+SPTESTMODE=...) is not replaced by the start (after kanoqwq's
         # mu300-dual-radio); only a modem that does not say gets the pair this firmware's RIL sends

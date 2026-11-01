@@ -530,6 +530,30 @@ printf 'OK\n'
                 self.assertEqual(r.returncode, 0, r.stderr)
                 self.assertIn('replay skipped', (run / 'lock.log').read_text())
 
+    def test_native_sim2_apply_keeps_the_queue_lock_and_exit_status(self):
+        lock, state, run, at = self.reset_setup()
+        native = self.custom_program('sim2-lock', '''
+case $1 in
+ supported) [ "$2" = nr ] ;;
+ apply)
+   [ -e "$UNISOC_APPLY_DIR/pid" ] || exit 99
+   printf '{"ok":0,"error":"native modem refused"}\n'
+   exit 1 ;;
+esac
+''')
+        for shell in self.each_shell():
+            apply_dir = self.tmp / 'native-apply'
+            r = self.script(shell, lock, 'apply', 'nr', '41', MU300_AT=at,
+                            MU300_DASH_DIR=run, MU300_SIM2_LOCK_BIN=native,
+                            UNISOC_APPLY_DIR=apply_dir)
+            self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+            self.assertEqual(json.loads(r.stdout)['error'], 'native modem refused')
+            self.assertFalse(apply_dir.exists(), 'the queue lock must not leak on failure')
+            r = self.script(shell, lock, 'reset', MU300_DASH_DIR=run,
+                            MU300_SIM2_LOCK_BIN=native)
+            self.assertEqual(r.returncode, 1)
+            self.assertIn('SIM2 reset-all', json.loads(r.stdout)['error'])
+
     def test_reset_sends_the_automatic_values_with_one_restart_and_clears_the_saved_state(self):
         """#96: mode and band locks live in the modem's NV and stay in force in Android. reset puts every lock back
         to automatic (the values measured on an F50), restarts the stack once, and drops the saved settings so the

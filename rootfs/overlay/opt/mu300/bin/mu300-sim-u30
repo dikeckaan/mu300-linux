@@ -208,6 +208,9 @@ sequence() {
     got=$(route "$target") || got=
     case "$got" in "$target"|'') ;; *) return 1 ;; esac
     [ "$target:$got" != 0:0 ] || rm -f "$sim_route_mark"
+    if [ "$target" = 1 ] && [ -x "${MU300_SIM2_LOCK_BIN:-/opt/mu300/bin/mu300-sim2-lock}" ]; then
+        MU300_NATIVE_EARLY=1 MU300_SIM_SLOT="$target" "${MU300_SIM2_LOCK_BIN:-/opt/mu300/bin/mu300-sim2-lock}" replay || return 1
+    fi
     cmd "$(data "$target")" 'AT+SFUN=4' 30 >/dev/null || return 1
     for ((attempt=0; attempt<15; attempt++)); do
         if check "$target" 1; then break; fi
@@ -222,7 +225,7 @@ publish() {
     if [ "$1" = 1 ]; then : > "$R/sim2-radio-ready"; else rm -f "$R/sim2-radio-ready"; fi
     rm -f "$R/sim-active-unknown"
     # The dashboard caches are shared across cards; identity caches remain per card.
-    rm -f /run/unisoc-modem/cell.json /run/unisoc-modem/sig.json
+    rm -f /run/unisoc-modem/cell.json /run/unisoc-modem/sig.json /run/unisoc-modem/lock.json
 }
 # wan_up: netifd applies the selected SIM profile and has an address on that exact bearer. A radio-only
 # transition does not change the next-boot preference; the boot default

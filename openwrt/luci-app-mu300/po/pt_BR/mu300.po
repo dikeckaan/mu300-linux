@@ -3604,6 +3604,9 @@ msgstr "Tipo de bloqueio desconhecido"
 msgid "Invalid value for this lock kind"
 msgstr "Valor inválido para este tipo de bloqueio"
 
+msgid "SIM2 reset-all is not validated; clear NR bands and NR cell locks separately"
+msgstr "A redefinição completa do SIM2 não foi validada; remova separadamente os bloqueios de bandas NR e células NR"
+
 msgid "Band, mode and cell locks are not supported for SIM2 yet"
 msgstr "Os bloqueios de banda, modo e célula ainda não são compatíveis com o SIM2"
 
@@ -4345,3 +4348,14 @@ msgstr "Rede local"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Os canais do modem estão ocupados com outras leituras; o sinal ao vivo chega em instantes"
+
+
+
+msgid "SIM2 NR locks at startup"
+msgstr "SIM2 NR locks at startup"
+
+msgid "Model default"
+msgstr "Model default"
+
+msgid "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."
+msgstr "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."
