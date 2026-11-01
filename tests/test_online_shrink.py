@@ -43,6 +43,15 @@ class Helper(unittest.TestCase):
         sh = (TOP / 'tools/android-online-shrink.sh').read_text()
         self.assertIn('/dev/mu300-online-$1', sh)
 
+    def test_no_disk_bytes_in_shell_arithmetic(self):
+        # Android's sh is mksh, whose $((...)) has 32 bits: a 64 GB eMMC's bytes came out negative and the helper
+        # refused to start (found on an F50). The byte offsets are computed with expr (64 bits in toybox).
+        sh = (TOP / 'tools/android-online-shrink.sh').read_text()
+        for line in sh.splitlines():
+            if '$((' in line and '512' in line and not line.lstrip().startswith('#'):
+                self.assertNotRegex(line, r'\$\(\([^)]*disk', line)
+        self.assertIn('expr "$disk" \\* 512', sh)
+
     def test_credited(self):
         for name in ('tools/f2fs-online/mu300-f2fs-online.c', 'tools/android-online-shrink.sh', 'tools/resume.sh',
                      'tools/resume.py', 'install.ps1'):

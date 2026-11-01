@@ -108,8 +108,13 @@ cmd_start() {
             echo PROBE=refused; echo "ERRNO=$(echo "$p" | sed -n 's/.*errno=\([0-9]*\).*/\1/p' | tail -n1)"; exit 0
         fi
     fi
+    # the bytes of the backup table's place and of the disk: with expr, never $((...)) - Android's sh (mksh) computes
+    # in 32 bits, and a disk's bytes do not fit (a 64 GB eMMC came out negative, the helper refused it)
+    case $disk in ''|*[!0-9]*) echo LAUNCH=failed; echo STAGE=bad-disk; exit 1 ;; esac
+    tail_b=$(expr "$(expr "$disk" - "$tail")" \* 512) && disk_b=$(expr "$disk" \* 512) &&
+        [ "$(expr "$disk_b" - "$tail_b")" = $((tail * 512)) ] || { echo LAUNCH=failed; echo STAGE=bad-disk; exit 1; }
     rm -f "$d/status"
-    out=$("$h" start /data "$real" "$old" "$target" "$mmc" $(( (disk - tail) * 512 )) $((disk * 512)) "$uuid" "$d" 2>&1)
+    out=$("$h" start /data "$real" "$old" "$target" "$mmc" "$tail_b" "$disk_b" "$uuid" "$d" 2>&1)
     case $out in
         *worker_started=*) echo LAUNCH=ok ;;
         *) echo LAUNCH=failed; echo "STAGE=$(echo "$out" | sed -n 's/.*stage=\([^ ]*\).*/\1/p' | tail -n1)"

@@ -628,6 +628,8 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
 }
 
 # ---------------------------------------------------------------- free eMMC region
+# (before resume_lookup: an interrupted online shrink that resumes prints sizes with it)
+gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
 step storage 6
 say "$(t 'Locating free eMMC space after the last partition')"
 region_probe || die "$(t 'could not read the partition table from the device (is su granted? try again)')"
@@ -639,7 +641,6 @@ if [ $RESUME = 1 ]; then
 fi
 # the partitions, for a picture of the eMMC: "name:first sector:sectors" of each (the stream only; sysfs, read only)
 [ -z "$PROGRESS_FD" ] || info partitions "$(su_do 'for p in /sys/block/'"$IDISK/$IPART"'*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done' | tr '\n' ' ')"
-gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
 # What each choice needs: the installed systems measure ~320 MiB (OpenWrt) and ~580 MiB (Ubuntu), and an update
 # keeps the previous one as <os>.old while the new one is unpacked, so allow for two of each plus working room.
 NEED_OPENWRT=$((800 * 1024 * 1024)); NEED_UBUNTU=$((1600 * 1024 * 1024)); NEED_BOTH=$((2400 * 1024 * 1024))
