@@ -105,6 +105,9 @@ A question is asked only where the installer asks it by hand too.
 The variables that were there before work as they did (`MU300_WORK`, `MU300_RELEASE_URL`, `MU300_SYNC_BOOTCHAIN`,
 `MU300_VPN_URL`, `MU300_VPN_MODULE`, `MU300_FETCH_JOBS`, `MU300_NO_SELF_UPDATE`); `install.ps1` now reads
 `MU300_LANG`, `MU300_RELEASE`, `MU300_RELEASE_URL` and `MU300_WORK` where its parameters are not given.
+Early in every run the installers and uninstallers switch Android's USB to adb alone for that boot (a stuck MTP
+has Windows reset the device every ten seconds); `MU300_USB_ADB_ONLY=0` leaves it, `MU300_USB_WAIT` (seconds, 60)
+bounds the wait for adb after the switch.
 
 **The Magisk zip on the device** asks nothing (nothing can be typed while Magisk installs it). Its answers are a
 `mu300-install.conf` (README, "Choosing something else"); for the password of an update only one inside the zip
@@ -180,6 +183,7 @@ The stages of an installation, in order: `preflight` 2, `storage` 6, `choices` 1
 | `bootloader.verified` | `ro.boot.verifiedbootstate`: `green`, `yellow`, `orange`, `red` |
 | `root` | `yes`, `no`: whether `su` works |
 | `root.su` | what `su -v` says, for example `27.0:MAGISKSU` |
+| `usb.functions`, `usb.was` | Android's USB functions for the run (`adb` once MTP/PTP were switched off) and the ones before (only after a switch); see `tools/android-usb.sh` |
 | `slot.android`, `slot.linux` | `a`, `b` |
 | `work` | the work directory on this computer |
 | `bootchain` | the boot chain line of the plan |

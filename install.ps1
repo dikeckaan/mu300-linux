@@ -74,6 +74,7 @@ $Top = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocat
 # the answers mode and the progress stream (Progress, Info, Step, AnswerNamed); an answers file sets MU300_* variables,
 # so it is read before anything looks at one
 . (Join-Path (Join-Path $Top 'tools') 'answers.ps1')
+. (Join-Path (Join-Path $Top 'tools') 'usb-adb.ps1')   # UsbAdbOnly, UsbRestore
 AnswersSetup $AnswersFile ([bool]$NonInteractive)
 # An error nobody caught still ends the progress stream with an event - whoever reads it must not wait for more - and
 # the script with status 1, saying where it was. (A trap that only passes the error on leaves the status of the last
@@ -82,6 +83,7 @@ trap {
     $where = "$_ ($(Split-Path -Leaf $_.InvocationInfo.ScriptName) line $($_.InvocationInfo.ScriptLineNumber))"
     Progress 'error' 'message' $where
     Write-Host "`nERROR: $where" -ForegroundColor Red
+    UsbRestore
     exit 1
 }
 if (-not $Lang -and $env:MU300_LANG) { $Lang = $env:MU300_LANG }
@@ -254,7 +256,7 @@ function SelfUpdate {
     return $true
 }
 function Say($m) { ProgressSay $m; Write-Host "`n==> $m" -ForegroundColor Cyan }
-function Die($m) { Progress 'error' 'message' $m; Write-Host ("`n" + (T 'ERROR:') + " $m") -ForegroundColor Red; exit 1 }
+function Die($m) { UsbRestore; Progress 'error' 'message' $m; Write-Host ("`n" + (T 'ERROR:') + " $m") -ForegroundColor Red; exit 1 }
 # Windows PowerShell 5.1 turns every stderr line of a native command into an ErrorRecord once stderr is
 # redirected, and with ErrorActionPreference Stop that aborts the script (adb's "daemon not running",
 # "no devices", push progress). Run such commands with Continue and drop their stderr.
@@ -739,6 +741,7 @@ if ($script:MuProgress) {
     } else { Info 'root' 'no' }
 }
 if ((SuDo 'id -u') -ne '0') { Die (T 'su does not work on the device') }
+UsbAdbOnly          # adb alone on USB for this run, no MTP (tools\usb-adb.ps1); UsbRestore where the run ends in Android
 $model = "$(SuDo 'getprop ro.product.model') / $(SuDo 'getprop ro.product.device')"
 Write-Host (T 'device: {1}' $model)
 if ($BL_STATE -eq 'locked') { Write-Host (T 'WARNING: {1}' $BL_WARN) }
@@ -793,6 +796,7 @@ if ($Backup) {
     Write-Host ('  ' + (T 'Not copied, here or during an installation: the NV and calibration partitions (IMEI, radio calibration). The installer never reads or writes them.'))
     Write-Host ('  ' + (T 'Nothing was written to the device.'))
     Info 'backup.boot' $bImg; Info 'backup.misc' $bMisc; Info 'backup.sha256' $bHave
+    UsbRestore
     Progress 'done' 'result' 'ok'
     exit 0
 }
@@ -1507,10 +1511,10 @@ if ($SD_MODE -eq 0 -and $SIZE -lt 700MB) {
     if ($Check -and $SD_DEV -and $sdEx -ne 'foreign') {
         Write-Host (T 'result: {1}' (T 'too little free eMMC space for Linux; the installer will offer the SD card instead (no repartitioning needed)'))
         Write-Host ("`n" + (T 'Nothing was written. Android version: {1}' (SuDo 'getprop ro.build.display.id')))
-        Info 'verdict.code' 'sd-only'; Progress 'done' 'result' 'ok'
+        Info 'verdict.code' 'sd-only'; UsbRestore; Progress 'done' 'result' 'ok'
         exit 0
     }
-    OfferRepartition $disk $lastEnd $SIZE   # installs nothing: it refuses, or makes room for a second pass
+    OfferRepartition $disk $lastEnd $SIZE; UsbRestore   # installs nothing: it refuses, or makes room for a second pass
     Progress 'done' 'result' 'ok'
     exit 0
 }
@@ -1595,6 +1599,7 @@ Write-Host (T 'result: {1}' $verdict)
 Info 'verdict' $verdict; Info 'verdict.code' $vcode
 if ($Check) {
     Write-Host ("`n" + (T 'Nothing was written. Android version: {1}' (SuDo 'getprop ro.build.display.id')))
+    UsbRestore
     Progress 'done' 'result' 'ok'
     exit 0
 }
