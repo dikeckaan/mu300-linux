@@ -79,7 +79,9 @@ sudo mu300-usb adb off          # no adb at all
 A device where you turned adb off, or set it up with a key, before this release stays as it was.
 
 ### Can I make calls or play sound?
-Voice calls are not supported. The board has no speaker or microphone; USB sound cards remain supported by the kernel.
+The board has no speaker or microphone; USB sound cards remain supported by the kernel. Voice call audio comes in a
+separate package, mu300-audio, given only to sponsors (minimum sponsorship 10 USD, [GitHub Sponsors](https://github.com/sponsors/dikeckaan)).
+After sponsoring, reach me through the form on [kaandikec.com](https://kaandikec.com).
 
 ### Can I plug in a screen?
 No. HDMI over USB-C does not work (the USB-C power-delivery chip never answers). It is a headless machine.
