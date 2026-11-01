@@ -61,11 +61,23 @@ DEFAULT = {
     'crypto_state': 'encrypted',     # ro.crypto.state (the F50's Android 13: file-based encryption)
     'crypto_type': 'file',           # ro.crypto.type
     'data_source': '/dev/block/dm-6',    # what /data is mounted from
+    'disk_name': 'mmcblk0',      # the internal disk tools/storage.sh's internal_disk is told (sda: a UFS unit)
+    'disk_lbs': 512,             # and its logical block size (4096: a UFS)
     'emmc': None,                # a directory standing for the device's storage (tests/fakeemmc.py): see above
+    'online': '',                # what tools/android-online-shrink.sh inspect says (the online way of making room);
+                                 # empty: ONLINE=no, as on a device whose kernel cannot
     'passwords': None,           # the current passwords of the installed systems' own accounts, for android-pwcheck.sh:
                                  # {"openwrt": "", "ubuntu": "secret1"}; "" is none (EMPTY), "!" a locked account, a
                                  # system not named has no account (NOUSER)
     'pwcheck': '',               # what every check of a password answers instead (UNVERIFIABLE, say)
+    'usb_config': 'adb',         # sys.usb.config (and sys.usb.state): the stock F50's is "ecm,mtp,adb"; tools/android-usb.sh
+                                 # adb-only makes it "adb" (or usb_revert's value), restore puts the old one back
+    'usb_back': True,            # after that switch the device is on adb again; false: it never comes back
+    'usb_revert': '',            # Android sets these functions again right after the switch
+    'boot_id': 'b00710d0-0000-4000-8000-000000000001',
+    'reboot_boots': False,       # adb reboot starts a new boot: a new boot_id, and the USB functions of before the
+                                 # run's switch (usb_stock) - what a real Android does; reboots_seen counts them
+    'usb_stock': 'ecm,mtp,adb',
 }
 T = '/data/local/tmp'
 
@@ -132,7 +144,39 @@ def props(st):
         'ro.boot.vbmeta.device_state': st['device_state'],
         'ro.boot.slot_suffix': '_' + st['slot'], 'sys.boot_completed': st['boot_completed'],
         'ro.serialno': st['serial'], 'ro.board.platform': st.get('platform', 'ums9620'),
+        'sys.usb.config': st['usb_config'], 'sys.usb.state': st['usb_config'],
     }
+
+
+def save(**keys):
+    """Change keys of the state file (what the device does to itself: its USB functions)."""
+    with open(state_path(), encoding='utf-8') as f:
+        raw = json.load(f)
+    raw.update(keys)
+    with open(state_path(), 'w', encoding='utf-8') as f:
+        json.dump(raw, f)
+
+
+def usb(st, args):
+    """tools/android-usb.sh as the device runs it; (text, kind). kind "usb": changes no storage."""
+    cfg, boot = st['usb_config'], st['boot_id']
+    has = lambda f: f in cfg.split(',')
+    # a reboot under way: asked for, and (with reboot_boots) not yet come back as a new boot
+    rebooted = os.path.exists(state_path() + '.log') and sum(
+        json.loads(l)['kind'] == 'reboot' for l in open(state_path() + '.log', encoding='utf-8')) > st.get('reboots_seen', 0)
+    if args[:1] == ['adb-only']:
+        if not has('adb') or rebooted:
+            return 'MU300-USB skip %s %s' % (cfg, boot), 'read'
+        if not (has('mtp') or has('ptp')):
+            return 'MU300-USB keep %s %s' % (cfg, boot), 'read'
+        save(usb_config=st['usb_revert'] or 'adb', **({} if st['usb_back'] else {'adb_state': 'none'}))
+        return 'MU300-USB switch %s %s' % (cfg, boot), 'usb'
+    if args[:1] == ['restore'] and len(args) == 3:
+        if args[2] != boot or cfg != 'adb' or rebooted:
+            return 'MU300-USB keep %s' % cfg, 'read'
+        save(usb_config=args[1])
+        return 'MU300-USB restore %s' % args[1], 'usb'
+    return '', 'unknown'
 
 
 def prop(st, name):
@@ -163,6 +207,21 @@ def pending_is_gpt(flag=None):
     elif os.path.exists(p):
         os.remove(p)
     return flag
+
+
+def pushed(update=None):
+    """{device path: sha256} of what was pushed into the online way's directory (no "emmc")"""
+    path = state_path() + '.pushed'
+    try:
+        with open(path, encoding='utf-8') as f:
+            have = json.load(f)
+    except (OSError, ValueError):
+        have = {}
+    if update:
+        have.update(update)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(have, f)
+    return have
 
 
 def emmc_run(st, cmd):
@@ -203,10 +262,14 @@ def facts(st):
 
 
 FACTS_CMD = 'd=$(readlink -f /dev/block/by-name/userdata);'
+DISK_CMD = 'd=$(readlink -f /dev/block/by-name/misc);'
 
 
 def su(st, cmd, argv):
     """The answer of the device to `su -c 'cmd'`; (text, kind)."""
+    m = re.fullmatch(r'sh %s/android-usb\.sh (.*)' % T, cmd)
+    if m:
+        return usb(st, m.group(1).split())
     if st.get('emmc') and emmc_cmd(cmd) and cmd != 'sh %s/android-bootchain.sh check' % T:
         return emmc_run(st, cmd)
     disk, parts, last_end, off, size = geometry(st)
@@ -215,6 +278,8 @@ def su(st, cmd, argv):
         return '0', 'read'
     if cmd.startswith(FACTS_CMD):
         return facts(st), 'read'
+    if cmd.startswith(DISK_CMD):     # tools/storage.sh's internal_disk: the disk that holds misc
+        return '%s %d' % (st['disk_name'], st['disk_lbs']), 'read'
     m = re.fullmatch(r'getprop (\S+)', cmd)
     if m:
         return prop(st, m.group(1)), 'read'
@@ -317,6 +382,16 @@ def su(st, cmd, argv):
             pending(st, data)
             pending_is_gpt(True)
         return '', 'read'
+    # the online way's inspection (tools/resume.sh online_inspect, install.ps1's OnlineInspect): its files in the
+    # installer's own directory under /data/local/tmp, and what the device script says
+    OT = T + '/mu300-online'
+    if cmd in ('rm -rf %s; mkdir -p %s; chmod 777 %s' % (OT, OT, OT), 'chmod 700 %s/mu300-f2fs-online' % OT):
+        return '', 'read'
+    m = re.fullmatch(r'sha256sum (%s/\S+)' % re.escape(OT), cmd)
+    if m:
+        return pushed().get(m.group(1), '') + '  ' + m.group(1), 'read'
+    if cmd == 'sh %s/android-online-shrink.sh inspect %s' % (OT, OT):
+        return st.get('online') or 'ONLINE=no\nREASON=the fake device cannot shrink online', 'read'
     if re.fullmatch(r'rm -f( %s/\S+)+' % T, cmd) or re.fullmatch(r'rm -rf %s/mu300-bootchain-backup' % T, cmd):
         return '', 'read'       # the installer's own leftovers in /data/local/tmp
     if re.search(r'\bof=/dev/|\bdd\b.*\bof=|>\s*/|\brm\b|\bsh \S+android-install\.sh|\bmkdir\b|\bcp\b|\btouch\b|blkdiscard', cmd):
@@ -413,6 +488,10 @@ def main(argv):
             if st['serial'].upper().startswith('MU300LINUX'):
                 out.write('/opt/mu300/bin\n' if line.startswith('ls') else 'mu300\n')
             return 0
+        if line == 'cat /proc/sys/kernel/random/boot_id':
+            log('read', argv, line)
+            out.write(st['boot_id'] + '\n')
+            return 0
         if line == 'getprop':
             log('read', argv, line)
             out.write(''.join('[%s]: [%s]\n' % kv for kv in sorted(props(st).items())))
@@ -433,6 +512,9 @@ def main(argv):
         return 0
     if cmd == 'push':
         log('push', argv)
+        if rest[-1].startswith(T + '/mu300-online/') and not st.get('emmc'):
+            with open(rest[0], 'rb') as f:
+                pushed({rest[-1]: hashlib.sha256(f.read()).hexdigest()})
         if rest[-1:] == [T + '/mu300-pwcheck.in'] and not st.get('emmc'):
             import shutil
             shutil.copy(rest[0], state_path() + '.pwin')     # what su's pw_check reads (android-pwcheck.sh above)
@@ -472,6 +554,9 @@ def main(argv):
         return 0
     if cmd == 'reboot':
         log('reboot', argv)
+        if st.get('reboot_boots'):
+            n = st.get('reboots_seen', 0) + 1
+            save(reboots_seen=n, boot_id='b00710d0-0000-4000-8000-%012d' % (n + 1), usb_config=st['usb_stock'])
         return 0
     log('unknown', argv)
     return 1

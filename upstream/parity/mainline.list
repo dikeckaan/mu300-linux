@@ -27,6 +27,7 @@ cfg CRYPTO_SHA1 6.18 7.2 7.3
 cfg CRYPTO_SHA256 6.18 7.2 7.3
 cfg CRYPTO_SHA512 6.18 7.2 7.3
 cfg CRYPTO_SKCIPHER 6.18 7.2 7.3
+cfg DEVFREQ_GOV_PASSIVE 6.18 7.2 7.3
 cfg DEVFREQ_THERMAL 6.18 7.2 7.3
 cfg DMABUF_HEAPS 6.18 7.2 7.3
 cfg FIXED_PHY 6.18 7.2 7.3
@@ -50,10 +51,12 @@ cfg SPI_SPRD_ADI 6.18 7.2 7.3
 cfg SPRD_7SRESET 6.18 7.2 7.3
 cfg SPRD_BC1P2 6.18 7.2 7.3
 cfg SPRD_CPU_HOTPLUG_COOLING 6.18 7.2 7.3
+cfg SPRD_DMC_DRV 6.18 7.2 7.3
 cfg SPRD_PMIC_SYSCON 6.18 7.2 7.3
 cfg SPRD_SOC_ID 6.18 7.2 7.3
 cfg SPRD_THERMAL_R5P0 6.18 7.2 7.3
 cfg SPRD_TIMER 6.18 7.2 7.3
+cfg SPRD_TOP_DVFS_DEVFREQ 6.18 7.2 7.3
 cfg SPRD_UMP96XX_TSENSOR 6.18 7.2 7.3
 cfg SPRD_UMS9620_IPA_PD 6.18 7.2 7.3
 cfg TYPEC_SC27XX 6.18 7.2 7.3
@@ -180,6 +183,7 @@ ko dm_crypt 6.18 7.2 7.3
 ko dm_mod 6.18 7.2 7.3
 ko dm_snapshot 6.18 7.2 7.3
 ko dm_verity 6.18 7.2 7.3
+ko dmc_drv 6.18 7.2 7.3
 ko dns_resolver 6.18 7.2 7.3
 ko drbg 6.18 7.2 7.3
 ko drm 6.18 7.2 7.3
@@ -216,6 +220,7 @@ ko gf128mul 6.18 7.2 7.3
 ko ghash_ce 6.18 7.2 7.3
 ko ghash_generic 6.18
 ko gnss 6.18 7.2 7.3
+ko governor_passive 6.18 7.2 7.3
 ko governor_performance 6.18 7.2 7.3
 ko governor_powersave 6.18 7.2 7.3
 ko governor_simpleondemand 6.18 7.2 7.3
@@ -566,6 +571,8 @@ ko spipe 6.18 7.2 7.3
 ko spool 6.18 7.2 7.3
 ko sprd_7sreset 6.18 7.2 7.3
 ko sprd_bc1p2 6.18 7.2 7.3
+ko sprd_cp_dvfs 6.18 7.2 7.3
+ko sprd_ddr_dvfs 6.18 7.2 7.3
 ko sprd_hwspinlock 6.18 7.2 7.3
 ko sprd_modem_loader 6.18 7.2 7.3
 ko sprd_pmic_syscon 6.18 7.2 7.3
@@ -580,6 +587,7 @@ ko sprd_systimer 6.18 7.2 7.3
 ko sprd_thermal_r5p0 6.18 7.2 7.3
 ko sprd_time_sync 6.18 7.2 7.3
 ko sprd_time_sync_cp 6.18 7.2 7.3
+ko sprd_top_dvfs 6.18 7.2 7.3
 ko sprd_trng 6.18 7.2 7.3
 ko sprd_ump96xx_tsensor 6.18 7.2 7.3
 ko sprd_wlan_combo 6.18 7.2 7.3

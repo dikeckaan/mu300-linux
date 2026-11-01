@@ -766,6 +766,8 @@ exit 0''')
                 self.send(fd, 'Deleted 240e:388:a:1234::/64 dev br-lan metric 128 pref medium')
                 self.until(lambda: len(self.replaces()) == 2, 'the removed route did not come back')
                 self.assertLess(time.monotonic() - t0, 5)
+                # the round's own last calls (the stale route's del, the bearer's show) come after its replace
+                time.sleep(1)
                 # the route that replace put back comes as a line too: a look, nothing changed, no ip
                 n = len(self.lines('ipcalls'))
                 self.send(fd, '240e:388:a:1234::/64 dev br-lan metric 128 pref medium')

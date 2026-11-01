@@ -174,7 +174,7 @@ sec == "net" && /:/ {
     cur["rx_" ifc] = f[1]; cur["tx_" ifc] = f[9]
 }
 sec == "load" { if (NF == 5) load = $1 " " $2 " " $3; else up = int($1) }
-sec == "disk" && $3 ~ /^mmcblk[0-9]+$/ { cur["dw"] += $10; cur["dr"] += $6 }
+sec == "disk" && $3 ~ /^(mmcblk[0-9]+|sd[a-z]+)$/ { cur["dw"] += $10; cur["dr"] += $6 }
 sec == "sys" {
     i = index($0, ":"); path = substr($0, 1, i - 1); val = substr($0, i + 1)
     n = split(path, pp, "/"); leaf = pp[n]; node = pp[n - 1]

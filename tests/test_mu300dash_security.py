@@ -230,6 +230,20 @@ class Mu300Dash(ShellTest):
         self.assertIsInstance(obj, dict, r.stdout)
         return obj
 
+    def test_signal_busy_when_both_channels_are_taken(self):
+        """The live signal read (locks page): cell exits 75 when both dashboard channels are taken by other readings,
+        and the reply says busy (the page keeps its reading, kanoqwq's b9f71e72); any other failure is the error."""
+        for shell in self.each_shell():
+            (self.out / 'cell.rc').write_text('75')
+            obj = self.reply(self.call(shell, 'signal')[0])
+            self.assertEqual(obj.get('busy'), 1, obj)
+            self.assertIn('busy', obj['error'])
+            (self.out / 'cell.rc').write_text('1')
+            obj = self.reply(self.call(shell, 'signal')[0])
+            self.assertNotIn('busy', obj)
+            self.assertEqual(obj['error'], 'Live signal read failed')
+            (self.out / 'cell.rc').unlink()
+
     def calls_parallel(self, shell, jobs):
         """[(label, method, params)] -> [(label, CompletedProcess, calls, stdins)], several at a time."""
         with ThreadPoolExecutor(max_workers=8) as ex:

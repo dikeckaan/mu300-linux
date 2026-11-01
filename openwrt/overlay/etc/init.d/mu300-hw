@@ -37,14 +37,18 @@ hw_bringup() {
 	/opt/mu300/bin/mu300-nfc supported 2>/dev/null && /opt/mu300/bin/mu300-nfc sync >/tmp/mu300-nfc.log 2>&1
 	# apply the country before netifd starts hostapd, otherwise 5 GHz channels are still NO-IR under world rules
 	country=$(uci -q get wireless.radio0.country)
+	reg_ready=1
 	if [ -n "$country" ]; then
 		iw reg set "$country"
-		for n in $(seq 1 10); do iw reg get | grep -q "country $country:" && break; sleep 1; done
+		reg_ready=0
+		for n in $(seq 1 10); do iw reg get | grep -q "country $country:" && { reg_ready=1; break; }; sleep 1; done
 	fi
 	# Unchanged settings and an access point that netifd's own start brought up: nothing to redo. The down/up below
 	# took a hotspot that was up (and the chip under it: a power cycle and a firmware load) down again for ~4 s at
-	# every boot.
-	if [ "$(md5sum /etc/config/wireless 2>/dev/null)" = "$cfg" ] && ap_enabled_soon; then
+	# every boot. Only once the country is live (kanoqwq's f0b5ad43): an access point that came up under the world
+	# rules is restarted under the country's. A settings file that could not be read is never "unchanged".
+	if [ "$reg_ready" = 1 ] && [ -n "$cfg" ] && [ "$(md5sum /etc/config/wireless 2>/dev/null)" = "$cfg" ] &&
+	   ap_enabled_soon; then
 		echo "access point up under the configured rules, no restart" >>/tmp/mu300-wifi-start.log
 		return 0
 	fi

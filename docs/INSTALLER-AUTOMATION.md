@@ -77,10 +77,12 @@ A question is asked only where the installer asks it by hand too.
 | `MU300_ANS_UNKNOWN_MODEL` | `yes`, `no` | not an F50 or U30 Air: continue anyway |
 | `MU300_STORAGE` | `internal`, `sd` | with an SD card: where the Linux filesystem goes |
 | `MU300_ANS_INTERNAL_OVER_CARD` | `internal` | internal storage although the card holds an installation |
-| `MU300_ANS_MAKE_ROOM` | `yes`, `no` | no free space: shrink `userdata` (erases Android's data) |
+| `MU300_ANS_MAKE_ROOM` | `yes`, `no` | no free space: shrink `userdata` |
+| `MU300_ANS_MAKE_ROOM_METHOD` | `keep`, `reset` | then, where the device can (the check's `makeroom.online` is `yes`): keep Android's data (its F2FS shrunk while Android runs, EXPERIMENTAL) or reset Android (erases its data); not asked elsewhere, where it is the reset |
 | `MU300_ANS_LINUX_GIB` | a number, `4` or `2.5` | then: how many GiB for Linux |
-| `MU300_ANS_ERASE_ANDROID` | `ERASE` | then: the word that allows it |
-| `MU300_ANS_REBOOT` | `yes`, `no` | then: reboot (into the reset by Android's recovery; the installation resumes on the next run) |
+| `MU300_ANS_SHRINK` | `yes`, `no` | with `keep`: shrink now |
+| `MU300_ANS_ERASE_ANDROID` | `ERASE` | with `reset`: the word that allows it |
+| `MU300_ANS_REBOOT` | `yes`, `no` | then: reboot (`keep`: a normal restart of Android; `reset`: into the reset by Android's recovery); the installation resumes on the next run |
 | `MU300_ANS_OVERWRITE` | `overwrite` | the free space holds data: use it anyway |
 | `MU300_ANS_BETA` | `yes`, `no` | a prerelease newer than the newest release: install it. `MU300_RELEASE=<tag>` (`-Release`) names the release and asks nothing |
 | `MU300_ANS_SYSTEMS` | `1`, `2`, `3` | Ubuntu, OpenWrt, both |
@@ -105,6 +107,9 @@ A question is asked only where the installer asks it by hand too.
 The variables that were there before work as they did (`MU300_WORK`, `MU300_RELEASE_URL`, `MU300_SYNC_BOOTCHAIN`,
 `MU300_VPN_URL`, `MU300_VPN_MODULE`, `MU300_FETCH_JOBS`, `MU300_NO_SELF_UPDATE`); `install.ps1` now reads
 `MU300_LANG`, `MU300_RELEASE`, `MU300_RELEASE_URL` and `MU300_WORK` where its parameters are not given.
+Early in every run the installers and uninstallers switch Android's USB to adb alone for that boot (a stuck MTP
+has Windows reset the device every ten seconds); `MU300_USB_ADB_ONLY=0` leaves it, `MU300_USB_WAIT` (seconds, 60)
+bounds the wait for adb after the switch.
 
 **The Magisk zip on the device** asks nothing (nothing can be typed while Magisk installs it). Its answers are a
 `mu300-install.conf` (README, "Choosing something else"); for the password of an update only one inside the zip
@@ -180,6 +185,7 @@ The stages of an installation, in order: `preflight` 2, `storage` 6, `choices` 1
 | `bootloader.verified` | `ro.boot.verifiedbootstate`: `green`, `yellow`, `orange`, `red` |
 | `root` | `yes`, `no`: whether `su` works |
 | `root.su` | what `su -v` says, for example `27.0:MAGISKSU` |
+| `usb.functions`, `usb.was` | Android's USB functions for the run (`adb` once MTP/PTP were switched off) and the ones before (only after a switch); see `tools/android-usb.sh` |
 | `slot.android`, `slot.linux` | `a`, `b` |
 | `work` | the work directory on this computer |
 | `bootchain` | the boot chain line of the plan |

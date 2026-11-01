@@ -16,7 +16,7 @@ import { mask as pageMask } from "./privacy.js";
 import { Sha256, sha256Hex } from "./sha256.js";
 
 export const STAGE = "/data/local/tmp/mu300-web";
-export const DEVICE_FILES = ["android-web.sh", "storage.sh", "android-boot-image.sh", "android-mount-mu300root.sh", "switch.sh"];
+export const DEVICE_FILES = ["android-web.sh", "storage.sh", "android-boot-image.sh", "android-mount-mu300root.sh", "android-usb.sh", "switch.sh"];
 
 export class DeviceError extends Error {
   // code: a word the page has a sentence for (the script's MU300-WEB-ERROR codes among them)
@@ -155,6 +155,14 @@ export class AndroidDevice {
       throw new DeviceError(/^[a-z-]{1,40}$/.test(code) ? code : "device", this.mask(rest.join(" ")).slice(0, 200));
     }
     return { rc: r.exitCode, out, marks };
+  }
+
+  // MTP and PTP off for this boot of Android (android-web.sh usb, tools/android-usb.sh; reported by kanoqwq: a hung MTP
+  // has Windows reset the device every ten seconds). true: the device switches, and a second later leaves the USB bus
+  // and comes back as another USB device with adb alone.
+  async usbAdbOnly() {
+    const r = await this.web(["usb"], { timeoutMs: 30000 });
+    return !!(r.marks.USB && /^switch /.test(r.marks.USB[0]));
   }
 
   async status(deep = false) {

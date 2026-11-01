@@ -227,10 +227,18 @@ m_signal() {
     # unbounded parallel work. The collector claims one of the verified
     # slot-0 nr6/nr7 channels and drops excess overlap immediately, and it
     # stops asking at its deadline: a silent modem answers within it.
+    local rc=0
     MU300_DASH_DIR="$live" MU300_DASH_LOCK_DIR="$DIR" MU300_DASH_DEADLINE=$SIGNAL_DEADLINE \
-        "$DASH/cell" fast >/dev/null 2>&1
-    json_obj "$(cat "$live/sig.json" 2>/dev/null)" ||
-        printf '{"error":"Live signal read failed"}\n'
+        "$DASH/cell" fast >/dev/null 2>&1 || rc=$?
+    # 75: both dashboard channels were taken by other readings (the home page's, another browser's); a retry soon
+    # will find one, so the page keeps what it shows instead of an error (kanoqwq's b9f71e72)
+    if ! json_obj "$(cat "$live/sig.json" 2>/dev/null)"; then
+        if [ "$rc" = 75 ]; then
+            printf '{"busy":1,"error":"The modem channels are busy with other readings; the live signal follows shortly"}\n'
+        else
+            printf '{"error":"Live signal read failed"}\n'
+        fi
+    fi
     rm -rf "$live"
 }
 
