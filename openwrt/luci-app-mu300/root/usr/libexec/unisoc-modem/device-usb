@@ -12,10 +12,12 @@ LIB=${0%/*}/../../share/unisoc-modem/lib.sh
 
 CFG=unisoc_modem.usb
 ROLE_FILE=${MU300_USB_ROLE_FILE:-/sys/class/usb_role/25100000.dwc3-role-switch/role}
-# The USB network mode for the next boot: ncm, ecm or rndis, alone on its line. boot/init reads it from the system
-# it boots and rebinds the gadget once when it differs (D12), then leaves APPLIED_FILE behind (K8).
+# The USB network mode for the next boot: ncm, ecm, rndis or multi (NCM + RNDIS), alone on its line. boot/init reads
+# it from the system it boots and rebinds the gadget once when it differs (D12), then leaves APPLIED_FILE behind (K8).
+# NAME_FILE beside it holds eth when a Linux computer should name the link eth0 rather than usb0 (every mode).
 BOOT_FILE=${MU300_USB_NET_FILE:-/etc/mu300/usb-net}
 APPLIED_FILE=${MU300_USB_APPLIED_FILE:-/run/mu300/usb-net-applied}
+NAME_FILE=${MU300_USB_NAME_FILE:-/etc/mu300/usb-net-name}
 NET_CLASS=${MU300_USB_NET_CLASS:-/sys/class/net}
 USB_BUS=${MU300_USB_BUS:-/sys/bus/usb/devices}
 RESCAN_MARKER=${MU300_USB_RESCAN_MARKER:-/run/unisoc-usb-host-rescan-done}
@@ -53,7 +55,7 @@ ensure_section() {
 sync_boot_file() {
     mode=$(get net_mode); scope=$(get net_scope); auto=$(get net_auto)
     [ "$auto" = 1 ] || { rm -f "$BOOT_FILE"; return; }
-    case $mode in ecm|ncm|rndis) ;; *) error 'Invalid USB network mode' ;; esac
+    case $mode in ecm|ncm|rndis|multi) ;; *) error 'Invalid USB network mode' ;; esac
     case $scope in once|permanent) ;; *) error 'Invalid USB network scope' ;; esac
     mkdir -p "${BOOT_FILE%/*}" || error 'Cannot create USB boot settings directory'
     tmp="$BOOT_FILE.$$"
@@ -62,7 +64,8 @@ sync_boot_file() {
     mv "$tmp" "$BOOT_FILE" || error 'Cannot save USB boot settings'
 }
 # bound_function: the network function the USB gadget has bound right now (configfs, kanoqwq's db4e5d2): ncm, ecm,
-# rndis, mixed (more than one kind), or none (no gadget bound to a controller, or none of these functions)
+# rndis, multi (RNDIS and NCM, as boot/init makes them for "multi"), mixed (any other mix of kinds), or none (no gadget
+# bound to a controller, or none of these functions)
 bound_function() {
     found=
     for gadget in "$GADGET_DIR"/*; do
@@ -71,7 +74,12 @@ bound_function() {
             [ -L "$link" ] || continue
             f=$(readlink "$link"); f=${f##*/}
             case $f in ncm.*) f=ncm ;; ecm.*) f=ecm ;; rndis.*) f=rndis ;; *) continue ;; esac
-            if [ -z "$found" ]; then found=$f; elif [ "$found" != "$f" ]; then found=mixed; fi
+            case $found:$f in
+                :*) found=$f ;;
+                ncm:rndis|rndis:ncm|multi:ncm|multi:rndis) found=multi ;;
+                "$f:$f") ;;
+                *) found=mixed ;;
+            esac
         done
     done
     echo "${found:-none}"
@@ -158,8 +166,9 @@ case ${1:-} in
         mode=$(get net_mode); scope=$(get net_scope)
         case $role_auto in 1) ;; *) role_auto=0 ;; esac
         case $net_auto in 1) ;; *) net_auto=0 ;; esac
-        case $mode in ecm|ncm|rndis) ;; *) mode=ncm ;; esac
+        case $mode in ecm|ncm|rndis|multi) ;; *) mode=ncm ;; esac
         case $scope in once|permanent) ;; *) scope=permanent ;; esac
+        name=usb; [ "$(sed -n 1p "$NAME_FILE" 2>/dev/null)" = eth ] && name=eth
         [ "$role_auto" = 0 ] || net_auto=0
         [ "$role" != host ] || net_auto=0
         available=1
@@ -169,8 +178,8 @@ case ${1:-} in
         # what the gadget runs now, beside what is saved for the next boot (none in host role: no gadget)
         current=none
         [ "$role" = host ] || current=$(bound_function)
-        printf '{"ok":1,"role":%s,"role_auto":%s,"host_supported":%s,"net_mode":"%s","net_scope":"%s","net_auto":%s,"net_available":%s,"net_current":"%s"}\n' \
-            "$(json_str "$role")" "$role_auto" "$host_supported" "$mode" "$scope" "$net_auto" "$available" "$current"
+        printf '{"ok":1,"role":%s,"role_auto":%s,"host_supported":%s,"net_mode":"%s","net_scope":"%s","net_auto":%s,"net_available":%s,"net_current":"%s","net_name":"%s"}\n' \
+            "$(json_str "$role")" "$role_auto" "$host_supported" "$mode" "$scope" "$net_auto" "$available" "$current" "$name"
         ;;
     set-role)
         role=${2:-}; auto=${3:-}
@@ -212,7 +221,7 @@ case ${1:-} in
         ;;
     set-net)
         mode=${2:-}; scope=${3:-}; auto=${4:-}
-        case $mode in ecm|ncm|rndis) ;; *) error 'Invalid USB network mode' ;; esac
+        case $mode in ecm|ncm|rndis|multi) ;; *) error 'Invalid USB network mode' ;; esac
         case $scope in once|permanent) ;; *) error 'Invalid USB network scope' ;; esac
         case $auto in 0|1) ;; *) error 'Invalid boot-auto value' ;; esac
         [ "$(role_now)" != host ] || error 'USB network mode is unavailable in host role'
@@ -221,6 +230,22 @@ case ${1:-} in
         put net_mode "$mode" && put net_scope "$scope" && put net_auto "$auto" || error 'Cannot save USB network policy'
         sync_boot_file
         uci commit unisoc_modem || error 'Cannot commit USB network policy'
+        printf '{"ok":1}\n'
+        ;;
+    set-net-name)
+        # usb or eth: what a Linux computer names the link from the next boot on (boot/init: every mode). A file of
+        # its own, not UCI: nothing of the mode's policy (auto, once, the host role) applies to it.
+        name=${2:-}
+        case $name in usb|eth) ;; *) error 'Invalid USB network name' ;; esac
+        if [ "$name" = usb ]; then
+            rm -f "$NAME_FILE" || error 'Cannot save USB boot settings'
+        else
+            mkdir -p "${NAME_FILE%/*}" || error 'Cannot create USB boot settings directory'
+            tmp="$NAME_FILE.$$"
+            printf 'eth\n' > "$tmp" || error 'Cannot write USB boot settings'
+            chmod 600 "$tmp"
+            mv "$tmp" "$NAME_FILE" || error 'Cannot save USB boot settings'
+        fi
         printf '{"ok":1}\n'
         ;;
     boot)
@@ -324,5 +349,5 @@ case ${1:-} in
         "$IP" link set dev "$name" master "$bridge" >/dev/null 2>&1 || error 'Cannot attach USB interface to LAN bridge'
         printf '{"ok":1}\n'
         ;;
-    *) echo "usage: $0 {get|set-role ROLE AUTO|apply-role ROLE|set-net MODE SCOPE AUTO|boot|host-rescan|net-sync|net-list|net-add IFACE}" >&2; exit 2 ;;
+    *) echo "usage: $0 {get|set-role ROLE AUTO|apply-role ROLE|set-net MODE SCOPE AUTO|set-net-name usb|eth|boot|host-rescan|net-sync|net-list|net-add IFACE}" >&2; exit 2 ;;
 esac

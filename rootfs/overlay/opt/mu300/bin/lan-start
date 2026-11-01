@@ -20,7 +20,8 @@ for n in $(seq 1 30); do ip link show usb0 >/dev/null 2>&1 && break; sleep 1; do
 ip addr flush dev usb0 2>/dev/null || true
 ip link set usb0 master br-lan
 ip link set usb0 up
-# rndis0: the gadget's RNDIS configuration, which Windows uses (boot/init); only one of the two carries traffic
+# rndis0: the gadget's RNDIS function, which Windows uses (boot/init); with "multi" (RNDIS and NCM) a computer can use
+# both, one bridge and one dnsmasq for the two
 if ip link show rndis0 >/dev/null 2>&1; then
     # with RNDIS, init's early DHCP server put the address on rndis0 (K5): only the bridge may hold the subnet
     ip addr flush dev rndis0 2>/dev/null || true

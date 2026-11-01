@@ -4338,3 +4338,21 @@ msgstr "本地網路"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "模組通道正被其他讀取佔用，即時訊號稍後更新"
+
+msgid "Name on a Linux computer"
+msgstr "在 Linux 電腦上的名稱"
+
+msgid "usb0 (the default)"
+msgstr "usb0（預設）"
+
+msgid "eth0, as with Android"
+msgstr "eth0，與 Android 相同"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS：一條傳輸線即可用於新舊 Windows、macOS 與 Linux。較新的 Windows 與 Linux 會顯示兩個網路介面卡。沒有 RNDIS 的核心只建立 NCM。"
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0：電腦取得廠商位址範圍內的位址（與 Android 相同），Linux 會將連線命名為 eth0 而非 usb0。Windows 與 macOS 不受影響。"
+
+msgid "Invalid USB network name"
+msgstr "無效的 USB 網路名稱"

@@ -58,8 +58,9 @@ Pick it at install ("Which OpenWrt?" -> 2, or `MU300_OPENWRT=luci`), or switch a
   the module's release), **Settings** (kill switch, IPv6, LAN ranges that bypass the tunnel, Tailscale, DNS, the
   per-profile options) and **Logs**. Without the module every page offers to install it.
 * **Cellular > TTL:** a fixed TTL for mobile data (`mu300-ttl`).
-* **Cellular > Device management:** USB role (device or host), the USB network mode (NCM, ECM or RNDIS, applied at the
-  next boot) beside the one the USB gadget runs now, and host-mode adapters that can join the LAN bridge (wired
+* **Cellular > Device management:** USB role (device or host), the USB network mode (NCM, ECM, RNDIS or NCM + RNDIS,
+  applied at the next boot) beside the one the USB gadget runs now, the name a Linux computer gives the link (usb0 or
+  eth0), and host-mode adapters that can join the LAN bridge (wired
   Ethernet adapters only, and none that another network already uses). **Network performance:** the TCP congestion
   control of the device's own connections, the kernel's default, CUBIC or BBR (BBR also makes fq the default queue);
   only what the kernel offers is listed (the 5.4 kernel has no BBR), and it is kept across reboots and updates

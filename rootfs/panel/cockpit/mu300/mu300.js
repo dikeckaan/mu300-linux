@@ -1694,19 +1694,22 @@
         refresh();
     }
 
-    /* the USB network to a computer (usb.net): NCM, ECM or RNDIS from the next boot, for good or for that boot only */
+    /* the USB network to a computer (usb.net): NCM, ECM, RNDIS or both NCM and RNDIS (multi) from the next boot, for
+     * good or for that boot only, and the name a Linux computer gives the link (usb0 or eth0, with every mode) */
     function usbNet(box) {
         var b = box.appendChild(el('div', { id: 'mu-usbnet' }));
-        var NAMES = { ncm: 'NCM', ecm: 'ECM', rndis: 'RNDIS', 'default': _('NCM (the default)') };
+        var NAMES = { ncm: 'NCM', ecm: 'ECM', rndis: 'RNDIS', multi: 'NCM + RNDIS', 'default': _('NCM (the default)') };
         function paint(o) {
             b.appendChild(row(_('USB network now'), o.now ? NAMES[o.now] || o.now : NAMES['default']));
             b.appendChild(row(_('USB network from the next boot'), (NAMES[o.mode] || o.mode) + (o.once ? ' (' + _('that boot only') + ')' : '')));
-            var mode = select('mu-usbnet-mode', [ [ 'default', NAMES['default'] ], [ 'ecm', 'ECM' ], [ 'rndis', 'RNDIS' ], [ 'ncm', 'NCM' ] ], o.mode || 'default');
+            var mode = select('mu-usbnet-mode', [ [ 'default', NAMES['default'] ], [ 'ecm', 'ECM' ], [ 'rndis', 'RNDIS' ], [ 'multi', NAMES.multi ], [ 'ncm', 'NCM' ] ], o.mode || 'default');
             var scope = select('mu-usbnet-scope', [ [ 'permanent', _('From the next boot on') ], [ 'once', _('The next boot only, then NCM again') ] ], o.once ? 'once' : 'permanent');
+            var name = select('mu-usbnet-name', [ [ 'usb', _('usb0 (the default)') ], [ 'eth', _('eth0, as with Android') ] ], o.name === 'eth' ? 'eth' : 'usb');
             b.appendChild(field(_('USB network protocol'), mode));
             b.appendChild(field(_('How long'), scope));
+            b.appendChild(field(_('Name on a Linux computer'), name));
             var sv = button(_('Save (used at the next boot)'), function () {
-                var req = { mode: mode.value };
+                var req = { mode: mode.value, name: name.value };
                 if (mode.value !== 'default') req.scope = scope.value;
                 act(sv, 'usb.net', req, { confirm: mode.value === 'rndis' ? _('RNDIS is for older Windows: macOS has no driver for it, and a Mac on USB loses the connection to the device until NCM is back. Save?') : null,
                     ok: _('Saved: the USB connection to the computer drops for a moment at the next boot and comes back with it.'),
@@ -1714,6 +1717,8 @@
             });
             b.appendChild(actions([ sv ]));
             b.appendChild(note(_('NCM: Windows 10 2004 and newer, macOS, Linux. ECM: macOS, Linux (Windows has no driver). RNDIS: older Windows (macOS has no driver).')));
+            b.appendChild(note(_('NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone.')));
+            b.appendChild(note(_('eth0: the computer gets an address from the maker\'s range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected.')));
         }
         load(b, 'usb.net', {}, paint);
     }

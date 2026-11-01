@@ -4345,3 +4345,21 @@ msgstr "Rețea de acasă"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Canalele modemului sunt ocupate cu alte citiri; semnalul în timp real urmează în curând"
+
+msgid "Name on a Linux computer"
+msgstr "Nume pe un calculator Linux"
+
+msgid "usb0 (the default)"
+msgstr "usb0 (implicit)"
+
+msgid "eth0, as with Android"
+msgstr "eth0, ca la Android"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS: un singur cablu care merge cu Windows vechi și nou, macOS și Linux. Windows mai nou și Linux arată două adaptoare de rețea. Un kernel fără RNDIS creează doar NCM."
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0: calculatorul primește o adresă din plaja producătorului, cum o dă Android, iar Linux numește legătura eth0 în loc de usb0. Windows și macOS nu sunt afectate."
+
+msgid "Invalid USB network name"
+msgstr "Nume de rețea USB nevalid"
