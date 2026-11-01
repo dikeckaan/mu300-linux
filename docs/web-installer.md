@@ -79,6 +79,13 @@ it without a device and with one, and what the owner has to set up for the one p
 * **Connecting.** The first time, Chrome's chooser (`requestDevice`); afterwards the page offers the devices the
   browser already allowed (`getDevices`) as "Connect to ...", and connects by itself when such a device comes back
   after a restart the page asked for. In Android and in Linux the same unit is two USB devices: each is chosen once.
+* **The call audio package** (`audio.js`, for sponsors): the installers for computers only point here. In the wizard
+  ("Would you like to add the audio package?") and in the Linux view the page shows the sponsor text, this device's
+  code (`android-web.sh code`, `mu300-device-code`, once the licensing work defines them) and takes the package from
+  `fetchAudioPackage` (a licence key and a Turnstile check against the package service: not wired yet; `?dev` picks a
+  local zip instead). `readAudioPackage` checks it before anything is sent (SHA256SUMS, the extra's manifest, the
+  kernels it has drivers for). The wizard sends it as the `mu300-audio` extra when the zip's installer takes it
+  (`take` says `"audio":1`); the Linux view runs `mu300-extra install mu300-audio --from DIR` and offers a restart.
 * **Not in the page, on purpose:** shrinking `userdata` on the 32 GB variant and growing it back (the page shows the
   figures and points to `install.sh` / `uninstall.sh`), rooting, unlocking, restoring single partitions from a
   backup (its README.txt has the two commands). The VPN module is still a file the user picks.

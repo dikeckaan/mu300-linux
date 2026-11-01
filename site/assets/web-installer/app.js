@@ -11,6 +11,7 @@ import { AdbError } from "./adb/errors.js";
 import { fingerprint, publicKeyLine } from "./adb/key.js";
 import { ADB_FILTERS, findAdbInterface, openUsbTransport, platformOf } from "./adb/usb.js";
 import { MIRROR_BASE } from "./config.js";
+import { AudioError, FORM_URL, MIN_SPONSOR_USD, SPONSOR_URL, fetchAudioPackage, readAudioPackage } from "./audio.js";
 import { AndroidDevice, DeviceError, LinuxDevice, directorySink, identify, memorySink } from "./device.js";
 import { INSTALL_STEPS, MIB, NEED, UNINSTALL_STEPS, analyseStorage, answersFor, dataNeeded, deviceBlockers, familyOf, fmtSize, osOf,
   parsePlan, stageRisk, targetExisting, targetSize, validateChoices } from "./flow.js";
@@ -90,6 +91,7 @@ const S = {
   job: null,                  // what the job screen shows
   busy: "",                   // a word for what is going on (disables the buttons)
   action: null,               // the manage view's last action: { title, lines, rc, running }
+  audio: null,                // the call audio package (audioState): its key, this device's code, the checked package
   wake: null,
   granted: [],                // the USB devices this browser was allowed before: connecting needs no chooser
 };
@@ -593,7 +595,7 @@ function startWizard() {
   S.w.choices = { target: a.target, systems: [], kernel: (st.linux && st.linux.kernel) || (st.device === "v50" ? "6.18" : "5.4"), bootOs: (st.linux && st.linux.boot_os) || "",
     // Linux as the default boot is proposed every time, as the installers do: an installation that is there may say
     // "Android" only because the page's own "Restart into Android" made it so on the way here
-    defaultLinux: true, attempts: (st.linux && st.linux.attempts) || 5, hotspot: true, gpu: true, vpn: false,
+    defaultLinux: true, attempts: (st.linux && st.linux.attempts) || 5, hotspot: true, gpu: true, vpn: false, audio: false,
     mode: "update", password: "", password2: "", adb: false, eraseConfirmed: false, overwriteConfirmed: false, have };
   loadReleaseList();
   render();
@@ -759,7 +761,9 @@ function stepChoices() {
     check(c.gpu, t("choice.gpu"), (ev) => { c.gpu = ev.target.checked; }),
     check(c.vpn, t("choice.vpn"), async (ev) => { c.vpn = ev.target.checked; w.vpnFile = null; if (c.vpn && !S.vpnAsset) { try { S.vpnAsset = DEMO ? (await import("./demo.js")).demoVpn() : await loadVpnModule(); } catch (e) { c.vpn = false; S.failure = explainError(e); } render(); } }),
     check(c.adb, t("choice.adb"), (ev) => { c.adb = ev.target.checked; }),
-    h("p", { class: "small muted" }, t("choice.adb.note")));
+    h("p", { class: "small muted" }, t("choice.adb.note")),
+    check(c.audio, t("choice.audio"), (ev) => { c.audio = ev.target.checked; render(); }));
+  if (c.audio) box.append(audioPanel(c.kernel));
 
   box.append(h("h3", {}, t("choice.password")), h("p", { class: "small" }, t("choice.password.note")),
     h("div", { class: "wi-pw" },
@@ -1001,16 +1005,24 @@ async function sendRun(i, onProgress) {
   const w = S.w, c = w.choices, system = c.systems[i];
   const asset = wizardCtx().zips[system], signal = w.abort ? w.abort.signal : undefined;
   const say = (label) => { const r = rateText(); return (done, tot) => onProgress(label, done, tot, r(done, tot)); };
+  let info;
   if (w.source === "device") {
-    await S.dev.fetchZip(asset.name, asset.size, asset.sha256, say(t("send.device", sysLabel(system))), signal);
+    info = await S.dev.fetchZip(asset.name, asset.size, asset.sha256, say(t("send.device", sysLabel(system))), signal);
   } else if (w.source === "mirror") {
     const blob = await downloadZip(MIRROR_BASE, w.mirror, asset, { onProgress: say(t("send.mirror", sysLabel(system))), signal });
-    await S.dev.takeZip(blob, asset.name, asset.sha256, { onProgress: say(t("send.zip", sysLabel(system))), signal });
+    info = await S.dev.takeZip(blob, asset.name, asset.sha256, { onProgress: say(t("send.zip", sysLabel(system))), signal });
   } else {
-    await S.dev.takeZip(fileOf(system).file, asset.name, shaFor(system), { onProgress: say(t("send.zip", sysLabel(system))), signal });
+    info = await S.dev.takeZip(fileOf(system).file, asset.name, shaFor(system), { onProgress: say(t("send.zip", sysLabel(system))), signal });
   }
+  if (i === 0) w.zipAudio = !!(info && info.audio === 1);
   if (i === 0 && c.vpn && w.vpnFile) {
     await S.dev.addExtra("vpn", w.vpnFile.file, S.vpnAsset.sha256, { onProgress: say(t("send.vpn")), signal });
+  }
+  // the audio package goes with the first system, as the VPN module does: the zip's installer puts it onto the Linux
+  // partition when it knows it (its plan's extras say so, and the review tells when it does not)
+  const pkg = audioReady(c.audio, c.kernel);
+  if (i === 0 && pkg && w.zipAudio) {
+    await S.dev.addExtra("mu300-audio", pkg.tarball, pkg.sha256, { onProgress: say(t("send.audio")), signal });
   }
 }
 async function giveAnswers(i) {
@@ -1083,11 +1095,14 @@ function stepReview() {
     [t("review.boots"), sysName(c.bootOs, p.ubuntu)],
     [t("review.default"), t(c.defaultLinux ? "home.default.linux" : "home.default.android", String(c.attempts))],
     [t("review.password"), t("review.pw." + (c.password ? "given" : p.password === "kept" ? "kept" : "image"))],
-    [t("review.extras"), [c.vpn ? "VPN" : null, c.adb ? t("review.adb") : null].filter(Boolean).join(", ") || "-"],
+    [t("review.extras"), [c.vpn ? "VPN" : null, audioReady(c.audio, c.kernel) ? t("review.audio", S.audio.pkg.release) : null, c.adb ? t("review.adb") : null].filter(Boolean).join(", ") || "-"],
     [t("review.bootchain"), p.sync_bootchain === "1" ? (p.bootchain ? t("review.bootchain.sync", p.bootchain.split(" ").join(", "), p.android_slot, p.linux_slot) : t("review.bootchain.same")) : t("review.bootchain.off")],
   ];
   box.append(h("div", { class: "table-scroll" }, h("table", {}, h("tbody", {}, rows.map(([k, v]) => h("tr", {}, h("th", { scope: "row" }, k), h("td", {}, v)))))));
   if (S.probe && S.probe.lock === "locked") box.append(lockedNote());
+  // a release whose installer does not take the audio package yet: the package is not added now, the Linux view
+  // adds it once Linux runs
+  if (audioReady(c.audio, c.kernel) && !w.zipAudio) box.append(callout("warn", "", t("review.audio.later")));
   box.append(callout("linux", t("review.writes.title"),
     t("review.writes", p.storage === "sd" ? t("review.writes.sd") : t("review.writes.region"), p.linux_slot, p.android_slot),
     t("review.fallback")));
@@ -1336,8 +1351,11 @@ function linuxView() {
     const v = renderManager(MGR_UI, S.mgr);
     const pre = v.querySelector("#wi-job-pre");
     if (pre && S.mgr.job) pre.dataset.state = S.mgr.job.state;
-    return v;
+    return h("div", {}, v, audioLinuxView());
   }
+  return h("div", {}, linuxOldView(), audioLinuxView());
+}
+function linuxOldView() {
   const i = S.linux, d = S.dev;
   const out = h("section", { class: "panel wi-panel" });
   out.append(h("h2", {}, t("linux.title")));
@@ -1397,6 +1415,104 @@ function linuxView() {
       S.action.running ? null : h("div", { class: "actions" }, btn(t("log.save"), () => saveBlob(new Blob([S.action.lines.join("\n") + "\n"], { type: "text/plain" }), `mu300-${stamp()}.log`), "small"))));
   }
   if (i.source === "commands") out.append(h("p", { class: "small muted" }, t("linux.source.commands")));
+  return out;
+}
+
+// ---------------------------------------------------------------------------------------------------- the audio package
+
+// The call audio package (audio.js): for sponsors. Its state is the page's, not one wizard's: a package checked in the
+// wizard is the one the Linux view can add later. pkg: what readAudioPackage gave (null: none yet).
+function audioState() {
+  if (!S.audio) S.audio = { key: "", code: null, asking: false, pkg: null, error: "", busy: false, anyway: false, job: null };
+  return S.audio;
+}
+// does the checked package have drivers for this kernel (asked again whenever the kernel choice changes)
+const audioFits = (pkg, kernel) => !kernel || pkg.kernels.some((k) => k.key === kernel);
+// the package to send, or null: checked, and for this kernel (or taken anyway)
+function audioReady(wanted, kernel) {
+  const a = S.audio;
+  if (!wanted || !a || !a.pkg) return null;
+  return audioFits(a.pkg, kernel) || a.anyway ? a.pkg : null;
+}
+async function audioCode() {
+  const a = audioState();
+  if (a.code !== null || a.asking || !S.dev || typeof S.dev.deviceCode !== "function") return;
+  a.asking = true;
+  try { a.code = await S.dev.deviceCode(); } catch (e) { a.code = ""; }
+  a.asking = false; render();
+}
+async function audioTake(source, kernel) {
+  const a = audioState();
+  a.busy = true; a.error = ""; a.pkg = null; a.anyway = false; render();
+  try {
+    // fetchAudioPackage: the package service (licence key, Turnstile); a picked zip only in developer mode
+    const blob = source === "file" ? a.file : await fetchAudioPackage({ licenceKey: a.key.trim(), deviceCode: a.code || "", turnstileToken: null });
+    a.pkg = await readAudioPackage(blob, { kernel });
+    note(`audio package ${a.pkg.release}: checked (${a.pkg.kernels.map((k) => k.krel).join(" ")})`);
+  } catch (e) {
+    a.error = e instanceof AudioError ? t("audio.err." + e.code, e.detail) : errorText(explainError(e));
+  }
+  a.busy = false; render();
+}
+// what the user sees of it: sponsors only, the form, this device's code, the key (or, developers, a zip), the result
+function audioPanel(kernel) {
+  const a = audioState();
+  audioCode();
+  const link = (u) => h("a", { href: u, target: "_blank", rel: "noopener" }, u);
+  const box = h("div", { class: "wi-audio" },
+    h("p", { class: "small" }, t("audio.sponsor", String(MIN_SPONSOR_USD)), " ", link(SPONSOR_URL)),
+    h("p", { class: "small" }, t("audio.form"), " ", link(FORM_URL)));
+  if (a.code) box.append(h("p", { class: "small" }, t("audio.code"), " ", h("strong", { class: "wi-mono" }, a.code)));
+  box.append(h("label", { class: "wi-field" }, t("audio.key"),
+    h("input", { type: "text", autocomplete: "off", spellcheck: "false", value: a.key, oninput: (ev) => { a.key = ev.target.value; } })),
+    h("div", { class: "actions" }, btn(t("audio.get"), () => audioTake("service", kernel), "", { disabled: a.busy })));
+  if (DEVMODE) {
+    box.append(h("label", { class: "wi-btn" }, t("audio.dev.pick"), h("input", { type: "file", class: "wi-hidden", accept: ".zip",
+      onchange: (ev) => { if (ev.target.files[0]) { a.file = ev.target.files[0]; audioTake("file", kernel); } } })));
+  }
+  if (a.busy) box.append(h("p", { class: "wi-wait small" }, t("audio.checking")));
+  if (a.error) box.append(h("p", { class: "wi-bad small" }, a.error));
+  if (a.pkg) {
+    box.append(h("p", { class: "wi-good small" }, t("audio.ok", a.pkg.release, a.pkg.kernels.map((k) => k.key).join(", "))));
+    if (!audioFits(a.pkg, kernel)) {
+      box.append(callout("warn", "", t("audio.unfit", kernel)),
+        check(a.anyway, t("audio.anyway"), (ev) => { a.anyway = ev.target.checked; render(); }));
+    }
+  }
+  if (!a.pkg) box.append(h("p", { class: "small muted" }, t("audio.skip")));
+  return box;
+}
+// the running Linux: the same panel, then mu300-extra install on the device and a restart
+function audioLinuxView() {
+  const a = audioState(), d = S.dev;
+  const out = h("section", { class: "panel wi-panel" }, h("h2", {}, t("audio.title")));
+  if (!a.open) {
+    out.append(h("p", { class: "small" }, t("audio.linux.what")), h("div", { class: "actions" }, btn(t("choice.audio"), () => { a.open = true; render(); })));
+    return out;
+  }
+  const kernel = S.linux && S.linux.kernelChoice;
+  out.append(audioPanel(kernel));
+  const pkg = audioReady(true, kernel);
+  if (pkg && typeof d.addAudio === "function") {
+    out.append(h("div", { class: "actions" }, btn(t("audio.install"), async () => {
+      if (S.busy) return;
+      a.job = { lines: [], rc: null, running: true }; S.busy = "audio"; render();
+      try {
+        const r = await d.addAudio(pkg.tarball, pkg.sha256, (line) => { a.job.lines.push(masker.mask(line)); });
+        a.job.rc = r.rc;
+      } catch (e) { if (isGone(e)) return; a.job.rc = -1; a.job.lines.push(errorText(explainError(e))); }
+      a.job.running = false; S.busy = ""; render();
+    }, "primary", { disabled: !!S.busy })));
+  }
+  if (a.job) {
+    out.append(h("pre", { class: "wi-log", tabindex: "0" }, a.job.lines.join("\n")));
+    if (!a.job.running) {
+      out.append(a.job.rc === 0
+        ? callout("linux", t("audio.installed"), t("audio.installed.reboot"), h("div", { class: "actions" },
+          btn(t("linux.reboot"), async () => { S.expectDisconnect = true; await d.reboot(); }, "", { disabled: !!S.busy })))
+        : callout("warn", "", t("audio.install.failed", String(a.job.rc))));
+    }
+  }
   return out;
 }
 

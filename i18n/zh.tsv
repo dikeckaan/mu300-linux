@@ -939,3 +939,10 @@ USB of Android: adb only for this run (was {1}; MTP can stall the connection, Wi
 Android kept its USB functions ({1}); going on with them	Android 保留了其 USB 功能（{1}）；继续使用这些功能
 the device did not come back on adb within {1} seconds after its USB was set to adb only: unplug it and plug it in again (or restart Android), then run this again (MU300_USB_ADB_ONLY=0 leaves the USB as it is)	USB 设为仅 adb 后，设备在 {1} 秒内没有重新出现在 adb 上：请拔下后重新插入（或重启 Android），然后再次运行（MU300_USB_ADB_ONLY=0 保持 USB 不变）
 USB of Android set back to {1}	Android 的 USB 已恢复为 {1}
+Would you like to add the audio package? (yes/no)	是否同时添加音频包？(是/否)
+Would you like to add the audio package?	是否同时添加音频包？
+The audio package (voice calls) is given to sponsors only: a sponsorship of at least 10 USD at {1}.	音频包（语音通话）只提供给赞助者：在 {1} 赞助至少 10 美元。
+After sponsoring, write to the owner through the form on {1}: that is how you receive it.	赞助之后，请通过 {1} 上的表单联系作者：音频包就是这样发给你的。
+Send this device code with the form on kaandikec.com; the package you receive works only on this device: {1}	请随 kaandikec.com 上的表单一起发送此设备代码；你收到的包只能在这台设备上使用：{1}
+The audio package is installed from the web installer, not from here: {1}	音频包通过网页安装程序安装，而不是在这里：{1}
+This installation goes on without it; the web installer can add it afterwards.	本次安装在没有音频包的情况下继续；之后可以用网页安装程序添加。

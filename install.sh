@@ -53,6 +53,8 @@
 #   MU300_ANS_VPN=yes|no                   the VPN module
 #   MU300_ANS_ADB=yes|no                   adb to Linux (on for every computer): this computer's key only
 #   MU300_ANS_PANEL=yes|no                 the web panel for Ubuntu
+#   MU300_ANS_AUDIO                        (none: the audio package is a question at a terminal only, and it is
+#                                          installed from the web installer)
 #   MU300_ANS_KERNEL=5.4|6.18|7.2|7.3      the kernel
 #   MU300_ANS_EXISTING=update|wipe         Linux is installed already
 #   MU300_ANS_ERASE_SD=ERASE               a new filesystem on the SD card erases it
@@ -251,6 +253,32 @@ fetch_vpn_module() {
     fi
     EXTRA_VPN=$_vd/$_f
 }
+
+# --- audio begin
+# The call audio package (mu300-audio) is for sponsors, and it is installed from the web installer only (it is never
+# downloaded here): asked at a terminal after the kernel (default no), and a yes says how to get it. In answers mode
+# nothing is asked (MU300_ANS_AUDIO is not needed). Hook: mu300_device_code, when the sourced tools define it, prints
+# the attached device's code (one line, 16 hex), which the sponsor sends with the form.
+audio_device_code() {
+    command -v mu300_device_code >/dev/null 2>&1 || return 0
+    mu300_device_code 2>/dev/null | tr -d '\r' | head -n1 | grep -Ex '[0-9a-f]{16}' || true
+}
+audio_web_installer() {
+    case $MU300_LANG in tr|zh) echo "https://kaandikec.com/mu300-linux/$MU300_LANG/web-installer/" ;;
+        *) echo https://kaandikec.com/mu300-linux/web-installer/ ;; esac
+}
+audio_note() {
+    [ $ANSWERS_MODE = 0 ] || return 0
+    ask _ax "$(t 'Would you like to add the audio package? (yes/no)')" no MU300_ANS_AUDIO
+    [ "$_ax" = yes ] || return 0
+    echo "  $(t 'The audio package (voice calls) is given to sponsors only: a sponsorship of at least 10 USD at {1}.' https://github.com/sponsors/dikeckaan)"
+    echo "  $(t 'After sponsoring, write to the owner through the form on {1}: that is how you receive it.' https://kaandikec.com)"
+    _dc=$(audio_device_code)
+    [ -z "$_dc" ] || echo "  $(t 'Send this device code with the form on kaandikec.com; the package you receive works only on this device: {1}' "$_dc")"
+    echo "  $(t 'The audio package is installed from the web installer, not from here: {1}' "$(audio_web_installer)")"
+    echo "  $(t 'This installation goes on without it; the web installer can add it afterwards.')"
+}
+# --- audio end
 
 # adb shell/exec-out read stdin; never let them eat the answers typed (or piped) into this script
 su_do() { adb shell "su -c '$1'" </dev/null | tr -d '\r'; }
@@ -930,6 +958,7 @@ if [ $MODE = prebuilt ] && [ -z "$PKG" ]; then
         esac
     done
 fi
+audio_note
 FORMAT=0; WIPE_LEGACY=0; UPDATE=0
 if [ $existing = no ]; then
     FORMAT=1

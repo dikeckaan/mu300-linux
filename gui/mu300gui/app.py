@@ -15,7 +15,7 @@ from . import adb as adbmod
 from .controller import Controller
 from .i18n import LANGUAGES, N_, _, language, os_language, set_language
 from .masking import short_serial
-from .model import GIB, MIB, connect, download_plan, duration, layout, make_room, size, summary, work_need
+from .model import GIB, MIB, connect, download_plan, duration, layout, make_room, size, summary, web_installer, work_need
 from .theme import S1, S2, S3, S4, S5, S6, Theme, dpi_aware, system_dark
 from .widgets import DiskBar, Scroll, StepList, Stepper, banner, card, facts, link, wrap_to
 
@@ -59,7 +59,7 @@ class App:
                 ('openwrt_flavor', tk.StringVar, False), ('boot_os', tk.StringVar, False), ('kernel', tk.StringVar, False),
                 ('release', tk.StringVar, False), ('release_url', tk.StringVar, False), ('default_linux', tk.BooleanVar, True),
                 ('boot_attempts', tk.StringVar, False), ('hotspot', tk.BooleanVar, False), ('gpu', tk.BooleanVar, False),
-                ('vpn', tk.BooleanVar, False), ('adb', tk.BooleanVar, False), ('panel', tk.BooleanVar, False),
+                ('vpn', tk.BooleanVar, False), ('adb', tk.BooleanVar, False), ('panel', tk.BooleanVar, False), ('audio', tk.BooleanVar, True),
                 ('storage', tk.StringVar, True), ('existing', tk.StringVar, True), ('password', tk.StringVar, False),
                 ('password2', tk.StringVar, False), ('keep_password', tk.BooleanVar, True),
                 ('current_password', tk.StringVar, False), ('overwrite_word', tk.StringVar, False), ('erase_sd_word', tk.StringVar, False),
@@ -794,6 +794,15 @@ class App:
         if not ch.package:          # (a file of the release, not of a zip)
             check(i, _('The web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)'), 'panel',
                   _('Cockpit with an MU300 page, on the LAN only. It can be added later: sudo mu300-extra install panel'), enabled=ch.ubuntu)
+        # the call audio package: for sponsors, added by the web installer only - here a note on how to get it
+        check(i, _('Would you like to add the audio package?'), 'audio')
+        if ch.audio:
+            ttk.Label(i, text='\n'.join((
+                _('The audio package (voice calls) is given to sponsors only: a sponsorship of at least 10 USD at {1}.', 'https://github.com/sponsors/dikeckaan'),
+                _('After sponsoring, write to the owner through the form on {1}: that is how you receive it.', 'https://kaandikec.com'),
+                _('The audio package is installed from the web installer, not from here: {1}', web_installer(language())),
+                _('This installation goes on without it; the web installer can add it afterwards.'))),
+                style='Card.Small.TLabel', wraplength=640, justify='left').pack(anchor='w', padx=(S5, 0), pady=(0, S2))
         check(i, _('Let only this computer in over adb to Linux'), 'adb',
               _('adb to Linux over USB is on and lets every computer in: a root shell without a password for anyone who plugs in a cable. With this, only this computer\'s adb key (~/.android/adbkey.pub) is let in.'))
 

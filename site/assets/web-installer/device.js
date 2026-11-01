@@ -32,7 +32,7 @@ export const safeArg = (a) => typeof a === "string" && ARG.test(a) && !a.include
 // (DEVICE_FILES), the answers, a Magisk zip of a release, an extra under a fixed name. Remote paths are built from
 // these and from nothing a device or a listing said.
 const ZIP_NAME = /^mu300-magisk-v[0-9][A-Za-z0-9._-]{0,80}\.zip$/;
-const EXTRA_FILE = { vpn: "extra-vpn.tar.gz", panel: "extra-panel.tar.gz" };
+const EXTRA_FILE = { vpn: "extra-vpn.tar.gz", panel: "extra-panel.tar.gz", "mu300-audio": "extra-mu300-audio.tar.gz" };
 // ... and the files it ever reads back: the copies android-web.sh makes for a backup, by their exact names
 const BACKUP_FILE = /^(?:(?:boot|uboot|sml|teecfg|trustos|vbmeta)_[ab]\.img|misc-head\.bin|gpt-head\.bin|gpt-tail\.bin|partitions\.txt)$/;
 const lines = (s) => s.split("\n").map((l) => l.replace(/\r+$/, ""));
@@ -228,8 +228,18 @@ export class AndroidDevice {
     const name = Object.prototype.hasOwnProperty.call(EXTRA_FILE, kind) ? EXTRA_FILE[kind] : null;
     if (!name) throw new DeviceError("bad-argument", "extra");
     if (!/^[0-9a-f]{64}$/.test(sha256 || "")) throw new DeviceError("bad-argument", "checksum");
-    await push(this.conn, file, `${STAGE}/in/${name}`, { mode: 0o644, onProgress: options.onProgress, signal: options.signal });
+    // (the audio package may carry firmware: readable by the adb user alone until root moves it away)
+    await push(this.conn, file, `${STAGE}/in/${name}`, { mode: kind === "mu300-audio" ? 0o600 : 0o644, onProgress: options.onProgress, signal: options.signal });
     await this.web(["extra", kind, name, sha256], { timeoutMs: 600000 });
+  }
+
+  // this device's code for the audio package's form (16 hex), or "" while the scripts have none (android-web.sh code)
+  async deviceCode() {
+    try {
+      const r = await this.web(["code"], { timeoutMs: 30000 });
+      const c = r.marks.CODE ? String(r.marks.CODE[0]).trim() : "";
+      return /^[0-9a-f]{16}$/.test(c) ? c : "";
+    } catch (e) { if (e instanceof AdbError) throw e; return ""; }
   }
 
   // The answers of the next run. The password, when there is one, travels on the stdin of a root command.
@@ -464,6 +474,23 @@ export class LinuxDevice {
   }
   async reboot() {
     try { await this.run("sync; reboot", { timeoutMs: 20000 }); } catch (e) { if (!(e instanceof AdbError)) throw e; }
+  }
+  // this device's code for the audio package's form: mu300-device-code where the image has it, else ""
+  async deviceCode() {
+    const r = await this._run("command -v mu300-device-code >/dev/null 2>&1 && mu300-device-code 2>/dev/null | head -n 1", { timeoutMs: 20000 });
+    const c = r.stdout.trim();
+    return /^[0-9a-f]{16}$/.test(c) ? c : "";
+  }
+  // The call audio package (a tarball the page checked, readAudioPackage) into the running Linux, the way its README
+  // says: mu300-extra install mu300-audio --from DIR, DIR a directory only root can enter with the tarball and a
+  // SHA256SUMS naming it, removed afterwards whatever happened. A restart then starts the DSP (the page offers it).
+  async addAudio(tarball, sha256, onLine, signal) {
+    if (!/^[0-9a-f]{64}$/.test(sha256 || "")) throw new DeviceError("bad-argument", "checksum");
+    const dir = "/root/.mu300-audio-web";
+    await this.run(`rm -rf ${dir} && mkdir -m 700 ${dir}`, { timeoutMs: 20000 });
+    await push(this.conn, tarball, `${dir}/mu300-audio.tar.gz`, { mode: 0o600, signal });
+    return this.run(`d=${dir}; chmod 700 $d; printf '%s  mu300-audio.tar.gz\\n' ${sha256} > $d/SHA256SUMS; ` +
+      `mu300-extra install mu300-audio --from $d; rc=$?; rm -rf $d; exit $rc`, { onLine, signal, timeoutMs: 600000 });
   }
   // Android next, then a restart: the way back to Android without a terminal
   async toAndroid(onLine) {

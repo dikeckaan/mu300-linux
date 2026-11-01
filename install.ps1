@@ -425,6 +425,22 @@ function FetchVpnModule {
     }
     $script:EXTRA_VPN = "$vd\$f"
 }
+# The call audio package (mu300-audio) is for sponsors, and it is installed from the web installer only (never
+# downloaded here): asked at a terminal after the kernel (default no), and a yes says how to get it (install.sh's
+# audio block). Nothing is asked in answers mode or with -Answers. Hook: a function MuDeviceCode, when the tools
+# define it, returns the attached device's code (16 hex), which the sponsor sends with the form.
+function AudioNote {
+    if ($script:MuAnswersMode -or $script:AnswerQueue) { return }
+    if ((Ask (T 'Would you like to add the audio package? (yes/no)') 'no' 'MU300_ANS_AUDIO') -ne 'yes') { return }
+    Write-Host ('  ' + (T 'The audio package (voice calls) is given to sponsors only: a sponsorship of at least 10 USD at {1}.' 'https://github.com/sponsors/dikeckaan'))
+    Write-Host ('  ' + (T 'After sponsoring, write to the owner through the form on {1}: that is how you receive it.' 'https://kaandikec.com'))
+    $dc = ''
+    if (Get-Command MuDeviceCode -CommandType Function -ErrorAction SilentlyContinue) { $dc = ([string](MuDeviceCode)).Trim() }
+    if ($dc -match '^[0-9a-f]{16}$') { Write-Host ('  ' + (T 'Send this device code with the form on kaandikec.com; the package you receive works only on this device: {1}' $dc)) }
+    $web = if ($Lang -in 'tr', 'zh') { "https://kaandikec.com/mu300-linux/$Lang/web-installer/" } else { 'https://kaandikec.com/mu300-linux/web-installer/' }
+    Write-Host ('  ' + (T 'The audio package is installed from the web installer, not from here: {1}' $web))
+    Write-Host ('  ' + (T 'This installation goes on without it; the web installer can add it afterwards.'))
+}
 # GitHub's release CDN throttles single connections hard in some regions: pull large files as parallel ranges
 function Fetch($url, $out) {
     $jobs = 8
@@ -2071,6 +2087,7 @@ while (-not $KERNEL) {
     }
 }
 }
+AudioNote
 $FORMAT = 0; $WIPE_LEGACY = 0; $UPDATE = 0
 if ($existing -eq 'no') {
     $FORMAT = 1

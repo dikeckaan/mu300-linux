@@ -292,7 +292,7 @@ class Take(WebCase):
         r = self.web('take', name, digest)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         z = json.loads(r.stdout.split('MU300-WEB-ZIP ', 1)[1])
-        self.assertEqual(z, {'name': name, 'web': 1, 'tag': 'v2026.10.06', 'system': 'openwrt', 'os': 'openwrt',
+        self.assertEqual(z, {'name': name, 'web': 1, 'audio': 1, 'tag': 'v2026.10.06', 'system': 'openwrt', 'os': 'openwrt',
                              'ubuntu': '', 'kernel': '6.18'})
         self.assertFalse((self.stage / 'in' / name).exists())
         kept = self.root() / 'zips' / name
@@ -309,6 +309,18 @@ class Take(WebCase):
         name, digest = self.full_zip(old=True)
         r = self.web('take', name, digest)
         self.assertEqual(json.loads(r.stdout.split('MU300-WEB-ZIP ', 1)[1])['web'], 0)
+
+    def test_a_zip_whose_installer_does_not_take_the_audio_package(self):
+        # (the releases up to v2026.10.30.1: EXTRA_NAMES='vpn panel')
+        name, digest = self.full_zip()
+        x = self.stage / 'in' / name
+        with zipfile.ZipFile(x) as z:
+            items = [(i, z.read(i)) for i in z.infolist()]
+        with zipfile.ZipFile(x, 'w') as z:
+            for i, data in items:
+                z.writestr(i, data.replace(b"EXTRA_NAMES='vpn panel mu300-audio'", b"EXTRA_NAMES='vpn panel'"))
+        r = self.web('take', name, sha(x))
+        self.assertEqual(json.loads(r.stdout.split('MU300-WEB-ZIP ', 1)[1])['audio'], 0)
 
     def test_refusals_leave_nothing_behind(self):
         name, digest = self.full_zip()
@@ -349,6 +361,18 @@ class Take(WebCase):
         r = self.web('extra', 'vpn', f.name, sha(f))
         self.assertEqual(r.stdout.strip(), 'MU300-WEB-EXTRA vpn')
         self.assertEqual((self.root() / 'extras/mu300-extra-vpn.tar.gz').stat().st_mode & 0o777, 0o600)
+        # the call audio package: an extra of its own name, checked the same way
+        a = self.stage / 'in/extra-mu300-audio.tar.gz'
+        a.write_bytes(tmi.tar_gz({'name': b'mu300-audio\n'}))
+        self.assertIn('MU300-WEB-ERROR sha-mismatch', self.web('extra', 'mu300-audio', a.name, 'f' * 64).stdout)
+        a.write_bytes(tmi.tar_gz({'name': b'mu300-audio\n'}))
+        r = self.web('extra', 'mu300-audio', a.name, sha(a))
+        self.assertEqual(r.stdout.strip(), 'MU300-WEB-EXTRA mu300-audio')
+        self.assertEqual((self.root() / 'extras/mu300-extra-mu300-audio.tar.gz').stat().st_mode & 0o777, 0o600)
+
+    def test_the_device_code_hook(self):
+        # none until the scripts define mu300_device_code
+        self.assertEqual(self.web('code').stdout.strip(), 'MU300-WEB-CODE none')
 
 
 class Answers(WebCase):

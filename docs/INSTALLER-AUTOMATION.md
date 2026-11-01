@@ -96,6 +96,7 @@ A question is asked only where the installer asks it by hand too.
 | `MU300_ANS_VPN` | `yes`, `no` | the VPN module |
 | `MU300_ANS_ADB` | `yes`, `no` | adb to Linux is on for every computer: let in this computer's key only |
 | `MU300_ANS_PANEL` | `yes`, `no` | the web panel for Ubuntu |
+| (none) | | the call audio package: asked at a terminal only, and installed from the web installer, never by these installers |
 | `MU300_ANS_KERNEL` | `5.4`, `6.18`, `7.2`, `7.3` | the kernel |
 | `MU300_ANS_EXISTING` | `update`, `wipe` | Linux is installed already |
 | `MU300_ANS_ERASE_SD` | `ERASE` | a new filesystem on the SD card erases it |

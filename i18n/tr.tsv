@@ -939,3 +939,10 @@ USB of Android: adb only for this run (was {1}; MTP can stall the connection, Wi
 Android kept its USB functions ({1}); going on with them	Android USB işlevlerini korudu ({1}); onlarla devam ediliyor
 the device did not come back on adb within {1} seconds after its USB was set to adb only: unplug it and plug it in again (or restart Android), then run this again (MU300_USB_ADB_ONLY=0 leaves the USB as it is)	USB'si yalnızca adb yapıldıktan sonra cihaz {1} saniye içinde adb'ye geri gelmedi: çıkarıp yeniden takın (ya da Android'i yeniden başlatın), sonra bunu yeniden çalıştırın (MU300_USB_ADB_ONLY=0 USB'yi olduğu gibi bırakır)
 USB of Android set back to {1}	Android'in USB'si yeniden {1} yapıldı
+Would you like to add the audio package? (yes/no)	Ses paketini de eklemek ister misiniz? (evet/hayır)
+Would you like to add the audio package?	Ses paketini de eklemek ister misiniz?
+The audio package (voice calls) is given to sponsors only: a sponsorship of at least 10 USD at {1}.	Ses paketi (sesli aramalar) yalnızca sponsorlara verilir: {1} adresinde en az 10 USD sponsorluk.
+After sponsoring, write to the owner through the form on {1}: that is how you receive it.	Sponsor olduktan sonra {1} sitesindeki formdan sahibine yazın: paketi bu yolla alırsınız.
+Send this device code with the form on kaandikec.com; the package you receive works only on this device: {1}	Bu cihaz kodunu kaandikec.com'daki formla gönderin; alacağınız paket yalnızca bu cihazda çalışır: {1}
+The audio package is installed from the web installer, not from here: {1}	Ses paketi buradan değil, web yükleyiciden kurulur: {1}
+This installation goes on without it; the web installer can add it afterwards.	Bu kurulum onsuz devam eder; web yükleyici paketi sonradan ekleyebilir.

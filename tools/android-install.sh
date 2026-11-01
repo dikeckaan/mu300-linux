@@ -477,13 +477,38 @@ extra_ok() {  # extra_ok NAME DIR: DIR (unpacked) is that extra: ./name says so,
         *) return 1 ;;
     esac
 }
+# An extra that is no part of a release (mu300-audio, the call audio package a sponsor received: install.sh checked
+# its zip): checked as mu300-extra checks one of its own - plain files and directories only (listed before it is
+# unpacked, and as it is on disk after), every file in ./manifest with its sha256 - owned by root, nothing set-id or
+# writable by others, and its firmware/ root's alone (700, files 600: the package may carry firmware).
+extra_is_own() { case $1 in vpn|vpn-*|panel|lang) return 1 ;; esac; return 0; }
+extra_tar_plain() {  # extra_tar_plain TARBALL: only files and directories, relative names without ..
+    _l=$(tar -tzf "$1" 2>/dev/null) && [ -n "$_l" ] || return 1
+    ! printf '%s\n' "$_l" | grep -Eq '^/|(^|/)\.\.(/|$)' || return 1
+    _v=$(tar -tvzf "$1" 2>/dev/null) || return 1
+    ! printf '%s\n' "$_v" | cut -c1 | grep -vq '^[-d]$'
+}
+extra_own_ok() {  # extra_own_ok DIR: the unpacked tree and its manifest
+    [ -z "$(find "$1" ! -type f ! -type d 2>/dev/null)" ] || return 1
+    [ -f "$1/manifest" ] || return 1
+    ! grep -Evq '^[0-9a-f]{64}  \./[A-Za-z0-9._+/-]+$' "$1/manifest" || return 1
+    [ "$(cut -c67- "$1/manifest" | sort)" = "$(cd "$1" && find . -type f ! -path ./manifest | sort)" ] || return 1
+    (cd "$1" && sha256sum -c manifest >/dev/null 2>&1) || return 1
+    chown -R 0:0 "$1" 2>/dev/null
+    chmod -R u-s,g-s,go-w "$1" && chmod 755 "$1" || return 1
+    if [ -d "$1/firmware" ]; then
+        chmod 700 "$1/firmware" && find "$1/firmware" -type f -exec chmod 600 {} + || return 1
+    fi
+}
 extra_from_push() {  # extra_from_push DISK: install the extras install.sh pushed ($T/mu300-extra-<name>.tar.gz)
     for f in $T/mu300-extra-*.tar.gz; do
         [ -f "$f" ] || continue
         n=${f##*/mu300-extra-}; n=${n%.tar.gz}
         x=$1/extra
         rm -rf "$x/.$n.new"; mkdir -p "$x/.$n.new"
-        if tar -xzf "$f" -C "$x/.$n.new" 2>/dev/null && extra_ok "$n" "$x/.$n.new"; then
+        _own=1; ! extra_is_own "$n" || { chmod 700 "$x/.$n.new"; extra_tar_plain "$f" || _own=; }
+        if [ -n "$_own" ] && tar -xzf "$f" -C "$x/.$n.new" 2>/dev/null && extra_ok "$n" "$x/.$n.new" &&
+            { ! extra_is_own "$n" || extra_own_ok "$x/.$n.new"; }; then
             rm -rf "$x/$n" "$x/.$n.sha256" && mv "$x/.$n.new" "$x/$n"
             say "extra $n installed ($(cat "$x/$n/release" 2>/dev/null || cat "$x/$n/VERSION" 2>/dev/null))"
         else

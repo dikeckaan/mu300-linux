@@ -176,6 +176,7 @@ class Choices:
         self.vpn = False
         self.adb = False                    # adb to Linux is on for every computer; True: for this computer's key only
         self.panel = False                  # the web panel for Ubuntu
+        self.audio = False                  # the call audio package: only a note here (the web installer adds it)
         self.storage = 'internal'           # internal | sd
         self.existing = 'update'            # with an installation there: update | wipe
         self.password = ''
@@ -467,6 +468,14 @@ def summary(c, facts, release):
                                 (c.hotspot, _('hotspot name and password from Android')), (c.adb, _('adb to Linux for this computer only'))) if flag]
     rows.append((_('Also'), ', '.join(extras) if extras else _('nothing else')))
     return rows
+
+
+WEB_INSTALLER = 'https://kaandikec.com/mu300-linux/web-installer/'
+
+
+def web_installer(lang):
+    """The web installer's page in the window's language: where the audio package is added."""
+    return 'https://kaandikec.com/mu300-linux/%s/web-installer/' % lang if lang in ('tr', 'zh') else WEB_INSTALLER
 
 
 def connect(kind, boot_system, systems=(), panel=False):

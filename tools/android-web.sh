@@ -13,7 +13,11 @@
 #   take NAME SHA256     the zip pushed as in/NAME (or downloaded by "run fetch"): moved to where only root can
 #                        write, checked there against SHA256, its installer unpacked. MU300-WEB-ZIP {json}: its
 #                        manifest, and whether its installer knows this caller (web=1).
-#   extra vpn|panel FILE SHA256   an extra pushed as in/FILE, checked the same way, for the next install
+#   extra vpn|panel|mu300-audio FILE SHA256   an extra pushed as in/FILE, checked the same way, for the next install
+#                        (mu300-audio: the call audio package of a sponsor, which the page checked; the zip's installer
+#                        takes it when it knows it, and its plan line extras= says so)
+#   code                 MU300-WEB-CODE <code>|none: this device's code for the audio package's form, from
+#                        mu300_device_code when the scripts define it (none: not yet)
 #   net [NAME]           MU300-WEB-NET {json}: can the device reach GitHub (the release file NAME) right now, and over
 #                        what (mobile data, Wi-Fi). Asks for headers only.
 #   run fetch NAME SIZE  the device downloads a release's zip itself, as a job, into in/NAME (then "take NAME SHA256"
@@ -426,8 +430,10 @@ take() {  # take NAME SHA256
         { rm -rf "$_x"; fail not-a-zip; }
     [ -f "$_x/mu300/install.sh" ] && [ -f "$_x/mu300/manifest" ] || { rm -rf "$_x"; fail not-a-zip; }
     _web=0; grep -q 'MU300_ANSWERS' "$_x/mu300/install.sh" && grep -q 'MU300-STEP' "$_x/mu300/install.sh" && _web=1
+    # its installer takes the call audio package as an extra (EXTRA_NAMES with mu300-audio): releases after v2026.10.30.1
+    _audio=0; grep -q "^EXTRA_NAMES='.*mu300-audio" "$_x/mu300/install.sh" && _audio=1
     _mf() { sed -n "s/^$1=//p" "$_x/mu300/manifest" | head -n1; }
-    out "ZIP {\"name\":$(js "$1"),\"web\":$_web,\"tag\":$(js "$(_mf TAG)"),\"system\":$(js "$(_mf SYSTEM)"),\"os\":$(js "$(_mf OS)"),\"ubuntu\":$(js "$(_mf UBUNTU)"),\"kernel\":$(js "$(_mf KERNEL)")}"
+    out "ZIP {\"name\":$(js "$1"),\"web\":$_web,\"audio\":$_audio,\"tag\":$(js "$(_mf TAG)"),\"system\":$(js "$(_mf SYSTEM)"),\"os\":$(js "$(_mf OS)"),\"ubuntu\":$(js "$(_mf UBUNTU)"),\"kernel\":$(js "$(_mf KERNEL)")}"
 }
 # ---- the device downloads a release's Magisk zip itself (run fetch NAME SIZE, net [NAME])
 # The tag is the one in the name (mu300-magisk-<tag>-<system>-k<kernel>.zip), the address this project's release of
@@ -613,7 +619,7 @@ fetch_zip() {  # fetch_zip NAME SIZE
     say "downloaded $_size bytes; not checked yet"
 }
 extra() {  # extra NAME FILE SHA256
-    case ${1:-} in vpn|panel) ;; *) fail bad-name ;; esac
+    case ${1:-} in vpn|panel|mu300-audio) ;; *) fail bad-name ;; esac
     name_ok "${2:-}" || fail bad-name
     sha_ok "${3:-}" || fail bad-sha
     root_dir
@@ -623,6 +629,7 @@ extra() {  # extra NAME FILE SHA256
     case $? in 0) ;; 2) fail too-large ;; *) fail no-file ;; esac
     _h=$(sha_of "$_e")
     if [ "$_h" != "$3" ]; then rm -f "$_e"; fail sha-mismatch "$_h"; fi
+    chmod 600 "$_e"
     out "EXTRA $1"
 }
 answers() {
@@ -925,6 +932,9 @@ case ${1:-} in
     status) status "${2:-}" ;;
     take) take "${2:-}" "${3:-}" ;;
     extra) extra "${2:-}" "${3:-}" "${4:-}" ;;
+    # hook: the device code of the licensing work (mu300_device_code), when the sourced scripts have it
+    code) _c=; ! command -v mu300_device_code >/dev/null 2>&1 || _c=$(mu300_device_code 2>/dev/null | head -n1)
+          case $_c in [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) out "CODE $_c" ;; *) out "CODE none" ;; esac ;;
     answers) answers ;;
     password) password ;;
     net) net "${2:-}" ;;

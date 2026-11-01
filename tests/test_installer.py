@@ -1393,3 +1393,57 @@ class VpnOnInTheReplacedSystem(ShellTest):
             self.assertIn('DIE The VPN is on with its kill switch in openwrt', out)
             self.assertNotIn('vx=', out)
             self.assertIn('vx=yes', self.question(shell, 'openwrt:ks', ''))
+
+
+class AudioNote(ShellTest):
+    """install.sh's audio block: the call audio package is for sponsors and installed from the web installer only.
+    A yes at a terminal says how to get it (sponsors, the form, the web installer; this device's code when the
+    licensing hook mu300_device_code is there) and asks for no file; answers mode asks nothing."""
+
+    def run_note(self, shell, answer, answers_mode=0, lang='en', hook=''):
+        src = (TOP / 'install.sh').read_text()
+        block = re.search(r'# --- audio begin\n(.*?)# --- audio end', src, re.S).group(1)
+        code = (f'TOP="{TOP}"\nMU300_LANG={lang}\n. "$TOP/tools/i18n.sh"\nANSWERS_MODE={answers_mode}\n'
+                'ask() { echo "ASK $4: $2"; read -r _a; [ -n "$_a" ] || _a=$3; eval "$1=\\$_a"; }\n' + hook + block + '\naudio_note\necho rc=$?\n')
+        return self.sh(shell, code, stdin=answer + '\n')
+
+    def test_a_yes_says_how_to_get_it_and_asks_for_no_file(self):
+        for shell in self.each_shell():
+            r = self.run_note(shell, 'yes')
+            self.assertIn('ASK MU300_ANS_AUDIO: Would you like to add the audio package? (yes/no)', r.stdout)
+            self.assertIn('at least 10 USD at https://github.com/sponsors/dikeckaan', r.stdout)
+            self.assertIn('the form on https://kaandikec.com', r.stdout)
+            self.assertIn('installed from the web installer, not from here: https://kaandikec.com/mu300-linux/web-installer/', r.stdout)
+            self.assertNotIn('device code', r.stdout)
+            self.assertEqual(r.stdout.count('ASK'), 1)
+            self.assertIn('rc=0', r.stdout)
+            # Turkish: the owner's own question, and the web installer's Turkish page
+            r = self.run_note(shell, 'evet', lang='tr')
+            self.assertIn('Ses paketini de eklemek ister misiniz?', r.stdout)
+            r = self.run_note(shell, 'yes', lang='tr')
+            self.assertIn('https://kaandikec.com/mu300-linux/tr/web-installer/', r.stdout)
+            # the licensing hook: its code is shown, anything that is not 16 hex is not
+            r = self.run_note(shell, 'yes', hook='mu300_device_code() { echo 0123456789abcdef; }\n')
+            self.assertIn('works only on this device: 0123456789abcdef', r.stdout)
+            r = self.run_note(shell, 'yes', hook='mu300_device_code() { echo 867530012345678; }\n')
+            self.assertNotIn('867530012345678', r.stdout)
+
+    def test_no_and_answers_mode_say_nothing(self):
+        for shell in self.each_shell():
+            r = self.run_note(shell, '')
+            self.assertNotIn('sponsor', r.stdout)
+            self.assertIn('rc=0', r.stdout)
+            r = self.run_note(shell, 'yes', answers_mode=1)
+            self.assertNotIn('ASK', r.stdout)
+            self.assertIn('rc=0', r.stdout)
+
+    def test_asked_after_the_kernel_and_nothing_is_downloaded(self):
+        src = (TOP / 'install.sh').read_text()
+        self.assertLess(src.index("ask kchoice"), src.index('\naudio_note\n'))
+        self.assertLess(src.index('\naudio_note\n'), src.index("ask mode \"$(t 'update or wipe')\""))
+        block = re.search(r'# --- audio begin\n(.*?)# --- audio end', src, re.S).group(1)
+        self.assertNotRegex(block, r'\bcurl\b|\bfetch\b|adb push')
+        ps1 = (TOP / 'install.ps1').read_text(encoding='utf-8')
+        self.assertIn("'MU300_ANS_AUDIO'", ps1)
+        self.assertLess(ps1.index("'MU300_ANS_KERNEL'"), ps1.index('\nAudioNote\n'))
+        self.assertIn('if ($script:MuAnswersMode -or $script:AnswerQueue) { return }', ps1)

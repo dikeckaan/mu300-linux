@@ -1,9 +1,11 @@
 """tools/android-install.sh: the SD card branch, cut out between its markers and run with stubs for Android's
 tools (sm, mke2fs, umount) and files standing in for block devices."""
+import hashlib
 import io
 import os
 import re
 import shutil
+import stat
 import tarfile
 import time
 
@@ -333,6 +335,52 @@ class Extras(ShellTest):
             # nothing pushed: nothing happens
             r = self.run_fn(shell, 'extra_from_push $M')
             self.assertIn('rc=0', r.stdout, r.stderr)
+
+    def audio_tarball(self, path, tamper=None, link=False, manifest=True, firmware=True):
+        """the call audio package's tarball (mu300-audio, an extra of the user's own): ./name, ./release, ./manifest"""
+        files = {'./name': 'mu300-audio\n', './release': 'v1.2.0\n', './bin/mu300-audio-dsp': '#!/bin/sh\n',
+                 './bin/mu300-voice': '#!/bin/sh\n', './hooks/link': '#!/bin/sh\n', './hooks/unlink': '#!/bin/sh\n'}
+        if firmware:
+            files['./firmware/agdsp.bin'] = 'dsp'
+        lines = ''.join(f'{hashlib.sha256(d.encode()).hexdigest()}  {n}\n' for n, d in files.items())
+        if tamper:
+            files[tamper] = 'changed'
+        with tarfile.open(path, 'w:gz') as t:
+            for n, d in list(files.items()) + ([('./manifest', lines)] if manifest else []):
+                ti = tarfile.TarInfo(n)
+                ti.size, ti.mode = len(d.encode()), 0o755 if '/bin/' in n or '/hooks/' in n else 0o666
+                t.addfile(ti, io.BytesIO(d.encode()))
+            if link:
+                ti = tarfile.TarInfo('./bin/sh')
+                ti.type, ti.linkname = tarfile.SYMTYPE, '/bin/sh'
+                t.addfile(ti)
+
+    def test_the_audio_package_is_checked_and_its_firmware_kept_for_root(self):
+        f = self.tmp / 'mu300-extra-mu300-audio.tar.gz'
+        x = self.m / 'extra/mu300-audio'
+        for shell in self.each_shell():
+            shutil.rmtree(self.m / 'extra', ignore_errors=True)
+            self.audio_tarball(f)
+            r = self.run_fn(shell, 'extra_from_push $M')
+            self.assertIn('extra mu300-audio installed (v1.2.0)', r.stdout, r.stderr)
+            self.assertFalse(f.exists())
+            self.assertEqual(stat.S_IMODE((x / 'firmware').stat().st_mode), 0o700)
+            self.assertEqual(stat.S_IMODE((x / 'firmware/agdsp.bin').stat().st_mode), 0o600)
+            self.assertEqual(stat.S_IMODE((x / 'name').stat().st_mode), 0o644)          # nothing writable by others
+            self.assertTrue(os.access(x / 'bin/mu300-audio-dsp', os.X_OK))
+            # without firmware (it may come from the device itself): installed all the same
+            self.audio_tarball(f, firmware=False)
+            r = self.run_fn(shell, 'extra_from_push $M')
+            self.assertIn('extra mu300-audio installed (v1.2.0)', r.stdout, r.stderr)
+            self.assertFalse((x / 'firmware').exists())
+            # a file that is not what its manifest says, no manifest, a link: skipped, the installed one stays
+            for bad in (dict(tamper='./bin/mu300-voice'), dict(manifest=False), dict(link=True)):
+                self.audio_tarball(f, **bad)
+                r = self.run_fn(shell, 'extra_from_push $M')
+                self.assertIn('rc=0', r.stdout, (bad, r.stderr))
+                self.assertIn('extra mu300-audio: the pushed file is not usable, skipped', r.stdout, bad)
+                self.assertEqual((x / 'release').read_text(), 'v1.2.0\n', bad)
+                self.assertFalse((self.m / 'extra/.mu300-audio.new').exists(), bad)
 
     def test_an_update_says_when_the_vpn_stays_off(self):
         from test_extra import module_tarball

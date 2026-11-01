@@ -469,3 +469,38 @@ test("net: whether the device can reach GitHub, and over what; only shapes the p
   await assert.rejects((await android({ net: "nothing\n" })).a.net(name), code("no-answer"));
   for (const n of HOSTILE) await assert.rejects(d.a.net(n), code("bad-argument"), JSON.stringify(n));
 });
+
+test("the audio package: an extra under its fixed name, readable by the adb user alone until root takes it", async () => {
+  const digest = "b".repeat(64);
+  const { a, dev, calls } = await android({ extra: "MU300-WEB-EXTRA mu300-audio\n" });
+  await a.addExtra("mu300-audio", new Uint8Array(10), digest);
+  assert.deepEqual([...dev.files.keys()], [`${STAGE}/in/extra-mu300-audio.tar.gz`]);
+  assert.equal(dev.modes.get(`${STAGE}/in/extra-mu300-audio.tar.gz`) & 0o777, 0o600);
+  assert.deepEqual(calls, [["extra", "mu300-audio", "extra-mu300-audio.tar.gz", digest]]);
+});
+
+test("the device code for the audio package's form: android-web.sh code, mu300-device-code on Linux; none is empty", async () => {
+  for (const [answer, want] of [["MU300-WEB-CODE 0123456789abcdef\n", "0123456789abcdef"], ["MU300-WEB-CODE none\n", ""], ["MU300-WEB-CODE 0123'; id\n", ""]]) {
+    const { a } = await android({ code: answer });
+    assert.equal(await a.deviceCode(), want, answer);
+  }
+  for (const [out, want] of [["fedcba9876543210\n", "fedcba9876543210"], ["", ""], ["IMEI 867530012345678\n", ""]]) {
+    const { conn } = await device(() => ({ stdout: out, exitCode: 0 }));
+    assert.equal(await new LinuxDevice(conn).deviceCode(), want, out);
+  }
+});
+
+test("Linux: the audio package goes in with mu300-extra install --from a directory only root can enter, which goes afterwards", async () => {
+  const { conn, dev } = await device(() => ({ stdout: "mu300-audio v1.2.0 installed in /mnt/mu300-disk/extra/mu300-audio\n", exitCode: 0 }));
+  const l = new LinuxDevice(conn);
+  const lines = [];
+  const digest = "c".repeat(64);
+  assert.equal((await l.addAudio(new Uint8Array(20), digest, (x) => lines.push(x))).rc, 0);
+  assert.deepEqual([...dev.files.keys()], ["/root/.mu300-audio-web/mu300-audio.tar.gz"]);
+  assert.equal(dev.modes.get("/root/.mu300-audio-web/mu300-audio.tar.gz") & 0o777, 0o600);
+  const cmds = dev.shellCalls.map((c) => c.cmd);
+  assert.match(cmds[0], /rm -rf \/root\/\.mu300-audio-web && mkdir -m 700 \/root\/\.mu300-audio-web$/);
+  assert.match(cmds[1], new RegExp(`printf '%s  mu300-audio.tar.gz\\\\n' ${digest} > \\$d/SHA256SUMS; mu300-extra install mu300-audio --from \\$d; rc=\\$\\?; rm -rf \\$d; exit \\$rc$`));
+  assert.ok(lines.some((x) => x.includes("installed")));
+  await assert.rejects(l.addAudio(new Uint8Array(1), "x; reboot"), code("bad-argument"));
+});

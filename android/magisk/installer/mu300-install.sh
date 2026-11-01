@@ -593,10 +593,10 @@ plan_password() {
     KEEP_PW=0; case $PW_MODE in kept|checked) KEEP_PW=1 ;; esac
 }
 # The extras a caller put beside the scripts, mu300/extras/mu300-extra-<name>.tar.gz (the VPN module as vpn, the
-# web panel as panel): android-install.sh installs every mu300-extra-<name>.tar.gz of its work directory onto the
+# web panel as panel, the call audio package a sponsor received as mu300-audio: the web installer checked it): android-install.sh installs every mu300-extra-<name>.tar.gz of its work directory onto the
 # Linux partition (extra/<name>) and checks what it unpacks. Only these names, and only regular files: D is as
 # trusted as the scripts in it. EXTRAS: the names found.
-EXTRA_NAMES='vpn panel'
+EXTRA_NAMES='vpn panel mu300-audio'
 extras_find() {
     EXTRAS=
     for _n in $EXTRA_NAMES; do
