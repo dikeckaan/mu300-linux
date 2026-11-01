@@ -60,6 +60,12 @@ BOOTMODE=true; MAGISK_VER_CODE=30700
 BUSYBOX = shutil.which('busybox')
 
 
+class WirelessComputerFiles(unittest.TestCase):
+    def test_offline_installer_carries_the_wireless_transport(self):
+        self.assertIn('tools/adb-network.py', computer_files())
+        self.assertIn('tools/adb-network-bin/adb', computer_files())
+
+
 @unittest.skipUnless(BUSYBOX, 'no busybox')
 class Customize(ShellTest):
     def setUp(self):
@@ -378,7 +384,11 @@ class ComputerSide(unittest.TestCase):
 
     def test_no_platform_tools(self):
         # Google's SDK licence (3.4) does not allow passing them on: START-HERE.md says where to get them
-        self.assertFalse([n for n in self.zip.namelist() if re.search(r'(^|/)(adb|adb\.exe|AdbWinApi\.dll|fastboot)$', n)])
+        shim = 'computer/tools/adb-network-bin/adb'
+        self.assertEqual(self.zip.read(shim), (TOP / 'tools/adb-network-bin/adb').read_bytes())
+        self.assertTrue(self.zip.read(shim).startswith(b'#!/bin/sh\n'))
+        self.assertFalse([n for n in self.zip.namelist() if n != shim and
+                          re.search(r'(^|/)(adb|adb\.exe|AdbWinApi\.dll|fastboot)$', n)])
 
     def test_the_magisk_side_unpacks_none_of_it(self):
         # customize.sh unpacks named entries only: a file of the computer's side never reaches the device's module

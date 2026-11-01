@@ -84,7 +84,7 @@ jobs:
         shell: pwsh
         run: |
           cd tests
-          python -m unittest test_adb_network -v
+          python -m unittest test_adb_network test_wireless_shrink -v
   # the online way of making room (Android keeps its data), on an arm64 runner: the helper in git is rebuilt and
   # compared byte for byte, then it and tools/android-online-shrink.sh shrink a real F2FS on a loop disk in a
   # privileged container (tests/online-shrink-e2e.sh: through a device-mapper mapping as Android's metadata

@@ -328,6 +328,7 @@ $(t "Nothing was changed: Android keeps its data and its partition table. To mak
 # new transaction and for one whose worker stopped after the shrink (online_recover). The transaction then says
 # "prepared".
 online_commit() {
+    [ -z "${MU300_ADB_ADDRESS:-}" ] || network_call shrink-begin "$RESUME_FILE"
     _tok=$(resume_py get "$RESUME_FILE" token | sed 's/^token=//')
     _bd=$(resume_py get "$RESUME_FILE" backup | sed 's/^backup=//')
     _fb=$(resume_py get "$RESUME_FILE" fs_blocks | sed 's/^fs_blocks=//'); _ft=$(resume_py get "$RESUME_FILE" fs_target | sed 's/^fs_target=//')
@@ -435,7 +436,10 @@ online_recover() {
                 { say "$(t 'Done - Android restarts once now, with the smaller userdata, and keeps its data')"
                   ask rb "$(t 'Reboot now? (yes/no)')" yes MU300_ANS_REBOOT
                   progress done result ok repartitioned yes resume pending transaction "$RESUME_FILE"
-                  [ "$rb" = yes ] && adb reboot
+                  if [ "$rb" = yes ]; then
+                      [ -z "${MU300_ADB_ADDRESS:-}" ] || network_call shrink-prepared "$RESUME_FILE"
+                      adb reboot
+                  fi
                   echo "  $(t 'Run the installer again once Android is up: it continues from here.')"
                   exit 0; }
             return 0 ;;

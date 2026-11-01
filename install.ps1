@@ -778,7 +778,7 @@ if ($script:MuProgress) {
     } else { Info 'root' 'no' }
 }
 if ((SuDo 'id -u') -ne '0') { Die (T 'su does not work on the device') }
-UsbAdbOnly          # adb alone on USB for this run, no MTP (tools\usb-adb.ps1); UsbRestore where the run ends in Android
+if (-not $AdbAddress) { UsbAdbOnly } # adb alone on USB for this run, no MTP (tools\usb-adb.ps1); UsbRestore where the run ends in Android
 $model = "$(SuDo 'getprop ro.product.model') / $(SuDo 'getprop ro.product.device')"
 Write-Host (T 'device: {1}' $model)
 if ($BL_STATE -eq 'locked') { Write-Host (T 'WARNING: {1}' $BL_WARN) }
@@ -1110,6 +1110,7 @@ function OnlineWait([string]$Tx, [string]$Tok) {
 # OnlineCommit: stage the helper and both tables, run the worker (the shrink, the backup table, the primary, each read
 # back), wait, check the table and the F2FS, write the token; the transaction then says "prepared"
 function OnlineCommit([string]$Tx, [int64]$Disk) {
+    if ($AdbAddress) { Network 'shrink-begin' $Tx | Out-Null }
     $g = Join-Path $Work 'gpt'
     $tok = TxGet $Tx 'token'; $bd = TxGet $Tx 'backup'
     $fb = TxGet $Tx 'fs_blocks'; $ft = TxGet $Tx 'fs_target'; $fu = TxGet $Tx 'fs_uuid'; [int64]$rs = TxGet $Tx 'region_start'
@@ -1185,7 +1186,10 @@ function OnlineRecover([string]$Tx, [int64]$Disk) {
                 Say (T 'Done - Android restarts once now, with the smaller userdata, and keeps its data')
                 $rb = Ask (T 'Reboot now? (yes/no)') 'yes' 'MU300_ANS_REBOOT'
                 Progress 'done' 'result' 'ok' 'repartitioned' 'yes' 'resume' 'pending' 'transaction' $Tx
-                if ($rb -eq 'yes') { Quiet { adb reboot } | Out-Null }
+                if ($rb -eq 'yes') {
+                    if ($AdbAddress) { Network 'shrink-prepared' $Tx | Out-Null }
+                    Quiet { adb reboot } | Out-Null
+                }
                 Write-Host ('  ' + (T 'Run the installer again once Android is up: it continues from here.'))
                 exit 0
             }
@@ -1643,6 +1647,7 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
         $rb = Ask (T 'Reboot now? (yes/no)') 'yes' 'MU300_ANS_REBOOT'
         Progress 'done' 'result' 'ok' 'repartitioned' 'yes' 'resume' 'pending' 'transaction' $tx
         if ($rb -eq 'yes') {
+            if ($AdbAddress) { Network 'shrink-prepared' $tx | Out-Null }
             Quiet { adb reboot } | Out-Null
             Write-Host ('  ' + (T 'Run the installer again once Android is up: it continues from here.'))
         } else {

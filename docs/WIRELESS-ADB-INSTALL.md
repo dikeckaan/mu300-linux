@@ -30,7 +30,7 @@ Linux/macOS (Python 3.8+ required):
 Use Android's actual address; the examples are not discovery defaults. The option accepts a literal IPv4 address
 and port. `MU300_ADB_ADDRESS` is the equivalent environment/answers-file setting; `MU300_ADB_TIMEOUT` sets the
 connection wait window (1..600 seconds, default 120). The explicit endpoint is also exported as `ANDROID_SERIAL`
-for child tools. Existing USB invocations and backup/reset/resume rules stay the same. Wireless mode uses the
+for child tools. USB invocations keep the upstream USB setup and backup/reset/resume rules. TCP mode leaves USB functions alone so it does not restart adbd while using the wireless transport. Wireless mode uses the
 text installer and skips self-update during the session so the source and transport helper stay together.
 
 The host records Android's serial, eMMC CID and Android slot, then checks them after reconnection and before
@@ -76,13 +76,48 @@ device, and retain `work/wireless-install.json`, its history, device logs and th
 
 Android's TCP adb endpoint and Linux's SSH/LuCI address can differ. After successful installation, rejoin the
 Linux hotspot and use the address the installer printed. Android adb need not be available in Linux. Returning
-to Android later still requires its wireless adb setup to be enabled. The existing factory-reset make-room route
-can erase that setup; [preserving-data preparation](PRESERVE-DATA-INSTALL.md) is a separate optional function for
-the matching U30 Air/M3 layout, not a silent replacement for reset.
+to Android later still requires its wireless adb setup to be enabled. The factory-reset make-room route can erase
+that setup; select the shared keep-data option below when it is offered and Android data must be retained.
+
+## Keep Android's data and resume over Wi-Fi
+
+The regular installer's **keep Android's data** option now works over this transport. It uses main's online F2FS
+helper and transaction recovery (#468, including #474's Android arithmetic and recovery fixes). There is no
+separate layout-specific shrink executable or fixed 4 GiB target. The same upstream eligibility checks, backup,
+free-space target and explicit confirmation apply. USB keeps its upstream flow. This TCP implementation requires
+a readable eMMC CID; UFS-only devices are refused rather than matched by their IP address alone.
+
+Before the first mutating shrink command, the wireless session binds to the saved transaction's device, slot,
+token, F2FS UUID and sizes. A lost reply stops the host; reconnect using the **same work directory** and
+`--adb-restart` / `-AdbRestart`. The normal transaction recovery inspects the existing worker and filesystem/table
+state before deciding what remains. It does not blindly replay an unacknowledged command. Do not power off or
+reboot a shrink worker merely because Wi-Fi disconnected.
+
+After the upstream worker and both tables have been read back and the transaction is marked prepared, choosing
+the Android restart stages and reads back one Magisk late-start script under `/data/adb/service.d`. It removes
+itself on execution, requires the same serial/CID/slot and a different boot, waits at most 180 seconds for Android,
+and restores **only the already selected TCP port** with runtime properties. It does not change persistent
+properties, adb authorization or Android's system partitions. The reboot is dispatched once; a lost reply never
+causes an automatic second reboot. Working Magisk is checked before the first mutating shrink command; its late-start execution is required to restore the port after this reboot.
+
+Rejoin Android's hotspot and rerun, for example:
+
+```sh
+./install.sh --adb-address 192.168.0.1:5555 --adb-restart
+```
+
+```powershell
+.\install.ps1 -AdbAddress 192.168.0.1:5555 -AdbRestart
+```
+
+If the address changed, pass the new endpoint; serial, eMMC CID and slot must still match. The upstream installer
+checks the prepared transaction, GPTs, token and smaller F2FS before installing. Keep its backups and transaction;
+they do not replace a complete backup of Android's files. An online shrink followed by GPT changes is not atomic.
+The former standalone 32 GB preparation tool has been removed in favor of this shared implementation.
 
 ## Validation
 
 Rooted wireless adb installation and preserving-data shrink were used successfully on one M3/B18 on 2026-10-29.
 This change adds reusable main-installer options, identity/connection guards, Wi-Fi/power notices and detached jobs
-with fake-device and real local POSIX-worker tests. Those new options have not been used to repeat an installation
+with fake-device and real local POSIX-worker tests. The shared online-shrink/TCP recovery integration is covered by fake disks and mocked adb only; it has not been used for another physical resize. Those new options have not been used to repeat an installation
 on the already-installed M3. U30 Air uses the same transport path; no new U30 Air hardware test is claimed.

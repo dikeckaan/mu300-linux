@@ -207,9 +207,9 @@ For an already enabled rooted wireless adb connection, the desktop installer now
 with device binding, reconnection/status checks and Wi-Fi/battery warnings. Connect a charger; Wi-Fi does not
 power the device. The original USB workflow remains available.
 
-For U30 Air/M3 with the matching 32 GB F2FS layout, an optional [rooted TCP adb and data-preserving preparation
-tool](docs/PRESERVE-DATA-INSTALL.md) can make 4 GiB before running the installer. It is experimental, measured on
-M3/B18, and separate from the reset workflow above; the existing backup and installation steps still apply.
+Wireless mode also supports the installer's existing **keep Android's data** option. It uses the same online
+F2FS helper, backups and transaction recovery as USB; see [wireless shrink and resume](docs/WIRELESS-ADB-INSTALL.md#keep-androids-data-and-resume-over-wi-fi).
+The old separate 32 GB preparation tool has been replaced by this shared path.
 
 **Making room is a reset, and the installation resumes afterwards (EXPERIMENTAL).** Android keeps its data
 encrypted (file-based encryption, with the metadata key in `/metadata`), and a data filesystem cleared from outside

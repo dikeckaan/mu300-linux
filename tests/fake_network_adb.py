@@ -1,5 +1,6 @@
 """TCP transport adapter around fakeadb.py; never executes a device command."""
 import contextlib
+import hashlib
 import io
 import os
 import re
@@ -28,10 +29,15 @@ def main(argv):
             command = shlex.split(wrapped)[2]
             if command.endswith(';'):
                 command = command[:-1]  # shell separator following the quoted -c argument
-            if 'echo CID=$(cat /sys/class/block/mmcblk0/device/cid)' in command:
+            if command.startswith('umask 077; mkdir -p /data/adb/service.d && printf %s '):
+                words = shlex.split(command); script = words[words.index('printf') + 2]
+                fakeadb.log('adb-resume-script', {'script': script})
+                print(hashlib.sha256(script.encode()).hexdigest() + '  ' + words[-1])
+                rc = 0
+            elif 'echo CID=$(cat /sys/class/block/mmcblk0/device/cid)' in command:
                 fields = {'SERIAL': st['serial'], 'CID': st['cid'], 'SLOT': '_' + st['slot'],
-                          'MODEL': st['model'], 'PRODUCT': st['device'], 'BOOT': 'fake-boot',
-                          'BATTERY': '96', 'POWERED': '0', 'STATUS': 'Discharging', 'COMPLETED': '1'}
+                          'MODEL': st['model'], 'PRODUCT': st['device'], 'BOOT': st.get('network_boot', 'fake-boot'),
+                          'BATTERY': '96', 'POWERED': '0', 'STATUS': 'Discharging', 'COMPLETED': '1', 'MAGISK': '1'}
                 print('\n'.join(k + '=' + v for k, v in fields.items()))
                 rc = 0
             else:

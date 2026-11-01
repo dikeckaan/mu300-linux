@@ -18,6 +18,8 @@ tools/storage.sh
 tools/releases.sh
 tools/release_pick.py
 tools/package.sh
+tools/adb-network.py
+tools/adb-network-bin
 tools/resume.sh
 tools/resume.py
 tools/self-update.sh
@@ -57,3 +59,4 @@ android/magisk/mu300-linux-switch
 android/magisk/installer/module.prop.in
 rootfs/overlay/opt/mu300/lib/storage.sh
 rootfs/overlay/opt/mu300/lib/vpn-orphan.sh
+docs/WIRELESS-ADB-INSTALL.md

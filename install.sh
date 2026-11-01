@@ -347,6 +347,7 @@ if [ -n "${MU300_ADB_ADDRESS:-}" ] || [ "$NETWORK_STATUS" = 1 ]; then
     if [ "$NETWORK_RESTART" = 1 ]; then network_call --restart connect; else network_call connect; fi
     ANDROID_SERIAL=$MU300_ADB_ADDRESS; export ANDROID_SERIAL
     T=$(network_call work)
+    ONLINE_T=$T/mu300-online
     PATH=$TOP/tools/adb-network-bin:$PATH; export PATH
 fi
 . "$TOP/tools/linux-mode.sh"
@@ -378,7 +379,7 @@ if [ -n "$PROGRESS_FD" ]; then
     fi
 fi
 [ "$(su_do 'id -u')" = 0 ] || die "$(t 'su does not work on the device')"
-usb_adb_only        # adb alone on USB for this run, no MTP (tools/usb-adb.sh); back at the end while in Android
+[ -n "${MU300_ADB_ADDRESS:-}" ] || usb_adb_only        # adb alone on USB for this run, no MTP (tools/usb-adb.sh); back at the end while in Android
 model="$(su_do 'getprop ro.product.model') / $(su_do 'getprop ro.product.device')"
 echo "$(t 'device: {1}' "$model")"
 [ $BL_STATE != locked ] || echo "$(t 'WARNING: {1}' "$BL_WARN")"
@@ -643,11 +644,12 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
             echo "  $(t 'Restart Android (adb reboot), then run the installer again: it continues from here.')"
             exit 0
         fi
-        _boot=; [ $ANSWERS_MODE = 1 ] || _boot=$(adb shell cat /proc/sys/kernel/random/boot_id </dev/null 2>/dev/null | tr -d '\r')
+        _boot=; [ $ANSWERS_MODE = 1 ] || [ -n "${MU300_ADB_ADDRESS:-}" ] || _boot=$(adb shell cat /proc/sys/kernel/random/boot_id </dev/null 2>/dev/null | tr -d '\r')
+        [ -z "${MU300_ADB_ADDRESS:-}" ] || network_call shrink-prepared "$RESUME_FILE"
         adb reboot
         # a program that drives the installer runs it again itself (the graphical installer: Refresh); a person at a
         # terminal is taken on to the installation once Android is up again
-        if [ $ANSWERS_MODE = 1 ] || ! online_reboot_wait "$_boot"; then
+        if [ $ANSWERS_MODE = 1 ] || [ -n "${MU300_ADB_ADDRESS:-}" ] || ! online_reboot_wait "$_boot"; then
             progress done result ok repartitioned yes resume pending transaction "$RESUME_FILE"
             echo "  $(t 'Run the installer again once Android is up: it continues from here.')"
             exit 0

@@ -31,7 +31,7 @@ class Network(unittest.TestCase):
         self.wifi.start(); self.addCleanup(self.wifi.stop)
         self.s = net.Session('fake-adb', '192.168.0.1:5555', self.root / 'session.json', timeout=1)
         self.facts = dict(SERIAL='fake-serial', CID='1'*32, SLOT='_b', MODEL='MU5352', PRODUCT='MU5352',
-                          BOOT='test-boot', BATTERY='96', POWERED='0', STATUS='Discharging')
+                          BOOT='test-boot', MAGISK='1', BATTERY='96', POWERED='0', STATUS='Discharging')
         self.s.facts = lambda: self.facts.copy()
         self.calls = []
 
@@ -291,7 +291,7 @@ class EntryPoint(Device):
     def test_original_shell_installer_checks_the_fake_u30air_through_tcp_entry_point(self):
         adapter = TOP / 'tests/fake_network_adb.py'
         for shell in self.each_shell():
-            self.device(model='U30_Air', device='U30Air', product='U30Air')
+            self.device(model='U30_Air', device='U30Air', product='U30Air', usb_config='ecm,mtp,adb')
             self.stub('adb', 'exec ' + shlex.quote(sys.executable) + ' ' + shlex.quote(str(adapter)) + ' "$@"')
             r = self.run_script(shell, 'install.sh', '--adb-address', '192.168.0.1:5555', '--check',
                                 MU300_NONINTERACTIVE=1, MU300_PROGRESS=1, MU300_ADB_TIMEOUT=2)
@@ -309,6 +309,8 @@ class EntryPoint(Device):
             self.assertTrue(calls)
             self.assertTrue(all(c['argv'][:2] in (['connect', '192.168.0.1:5555'], ['-s', '192.168.0.1:5555']) for c in calls))
             self.assertEqual(self.calls('reboot'), [])
+            self.assertFalse([c for c in self.calls() if 'android-usb.sh' in c.get('cmd', '')])
+            self.assertEqual(json.loads(self.state.read_text())['usb_config'], 'ecm,mtp,adb')
             self.assertFalse(any('of=/dev/block' in c['cmd'] for c in self.calls('write')))
 
 

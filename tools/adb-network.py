@@ -5,6 +5,7 @@ Only connection checks and staging transfers retry. An unacknowledged shell comm
 device installation is a detached job; reconnecting to status does not restart it or arm a boot slot.
 """
 import argparse
+import hashlib
 import ipaddress
 import json
 import os
@@ -94,6 +95,7 @@ echo SLOT=$(getprop ro.boot.slot_suffix)
 echo MODEL=$(getprop ro.product.model)
 echo PRODUCT=$(getprop ro.product.device)
 echo COMPLETED=$(getprop sys.boot_completed)
+echo MAGISK=$(magisk -v >/dev/null 2>&1 && echo 1 || echo 0)
 echo BOOT=$(cat /proc/sys/kernel/random/boot_id)
 echo BATTERY=$(cat /sys/class/power_supply/battery/capacity 2>/dev/null)
 echo STATUS=$(cat /sys/class/power_supply/battery/status 2>/dev/null)
@@ -193,7 +195,12 @@ class Session:
             unknown_foreground = self.state['phase'] == 'uncertain'
             safe_transfer_failure = self.state['phase'] == 'blocked' and not self.state.get('job')
             same_boot = f['BOOT'] == self.state.get('boot')
-            if not restart or (same_boot and (unknown_foreground or (not finished and not safe_transfer_failure))):
+            shrink_resume = self.state['phase'] in ('shrink-recovery', 'shrink-reboot', 'shrink-arming') and not self.state.get('job')
+            if shrink_resume:
+                self.shrink_transaction(self.state['shrink']['transaction'])
+                if self.state['phase'] == 'shrink-reboot' and same_boot:
+                    raise RuntimeError('the verified shrink is waiting for Android to restart; reconnect after the new boot')
+            if not restart or (same_boot and not shrink_resume and (unknown_foreground or (not finished and not safe_transfer_failure))):
                 raise RuntimeError('a previous wireless session needs review. Use --adb-status. '
                                    'After a finished job, or a manual Android reboot for an unknown foreground command, '
                                    '--adb-restart starts the normal installer again; it does not replay the old command.')
@@ -216,6 +223,92 @@ class Session:
         if not self.state['wifi']:
             print('Wi-Fi name is unavailable on this host. If disconnected, check the current Wi-Fi and adb address.', flush=True)
         self.power_warning(f)
+
+    def shrink_transaction(self, path):
+        """Bind recovery to the installer's saved online transaction, never an arbitrary command."""
+        path = Path(path).resolve()
+        rec = json.loads(path.read_text(encoding='utf-8'))
+        ident = self.state['identity']
+        if (rec.get('format') != 1 or rec.get('method') != 'online' or
+                rec.get('state') not in ('prepared-request', 'prepared') or
+                rec.get('serial') != ident['SERIAL'] or rec.get('cid') != ident['CID'] or
+                rec.get('slot') != ident['SLOT'].lstrip('_') or
+                not re.fullmatch(r'[0-9a-f]{32}', rec.get('token', '')) or
+                not re.fullmatch(r'[0-9a-f]{32}', rec.get('fs_uuid', '')) or
+                not isinstance(rec.get('fs_target'), int) or not isinstance(rec.get('fs_blocks'), int) or
+                not 0 < rec['fs_target'] < rec['fs_blocks']):
+            raise RuntimeError('the online shrink transaction does not match this wireless device')
+        old = self.state.get('shrink')
+        if old and (old['token'] != rec['token'] or old['transaction'] != str(path) or
+                    any(old.get(k) != rec[k] for k in ('fs_uuid', 'fs_blocks', 'fs_target'))):
+            raise RuntimeError('a different online shrink transaction is already bound to this session')
+        return path, rec
+
+    def shrink_begin(self, path):
+        f = self.guard()
+        if f.get('MAGISK') != '1':
+            raise RuntimeError('wireless shrink requires working Magisk late-start scripts to restore TCP adb after reboot')
+        path, rec = self.shrink_transaction(path)
+        self.state['shrink'] = {'transaction': str(path), 'token': rec['token'],
+                                **{k: rec[k] for k in ('fs_uuid', 'fs_blocks', 'fs_target')}}
+        self.save()  # before the first mutating shrink command
+
+    def arm_shrink_adb(self):
+        # One Magisk late-start script, never a persistent Android property or an auth change.
+        # Reboot often drops `adb tcpip`; restore only the already selected port after this Android boot.
+        port = int(self.address.rsplit(':', 1)[1])
+        ident = self.state['identity']
+        script = "#!/system/bin/sh\nrm -f \"$0\"\n"
+        script += 'test "$(getprop ro.serialno)" = ' + shlex.quote(ident['SERIAL']) + ' || exit 1\n'
+        script += 'test "$(cat /sys/class/block/mmcblk0/device/cid)" = ' + shlex.quote(ident['CID']) + ' || exit 1\n'
+        script += 'test "$(getprop ro.boot.slot_suffix)" = ' + shlex.quote(ident['SLOT']) + ' || exit 1\n'
+        script += 'test "$(cat /proc/sys/kernel/random/boot_id)" != ' + shlex.quote(self.state['boot']) + ' || exit 1\n'
+        script += 'i=0; while test "$(getprop sys.boot_completed)" != 1; do\n'
+        script += ' i=$((i+1)); test "$i" -lt 90 || exit 1; sleep 2\ndone\n'
+        script += 'setprop service.adb.tcp.port ' + str(port) + ' || exit 1\nsetprop ctl.restart adbd\n'
+        path = '/data/adb/service.d/mu300-wireless-shrink-' + self.state['id'] + '.sh'
+        digest = hashlib.sha256(script.encode()).hexdigest()
+        self.state['adb_resume'] = {'path': path, 'sha256': digest}
+        self.state['phase'] = 'shrink-arming'; self.save()
+        command = ('umask 077; mkdir -p /data/adb/service.d && printf %s ' + shlex.quote(script) +
+                   ' > ' + path + '.tmp && chmod 700 ' + path + '.tmp && mv ' + path + '.tmp ' + path +
+                   ' && sha256sum ' + path)
+        try:
+            out, rc = self.shell(command)
+            if rc or out.decode('ascii', 'strict').split() != [digest, path]:
+                raise RuntimeError('the one-time TCP adb restore script did not read back; do not reboot yet')
+        except (TransportError, RuntimeError, UnicodeError):
+            self.state['phase'] = 'shrink-recovery'; self.save()
+            raise
+        self.state['phase'] = 'ready'; self.save()
+
+    def shrink_prepared(self, path):
+        self.guard()
+        path, rec = self.shrink_transaction(path)
+        if not self.state.get('shrink') or rec['state'] != 'prepared':
+            raise RuntimeError('shrink must be read back and marked prepared before Android may restart')
+        self.arm_shrink_adb()
+        self.state['phase'] = 'shrink-reboot'
+        self.save()
+
+    def shrink_reboot(self):
+        if self.state.get('shrink_reboot_sent'):
+            raise RuntimeError('the shrink reboot was already dispatched; reconnect, never replay reboot')
+        self.shrink_transaction(self.state['shrink']['transaction'])
+        f = self.wait()
+        if f['BOOT'] != self.state['boot']:
+            raise RuntimeError('Android already restarted; use --adb-restart to validate and resume')
+        self.state['shrink_reboot_sent'] = True
+        self.save()  # loss of the reply cannot cause a second reboot
+        try:
+            r = self.call(['-s', self.address, 'reboot'], timeout=30)
+            if r.returncode:
+                print('WARNING: reboot was not acknowledged; check the device before a manual restart.', file=sys.stderr)
+        except TransportError:
+            print('WARNING: reboot reply was lost; no reboot is retried.', file=sys.stderr)
+        print('Rejoin Android Wi-Fi, then rerun with --adb-restart (PowerShell: -AdbRestart) and the same work directory. '
+              'The saved transaction checks both GPTs, the token and the F2FS before installation continues.', file=sys.stderr)
+        return 0
 
     def guard(self):
         if not self.state:
@@ -317,6 +410,11 @@ class Session:
         print('Session phase: ' + self.state['phase'] + '; device result: ' + (str(rc) if rc is not None else 'unknown/pending'), flush=True)
         if self.state['phase'] == 'uncertain':
             print('A foreground command lost its reply. Do not replay it. Review logs and reboot Android before an explicit restart.', flush=True)
+        if self.state['phase'] == 'shrink-recovery':
+            print('A shrink command lost its reply. Do not power off or reboot. Reconnect and use --adb-restart with '
+                  'the same work directory: the saved transaction inspects the existing worker and disk state; no command is replayed.', flush=True)
+        if self.state['phase'] == 'shrink-reboot':
+            print('The verified shrink is waiting for a new Android boot; rerun with --adb-restart afterwards.', flush=True)
         emit(log)
 
     def proxy(self, args):
@@ -326,11 +424,16 @@ class Session:
             args = args[2:]
         if not args or args[0].startswith('-') or args[0] in ('tcpip', 'disconnect', 'kill-server'):
             raise RuntimeError('this adb operation is not part of the pinned wireless installation')
+        if self.state and self.state['phase'] == 'shrink-reboot':
+            if args != ['reboot']:
+                raise RuntimeError('shrink verified: only its single Android reboot is allowed; resume after reconnect')
+            return self.shrink_reboot()
         try:
             self.guard()
         except (TransportError, PeerError):
             if self.state and self.state['phase'] in ('ready', 'installed'):
-                self.state['phase'] = 'blocked'; self.save()
+                self.state['phase'] = 'shrink-recovery' if self.state.get('shrink') else 'blocked'
+                self.save()
             raise
         if args[0] == 'shell':
             command = args[1] if len(args) == 2 else ' '.join(shlex.quote(a) for a in args[1:])
@@ -340,10 +443,10 @@ class Session:
             try:
                 output, rc = self.shell(command, root=False, timeout=600)
             except TransportError:
-                self.state['phase'] = 'uncertain'; self.save()
+                self.state['phase'] = 'shrink-recovery' if self.state.get('shrink') else 'uncertain'; self.save()
                 raise
             if rc and re.search(r'\bof=/dev/block/', command):
-                self.state['phase'] = 'blocked'; self.save()
+                self.state['phase'] = 'shrink-recovery' if self.state.get('shrink') else 'blocked'; self.save()
                 raise RuntimeError('device write returned failure; inspect the medium before another installation')
             emit(output)
             return rc
@@ -360,7 +463,7 @@ class Session:
                 except TransportError:
                     pass
                 time.sleep(1)
-            self.state['phase'] = 'blocked'; self.save()
+            self.state['phase'] = 'shrink-recovery' if self.state.get('shrink') else 'blocked'; self.save()
             raise RuntimeError('staging transfer failed. Check Wi-Fi and the adb address; no write command was replayed')
         try:
             r = self.call(['-s', self.address, *args], timeout=30)
@@ -385,7 +488,7 @@ def main():
     p.add_argument('--state', required=True, type=Path)
     p.add_argument('--timeout', type=int, default=120)
     p.add_argument('--restart', action='store_true')
-    p.add_argument('action', choices=('connect', 'work', 'check', 'status', 'finish', 'proxy'))
+    p.add_argument('action', choices=('connect', 'work', 'check', 'status', 'finish', 'proxy', 'shrink-begin', 'shrink-prepared'))
     p.add_argument('args', nargs=argparse.REMAINDER)
     a = p.parse_args()
     if not 1 <= a.timeout <= 600:
@@ -407,6 +510,13 @@ def main():
         session.check()
     elif a.action == 'finish':
         session.check(); session.state['phase'] = 'complete'; session.save()
+    elif a.action in ('shrink-begin', 'shrink-prepared'):
+        if len(a.args) != 1:
+            raise RuntimeError('one saved online transaction is required')
+        if a.action == 'shrink-begin':
+            session.shrink_begin(a.args[0])
+        else:
+            session.shrink_prepared(a.args[0])
     else:
         args = a.args[1:] if a.args[:1] == ['--'] else a.args
         return session.proxy(args)
