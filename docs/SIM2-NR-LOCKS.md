@@ -33,6 +33,10 @@ hot-switch preference and boot-fallback policy are not changed by locking.
 
 ## Validation
 
+Hardware testing is limited to **U30 Air and M3**. The detailed recorded run
+below is from the U30 Air; the owner also confirmed successful M3 SIM2 band
+and cell locking on 2026-11-01. No F50/V50 hardware validation is claimed.
+
 2026-10-30, U30 Air, modem W25.24.1, OpenWrt 25.12.6 / kernel 7.2.11:
 
 - SIM2 n41 write/read-back, RF restart and bearer recovery.
@@ -47,8 +51,8 @@ A final consecutive n41 / NR-cell unlock / automatic-NR run also passed. Cleanup
 does not call ifup again after success: doing that restarted the restored
 netifd bearer and made the next job see an offline card.
 
-M3 is included through the shared board profile. These measurements were made
-on a U30 Air; no separate M3 hardware run is claimed. Other modem revisions,
+M3 uses the same board profile. The M3 hardware result is owner-confirmed;
+no separate M3 firmware/version matrix was supplied. Other modem revisions,
 all individual supported NR bands and a switch between two data-capable SIMs
 have not been independently measured here.
 
@@ -61,27 +65,32 @@ SIM cold-start, hot-switch, plugin and rpcd suites cover the integration hooks.
 This extends **NR bands and NR cells only** to the existing boot-pinned SIM2
 path. It does not add LTE writes, mode/EN-DC changes, reset-all, a new hot-switch
 implementation or support for another manufacturer's modem. There is no F50 or
-V50 hardware lock result for this implementation. U30 Air/M3 does not need the
-experimental switch; its existing native sequence stays separate.
+V50 hardware lock result for this implementation. The startup switch defaults
+on for U30 Air/M3 and off for other models; the native sequence stays separate.
 
-### Default-off startup switch
+### Model-based startup switch
 
-In LuCI **Cellular > Adapter settings**, enable **Experimental SIM2 NR locks
-(F50/V50)**, save, and reboot. The UCI equivalent is:
+In LuCI **Cellular > Adapter settings**, **SIM2 NR locks at startup** offers
+Model default, Enabled and Disabled. Model default enables U30 Air/M3 and
+disables F50/V50 (and unsupported models). M3 dispatches through the shared
+`u30air` hardware profile. Save and reboot to apply a changed choice.
+
+For F50/V50 testers, select Enabled. The UCI equivalent is:
 
 ```sh
-uci set unisoc_modem.main.sim2_lock_experimental='1'
+uci set unisoc_modem.main.sim2_nr_locks='1'
 uci commit unisoc_modem
 ```
 
 This is an installation-wide opt-in for the detected F50 or V50, not a claim
-that its modem revision has been tested. The option defaults to `0` on new
-installs and when absent from an existing configuration. The AT init service
+that its modem revision has been tested. The option defaults to `auto` on new
+installs; an absent option has the same model-based default. `0` explicitly
+disables it on any model and `1` enables a supported profile. The AT init service
 calls `mu300-sim2-lock boot-config` before starting owners or RF; it latches
-`off`, `f50` or `v50` in `/run/mu300/sim2-lock-experimental` once per boot.
+`off`, `u30air`, `f50` or `v50` in `/run/mu300/sim2-nr-locks` once per boot.
 Saving the form, reloading the page or restarting AT services cannot activate
-the feature mid-boot. Unchecking and rebooting disables this profile. The
-checkbox does not clear modem NV: unlock NR bands/cells before disabling it.
+the feature mid-boot. Selecting Disabled and rebooting disables the profile.
+The switch does not clear modem NV: unlock NR bands/cells before disabling it.
 
 SIM2 must already be selected and online through the ordinary boot selector;
 this switch does not change the active/default SIM, APNs or boot OS. On an F50
@@ -94,8 +103,8 @@ choose the desired physical card with the existing card selector and reboot.
 * F50/V50 logical SIM2 uses nr4/nr5 and `sipa_eth8`, but the boot-pinned daemon
   directories are `/run/mu300-at` and `/run/mu300-at2`. The native U30 Air still
   uses `/run/mu300-at4` and `/run/mu300-at5` with explicit card prefixes.
-* Boot-pinned commands do not change the card selector. Before writes, the
-  command broker must report `SPACTCARD: 1`. Owners must already exist; no TTY
+* Boot-pinned commands do not change the card selector. Before writes, both
+  command and data brokers must report `SPACTCARD: 1`. Owners must already exist; no TTY
   is opened or reopened. F50/V50 may report RF-off as CFUN 0 or 2.
 * A requested NR band must be both encodable by the existing six-band codec
   and present in this card's `SP5GCMDS` capability reply. A missing, malformed

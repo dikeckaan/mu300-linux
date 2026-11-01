@@ -126,9 +126,9 @@ sim1_only() {
 # and nothing starts this service a second time. Whatever cannot be read, written or understood is a SIM1 boot.
 start_service() {
     local slot hot temporary lib=${MU300_SIM_CONFIG_LIB:-/opt/mu300/lib/sim-config.sh}
-    # Default off; configuration is latched once per boot, before any AT/RF.
+    # Model defaults: U30 Air/M3 on, other models off. Latch once before AT/RF.
     local sim2_lock=${MU300_SIM2_LOCK_BIN:-/opt/mu300/bin/mu300-sim2-lock}
-    [ ! -x "$sim2_lock" ] || "$sim2_lock" boot-config || echo 'mu300-atd: experimental SIM2 locks remain unavailable' >&2
+    [ ! -x "$sim2_lock" ] || "$sim2_lock" boot-config || echo 'mu300-atd: SIM2 locks remain unavailable' >&2
     # Only the U30 Air has the second group and the validated sequences; everywhere else the files are ignored.
     [ "$(/opt/mu300/bin/mu300-device 2>/dev/null)" = u30air ] || { start_sim1; return; }
     [ -r "$lib" ] || { start_sim1; return; }

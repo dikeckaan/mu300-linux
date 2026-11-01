@@ -4349,8 +4349,13 @@ msgstr "Οικιακό δίκτυο"
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Τα κανάλια του μόντεμ είναι απασχολημένα με άλλες αναγνώσεις· το ζωντανό σήμα έρχεται σύντομα"
 
-msgid "Experimental SIM2 NR locks (F50/V50)"
-msgstr "Experimental SIM2 NR locks (F50/V50)"
 
-msgid "Default off. Save and reboot to enable SIM2 NR band and cell lock testing on F50/V50. Simulation-tested only; LTE is not enabled. U30 Air/M3 keeps its existing path. Unlock first before disabling: this switch does not clear modem settings."
-msgstr "Default off. Save and reboot to enable SIM2 NR band and cell lock testing on F50/V50. Simulation-tested only; LTE is not enabled. U30 Air/M3 keeps its existing path. Unlock first before disabling: this switch does not clear modem settings."
+
+msgid "SIM2 NR locks at startup"
+msgstr "SIM2 NR locks at startup"
+
+msgid "Model default"
+msgstr "Model default"
+
+msgid "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."
+msgstr "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."

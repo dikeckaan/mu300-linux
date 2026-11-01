@@ -1,6 +1,6 @@
 config core 'main'
 	option at_backend 'auto'
-	option sim2_lock_experimental '0'
+	option sim2_nr_locks 'auto'
 	option at_port '/dev/stty_nr1'
 	option at_command ''
 	option sms_command ''

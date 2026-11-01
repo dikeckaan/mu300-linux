@@ -4328,8 +4328,13 @@ msgstr "本地网络"
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "模组通道正被其他读取占用，实时信号稍后更新"
 
-msgid "Experimental SIM2 NR locks (F50/V50)"
-msgstr "实验性 SIM2 NR 锁定（F50/V50）"
 
-msgid "Default off. Save and reboot to enable SIM2 NR band and cell lock testing on F50/V50. Simulation-tested only; LTE is not enabled. U30 Air/M3 keeps its existing path. Unlock first before disabling: this switch does not clear modem settings."
-msgstr "默认关闭。保存并重启后，可在 F50/V50 上测试 SIM2 的 5G NR 锁频和锁小区。仅通过模拟测试，未开放 LTE；U30 Air/M3 继续使用现有流程。关闭前请先解除锁定：此开关不会清除基带设置。"
+
+msgid "SIM2 NR locks at startup"
+msgstr "启动时启用 SIM2 NR 锁定"
+
+msgid "Model default"
+msgstr "型号默认值"
+
+msgid "Enabled by default on U30 Air/M3; disabled by default on other models. F50/V50 are experimental and simulation-tested only. Save and reboot to apply. Unlock before disabling; this switch does not clear modem settings. LTE is not enabled."
+msgstr "U30 Air/M3 默认开启，其他型号默认关闭。F50/V50 为实验支持，仅通过模拟测试。保存并重启后生效。关闭前请先解除锁定；此开关不会清除基带设置，未开放 LTE。"

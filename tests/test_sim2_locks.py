@@ -58,6 +58,7 @@ class Fixture(unittest.TestCase):
         (self.root / 'etc/openwrt_release').touch()
         (self.root / 'run/mu300-radio-freeze').touch()
         (self.root / 'run/mu300/sim-slot').write_text('1')
+        (self.root / 'run/mu300/sim2-nr-locks').write_text('u30air')
         for ch in ['mu300-at4', 'mu300-at5']:
             d = self.root / 'run' / ch
             (d / 'owner').mkdir(parents=True)
@@ -93,6 +94,34 @@ class Fixture(unittest.TestCase):
 
 
 class Native(Fixture):
+    def test_model_default_enables_u30_family_only(self):
+        self.stub('uci', 'case $3 in unisoc_modem.main.sim2_nr_locks) printf "%s" "${T_ENABLE:-auto}";; esac')
+        flag = self.root / 'run/mu300/sim2-nr-locks'
+        for device in ['u30air', 'f50', 'v50', 'unknown']:
+            self.stub('mu300-device', 'echo ' + device, self.root / 'opt/mu300/bin')
+            for choice in ['', 'auto', '1', '0', 'invalid']:
+                flag.unlink(missing_ok=True)
+                r = self.call('boot-config', T_ENABLE=choice)
+                self.assertEqual(r.returncode, 0, r.stderr)
+                on = (choice in ['', 'auto'] and device == 'u30air') or (choice == '1' and device != 'unknown')
+                self.assertEqual(flag.read_text().strip(), device if on else 'off', (device, choice))
+        self.assertEqual(self.state()['log'], [])
+
+    def test_native_default_on_can_be_disabled_next_boot(self):
+        self.stub('uci', 'case $3 in unisoc_modem.main.sim2_nr_locks) printf "%s" "${T_ENABLE:-auto}";; esac')
+        flag = self.root / 'run/mu300/sim2-nr-locks'
+        flag.unlink()
+        self.assertEqual(self.call('boot-config').returncode, 0)
+        self.assertEqual(self.call('supported', 'nr').returncode, 0)
+        # Saving off cannot change this boot's policy.
+        self.call('boot-config', T_ENABLE='0')
+        self.assertEqual(self.call('supported', 'nr').returncode, 0)
+        flag.unlink()
+        self.call('boot-config', T_ENABLE='0')
+        self.assertNotEqual(self.call('apply', 'nr', '41').returncode, 0)
+        self.assertEqual(self.call('replay', MU300_NATIVE_EARLY='1').returncode, 0)
+        self.assertEqual(self.state()['log'], [])
+
     def test_nr_lock_readback_restart_and_commit(self):
         r = self.call('apply', 'nr', '41')
         self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
@@ -284,7 +313,7 @@ class Experimental(Fixture):
     def profile(self, device='f50', board=1, chip=0):
         self.stub('mu300-device', 'echo ' + device, self.root / 'opt/mu300/bin')
         (self.root / 'run/mu300-radio-freeze').unlink(missing_ok=True)
-        (self.root / 'run/mu300/sim2-lock-experimental').write_text(device)
+        (self.root / 'run/mu300/sim2-nr-locks').write_text(device)
         self.env['T_GENERIC'] = '1'
         for name in ['mu300-at', 'mu300-at2']:
             d = self.root / 'run' / name
@@ -318,7 +347,7 @@ class Experimental(Fixture):
 
     def test_f50_requires_explicit_matching_opt_in(self):
         self.profile()
-        flag = self.root / 'run/mu300/sim2-lock-experimental'
+        flag = self.root / 'run/mu300/sim2-nr-locks'
         for value in ['', 'v50', 'f50;reboot']:
             flag.write_text(value)
             self.assertNotEqual(self.call('apply', 'nr', '41').returncode, 0)
@@ -328,9 +357,9 @@ class Experimental(Fixture):
 
     def test_gui_switch_defaults_off_and_is_latched_until_next_boot(self):
         self.profile()
-        flag = self.root / 'run/mu300/sim2-lock-experimental'
+        flag = self.root / 'run/mu300/sim2-nr-locks'
         flag.unlink()
-        self.stub('uci', 'case $3 in unisoc_modem.main.sim2_lock_experimental) printf "%s" "${T_ENABLE:-0}";; esac')
+        self.stub('uci', 'case $3 in unisoc_modem.main.sim2_nr_locks) printf "%s" "${T_ENABLE:-0}";; esac')
         self.assertEqual(self.call('boot-config').returncode, 0)
         self.assertEqual(flag.read_text().strip(), 'off')
         # Saving on during this boot (or restarting the service) cannot enable it.
