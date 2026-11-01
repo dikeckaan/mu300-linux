@@ -1,9 +1,13 @@
-# Installing over rooted wireless/TCP adb
+# Session guards for existing TCP adb installation
 
-The desktop installer can use an already enabled, authorized **rooted TCP adb** endpoint as an explicit transport.
-This adds connection management to the existing installation; it does not enable root, open an adb port, perform
-Android's pairing-code setup, or change a device's hardware profile. Use a trusted network. M3 recognition remains
-the separate change in [#456](https://github.com/dikeckaan/mu300-linux/pull/456).
+ADB already supports TCP endpoints, and the desktop installers already provide installation, backup and online
+F2FS shrink/recovery. This optional mode adds device-identity checks, detached-job status and lost-reply handling
+to those flows. It requires an already enabled, authorized **rooted TCP adb** endpoint; it does not enable root,
+open the initial adb port or perform Android's pairing-code setup. Use a trusted network.
+
+Partition layout, shrink eligibility/target, GPT writes and transaction recovery remain the upstream installer's
+implementation. The keep-data method is described in [FINDINGS 239](FINDINGS.md).
+M3 recognition remains the separate change in [#456](https://github.com/dikeckaan/mu300-linux/pull/456).
 
 Connect the computer to the device's hotspot, or another network that can reach Android's adb endpoint. Wi-Fi
 does not supply power: **connect a stable charger and keep it connected during installation**. Wireless mode reads
@@ -30,8 +34,9 @@ Linux/macOS (Python 3.8+ required):
 Use Android's actual address; the examples are not discovery defaults. The option accepts a literal IPv4 address
 and port. `MU300_ADB_ADDRESS` is the equivalent environment/answers-file setting; `MU300_ADB_TIMEOUT` sets the
 connection wait window (1..600 seconds, default 120). The explicit endpoint is also exported as `ANDROID_SERIAL`
-for child tools. USB invocations keep the upstream USB setup and backup/reset/resume rules. TCP mode leaves USB functions alone so it does not restart adbd while using the wireless transport. Wireless mode uses the
-text installer and skips self-update during the session so the source and transport helper stay together.
+for child tools. TCP mode leaves USB functions alone so it does not restart adbd while using the wireless
+transport. It uses the text installer and skips self-update during the session so the source and helper stay
+together. USB invocations keep the upstream USB setup and backup/reset/resume rules.
 
 The host records Android's serial, eMMC CID and Android slot, then checks them after reconnection and before
 commands. It never falls back to a phone, emulator or another router at the same IP. Each run gets a private
@@ -81,11 +86,9 @@ that setup; select the shared keep-data option below when it is offered and Andr
 
 ## Keep Android's data and resume over Wi-Fi
 
-The regular installer's **keep Android's data** option now works over this transport. It uses main's online F2FS
-helper and transaction recovery (#468, including #474's Android arithmetic and recovery fixes). There is no
-separate layout-specific shrink executable or fixed 4 GiB target. The same upstream eligibility checks, backup,
-free-space target and explicit confirmation apply. USB keeps its upstream flow. This TCP implementation requires
-a readable eMMC CID; UFS-only devices are refused rather than matched by their IP address alone.
+Select the existing installer's **keep Android's data** option when offered. The guards below only handle the
+wireless session around that operation; they do not implement another shrink or recovery algorithm. This TCP
+mode currently requires a readable eMMC CID. UFS-only devices are refused rather than identified by IP alone.
 
 Before the first mutating shrink command, the wireless session binds to the saved transaction's device, slot,
 token, F2FS UUID and sizes. A lost reply stops the host; reconnect using the **same work directory** and
@@ -98,7 +101,8 @@ the Android restart stages and reads back one Magisk late-start script under `/d
 itself on execution, requires the same serial/CID/slot and a different boot, waits at most 180 seconds for Android,
 and restores **only the already selected TCP port** with runtime properties. It does not change persistent
 properties, adb authorization or Android's system partitions. The reboot is dispatched once; a lost reply never
-causes an automatic second reboot. Working Magisk is checked before the first mutating shrink command; its late-start execution is required to restore the port after this reboot.
+causes an automatic second reboot. Working Magisk is checked before the first mutating shrink command; its
+late-start execution is required to restore the port after this reboot.
 
 Rejoin Android's hotspot and rerun, for example:
 
@@ -113,11 +117,13 @@ Rejoin Android's hotspot and rerun, for example:
 If the address changed, pass the new endpoint; serial, eMMC CID and slot must still match. The upstream installer
 checks the prepared transaction, GPTs, token and smaller F2FS before installing. Keep its backups and transaction;
 they do not replace a complete backup of Android's files. An online shrink followed by GPT changes is not atomic.
-The former standalone 32 GB preparation tool has been removed in favor of this shared implementation.
 
 ## Validation
 
-Rooted wireless adb installation and preserving-data shrink were used successfully on one M3/B18 on 2026-10-29.
-This change adds reusable main-installer options, identity/connection guards, Wi-Fi/power notices and detached jobs
-with fake-device and real local POSIX-worker tests. The shared online-shrink/TCP recovery integration is covered by fake disks and mocked adb only; it has not been used for another physical resize. Those new options have not been used to repeat an installation
-on the already-installed M3. U30 Air uses the same transport path; no new U30 Air hardware test is claimed.
+The guarded entry points and TCP shrink/reboot recovery have fake-device, fake-disk and host tests. Local POSIX
+worker tests also run the detached worker and one-time restoration script against stubs. The integrated flow has
+not been used for a new physical resize or installation on the already-installed M3.
+
+A separate staged run on M3/B18 used rooted TCP adb for a successful keep-data shrink and installation on
+2026-10-29. That establishes a tested method, not a hardware pass for these new guards. No U30 Air preservation
+resize is claimed here. This change leaves hardware/model dispatch to the existing installer.

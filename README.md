@@ -202,14 +202,10 @@ and it asks first. Back the device up with `tools/backup-device.sh` before sayin
 neither case, stop and open an issue with what `--check` printed; they identify the variant. With an SD card in the
 slot there is a way that erases nothing: `--check` says so, and the installer offers the card instead.
 
-For an already enabled rooted wireless adb connection, the desktop installer now has an explicit
-[wireless installation mode](docs/WIRELESS-ADB-INSTALL.md): `--adb-address IP:PORT` / `-AdbAddress IP:PORT`,
-with device binding, reconnection/status checks and Wi-Fi/battery warnings. Connect a charger; Wi-Fi does not
-power the device. The original USB workflow remains available.
-
-Wireless mode also supports the installer's existing **keep Android's data** option. It uses the same online
-F2FS helper, backups and transaction recovery as USB; see [wireless shrink and resume](docs/WIRELESS-ADB-INSTALL.md#keep-androids-data-and-resume-over-wi-fi).
-The old separate 32 GB preparation tool has been replaced by this shared path.
+For an already enabled, authorized TCP adb endpoint, optional [wireless session guards](docs/WIRELESS-ADB-INSTALL.md)
+(`--adb-address IP:PORT` / `-AdbAddress IP:PORT`) add device checks, detached-job status and lost-reply handling to
+the existing installer. They reuse its normal installation and keep-data shrink/recovery, with no separate
+partitioning tool. Connect a stable charger; Wi-Fi does not power the device.
 
 **Making room is a reset, and the installation resumes afterwards (EXPERIMENTAL).** Android keeps its data
 encrypted (file-based encryption, with the metadata key in `/metadata`), and a data filesystem cleared from outside
