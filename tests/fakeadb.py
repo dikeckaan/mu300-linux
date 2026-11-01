@@ -75,6 +75,9 @@ DEFAULT = {
     'usb_back': True,            # after that switch the device is on adb again; false: it never comes back
     'usb_revert': '',            # Android sets these functions again right after the switch
     'boot_id': 'b00710d0-0000-4000-8000-000000000001',
+    'reboot_boots': False,       # adb reboot starts a new boot: a new boot_id, and the USB functions of before the
+                                 # run's switch (usb_stock) - what a real Android does; reboots_seen counts them
+    'usb_stock': 'ecm,mtp,adb',
 }
 T = '/data/local/tmp'
 
@@ -158,8 +161,9 @@ def usb(st, args):
     """tools/android-usb.sh as the device runs it; (text, kind). kind "usb": changes no storage."""
     cfg, boot = st['usb_config'], st['boot_id']
     has = lambda f: f in cfg.split(',')
-    rebooted = os.path.exists(state_path() + '.log') and any(
-        json.loads(l)['kind'] == 'reboot' for l in open(state_path() + '.log', encoding='utf-8'))
+    # a reboot under way: asked for, and (with reboot_boots) not yet come back as a new boot
+    rebooted = os.path.exists(state_path() + '.log') and sum(
+        json.loads(l)['kind'] == 'reboot' for l in open(state_path() + '.log', encoding='utf-8')) > st.get('reboots_seen', 0)
     if args[:1] == ['adb-only']:
         if not has('adb') or rebooted:
             return 'MU300-USB skip %s %s' % (cfg, boot), 'read'
@@ -484,6 +488,10 @@ def main(argv):
             if st['serial'].upper().startswith('MU300LINUX'):
                 out.write('/opt/mu300/bin\n' if line.startswith('ls') else 'mu300\n')
             return 0
+        if line == 'cat /proc/sys/kernel/random/boot_id':
+            log('read', argv, line)
+            out.write(st['boot_id'] + '\n')
+            return 0
         if line == 'getprop':
             log('read', argv, line)
             out.write(''.join('[%s]: [%s]\n' % kv for kv in sorted(props(st).items())))
@@ -546,6 +554,9 @@ def main(argv):
         return 0
     if cmd == 'reboot':
         log('reboot', argv)
+        if st.get('reboot_boots'):
+            n = st.get('reboots_seen', 0) + 1
+            save(reboots_seen=n, boot_id='b00710d0-0000-4000-8000-%012d' % (n + 1), usb_config=st['usb_stock'])
         return 0
     log('unknown', argv)
     return 1

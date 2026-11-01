@@ -12512,7 +12512,11 @@ Ubuntu 24.04 with kernel 7.3, v2026.10.30.1, into the 41 GiB region; Linux boote
 SHA-256 and the setting were the same, and Android's own boot fsck of /data (`fsck.f2fs -a`) reported no error. Three
 bugs found and fixed: the worker's byte offsets were computed in Android's 32-bit sh (every start was refused), the
 terminal run lost the F50 when it drops off USB once about 5 s after boot_completed, and a resumed run printed sizes
-before `gib` was defined. vold also runs `resize.f2fs` on /data at every boot (it failed on the unclean image here); on
+before `gib` was defined. Two more from that test: the region found by a resumed run was an old mu300root superblock
+left at the fixed offset of the first releases (27762098176) inside the region made, not the region itself - a
+resumed run now looks at the transaction's region only (tools/storage.sh, install.ps1); and the restart in the middle
+of a terminal run gives Android its USB functions (MTP) back, so the run sets adb alone again in the new boot (#473's
+usb_adb_only), whose restore at the end is for that boot. vold also runs `resize.f2fs` on /data at every boot (it failed on the unclean image here); on
 the shrunk table the F2FS already fills userdata to within a section, so there is nothing for it to grow into.
 
 **Not taken.** kano's growth of an encrypted userdata at uninstall (474e8018: a temporary Android boot image with a

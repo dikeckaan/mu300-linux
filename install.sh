@@ -615,6 +615,9 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
             echo "  $(t 'Run the installer again once Android is up: it continues from here.')"
             exit 0
         fi
+        # the new boot has the user's USB functions again (MTP among them): adb alone once more, and the restore at
+        # the end of the run is for this boot (tools/usb-adb.sh)
+        usb_adb_only
         return 0
     fi
     resume_prepare "$new_end"

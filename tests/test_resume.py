@@ -570,6 +570,29 @@ class OnlineShrink(ResetAndResume):
         r, ev, facts = self.inst(shell, dict(KEEP, **answers))
         return r, ev, facts, before, misc, blocks
 
+    def test_a_terminal_run_sets_usb_to_adb_only_again_in_the_new_boot(self):
+        # a person at a terminal: after the restart the run waits for Android and goes on (online_reboot_wait). The
+        # new boot has the user's USB functions (MTP) again: adb alone once more, and the restore at the end of the
+        # run is for that boot (#473). (The fake's kernel keeps the old userdata size across the restart, so the
+        # resumed check stops the run there; its EXIT trap does the restore.)
+        for shell in self.each_shell():
+            self.fresh()
+            self.device(pull=True, usb_config='ecm,mtp,adb', reboot_boots=True)
+            stdin = 'yes\nkeep\n4\nyes\nyes\n' + '\n' * 60
+            r = self.run_script(shell, 'install.sh', stdin=stdin, MU300_GUI='0', MU300_ONLINE_SH=str(self.wrapper),
+                                MU300_ONLINE_POLL='0', MU300_ONLINE_LOST_TRIES='3', MU300_ONLINE_SETTLE='1')
+            out = r.stdout + r.stderr
+            self.assertIn('Waiting for Android to start again', out)
+            self.assertEqual(len(self.calls('reboot')), 1, out[-3000:])
+            usb = [c['cmd'] for c in self.calls() if 'android-usb.sh' in (c.get('cmd') or '')]
+            switches = [c for c in usb if c.endswith('adb-only')]
+            self.assertEqual(len(switches), 2, (usb, out[-3000:]))
+            restores = [c for c in usb if ' restore ' in c]
+            self.assertTrue(restores, (usb, out[-3000:]))
+            self.assertTrue(restores[-1].endswith('ecm,mtp,adb b00710d0-0000-4000-8000-000000000002'), restores)
+            st = json.loads(self.state.read_text())
+            self.assertEqual((st['boot_id'][-1:], st['usb_config']), ('2', 'ecm,mtp,adb'))
+
     def test_android_keeps_its_data_and_the_installation_continues_after_a_restart(self):
         for shell in self.each_shell():
             self.fresh()
@@ -623,6 +646,26 @@ class OnlineShrink(ResetAndResume):
             r, ev, facts = self.inst(shell, INSTALL)
             self.assertIn('not the filesystem that was shrunk', ev[-1]['message'])
             self.assertEqual(self.writes(), [])
+
+    def test_the_region_made_is_the_transactions_not_an_old_superblock_at_the_fixed_offset(self):
+        # the region made reaches below the fixed offset of the first releases, and an old mu300root superblock is
+        # left there (a Linux that was installed before): the resumed run uses the transaction's region, new
+        for shell in self.each_shell():
+            self.fresh()
+            r, ev, facts, before, misc, blocks = self.keep(shell, MU300_ANS_LINUX_GIB='42')
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:] + r.stderr)
+            rec = json.loads(Path(ev[-1]['transaction']).read_text())
+            self.assertLess(rec['region_start'] * 512, 27762098176)
+            sb = bytearray(2048); sb[1080 - 1024:1082 - 1024] = b'\x53\xef'; sb[1144 - 1024:1153 - 1024] = b'mu300root'
+            sb[1028 - 1024:1032 - 1024] = (1 << 20).to_bytes(4, 'little')
+            with open(self.emmc / 'dev/block' / fakeemmc.disk_of(self.emmc)[0], 'r+b') as f:
+                f.seek(27762098176 + 1024); f.write(bytes(sb))
+            fakeemmc.reset(self.emmc, wipe=False)
+            self.device(pull='noboot')
+            r, ev, facts = self.inst(shell, INSTALL)
+            self.assertEqual(facts['resume.check'], 'RESUME-OK', r.stdout[-3000:])
+            self.assertIn('Linux region: offset %d, ' % (rec['region_start'] * 512), r.stdout)
+            self.assertIn('existing mu300root filesystem: no', r.stdout)
 
     def test_a_kernel_that_refuses_changes_nothing(self):
         for shell in self.each_shell():

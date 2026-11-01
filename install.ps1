@@ -1774,6 +1774,9 @@ $cands = @($REG_OFF); if ($IN_PART -eq 1) { $cands += $PART_OFF }; $cands += [in
 foreach ($cand in $cands) {
     if (-not (RegionOnDisk $cand)) { continue }
     if ($cand -eq 27762098176 -and $IN_PART -eq 1 -and $cand -ge $PART_OFF -and $cand -lt ($PART_OFF + $PART_SIZE)) { continue }
+    # a region made by making room is the transaction's and nothing else: an old mu300root superblock left at the
+    # fixed offset inside it is not an installation (found on an F50-B, #468)
+    if ($RESUMING -eq 1 -and $cand -ne $REG_OFF) { continue }
     $m = (SuDo "dd if=/dev/block/$IDISK bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
     # two bytes on the disk always read as four hex digits: anything else is no answer, never "no installation"
     if ($m -notmatch '^[0-9a-f]{4}$') { Die (T 'no answer from the device') }
