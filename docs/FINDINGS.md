@@ -12455,7 +12455,7 @@ the lock; they run on request or 25 s after boot, not in the window above.
 
 **Status: EXPERIMENTAL, offered by install.sh, install.ps1 and the graphical installer next to the reset of FINDINGS
 112 (`MU300_ANS_MAKE_ROOM_METHOD=keep|reset`); tested in tests/test_online_shrink.py, tests/online-shrink-e2e.sh (the
-real helper on a real F2FS, CI's arm64 job) and tests/test_resume.py (`OnlineShrink`); not run on a board of ours.
+real helper on a real F2FS, CI's arm64 job) and tests/test_resume.py (`OnlineShrink`); run on an F50 (below).
 Method: dikeckaan; implementation: kanoqwq (kanoqwq/mu300-linux fe52afe3, c69be3a3, dad8224b).**
 
 The make-room path of FINDINGS 112 erased everything in Android: the table was rewritten and Android's recovery
@@ -12498,8 +12498,21 @@ installation after it and power cuts were not tested on hardware. Here: tests/on
 helper and script on Linux 7.0 against a 6 GiB loop disk with a GPT, the F2FS 40 % full and mounted through a
 device-mapper mapping (and directly), files written during the shrink; afterwards both table copies are the new
 table, the F2FS has its target and UUID, fsck.f2fs is clean and every file reads back. A read-only `/data` and a stale
-table are refused before anything changes. No board of ours was shrunk: that needs it in Android, and the test boards
-stay in Linux.
+table are refused before anything changes.
+
+**On a board (2026-11-01, F50-B: Android 12, kernel 5.4.254, 58 GiB eMMC, /data an F2FS on dm-default-key with
+file-based encryption).** Its userdata was first grown in the table to the end of the disk (the F2FS stayed at 20 GiB),
+which is the 32 GB variant's layout to the installer; 36 marker files (5 GiB of random data, some deleted in between)
+and a setting were written in Android. The same-size probe passes on this kernel. Refused before anything changed, the
+table and the F2FS read back as before: a stale old table, a wrong UUID, a wrong old size, a target above the F2FS or
+below what is used plus the margin. Two real runs: 20 -> 15.4 GiB (the computer killed while the worker shrank; the next
+run found "committed", finished and restarted Android) and 15.4 -> 11.4 GiB (a terminal run, which went on to install
+Ubuntu 24.04 with kernel 7.3, v2026.10.30.1, into the 41 GiB region; Linux booted). After each restart every marker's
+SHA-256 and the setting were the same, and Android's own boot fsck of /data (`fsck.f2fs -a`) reported no error. Three
+bugs found and fixed: the worker's byte offsets were computed in Android's 32-bit sh (every start was refused), the
+terminal run lost the F50 when it drops off USB once about 5 s after boot_completed, and a resumed run printed sizes
+before `gib` was defined. vold also runs `resize.f2fs` on /data at every boot (it failed on the unclean image here); on
+the shrunk table the F2FS already fills userdata to within a section, so there is nothing for it to grow into.
 
 **Not taken.** kano's growth of an encrypted userdata at uninstall (474e8018: a temporary Android boot image with a
 Magisk overlay that runs resize.f2fs before `/data` is mounted) - it changes Android's boot partition; our uninstall
