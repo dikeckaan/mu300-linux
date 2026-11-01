@@ -20,7 +20,8 @@ rm -rf "$OUT/assets" "$OUT/web-installer"
 D=$OUT/assets/web-installer/device
 rm -rf "$D"; mkdir -p "$D"
 cp "$TOP/tools/android-web.sh" "$TOP/tools/storage.sh" "$TOP/tools/android-boot-image.sh" \
-   "$TOP/tools/android-mount-mu300root.sh" "$TOP/android/magisk/mu300-linux-switch/switch.sh" "$D/"
+   "$TOP/tools/android-mount-mu300root.sh" "$TOP/tools/android-usb.sh" \
+   "$TOP/android/magisk/mu300-linux-switch/switch.sh" "$D/"
 (cd "$D" && for f in *.sh; do
     printf '%s  %s\n' "$( (sha256sum "$f" 2>/dev/null || shasum -a 256 "$f") | cut -d' ' -f1)" "$f"
 done > SHA256SUMS)

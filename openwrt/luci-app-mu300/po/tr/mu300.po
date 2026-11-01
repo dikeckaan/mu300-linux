@@ -4326,3 +4326,15 @@ msgstr "Bu dosya kurulu olandan eski: bunun için onay gerekiyor"
 
 msgid "The release source was not changed"
 msgstr "Sürüm kaynağı değiştirilmedi"
+
+msgid "No SIM card"
+msgstr "SIM kart yok"
+
+msgid "Roaming now"
+msgstr "Şu an dolaşımda"
+
+msgid "Home network"
+msgstr "Ev şebekesi"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "Modem kanalları başka okumalarla meşgul; canlı sinyal birazdan gelir"

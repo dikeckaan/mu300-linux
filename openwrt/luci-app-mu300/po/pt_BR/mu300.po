@@ -4333,3 +4333,15 @@ msgstr "Este arquivo é mais antigo que o que está instalado: isso precisa de c
 
 msgid "The release source was not changed"
 msgstr "A origem da versão não foi alterada"
+
+msgid "No SIM card"
+msgstr "Sem chip SIM"
+
+msgid "Roaming now"
+msgstr "Em roaming agora"
+
+msgid "Home network"
+msgstr "Rede local"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "Os canais do modem estão ocupados com outras leituras; o sinal ao vivo chega em instantes"

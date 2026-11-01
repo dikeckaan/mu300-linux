@@ -39,6 +39,7 @@ function T($key) {
     $s
 }
 . (Join-Path (Join-Path $Top 'tools') 'answers.ps1')
+. (Join-Path (Join-Path $Top 'tools') 'usb-adb.ps1')   # UsbAdbOnly, UsbRestore
 AnswersSetup $AnswersFile ([bool]$NonInteractive)
 # An error nobody caught still ends the progress stream with an event - whoever reads it must not wait for more - and
 # the script with status 1, saying where it was. (A trap that only passes the error on leaves the status of the last
@@ -47,6 +48,7 @@ trap {
     $where = "$_ ($(Split-Path -Leaf $_.InvocationInfo.ScriptName) line $($_.InvocationInfo.ScriptLineNumber))"
     Progress 'error' 'message' $where
     Write-Host "`nERROR: $where" -ForegroundColor Red
+    UsbRestore
     exit 1
 }
 Progress 'hello' 'script' 'uninstall.ps1' 'version' '1' 'mode' 'uninstall'
@@ -76,7 +78,7 @@ function FindAdb {
 }
 
 function Say($m) { ProgressSay $m; Write-Host "`n==> $m" -ForegroundColor Cyan }
-function Die($m) { Progress 'error' 'message' $m; Write-Host "`nERROR: $m" -ForegroundColor Red; exit 1 }
+function Die($m) { UsbRestore; Progress 'error' 'message' $m; Write-Host "`nERROR: $m" -ForegroundColor Red; exit 1 }
 # Windows PowerShell 5.1 turns every stderr line of a native command into an ErrorRecord once stderr is
 # redirected, and with ErrorActionPreference Stop that aborts the script (adb's "daemon not running",
 # "no devices", push progress). Run such commands with Continue and drop their stderr.
@@ -275,6 +277,7 @@ if (("" + (Quiet { adb shell 'ls -d /opt/mu300/bin 2>/dev/null' })).Trim()) {
     Die 'The device is running MU300 Linux, not Android: boot Android yourself (in Linux: sudo mu300-next-boot android && sudo reboot)'
 }
 if ((SuDo 'id -u') -ne '0') { Die 'su does not work on the device' }
+UsbAdbOnly          # adb alone on USB for this run, no MTP (tools\usb-adb.ps1); set back when it ends
 $model = "$(SuDo 'getprop ro.product.model') / $(SuDo 'getprop ro.product.device')"
 Write-Host "device: $model"
 # (the ZTE V50, experimental: FINDINGS 95, as install.ps1 takes it)
@@ -510,4 +513,5 @@ if ((SuDo 'magisk -v')) { SuDo '[ -d /data/adb/modules/mu300_linux_switch ] && t
 
 Step 'done' 100
 Say 'Done. The device boots stock Android; reboot it once to check.'
+UsbRestore
 Progress 'done' 'result' 'ok'

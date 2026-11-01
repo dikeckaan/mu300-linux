@@ -459,6 +459,31 @@ $r = RunScript 'uninstall.ps1' '-NonInteractive' @{ MU300_ANS_WIPE = 'keep'; MU3
 Check 'uninstall: not the word' (LastEvent $r).message 'cancelled'
 Check "uninstall: nothing written: $(UntouchedWhy)"  (Untouched) 0
 
+# ---- MTP off for the run (tools\usb-adb.ps1, tools\android-usb.sh; reported by kanoqwq): the stock F50's ecm,mtp,adb
+Device 'usb_config' 'ecm,mtp,adb'
+$r = RunScript 'install.ps1' '-Check -NonInteractive'
+Check 'usb: exit'               $r.Rc 0
+if ($r.Rc -ne 0) { Write-Host $r.Out }
+Check 'usb: adb alone'          "$($r.Facts['usb.functions']) $($r.Facts['usb.was'])" 'adb ecm,mtp,adb'
+Check 'usb: said'               ($r.Out -match 'USB of Android: adb only for this run \(was ecm,mtp,adb') $true
+Check 'usb: set back'           ($r.Out -match 'USB of Android set back to ecm,mtp,adb') $true
+Check 'usb: the device again'   (([IO.File]::ReadAllText($state) | ConvertFrom-Json).usb_config) 'ecm,mtp,adb'
+Check "usb: nothing written: $(UntouchedWhy)"  (Untouched) 0
+Device
+$r = RunScript 'install.ps1' '-Check -NonInteractive'
+Check 'usb already adb: no switch' "$($r.Facts['usb.functions']) $($r.Out -match 'adb only for this run')" 'adb False'
+Device 'usb_config' 'ecm,mtp,adb' 'usb_back' $false
+$r = RunScript 'install.ps1' '-Check -NonInteractive' @{ MU300_USB_WAIT = '2' }
+Check 'usb gone: exit'          $r.Rc 1
+Check 'usb gone: error'         ((LastEvent $r).message -like 'the device did not come back on adb within 2 seconds*') $true
+Device 'usb_config' 'ecm,mtp,adb'
+$r = RunScript 'install.ps1' '-Check -NonInteractive' @{ MU300_USB_ADB_ONLY = '0' }
+Check 'usb left alone'          @(Calls | Where-Object { $_.cmd -match 'android-usb' }).Count 0
+Device 'usb_config' 'ecm,mtp,adb' 'existing' $true
+$r = RunScript 'uninstall.ps1' '-NonInteractive' @{ MU300_ANS_WIPE = 'keep'; MU300_ANS_CONFIRM = 'uninstall' }
+Check 'uninstall usb: switched' $r.Facts['usb.was'] 'ecm,mtp,adb'
+Check 'uninstall usb: set back' (([IO.File]::ReadAllText($state) | ConvertFrom-Json).usb_config) 'ecm,mtp,adb'
+
 Remove-Item -Recurse -Force $fx -ErrorAction SilentlyContinue
 Write-Host "$script:passed passed, $script:failed failed"
 exit $script:failed

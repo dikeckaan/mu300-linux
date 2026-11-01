@@ -935,3 +935,7 @@ Reset Android: ERASES everything in Android (apps, photos, accounts, settings)	�
 Room was made and Android kept its data. Android restarts once; when it is up again, press Refresh on the Device page: the installation continues where it was prepared.	空间已腾出，Android 保留了其数据。Android 会重启一次；启动后在“设备”页点击“刷新”：安装会从准备好的位置继续。
 Not possible on this device: {1}	在此设备上不可行：{1}
 First the partition table, misc, boot and the boot chain are backed up to this computer, with a record of what is prepared. Then Android's own kernel shrinks its data while Android runs (this can take a few minutes), the partition table is written, and Android restarts once, with everything in it kept. Then Refresh: the installation continues where it was prepared. EXPERIMENTAL.	首先把分区表、misc、boot 和启动链备份到本电脑，并记录所准备的内容。然后由 Android 自己的内核在 Android 运行时缩小其数据（可能需要几分钟），写入分区表，Android 重启一次，其中一切都会保留。之后点击“刷新”：安装会从准备好的位置继续。实验性功能。
+USB of Android: adb only for this run (was {1}; MTP can stall the connection, Windows then resets it)	Android 的 USB：本次运行期间仅 adb（原为 {1}；MTP 可能卡住连接，Windows 随后会重置它）
+Android kept its USB functions ({1}); going on with them	Android 保留了其 USB 功能（{1}）；继续使用这些功能
+the device did not come back on adb within {1} seconds after its USB was set to adb only: unplug it and plug it in again (or restart Android), then run this again (MU300_USB_ADB_ONLY=0 leaves the USB as it is)	USB 设为仅 adb 后，设备在 {1} 秒内没有重新出现在 adb 上：请拔下后重新插入（或重启 Android），然后再次运行（MU300_USB_ADB_ONLY=0 保持 USB 不变）
+USB of Android set back to {1}	Android 的 USB 已恢复为 {1}

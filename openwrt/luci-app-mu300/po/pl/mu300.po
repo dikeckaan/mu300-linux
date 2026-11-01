@@ -4333,3 +4333,15 @@ msgstr "Ten plik jest starszy niż to, co zainstalowane: to wymaga potwierdzenia
 
 msgid "The release source was not changed"
 msgstr "Źródło wydania nie zostało zmienione"
+
+msgid "No SIM card"
+msgstr "Brak karty SIM"
+
+msgid "Roaming now"
+msgstr "Teraz w roamingu"
+
+msgid "Home network"
+msgstr "Sieć macierzysta"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "Kanały modemu są zajęte innymi odczytami; sygnał na żywo pojawi się wkrótce"

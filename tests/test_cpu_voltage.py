@@ -257,6 +257,46 @@ class InitDecision(ShellTest):
             self.assertEqual(self.f('cpu-voltage-rejected'), '-6250,-3125,0 unclean-end')
             self.assertIn('stage=cpu-voltage-rejected', out)
 
+    def test_keep_good_keeps_a_good_value_whose_boot_was_up_its_ten_minutes(self):
+        # kanoqwq's fb0b28e7 ("preserve confirmed CPU settings"): off by default; on, a power cut after the boot's
+        # 10 minutes keeps the value, and a boot that died before them still drops it
+        for shell in self.each_shell():
+            for keep, up, kept in (('1', True, True), (None, True, False), ('1', False, False), ('0', True, False)):
+                with self.subTest(keep=keep, up=up):
+                    for n in ('cpu-voltage-trial', 'cpu-voltage-rejected', 'cpu-voltage-keep-good'):
+                        (self.d / n).unlink(missing_ok=True)
+                    (self.d / 'cpu-voltage').write_text('-6250,-3125,0\n')
+                    (self.d / 'cpu-voltage-good').write_text('-6250,-3125,0\n')
+                    (self.d / 'cpu-voltage-armed').write_text('-6250,-3125,0\n' + ('up\n' if up else ''))
+                    if keep is not None:
+                        (self.d / 'cpu-voltage-keep-good').write_text(keep + '\n')
+                    self.reset()
+                    out = self.boot(shell).stdout
+                    if kept:
+                        self.assertEqual(self.written(), '-6250,-3125,0')
+                        self.assertIn('stage=cpu-voltage-kept', out)
+                        self.assertIsNone(self.f('cpu-voltage-rejected'))
+                        # armed again for this boot, without "up": this boot has to earn it again
+                        self.assertEqual((self.d / 'cpu-voltage-armed').read_text(), '-6250,-3125,0\n')
+                    else:
+                        self.assertEqual(self.written(), '0,0,0')
+                        self.assertEqual(self.f('cpu-voltage-rejected'), '-6250,-3125,0 unclean-end')
+                        self.assertEqual(self.f('cpu-voltage'), '0,0,0')
+
+    def test_keep_good_never_keeps_what_is_not_the_good_request(self):
+        for shell in self.each_shell():
+            for good, req in (('-3125,0,0', '-6250,-3125,0'), ('-6250,-3125,0', '-3125,0,0')):
+                with self.subTest(good=good, req=req):
+                    (self.d / 'cpu-voltage-rejected').unlink(missing_ok=True)
+                    (self.d / 'cpu-voltage-keep-good').write_text('1\n')
+                    (self.d / 'cpu-voltage').write_text(req + '\n')
+                    (self.d / 'cpu-voltage-good').write_text(good + '\n')
+                    (self.d / 'cpu-voltage-armed').write_text('-6250,-3125,0\nup\n')
+                    self.reset()
+                    self.boot(shell)
+                    self.assertEqual(self.written(), '0,0,0')
+                    self.assertTrue(self.f('cpu-voltage-rejected').endswith(' unclean-end'))
+
     def test_a_trial_boot_that_ended_before_its_good_mark_gets_no_second_try(self):
         for shell in self.each_shell():
             (self.d / 'cpu-voltage').write_text('-3125,0,0\n')
@@ -531,6 +571,39 @@ class Cli(ShellTest):
             self.kernel('applied', '0,0,0')
             self.cpu(shell, 'mark-good')
             self.assertIsNone(self.f('cpu-voltage-good'))
+
+    def test_mark_good_writes_up_under_the_armed_value_at_every_boot(self):
+        for shell in self.each_shell():
+            self.clear()
+            (self.disk / '.mu300' / 'cpu-voltage').write_text('-6250,0,0\n')
+            (self.disk / '.mu300' / 'cpu-voltage-good').write_text('-6250,0,0\n')
+            (self.disk / '.mu300' / 'cpu-voltage-armed').write_text('-6250,0,0\n')   # a later boot of a good value
+            self.kernel('applied', '-6250,0,0')
+            (self.root / 'proc' / 'uptime').write_text('300.5 1.0\n')
+            self.cpu(shell, 'mark-good')
+            self.assertEqual((self.disk / '.mu300' / 'cpu-voltage-armed').read_text(), '-6250,0,0\n')
+            (self.root / 'proc' / 'uptime').write_text('601.5 1.0\n')
+            self.assertEqual(self.cpu(shell, 'mark-good').returncode, 0)
+            self.assertEqual((self.disk / '.mu300' / 'cpu-voltage-armed').read_text(), '-6250,0,0\nup\n')
+            st = json.loads(self.cpu(shell, 'status --json').stdout)
+            self.assertEqual((st['armed'], st['keep_good']), (1, 0))
+
+    def test_keep_good_is_off_by_default_and_root_only(self):
+        for shell in self.each_shell():
+            self.clear()
+            self.assertEqual(self.cpu(shell, 'keep-good').stdout.strip(), 'off')
+            self.assertEqual(self.cpu(shell, 'keep-good on').returncode, 0)
+            self.assertEqual(self.f('cpu-voltage-keep-good'), '1')
+            self.assertEqual(self.cpu(shell, 'keep-good').stdout.strip(), 'on')
+            self.assertEqual(json.loads(self.cpu(shell, 'status --json').stdout)['keep_good'], 1)
+            self.assertNotEqual(self.cpu(shell, 'keep-good maybe').returncode, 0)
+            self.assertEqual(self.cpu(shell, 'keep-good off').returncode, 0)
+            self.assertIsNone(self.f('cpu-voltage-keep-good'))
+        self.stub('id', 'echo 1000')
+        for shell in self.each_shell():
+            r = self.sh(shell, f'"{CPU}" voltage keep-good on', MU300_DISK=self.disk, MU300_RUN=self.run_dir)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIsNone(self.f('cpu-voltage-keep-good'))
 
     def test_shutdown_removes_the_armed_mark(self):
         for shell in self.each_shell():

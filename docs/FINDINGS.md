@@ -1006,7 +1006,8 @@ stops a boot: anything unclear is `0,0,0`. Files in `.mu300` of the Linux disk: 
   stopping - `systemctl stop` is not a shutdown -, and on OpenWrt the K10 link's `shutdown` action, never `stop`). A
   boot that finds `armed` - a crash, a panic (`panic=5`, the lockup panics), a watchdog reset, `reboot -f`, a power
   cut - drops the offset: `0,0,0`, the request cleared, the reason in `rejected` for the panels. The power cut is
-  counted too: it cannot be told from a hang, and the price is setting the value again.
+  counted too: it cannot be told from a hang, and the price is setting the value again (`mu300-cpu voltage keep-good on`,
+  off by default, keeps a good value whose boot was up its 10 minutes: FINDINGS 240).
 * A value the initramfs cannot check is never written: not three whole steps in range (the same check as the CLI,
   kept identical by a test), or a **SoC firmware not known**: both `sml_a` and `sml_b` of the eMMC must have the
   SHA-256 of the F50 build kano read (`ff4782690fd805ff54fe34853ef8ee5c7e51c3259e20077c55373b50a4b259c2`). The U30
@@ -12519,3 +12520,147 @@ Magisk overlay that runs resize.f2fs before `/data` is mounted) - it changes And
 still offers the old growth (which erases Android's data) or leaving the space free. His backup of the metadata
 partition (encryption key material) is not made either: nothing here writes it.
 
+### 240. kanoqwq's power and services work of October 23-25: what is taken, and how
+
+What was still missing of kanoqwq's `cc0ecce7` (CPU0 idle controls, fewer background wakeups), `f0b5ad43` (event-driven
+services, boot work) and the CPU part of `fb0b28e7` ("preserve confirmed CPU settings"), after #399, #402, #405, #408,
+#416 and the liuwang97 work of FINDINGS 235. His tree runs a modem daemon (`mu300-modemd`, a ubus object) and a system
+daemon (`mu300-sysd`); ours has neither, so his behaviour goes into our scripts and nothing that needs them is taken.
+
+**CPU0's low latency** (`cpu-idle.uc`, cc0ecce7; FINDINGS 200 has the switch). `mu300-cpu lowlatency on|off` is all or
+nothing: a state that does not take the value (written, read back) puts every state of CPU0 back as it was, and a
+setting that cannot be saved is undone the same way. `status --json` has `lowlatency.mixed` (some states off, some on).
+His web switch leaves WFI alone and writes only `core-sleep-*` and `cluster-pd`; ours writes every state, which comes to
+the same: with every state disabled the menu governor still takes state 0. His UMS9621 (T158) refusal is not needed (no
+such board here).
+
+**The CPU voltage offset after a power cut** (fb0b28e7). Ours dropped an offset after any boot that ended without a
+clean shutdown (FINDINGS 133), and on a board without a battery (F50, V50) pulling the cable is that. kano's version
+confirms a value at S99 and then keeps it through any later end. He did not try it on a device, so here it is a switch,
+**off by default**: `mu300-cpu voltage keep-good on|off` (`.mu300/cpu-voltage-keep-good` on the Linux disk, `keep_good` in
+`status --json`; CLI only). `mark-good` now writes `up` under the armed value at every boot that reaches its 10
+minutes with the good value; with keep-good on, the initramfs keeps a good value when the armed mark of the boot that
+ended says `up` (`stage=cpu-voltage-kept`). A boot that ended before its 10 minutes still drops the value, so an
+offset that crashes early cannot loop the boots; one that crashes later is kept, as in his version, until
+`mu300-cpu voltage off`.
+
+**Wi-Fi at boot** (mu300-hw, f0b5ad43). The "no restart" shortcut (unchanged settings, the access point up) also needs
+the country to be live: an access point that came up under the world rules is restarted under the country's. A
+settings file whose checksum cannot be read never counts as unchanged.
+
+**SMS receiver** (`mu300-smsd`; his `sms-events.sh`, f0b5ad43, and its 500 ms slack, cc0ecce7). His receiver listens to
+the modem daemon's ubus events. Ours keeps its look every 5 s, but a look that finds nothing new starts no process:
+before, every look ran `mu300-sim-state get` (and through it `mu300-sim active`, `head`, `tr`) and `cat | grep | md5sum`
+over the URC logs. Now the logs are checksummed again only when one of them was written since the last checksum, and
+the card is asked about again only when its state files (`/run/mu300/sim-slot`, `sim0.state`, `sim1.state`) changed,
+and at every periodic sync. The times are compared by the shell's own `test FILE -ot MARK` against a mark in the lock
+directory, written before the look, so a write during the look is seen at the next one; a write in the mark's second
+counts as new. Without a mark (it could not be written) every look is as before. The wait is FINDINGS 235's: a read with
+a timeout on a private fifo (busybox ash, bash; `sleep` under dash), with 500 ms of timer slack during the wait only.
+
+**Data watchdog** (`mobile-data watch`; his `data-events.sh`). His watchdog wakes on the modem daemon's URC and netifd
+events; ours keeps its AT look every 30 s, and the sleep between two looks now runs with 500 ms of timer slack (set by
+the sleep's own subshell; the AT and route work keeps the default). His `watch_cleanup` fixes a bug ours had too: the
+traps removed a lock path that was a local of `watch()`. On F50-B every `systemctl restart` ended in
+`wlock: unbound variable` (the EXIT trap, after the locals were gone) and status 1; on the U30 Air the TERM trap
+removed the lock and the watchdog went on without it, until a KILL. The path is now
+at process scope, TERM exits 0 (a stop) and INT 130, and the lock goes only while it is still this process's. The
+sleep runs in the background and is waited for, so the TERM trap runs at once rather than after up to 30 s.
+
+**Already here, or not taken:**
+- Already in: thermal-guard's "no reading is unknown" rule (#399), the LED tick hint (FINDINGS 235), ndp-learn on
+  `ip monitor` with slack, early-recorder's `logread -l 300` and 30 s rounds, `mu300-cpu services`, the boot work
+  (printk 4, the entropy kick, the eMMC wait at 100 ms, no `sleep 1` before the UDC bind, the module prefetch, regdb
+  before the PHY, `iw reg set` before `wifi-start`, no wait for a firmware class the kernel lacks), sipa-dele's 0.5 s
+  polling and its 0.1 s handshake check, `ums9620_lpintc`, the 7.x link-wait patch, the NCM/RNDIS `os_desc` patch.
+- Not taken: his adaptive 5-30 s thermal cadence (as in #399); everything on `mu300-modemd`/`mu300-sysd` and the ubus
+  objects (the native AT owner `mu300-atd-io`, dashboard RPCs, the uevent mode of `mu300-keys`, the LED deadline
+  scheduling inside sysd); the native U30 dual-SIM changes; his TTL engine; calls, SIP and audio; the Chinese reports.
+- His explicit-off replay of CPU0 idle at boot: ours never disables CPU0's idle states unless asked, so off needs no
+  replay.
+
+Tests: `test_cpu.CoresAndLatency` (all or nothing, nothing saved, `mixed`), `test_cpu_voltage` (keep-good: kept only
+with the switch, `up` and the good request; `mark-good` writes `up`; the switch is root's and off by default),
+`test_wifi.HwRestart` (`hw_bringup` itself with stubs), `test_sms_pool.Daemon.test_an_idle_look_starts_no_process`
+(dash, bash, busybox ash; Linux only), `test_device_scripts.MobileData.test_only_the_watch_wait_gets_timer_slack`.
+
+**On the boards** (scripts deployed live, the originals put back after):
+- F50-B, Ubuntu 24.04, 7.3.0. CPU0's states are `WFI`, `core-sleep-lit` and `cluster-pd`. `lowlatency on` turned all
+  three off and `off` turned them back on, with `active` and `mixed` right each time. One state switched off by hand
+  read `partly off` (`mixed: 1`). `voltage keep-good` was off, then on (`keep_good: 1`), then off again. `mark-good`
+  with nothing armed did nothing. The watchdog's sleep child ran with 500000000 ns of slack and the watchdog itself
+  with 50000. `systemctl restart` of the watchdog: the old script stopped with status 1 (`wlock: unbound variable`),
+  the new one "Deactivated successfully" at once.
+- U30 Air, OpenWrt 25.12.6, 6.18.59, the VPN (sing-box) and its kill switch up throughout. `mu300-smsd`: 169 CPU ticks
+  in 120 s before, 141 after (what is left is the full sync every 30 s, not touched here); in the looks between two
+  syncs it had no child at all, and its slack read 500000000 during the wait. The OpenWrt busybox does
+  `test -ot` to the second and `read -t` on the fifo (also checked in the 25.12.6 image). A real receive:
+  `mu300-sms send 7000 KALAN`, and the operator's two-part answer came by direct delivery, joined into one message, in
+  the pool 8 s later. The data watchdog's sleep had 500000000 ns of slack. The old watchdog ignored TERM there: its
+  trap removed the lock and the loop went on (it took a KILL); the new one exited, and procd started it again.
+  `mu300-hw`, a reboot with the hotspot on: "no restart" (the country, TR, live), the access point up, the VPN up.
+- Not tried on a board: keep-good across a real power cut (it needs the initramfs of this branch and an offset).
+
+### 241. The IPA delegate says when its channel is open; the dashboard says "No SIM card" and whether it roams
+
+**Status: the delegate part checked by kanoqwq on a U30 Air (7.2.8) and here on a U30 Air (OpenWrt, 6.18.59); the
+dashboard parts here on the same U30 Air, "No SIM card" offline only.** From his `0043a5d8`, `c84da8ba`, `fe52afe3` and `b9f71e72`,
+taken into this tree's code.
+
+- **sipa_dele has a readiness interface** (`0043a5d8`). The delegate module now keeps a channel status (0 handshake
+  pending, 1 open, negative: the open failed) and shows it in sysfs next to `sipa_dele_reset`:
+  `/sys/bus/platform/drivers/sipa_delegate/*/sipa_dele_ready` (the number) and `sipa_dele_wait`, whose read waits on a
+  kernel wait queue until the status is not 0: `1` at once when the channel is open, `-ETIMEDOUT` after 3 s, the open's
+  error, `-EAGAIN` for a channel that closed in between. The status goes to 1 on the first OPEN and on every later one,
+  to 0 on a CLOSE or a receive that says the channel is FREE/gone (`-EIO`/`-ENODEV`); other receive errors leave it.
+  Two fixes in the same place: the connection thread is woken only after the resource graph and its callback are in
+  place (it was woken first, so a request from the CP could arrive before there was anything to take it), and a failed
+  start now frees what init made (the thread was left parked, the delegator allocated, sysfs registered after
+  success only).
+- **sipa-dele-start asks it.** After `insmod` it reads `sipa_dele_wait` instead of looking for `channel 5-120 send
+  open msg` in dmesg (that line only said the OPEN was sent): not open, exit 1, and mobile-data makes no PDP context
+  this round. mobile-data now also calls it when the module is already loaded (a reconnect), and there it only asks:
+  no wait for the packet domain, no insmod. A module without the file (an older build, the 5.4 vendor one), or more
+  than one such device, cannot say: exit 0 as before, so an image with an older module never stays off the network
+  for it (bootability over lockdown). His `SPACTCARD` prefix on the `AT+CGATT?` probe is not needed here: ours already
+  asks the selected card's own channel (`mu300-sim active`).
+- **The dashboard says "No SIM card"** (`fe52afe3`). With no card the radio is off too, and the page said "Radio off".
+  dashboard-info now reports `modem.sim_state`, the card in use's last word on itself (mu300-sim-state's
+  `/run/mu300/sim<slot>.state`, FINDINGS 186; a file, no AT command): `absent`, `ready`, `locked` or null. Absent: the
+  network and registration rows say "No SIM card", and what belongs to a card is dropped from the shown snapshot (the
+  identity cache may still hold the last card's IMSI, ICCID and number; operator, cells and signal go too). The IMEIs,
+  model, firmware and the CFUN stay. null (not asked this boot) is never taken for absent.
+- **Whether the card roams now** (`c84da8ba`). The data roaming row shows the setting (FINDINGS 120) and now the
+  network's word after it: "Roaming now" (stat 5 or 10 on the 5G or the LTE registration) or "Home network" (1 or 9);
+  nothing when neither says. Both registrations are asked: on 5G SA the LTE one may be empty while the 5G one roams.
+  The registration row also names a 5G roaming registration. His two IMEI rows with the "in use" badge were already
+  here (FINDINGS 221).
+- **The locks page's live signal: busy is not a failure** (`b9f71e72`). When both dashboard channels are taken by
+  other readings (the home page, a second browser), `cell` exits 75 and `mu300dash signal` answers
+  `{"busy":1,...}`; the page keeps its last reading and does not back off. Any other failure is shown as before.
+
+Not taken: his dual-standby switch and single-standby policy (`0043a5d8`: in this tree only the card in use has a live
+stack, FINDINGS 185, so single standby is how it already runs); his `AT+SFUN=2` presence preflight for the U30 Air
+(it lives in his dual-stack `mu300-dual-radio`; mu300-sim-state never asks the card that is not in use); the 152
+default for automatic mode (here "Automatic" stays the modem's 134, 152 is the explicit "Automatic without 2G",
+FINDINGS 198); the auto-mode ACL fix (`82c01b9e`: no page here writes uci over rpc); the voice receipt fix (`500e5ea4`,
+see FINDINGS 210); the SMS pool resolver, list column and LF fixes (`edcdeb27`, `fe52afe3`: one pool here, FINDINGS
+210, and our encoder takes the text from the environment, so a newline is encoded, not a line break); his battery
+summary in amperes (`b9f71e72`: our tile shows the direction, watts, volts and the USB input); his `ubus_rpc_session`
+argument (his native modemd; ours is an rpcd shell backend); the VPN removal in `fe52afe3`.
+
+`tests/test_device_scripts.py` (`SipaDele`: the readiness of a loaded and a freshly loaded delegate; `MobileData`: a
+loaded delegate is asked), `tests/test_dashboard_info.py` (`sim_state`, `SimAbsent`, `RoamingNow`),
+`tests/test_mu300dash_security.py` (the busy signal reply).
+**Checked here** (U30 Air, OpenWrt 25.12.6, 6.18.59, SIM in, VPN on): the module built from this tree, a reboot:
+the loader logged "packet domain attached", "loaded sipa-dele", "delegate channel and resource callbacks ready",
+`sipa_dele_ready` read 1, data through the VPN (HTTP 204), no oops. `ifdown wan; ifup wan`: the ready check passed
+(`/tmp/mu300-sipa-dele-ready.log`) and data came back. The vendor DT's "get resource failed for remote-base" / "dts
+parsing failed" line is in the boot log with the old module as well. Dashboard: `sim_state` "ready", "absent" from a
+state file given by hand; the data roaming row read "Allowed · Home network"; with every dashboard channel held,
+`mu300dash signal` answered busy. Everything was put back afterwards. Not checked on a board: the page with a card
+taken out, and an F50.
+**Device check before merge (still open):** a mainline board with the rebuilt `sipa-dele.ko`: `cat .../sipa_dele_ready` reads 1
+after the dial, `/tmp/mu300-sipa-dele.log` says "delegate channel and resource callbacks ready", data flows; `ifdown
+wan; ifup wan` passes the ready check (`/tmp/mu300-sipa-dele-ready.log`). The dashboard of a board with its card taken
+out (or an empty slot selected) says "No SIM card", the IMEIs stay.

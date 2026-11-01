@@ -4333,3 +4333,15 @@ msgstr "Acest fișier este mai vechi decât ce este instalat: este nevoie de con
 
 msgid "The release source was not changed"
 msgstr "Sursa versiunii nu a fost schimbată"
+
+msgid "No SIM card"
+msgstr "Nicio cartelă SIM"
+
+msgid "Roaming now"
+msgstr "În roaming acum"
+
+msgid "Home network"
+msgstr "Rețea de acasă"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "Canalele modemului sunt ocupate cu alte citiri; semnalul în timp real urmează în curând"
