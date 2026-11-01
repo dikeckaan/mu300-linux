@@ -308,6 +308,7 @@ if [ $CHECK_ONLY = 0 ] && [ $MODE = build ]; then
     [ -f "$KOUT/Image" ] && ls "$KOUT"/modules/*.ko >/dev/null 2>&1 || die "$(t 'kernel outputs missing in {1} (run kernel/build-all.sh)' "$KOUT")"
 fi
 . "$TOP/tools/linux-mode.sh"
+. "$TOP/tools/usb-adb.sh"
 require_android
 adb_prop() { adb shell getprop "$1" </dev/null 2>/dev/null | tr -d '\r' | head -n1; }
 # The bootloader's lock is a warning and never a refusal (the owner's decision of 2026-10-13, FINDINGS 71): Linux
@@ -335,6 +336,7 @@ if [ -n "$PROGRESS_FD" ]; then
     fi
 fi
 [ "$(su_do 'id -u')" = 0 ] || die "$(t 'su does not work on the device')"
+usb_adb_only        # adb alone on USB for this run, no MTP (tools/usb-adb.sh); back at the end while in Android
 model="$(su_do 'getprop ro.product.model') / $(su_do 'getprop ro.product.device')"
 echo "$(t 'device: {1}' "$model")"
 [ $BL_STATE != locked ] || echo "$(t 'WARNING: {1}' "$BL_WARN")"

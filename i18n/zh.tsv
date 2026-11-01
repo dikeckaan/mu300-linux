@@ -896,3 +896,7 @@ Linux goes into the GPT partition named mu300root ({1}), which another installer
 The partition named mu300root is not empty ({1} of 16 samples hold data), and it holds no Linux filesystem of this project. To use it anyway, put MU300_STORAGE=internal and MU300_REGION_OVERWRITE=yes into {2}, a file only root can change.	名为 mu300root 的分区不为空（16 个采样中有 {1} 个含有数据），且其中没有本项目的 Linux 文件系统。如仍要使用，请把 MU300_STORAGE=internal 和 MU300_REGION_OVERWRITE=yes 写入只有 root 能修改的文件 {2}。
 storage:        internal, the GPT partition mu300root at offset {1}, {2} ({3})	存储：          内部，GPT 分区 mu300root，偏移 {1}，{2}（{3}）
 the partition mu300root	mu300root 分区
+USB of Android: adb only for this run (was {1}; MTP can stall the connection, Windows then resets it)	Android 的 USB：本次运行期间仅 adb（原为 {1}；MTP 可能卡住连接，Windows 随后会重置它）
+Android kept its USB functions ({1}); going on with them	Android 保留了其 USB 功能（{1}）；继续使用这些功能
+the device did not come back on adb within {1} seconds after its USB was set to adb only: unplug it and plug it in again (or restart Android), then run this again (MU300_USB_ADB_ONLY=0 leaves the USB as it is)	USB 设为仅 adb 后，设备在 {1} 秒内没有重新出现在 adb 上：请拔下后重新插入（或重启 Android），然后再次运行（MU300_USB_ADB_ONLY=0 保持 USB 不变）
+USB of Android set back to {1}	Android 的 USB 已恢复为 {1}

@@ -68,6 +68,11 @@ DEFAULT = {
                                  # {"openwrt": "", "ubuntu": "secret1"}; "" is none (EMPTY), "!" a locked account, a
                                  # system not named has no account (NOUSER)
     'pwcheck': '',               # what every check of a password answers instead (UNVERIFIABLE, say)
+    'usb_config': 'adb',         # sys.usb.config (and sys.usb.state): the stock F50's is "ecm,mtp,adb"; tools/android-usb.sh
+                                 # adb-only makes it "adb" (or usb_revert's value), restore puts the old one back
+    'usb_back': True,            # after that switch the device is on adb again; false: it never comes back
+    'usb_revert': '',            # Android sets these functions again right after the switch
+    'boot_id': 'b00710d0-0000-4000-8000-000000000001',
 }
 T = '/data/local/tmp'
 
@@ -134,7 +139,38 @@ def props(st):
         'ro.boot.vbmeta.device_state': st['device_state'],
         'ro.boot.slot_suffix': '_' + st['slot'], 'sys.boot_completed': st['boot_completed'],
         'ro.serialno': st['serial'], 'ro.board.platform': st.get('platform', 'ums9620'),
+        'sys.usb.config': st['usb_config'], 'sys.usb.state': st['usb_config'],
     }
+
+
+def save(**keys):
+    """Change keys of the state file (what the device does to itself: its USB functions)."""
+    with open(state_path(), encoding='utf-8') as f:
+        raw = json.load(f)
+    raw.update(keys)
+    with open(state_path(), 'w', encoding='utf-8') as f:
+        json.dump(raw, f)
+
+
+def usb(st, args):
+    """tools/android-usb.sh as the device runs it; (text, kind). kind "usb": changes no storage."""
+    cfg, boot = st['usb_config'], st['boot_id']
+    has = lambda f: f in cfg.split(',')
+    rebooted = os.path.exists(state_path() + '.log') and any(
+        json.loads(l)['kind'] == 'reboot' for l in open(state_path() + '.log', encoding='utf-8'))
+    if args[:1] == ['adb-only']:
+        if not has('adb') or rebooted:
+            return 'MU300-USB skip %s %s' % (cfg, boot), 'read'
+        if not (has('mtp') or has('ptp')):
+            return 'MU300-USB keep %s %s' % (cfg, boot), 'read'
+        save(usb_config=st['usb_revert'] or 'adb', **({} if st['usb_back'] else {'adb_state': 'none'}))
+        return 'MU300-USB switch %s %s' % (cfg, boot), 'usb'
+    if args[:1] == ['restore'] and len(args) == 3:
+        if args[2] != boot or cfg != 'adb' or rebooted:
+            return 'MU300-USB keep %s' % cfg, 'read'
+        save(usb_config=args[1])
+        return 'MU300-USB restore %s' % args[1], 'usb'
+    return '', 'unknown'
 
 
 def prop(st, name):
@@ -210,6 +246,9 @@ DISK_CMD = 'd=$(readlink -f /dev/block/by-name/misc);'
 
 def su(st, cmd, argv):
     """The answer of the device to `su -c 'cmd'`; (text, kind)."""
+    m = re.fullmatch(r'sh %s/android-usb\.sh (.*)' % T, cmd)
+    if m:
+        return usb(st, m.group(1).split())
     if st.get('emmc') and emmc_cmd(cmd) and cmd != 'sh %s/android-bootchain.sh check' % T:
         return emmc_run(st, cmd)
     disk, parts, last_end, off, size = geometry(st)

@@ -32,6 +32,9 @@
 #   follow               the job's output from its start, as it comes; ends with MU300-WEB-EXIT <status>
 #   cancel               end a job that has not started writing the systems yet
 #   boot-linux [dry]     arm Linux for one boot and reboot (the Magisk module's switch.sh; dry: write nothing)
+#   usb                  MTP and PTP off for this boot of Android: tools/android-usb.sh adb-only, its answer as
+#                        MU300-WEB-USB switch|keep|skip CONFIG BOOT_ID; with switch the device leaves USB a second later
+#                        and comes back as another USB device (adb alone)
 #   backup               copies of what an installation writes, in root's directory: MU300-WEB-FILE lines
 #   cat NAME             one of those copies, as base64 on stdout, for the page to keep
 #   clean [all]          remove the copies for a backup and what a killed run left (all: the zips and a download too)
@@ -953,6 +956,7 @@ case ${1:-} in
         if [ "${2:-}" = dry ]; then exec "$BB" sh "$S/switch.sh" --dry-run; fi
         exec "$BB" sh "$S/switch.sh" ;;
     backup) backup ;;
+    usb) su_do "sh $S/android-usb.sh adb-only" | sed -n 's/^MU300-USB /MU300-WEB-USB /p' ;;
     cat) backup_cat "${2:-}" ;;
     clean) clean "${2:-}" ;;
     *) fail bad-command ;;

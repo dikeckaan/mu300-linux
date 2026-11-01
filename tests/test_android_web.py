@@ -23,7 +23,8 @@ WEB = TOP / 'tools/android-web.sh'
 SWITCH = TOP / 'android/magisk/mu300-linux-switch'
 STAGED = {'android-web.sh': WEB, 'storage.sh': TOP / 'tools/storage.sh',
           'android-boot-image.sh': TOP / 'tools/android-boot-image.sh',
-          'android-mount-mu300root.sh': TOP / 'tools/android-mount-mu300root.sh', 'switch.sh': SWITCH / 'switch.sh'}
+          'android-mount-mu300root.sh': TOP / 'tools/android-mount-mu300root.sh', 'android-usb.sh': TOP / 'tools/android-usb.sh',
+          'switch.sh': SWITCH / 'switch.sh'}
 # the device's shell for storage.sh: device paths point into the fake device, and what comes back names the device's
 # own paths again (sd_probe's /dev/block/mmcblk1 is checked by its name before it is erased)
 DEVSH = r'''#!/bin/sh
@@ -806,6 +807,29 @@ class Clean(WebCase):
         (dead / 'mu300root').mkdir(parents=True)
         self.web('clean', MU300_MOUNTS=self.tmp / 'no-such-file')
         self.assertTrue(dead.exists())
+
+
+class Usb(WebCase):
+    """usb: MTP off for this boot of Android (tools/android-usb.sh, tests/test_usb_adb.py), its answer for the page"""
+
+    def test_mtp_off_and_the_answer_for_the_page(self):
+        props, log = self.tmp / 'props', self.tmp / 'setprop.log'
+        props.mkdir(exist_ok=True)
+        self.stub('getprop', f'cat "{props}/$1" 2>/dev/null; echo')
+        self.stub('setprop', f'echo "$1=$2" >> "{log}"; printf %s "$2" > "{props}/$1"; '
+                             f'[ "$1" != sys.usb.config ] || printf %s "$2" > "{props}/sys.usb.state"')
+        (self.tmp / 'boot_id').write_text('b1\n')
+        env = dict(MU300_GETPROP=self.stubs / 'getprop', MU300_SETPROP=self.stubs / 'setprop',
+                   MU300_BOOT_ID=self.tmp / 'boot_id', MU300_USB_DETACH='0', MU300_USB_DELAY='0')
+        for cfg, want, sets in (('ecm,mtp,adb', 'switch ecm,mtp,adb b1', ['sys.usb.config=none', 'sys.usb.config=adb']),
+                                ('adb', 'keep adb b1', [])):
+            (props / 'sys.usb.config').write_text(cfg)
+            if log.exists():
+                log.unlink()
+            r = self.web('usb', **env)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertEqual(r.stdout.strip(), 'MU300-WEB-USB ' + want)
+            self.assertEqual(log.read_text().split() if log.exists() else [], sets)
 
 
 class BootLinux(WebCase):
