@@ -74,7 +74,8 @@ watchdog in the power co-processor was never told to stand down, because that me
 
 ## No sound, no screen
 
-* **Sound:** the board has no speaker or microphone. Voice calls are not supported.
+* **Sound:** the board has no speaker or microphone. Voice call audio comes in a separate package, mu300-audio, given
+  only to sponsors (minimum sponsorship 10 USD, [GitHub Sponsors](https://github.com/sponsors/dikeckaan)).
 * **Screen:** HDMI over USB-C does not work, because the USB-C power-delivery chip never answers. The device is headless.
 
 ## A rare boot hang on 6.18 (§31m, open)
