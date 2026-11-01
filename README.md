@@ -134,7 +134,8 @@ trying it costs you the server.
   * no screen output: HDMI over USB-C does not work (the power-delivery chip never answers), so it is a headless
     machine you use over SSH or the web interface;
   * no speaker or microphone; voice call audio comes in a separate package, mu300-audio, given only to sponsors
-    (minimum sponsorship 10 USD, [GitHub Sponsors](https://github.com/sponsors/dikeckaan));
+    (minimum sponsorship 10 USD, [GitHub Sponsors](https://github.com/sponsors/dikeckaan)); after sponsoring, reach me
+    through the form on [kaandikec.com](https://kaandikec.com);
   * about 1.4 GB of RAM, because the modem firmware reserves most of the rest. Compressed swap in RAM (zram, half the
     RAM, lz4) is on by default and stretches it; `sudo mu300-zram off` turns it off.
 
@@ -1208,7 +1209,8 @@ The kernel source used here is mirrored at
 
 mu300-linux is a hobby project, made by one person in Turkey in spare time. If it saved you a device or some money
 and you want to give something back, you can sponsor it on [GitHub Sponsors](https://github.com/sponsors/dikeckaan). The voice call audio package
-(mu300-audio) is given only to sponsors; the minimum sponsorship is 10 USD.
+(mu300-audio) is given only to sponsors; the minimum sponsorship is 10 USD. After sponsoring, reach me through the
+form on [kaandikec.com](https://kaandikec.com).
 One-off and monthly amounts both work, from anywhere GitHub takes cards. It is entirely optional: everything here
 stays free.
 
