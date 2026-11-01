@@ -24,6 +24,18 @@ function pollSeconds(value) {
 	return Number.isFinite(seconds) && seconds >= 0.5 && seconds <= 60 ? seconds : DEFAULT_POLL_S;
 }
 
+/* roamingNow(cell) -> true when the card is registered as roaming (stat 5, or 10 on the 5G/LTE registration; 3GPP
+ * TS 27.007), false when at home (1 or 9), null when neither registration says (kanoqwq's c84da8ba). Both are asked:
+ * on 5G SA the LTE registration may be absent while the 5G one roams. Whether data may roam is another matter (the
+ * card's setting, FINDINGS 120); this is the network's word. */
+function roamingNow(c) {
+	var stats = [ c && c.reg5g, c && c.reg ].filter(function(r) { return r && r.stat != null; })
+		.map(function(r) { return Number(r.stat); });
+	if (stats.some(function(n) { return n === 5 || n === 10; })) return true;
+	if (stats.some(function(n) { return n === 1 || n === 9; })) return false;
+	return null;
+}
+
 /* NR bands the modem's SPLBAND masks can carry (unisoc-modem/lock NR_A/NR_B/NR_S): n6 is supported but not in the
  * tables, so an automatic NR read-back can never list it */
 var NR_CODEC = [ 1, 2, 3, 5, 7, 8, 12, 20, 25, 28, 66, 70, 71, 74, 34, 38, 39, 40, 41, 50, 51, 77, 78, 79,
@@ -678,9 +690,19 @@ return view.extend({
 			 * "No response" after the modem had recovered, until the slow tier's next full refresh (kanoqwq 3c350105). */
 			delete c.error;
 		}
+		/* No card in the slot in use (its last AT+CPIN?, mu300-sim-state; dashboard-info's modem.sim_state; kanoqwq's
+		 * fe52afe3): the page says so where it named the radio, and drops what belongs to a card - IMSI, ICCID, the
+		 * number, the operator, cells and signal, which a cache may still hold from the card taken out. The module's
+		 * own identity (the IMEIs, model, firmware) and the radio's real state stay. Unknown is never taken for absent. */
+		var simAbsent = !!(i.modem && i.modem.sim_state === 'absent');
+		if (simAbsent && c) {
+			var eq = c.ident || null;
+			c = { ts: c.ts, cfun: c.cfun, ident: eq ? { slot: eq.slot, mfg: eq.mfg, model: eq.model, fw: eq.fw,
+				imei: eq.imei, imei1: eq.imei1, imei2: eq.imei2 } : null };
+		}
 		this.lastCell = c;
 		/* Slow-tier data (neighbors/carrier/identity) is redrawn only when the whole cache's timestamp changes */
-		var fullTs = (st.cell && st.cell.ts) || 0;
+		var fullTs = ((st.cell && st.cell.ts) || 0) + (simAbsent ? ':absent' : '');
 		var slowChanged = fullTs !== this.lastFullTs;
 		this.lastFullTs = fullTs;
 
@@ -697,8 +719,8 @@ return view.extend({
 		var label = M.qLabel(rsrp, rsrq, sinr), score = M.qScore({ rsrp: rsrp, rsrq: rsrq, sinr: sinr });
 		var col = M.qCol(M.qLevel(rsrp, rsrq, sinr));
 
-		var rat = '--';
-		if (c && !c.error) {
+		var rat = simAbsent ? _('No SIM card') : '--';
+		if (!simAbsent && c && !c.error) {
 			var nr = c.nr && c.nr.band ? true : false;
 			var lte = c.lte && c.lte.band ? true : false;
 			if (nr && lte) rat = '5G NSA';
@@ -787,15 +809,18 @@ return view.extend({
 		this.paintSim(i.sim);
 		M.set('sess', w.uptime ? M.fmtUptime(w.uptime) : '--');
 		var regmap = { 0: _('Not registered'), 1: _('Registered'), 2: _('Searching'), 3: _('Registration denied'), 4: _('Unknown'), 5: _('Registered (roaming)'), 7: _('Emergency only'), 8: _('Emergency only'), 10: _('Registered') };
-		var reg = '--';
+		var reg = simAbsent ? _('No SIM card') : '--';
 		if (c && c.reg) {
 			reg = regmap[c.reg.stat] || _('Status %s').format(c.reg.stat);
 			if (c.reg.tac) reg += ' · TAC ' + c.reg.tac;
-			if (c.reg5g && c.reg5g.stat == 1) reg += ' · 5G ' + regmap[c.reg5g.stat];
+			if (c.reg5g && (c.reg5g.stat == 1 || c.reg5g.stat == 5)) reg += ' · 5G ' + regmap[c.reg5g.stat];
 		} else if (c && c.error) reg = M.errText(c);
 		M.set('reg', reg);
-		var ro = w.roaming || null;
-		M.set('roam', !ro ? '--' : ro.held ? _('Off: data held back while roaming') : ro.allowed ? _('Allowed') : _('Off'));
+		/* the setting (and the hold), then whether the card is roaming now (kanoqwq's c84da8ba): from the 5G and the
+		 * LTE registration both, as on 5G SA the LTE one may say nothing while the 5G one roams */
+		var ro = w.roaming || null, roamNow = simAbsent ? null : roamingNow(c);
+		M.set('roam', (!ro ? '--' : ro.held ? _('Off: data held back while roaming') : ro.allowed ? _('Allowed') : _('Off')) +
+			(ro && !ro.held && roamNow != null ? ' · ' + (roamNow ? _('Roaming now') : _('Home network')) : ''));
 		M.v('roam').style.color = ro && ro.held ? 'var(--warning,#f59e0b)' : '';
 
 		var anchor = (c && c.lte && c.lte.band) ? c.lte : null;

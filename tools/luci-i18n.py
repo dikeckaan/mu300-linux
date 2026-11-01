@@ -446,7 +446,10 @@ def check(root, scan_shared):
     for p, f, allowed in files:
         if allowed or not p.is_file():
             continue
-        for no, line in enumerate(p.read_bytes().decode('utf-8', errors='replace').split('\n'), 1):
+        data = p.read_bytes()
+        if b'\0' in data:
+            continue        # a program (tools/f2fs-online/mu300-f2fs-online): its bytes are no text to translate
+        for no, line in enumerate(data.decode('utf-8', errors='replace').split('\n'), 1):
             if CJK.search(line):
                 problems.append(('cjk', f, no, line.strip()[:100]))
 

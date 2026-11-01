@@ -295,6 +295,9 @@ region_find_existing() {
     existing=no; PART_FS=none
     for cand in ${REG_OFF:-$OFF} ${PART_OFF:-} 27762098176; do
         region_on_disk "$cand" || continue
+        # a region made by making room (tools/resume.sh: RESUME=1) is the transaction's and nothing else: an old
+        # mu300root superblock left at the fixed offset inside it is not an installation (found on an F50-B, #468)
+        [ "${RESUME:-0}" != 1 ] || [ "$cand" = "${REG_OFF:-$OFF}" ] || continue
         if [ "$cand" = 27762098176 ] && [ -n "${PART_OFF:-}" ] && [ "$cand" -ge "$PART_OFF" ] &&
            [ "$cand" -lt $((PART_OFF + PART_SIZE)) ]; then continue; fi
         m=$(su_do "dd if=/dev/block/$IDISK bs=1 skip=$((cand + 1080)) count=2 2>/dev/null | od -An -tx1" | tr -d ' \n')

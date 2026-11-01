@@ -4333,3 +4333,15 @@ msgstr "Questo file è più vecchio di quanto installato: è necessaria una conf
 
 msgid "The release source was not changed"
 msgstr "La sorgente di rilascio non è stata cambiata"
+
+msgid "No SIM card"
+msgstr "Nessuna SIM"
+
+msgid "Roaming now"
+msgstr "In roaming ora"
+
+msgid "Home network"
+msgstr "Rete di casa"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "I canali del modem sono occupati da altre letture; il segnale in tempo reale arriva a breve"

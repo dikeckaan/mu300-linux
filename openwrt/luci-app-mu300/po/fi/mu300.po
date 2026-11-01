@@ -4333,3 +4333,15 @@ msgstr "Tämä tiedosto on asennettua vanhempi: se vaatii vahvistuksen"
 
 msgid "The release source was not changed"
 msgstr "Julkaisulähdettä ei muutettu"
+
+msgid "No SIM card"
+msgstr "Ei SIM-korttia"
+
+msgid "Roaming now"
+msgstr "Verkkovierailulla nyt"
+
+msgid "Home network"
+msgstr "Kotiverkko"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "Modeemin kanavat ovat varattuina muihin lukuihin; reaaliaikainen signaali tulee pian"

@@ -80,3 +80,24 @@ jobs:
           python -m pip install -q lz4
           cd tests
           python -m unittest test_boot_image -v
+  # the online way of making room (Android keeps its data), on an arm64 runner: the helper in git is rebuilt and
+  # compared byte for byte, then it and tools/android-online-shrink.sh shrink a real F2FS on a loop disk in a
+  # privileged container (tests/online-shrink-e2e.sh: through a device-mapper mapping as Android's metadata
+  # encryption has it, and directly)
+  online-shrink:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - name: the helper in git is the build of its source
+        run: |
+          sh tools/f2fs-online/build.sh "$RUNNER_TEMP/mu300-f2fs-online"
+          cmp "$RUNNER_TEMP/mu300-f2fs-online" tools/f2fs-online/mu300-f2fs-online
+      - name: F2FS and device-mapper in the runner's kernel
+        run: |
+          sudo modprobe f2fs || { sudo apt-get install -y -qq "linux-modules-extra-$(uname -r)" >/dev/null && sudo modprobe f2fs; }
+          sudo modprobe dm-mod || true
+          grep -w f2fs /proc/filesystems
+      - name: the helper and the device script on a loop disk
+        env:
+          MU300_E2E_DOCKER: '1'
+        run: cd tests && python3 -m unittest test_online_shrink -v

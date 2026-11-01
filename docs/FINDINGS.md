@@ -1006,7 +1006,8 @@ stops a boot: anything unclear is `0,0,0`. Files in `.mu300` of the Linux disk: 
   stopping - `systemctl stop` is not a shutdown -, and on OpenWrt the K10 link's `shutdown` action, never `stop`). A
   boot that finds `armed` - a crash, a panic (`panic=5`, the lockup panics), a watchdog reset, `reboot -f`, a power
   cut - drops the offset: `0,0,0`, the request cleared, the reason in `rejected` for the panels. The power cut is
-  counted too: it cannot be told from a hang, and the price is setting the value again.
+  counted too: it cannot be told from a hang, and the price is setting the value again (`mu300-cpu voltage keep-good on`,
+  off by default, keeps a good value whose boot was up its 10 minutes: FINDINGS 240).
 * A value the initramfs cannot check is never written: not three whole steps in range (the same check as the CLI,
   kept identical by a test), or a **SoC firmware not known**: both `sml_a` and `sml_b` of the eMMC must have the
   SHA-256 of the F50 build kano read (`ff4782690fd805ff54fe34853ef8ee5c7e51c3259e20077c55373b50a4b259c2`). The U30
@@ -12515,3 +12516,220 @@ on with the USB 2 one first) left the gadget `configured` at high speed with adb
 after that (both orders, 1-15 s off) all brought NCM back by themselves, and three on the release kernel did too.
 This looks like the Mac's NCM state (as in 237), but it is not proven. Not covered here: a wall charger (DCP), a PD charger and the host role (`mu300-usb host`), which need
 someone at the device.
+
+### 239. Making room without losing Android's data: userdata's F2FS shrunk while Android runs
+
+**Status: EXPERIMENTAL, offered by install.sh, install.ps1 and the graphical installer next to the reset of FINDINGS
+112 (`MU300_ANS_MAKE_ROOM_METHOD=keep|reset`); tested in tests/test_online_shrink.py, tests/online-shrink-e2e.sh (the
+real helper on a real F2FS, CI's arm64 job) and tests/test_resume.py (`OnlineShrink`); run on an F50 (below).
+Method: dikeckaan; implementation: kanoqwq (kanoqwq/mu300-linux fe52afe3, c69be3a3, dad8224b).**
+
+The make-room path of FINDINGS 112 erased everything in Android: the table was rewritten and Android's recovery
+reset it, because a filesystem cleared from outside is one an encrypted Android cannot mount. It need not be. Android's
+own kernel can shrink the mounted F2FS on `/data` (`F2FS_IOC_RESIZE_FS`): it works on the decrypted mapping, moves
+what lies past the new end, and leaves the files, the keys and the encryption alone. After that the partition table
+can say a smaller userdata, and on the next start Android maps the smaller partition and mounts the same filesystem.
+
+**How.** `tools/f2fs-online/mu300-f2fs-online` (kanoqwq's `f2fs-online.c`, a static arm64 program of 67 KB, built
+reproducibly by `build.sh`; CI rebuilds it and compares) and `tools/android-online-shrink.sh` (his eligibility checks
+in shell) on the device; `tools/resume.sh` / install.ps1 and `tools/resume.py` on the computer.
+
+* Offered only where `/data` is an F2FS on all of userdata: mounted from userdata itself, or from one device-mapper
+  node whose only slave is userdata and which covers all of it (file-based plus metadata encryption, as on the F50);
+  never with block encryption, a layered or offset mapping, or a read-only `/data`. The F2FS must be whole sections.
+* The target is whole sections, smaller than now, and keeps 2 GiB more than what is used (kano's margin).
+* The disk is the internal one of tools/storage.sh's `internal_disk` (mmcblk0, or sda on a UFS, #396), and the table
+  is read, rebuilt and committed in its logical blocks (`resize-last-partition.py --sector-size`; on 4096-byte blocks
+  the first 48 and the last 40 sectors, and the worker is given the backup table's place by that count). F2FS blocks
+  are 4096 bytes either way.
+* Before anything is written: the backup of FINDINGS 112, and a transaction with both tables (before and after) and
+  the F2FS's UUID and size, on the computer.
+* On the device everything runs from `/dev/mu300-online-TOKEN` (tmpfs), never from the userdata being resized. First
+  the kernel's ioctl at the current size, a no-op that shows it takes the ioctl at all; a kernel that refuses changes
+  nothing and the transaction is put aside. Then a detached worker (adb may drop) checks both copies of the table
+  against the old (or new) ones it was given, shrinks, reads the superblocks back, writes the backup table and then
+  the primary, each read back.
+* The computer then checks both copies and the F2FS again, writes the token of FINDINGS 112 into the region and asks
+  for a normal restart. In a terminal it waits for Android and goes on with the installation; the next run of a
+  program that drives the installer (the graphical one: Refresh) does the same, checked as every resumed run is, and
+  for this way also against the F2FS's UUID and size (Android not restarted yet: it says so).
+* An interrupted run is picked up from where the device is, never guessed: a worker that still runs is waited for;
+  the old table at the old size is nothing done (the transaction is put aside); the old table at the target size is a
+  worker that stopped between the two (it runs again and commits the table); the new table at the target size is
+  done; anything else stops, with the backups kept.
+
+**Evidence.** kanoqwq shrank an encrypted Android this way on a device of his line (64 GiB) and, on a user's F50,
+by 8 GiB, with the UUID, both superblocks and the data checked after a normal restart; his notes say the full
+installation after it and power cuts were not tested on hardware. Here: tests/online-shrink-e2e.sh runs the committed
+helper and script on Linux 7.0 against a 6 GiB loop disk with a GPT, the F2FS 40 % full and mounted through a
+device-mapper mapping (and directly), files written during the shrink; afterwards both table copies are the new
+table, the F2FS has its target and UUID, fsck.f2fs is clean and every file reads back. A read-only `/data` and a stale
+table are refused before anything changes.
+
+**On a board (2026-11-01, F50-B: Android 12, kernel 5.4.254, 58 GiB eMMC, /data an F2FS on dm-default-key with
+file-based encryption).** Its userdata was first grown in the table to the end of the disk (the F2FS stayed at 20 GiB),
+which is the 32 GB variant's layout to the installer; 36 marker files (5 GiB of random data, some deleted in between)
+and a setting were written in Android. The same-size probe passes on this kernel. Refused before anything changed, the
+table and the F2FS read back as before: a stale old table, a wrong UUID, a wrong old size, a target above the F2FS or
+below what is used plus the margin. Two real runs: 20 -> 15.4 GiB (the computer killed while the worker shrank; the next
+run found "committed", finished and restarted Android) and 15.4 -> 11.4 GiB (a terminal run, which went on to install
+Ubuntu 24.04 with kernel 7.3, v2026.10.30.1, into the 41 GiB region; Linux booted). After each restart every marker's
+SHA-256 and the setting were the same, and Android's own boot fsck of /data (`fsck.f2fs -a`) reported no error. Three
+bugs found and fixed: the worker's byte offsets were computed in Android's 32-bit sh (every start was refused), the
+terminal run lost the F50 when it drops off USB once about 5 s after boot_completed, and a resumed run printed sizes
+before `gib` was defined. Two more from that test: the region found by a resumed run was an old mu300root superblock
+left at the fixed offset of the first releases (27762098176) inside the region made, not the region itself - a
+resumed run now looks at the transaction's region only (tools/storage.sh, install.ps1); and the restart in the middle
+of a terminal run gives Android its USB functions (MTP) back, so the run sets adb alone again in the new boot (#473's
+usb_adb_only), whose restore at the end is for that boot. vold also runs `resize.f2fs` on /data at every boot (it failed on the unclean image here); on
+the shrunk table the F2FS already fills userdata to within a section, so there is nothing for it to grow into.
+
+**Not taken.** kano's growth of an encrypted userdata at uninstall (474e8018: a temporary Android boot image with a
+Magisk overlay that runs resize.f2fs before `/data` is mounted) - it changes Android's boot partition; our uninstall
+still offers the old growth (which erases Android's data) or leaving the space free. His backup of the metadata
+partition (encryption key material) is not made either: nothing here writes it.
+
+### 240. kanoqwq's power and services work of October 23-25: what is taken, and how
+
+What was still missing of kanoqwq's `cc0ecce7` (CPU0 idle controls, fewer background wakeups), `f0b5ad43` (event-driven
+services, boot work) and the CPU part of `fb0b28e7` ("preserve confirmed CPU settings"), after #399, #402, #405, #408,
+#416 and the liuwang97 work of FINDINGS 235. His tree runs a modem daemon (`mu300-modemd`, a ubus object) and a system
+daemon (`mu300-sysd`); ours has neither, so his behaviour goes into our scripts and nothing that needs them is taken.
+
+**CPU0's low latency** (`cpu-idle.uc`, cc0ecce7; FINDINGS 200 has the switch). `mu300-cpu lowlatency on|off` is all or
+nothing: a state that does not take the value (written, read back) puts every state of CPU0 back as it was, and a
+setting that cannot be saved is undone the same way. `status --json` has `lowlatency.mixed` (some states off, some on).
+His web switch leaves WFI alone and writes only `core-sleep-*` and `cluster-pd`; ours writes every state, which comes to
+the same: with every state disabled the menu governor still takes state 0. His UMS9621 (T158) refusal is not needed (no
+such board here).
+
+**The CPU voltage offset after a power cut** (fb0b28e7). Ours dropped an offset after any boot that ended without a
+clean shutdown (FINDINGS 133), and on a board without a battery (F50, V50) pulling the cable is that. kano's version
+confirms a value at S99 and then keeps it through any later end. He did not try it on a device, so here it is a switch,
+**off by default**: `mu300-cpu voltage keep-good on|off` (`.mu300/cpu-voltage-keep-good` on the Linux disk, `keep_good` in
+`status --json`; CLI only). `mark-good` now writes `up` under the armed value at every boot that reaches its 10
+minutes with the good value; with keep-good on, the initramfs keeps a good value when the armed mark of the boot that
+ended says `up` (`stage=cpu-voltage-kept`). A boot that ended before its 10 minutes still drops the value, so an
+offset that crashes early cannot loop the boots; one that crashes later is kept, as in his version, until
+`mu300-cpu voltage off`.
+
+**Wi-Fi at boot** (mu300-hw, f0b5ad43). The "no restart" shortcut (unchanged settings, the access point up) also needs
+the country to be live: an access point that came up under the world rules is restarted under the country's. A
+settings file whose checksum cannot be read never counts as unchanged.
+
+**SMS receiver** (`mu300-smsd`; his `sms-events.sh`, f0b5ad43, and its 500 ms slack, cc0ecce7). His receiver listens to
+the modem daemon's ubus events. Ours keeps its look every 5 s, but a look that finds nothing new starts no process:
+before, every look ran `mu300-sim-state get` (and through it `mu300-sim active`, `head`, `tr`) and `cat | grep | md5sum`
+over the URC logs. Now the logs are checksummed again only when one of them was written since the last checksum, and
+the card is asked about again only when its state files (`/run/mu300/sim-slot`, `sim0.state`, `sim1.state`) changed,
+and at every periodic sync. The times are compared by the shell's own `test FILE -ot MARK` against a mark in the lock
+directory, written before the look, so a write during the look is seen at the next one; a write in the mark's second
+counts as new. Without a mark (it could not be written) every look is as before. The wait is FINDINGS 235's: a read with
+a timeout on a private fifo (busybox ash, bash; `sleep` under dash), with 500 ms of timer slack during the wait only.
+
+**Data watchdog** (`mobile-data watch`; his `data-events.sh`). His watchdog wakes on the modem daemon's URC and netifd
+events; ours keeps its AT look every 30 s, and the sleep between two looks now runs with 500 ms of timer slack (set by
+the sleep's own subshell; the AT and route work keeps the default). His `watch_cleanup` fixes a bug ours had too: the
+traps removed a lock path that was a local of `watch()`. On F50-B every `systemctl restart` ended in
+`wlock: unbound variable` (the EXIT trap, after the locals were gone) and status 1; on the U30 Air the TERM trap
+removed the lock and the watchdog went on without it, until a KILL. The path is now
+at process scope, TERM exits 0 (a stop) and INT 130, and the lock goes only while it is still this process's. The
+sleep runs in the background and is waited for, so the TERM trap runs at once rather than after up to 30 s.
+
+**Already here, or not taken:**
+- Already in: thermal-guard's "no reading is unknown" rule (#399), the LED tick hint (FINDINGS 235), ndp-learn on
+  `ip monitor` with slack, early-recorder's `logread -l 300` and 30 s rounds, `mu300-cpu services`, the boot work
+  (printk 4, the entropy kick, the eMMC wait at 100 ms, no `sleep 1` before the UDC bind, the module prefetch, regdb
+  before the PHY, `iw reg set` before `wifi-start`, no wait for a firmware class the kernel lacks), sipa-dele's 0.5 s
+  polling and its 0.1 s handshake check, `ums9620_lpintc`, the 7.x link-wait patch, the NCM/RNDIS `os_desc` patch.
+- Not taken: his adaptive 5-30 s thermal cadence (as in #399); everything on `mu300-modemd`/`mu300-sysd` and the ubus
+  objects (the native AT owner `mu300-atd-io`, dashboard RPCs, the uevent mode of `mu300-keys`, the LED deadline
+  scheduling inside sysd); the native U30 dual-SIM changes; his TTL engine; calls, SIP and audio; the Chinese reports.
+- His explicit-off replay of CPU0 idle at boot: ours never disables CPU0's idle states unless asked, so off needs no
+  replay.
+
+Tests: `test_cpu.CoresAndLatency` (all or nothing, nothing saved, `mixed`), `test_cpu_voltage` (keep-good: kept only
+with the switch, `up` and the good request; `mark-good` writes `up`; the switch is root's and off by default),
+`test_wifi.HwRestart` (`hw_bringup` itself with stubs), `test_sms_pool.Daemon.test_an_idle_look_starts_no_process`
+(dash, bash, busybox ash; Linux only), `test_device_scripts.MobileData.test_only_the_watch_wait_gets_timer_slack`.
+
+**On the boards** (scripts deployed live, the originals put back after):
+- F50-B, Ubuntu 24.04, 7.3.0. CPU0's states are `WFI`, `core-sleep-lit` and `cluster-pd`. `lowlatency on` turned all
+  three off and `off` turned them back on, with `active` and `mixed` right each time. One state switched off by hand
+  read `partly off` (`mixed: 1`). `voltage keep-good` was off, then on (`keep_good: 1`), then off again. `mark-good`
+  with nothing armed did nothing. The watchdog's sleep child ran with 500000000 ns of slack and the watchdog itself
+  with 50000. `systemctl restart` of the watchdog: the old script stopped with status 1 (`wlock: unbound variable`),
+  the new one "Deactivated successfully" at once.
+- U30 Air, OpenWrt 25.12.6, 6.18.59, the VPN (sing-box) and its kill switch up throughout. `mu300-smsd`: 169 CPU ticks
+  in 120 s before, 141 after (what is left is the full sync every 30 s, not touched here); in the looks between two
+  syncs it had no child at all, and its slack read 500000000 during the wait. The OpenWrt busybox does
+  `test -ot` to the second and `read -t` on the fifo (also checked in the 25.12.6 image). A real receive:
+  `mu300-sms send 7000 KALAN`, and the operator's two-part answer came by direct delivery, joined into one message, in
+  the pool 8 s later. The data watchdog's sleep had 500000000 ns of slack. The old watchdog ignored TERM there: its
+  trap removed the lock and the loop went on (it took a KILL); the new one exited, and procd started it again.
+  `mu300-hw`, a reboot with the hotspot on: "no restart" (the country, TR, live), the access point up, the VPN up.
+- Not tried on a board: keep-good across a real power cut (it needs the initramfs of this branch and an offset).
+
+### 241. The IPA delegate says when its channel is open; the dashboard says "No SIM card" and whether it roams
+
+**Status: the delegate part checked by kanoqwq on a U30 Air (7.2.8) and here on a U30 Air (OpenWrt, 6.18.59); the
+dashboard parts here on the same U30 Air, "No SIM card" offline only.** From his `0043a5d8`, `c84da8ba`, `fe52afe3` and `b9f71e72`,
+taken into this tree's code.
+
+- **sipa_dele has a readiness interface** (`0043a5d8`). The delegate module now keeps a channel status (0 handshake
+  pending, 1 open, negative: the open failed) and shows it in sysfs next to `sipa_dele_reset`:
+  `/sys/bus/platform/drivers/sipa_delegate/*/sipa_dele_ready` (the number) and `sipa_dele_wait`, whose read waits on a
+  kernel wait queue until the status is not 0: `1` at once when the channel is open, `-ETIMEDOUT` after 3 s, the open's
+  error, `-EAGAIN` for a channel that closed in between. The status goes to 1 on the first OPEN and on every later one,
+  to 0 on a CLOSE or a receive that says the channel is FREE/gone (`-EIO`/`-ENODEV`); other receive errors leave it.
+  Two fixes in the same place: the connection thread is woken only after the resource graph and its callback are in
+  place (it was woken first, so a request from the CP could arrive before there was anything to take it), and a failed
+  start now frees what init made (the thread was left parked, the delegator allocated, sysfs registered after
+  success only).
+- **sipa-dele-start asks it.** After `insmod` it reads `sipa_dele_wait` instead of looking for `channel 5-120 send
+  open msg` in dmesg (that line only said the OPEN was sent): not open, exit 1, and mobile-data makes no PDP context
+  this round. mobile-data now also calls it when the module is already loaded (a reconnect), and there it only asks:
+  no wait for the packet domain, no insmod. A module without the file (an older build, the 5.4 vendor one), or more
+  than one such device, cannot say: exit 0 as before, so an image with an older module never stays off the network
+  for it (bootability over lockdown). His `SPACTCARD` prefix on the `AT+CGATT?` probe is not needed here: ours already
+  asks the selected card's own channel (`mu300-sim active`).
+- **The dashboard says "No SIM card"** (`fe52afe3`). With no card the radio is off too, and the page said "Radio off".
+  dashboard-info now reports `modem.sim_state`, the card in use's last word on itself (mu300-sim-state's
+  `/run/mu300/sim<slot>.state`, FINDINGS 186; a file, no AT command): `absent`, `ready`, `locked` or null. Absent: the
+  network and registration rows say "No SIM card", and what belongs to a card is dropped from the shown snapshot (the
+  identity cache may still hold the last card's IMSI, ICCID and number; operator, cells and signal go too). The IMEIs,
+  model, firmware and the CFUN stay. null (not asked this boot) is never taken for absent.
+- **Whether the card roams now** (`c84da8ba`). The data roaming row shows the setting (FINDINGS 120) and now the
+  network's word after it: "Roaming now" (stat 5 or 10 on the 5G or the LTE registration) or "Home network" (1 or 9);
+  nothing when neither says. Both registrations are asked: on 5G SA the LTE one may be empty while the 5G one roams.
+  The registration row also names a 5G roaming registration. His two IMEI rows with the "in use" badge were already
+  here (FINDINGS 221).
+- **The locks page's live signal: busy is not a failure** (`b9f71e72`). When both dashboard channels are taken by
+  other readings (the home page, a second browser), `cell` exits 75 and `mu300dash signal` answers
+  `{"busy":1,...}`; the page keeps its last reading and does not back off. Any other failure is shown as before.
+
+Not taken: his dual-standby switch and single-standby policy (`0043a5d8`: in this tree only the card in use has a live
+stack, FINDINGS 185, so single standby is how it already runs); his `AT+SFUN=2` presence preflight for the U30 Air
+(it lives in his dual-stack `mu300-dual-radio`; mu300-sim-state never asks the card that is not in use); the 152
+default for automatic mode (here "Automatic" stays the modem's 134, 152 is the explicit "Automatic without 2G",
+FINDINGS 198); the auto-mode ACL fix (`82c01b9e`: no page here writes uci over rpc); the voice receipt fix (`500e5ea4`,
+see FINDINGS 210); the SMS pool resolver, list column and LF fixes (`edcdeb27`, `fe52afe3`: one pool here, FINDINGS
+210, and our encoder takes the text from the environment, so a newline is encoded, not a line break); his battery
+summary in amperes (`b9f71e72`: our tile shows the direction, watts, volts and the USB input); his `ubus_rpc_session`
+argument (his native modemd; ours is an rpcd shell backend); the VPN removal in `fe52afe3`.
+
+`tests/test_device_scripts.py` (`SipaDele`: the readiness of a loaded and a freshly loaded delegate; `MobileData`: a
+loaded delegate is asked), `tests/test_dashboard_info.py` (`sim_state`, `SimAbsent`, `RoamingNow`),
+`tests/test_mu300dash_security.py` (the busy signal reply).
+**Checked here** (U30 Air, OpenWrt 25.12.6, 6.18.59, SIM in, VPN on): the module built from this tree, a reboot:
+the loader logged "packet domain attached", "loaded sipa-dele", "delegate channel and resource callbacks ready",
+`sipa_dele_ready` read 1, data through the VPN (HTTP 204), no oops. `ifdown wan; ifup wan`: the ready check passed
+(`/tmp/mu300-sipa-dele-ready.log`) and data came back. The vendor DT's "get resource failed for remote-base" / "dts
+parsing failed" line is in the boot log with the old module as well. Dashboard: `sim_state` "ready", "absent" from a
+state file given by hand; the data roaming row read "Allowed · Home network"; with every dashboard channel held,
+`mu300dash signal` answered busy. Everything was put back afterwards. Not checked on a board: the page with a card
+taken out, and an F50.
+**Device check before merge (still open):** a mainline board with the rebuilt `sipa-dele.ko`: `cat .../sipa_dele_ready` reads 1
+after the dial, `/tmp/mu300-sipa-dele.log` says "delegate channel and resource callbacks ready", data flows; `ifdown
+wan; ifup wan` passes the ready check (`/tmp/mu300-sipa-dele-ready.log`). The dashboard of a board with its card taken
+out (or an empty slot selected) says "No SIM card", the IMEIs stay.

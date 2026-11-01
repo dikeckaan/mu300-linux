@@ -8,7 +8,11 @@ writes (tools/resume.sh) and the checks of the installation that resumes after t
                                userdata a link to its node, as readlink -f resolves it on the device
     sys/block/mmcblk0/...      start, size and PARTNAME of every partition, the disk's size
     sys/class/block/...        userdata's start and size, the eMMC's CID
-    proc/mounts, props         what /data is mounted from; the properties getprop answers
+    dev/block/dm-N             /data's mapping (metadata encryption), when it is mounted from one: an F2FS superblock
+                               (f2fs_super) of all of userdata, which the online way reads and tests/fakeonline.py
+                               shrinks
+    proc/mounts, props         what /data is mounted from (a path inside the directory, which the commands that read
+                               it then use as it is); the properties getprop answers
     bin/                       getprop, dd (never truncates a file it writes into, takes no conv=fsync), sha256sum
     tmp/                       /data/local/tmp
 
@@ -63,6 +67,23 @@ def gpt_sectors(lbs):
     return (48, 40) if lbs == 4096 else (34, 33)
 
 
+def f2fs_super(blocks, uuid=b'\x5a' * 16):
+    """The first 8 KiB of an F2FS of BLOCKS 4096-byte blocks: both superblock copies, sections of 512 blocks."""
+    sb = bytearray(3072)
+    struct.pack_into('<IHHIIII', sb, 0, 0xf2f52010, 1, 16, 9, 3, 12, 9)
+    struct.pack_into('<I', sb, 24, 1)
+    struct.pack_into('<Q', sb, 36, blocks)
+    sb[108:124] = uuid
+    raw = bytearray(8192)
+    raw[1024:4096] = sb
+    raw[5120:8192] = sb
+    return bytes(raw)
+
+
+def f2fs_blocks(d, node='dm-6'):
+    return struct.unpack_from('<Q', (Path(d) / 'dev/block' / node).read_bytes(), 1024 + 36)[0]
+
+
 def make(d, layout='vendor64', crypto=('encrypted', 'file'), source='/dev/block/dm-6', cid=CID, slot='a'):
     """The directory D standing for a device with this partition table; returns D."""
     d = Path(d)
@@ -86,11 +107,14 @@ def make(d, layout='vendor64', crypto=('encrypted', 'file'), source='/dev/block/
     else:
         (d / f'sys/class/block/{name}/device/cid').write_text(cid + '\n')
     sysfs(d, parts)
-    for i, (pname, _first, _last) in enumerate(parts, 1):
+    for i, (pname, first, last) in enumerate(parts, 1):
         if pname == 'userdata':
             node = d / 'dev/block' / ('%s%d' % (prefix, i))
-            node.write_bytes(bytes(1024) + bytes.fromhex('1020f5f2') + bytes(4096 - 1028))
+            blocks = ((last - first + 1) // 8 // 512) * 512
+            node.write_bytes(f2fs_super(blocks))
             os.symlink('../%s%d' % (prefix, i), d / 'dev/block/by-name/userdata')
+            if source.startswith('/dev/block/dm-'):
+                (d / source.lstrip('/')).write_bytes(f2fs_super(blocks))
     if lbs == 4096:   # misc a link to its node, and that node's sysfs entry below the disk, as on the device
         i = [n for n, _, _ in parts].index('misc') + 1
         (d / 'dev/block' / ('sda%d' % i)).write_bytes(_misc(slot))
@@ -101,7 +125,8 @@ def make(d, layout='vendor64', crypto=('encrypted', 'file'), source='/dev/block/
         (d / 'dev/block/by-name' / ('boot_' + s)).write_bytes(('boot_%s ' % s).encode() * 100000)
         for p in CHAIN:
             (d / 'dev/block/by-name' / ('%s_%s' % (p, s))).write_bytes(('%s_%s ' % (p, s)).encode() * 3000)
-    (d / 'proc/mounts').write_text('%s /data f2fs rw,lazytime 0 0\n/dev/block/dm-3 /metadata ext4 ro 0 0\n' % source)
+    (d / 'proc/mounts').write_text('%s /data f2fs rw,lazytime 0 0\n/dev/block/dm-3 /metadata ext4 ro 0 0\n'
+                                   % (str(d) + source if source.startswith('/dev/block/') else source))
     (d / 'props').write_text('ro.crypto.state=%s\nro.crypto.type=%s\n' % crypto)
     _exe(d / 'bin/getprop', '#!/bin/sh\nsed -n "s/^$1=//p" "$FAKE_EMMC/props"\n')
     real_dd = shutil.which('dd') or '/bin/dd'

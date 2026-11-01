@@ -56,8 +56,10 @@ step preflight 5
 say "Checking host tools and device"
 for c in adb python3; do command -v $c >/dev/null || die "$c not found"; done
 . "$TOP/tools/linux-mode.sh"
+. "$TOP/tools/usb-adb.sh"
 require_android
 [ "$(su_do 'id -u')" = 0 ] || die "su does not work on the device"
+usb_adb_only        # adb alone on USB for this run, no MTP (tools/usb-adb.sh); set back when it ends
 model="$(su_do 'getprop ro.product.model') / $(su_do 'getprop ro.product.device')"
 echo "device: $model"
 # (the ZTE V50, experimental: FINDINGS 95, as install.sh takes it)

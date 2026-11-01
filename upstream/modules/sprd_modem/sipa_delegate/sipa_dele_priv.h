@@ -15,6 +15,7 @@
 #define _SIPA_DELE_PRIV_H_
 #include <linux/sipc.h>
 #include <linux/sipa.h>
+#include <linux/wait.h>
 
 /* flag for CMD/DONE/EVT msg type */
 #define SMSG_FLG_DELE_REQUEST		0x1
@@ -68,6 +69,9 @@ struct sipa_delegator {
 	u32 chan;
 	u32 smsg_cnt;
 	bool connected;
+	/* 0: handshake pending, 1: channel usable, negative: open failed. */
+	atomic_t channel_status;
+	wait_queue_head_t channel_wait;
 	bool is_powered;
 	atomic_t requesting_cons;
 	bool pd_eb_flag;

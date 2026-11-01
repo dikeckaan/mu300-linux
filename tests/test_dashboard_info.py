@@ -177,6 +177,21 @@ class Info(ShellTest):
             self.stub('uci', 'case "$*" in *network.wan.roaming) echo "1; x" ;; *) exit 1 ;; esac')
             self.assertEqual(self.info(shell, MU300_ROAM_HELD=held)['wan']['roaming']['allowed'], 1)
 
+    def test_sim_state(self):
+        """The card in use's last word on itself (mu300-sim-state's file, no AT command): absent, ready or locked;
+        anything else, or no file, is null (unknown) - never absent."""
+        run = self.tmp / 'simstate'
+        run.mkdir()
+        for shell in self.each_shell():
+            (run / 'sim0.state').unlink(missing_ok=True)
+            self.assertIsNone(self.info(shell, MU300_SIM_STATE_DIR=run)['modem']['sim_state'])
+            for state in ('absent', 'ready', 'locked'):
+                (run / 'sim0.state').write_text(state + '\n')
+                self.assertEqual(self.info(shell, MU300_SIM_STATE_DIR=run)['modem']['sim_state'], state)
+            for junk in ('gone\n', 'absent"x\n', ''):
+                (run / 'sim0.state').write_text(junk)
+                self.assertIsNone(self.info(shell, MU300_SIM_STATE_DIR=run)['modem']['sim_state'], junk)
+
     def test_connections(self):
         count, table = self.tmp / 'nf_conntrack_count', self.tmp / 'nf_conntrack'
         for shell in self.each_shell():
@@ -766,13 +781,14 @@ class CellRecovery(unittest.TestCase):
     slow tier's old error: the card said "No response" after the modem had recovered until the slow tier's next full
     refresh (ported from kanoqwq/mu300-linux@3c350105)."""
 
-    def merge(self, cell, sig):
+    def merge(self, cell, sig, info=None):
         src = HOME.read_text(encoding='utf-8')
         start = src.index('var c = st.cell || null;')
         end = src.index('this.lastCell = c;', start)
-        js = 'const st = ' + json.dumps({'cell': cell, 'sig': sig}) + ';\n' + src[start:end] + r'''
-process.stdout.write(JSON.stringify({ c: c, cell: st.cell, sig: st.sig }));
-'''
+        js = ('const st = ' + json.dumps({'cell': cell, 'sig': sig}) + ';\nconst i = ' + json.dumps(info or {}) +
+              ';\n' + src[start:end] + r'''
+process.stdout.write(JSON.stringify({ c: c, cell: st.cell, sig: st.sig, absent: simAbsent }));
+''')
         r = subprocess.run(['node', '-'], input=js, capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
@@ -805,3 +821,108 @@ process.stdout.write(JSON.stringify({ c: c, cell: st.cell, sig: st.sig }));
     def test_sig_alone_is_copied(self):
         t = self.merge(None, self.SIG)
         self.assertEqual(t['c'], self.SIG)
+
+
+@unittest.skipUnless(shutil.which('node'), 'Node.js is needed for the LuCI JS tests')
+class SimAbsent(unittest.TestCase):
+    """No card in the slot in use (dashboard-info's modem.sim_state, from mu300-sim-state's last AT+CPIN?; kanoqwq's
+    fe52afe3): the page drops what belongs to a card - a cache may still hold the last one's IMSI, ICCID, number,
+    operator and cells - and keeps the module's own identity and the radio's state. Unknown is not absent."""
+
+    CELL = {'ts': 100, 'cfun': 0, 'reg': {'stat': 0}, 'operator': {'plmn': '00101'}, 'msisdn': '+10000000000',
+            'lte': {'band': 3}, 'sig': {'rsrp': -95.0},
+            'ident': {'slot': 0, 'mfg': 'UNISOC', 'model': 'X', 'fw': 'F', 'imei': '000000000000000',
+                      'imei1': '000000000000000', 'imei2': '', 'imsi': '001010000000000', 'iccid': '8900000000000000000'}}
+
+    merge = CellRecovery.merge
+
+    def test_absent_drops_the_card(self):
+        t = self.merge(self.CELL, None, {'modem': {'sim_state': 'absent'}})
+        self.assertTrue(t['absent'])
+        self.assertEqual(t['c'], {'ts': 100, 'cfun': 0, 'ident': {
+            'slot': 0, 'mfg': 'UNISOC', 'model': 'X', 'fw': 'F', 'imei': '000000000000000',
+            'imei1': '000000000000000', 'imei2': ''}})
+        self.assertEqual(t['cell'], self.CELL)                # the cache object itself is not changed
+
+    def test_ready_locked_or_unknown_keep_everything(self):
+        for info in ({'modem': {'sim_state': 'ready'}}, {'modem': {'sim_state': 'locked'}},
+                     {'modem': {'sim_state': None}}, {'modem': {}}, {}):
+            t = self.merge(self.CELL, None, info)
+            self.assertFalse(t['absent'], info)
+            self.assertEqual(t['c'], self.CELL, info)
+
+    def test_the_page_says_no_sim_card(self):
+        src = HOME.read_text(encoding='utf-8')
+        self.assertIn("var rat = simAbsent ? _('No SIM card') : '--';", src)
+        self.assertIn("var reg = simAbsent ? _('No SIM card') : '--';", src)
+
+
+@unittest.skipUnless(shutil.which('node'), 'Node.js is needed for the LuCI JS tests')
+class RoamingNow(unittest.TestCase):
+    """home.js's roamingNow (kanoqwq's c84da8ba): the network's word from the 5G and the LTE registration both."""
+
+    def now(self, cell):
+        src = HOME.read_text(encoding='utf-8')
+        start = src.index('function roamingNow(c) {')
+        end = src.index('\n}\n', start) + 2
+        js = src[start:end] + '\nprocess.stdout.write(JSON.stringify(roamingNow(' + json.dumps(cell) + ')));'
+        r = subprocess.run(['node', '-'], input=js, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return json.loads(r.stdout)
+
+    def test_states(self):
+        for cell, want in (({'reg': {'stat': 5}}, True), ({'reg': {'stat': 10}}, True),
+                           ({'reg': {'stat': 1}}, False), ({'reg': {'stat': 9}}, False),
+                           ({'reg': {'stat': 0}, 'reg5g': {'stat': 5}}, True),     # 5G SA roaming, LTE silent
+                           ({'reg': {'stat': 1}, 'reg5g': {'stat': 5}}, True),
+                           ({'reg': {'stat': 2}, 'reg5g': None}, None), ({'reg': {'stat': None}}, None),
+                           ({}, None), (None, None)):
+            self.assertEqual(self.now(cell), want, cell)
+
+
+LOCKS = HOME.parent / 'locks.js'
+
+
+@unittest.skipUnless(shutil.which('node'), 'Node.js is needed for the LuCI JS tests')
+class LocksServingBusy(unittest.TestCase):
+    """locks.js's loadServing (kanoqwq's b9f71e72): a "busy" reply (both dashboard channels taken by other readings)
+    keeps the reading shown and is no failure (no back-off); a real failure is painted and backs off."""
+
+    def run_page(self, replies, last=None):
+        src = LOCKS.read_text(encoding='utf-8')
+        start = src.index('loadServing: function() {')
+        start = src.index('function', start)
+        end = src.index('\n\t},', start)
+        js = r'''
+const replies = ''' + json.dumps(replies) + r''';
+const painted = [];
+const M = { callSignal: () => Promise.resolve(replies.shift()), backoff: (base, n) => n ? 1 + n : 1 };
+const self = { lastCell: ''' + json.dumps(last) + r''', servingMeta: {},
+               paintServing: (c) => { painted.push(c); self.lastCell = c; },
+               loadServing: ''' + src[start:end] + '\n\t}' + r''' };
+(async () => {
+    const fails = [];
+    while (replies.length) { self._skip = 0; await self.loadServing(); fails.push(self._fails); }
+    process.stdout.write(JSON.stringify({ painted, fails }));
+})();
+'''
+        r = subprocess.run(['node', '-'], input=js, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return json.loads(r.stdout)
+
+    GOOD = {'ts': 10, 'sig': {'rsrp': -90.0}}
+    BUSY = {'busy': 1, 'error': 'The modem channels are busy with other readings; the live signal follows shortly'}
+
+    def test_busy_keeps_the_reading(self):
+        t = self.run_page([self.BUSY, self.BUSY], last=self.GOOD)
+        self.assertEqual(t['painted'], [])
+        self.assertEqual(t['fails'], [0, 0])
+
+    def test_busy_without_a_reading_says_so(self):
+        t = self.run_page([self.BUSY])
+        self.assertEqual(t['painted'][0]['busy'], 1)
+
+    def test_a_failure_is_painted_and_backs_off(self):
+        t = self.run_page([{'error': 'Live signal read failed'}], last=self.GOOD)
+        self.assertEqual(t['painted'][0]['error'], 'Live signal read failed')
+        self.assertEqual(t['fails'], [1])

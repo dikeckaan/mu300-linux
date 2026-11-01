@@ -19,6 +19,20 @@ install.sh and install.ps1 call this file; the graphical installer and tests/ im
     resume.py find DIR [SERIAL CID]              the newest transaction in DIR/*/transaction.json still waiting for
                                                  this device (any device without SERIAL and CID); nothing when none
     resume.py check FILE KEY=VALUE...            RESUME-OK, or RESUME-REFUSED: <why> and status 1
+    resume.py online-target new_size=S section_blocks=N used_bytes=B blocks=N
+                                                 TARGET=<F2FS blocks> for a userdata of S sectors whose data stays,
+                                                 or REFUSED: <why> and status 1
+    resume.py online-state FILE head=F tail=F fs_blocks=N fs_uuid=HEX
+                                                 how far an online shrink got: STATE=unchanged|shrunk|committed|unknown
+
+The online way (method=online in the transaction; EXPERIMENTAL): Android keeps its data. The F2FS mounted on /data is
+shrunk while Android runs, by the kernel's F2FS_IOC_RESIZE_FS (tools/f2fs-online, tools/android-online-shrink.sh),
+and the smaller table is written after it; Android then restarts normally and nothing is reset. The method is
+dikeckaan's; kanoqwq implemented it (kanoqwq/mu300-linux fe52afe3, c69be3a3, dad8224b: installer/backend/
+online_shrink.py), and these are his rules: a target on a section boundary and well above what is used, the table
+committed only after the filesystem is at its target, and a run that was interrupted continued only from a state
+that is one of the two known ones (never guessed, never "fixed" by a reset). Its transaction also holds fs_uuid,
+fs_blocks (before) and fs_target, and check then takes fs_blocks and fs_uuid of /data as it is now.
 
 The facts `check` takes, as the installers read them from the device: serial, slot (the slot Android runs from),
 cid, node, start, size, disk (userdata's node, first sector and sectors, and the eMMC's sectors, from sysfs),
@@ -45,7 +59,10 @@ BCB_RECOVERY = b'recovery\n--wipe_data\n--reason=mu300-make-room\n'
 # may change, these may not.
 TOOLS = ('tools/resize-last-partition.py', 'tools/storage.sh', 'tools/android-install.sh',
          'tools/android-mount-mu300root.sh', 'boot/init')
-INTS = ('start', 'size', 'disk', 'target', 'need', 'gpt_first', 'gpt_end', 'usable_end', 'region_start', 'region_end')
+INTS = ('start', 'size', 'disk', 'target', 'need', 'gpt_first', 'gpt_end', 'usable_end', 'region_start', 'region_end',
+        'fs_blocks', 'fs_target', 'new_size', 'section_blocks', 'used_bytes', 'blocks')
+# kano's margin (online_shrink.allocation): the shrunk F2FS keeps 2 GiB more than what is used now
+ONLINE_MARGIN = 2 << 30
 WAITING = ('prepared-request', 'prepared')
 
 
@@ -187,6 +204,16 @@ def check(r, facts):
     for k in ('serial', 'slot', 'cid', 'node', 'start', 'disk'):
         if str(f.get(k)) != str(r.get(k)):
             raise ValueError('the device or its slot differs from the saved transaction (%s)' % k)
+    online = r.get('method') == 'online'
+    if online and r.get('state') != 'installed' and int(f.get('size', -1)) == r['size'] != r['target']:
+        raise ValueError('Android has not restarted since userdata was shrunk (it still runs with the old partition '
+                         'table): reboot it (adb reboot) and run the installer again')
+    if online and r.get('state') != 'installed' and 'fs_blocks' in f:
+        if f.get('fs_uuid') != r.get('fs_uuid'):
+            raise ValueError("Android's data is not the filesystem that was shrunk (its UUID differs)")
+        if f['fs_blocks'] != r.get('fs_target'):
+            raise ValueError("Android's data is not at the size it was shrunk to (%s blocks, the transaction made it %s)"
+                             % (f['fs_blocks'], r.get('fs_target')))
     if int(f.get('size', -1)) != r['target']:
         raise ValueError('the prepared partition geometry differs (userdata is %s sectors, the transaction made it %s)'
                          % (f.get('size'), r['target']))
@@ -203,6 +230,39 @@ def check(r, facts):
             raise ValueError('preparation token mismatch; refusing to overwrite the region')
     if f.get('identity') != r['identity']:
         raise ValueError("this installer's tools or the package differ from the ones that prepared the installation")
+
+
+def online_target(new_size, section_blocks, used_bytes, blocks):
+    """The F2FS size, in 4096-byte blocks, for a userdata of NEW_SIZE sectors: whole sections only (the kernel takes
+    nothing else), smaller than now, and ONLINE_MARGIN above what is used (kano's allocation)."""
+    if section_blocks <= 0 or blocks <= 0 or new_size <= 0 or used_bytes < 0:
+        raise ValueError('the F2FS geometry is not known')
+    target = (new_size * 512 // 4096 // section_blocks) * section_blocks
+    if target >= blocks:
+        raise ValueError('that would not make the F2FS smaller')
+    if target * 4096 <= used_bytes + ONLINE_MARGIN:
+        raise ValueError("Android's data takes %.1f GiB: a userdata of %.1f GiB would leave it less than 2 GiB to spare"
+                         % (used_bytes / 2 ** 30, new_size * 512 / 2 ** 30))
+    return target
+
+
+def online_state(r, head, tail, fs_blocks, fs_uuid):
+    """How far an online shrink got, from the table on the disk now and the filesystem's size: unchanged (the old
+    table, the old size: nothing happened), shrunk (the old table, the target size: the worker stopped between the
+    two; it can commit the table), committed (the new table, the target size), unknown (anything else: stop)."""
+    bd = Path(r['backup'])
+    old = ((bd / 'gpt.head').read_bytes(), (bd / 'gpt.tail').read_bytes())
+    new = ((bd / 'gpt-new.head').read_bytes(), (bd / 'gpt-new.tail').read_bytes())
+    now = (Path(head).read_bytes(), Path(tail).read_bytes())
+    if fs_uuid != r.get('fs_uuid'):
+        return 'unknown'
+    if now == old and fs_blocks == r.get('fs_blocks'):
+        return 'unchanged'
+    if now == old and fs_blocks == r.get('fs_target'):
+        return 'shrunk'
+    if now == new and fs_blocks == r.get('fs_target'):
+        return 'committed'
+    return 'unknown'
 
 
 def main(argv):
@@ -242,6 +302,19 @@ def main(argv):
             p = find(args[0], *(args[1:3] if len(args) >= 3 else ()))
             if p:
                 print(p)
+        elif cmd == 'online-target':
+            f = typed(args)
+            try:
+                print('TARGET=%d' % online_target(f['new_size'], f['section_blocks'], f['used_bytes'], f['blocks']))
+            except ValueError as e:
+                print('REFUSED: %s' % e)
+                return 1
+        elif cmd == 'online-state':
+            f = typed(args[1:])
+            try:
+                print('STATE=' + online_state(load(args[0]), f['head'], f['tail'], f.get('fs_blocks', -1), f.get('fs_uuid', '')))
+            except (OSError, KeyError):
+                print('STATE=unknown')
         elif cmd == 'check':
             try:
                 check(load(args[0]), typed(args[1:]))
