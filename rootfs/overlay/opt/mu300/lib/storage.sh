@@ -61,3 +61,37 @@ mu300_storage_sector_size() {  # mu300_storage_sector_size DISK: its logical blo
     case $_mu300ss in 4096) echo 4096 ;; *) echo 512 ;; esac
 }
 # --- storage end
+
+# The device code: 16 lowercase hex digits that name this device and no other - the first 16 of
+# sha256("mu300-audio-device-v1\n" + IDENTITY), IDENTITY being "emmc:" and the eMMC's CID, or "ufs:" and the UFS's
+# manufacturer and serial number (its string descriptors, "ufs:MANUFACTURER:SERIAL"), as sysfs gives them (one line,
+# the newline dropped). The installers read the same files on Android (tools/device-code.sh), so Linux and Android
+# give the same code; tests/test_device_code.py holds the two to it. A licence of mu300-audio names this code. The raw
+# identity is never printed: only its hash leaves here. Status 1 (nothing printed) when there is no identity to read.
+mu300_device_sha256() {  # stdin's sha256, lowercase hex
+    if command -v sha256sum >/dev/null 2>&1; then sha256sum | cut -d' ' -f1
+    elif command -v shasum >/dev/null 2>&1; then shasum -a 256 | cut -d' ' -f1
+    else openssl dgst -sha256 -r | cut -d' ' -f1; fi
+}
+mu300_device_identity() {  # the identity the code is made from; for mu300_device_code only, never to be shown
+    _mu300dd=$(mu300_storage_disk) || return 1
+    _mu300db=${MU300_SYS:-/sys}/block/$_mu300dd/device
+    if mu300_storage_ufs "$_mu300dd"; then
+        _mu300du=$_mu300db/../../../string_descriptors
+        _mu300dm=$(cat "$_mu300du/manufacturer_name" 2>/dev/null) || _mu300dm=
+        _mu300ds=$(cat "$_mu300du/serial_number" 2>/dev/null) || _mu300ds=
+        [ -n "$_mu300dm" ] && [ -n "$_mu300ds" ] || return 1
+        printf 'ufs:%s:%s' "$_mu300dm" "$_mu300ds"
+    else
+        _mu300dc=$(cat "$_mu300db/cid" 2>/dev/null) || _mu300dc=
+        [ -n "$_mu300dc" ] || return 1
+        printf 'emmc:%s' "$_mu300dc"
+    fi
+}
+mu300_device_code() {  # mu300_device_code: this device's code (one line, 16 hex digits); status 1 when none
+    _mu300di=$(mu300_device_identity) || return 1
+    _mu300dh=$(printf 'mu300-audio-device-v1\n%s' "$_mu300di" | mu300_device_sha256) || return 1
+    _mu300di=
+    case $_mu300dh in [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*) ;; *) return 1 ;; esac
+    printf '%s\n' "$_mu300dh" | cut -c1-16
+}

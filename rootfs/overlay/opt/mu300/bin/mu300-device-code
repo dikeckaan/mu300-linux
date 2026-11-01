@@ -1,0 +1,8 @@
+#!/bin/sh
+# This device's code: one line, 16 lowercase hex digits, the same on Linux and under Android (tools/device-code.sh)
+# and the same every boot - a hash of the internal disk's identity (an eMMC's CID, a UFS's manufacturer and serial
+# number), never that identity itself (lib/storage.sh's mu300_device_code). A licence of mu300-audio names this code:
+# the owner issues a package for the code a sponsor sends him.
+#   mu300-device-code     the code; exit status 1 and a message on stderr when the disk has no identity to read
+. "${MU300_STORAGE_LIB:-/opt/mu300/lib/storage.sh}"
+mu300_device_code || { echo "mu300-device-code: no identity of the internal disk to read" >&2; exit 1; }
