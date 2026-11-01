@@ -1380,6 +1380,28 @@ at() {
         self.assertNotIn('hook replay early', cmds)
         self.assertTrue(pending.exists())
 
+    def test_boot_pinned_sim2_replay_runs_under_radio_lock_before_rf_on(self):
+        hook = self.tmp / 'sim2-lock'
+        hook.write_text('#!/bin/sh\n[ "$1" = supported ] && exit 0\n'
+                        '[ "$MU300_SIM2_BOOT" = 1 ] || exit 9\n'
+                        '[ -L "$STUBLOG/run/mu300-radio-on.owner" ] || exit 8\n'
+                        'echo "- sim2-replay" >> "$STUBLOG/at"\nexit "${HOOK_RC:-0}"\n')
+        hook.chmod(0o755)
+        r, sent, cmds = self.radio('SIM_SLOT=1; radio_on; echo ok', MU300_SIM2_LOCK_BIN=hook)
+        self.assertIn('ok', r.stdout, r.stderr)
+        self.assertLess(cmds.index('sim2-replay'), cmds.index('AT+SFUN=4'))
+        # An interrupted write must be restored before dialling or enabling RF.
+        r, sent, cmds = self.radio('SIM_SLOT=1; radio_on || echo failed', MU300_SIM2_LOCK_BIN=hook, HOOK_RC=1)
+        self.assertIn('failed', r.stdout, r.stderr)
+        self.assertNotIn('AT+SFUN=4', cmds)
+        # It also runs before the already-on shortcut (LK may leave CFUN=1).
+        r, sent, cmds = self.radio('SIM_SLOT=1; radio_on; echo ok', MU300_SIM2_LOCK_BIN=hook, CFUN=1)
+        self.assertIn('ok', r.stdout, r.stderr)
+        self.assertIn('sim2-replay', cmds)
+        # The external SIM path remains unchanged.
+        r, sent, cmds = self.radio('SIM_SLOT=0; radio_on; echo ok', MU300_SIM2_LOCK_BIN=hook)
+        self.assertNotIn('sim2-replay', cmds)
+
     # suspend/resume: mu300-power takes the modem down while nobody uses the device. radio_on and up are replaced by a
     # line in the AT log (their own sequences are tested elsewhere); down is the real one, on the scratch run/.
     # radio_on also notes whether the mode file is still there; AT+SPENDC? answers "+ENDC: $ENDC" (1 by default).

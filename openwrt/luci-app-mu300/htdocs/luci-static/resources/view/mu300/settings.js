@@ -16,6 +16,11 @@ return view.extend({
 		o.value('atinout', _('atinout + serial port'));
 		o.value('custom', _('Custom adapter'));
 
+		o = s.option(form.Flag, 'sim2_lock_experimental', _('Experimental SIM2 NR locks (F50/V50)'));
+		o.default = '0';
+		o.rmempty = false;
+		o.description = _('Default off. Save and reboot to enable SIM2 NR band and cell lock testing on F50/V50. Simulation-tested only; LTE is not enabled. U30 Air/M3 keeps its existing path. Unlock first before disabling: this switch does not clear modem settings.');
+
 		o = s.option(form.Value, 'at_port', _('AT serial port'));
 		o.placeholder = '/dev/stty_nr1';
 		o.depends('at_backend', 'atinout');

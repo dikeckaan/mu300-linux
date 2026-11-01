@@ -4341,3 +4341,9 @@ msgstr "Ev şebekesi"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Modem kanalları başka okumalarla meşgul; canlı sinyal birazdan gelir"
+
+msgid "Experimental SIM2 NR locks (F50/V50)"
+msgstr "Deneysel SIM2 NR kilitleri (F50/V50)"
+
+msgid "Default off. Save and reboot to enable SIM2 NR band and cell lock testing on F50/V50. Simulation-tested only; LTE is not enabled. U30 Air/M3 keeps its existing path. Unlock first before disabling: this switch does not clear modem settings."
+msgstr "Varsayılan olarak kapalıdır. F50/V50 üzerinde SIM2 NR bant ve hücre kilitlerini denemek için kaydedip yeniden başlatın. Yalnızca benzetim testleri yapıldı; LTE etkin değildir. U30 Air/M3 mevcut yolunu kullanır. Kapatmadan önce kilitleri kaldırın: bu anahtar modem ayarlarını temizlemez."

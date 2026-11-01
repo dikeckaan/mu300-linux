@@ -7,9 +7,20 @@ P = TOP / 'rootfs/overlay/opt/mu300/bin'
 
 MODEM = r'''#!/usr/bin/python3
 import os,json,sys
-p=os.environ['MODEM'];d=json.load(open(p));q=sys.argv[-1];assert q.startswith('AT+SPACTCARD=1;+');q=q.split(';+',1)[1];d['log'].append(q)
+p=os.environ['MODEM'];d=json.load(open(p));q=sys.argv[-1]
+generic=os.environ.get('T_GENERIC')=='1'
+if generic:
+ assert q.startswith('AT+') and ';' not in q;q=q[3:]
+else:
+ assert q.startswith('AT+SPACTCARD=1;+');q=q.split(';+',1)[1]
+port=os.path.basename(os.environ['MU300_AT_DIR'])
+if not (generic and q=='SPACTCARD?'):
+ assert port==(('mu300-at2' if generic else 'mu300-at5') if q=='SFUN=4' else ('mu300-at' if generic else 'mu300-at4'))
+d['log'].append(q)
 o=''
 if q=='SPLBAND=3':o='+SPLBAND: '+d['nr']
+elif q=='SPACTCARD?':o='+SPACTCARD: '+os.environ.get('T_DATA_CARD' if port=='mu300-at2' else 'T_CARD','1')
+elif q=='SP5GCMDS="get nr support_band"':o='+SP5GCMDS: get nr support_band,'+os.environ.get('T_CAPS','6,41,78,1,8,28,5')
 elif q.startswith('SPLBAND=2,'):
  if d.pop('refuse',False):json.dump(d,open(p,'w'));print('ERROR');sys.exit(0)
  r=q.split(',',1)[1].split(',');d['nr']=','.join(r[:3]) if r[3]=='0' else ','.join(r)
@@ -19,7 +30,7 @@ elif q=='SPFORCEFRQ=16,4':d['cell']=[]
 elif q.startswith('SPFORCEFRQ=16,6,'):d['cell'].append(q.split(',',2)[2])
 elif q=='SPENGMD=0,14,1':o='41,0-524910,0-269,0-0'
 elif q=='CFUN?':o='+CFUN: '+str(d['rf'])
-elif q=='SFUN=5':d['rf']=0
+elif q=='SFUN=5':d['rf']=int(os.environ.get('T_RF_OFF','0'))
 elif q=='SFUN=4':
  d['rf']=1
  if d.pop('lose_cell',False):d['cell']=[]
@@ -28,7 +39,7 @@ json.dump(d,open(p,'w'));print(o+'\nOK' if o else 'OK')
 '''
 
 
-class Native(unittest.TestCase):
+class Fixture(unittest.TestCase):
 
     def setUp(self):
         self.p = Path(tempfile.mkdtemp(prefix='u30-native-'))
@@ -36,7 +47,7 @@ class Native(unittest.TestCase):
         self.bin = self.p / 'bin'
         self.bin.mkdir()
         s = (P / 'mu300-sim2-lock').read_text()
-        for pre in ['/run/mu300', '/etc/mu300', '/etc/unisoc-modem', '/usr/libexec/unisoc-modem', '/opt/mu300/bin', '/opt/mu300/busybox-bin', '/etc/openwrt_release', '/usr/share/unisoc-modem']:
+        for pre in ['/run/mu300', '/etc/mu300', '/etc/unisoc-modem', '/usr/libexec/unisoc-modem', '/opt/mu300/bin', '/opt/mu300/lib', '/opt/mu300/busybox-bin', '/etc/openwrt_release', '/usr/share/unisoc-modem']:
             s = s.replace(pre, str(self.root) + pre)
         self.helper = self.root / 'opt/mu300/bin/mu300-sim2-lock'
         self.helper.parent.mkdir(parents=True)
@@ -80,6 +91,8 @@ class Native(unittest.TestCase):
     def state(self):
         return json.loads(self.db.read_text())
 
+
+class Native(Fixture):
     def test_nr_lock_readback_restart_and_commit(self):
         r = self.call('apply', 'nr', '41')
         self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
@@ -267,5 +280,254 @@ class Native(unittest.TestCase):
         self.assertEqual(self.state()['cell'], [])
         self.assertFalse(pending.exists())
         self.assertNotIn('SFUN=4', self.state()['log'])
+class Experimental(Fixture):
+    def profile(self, device='f50', board=1, chip=0):
+        self.stub('mu300-device', 'echo ' + device, self.root / 'opt/mu300/bin')
+        (self.root / 'run/mu300-radio-freeze').unlink(missing_ok=True)
+        (self.root / 'run/mu300/sim2-lock-experimental').write_text(device)
+        self.env['T_GENERIC'] = '1'
+        for name in ['mu300-at', 'mu300-at2']:
+            d = self.root / 'run' / name
+            (d / 'owner').mkdir(parents=True, exist_ok=True)
+            os.mkfifo(d / 'cmd')
+            (d / 'owner/pid').write_text(str(os.getpid()))
+        key = 'f50'
+        if device == 'v50':
+            lib = self.root / 'opt/mu300/lib/v50-card.sh'
+            lib.parent.mkdir(parents=True)
+            lib.write_bytes((TOP / 'rootfs/overlay/opt/mu300/lib/v50-card.sh').read_bytes())
+            self.env['MU300_SYSROOT'] = str(self.root)
+            b = self.root / 'proc/driver/board_id'
+            b.parent.mkdir(parents=True)
+            b.write_text(str(board))
+            self.mux = self.p / 'mux'
+            self.mux.mkdir()
+            (self.mux / 'chip_select').write_text(str(chip))
+            (self.mux / 'psim_select').write_text('0')
+            self.env['MU300_V50_MUX'] = str(self.mux)
+            key = f'v50-board{board}-card{chip + 1}'
+        self.saved = self.root / ('etc/unisoc-modem/lock-state.d/sim2-' + key)
+        self.recovery = self.root / ('etc/mu300/sim2-' + key + '-recovery')
+
+    def boot_saved(self, rf=0):
+        self.saved.mkdir(exist_ok=True)
+        (self.saved / 'nr').write_text('41')
+        (self.saved / 'cell').write_text('524910,269\n')
+        d = self.state(); d['rf'] = rf; self.db.write_text(json.dumps(d))
+        return self.call('replay', MU300_SIM2_BOOT='1')
+
+    def test_f50_requires_explicit_matching_opt_in(self):
+        self.profile()
+        flag = self.root / 'run/mu300/sim2-lock-experimental'
+        for value in ['', 'v50', 'f50;reboot']:
+            flag.write_text(value)
+            self.assertNotEqual(self.call('apply', 'nr', '41').returncode, 0)
+        flag.unlink()
+        self.assertNotEqual(self.call('supported', 'nr').returncode, 0)
+        self.assertEqual(self.state()['log'], [])
+
+    def test_gui_switch_defaults_off_and_is_latched_until_next_boot(self):
+        self.profile()
+        flag = self.root / 'run/mu300/sim2-lock-experimental'
+        flag.unlink()
+        self.stub('uci', 'case $3 in unisoc_modem.main.sim2_lock_experimental) printf "%s" "${T_ENABLE:-0}";; esac')
+        self.assertEqual(self.call('boot-config').returncode, 0)
+        self.assertEqual(flag.read_text().strip(), 'off')
+        # Saving on during this boot (or restarting the service) cannot enable it.
+        self.assertEqual(self.call('boot-config', T_ENABLE='1').returncode, 0)
+        self.assertNotEqual(self.call('supported', 'nr', T_ENABLE='1').returncode, 0)
+        # New /run after reboot latches the persisted enabled switch.
+        flag.unlink()
+        self.assertEqual(self.call('boot-config', T_ENABLE='1').returncode, 0)
+        self.assertEqual(flag.read_text().strip(), 'f50')
+        self.assertEqual(self.call('supported', 'nr').returncode, 0)
+        # Disabling is latched on the next boot too.
+        self.assertEqual(self.call('boot-config', T_ENABLE='0').returncode, 0)
+        self.assertEqual(self.call('supported', 'nr').returncode, 0)
+        flag.unlink()
+        self.call('boot-config', T_ENABLE='0')
+        self.assertNotEqual(self.call('supported', 'nr').returncode, 0)
+        self.assertEqual(self.state()['log'], [])
+
+    def test_f50_lock_uses_boot_pinned_main_and_data_brokers(self):
+        self.profile()
+        r = self.call('apply', 'nr', '41')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual((self.saved / 'nr').read_text(), '41')
+        self.assertFalse(self.recovery.exists())
+        self.assertIn('SPACTCARD?', self.state()['log'])
+        self.assertEqual(json.loads(self.call('status').stdout)['experimental'], True)
+
+    def test_f50_nr_cell_and_unlock(self):
+        self.profile()
+        for value in ['auto', 'off-nr']:
+            r = self.call('apply', 'cell', value)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.state()['cell'], [])
+
+    def test_wrong_logical_card_never_writes(self):
+        self.profile()
+        r = self.call('apply', 'nr', '41', T_CARD='0')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertEqual(self.state()['log'], ['SPACTCARD?'])
+        self.assertFalse(self.recovery.exists())
+
+    def test_wrong_data_broker_never_restarts_the_other_card(self):
+        self.profile()
+        r = self.call('apply', 'nr', '41', T_DATA_CARD='0')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertEqual(self.state()['log'], ['SPACTCARD?', 'SPACTCARD?'])
+        self.assertFalse(self.recovery.exists())
+
+    def test_missing_or_incompatible_capabilities_do_not_drop_wan(self):
+        self.profile()
+        self.stub('ifdown', 'echo down >> "$MODEM.net"')
+        for caps in ['', '2,1,78', '3,1,41', 'bad,41', '1,79']:
+            r = self.call('apply', 'nr', '41', T_CAPS=caps)
+            self.assertNotEqual(r.returncode, 0, (caps, r.stdout))
+        self.assertFalse(Path(str(self.db) + '.net').exists())
+        self.assertFalse(self.recovery.exists())
+        self.assertFalse(any(x.startswith('SPLBAND=2') for x in self.state()['log']))
+
+    def test_f50_firmware_may_report_off_as_cfun2(self):
+        self.profile()
+        r = self.call('apply', 'nr', '41', T_RF_OFF='2')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_f50_refusal_rolls_back(self):
+        self.profile()
+        d = self.state(); d['refuse'] = True; self.db.write_text(json.dumps(d))
+        r = self.call('apply', 'nr', '41')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertEqual(self.state()['nr'], '0,0,0')
+        self.assertFalse((self.saved / 'nr').exists())
+        self.assertFalse(self.recovery.exists())
+
+    def test_live_ifup_never_replays_the_uncommitted_journal(self):
+        self.profile()
+        self.saved.mkdir(); (self.saved / 'nr').write_text('78')
+        self.stub('ifup', f'MU300_SIM2_BOOT=1 "{self.helper}" replay')
+        r = self.call('apply', 'nr', '41')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.state()['nr'], '0,0,16')
+        self.assertEqual((self.saved / 'nr').read_text(), '41')
+
+    def test_lock_lost_during_dial_is_not_saved(self):
+        self.profile()
+        script = self.bin / 'ifup'
+        script.write_text('#!/usr/bin/python3\nimport json,os\np=os.environ["MODEM"]\n'
+                          'd=json.load(open(p));d["cell"]=[];json.dump(d,open(p,"w"))\n')
+        script.chmod(0o755)
+        r = self.call('apply', 'cell', 'auto')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertFalse((self.saved / 'cell').exists())
+        self.assertFalse(self.recovery.exists())
+
+    def test_failed_boot_replay_keeps_journal_until_verified_recovery(self):
+        self.profile()
+        d = self.state();d['refuse'] = True;self.db.write_text(json.dumps(d))
+        r = self.boot_saved()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertTrue(self.recovery.exists())
+        self.assertNotIn('SFUN=4', self.state()['log'])
+        (self.saved.parent / 'auto_apply').write_text('off')
+        r = self.call('replay', MU300_SIM2_BOOT='1')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertFalse(self.recovery.exists())
+        self.assertEqual(self.state()['nr'], '0,0,0')
+
+    def test_lte_modes_and_reset_stay_guarded(self):
+        self.profile()
+        for kind in ['lte', 'mode', 'endc', 'reset']:
+            self.assertNotEqual(self.call('supported', kind).returncode, 0)
+        self.assertEqual(self.state()['log'], [])
+
+    def test_f50_boot_replay_before_rf_on_and_once_only(self):
+        self.profile()
+        r = self.boot_saved()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.state()['nr'], '0,0,16')
+        self.assertEqual(self.state()['cell'], ['524910,269'])
+        self.assertNotIn('SFUN=4', self.state()['log'])
+        before = self.state()['log']
+        self.assertEqual(self.call('replay', MU300_SIM2_BOOT='1').returncode, 0)
+        self.assertEqual(self.state()['log'], before)
+        self.assertFalse(self.recovery.exists())
+
+    def test_f50_boot_replay_when_bootloader_left_radio_on(self):
+        self.profile()
+        r = self.boot_saved(rf=1)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.state()['rf'], 1)
+        self.assertLess(self.state()['log'].index('SFUN=5'), self.state()['log'].index('SPLBAND=2,0,0,16,0'))
+        self.assertFalse(self.recovery.exists())
+
+    def test_boot_recovery_even_with_replay_disabled(self):
+        self.profile()
+        self.recovery.write_text('0,0,0\n')
+        (self.saved.parent / 'auto_apply').write_text('off')
+        d = self.state(); d['nr'] = '0,0,16'; d['rf'] = 0; self.db.write_text(json.dumps(d))
+        r = self.call('replay', MU300_SIM2_BOOT='1')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.state()['nr'], '0,0,0')
+        self.assertFalse(self.recovery.exists())
+
+    def test_invalid_saved_cells_are_checked_before_rf_or_lock_write(self):
+        self.profile()
+        self.saved.mkdir()
+        (self.saved / 'cell').write_text('524910,1008\n')
+        r = self.call('replay', MU300_SIM2_BOOT='1')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertFalse(self.recovery.exists())
+        self.assertEqual(self.state()['log'], ['SPACTCARD?', 'SPACTCARD?', 'CFUN?'])
+
+    def test_v50_state_uses_actual_physical_card(self):
+        self.profile('v50', board=1, chip=0)
+        r = self.call('apply', 'nr', '41')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        first = self.saved
+        (self.mux / 'chip_select').write_text('1')
+        r = self.call('apply', 'nr', '78')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual((first / 'nr').read_text(), '41')
+        self.assertEqual((first.parent / 'sim2-v50-board1-card2/nr').read_text(), '78')
+
+    def test_v50_absent_physical_card_and_unknown_board_refused(self):
+        self.profile('v50', board=3, chip=1)
+        self.assertNotEqual(self.call('supported', 'nr').returncode, 0)
+        (self.root / 'proc/driver/board_id').write_text('9')
+        self.assertNotEqual(self.call('supported', 'nr').returncode, 0)
+        self.assertEqual(self.state()['log'], [])
+
+    def test_all_v50_board_variants_only_offer_present_sim2_cards(self):
+        self.profile('v50')
+        for board in range(4):
+            for chip in range(2):
+                (self.root / 'proc/driver/board_id').write_text(str(board))
+                (self.mux / 'chip_select').write_text(str(chip))
+                r = self.call('status')
+                allowed = chip == 0 or board in (0, 1)
+                self.assertEqual(r.returncode == 0, allowed, (board, chip))
+                if allowed:
+                    self.assertEqual(json.loads(r.stdout)['profile'], f'v50-board{board}-card{chip + 1}')
+        self.assertEqual(self.state()['log'], [])
+
+    def test_v50_card_changed_while_waiting_for_radio_lock_is_refused(self):
+        self.profile('v50')
+        self.stub('mobile-data', f'echo 1 > "{self.mux}/chip_select";shift;exec "$@"', self.root / 'opt/mu300/bin')
+        r = self.call('apply', 'nr', '41')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertFalse(self.recovery.exists())
+        self.assertFalse(any(x.startswith('SPLBAND=2') for x in self.state()['log']))
+
+    def test_v50_boot_never_replays_other_physical_cards_state(self):
+        self.profile('v50', board=1, chip=0)
+        self.saved.mkdir(); (self.saved / 'nr').write_text('41')
+        (self.mux / 'chip_select').write_text('1')
+        r = self.call('replay', MU300_SIM2_BOOT='1')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.state()['log'], [])
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
