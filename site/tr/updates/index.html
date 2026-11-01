@@ -120,7 +120,17 @@ getirilir.</li>
 açılmazsa cihaz kendiliğinden Android'e döner.</li>
 </ol>
 <p>Çekirdek de aynı yolla değiştirilir: <code>sudo mu300-update kernel 6.18</code> (ya da <code>5.4</code>,
-<code>7.2</code>, <code>7.3</code>), sonra yeniden başlatın. Bkz. <a href="../choose/#kernels">çekirdek seçimi</a>.</p>
+<code>7.3</code>), sonra yeniden başlatın. Bkz. <a href="../choose/#kernels">çekirdek seçimi</a>.</p>
+<div class="callout">
+<strong>Çekirdek 7.2 artık desteklenmiyor</strong>
+<p>kernel.org 7.2 serisini sonlandırdı (son sürümü 7.2.15 idi); sürümler artık onu taşımıyor. 7.2'yi seçmiş bir cihaz,
+bir sonraki <code>sudo mu300-update apply</code> (ya da <code>mu300-update boot</code>) ile normal açılış güncellemesi
+üzerinden kararlı ana hat sürümü 7.3'ü alır: eski imaj <code>sudo mu300-update rollback-boot</code> için saklanır,
+açılmayan bir çekirdek cihazı kendiliğinden Android'e döndürür. Çıktı 7.2'nin artık desteklenmediğini söyler;
+<code>mu300-update check</code> ve <code>mu300-update kernel</code> da söyler. <code>sudo mu300-update kernel 7.2</code>
+reddedilir ve <code>sudo mu300-update kernel 7.3</code> (ya da 6.18) önerilir. Adında <code>k7.2</code> olan eski bir
+sürümün zip'i taşıdığı çekirdeği yine kurar (<a href="../choose/#kernel-72">ayrıntılar</a>).</p>
+</div>
 <p><strong>Sürüm adları</strong> sürümün derlendiği gün ve o günkü sırasıdır: <code>v2026.10.16.1</code>,
 <code>v2026.10.16.2</code>. Bunlar, "günü" yalnızca bir sayaç olan <code>v2026.10.27</code> gibi eski üç parçalı
 adların hepsinden yenidir. v2026.10.27 ya da daha eski bir cihaz bunlara her zamanki gibi

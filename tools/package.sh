@@ -42,6 +42,8 @@ package_load() {
         ubuntu-26.04:ubuntu:26.04:mu300-ubuntu-26.04-rootfs.tar.gz) ;;
         *) _pok= ;;
     esac
+    # (7.2 is retired; the zips of the releases that had it still install what they carry, and mu300-update moves
+    # such a device to 7.3 with its next update)
     case $PKG_KERNEL:$PKG_KERNEL_ASSET in
         5.4:mu300-kernel.tar.gz|6.18:mu300-kernel-6.18.tar.gz|7.2:mu300-kernel-7.2.tar.gz|7.3:mu300-kernel-7.3.tar.gz) ;;
         *) _pok= ;;

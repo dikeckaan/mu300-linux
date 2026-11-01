@@ -322,7 +322,8 @@ class Update(UpdateBase):
         boot = self.disk / 'boot'
         boot.mkdir()
         cases = [(None, '5.4', 'mu300-kernel.tar.gz'), ('6.18', '6.18', 'mu300-kernel-6.18.tar.gz'),
-                 ('7.2', '7.2', 'mu300-kernel-7.2.tar.gz'), ('7.3', '7.3', 'mu300-kernel-7.3.tar.gz'),
+                 # 7.2 is retired: its successor, never the 5.4 an unknown choice means (Ubuntu 26.04 does not run there)
+                 ('7.2', '7.3', 'mu300-kernel-7.3.tar.gz'), ('7.3', '7.3', 'mu300-kernel-7.3.tar.gz'),
                  ('5.4', '5.4', 'mu300-kernel.tar.gz'), ('7.4', '5.4', 'mu300-kernel.tar.gz'),
                  ('6.1', '5.4', 'mu300-kernel.tar.gz'), ('', '5.4', 'mu300-kernel.tar.gz')]
         for shell in self.each_shell():
@@ -333,6 +334,51 @@ class Update(UpdateBase):
                 else:
                     f.write_text(c + '\n')
                 self.assertEqual(self.up(shell, 'kernel_choice; kernel_asset').stdout.split(), [choice, asset], c)
+
+    def test_a_retired_kernel_is_refused_with_its_successor_and_shown_as_such(self):
+        boot = self.disk / 'boot'
+        boot.mkdir()
+        self.stub('uname', 'echo 7.2.15-mu300')
+        for shell in self.each_shell():
+            (boot / 'kernel').write_text('7.2\n')
+            r = self.up(shell, 'kernel_cmd 7.2')
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('kernel 7.2 is retired', r.stderr)
+            self.assertIn('sudo mu300-update kernel 7.3', r.stderr)
+            # nothing is written down by the refusal
+            self.assertEqual((boot / 'kernel').read_text(), '7.2\n')
+            r = self.up(shell, 'kernel_cmd')
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn('kernel: 7.3 (running 7.2.15-mu300)', r.stdout)
+            self.assertIn('kernel 7.2 was chosen, and it is retired: the next update (mu300-update apply) installs 7.3', r.stdout)
+            r = self.up(shell, 'kernel_retired_note; kernel_retired_note')
+            self.assertEqual(r.stdout.count('kernel: 7.2 is retired'), 1, r.stdout)
+            self.assertIn('this device moves to 7.3', r.stdout)
+            # a kernel that is not retired says nothing, and an unknown one is not taken for a retired one
+            for c in ('7.3', '6.18', '6.6'):
+                (boot / 'kernel').write_text(c + '\n')
+                self.assertEqual(self.up(shell, 'kernel_retired_note; kernel_cmd 2>/dev/null | sed 1d').stdout, '', c)
+                self.assertNotEqual(self.up(shell, f'kernel_retired {c}').returncode, 0, c)
+            r = self.up(shell, 'kernel_cmd 7.1')
+            self.assertIn('usage: mu300-update kernel [5.4|6.18|7.3]', r.stderr)
+
+    def test_the_retired_choice_settles_only_on_an_image_of_its_successor(self):
+        boot = self.disk / 'boot'
+        boot.mkdir()
+        rel = self.tmp / 'kernel.release'
+        for shell in self.each_shell():
+            for krel, want in (('7.3.1-mu300', '7.3'), ('7.2.15-mu300', '7.2'), ('6.18.60', '7.2'), (None, '7.3')):
+                (boot / 'kernel').write_text('7.2\n')
+                rel.unlink(missing_ok=True)
+                if krel:
+                    rel.write_text(krel + '\n')
+                r = self.up(shell, f'kernel_choice_settle "{rel}"')
+                self.assertEqual((boot / 'kernel').read_text().strip(), want, krel)
+                self.assertEqual('the choice is 7.3 now (it was 7.2)' in r.stdout, want == '7.3', krel)
+            # a choice that is not retired is left alone
+            (boot / 'kernel').write_text('6.18\n')
+            self.up(shell, f'kernel_choice_settle "{rel}"')
+            self.assertEqual((boot / 'kernel').read_text(), '6.18\n')
 
     def test_byte_helpers(self):
         # the boot image header is edited with these: sizes little endian, the AVB footer big endian
@@ -1173,6 +1219,41 @@ class KernelStep(UpdateBase):
             self.assertEqual(self.ko(u), old)
             self.assertEqual(self.ko(o), old)
             self.assertEqual(self.ko(pm / 'ubuntu'), old)
+
+    def test_a_device_on_the_retired_7_2_gets_7_3_and_rollback_boot_brings_7_2_back(self):
+        # 7.2 is retired: a release has no mu300-kernel-7.2.tar.gz. The device that chose it gets 7.3 through the usual
+        # step (the image in the slot kept for rollback-boot), is told so, and has 7.3 written down after it
+        old = {'a.ko': b'old a'}
+        new = {'a.ko': b'new a', 'b.ko': b'new b'}
+        for shell in self.each_shell():
+            img = self.old_image(self.KREL)
+            (self.disk / 'boot/kernel').write_text('7.2\n')
+            (self.disk / 'boot/installed.kernel').write_text('7.2\n')
+            self.systems(old)
+            self.make_bundle(new, krel='7.3.1').rename(self.src / 'mu300-kernel-7.3.tar.gz')
+            r = self.run_step(shell, **self.busybox_applets(shell))
+            self.assertIn('rc=0', r.stdout, r.stderr)
+            self.assertIn('kernel: 7.2 is retired', r.stdout)
+            self.assertIn('this device moves to 7.3', r.stdout)
+            self.assertIn('kernel: the choice is 7.3 now (it was 7.2)', r.stdout)
+            self.assertIn('boot: updated to v2026.10.18.1', r.stdout)
+            self.assertEqual(self.part.read_bytes()[4096:4196], b'N' * 100)
+            self.assertEqual((self.disk / 'boot/kernel').read_text().strip(), '7.3')
+            self.assertEqual((self.disk / 'boot/installed.kernel').read_text().strip(), '7.3')
+            self.assertEqual((self.disk / 'boot/prev.kernel').read_text().strip(), '7.2')
+            # the next run says nothing of 7.2 any more
+            self.assertNotIn('retired', self.up(shell, 'kernel_retired_note').stdout)
+            r = self.up(shell, (self.STUBS % self.PSIZE) + 'rollback_boot; echo "rc=$?"', PART=self.part,
+                        MU300_NO_DEPMOD=1, **self.busybox_applets(shell))
+            self.assertIn('rc=0', r.stdout, r.stderr)
+            self.assertEqual(self.part.read_bytes()[:1 << 20], img[:1 << 20])
+            self.assertEqual((self.disk / 'boot/kernel').read_text().strip(), '7.2')
+            self.assertIn('Kernel 7.2 is retired: the next update (mu300-update apply) installs 7.3 again', r.stdout)
+            self.assertEqual(self.up(shell, 'kernel_asset').stdout.strip(), 'mu300-kernel-7.3.tar.gz')
+            (self.src / 'mu300-kernel-7.3.tar.gz').unlink()
+            for f in ('prev.body', 'prev.kernel', 'installed.kernel', 'installed.tag', 'installed.id'):
+                (self.disk / 'boot' / f).unlink(missing_ok=True)
+            shutil.rmtree(self.disk / 'boot/prev.modules', ignore_errors=True)
 
     def test_a_restart_before_the_image_is_written_puts_the_kept_set_back(self):
         # #422: a restart while the step ran left the systems with the new build's modules and the slot with the image

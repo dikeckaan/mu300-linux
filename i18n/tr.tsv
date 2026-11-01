@@ -89,21 +89,20 @@ Which kernel?	Hangi çekirdek?
 1) 5.4   Unisoc's vendor kernel (Android 12 base): the longest tested, everything this project supports	1) 5.4   Unisoc'un üretici çekirdeği (Android 12 tabanlı): en uzun süre test edilen, projenin desteklediği her şey çalışır
 2) 6.18  mainline Linux, current long-term (LTS) release: newer drivers and security fixes, the same	2) 6.18  ana hat (mainline) Linux, güncel uzun süreli destek (LTS) sürümü: daha yeni sürücüler ve güvenlik düzeltmeleri,
          functions (hotspot, mobile data, SMS, Bluetooth, VPN, GPU); no USB-C video output yet	         aynı işlevler (hotspot, mobil veri, SMS, Bluetooth, VPN, GPU); USB-C görüntü çıkışı henüz yok
-3) 7.2   mainline Linux, stable release: newer drivers, the same functions	3) 7.2   ana hat (mainline) Linux, kararlı sürüm: daha yeni sürücüler, 6.18 ile aynı
+3) 7.3   mainline Linux, stable release: newer drivers, the same functions	3) 7.3   ana hat (mainline) Linux, kararlı sürüm: daha yeni sürücüler, 6.18 ile aynı
          as 6.18; tested less than 6.18	         işlevler; 6.18'den daha az test edildi
-4) 7.3   the newest mainline Linux (7.3 for now): the newest drivers, the same functions	4) 7.3   en yeni ana hat (mainline) Linux (şimdilik 7.3): en yeni sürücüler, 6.18 ile aynı
-         as 6.18; tested less than 7.2	         işlevler; 7.2'den daha az test edildi
-This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2|7.3	Bu seçim sonradan cihazda değiştirilebilir: sudo mu300-update kernel 5.4|6.18|7.2|7.3
+This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.3	Bu seçim sonradan cihazda değiştirilebilir: sudo mu300-update kernel 5.4|6.18|7.3
 Which Ubuntu?	Hangi Ubuntu?
 1) 24.04 LTS  the longest tested, supported until 2029	1) 24.04 LTS  en uzun süre test edilen, 2029'a kadar destekleniyor
-2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18, 7.2 or 7.3	2) 26.04 LTS  en yenisi (systemd 259, daha yeni paketler), 2031'e kadar destekleniyor; kernel 6.18, 7.2 veya 7.3
+2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18 or 7.3	2) 26.04 LTS  en yenisi (systemd 259, daha yeni paketler), 2031'e kadar destekleniyor; kernel 6.18 veya 7.3
 Ubuntu	Ubuntu
-Ubuntu 26.04 needs a mainline kernel (6.18, 7.2 or 7.3): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).	Ubuntu 26.04 ana hat (mainline) bir çekirdek gerektirir (6.18, 7.2 ya da 7.3): programları 5.4'te olmayan sistem çağrılarını kullanıyor (örneğin tar orada klasör içeren arşivleri açamıyor).
+Ubuntu 26.04 needs a mainline kernel (6.18 or 7.3): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).	Ubuntu 26.04 ana hat (mainline) bir çekirdek gerektirir (6.18 ya da 7.3): programları 5.4'te olmayan sistem çağrılarını kullanıyor (örneğin tar orada klasör içeren arşivleri açamıyor).
 this copy has changes of its own, so {1} files were left as they are	bu kopyanın kendi değişiklikleri var, {1} dosya olduğu gibi bırakıldı
 no answer left for the question: {1}	bu soru için başka cevap kalmadı: {1}
 Device	Cihaz
 Kernel	Çekirdek
-enter 1, 2, 3 or 4	1, 2, 3 ya da 4 girin
+enter 1, 2 or 3	1, 2 ya da 3 girin
+Kernel 7.2 is retired (its last release was 7.2.15): installing 7.3, the kernel that takes its place.	Çekirdek 7.2 artık desteklenmiyor (son sürümü 7.2.15 idi): yerine geçen 7.3 kuruluyor.
 A MU300 Linux installation is already on this device.	Bu cihazda zaten bir MU300 Linux kurulumu var.
 update  install the new release over the systems and keep everything you added or changed in them	update  yeni sürümü sistemlerin üzerine kurar, eklediğiniz ve değiştirdiğiniz her şeyi korur
         (files, settings, accounts; packages you installed come back at the first boot)	        (dosyalar, ayarlar, hesaplar; kurduğunuz paketler ilk açılışta yeniden kurulur)
@@ -236,7 +235,7 @@ MU300_BOOT_OS={1}, but {1} is not installed	MU300_BOOT_OS={1}, ancak {1} kurulu 
 Magisk's magiskboot was not found; install this zip with Magisk 26 or newer	Magisk'in magiskboot aracı bulunamadı; bu zip'i Magisk 26 veya daha yenisiyle kurun
 Plan	Plan
 Take the card out and install the zip again, or install to the card (MU300_STORAGE=sd in /sdcard/mu300-install.conf).	Kartı çıkarıp zip'i yeniden kurun ya da karta kurun (/sdcard/mu300-install.conf dosyasında MU300_STORAGE=sd).
-Ubuntu 26.04 is installed, and it needs a mainline kernel (6.18, 7.2 or 7.3): use a zip with one of those kernels, or MU300_MODE=wipe.	Ubuntu 26.04 kurulu ve ana hat çekirdek (6.18, 7.2 veya 7.3) gerektiriyor: bu çekirdeklerden birini içeren bir zip kullanın ya da MU300_MODE=wipe.
+Ubuntu 26.04 is installed, and it needs a mainline kernel (6.18 or 7.3): use a zip with one of those kernels, or MU300_MODE=wipe.	Ubuntu 26.04 kurulu ve ana hat çekirdek (6.18 veya 7.3) gerektiriyor: bu çekirdeklerden birini içeren bir zip kullanın ya da MU300_MODE=wipe.
 Unpacking {1} and {2}	{1} ve {2} açılıyor
 already there:  {1}	zaten kurulu:   {1}
 boot_a and boot_b are the same partition	boot_a ve boot_b aynı bölüm
@@ -410,15 +409,14 @@ Systems	Sistemler
 One or both. With both, mu300-os switches between them later.	Biri ya da ikisi. İkisi de kurulursa sonradan mu300-os ile aralarında geçiş yapılır.
 The full distribution with apt; about 500 MiB of RAM in use. Needs {1}.	apt içeren tam dağıtım; yaklaşık 500 MiB RAM kullanır. {1} gerektirir.
 24.04 LTS: the longest tested, supported until 2029	24.04 LTS: en uzun süre test edilen, 2029'a kadar destekleniyor
-26.04 LTS: the newest, supported until 2031; needs kernel 6.18, 7.2 or 7.3	26.04 LTS: en yenisi, 2031'e kadar destekleniyor; 6.18, 7.2 ya da 7.3 çekirdeğini gerektirir
+26.04 LTS: the newest, supported until 2031; needs kernel 6.18 or 7.3	26.04 LTS: en yenisi, 2031'e kadar destekleniyor; 6.18 ya da 7.3 çekirdeğini gerektirir
 A router system with the LuCI web interface; about 140 MiB of RAM in use. Needs {1}.	LuCI web arayüzlü bir yönlendirici sistemi; yaklaşık 140 MiB RAM kullanır. {1} gerektirir.
 The standard LuCI web interface	Standart LuCI web arayüzü
 With the MU300 control panel: dashboard, cellular locks, SMS, AT terminal, USB modes	MU300 kontrol paneliyle: pano, hücresel kilitler, SMS, AT terminali, USB kipleri
-It can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2|7.3	Sonradan cihazda değiştirilebilir: sudo mu300-update kernel 5.4|6.18|7.2|7.3
+It can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.3	Sonradan cihazda değiştirilebilir: sudo mu300-update kernel 5.4|6.18|7.3
 5.4  —  the vendor kernel: the longest tested, everything this project supports	5.4  —  üretici çekirdeği: en uzun süre test edilen, projenin desteklediği her şey çalışır
 6.18  —  mainline Linux, long-term release: newer drivers and security fixes; no USB-C video output yet	6.18  —  ana hat (mainline) Linux, uzun süreli destek sürümü: daha yeni sürücüler ve güvenlik düzeltmeleri; USB-C görüntü çıkışı henüz yok
-7.2  —  mainline Linux, stable release; tested less than 6.18	7.2  —  ana hat (mainline) Linux, kararlı sürüm; 6.18'den daha az test edildi
-7.3  —  the newest mainline Linux; tested less than 7.2	7.3  —  en yeni ana hat (mainline) Linux; 7.2'den daha az test edildi
+7.3  —  mainline Linux, stable release; tested less than 6.18	7.3  —  ana hat (mainline) Linux, kararlı sürüm; 6.18'den daha az test edildi
 Release	Sürüm
 Starting	Açılış
 Start Linux by default instead of Android	Varsayılan olarak Android yerine Linux açılsın
@@ -751,7 +749,7 @@ This is not a ZTE F50/MU300 or U30 Air.	Bu bir ZTE F50/MU300 ya da U30 Air deği
 The device has not been checked yet.	Cihaz henüz kontrol edilmedi.
 Choose at least one system.	En az bir sistem seçin.
 That choice needs about {1} and the place has {2}.	Bu seçim yaklaşık {1} gerektiriyor, burada ise {2} var.
-Ubuntu 26.04 needs a mainline kernel: choose 6.18, 7.2 or 7.3.	Ubuntu 26.04 ana hat (mainline) bir çekirdek gerektirir: 6.18, 7.2 ya da 7.3 seçin.
+Ubuntu 26.04 needs a mainline kernel: choose 6.18 or 7.3.	Ubuntu 26.04 ana hat (mainline) bir çekirdek gerektirir: 6.18 ya da 7.3 seçin.
 Choose a kernel.	Bir çekirdek seçin.
 Failed boots before Android: a number from 1 to 6.	Android'e dönmeden önceki başarısız açılış sayısı: 1 ile 6 arasında bir sayı.
 The password needs {1} characters or more.	Şifre en az {1} karakter olmalı.
@@ -790,8 +788,8 @@ more than one device runs MU300 Linux and adb could not reboot this one: boot An
 This looks like a ZTE V50 but is not one this installer knows (model V50, device MU3351, platform ums9620): {1}	Bu bir ZTE V50 gibi görünüyor ama bu kurulum programının tanıdığı bir V50 değil (model V50, cihaz MU3351, platform ums9620): {1}
 ZTE V50: EXPERIMENTAL, tested by nobody in this project (kano ported it); mainline kernel only; no second SIM, no NFC; USB network 192.168.79.1	ZTE V50: DENEYSEL, bu projede kimse denemedi (kano uyarladı); yalnızca ana hat (mainline) çekirdek; ikinci SIM yok, NFC yok; USB ağı 192.168.79.1
 The ZTE V50 runs a mainline kernel only: install a prebuilt release (without --build)	ZTE V50 yalnızca ana hat (mainline) çekirdekle çalışır: hazır bir sürüm kurun (--build olmadan)
-The ZTE V50 runs a mainline kernel only (6.18, 7.2 or 7.3).	ZTE V50 yalnızca ana hat (mainline) çekirdekle çalışır (6.18, 7.2 ya da 7.3).
-The ZTE V50 runs only a mainline kernel of a release that knows it: take the zip for kernel 6.18, 7.2 or 7.3 (of a newer release if this one has none)	ZTE V50 yalnızca onu tanıyan bir sürümün ana hat (mainline) çekirdeğiyle çalışır: 6.18, 7.2 ya da 7.3 çekirdeğinin zip dosyasını alın (bu sürümde yoksa daha yeni bir sürümün)
+The ZTE V50 runs a mainline kernel only (6.18 or 7.3).	ZTE V50 yalnızca ana hat (mainline) çekirdekle çalışır (6.18 ya da 7.3).
+The ZTE V50 runs only a mainline kernel of a release that knows it: take the zip for kernel 6.18 or 7.3 (of a newer release if this one has none)	ZTE V50 yalnızca onu tanıyan bir sürümün ana hat (mainline) çekirdeğiyle çalışır: 6.18 ya da 7.3 çekirdeğinin zip dosyasını alın (bu sürümde yoksa daha yeni bir sürümün)
 a prepared installation is waiting (tools/resume.sh): this installer does not update itself until it is done	hazırlanmış bir kurulum bekliyor (tools/resume.sh): bu kurulum programı o bitene kadar kendini güncellemez
 could not read what identifies this device (serial, eMMC CID, userdata)	bu cihazı tanımlayan bilgiler okunamadı (seri numarası, eMMC CID, userdata)
 the partition table and the running kernel disagree about userdata; reboot Android and try again	bölüm tablosu ile çalışan çekirdek userdata konusunda uyuşmuyor; Android'i yeniden başlatıp tekrar deneyin
@@ -838,7 +836,7 @@ Rewrite the partition table and ask Android's recovery for the reset	Bölüm tab
 Package: {1} with kernel {2}, release {3} (unpacked Magisk zip at {4})	Paket: {1}, {2} çekirdeği, sürüm {3} ({4} konumunda açılmış Magisk zip'i)
 This package installs {1} with kernel {2} (release {3}); nothing is downloaded.	Bu paket {1} ve {2} çekirdeğini kurar (sürüm {3}); hiçbir şey indirilmez.
 Another system or kernel: the zip of that combination, or ./install.sh of the project.	Başka bir sistem ya da çekirdek için: o birleşimin zip'i ya da projenin ./install.sh dosyası.
-The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18, 7.2 or 7.3 of this release	ZTE V50 yalnızca ana hat (mainline) çekirdekle çalışır: bu sürümün 6.18, 7.2 ya da 7.3 çekirdekli zip'ini alın
+The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18 or 7.3 of this release	ZTE V50 yalnızca ana hat (mainline) çekirdekle çalışır: bu sürümün 6.18 ya da 7.3 çekirdekli zip'ini alın
 It is not part of this package.	Bu paketin parçası değildir.
 Checking the files of this package	Bu paketin dosyaları doğrulanıyor
 no unpacked Magisk zip at {1}	{1} konumunda açılmış bir Magisk zip'i yok

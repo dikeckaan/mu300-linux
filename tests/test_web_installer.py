@@ -73,11 +73,11 @@ class JavaScript(unittest.TestCase):
                       'for (const f of process.argv.slice(2)) console.log(JSON.stringify(await inspectMagiskZip(new Blob([readFileSync(f)]))));\n')
             (tmp / 'inspect.mjs').write_text(script)
             zips = sorted((tmp / 'out').glob('*.zip'))
-            self.assertEqual(len(zips), 15)
+            self.assertEqual(len(zips), 11)
             r = subprocess.run([NODE, str(tmp / 'inspect.mjs')] + [str(z) for z in zips], capture_output=True, text=True, timeout=120)
             self.assertEqual(r.returncode, 0, r.stderr)
             seen = [json.loads(l) for l in r.stdout.splitlines()]
-            self.assertEqual(len(seen), 15)
+            self.assertEqual(len(seen), 11)
             for z, info in zip(zips, seen):
                 self.assertEqual(f"mu300-magisk-{info['tag']}-{info['system']}-k{info['kernel']}.zip", z.name)
                 self.assertTrue(info['web'], z.name)
@@ -152,7 +152,7 @@ class Strings(unittest.TestCase):
         fam['err.adb.access.'] = {'windows', 'linux', 'mac', 'android', 'other'}
         fam['lock.'] = fam['explain.lock.'] = {'unlocked', 'locked', 'unknown'}
         fam['sys.about.'] = {'ubuntu-24.04', 'ubuntu-26.04', 'openwrt', 'openwrt-luci'}
-        fam['kernel.'] = {'5.4', '6.18', '7.2', '7.3'}
+        fam['kernel.'] = {'5.4', '6.18', '7.3', 'retired'}
         fam['job.kind.'] = {'plan', 'install', 'uninstall'}
         fam['review.pw.'] = {'given', 'kept', 'image'}
         fam['wizard.step.'] = set(re.search(r'WSTEPS = \[(.*?)\]', app).group(1).replace('"', '').split(', '))
@@ -287,7 +287,7 @@ class Pages(unittest.TestCase):
             import os
             tag = 'v2026.11.01'
             (tmp / 'zips').mkdir()
-            names = [f'mu300-magisk-{tag}-openwrt-k6.18.zip', f'mu300-magisk-{tag}-ubuntu-24.04-k7.2.zip']
+            names = [f'mu300-magisk-{tag}-openwrt-k6.18.zip', f'mu300-magisk-{tag}-ubuntu-24.04-k7.3.zip']
             for n, size in zip(names, (300000, 2 * 1048576 + 17)):
                 (tmp / 'zips' / n).write_bytes(os.urandom(size))
             (tmp / 'zips' / 'mu300-magisk-v2026.10.01-openwrt-k6.18.zip').write_bytes(b'another release')

@@ -1,6 +1,6 @@
 name: Release
 
-# The whole release on a GitHub arm64 runner: the vendor 5.4 kernel (kernel/build-all.sh), the mainline 6.18, 7.2 and 7.3
+# The whole release on a GitHub arm64 runner: the vendor 5.4 kernel (kernel/build-all.sh), the mainline 6.18 and 7.3
 # kernels with their modules (upstream/build.sh, build-modules.sh), then tools/make-release.sh, which builds the root
 # filesystems and the extras, audits every asset and publishes the release. Actions > Release > Run workflow on main,
 # with the tag left empty (the next one of today: vYYYY.MM.DD.N, tools/make-release.sh --next-tag, docs/FINDINGS.md
@@ -23,9 +23,6 @@ on:
         default: true
       kv618:
         description: 'The 6.18 kernel to build (empty: the newest 6.18 longterm on kernel.org)'
-        required: false
-      kv72:
-        description: 'The 7.2 kernel to build (empty: the newest 7.2 on kernel.org)'
         required: false
       kv73:
         description: 'The 7.3 kernel to build (empty: the newest 7.3 on kernel.org: 7.3, then 7.3.1, ...)'
@@ -81,10 +78,9 @@ jobs:
         id: kv
         env:
           KV618: ${{ inputs.kv618 }}
-          KV72: ${{ inputs.kv72 }}
           KV73: ${{ inputs.kv73 }}
         run: |
-          curl -fsSL https://www.kernel.org/releases.json | KV618="$KV618" KV72="$KV72" KV73="$KV73" python3 -c '
+          curl -fsSL https://www.kernel.org/releases.json | KV618="$KV618" KV73="$KV73" python3 -c '
           import json, os, re, sys
           # a mainline release is X.Y (its tarball linux-7.3.tar.xz, its kernel release 7.3.0) until its first stable
           # update X.Y.1; release candidates (7.4-rc1) are not on the CDN and never match
@@ -92,7 +88,7 @@ jobs:
           def newest(series):
               got = sorted((v for v in vs if v == series or v.startswith(series + ".")), key=lambda v: [int(p) for p in v.split(".")])
               return got[-1] if got else sys.exit("no %s kernel on kernel.org" % series)
-          for name, series in (("kv618", "6.18"), ("kv72", "7.2"), ("kv73", "7.3")):
+          for name, series in (("kv618", "6.18"), ("kv73", "7.3")):
               v = os.environ[name.upper()] or newest(series)
               if not re.fullmatch(series.replace(".", r"\.") + r"(\.[0-9]+)?", v): sys.exit("not a %s kernel: %s" % (series, v))
               print(name + "=" + v)
@@ -133,12 +129,6 @@ jobs:
         with:
           path: upstream/out
           key: kernel-${{ steps.kv.outputs.kv618 }}-${{ steps.kv.outputs.treeup }}
-      - name: Mainline 7.2 outputs from the cache
-        id: c72
-        uses: actions/cache/restore@v4
-        with:
-          path: upstream/out-7.2
-          key: kernel-${{ steps.kv.outputs.kv72 }}-${{ steps.kv.outputs.treeup }}
       - name: Mainline 7.3 outputs from the cache
         id: c73
         uses: actions/cache/restore@v4
@@ -146,7 +136,7 @@ jobs:
           path: upstream/out-7.3
           key: kernel-${{ steps.kv.outputs.kv73 }}-${{ steps.kv.outputs.treeup }}
       - name: Mainline build environment
-        if: steps.c618.outputs.cache-hit != 'true' || steps.c72.outputs.cache-hit != 'true' || steps.c73.outputs.cache-hit != 'true'
+        if: steps.c618.outputs.cache-hit != 'true' || steps.c73.outputs.cache-hit != 'true'
         run: |
           sudo -E docker build -t mu300-mainline-build upstream/
           sudo -E docker volume create mu300-mainline
@@ -163,19 +153,6 @@ jobs:
         with:
           path: upstream/out
           key: kernel-${{ steps.kv.outputs.kv618 }}-${{ steps.kv.outputs.treeup }}
-      - name: Mainline 7.2
-        if: steps.c72.outputs.cache-hit != 'true'
-        env:
-          KV: ${{ steps.kv.outputs.kv72 }}
-        run: |
-          sudo -E docker run --rm -e KV="$KV" -e OUTDIR=out-7.2 -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build.sh
-          sudo -E docker run --rm -e KV="$KV" -e OUTDIR=out-7.2 -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build-modules.sh > /dev/null
-          ls upstream/out-7.2/modules/*.ko | wc -l
-      - if: steps.c72.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: upstream/out-7.2
-          key: kernel-${{ steps.kv.outputs.kv72 }}-${{ steps.kv.outputs.treeup }}
       - name: Mainline 7.3
         if: steps.c73.outputs.cache-hit != 'true'
         env:
@@ -189,7 +166,7 @@ jobs:
         with:
           path: upstream/out-7.3
           key: kernel-${{ steps.kv.outputs.kv73 }}-${{ steps.kv.outputs.treeup }}
-      # the three mainline trees with every module (FINDINGS 163) share one volume, ~21 GB; the runner had ~108 GB free
+      # the mainline trees with every module (FINDINGS 163) share one volume, ~14 GB for the two; the runner had ~108 GB free
       - name: Disk after the kernels
         if: always()
         run: |
@@ -197,7 +174,7 @@ jobs:
           sudo du -sh /var/lib/docker/volumes/mu300-mainline 2>/dev/null || true
       - name: Build logs
         if: failure()
-        run: tail -n 60 upstream/out/modules/*.log upstream/out-7.2/modules/*.log upstream/out-7.3/modules/*.log 2>/dev/null || true
+        run: tail -n 60 upstream/out/modules/*.log upstream/out-7.3/modules/*.log 2>/dev/null || true
       # MU300_RELEASE_KEY: the release key (a usign secret key, see tools/sign-release.sh). With it make-release.sh
       # signs SHA256SUMS and publishes SHA256SUMS.sig; without it the release is as it always was - unless the tree
       # has the public key (rootfs/overlay/opt/mu300/lib/release.pub), and then nothing is published unsigned.

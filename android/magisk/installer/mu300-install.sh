@@ -351,7 +351,7 @@ payload_unpack() {  # the two payload files copied out of the zip into W, and on
     tar -xzf "$W/kernel.tar.gz" -C "$W/kernel" && rm -f "$W/kernel.tar.gz" || die "$(t 'could not unpack the kernel bundle')"
     KB=$W/kernel
     if [ "$DEVICE" = v50 ] && ! grep -qw v50 "$KB/devices" 2>/dev/null; then
-        die "$(t 'The ZTE V50 runs only a mainline kernel of a release that knows it: take the zip for kernel 6.18, 7.2 or 7.3 (of a newer release if this one has none)')"
+        die "$(t 'The ZTE V50 runs only a mainline kernel of a release that knows it: take the zip for kernel 6.18 or 7.3 (of a newer release if this one has none)')"
     fi
     grep -qw "$DEVICE" "$KB/devices" 2>/dev/null || die "$(t 'this kernel does not support the {1}' "$DEVICE")"
 }
@@ -514,7 +514,7 @@ plan_choices() {
     case $_after in *ubuntu*openwrt*|*openwrt*ubuntu*) _need=$NEED_BOTH ;; *) _need=$(need_for "$OS") ;; esac
     [ "$TARGET_SIZE" -ge "$_need" ] || die "$(t 'that choice needs about {1} MiB and this device has {2} MiB of free space' "$((_need / 1048576))" "$((TARGET_SIZE / 1048576))")"
     if [ "$KERNEL" = 5.4 ] && case " $HAVE_SYSTEMS " in *" ubuntu "*) [ "$HAVE_UBUNTU" = 26.04 ] ;; *) false ;; esac; then
-        die "$(t 'Ubuntu 26.04 is installed, and it needs a mainline kernel (6.18, 7.2 or 7.3): use a zip with one of those kernels, or MU300_MODE=wipe.')"
+        die "$(t 'Ubuntu 26.04 is installed, and it needs a mainline kernel (6.18 or 7.3): use a zip with one of those kernels, or MU300_MODE=wipe.')"
     fi
     sd_kernel_ok "$KB" || die "$(t 'this kernel cannot read the SD card; use a newer zip')"
     # Never back to an older release by itself: the new image does the carrying over, and one from before the first

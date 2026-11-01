@@ -21,7 +21,7 @@ Think of it as a Raspberry Pi that already has a 5G modem, a Wi-Fi access point 
 |---|---|
 | understand what you need and install it | [Installation](Installation) |
 | pick between Ubuntu, OpenWrt and OpenWrt with the control panel | [Choosing a System](Choosing-a-System) |
-| pick a kernel (5.4, 6.18, 7.2 or 7.3) | [Kernels](Kernels) |
+| pick a kernel (5.4, 6.18 or 7.3) | [Kernels](Kernels) |
 | get mobile data working, set an APN | [Mobile Data and APN](Mobile-Data-and-APN) |
 | change the hotspot, or join another Wi-Fi | [Wi-Fi Hotspot and Client](Wi-Fi-Hotspot-and-Client) |
 | read and send text messages | [SMS](SMS) |

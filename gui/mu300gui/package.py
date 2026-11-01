@@ -15,6 +15,8 @@ SYSTEMS = {'openwrt': ('openwrt', '', 'mu300-openwrt-rootfs.tar.gz'),
            'openwrt-luci': ('openwrt-luci', '', 'mu300-openwrt-luci-rootfs.tar.gz'),
            'ubuntu-24.04': ('ubuntu', '24.04', 'mu300-ubuntu-rootfs.tar.gz'),
            'ubuntu-26.04': ('ubuntu', '26.04', 'mu300-ubuntu-26.04-rootfs.tar.gz')}
+# (7.2 is retired; the zips of the releases that had it still install what they carry, and mu300-update moves such a
+# device to 7.3 with its next update)
 KERNELS = {'5.4': 'mu300-kernel.tar.gz', '6.18': 'mu300-kernel-6.18.tar.gz', '7.2': 'mu300-kernel-7.2.tar.gz', '7.3': 'mu300-kernel-7.3.tar.gz'}
 KEYS = ('TAG', 'SYSTEM', 'OS', 'UBUNTU', 'KERNEL', 'KERNEL_ASSET', 'ROOTFS_ASSET', 'SHA256_KERNEL', 'SHA256_ROOTFS')
 

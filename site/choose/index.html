@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>try{var t=localStorage.getItem("mu300-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <title>Ubuntu or OpenWrt? Choosing a system and kernel for the ZTE F50 / U30 Air</title>
-<meta name="description" content="Ubuntu 24.04 or 26.04, OpenWrt 25.12, or OpenWrt with the MU300 control panel, and the 5.4, 6.18, 7.2 or 7.3 kernel: what each one is good for on the ZTE F50 / MU300 and U30 Air, explained simply.">
+<meta name="description" content="Ubuntu 24.04 or 26.04, OpenWrt 25.12, or OpenWrt with the MU300 control panel, and the 5.4, 6.18 or 7.3 kernel: what each one is good for on the ZTE F50 / MU300 and U30 Air, explained simply.">
 <link rel="canonical" href="https://kaandikec.com/mu300-linux/choose/">
 <link rel="alternate" hreflang="en" href="https://kaandikec.com/mu300-linux/choose/">
 <link rel="alternate" hreflang="tr" href="https://kaandikec.com/mu300-linux/tr/choose/">
@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="MU300 Linux">
 <meta property="og:title" content="Ubuntu or OpenWrt? Choosing a system and kernel for the ZTE F50 / U30 Air">
-<meta property="og:description" content="Ubuntu 24.04 or 26.04, OpenWrt 25.12, or OpenWrt with the MU300 control panel, and the 5.4, 6.18, 7.2 or 7.3 kernel: what each one is good for on the ZTE F50 / MU300 and U30 Air, explained simply.">
+<meta property="og:description" content="Ubuntu 24.04 or 26.04, OpenWrt 25.12, or OpenWrt with the MU300 control panel, and the 5.4, 6.18 or 7.3 kernel: what each one is good for on the ZTE F50 / MU300 and U30 Air, explained simply.">
 <meta property="og:url" content="https://kaandikec.com/mu300-linux/choose/">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://kaandikec.com/mu300-linux/assets/img/og-image.png">
@@ -23,7 +23,7 @@
 <meta property="og:image:alt" content="A 5G pocket hotspot with two rooms, one for Android and one for Linux">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Ubuntu or OpenWrt? Choosing a system and kernel for the ZTE F50 / U30 Air">
-<meta name="twitter:description" content="Ubuntu 24.04 or 26.04, OpenWrt 25.12, or OpenWrt with the MU300 control panel, and the 5.4, 6.18, 7.2 or 7.3 kernel: what each one is good for on the ZTE F50 / MU300 and U30 Air, explained simply.">
+<meta name="twitter:description" content="Ubuntu 24.04 or 26.04, OpenWrt 25.12, or OpenWrt with the MU300 control panel, and the 5.4, 6.18 or 7.3 kernel: what each one is good for on the ZTE F50 / MU300 and U30 Air, explained simply.">
 <meta name="twitter:image" content="https://kaandikec.com/mu300-linux/assets/img/og-image.png">
 <meta name="theme-color" content="#f3f6fa" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d1520" media="(prefers-color-scheme: dark)">
@@ -159,8 +159,8 @@ sudo mu300-os openwrt-luci    <span class="c"># OpenWrt with the control panel</
 <h2 id="ubuntu">Which Ubuntu?</h2>
 <div class="table-scroll"><table>
 <thead><tr><th scope="col"></th><th scope="col">24.04 LTS</th><th scope="col">26.04 LTS</th></tr></thead><tbody>
-<tr><th scope="row">In the installer</th><td>"the longest tested, supported until 2029"</td><td>"the newest (systemd 259, newer packages), supported until 2031; kernel 6.18, 7.2 or 7.3"</td></tr>
-<tr><th scope="row">Kernels</th><td>5.4, 6.18, 7.2, 7.3</td><td>6.18, 7.2 or 7.3 only</td></tr>
+<tr><th scope="row">In the installer</th><td>"the longest tested, supported until 2029"</td><td>"the newest (systemd 259, newer packages), supported until 2031; kernel 6.18 or 7.3"</td></tr>
+<tr><th scope="row">Kernels</th><td>5.4, 6.18, 7.3</td><td>6.18 or 7.3 only</td></tr>
 <tr><th scope="row">Pick it when</th><td>you want it to just work (the default)</td><td>you want the newest packages and use a mainline kernel</td></tr>
 </tbody></table></div>
 <p>Ubuntu 26.04 needs a mainline kernel because its programs use system calls that 5.4 does not have. An installed
@@ -168,31 +168,47 @@ Ubuntu can move to the other release later, keeping settings and data:</p>
 <pre><code>sudo MU300_UBUNTU=26.04 mu300-update apply   <span class="c"># or 24.04 to go back</span></code></pre>
 
 <h2 id="kernels">Which kernel?</h2>
-<p>All four run the same systems and the same functions: hotspot, mobile data, SMS, Bluetooth, VPN, GPU, and KVM
+<p>All three run the same systems and the same functions: hotspot, mobile data, SMS, Bluetooth, VPN, GPU, and KVM
 (<code>/dev/kvm</code>). They differ in how new they are and how long they have been tested. This is how the installer
 puts it:</p>
 <div class="table-scroll"><table>
 <thead><tr><th scope="col">Choice</th><th scope="col">Kernel</th><th scope="col">What it is</th></tr></thead><tbody>
 <tr><th scope="row">1</th><td>5.4</td><td>Unisoc's vendor kernel (Android 12 base): the longest tested, everything this project supports</td></tr>
 <tr><th scope="row">2</th><td>6.18</td><td>mainline Linux, the current long-term (LTS) release: newer drivers and security fixes, the same functions; no USB-C video output yet</td></tr>
-<tr><th scope="row">3</th><td>7.2</td><td>7.2 (stable): mainline Linux's stable 7.2 series, newer drivers, the same functions as 6.18; tested less than 6.18</td></tr>
-<tr><th scope="row">4</th><td>7.3</td><td>the newest mainline release: the newest drivers, the same functions as 6.18; tested less than 7.2</td></tr>
+<tr><th scope="row">3</th><td>7.3</td><td>mainline Linux, the stable release: newer drivers, the same functions as 6.18; tested less than 6.18</td></tr>
 </tbody></table></div>
-<p>7.3 comes from the next release after v2026.10.19.2 on; older releases offer the first three.</p>
+<p>7.3 comes from the next release after v2026.10.19.2 on. Older releases also offered 7.2.</p>
+
+<h3 id="kernel-72">7.2 is retired</h3>
+<p>kernel.org ended the 7.2 series (7.2.15 was its last release), so releases no longer carry it: there is no
+<code>mu300-kernel-7.2.tar.gz</code> and no <code>-k7.2</code> Magisk zip any more. 7.3, the stable mainline release,
+takes its place.</p>
+<ul>
+<li>A device that chose 7.2 gets 7.3 with its next <code>sudo mu300-update apply</code> (or <code>mu300-update
+boot</code>), through the normal boot update: the old image is kept for <code>sudo mu300-update rollback-boot</code>,
+and a kernel that does not start sends the device back to Android by itself. The output says that 7.2 is retired;
+<code>mu300-update check</code> and <code>mu300-update kernel</code> say it too.</li>
+<li><code>sudo mu300-update kernel 7.2</code> refuses and suggests <code>sudo mu300-update kernel 7.3</code> (or
+6.18).</li>
+<li>The installers ask 1) 5.4, 2) 6.18, 3) 7.3. An answer of 7.2 (<code>MU300_ANS_KERNEL=7.2</code> or saved answers)
+is taken as 7.3, with a note, and the old answer 4 still means 7.3. The web installer proposes 7.3 to a device that
+had 7.2.</li>
+<li>A zip of an older release with <code>k7.2</code> in its name still installs the kernel it carries.</li>
+</ul>
 
 <h3>The differences that matter</h3>
 <ul>
-<li><strong>Ubuntu 26.04</strong> needs 6.18, 7.2 or 7.3.</li>
+<li><strong>Ubuntu 26.04</strong> needs 6.18 or 7.3.</li>
 <li><strong>U30 Air USB host</strong> (flash drives, keyboards, Ethernet adapters through an OTG adapter) works on the
 mainline kernels only.</li>
-<li><strong>U30 Air charging:</strong> on 5.4 the vendor charger stack charges; on 6.18, 7.2 and 7.3 the <code>bq256xx</code>
+<li><strong>U30 Air charging:</strong> on 5.4 the vendor charger stack charges; on 6.18 and 7.3 the <code>bq256xx</code>
 driver does, from v2026.10.12 on. Mainline kernels of v2026.10.11 and older leave charging off, so update first. From
 v2026.10.20 the mainline kernels also read the current a Type-C port offers (up to 2 A instead of 500 mA); the charge limit (0-100 %)
 works on every kernel.</li>
-<li><strong>dae</strong>, the VPN module's eBPF engine, needs 6.18, 7.2 or 7.3 of v2026.10.20 or newer (from 6.18.56 and 7.2.10 on, which carry
+<li><strong>dae</strong>, the VPN module's eBPF engine, needs 6.18 or 7.3 of v2026.10.20 or newer (from 6.18.56 and 7.2.10 on, which carry
 BTF and the BPF JIT); 5.4 cannot run it.</li>
 <li><strong>WireGuard VPN profiles</strong> need a mainline kernel: the 5.4 vendor kernel has no WireGuard, according to
-the <a href="https://github.com/dikeckaan/mu300-linux-vpn">VPN module</a>. The other VPN types work on all four.</li>
+the <a href="https://github.com/dikeckaan/mu300-linux-vpn">VPN module</a>. The other VPN types work on all three.</li>
 <li><strong>Modules:</strong> the mainline kernels carry about 360 extra modules: WireGuard, SQM, tunnels, USB adapters
 and modems, NTFS, exFAT, btrfs, NFS, CIFS, dm-crypt, containers.</li>
 <li><strong>6.18</strong> has a rare hang in its first seconds on some boards (the README measured about one boot in 20
@@ -205,7 +221,7 @@ on one board); the device then falls back to Android, and <code>su -c mu300-linu
 <p>Take the installer's default, <strong>5.4</strong>: it is the longest tested. Pick <strong>6.18</strong> for Ubuntu
 26.04, for WireGuard, or for USB host mode on the U30 Air. Changing later takes one command and a restart:</p>
 <pre><code>sudo mu300-update kernel             <span class="c"># shows the kernel you have</span>
-sudo mu300-update kernel 6.18        <span class="c"># or 5.4, 7.2 or 7.3; then restart</span>
+sudo mu300-update kernel 6.18        <span class="c"># or 5.4 or 7.3; then restart</span>
 sudo reboot</code></pre>
 <p>If the new kernel does not start, the device falls back to Android after the usual number of failed starts,
 and <code>sudo mu300-update rollback-boot</code> puts the previous one back.</p>

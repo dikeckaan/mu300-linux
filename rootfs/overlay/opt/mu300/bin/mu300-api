@@ -1310,7 +1310,7 @@ m_update_check() { only; job_start update-check 300 "" "$BIN/mu300-update" check
 m_update_apply() { only; job_start update-apply 7200 "" "$BIN/mu300-update" apply; }
 m_kernel_set() {
     only version
-    word version '5\.4|6\.18|7\.2|7\.3'; need version
+    word version '5\.4|6\.18|7\.3'; need version
     job_start kernel 3600 "" "$BIN/mu300-update" kernel "$V"
 }
 EXTRAS='vpn lang panel vpn-xray vpn-singbox vpn-mihomo vpn-dae'

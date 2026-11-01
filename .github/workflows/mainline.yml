@@ -2,7 +2,7 @@ name: Mainline kernel build
 
 # Builds the mainline port (upstream/: kernel + every out-of-tree vendor module) against the current longterm
 # release, the newest stable release, the newest mainline release (not a release candidate) and the newest of each
-# series the releases ship (6.18, 7.2, 7.3), every week and on changes to upstream/. The build stops on anything that
+# series the releases ship (6.18, 7.3), every week and on changes to upstream/. The build stops on anything that
 # drifts silently - a patch that no longer applies, a config option Kconfig drops, a port edit whose anchor moved,
 # an API a module uses that is gone - so a red run is the early warning for the next kernel jump.
 
@@ -47,7 +47,7 @@ jobs:
           def newest(series):
               got = sorted((v for v in vs if v == series or v.startswith(series + ".")), key=lambda v: [int(p) for p in v.split(".")])
               return got[-1:]
-          shipped = [v for s in ("7.2", "7.3") for v in newest(s)]
+          shipped = [v for s in ("7.3",) for v in newest(s)]
           print("list=" + json.dumps(sorted({lts, stable, *main, *shipped})))
           ' >> "$GITHUB_OUTPUT"
 

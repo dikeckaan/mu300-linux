@@ -9,7 +9,7 @@ This is a hobby project run in spare time. Clear reports and small, focused pull
 
 1. Read [Troubleshooting](Troubleshooting) first.
 2. Say which device (F50 / MU300 or U30 Air), which release, which system (Ubuntu 24.04/26.04, OpenWrt, OpenWrt with the
-   panel) and which kernel (5.4, 6.18, 7.2, 7.3).
+   panel) and which kernel (5.4, 6.18, 7.3; 7.2 on an older release).
 3. Attach what helps:
    * installer problems: the output of `./install.sh --check` (it identifies the storage variant);
    * a device that fell back to Android: the folder from `tools/collect-logs.sh` (bootloader log, pstore and the init

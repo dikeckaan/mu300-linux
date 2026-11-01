@@ -445,7 +445,7 @@ export class LinuxDevice {
   checkUpdate(onLine) { return this.run("mu300-update check", { onLine, timeoutMs: 180000 }); }
   applyUpdate(onLine, signal) { return this.run("mu300-update apply", { onLine, signal }); }
   setKernel(k, onLine, signal) {
-    if (!["5.4", "6.18", "7.2", "7.3"].includes(k)) throw new DeviceError("bad-argument", k);
+    if (!["5.4", "6.18", "7.3"].includes(k)) throw new DeviceError("bad-argument", k);
     return this.run(`mu300-update kernel ${k}`, { onLine, signal });
   }
   setBootOs(name, onLine) {

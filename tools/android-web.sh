@@ -449,6 +449,7 @@ zip_tag() {  # the tag in a release zip's name, or nothing
     # expression, so the sed that did this on a computer said "not a release zip" to every name on a device
     case $1 in mu300-magisk-v[0-9]*.zip) ;; *) return 0 ;; esac
     _zt=${1#mu300-magisk-}; _zt=${_zt%.zip}
+    # (-k7.2: the retired kernel's zips of the releases that had it are still release zips)
     case $_zt in *-k5.4|*-k6.18|*-k7.2|*-k7.3) _zt=${_zt%-k*} ;; *) return 0 ;; esac
     case $_zt in
         *-openwrt-luci) _zt=${_zt%-openwrt-luci} ;;

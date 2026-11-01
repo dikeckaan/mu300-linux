@@ -78,6 +78,7 @@ export async function openZip(blob) {
 }
 
 const SYSTEMS = { "openwrt": ["openwrt", ""], "openwrt-luci": ["openwrt-luci", ""], "ubuntu-24.04": ["ubuntu", "24.04"], "ubuntu-26.04": ["ubuntu", "26.04"] };
+// (with the retired 7.2: a zip of a release that had it is still read, and then refused as the other kernel)
 const KERNELS = ["5.4", "6.18", "7.2", "7.3"];
 
 // The manifest of a Magisk zip as its installer reads it (manifest_load): only these keys, and every value exactly

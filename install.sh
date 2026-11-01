@@ -53,7 +53,7 @@
 #   MU300_ANS_VPN=yes|no                   the VPN module
 #   MU300_ANS_ADB=yes|no                   adb to Linux (on for every computer): this computer's key only
 #   MU300_ANS_PANEL=yes|no                 the web panel for Ubuntu
-#   MU300_ANS_KERNEL=5.4|6.18|7.2|7.3      the kernel
+#   MU300_ANS_KERNEL=5.4|6.18|7.3      the kernel (7.2, retired, is taken as 7.3)
 #   MU300_ANS_EXISTING=update|wipe         Linux is installed already
 #   MU300_ANS_ERASE_SD=ERASE               a new filesystem on the SD card erases it
 #   MU300_ANS_KEEP_PASSWORD=yes|no         an update of a system with a login password: keep it (its current password
@@ -766,7 +766,7 @@ package_choices() {
     echo "  $(t 'Another system or kernel: the zip of that combination, or ./install.sh of the project.')"
     OSES=$PKG_OS; BOOT_OS=$PKG_OS; UBUNTU=${PKG_UBUNTU:-24.04}; KERNEL=$PKG_KERNEL
     [ "$DEVICE" != v50 ] || [ "$KERNEL" != 5.4 ] ||
-        die "$(t 'The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18, 7.2 or 7.3 of this release')"
+        die "$(t 'The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18 or 7.3 of this release')"
     need=$NEED_OPENWRT; [ "$OSES" = ubuntu ] && need=$NEED_UBUNTU
     _fit=; [ $SIZE -lt $NEED_OPENWRT ] || _fit=$(t "An OpenWrt zip of this release fits here.")
     [ $SIZE -ge $need ] || die "$(t 'that choice needs about {1} MiB and this device has {2} MiB of free space' "$((need / 1048576))" "$((SIZE / 1048576))")${_fit:+
@@ -829,7 +829,7 @@ UBUNTU=24.04
 case " $OSES " in *" ubuntu "*) if [ $MODE = prebuilt ]; then
     say "$(t 'Which Ubuntu?')"
     echo "  $(t '1) 24.04 LTS  the longest tested, supported until 2029')"
-    echo "  $(t '2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18, 7.2 or 7.3')"
+    echo "  $(t '2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18 or 7.3')"
     ask uv "$(t 'Ubuntu')" 1 MU300_ANS_UBUNTU
     case $uv in 1|24.04) UBUNTU=24.04 ;; 2|26.04) UBUNTU=26.04 ;; *) die "$(t 'invalid choice')" ;; esac
 fi ;; esac
@@ -905,28 +905,30 @@ if [ $MODE = prebuilt ] && [ -z "$PKG" ]; then
     echo "  $(t "1) 5.4   Unisoc's vendor kernel (Android 12 base): the longest tested, everything this project supports")"
     echo "  $(t '2) 6.18  mainline Linux, current long-term (LTS) release: newer drivers and security fixes, the same')"
     echo "  $(t '         functions (hotspot, mobile data, SMS, Bluetooth, VPN, GPU); no USB-C video output yet')"
-    echo "  $(t '3) 7.2   mainline Linux, stable release: newer drivers, the same functions')"
+    echo "  $(t '3) 7.3   mainline Linux, stable release: newer drivers, the same functions')"
     echo "  $(t '         as 6.18; tested less than 6.18')"
-    echo "  $(t '4) 7.3   the newest mainline Linux (7.3 for now): the newest drivers, the same functions')"
-    echo "  $(t '         as 6.18; tested less than 7.2')"
-    echo "  $(t 'This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2|7.3')"
+    echo "  $(t 'This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.3')"
     while :; do
         kdefault=1; [ "$DEVICE" != v50 ] || kdefault=2
         ask kchoice "$(t 'Kernel')" $kdefault MU300_ANS_KERNEL
         case $kchoice in
             1|5.4) if [ "$DEVICE" = v50 ]; then
-                       echo "  $(t 'The ZTE V50 runs a mainline kernel only (6.18, 7.2 or 7.3).')"
+                       echo "  $(t 'The ZTE V50 runs a mainline kernel only (6.18 or 7.3).')"
                        continue
                    fi
                    if [ "${UBUNTU:-}" = 26.04 ]; then
-                       echo "  $(t 'Ubuntu 26.04 needs a mainline kernel (6.18, 7.2 or 7.3): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).')"
+                       echo "  $(t 'Ubuntu 26.04 needs a mainline kernel (6.18 or 7.3): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).')"
                        continue
                    fi
                    KERNEL=5.4; break ;;
             2|6.18) KERNEL=6.18; break ;;
-            3|7.2) KERNEL=7.2; break ;;
-            4|7.3) KERNEL=7.3; break ;;
-            *) echo "  $(t 'enter 1, 2, 3 or 4')" ;;
+            # (4 was 7.3 while 7.2 was the third: saved answers of then still mean it)
+            3|7.3|4) KERNEL=7.3; break ;;
+            # 7.2 is retired (kernel.org ended it with 7.2.15) and no release after it has its bundle: an answer of
+            # before, or a habit, gets the kernel that took its place
+            7.2) echo "  $(t 'Kernel 7.2 is retired (its last release was 7.2.15): installing 7.3, the kernel that takes its place.')"
+                 KERNEL=7.3; break ;;
+            *) echo "  $(t 'enter 1, 2 or 3')" ;;
         esac
     done
 fi
@@ -1136,7 +1138,7 @@ if [ -z "$PKG" ] || [ "$KERNEL" = 5.4 ]; then
     # init's e2fsck (FINDINGS 182): in the bundles of the releases since it came
     [ ! -f "$KOUT/e2fsck" ] || E2FSCK=$KOUT/e2fsck
 fi
-# a mainline kernel (6.18, 7.2, 7.3): its bundle, unpacked
+# a mainline kernel (6.18, 7.3): its bundle, unpacked
 KMAIN=
 if [ "$KERNEL" != 5.4 ]; then
     KMAIN=$REL/kernel-$KERNEL
@@ -1221,7 +1223,7 @@ step bootimage 68
 say "$(t 'Building the boot image')"
 sed "s/^ROOT_OFFSET=[0-9]*/ROOT_OFFSET=$OFF/" "$TOP/boot/init" > "$WORK/init"
 # a mainline kernel: its kernel, and its generic ramdisk segment behind this one (its init and modules win) - the
-# image that "mu300-update kernel 6.18" (or 7.2, 7.3) writes on the device
+# image that "mu300-update kernel 6.18" (or 7.3) writes on the device
 python3 "$TOP/boot/build-boot-image.py" --stock-boot "$WORK/dumps/boot_$ANDROID_SLOT.img" --misc-head "$WORK/dumps/misc-head.bin" \
   --kernel "${KMAIN:-$KOUT}/Image" ${KMAIN:+--append-ramdisk "$KMAIN/ramdisk-generic.lz4"} \
   ${KOUT:+--modules "$KOUT/modules"} --init "$WORK/init" ${BUSYBOX:+--busybox "$BUSYBOX"} --device "$DEVICE" \

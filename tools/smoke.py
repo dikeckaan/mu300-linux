@@ -176,13 +176,13 @@ class Board:
             bad('"from_path": an absolute path of letters, digits and . _ -')
         self.magisk_zip = d.get('magisk_zip')
         if self.magisk_zip is not None and not _full(ZIP_KIND_RE, self.magisk_zip):
-            bad('"magisk_zip": the zip\'s system and kernel, e.g. openwrt-luci-k6.18 or ubuntu-24.04-k7.2')
+            bad('"magisk_zip": the zip\'s system and kernel, e.g. openwrt-luci-k6.18 or ubuntu-24.04-k7.3')
         self.apply_args = d.get('apply_args', [])
         if not isinstance(self.apply_args, list) or any(a not in APPLY_ARGS for a in self.apply_args):
             bad(f'"apply_args": a list of {", ".join(APPLY_ARGS)}')
         self.expect_kernel = d.get('expect_kernel')
         if self.expect_kernel is not None and not _full(KERNEL_RE, self.expect_kernel):
-            bad('"expect_kernel": a kernel version prefix such as 6.18 or 7.2.10')
+            bad('"expect_kernel": a kernel version prefix such as 6.18 or 7.3.1')
         # what each update path needs, and the one rule that is never relaxed: Android only when allowed
         if self.update == 'mirror' and not self.mirror_url:
             bad('"update": "mirror" needs "mirror_url"')

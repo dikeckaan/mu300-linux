@@ -494,13 +494,12 @@ class Rules(unittest.TestCase):
 
             bundle('mu300-kernel', 'sprd-dma.ko', 'virt-dma.ko')
             bundle('mu300-kernel-6.18')
-            bundle('mu300-kernel-7.2')
             bundle('mu300-kernel-7.3')
             manifest('mu300-ubuntu-rootfs', 'opt/mu300/bin/mu300-atd', 'etc/systemd/system/mu300-atd.service')
             manifest('mu300-openwrt-rootfs', 'etc/init.d/mu300-atd')
             self.assertIn('fail=0', run())
             for name, mods in (('mu300-kernel', ('audio_sipc.ko',)), ('mu300-kernel-6.18', ('sprd-dma.ko',)),
-                               ('mu300-kernel-7.2', ('snd-soc-sprd-card.ko',)), ('mu300-kernel-7.3', ('audio_mem.ko',))):
+                               ('mu300-kernel-7.3', ('snd-soc-sprd-card.ko',)), ('mu300-kernel-7.3', ('audio_mem.ko',))):
                 bundle(name, *mods)
                 out = run()
                 self.assertIn('fail=1', out, name)
@@ -886,11 +885,11 @@ class Rules(unittest.TestCase):
 
     def test_every_release_kernel_bundle_has_the_sd_host(self):
         # 5.4 reads the card as well (FINDINGS 31j): its bundle says so, and the release audit fails when any of the
-        # four bundles does not (mu300-update refuses such a bundle for a system on the card)
+        # three bundles does not (mu300-update refuses such a bundle for a system on the card)
         mr = (TOP / 'tools' / 'make-release.sh').read_text()
         self.assertIn("printf 'sdcard\\nlinux-slot\\ngpt-root\\n' > \"$K/features\"", mr)
         self.assertLess(mr.index('$K/features'), mr.index('tar -C "$K" -czf "$D/mu300-kernel.tar.gz" .'))
-        self.assertIn('for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.2 mu300-kernel-7.3; do\n'
+        self.assertIn('for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.3; do\n'
                       '    tar -xzOf "$D/$a.tar.gz" ./features 2>/dev/null | grep -qx sdcard', mr)
         # and that its init works with Linux on either slot (mu300-update refuses one without it on slot a)
         self.assertIn('    tar -xzOf "$D/$a.tar.gz" ./features 2>/dev/null | grep -qx linux-slot', mr)

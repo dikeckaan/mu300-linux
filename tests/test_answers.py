@@ -107,6 +107,22 @@ class Ask(ShellTest):
             self.assertEqual(r.returncode, 1)
             self.assertNotIn('c=', r.stdout)
 
+    def test_the_kernel_menu_takes_the_retired_7_2_for_7_3(self):
+        # 7.2 is retired: the menu is 5.4, 6.18, 7.3; an answer of 7.2 (an answers file of before) installs 7.3 with a
+        # line saying so, and 4 (7.3's number while 7.2 was the third) still means 7.3. The menu as install.sh has it,
+        # with the real ask
+        src = (TOP / 'install.sh').read_text()
+        start = src.index('if [ $MODE = prebuilt ] && [ -z "$PKG" ]; then\n    say "$(t \'Which kernel?\')"')
+        menu = src[start:src.index('\nfi\n', start) + 4]
+        for answer, want, said in (('7.2', '7.3', True), ('3', '7.3', False), ('4', '7.3', False), ('7.3', '7.3', False),
+                                   ('2', '6.18', False), ('1', '5.4', False)):
+            for shell in self.each_shell():
+                r = self.run_ask(shell, 'say() { :; }; MODE=prebuilt PKG= DEVICE=f50 UBUNTU=24.04; answers_setup; '
+                                 + menu + '\necho "KERNEL=$KERNEL"', MU300_NONINTERACTIVE=1, MU300_ANS_KERNEL=answer)
+                self.assertIn(f'KERNEL={want}\n', r.stdout, (answer, r.stdout, r.stderr))
+                self.assertEqual('Kernel 7.2 is retired' in r.stdout, said, answer)
+                self.assertNotIn('7.2   mainline', r.stdout)
+
     def test_the_password_is_never_shown(self):
         for shell in self.each_shell():
             r = self.run_ask(shell, 'answers_setup; ask_password pw "Password" "Repeat"; echo "len=${#pw}"; '

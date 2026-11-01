@@ -41,7 +41,7 @@ One line of JSON on stdout, exit status 0, nothing on stderr:
 | `system` | string | `ubuntu`, `openwrt` or `openwrt-luci`: the system that is running (the name of its directory on the Linux partition; a system of the user's own has its own name) |
 | `version_id` | string | `VERSION_ID` of the system's `/etc/os-release`: `24.04` or `26.04` for Ubuntu, OpenWrt's version for OpenWrt; empty when there is none |
 | `release` | string | The mu300-linux release the running system's image came from (`/etc/mu300/image-version`), e.g. `v2026.10.23`; `unknown` when the file is missing, `dev` for an image built without a version |
-| `kernel` | string | `uname -r`: `5.4.…`, `6.18.…`, `7.2.…` or `7.3.…` |
+| `kernel` | string | `uname -r`: `5.4.…`, `6.18.…` or `7.3.…` (`7.2.…` on a device that has not updated since 7.2 was retired) |
 | `root` | boolean | Whether the caller is root. Always `true` over adb; `false` when a program runs it over SSH as `ubuntu` |
 | `adb` | string | `open` (every computer is let in), `keys` (only authorised keys), `off`, or `unavailable` (no adbd or no FunctionFS in this system) |
 

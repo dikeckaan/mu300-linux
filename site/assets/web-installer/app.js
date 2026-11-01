@@ -14,7 +14,7 @@ import { MIRROR_BASE } from "./config.js";
 import { AndroidDevice, DeviceError, LinuxDevice, directorySink, identify, memorySink } from "./device.js";
 import { INSTALL_STEPS, MIB, NEED, UNINSTALL_STEPS, analyseStorage, answersFor, dataNeeded, deviceBlockers, familyOf, fmtSize, osOf,
   parsePlan, stageRisk, targetExisting, targetSize, validateChoices } from "./flow.js";
-import { GithubError, combos, findZip, loadReleases, loadVpnModule, releaseSupportsWeb } from "./github.js";
+import { GithubError, RETIRED_KERNELS, combos, findZip, loadReleases, loadVpnModule, releaseSupportsWeb } from "./github.js";
 import { loadKey } from "./keystore.js";
 import { Manager, renderManager } from "./manager.js";
 import { MirrorError, downloadZip, loadMirror } from "./mirror.js";
@@ -590,7 +590,10 @@ function startWizard() {
   S.w = newWizard(); S.view = "wizard"; S.failure = null;
   const a = S.analysis, st = S.status;
   const have = st.linux && st.linux.systems ? Object.keys(st.linux.systems) : [];
-  S.w.choices = { target: a.target, systems: [], kernel: (st.linux && st.linux.kernel) || (st.device === "v50" ? "6.18" : "5.4"), bootOs: (st.linux && st.linux.boot_os) || "",
+  // (a device on the retired 7.2 is proposed the kernel that takes its place, and the choices step says so)
+  const had = (st.linux && st.linux.kernel) || (st.device === "v50" ? "6.18" : "5.4");
+  S.w.retiredKernel = RETIRED_KERNELS[had] ? had : "";
+  S.w.choices = { target: a.target, systems: [], kernel: RETIRED_KERNELS[had] || had, bootOs: (st.linux && st.linux.boot_os) || "",
     // Linux as the default boot is proposed every time, as the installers do: an installation that is there may say
     // "Android" only because the page's own "Restart into Android" made it so on the way here
     defaultLinux: true, attempts: (st.linux && st.linux.attempts) || 5, hotspot: true, gpu: true, vpn: false,
@@ -733,8 +736,9 @@ function stepChoices() {
   box.append(grid, h("p", { class: "small muted" }, t("choice.systems.note", fmtSize(size), fmtSize(NEED.openwrt), fmtSize(NEED.ubuntu), fmtSize(NEED.both))));
 
   box.append(h("h3", {}, t("choice.kernel")));
+  if (w.retiredKernel) box.append(h("p", { class: "small" }, t("kernel.retired", w.retiredKernel, RETIRED_KERNELS[w.retiredKernel])));
   const ks = h("div", { class: "wi-opts" });
-  for (const k of ["5.4", "6.18", "7.2", "7.3"]) {
+  for (const k of ["5.4", "6.18", "7.3"]) {
     const ok = c.systems.every((s) => (avail[s] || []).includes(k)) && !(S.status.device === "v50" && k === "5.4");   // the V50: mainline only
     ks.append(radio("kernel", k, c.kernel, t("kernel." + k), () => { c.kernel = k; w.files = {}; render(); }, { disabled: !ok }));
   }
@@ -1373,7 +1377,7 @@ function linuxView() {
       btn(t("linux.apply"), act(t("linux.apply"), (on) => d.applyUpdate(on), { confirm: t("linux.apply.confirm"), long: true, refresh: true }), "primary", { disabled: off })),
     h("p", { class: "small muted" }, t("linux.apply.note")));
   out.append(h("h3", {}, t("choice.kernel")),
-    h("div", { class: "actions" }, ["5.4", "6.18", "7.2", "7.3"].map((k) => btn(k + (i.kernelChoice === k ? " ✓" : ""), act(t("linux.kernel.set", k), (on) => d.setKernel(k, on), { confirm: t("linux.kernel.confirm", k), long: true, refresh: true }), "", { disabled: off || i.kernelChoice === k }))),
+    h("div", { class: "actions" }, ["5.4", "6.18", "7.3"].map((k) => btn(k + (i.kernelChoice === k ? " ✓" : ""), act(t("linux.kernel.set", k), (on) => d.setKernel(k, on), { confirm: t("linux.kernel.confirm", k), long: true, refresh: true }), "", { disabled: off || i.kernelChoice === k }))),
     h("p", { class: "small muted" }, t("linux.kernel.note")));
   if (i.systems.length > 1) {
     out.append(h("h3", {}, t("choice.boot-os")),

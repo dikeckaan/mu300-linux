@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>try{var t=localStorage.getItem("mu300-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <title>Ubuntu mu OpenWrt mu? ZTE F50 / U30 Air için sistem ve çekirdek seçimi</title>
-<meta name="description" content="ZTE F50 / MU300 ve U30 Air'de Ubuntu 24.04 ya da 26.04, OpenWrt 25.12 veya kontrol panelli OpenWrt; 5.4, 6.18, 7.2 ya da 7.3 çekirdeği: hangisi ne işe yarar.">
+<meta name="description" content="ZTE F50 / MU300 ve U30 Air'de Ubuntu 24.04 ya da 26.04, OpenWrt 25.12 veya kontrol panelli OpenWrt; 5.4, 6.18 ya da 7.3 çekirdeği: hangisi ne işe yarar.">
 <link rel="canonical" href="https://kaandikec.com/mu300-linux/tr/choose/">
 <link rel="alternate" hreflang="en" href="https://kaandikec.com/mu300-linux/choose/">
 <link rel="alternate" hreflang="tr" href="https://kaandikec.com/mu300-linux/tr/choose/">
@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="MU300 Linux">
 <meta property="og:title" content="Ubuntu mu OpenWrt mu? ZTE F50 / U30 Air için sistem ve çekirdek seçimi">
-<meta property="og:description" content="ZTE F50 / MU300 ve U30 Air'de Ubuntu 24.04 ya da 26.04, OpenWrt 25.12 veya kontrol panelli OpenWrt; 5.4, 6.18, 7.2 ya da 7.3 çekirdeği: hangisi ne işe yarar.">
+<meta property="og:description" content="ZTE F50 / MU300 ve U30 Air'de Ubuntu 24.04 ya da 26.04, OpenWrt 25.12 veya kontrol panelli OpenWrt; 5.4, 6.18 ya da 7.3 çekirdeği: hangisi ne işe yarar.">
 <meta property="og:url" content="https://kaandikec.com/mu300-linux/tr/choose/">
 <meta property="og:locale" content="tr_TR">
 <meta property="og:image" content="https://kaandikec.com/mu300-linux/assets/img/og-image.png">
@@ -23,7 +23,7 @@
 <meta property="og:image:alt" content="İki odalı bir 5G cep hotspot'u: biri Android'e, biri Linux'a ait">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Ubuntu mu OpenWrt mu? ZTE F50 / U30 Air için sistem ve çekirdek seçimi">
-<meta name="twitter:description" content="ZTE F50 / MU300 ve U30 Air'de Ubuntu 24.04 ya da 26.04, OpenWrt 25.12 veya kontrol panelli OpenWrt; 5.4, 6.18, 7.2 ya da 7.3 çekirdeği: hangisi ne işe yarar.">
+<meta name="twitter:description" content="ZTE F50 / MU300 ve U30 Air'de Ubuntu 24.04 ya da 26.04, OpenWrt 25.12 veya kontrol panelli OpenWrt; 5.4, 6.18 ya da 7.3 çekirdeği: hangisi ne işe yarar.">
 <meta name="twitter:image" content="https://kaandikec.com/mu300-linux/assets/img/og-image.png">
 <meta name="theme-color" content="#f3f6fa" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d1520" media="(prefers-color-scheme: dark)">
@@ -161,8 +161,8 @@ sudo mu300-os openwrt-luci    <span class="c"># kontrol panelli OpenWrt</span></
 <h2 id="ubuntu">Hangi Ubuntu?</h2>
 <div class="table-scroll"><table>
 <thead><tr><th scope="col"></th><th scope="col">24.04 LTS</th><th scope="col">26.04 LTS</th></tr></thead><tbody>
-<tr><th scope="row">Kurulum programında</th><td>"en uzun süre test edilen, 2029'a kadar destekleniyor"</td><td>"en yenisi (systemd 259, daha yeni paketler), 2031'e kadar destekleniyor; kernel 6.18, 7.2 veya 7.3"</td></tr>
-<tr><th scope="row">Çekirdekler</th><td>5.4, 6.18, 7.2, 7.3</td><td>yalnızca 6.18, 7.2 ya da 7.3</td></tr>
+<tr><th scope="row">Kurulum programında</th><td>"en uzun süre test edilen, 2029'a kadar destekleniyor"</td><td>"en yenisi (systemd 259, daha yeni paketler), 2031'e kadar destekleniyor; kernel 6.18 veya 7.3"</td></tr>
+<tr><th scope="row">Çekirdekler</th><td>5.4, 6.18, 7.3</td><td>yalnızca 6.18 ya da 7.3</td></tr>
 <tr><th scope="row">Ne zaman seçilir</th><td>sorunsuz çalışsın istiyorsanız (varsayılan)</td><td>en yeni paketleri istiyor ve ana hat çekirdek kullanıyorsanız</td></tr>
 </tbody></table></div>
 <p>Ubuntu 26.04 ana hat bir çekirdek ister, çünkü programları 5.4'te olmayan sistem çağrılarını kullanır. Kurulu bir
@@ -170,30 +170,46 @@ Ubuntu, ayarları ve verileri korunarak sonradan diğer sürüme geçebilir:</p>
 <pre><code>sudo MU300_UBUNTU=26.04 mu300-update apply   <span class="c"># geri dönmek için 24.04</span></code></pre>
 
 <h2 id="kernels">Hangi çekirdek?</h2>
-<p>Dördü de aynı sistemleri ve aynı işlevleri çalıştırır: hotspot, mobil veri, SMS, Bluetooth, VPN, GPU ve KVM
+<p>Üçü de aynı sistemleri ve aynı işlevleri çalıştırır: hotspot, mobil veri, SMS, Bluetooth, VPN, GPU ve KVM
 (<code>/dev/kvm</code>). Farkları ne kadar yeni oldukları ve ne kadar süre test edildikleridir. Kurulum programı
 şöyle anlatıyor:</p>
 <div class="table-scroll"><table>
 <thead><tr><th scope="col">Seçim</th><th scope="col">Çekirdek</th><th scope="col">Nedir</th></tr></thead><tbody>
 <tr><th scope="row">1</th><td>5.4</td><td>Unisoc'un üretici çekirdeği (Android 12 tabanlı): en uzun süre test edilen, projenin desteklediği her şey çalışır</td></tr>
 <tr><th scope="row">2</th><td>6.18</td><td>ana hat (mainline) Linux, güncel uzun süreli destek (LTS) sürümü: daha yeni sürücüler ve güvenlik düzeltmeleri, aynı işlevler; USB-C görüntü çıkışı henüz yok</td></tr>
-<tr><th scope="row">3</th><td>7.2</td><td>7.2 (kararlı): ana hat (mainline) Linux'un kararlı 7.2 serisi, daha yeni sürücüler, 6.18 ile aynı işlevler; 6.18'den daha az test edildi</td></tr>
-<tr><th scope="row">4</th><td>7.3</td><td>en yeni ana hat (mainline) sürüm: en yeni sürücüler, 6.18 ile aynı işlevler; 7.2'den daha az test edildi</td></tr>
+<tr><th scope="row">3</th><td>7.3</td><td>ana hat (mainline) Linux, kararlı sürüm: daha yeni sürücüler, 6.18 ile aynı işlevler; 6.18'den daha az test edildi</td></tr>
 </tbody></table></div>
-<p>7.3, v2026.10.19.2'den sonraki sürümden itibaren gelir; daha eski sürümler ilk üçünü sunar.</p>
+<p>7.3, v2026.10.19.2'den sonraki sürümden itibaren gelir. Daha eski sürümler 7.2'yi de sunuyordu.</p>
+
+<h3 id="kernel-72">7.2 artık desteklenmiyor</h3>
+<p>kernel.org 7.2 serisini sonlandırdı (son sürümü 7.2.15 idi); sürümler artık onu taşımıyor: ne
+<code>mu300-kernel-7.2.tar.gz</code> ne de <code>-k7.2</code> Magisk zip'i var. Yerini kararlı ana hat sürümü 7.3
+alıyor.</p>
+<ul>
+<li>7.2'yi seçmiş bir cihaz, bir sonraki <code>sudo mu300-update apply</code> (ya da <code>mu300-update boot</code>)
+ile normal açılış güncellemesi üzerinden 7.3'ü alır: eski imaj <code>sudo mu300-update rollback-boot</code> için
+saklanır, açılmayan bir çekirdek cihazı kendiliğinden Android'e döndürür. Çıktı 7.2'nin artık desteklenmediğini
+söyler; <code>mu300-update check</code> ve <code>mu300-update kernel</code> da söyler.</li>
+<li><code>sudo mu300-update kernel 7.2</code> reddedilir ve <code>sudo mu300-update kernel 7.3</code> (ya da 6.18)
+önerilir.</li>
+<li>Kurulum programları 1) 5.4, 2) 6.18, 3) 7.3 diye sorar. 7.2 cevabı (<code>MU300_ANS_KERNEL=7.2</code> ya da
+kaydedilmiş cevaplar) bir notla 7.3 olarak alınır; eski 4 cevabı yine 7.3 demektir. Web kurulum programı 7.2'li bir
+cihaza 7.3'ü önerir.</li>
+<li>Adında <code>k7.2</code> olan eski bir sürümün zip'i taşıdığı çekirdeği yine kurar.</li>
+</ul>
 
 <h3>Önemli farklar</h3>
 <ul>
-<li><strong>Ubuntu 26.04</strong> 6.18, 7.2 ya da 7.3 ister.</li>
+<li><strong>Ubuntu 26.04</strong> 6.18 ya da 7.3 ister.</li>
 <li><strong>U30 Air'de USB host</strong> (OTG adaptörüyle flash bellek, klavye, Ethernet adaptörü) yalnızca ana hat
 çekirdeklerde çalışır.</li>
-<li><strong>U30 Air'de şarj:</strong> 5.4'te üreticinin şarj yazılımı şarj eder; 6.18, 7.2 ve 7.3'te v2026.10.12'den beri
+<li><strong>U30 Air'de şarj:</strong> 5.4'te üreticinin şarj yazılımı şarj eder; 6.18 ve 7.3'te v2026.10.12'den beri
 <code>bq256xx</code> sürücüsü. v2026.10.11 ve öncesinin ana hat çekirdekleri şarjı kapalı bırakır; önce güncelleyin. v2026.10.20'den
 beri ana hat çekirdekler Type-C portunun sunduğu akımı da okur (500 mA yerine 2 A'e kadar); şarj sınırı (%0-100) her çekirdekte çalışır.</li>
-<li><strong>dae</strong>, VPN modülünün eBPF motoru, v2026.10.20 ya da daha yeni bir 6.18/7.2/7.3 ister (BTF ve BPF JIT taşıyan 6.18.56 ve
+<li><strong>dae</strong>, VPN modülünün eBPF motoru, v2026.10.20 ya da daha yeni bir 6.18/7.3 ister (BTF ve BPF JIT taşıyan 6.18.56 ve
 7.2.10'dan itibaren); 5.4 onu çalıştıramaz.</li>
 <li><strong>WireGuard VPN profilleri</strong> ana hat bir çekirdek ister: <a href="https://github.com/dikeckaan/mu300-linux-vpn">VPN
-modülüne</a> göre 5.4 üretici çekirdeğinde WireGuard yoktur. Diğer VPN türleri dördünde de çalışır.</li>
+modülüne</a> göre 5.4 üretici çekirdeğinde WireGuard yoktur. Diğer VPN türleri üçünde de çalışır.</li>
 <li><strong>Modüller:</strong> ana hat çekirdekler yaklaşık 360 ek modülle gelir: WireGuard, SQM, tüneller, USB
 adaptörleri ve modemler, NTFS, exFAT, btrfs, NFS, CIFS, dm-crypt, konteynerler.</li>
 <li><strong>6.18</strong> bazı kartlarda ilk saniyelerde nadiren donar (README bir kartta yaklaşık 20 açılışta bir
@@ -207,7 +223,7 @@ adaptörleri ve modemler, NTFS, exFAT, btrfs, NFS, CIFS, dm-crypt, konteynerler.
 WireGuard ya da U30 Air'de USB host için <strong>6.18</strong>'i seçin. Sonradan değiştirmek bir komut ve bir yeniden
 başlatmadır:</p>
 <pre><code>sudo mu300-update kernel             <span class="c"># şu anki çekirdeği gösterir</span>
-sudo mu300-update kernel 6.18        <span class="c"># ya da 5.4, 7.2, 7.3; sonra yeniden başlatın</span>
+sudo mu300-update kernel 6.18        <span class="c"># ya da 5.4, 7.3; sonra yeniden başlatın</span>
 sudo reboot</code></pre>
 <p>Yeni çekirdek açılmazsa cihaz, seçtiğiniz sayıda başarısız açılıştan sonra Android'e döner;
 <code>sudo mu300-update rollback-boot</code> öncekini geri getirir.</p>
