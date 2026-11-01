@@ -283,12 +283,23 @@ static int sipa_free_thread(void *data)
 		wait_event_interruptible(sender->free_waitq,
 					 READ_ONCE(sender->free_started) || kthread_should_stop());
 	while (!kthread_should_stop()) {
-		wait_event_interruptible(sender->free_waitq,
-					 !sipa_sender_ck_unfree(sender) ||
-					 sender->free_notify_net);
+		/* MU300 (kanoqwq fe52afe3): a stop is part of the condition, else kthread_stop() waited for ever */
+		if (wait_event_interruptible(sender->free_waitq,
+					     kthread_should_stop() ||
+					     !sipa_sender_ck_unfree(sender) ||
+					     sender->free_notify_net))
+			continue;
+		if (kthread_should_stop())
+			break;
 		sipa_free_sent_items();
 	}
 	return 0;
+}
+
+/* MU300 (kanoqwq fe52afe3): the thread ends before the devm memory it works on is freed (a failed probe, unbind) */
+static void sipa_stop_sender_thread(void *data)
+{
+	kthread_stop(data);
 }
 
 static int sipa_skb_sender_init(struct sipa_skb_sender *sender)
@@ -381,8 +392,7 @@ int sipa_create_skb_sender(struct sipa_plat_drv_cfg *ipa,
 		dev_err(ipa->dev,
 			"alloc sender pair_cache err rx depth = 0x%x\n",
 			ep->send_fifo.rx_fifo.fifo_depth);
-		kfree(sender);
-		return -ENOMEM;
+		return -ENOMEM;	/* MU300 (kanoqwq fe52afe3): sender is devm memory, no kfree() */
 	}
 
 	INIT_LIST_HEAD(&sender->nic_list);
@@ -410,12 +420,12 @@ int sipa_create_skb_sender(struct sipa_plat_drv_cfg *ipa,
 	if (IS_ERR(sender->free_thread)) {
 		dev_err(sender->dev, "Failed to create kthread: sipa-free-%d\n",
 			ep->id);
-		ret = PTR_ERR(sender->free_thread);
-		kfree(sender->pair_cache);
-		kfree(sender);
-		return ret;
+		return PTR_ERR(sender->free_thread);	/* (devm memory: no kfree()) */
 	}
 	wake_up_process(sender->free_thread);	/* MU300: it waits for free_started */
+	ret = devm_add_action_or_reset(ipa->dev, sipa_stop_sender_thread, sender->free_thread);
+	if (ret)
+		return ret;
 
 	*sender_pp = sender;
 
@@ -424,8 +434,10 @@ int sipa_create_skb_sender(struct sipa_plat_drv_cfg *ipa,
 
 void destroy_sipa_skb_sender(struct sipa_skb_sender *sender)
 {
-	kfree(sender->pair_cache);
-	kfree(sender);
+	/* MU300 (kanoqwq fe52afe3): the thread first, and devm memory goes back with devm_kfree() */
+	devm_release_action(sender->dev, sipa_stop_sender_thread, sender->free_thread);
+	devm_kfree(sender->dev, sender->pair_cache);
+	devm_kfree(sender->dev, sender);
 }
 
 void sipa_skb_sender_add_nic(struct sipa_skb_sender *sender,

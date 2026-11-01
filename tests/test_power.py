@@ -1092,6 +1092,21 @@ class Guards(DaemonTest):
             self.battery(capacity=90, temp=460); self.loops(shell)
             self.assertEqual(self.ctype(ch), 'N/A'); self.assertEqual(self.charge_off(), 'temp')
 
+    def test_an_early_full_from_the_charger_is_not_the_limit(self):
+        # kanoqwq c031a58a: the charger said Full at 84 % under a 90 % limit (FINDINGS 207): the guard must not take
+        # that for its own stop, nor end a full charge with it
+        for shell in self.each_shell():
+            self.setUp()
+            self.write_conf('CHARGE_TO=90\n')
+            ch = self.charger(online=1); self.battery(capacity=84, status='Full')
+            self.loops(shell)
+            self.assertEqual(self.ctype(ch), 'Fast')
+            self.assertNotEqual(self.charge_off(), 'limit')
+            self.assertEqual(self.power(shell, 'charge full').returncode, 0)
+            self.loops(shell)
+            self.assertIn('FULL_ONCE=1\n', self.conf.read_text())
+            self.assertEqual(self.ctype(ch), 'Fast')
+
     def test_charging_controls_are_the_u30_air_s(self):
         for shell in self.each_shell():
             self.setUp()
