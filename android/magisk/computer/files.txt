@@ -33,6 +33,8 @@ tools/android-pwcheck.sh
 tools/android-usb.sh
 tools/install-magisk-module.sh
 tools/resize-last-partition.py
+tools/android-online-shrink.sh
+tools/f2fs-online/mu300-f2fs-online
 tools/vendor-overlay.py
 tools/sha512crypt.py
 tools/backup-device.sh

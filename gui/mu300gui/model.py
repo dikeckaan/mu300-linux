@@ -147,9 +147,12 @@ def make_room(facts):
         return None
     first, end, usable = facts.num('makeroom.first'), facts.num('makeroom.end'), facts.num('makeroom.usable_end')
     lo, hi = facts.num('makeroom.min_linux') * SECTOR, facts.num('makeroom.max_linux') * SECTOR
+    # the online way (Android keeps its data): offered when the installer's check found it possible
     return {'userdata': (end - first + 1) * SECTOR, 'total': (usable - first + 1) * SECTOR, 'min': lo, 'max': hi,
             'min_android': facts.num('makeroom.min_android') * SECTOR, 'possible': hi >= lo > 0,
-            'suggest': min(max(4 * GIB, lo), hi) if hi >= lo else 0}
+            'suggest': min(max(4 * GIB, lo), hi) if hi >= lo else 0,
+            'online': facts.get('makeroom.online') == 'yes', 'online_reason': facts.get('makeroom.online_reason') or '',
+            'used': facts.num('makeroom.android_used')}
 
 
 class Choices:
@@ -382,15 +385,20 @@ def answers(c, facts, lang, serial):
     return a
 
 
-def make_room_answers(lang, serial, gib, word, reboot=True):
-    """The variables of a make-room run: the size, and ERASE only as it was typed."""
+def make_room_answers(lang, serial, gib, word, reboot=True, method=None):
+    """The variables of a make-room run: the size, and ERASE only as it was typed. METHOD (keep or reset) where the
+    installer offers the online way: keep is confirmed by the window's own question, reset still wants ERASE."""
     a = OrderedDict()
     a['MU300_LANG'] = lang
     if serial:
         a['ANDROID_SERIAL'] = serial
     a['MU300_ANS_MAKE_ROOM'] = 'yes'
+    if method:
+        a['MU300_ANS_MAKE_ROOM_METHOD'] = method
     a['MU300_ANS_LINUX_GIB'] = ('%.2f' % gib).rstrip('0').rstrip('.')
-    if word:
+    if method == 'keep':
+        a['MU300_ANS_SHRINK'] = 'yes'
+    elif word:
         a['MU300_ANS_ERASE_ANDROID'] = word
     a['MU300_ANS_REBOOT'] = yn(reboot)
     return a

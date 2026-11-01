@@ -77,10 +77,12 @@ A question is asked only where the installer asks it by hand too.
 | `MU300_ANS_UNKNOWN_MODEL` | `yes`, `no` | not an F50 or U30 Air: continue anyway |
 | `MU300_STORAGE` | `internal`, `sd` | with an SD card: where the Linux filesystem goes |
 | `MU300_ANS_INTERNAL_OVER_CARD` | `internal` | internal storage although the card holds an installation |
-| `MU300_ANS_MAKE_ROOM` | `yes`, `no` | no free space: shrink `userdata` (erases Android's data) |
+| `MU300_ANS_MAKE_ROOM` | `yes`, `no` | no free space: shrink `userdata` |
+| `MU300_ANS_MAKE_ROOM_METHOD` | `keep`, `reset` | then, where the device can (the check's `makeroom.online` is `yes`): keep Android's data (its F2FS shrunk while Android runs, EXPERIMENTAL) or reset Android (erases its data); not asked elsewhere, where it is the reset |
 | `MU300_ANS_LINUX_GIB` | a number, `4` or `2.5` | then: how many GiB for Linux |
-| `MU300_ANS_ERASE_ANDROID` | `ERASE` | then: the word that allows it |
-| `MU300_ANS_REBOOT` | `yes`, `no` | then: reboot (into the reset by Android's recovery; the installation resumes on the next run) |
+| `MU300_ANS_SHRINK` | `yes`, `no` | with `keep`: shrink now |
+| `MU300_ANS_ERASE_ANDROID` | `ERASE` | with `reset`: the word that allows it |
+| `MU300_ANS_REBOOT` | `yes`, `no` | then: reboot (`keep`: a normal restart of Android; `reset`: into the reset by Android's recovery); the installation resumes on the next run |
 | `MU300_ANS_OVERWRITE` | `overwrite` | the free space holds data: use it anyway |
 | `MU300_ANS_BETA` | `yes`, `no` | a prerelease newer than the newest release: install it. `MU300_RELEASE=<tag>` (`-Release`) names the release and asks nothing |
 | `MU300_ANS_SYSTEMS` | `1`, `2`, `3` | Ubuntu, OpenWrt, both |
