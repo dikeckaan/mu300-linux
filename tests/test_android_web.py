@@ -1267,6 +1267,7 @@ class Links(WebCase):
         uses = [l.strip() for l in WEB.read_text().splitlines() if re.search(r'\$S(/|"|\b)', l) and not l.lstrip().startswith('#')]
         for l in uses:
             ok = (re.search(r'\. "\$S/[a-z-]+\.sh"', l) or re.search(r'"\$S/(android-mount-mu300root|switch)\.sh"', l) or
+                  re.search(r'\\"\$S/android-usb\.sh\\" adb-only', l) or
                   l.startswith('S=${MU300_WEB_STAGE') or l.startswith('[ ! -L "$S" ] && [ ! -L "$S/in" ]') or
                   l.startswith('mv "$S/in/$1" "$_b"'))
             self.assertTrue(ok, l)

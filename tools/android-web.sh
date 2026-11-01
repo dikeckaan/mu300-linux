@@ -956,7 +956,7 @@ case ${1:-} in
         if [ "${2:-}" = dry ]; then exec "$BB" sh "$S/switch.sh" --dry-run; fi
         exec "$BB" sh "$S/switch.sh" ;;
     backup) backup ;;
-    usb) su_do "sh $S/android-usb.sh adb-only" | sed -n 's/^MU300-USB /MU300-WEB-USB /p' ;;
+    usb) su_do "sh \"$S/android-usb.sh\" adb-only" | sed -n 's/^MU300-USB /MU300-WEB-USB /p' ;;
     cat) backup_cat "${2:-}" ;;
     clean) clean "${2:-}" ;;
     *) fail bad-command ;;

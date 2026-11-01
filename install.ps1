@@ -1514,8 +1514,7 @@ if ($SD_MODE -eq 0 -and $SIZE -lt 700MB) {
         Info 'verdict.code' 'sd-only'; UsbRestore; Progress 'done' 'result' 'ok'
         exit 0
     }
-    OfferRepartition $disk $lastEnd $SIZE   # installs nothing: it refuses, or makes room for a second pass
-    UsbRestore
+    OfferRepartition $disk $lastEnd $SIZE; UsbRestore   # installs nothing: it refuses, or makes room for a second pass
     Progress 'done' 'result' 'ok'
     exit 0
 }
