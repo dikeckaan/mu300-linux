@@ -141,8 +141,48 @@ static ssize_t sipa_dele_reset_store(struct device *dev,
 
 static DEVICE_ATTR_RW(sipa_dele_reset);
 
+static ssize_t sipa_dele_ready_show(struct device *dev,
+				   struct device_attribute *attr, char *buf)
+{
+	return sysfs_emit(buf, "%d\n",
+		atomic_read(&s_cp_delegator->delegator.channel_status));
+}
+static DEVICE_ATTR_RO(sipa_dele_ready);
+
+/* A one-shot, interruptible startup gate. The three-second ceiling replaces
+ * the old loader's 30 x 100 ms log scan; a ready channel returns immediately.
+ * No resource is requested or held by this read, so idle PM stays unchanged. */
+static ssize_t sipa_dele_wait_show(struct device *dev,
+				  struct device_attribute *attr, char *buf)
+{
+	struct sipa_delegator *delegator = &s_cp_delegator->delegator;
+	int status;
+	long ret;
+
+	status = atomic_read(&delegator->channel_status);
+	if (!status) {
+		ret = wait_event_interruptible_timeout(delegator->channel_wait,
+			atomic_read(&delegator->channel_status) != 0,
+			msecs_to_jiffies(3000));
+		if (ret < 0)
+			return ret;
+		if (!ret)
+			return -ETIMEDOUT;
+		status = atomic_read(&delegator->channel_status);
+	}
+	if (status < 0)
+		return status;
+	/* CLOSE can race a wake-up. Do not report that channel as ready. */
+	if (status != 1)
+		return -EAGAIN;
+	return sysfs_emit(buf, "1\n");
+}
+static DEVICE_ATTR_RO(sipa_dele_wait);
+
 static struct attribute *sipa_dele_attrs[] = {
 	&dev_attr_sipa_dele_reset.attr,
+	&dev_attr_sipa_dele_ready.attr,
+	&dev_attr_sipa_dele_wait.attr,
 	NULL,
 };
 ATTRIBUTE_GROUPS(sipa_dele);
@@ -177,8 +217,11 @@ int cp_delegator_init(struct sipa_delegator_create_params *params)
 		return -ENOMEM;
 	ret = sipa_delegator_init(&s_cp_delegator->delegator,
 				  params);
-	if (ret)
+	if (ret) {
+		kfree(s_cp_delegator);
+		s_cp_delegator = NULL;
 		return ret;
+	}
 
 	s_cp_delegator->delegator.on_cmd = cp_dele_on_commad;
 	s_cp_delegator->delegator.local_request_prod = cp_dele_local_req_r_prod;
@@ -191,10 +234,16 @@ int cp_delegator_init(struct sipa_delegator_create_params *params)
 	 * once, which now fails on a device whose runtime PM is still off (-EACCES) instead of spinning until it is on
 	 */
 	pm_runtime_enable(s_cp_delegator->delegator.pdev);
+	ret = sipa_dele_init_sysfs(s_cp_delegator);
+	if (ret)
+		goto fail_before_start;
 	ret = sipa_delegator_start(&s_cp_delegator->delegator);
 	if (ret) {
-		pm_runtime_disable(s_cp_delegator->delegator.pdev);
-		return ret;
+		/* The connection thread is still parked on every start failure. */
+		atomic_set(&s_cp_delegator->delegator.channel_status, ret);
+		wake_up_interruptible_all(&s_cp_delegator->delegator.channel_wait);
+		sysfs_remove_groups(&params->pdev->kobj, sipa_dele_groups);
+		goto fail_before_start;
 	}
 
 	/*
@@ -211,7 +260,12 @@ int cp_delegator_init(struct sipa_delegator_create_params *params)
 	if (ret && ret != -EINPROGRESS)
 		dev_warn(params->pdev, "CONS_WIFI_DL -> PROD_CP: %d\n", ret);
 
-	sipa_dele_init_sysfs(s_cp_delegator);
-
 	return 0;
+
+fail_before_start:
+	pm_runtime_disable(s_cp_delegator->delegator.pdev);
+	sipa_delegator_exit(&s_cp_delegator->delegator);
+	kfree(s_cp_delegator);
+	s_cp_delegator = NULL;
+	return ret;
 }

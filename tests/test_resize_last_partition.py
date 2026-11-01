@@ -2,6 +2,7 @@
 install.ps1's OfferRepartition), against the tables of fakegpt.py: the factory 64 GB layout and the one of issue #32,
 where userdata fills the disk. It may change one thing, the last sector of userdata, and it refuses every table it
 does not expect before it writes a file."""
+import struct
 import subprocess
 import sys
 import tempfile
@@ -104,6 +105,58 @@ class Resize(unittest.TestCase):
         self.table('vendor64')
         self.refused(self.tool('--end-sector', str(LAST + 1), '--out', str(self.tmp / 'new')), 'past the end')
         self.refused(self.tool('--end-sector', str(FIRST), '--out', str(self.tmp / 'new')), 'would leave userdata empty')
+
+
+class Resize4k(unittest.TestCase):
+    """The 1 TB UFS of issue #396: the table in 4096-byte blocks, every number given and shown in 512-byte sectors."""
+    DISK, LAST, FIRST = fakegpt.DISK1T, fakegpt.USABLE_LAST1T, fakegpt.USERDATA_FIRST1T
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.tmp = Path(self._tmp.name)
+        fakegpt.write(str(self.tmp / 'gpt'), 'ufs1t')
+
+    def tool(self, *args, dump='gpt', sector_size=('--sector-size', '4096')):
+        return subprocess.run([sys.executable, str(TOOL), f'{self.tmp / dump}.head,{self.tmp / dump}.tail',
+                               '--disk-sectors', str(self.DISK), '--name', 'userdata', *sector_size, *args],
+                              capture_output=True, text=True)
+
+    def shown(self, r):
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return dict(l.split('=', 1) for l in r.stdout.splitlines() if l.startswith(('LAST_', 'USABLE_')))
+
+    def test_show_in_sectors_found_or_given(self):
+        want = {'LAST_NAME': 'userdata', 'LAST_FIRST': str(self.FIRST), 'LAST_END': str(self.LAST),
+                'USABLE_END': str(self.LAST)}
+        self.assertEqual(self.shown(self.tool('--show')), want)
+        self.assertEqual(self.shown(self.tool('--show', sector_size=())), want)      # from where the header is
+        self.assertEqual(self.LAST, 1999368191)
+        r = self.tool('--show', sector_size=('--sector-size', '512'))
+        self.assertNotEqual(r.returncode, 0)
+
+    def test_shrink_and_grow_back(self):
+        new_end = self.LAST - (8 << 21)                                              # 8 GiB for Linux
+        r = self.tool('--end-sector', str(new_end), '--out', str(self.tmp / 'new'))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        head, nhead = (self.tmp / 'gpt.head').read_bytes(), (self.tmp / 'new.head').read_bytes()
+        self.assertEqual((len(nhead), len((self.tmp / 'new.tail').read_bytes())), (48 * 512, 40 * 512))
+        o = 2 * 4096 + len(fakegpt.BEFORE) * 128 + 40                                  # userdata's last LBA
+        self.assertEqual(struct.unpack_from('<Q', nhead, o)[0], (new_end + 1) // 8 - 1)
+        diff = [i for i in range(len(head)) if head[i] != nhead[i]]
+        self.assertTrue(all(o <= i < o + 8 or 4096 + 16 <= i < 4096 + 20 or 4096 + 88 <= i < 4096 + 92
+                            for i in diff), diff)
+        self.assertEqual(self.shown(self.tool('--show', dump='new'))['LAST_END'], str(new_end))
+        g = self.tool('--fill', '--out', str(self.tmp / 'back'), dump='new')
+        self.assertEqual(g.returncode, 0, g.stderr)
+        self.assertEqual((self.tmp / 'back.head').read_bytes(), head)
+        self.assertEqual((self.tmp / 'back.tail').read_bytes(), (self.tmp / 'gpt.tail').read_bytes())
+
+    def test_an_end_inside_a_block_is_refused(self):
+        r = self.tool('--end-sector', str(self.LAST - (8 << 21) - 1), '--out', str(self.tmp / 'new'))
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('not the last sector of a 4096-byte block', r.stderr)
+        self.assertFalse((self.tmp / 'new.head').exists())
 
 
 if __name__ == '__main__':

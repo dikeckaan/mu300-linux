@@ -252,6 +252,15 @@ async function checkRoot() {
     S.rootState = S.probe.su ? await S.dev.root(90000) : "no-su";
     if (S.rootState === "granted") {
       await S.dev.stage(fetchDeviceFile);
+      // adb alone on USB, no MTP (tools/android-usb.sh): the device goes away and comes back as another USB device,
+      // which the browser asks about once. Should it stay, the page goes on with it as it is.
+      const dev = S.dev;
+      if (await dev.usbAdbOnly()) {
+        S.expectDisconnect = true; S.usbSwitched = true; render();
+        await new Promise((r) => setTimeout(r, 15000));
+        if (S.dev !== dev || !S.conn) return;
+        S.expectDisconnect = false; S.usbSwitched = false;
+      }
       await refreshStatus(true);
       // a job the page did not start in this visit: one that outlived a closed tab, or still runs
       const job = S.status.job;
@@ -287,8 +296,8 @@ function onConnectionLost(conn, err) {
   S.conn = null; S.dev = null;
   const hadJob = S.view === "job" && S.job && !S.job.done;
   S.phase = "idle";
-  S.lost = { hadJob, expected: !!S.expectDisconnect };
-  S.expectDisconnect = false;
+  S.lost = { hadJob, expected: !!S.expectDisconnect, usb: !!S.usbSwitched };
+  S.expectDisconnect = false; S.usbSwitched = false;
   releaseWake();
   loadGranted().then(render);
   render();
@@ -367,8 +376,8 @@ function devicePanel() {
   if (S.phase === "idle" || S.phase === "failed") {
     p.append(h("h2", {}, t("connect.title")));
     if (S.lost) {
-      p.append(callout(S.lost.hadJob ? "linux" : "", t(S.lost.expected ? "lost.expected.title" : "lost.title"),
-        t(S.lost.hadJob ? "lost.job" : S.lost.expected ? "lost.expected" : "lost.text")));
+      p.append(callout(S.lost.hadJob ? "linux" : "", t(S.lost.usb ? "lost.usb.title" : S.lost.expected ? "lost.expected.title" : "lost.title"),
+        t(S.lost.hadJob ? "lost.job" : S.lost.usb ? "lost.usb" : S.lost.expected ? "lost.expected" : "lost.text")));
     }
     if (S.phase === "failed" && S.failure) p.append(failureBox(S.failure));
     p.append(h("ol", { class: "wi-check" },

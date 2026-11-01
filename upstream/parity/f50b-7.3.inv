@@ -36,6 +36,7 @@ cpuidle WFI
 cpuidle cluster-pd
 cpuidle core-sleep-lit
 devfreq 23140000.gpu
+devfreq scene-frequency
 driver faux/faux_driver
 driver gadget/configfs-gadget.linux
 driver genpd_provider/genpd_provider
@@ -70,7 +71,10 @@ driver platform/snd_aloop
 driver platform/sprd-adi
 driver platform/sprd-bc1p2
 driver platform/sprd-bltc
+driver platform/sprd-cp-dvfs
 driver platform/sprd-cpufreq-v2
+driver platform/sprd-ddr-dvfs
+driver platform/sprd-dmc
 driver platform/sprd-efuse
 driver platform/sprd-eic
 driver platform/sprd-gpio

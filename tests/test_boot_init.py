@@ -1385,3 +1385,11 @@ class ModulesSettle(ShellTest):
     def test_it_runs_before_the_system_starts(self):
         self.assertLess(INIT.index('    modules_settle /disk\n'), INIT.index('exec switch_root'))
         self.assertLess(INIT.index('    modules_settle /disk\n'), INIT.index('(cd "$rootdir/lib/modules/$(uname -r)"'))
+
+
+class Run(unittest.TestCase):
+    """the /run the whole system keeps is not world-writable"""
+
+    def test_run_is_mounted_0755(self):
+        mounts = re.findall(r'^mount -t tmpfs .*/run$', INIT, re.M)
+        self.assertEqual(mounts, ['mount -t tmpfs -o mode=0755,nosuid,nodev tmpfs /run'])

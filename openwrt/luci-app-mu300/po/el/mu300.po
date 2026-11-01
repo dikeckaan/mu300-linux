@@ -4333,3 +4333,15 @@ msgstr "Αυτό το αρχείο είναι παλαιότερο από το �
 
 msgid "The release source was not changed"
 msgstr "Η πηγή έκδοσης δεν άλλαξε"
+
+msgid "No SIM card"
+msgstr "Δεν υπάρχει κάρτα SIM"
+
+msgid "Roaming now"
+msgstr "Περιαγωγή τώρα"
+
+msgid "Home network"
+msgstr "Οικιακό δίκτυο"
+
+msgid "The modem channels are busy with other readings; the live signal follows shortly"
+msgstr "Τα κανάλια του μόντεμ είναι απασχολημένα με άλλες αναγνώσεις· το ζωντανό σήμα έρχεται σύντομα"
