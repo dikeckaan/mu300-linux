@@ -13,7 +13,9 @@ GIB = 1 << 30
 SECTOR = 512
 # what the installers say each choice needs (their `need.*` facts say it for a device; these are for before a check)
 NEED = {'openwrt': 800 * MIB, 'ubuntu': 1600 * MIB, 'both': 2400 * MIB}
-KERNELS = ('5.4', '6.18', '7.2', '7.3')
+KERNELS = ('5.4', '6.18', '7.3')
+# a kernel the releases no longer carry, and the one that takes its place (7.2 ended with 7.2.15)
+RETIRED_KERNELS = {'7.2': '7.3'}
 UBUNTUS = ('24.04', '26.04')
 MIN_PASSWORD = 6
 
@@ -293,12 +295,13 @@ def problems(c, facts):
     if (c.ubuntu or c.openwrt) and c.place_bytes(facts) and c.place_bytes(facts) < c.needs(facts):
         out.append(('systems', _('That choice needs about {1} and the place has {2}.', size(c.needs(facts)), size(c.place_bytes(facts)))))
     if c.kernel == '5.4' and c.device == 'v50' and c.package:
-        out.append(('kernel', _('The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18, 7.2 or 7.3 of this release')))
+        out.append(('kernel', _('The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18 or 7.3 of this release')))
     elif c.kernel == '5.4' and c.device == 'v50':
-        out.append(('kernel', _('The ZTE V50 runs a mainline kernel only (6.18, 7.2 or 7.3).')))
+        out.append(('kernel', _('The ZTE V50 runs a mainline kernel only (6.18 or 7.3).')))
     elif not c.kernel_ok():
-        out.append(('kernel', _('Ubuntu 26.04 needs a mainline kernel: choose 6.18, 7.2 or 7.3.')))
-    if c.kernel not in KERNELS:
+        out.append(('kernel', _('Ubuntu 26.04 needs a mainline kernel: choose 6.18 or 7.3.')))
+    # (a package of a release that still had 7.2 carries it, and installs it: mu300-update moves it on later)
+    if c.kernel not in KERNELS and not c.package:
         out.append(('kernel', _('Choose a kernel.')))
     if c.default_linux and not 1 <= int(c.boot_attempts or 0) <= 6:
         out.append(('boot', _('Failed boots before Android: a number from 1 to 6.')))

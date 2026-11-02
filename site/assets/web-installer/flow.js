@@ -120,7 +120,7 @@ export function validateChoices(c, ctx) {
   if (!systems.length) e.push({ code: "no-system" });
   const fams = systems.map(familyOf);
   if (new Set(fams).size !== fams.length || systems.length > 2) e.push({ code: "one-of-each" });
-  if (!["5.4", "6.18", "7.2", "7.3"].includes(c.kernel)) e.push({ code: "no-kernel" });
+  if (!["5.4", "6.18", "7.3"].includes(c.kernel)) e.push({ code: "no-kernel" });
   if (systems.includes("ubuntu-26.04") && c.kernel === "5.4") e.push({ code: "ubuntu-2604-needs-mainline" });
   if (status && status.device === "v50" && c.kernel === "5.4") e.push({ code: "v50-needs-mainline" });   // FINDINGS 95
   for (const s of systems) if (ctx.zips && !ctx.zips[s]) e.push({ code: "no-zip", system: s, kernel: c.kernel });

@@ -181,7 +181,7 @@ First it brings your copy of the project up to date from GitHub and restarts its
 | *Install the VPN module?* | the optional [VPN](VPN) (about 40 MB to download) | no, add it later if needed |
 | *Install the web panel for Ubuntu?* (Ubuntu only) | Cockpit with the MU300 page, from the release's offline file (about 24 MB more; see [Control Panel (LuCI)](Control-Panel-(LuCI)#a-web-panel-on-ubuntu-cockpit)) | no, add it later with `mu300-extra install panel` |
 | *adb to Linux is on and lets every computer in ... Let in only this computer's adb key instead?* | adb to Linux over the cable is on by default, with a root shell and no password for anyone who plugs in a cable; `yes` closes it to all but the computer you install from (see [adb to Linux](#adb-to-linux)) | no (every computer; change it later with `mu300-usb adb auth keys` or `mu300-usb adb off`) |
-| *Which kernel?* 1) 5.4 2) 6.18 3) 7.2 4) 7.3 | the core of Linux; see [Kernels](Kernels) | 1 (5.4), or 2 (6.18) for Ubuntu 26.04 |
+| *Which kernel?* 1) 5.4 2) 6.18 3) 7.3 | the core of Linux; see [Kernels](Kernels) | 1 (5.4), or 2 (6.18) for Ubuntu 26.04 |
 | *update or wipe* (only when Linux is already there) | `update` keeps everything you added to the systems or changed in them (see [Updating](Updating#what-an-update-keeps)); `wipe` erases the Linux filesystem and starts fresh | update |
 | *Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)* | your login password, at least 6 characters | choose a good one |
 
@@ -347,8 +347,8 @@ unpacked on a computer, where it is the computer's installer with the zip's syst
 ([below](#a-magisk-zip-on-a-computer)).
 
 If the device runs a rooted Android with **Magisk 26 or newer**, Linux can be installed from the device itself. Each
-release has one zip per system and kernel, 15 in all (11 up to v2026.10.19.2, before 7.3), e.g. `mu300-magisk-<tag>-ubuntu-24.04-k5.4.zip` or
-`mu300-magisk-<tag>-openwrt-luci-k7.2.zip` (OpenWrt with the control panel); the same zip works on the F50 and the
+release has one zip per system and kernel, 11 in all (15 in the releases that carried both 7.2 and 7.3), e.g. `mu300-magisk-<tag>-ubuntu-24.04-k5.4.zip` or
+`mu300-magisk-<tag>-openwrt-luci-k7.3.zip` (OpenWrt with the control panel); the same zip works on the F50 and the
 U30 Air and finds the place by itself. There is no Ubuntu 26.04 zip with kernel 5.4.
 
 1. Put the zip on the device and open it in the Magisk app (Modules, Install from storage), or run

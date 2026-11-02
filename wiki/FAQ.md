@@ -32,7 +32,7 @@ Ubuntu for a general Linux computer, OpenWrt for a lean router, OpenWrt with the
 dashboard for the modem. You can install both. See [Choosing a System](Choosing-a-System).
 
 ### Which kernel?
-5.4 if unsure (the longest tested); 6.18, 7.2 or 7.3 for Ubuntu 26.04 or WireGuard, 6.18 or 7.2 for U30 Air USB host mode (not yet tried on 7.3). You can change it
+5.4 if unsure (the longest tested); 6.18 or 7.3 for Ubuntu 26.04 or WireGuard, a mainline kernel for U30 Air USB host mode (tried on 6.18 and 7.2; not yet on 7.3). You can change it
 later. See [Kernels](Kernels).
 
 ### How do I connect to it?

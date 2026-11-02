@@ -64,7 +64,7 @@ not end up in your shell history. `mu300-toolkit` has a VPN menu.
 | VLESS, VMess, Trojan, Shadowsocks links; Xray JSON | Xray-core with hev-socks5-tunnel |
 | the same links behind the kill switch; sing-box JSON | sing-box |
 | Clash/mihomo YAML | mihomo (`mu300-extra install vpn-mihomo`) |
-| hysteria2, TUIC links; dae config | [dae](https://github.com/daeuniverse/dae), the eBPF proxy (`mu300-extra install vpn-dae`): needs kernel 6.18, 7.2 or 7.3 of v2026.10.20 or newer (they carry BTF); never 5.4 |
+| hysteria2, TUIC links; dae config | [dae](https://github.com/daeuniverse/dae), the eBPF proxy (`mu300-extra install vpn-dae`): needs kernel 6.18 or 7.3 of v2026.10.20 or newer (they carry BTF); never 5.4 |
 
 Tailscale's own traffic goes through the tunnel by default.
 

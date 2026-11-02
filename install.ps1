@@ -541,6 +541,8 @@ function PackageManifest([string]$Dir) {
     $sys = @('openwrt:openwrt::mu300-openwrt-rootfs.tar.gz', 'openwrt-luci:openwrt-luci::mu300-openwrt-luci-rootfs.tar.gz',
         'ubuntu-24.04:ubuntu:24.04:mu300-ubuntu-rootfs.tar.gz', 'ubuntu-26.04:ubuntu:26.04:mu300-ubuntu-26.04-rootfs.tar.gz')
     if ($sys -cnotcontains "$($m.SYSTEM):$($m.OS):$($m.UBUNTU):$($m.ROOTFS_ASSET)") { return $null }
+    # (7.2 is retired; the zips of the releases that had it still install what they carry, and mu300-update moves
+    # such a device to 7.3 with its next update)
     if (@('5.4:mu300-kernel.tar.gz', '6.18:mu300-kernel-6.18.tar.gz', '7.2:mu300-kernel-7.2.tar.gz', '7.3:mu300-kernel-7.3.tar.gz') -cnotcontains "$($m.KERNEL):$($m.KERNEL_ASSET)") { return $null }
     if ($m.UBUNTU -eq '26.04' -and $m.KERNEL -eq '5.4') { return $null }
     foreach ($h in $m.SHA256_KERNEL, $m.SHA256_ROOTFS) { if ($h -cnotmatch '^[0-9a-f]{64}$') { return $null } }
@@ -1925,7 +1927,7 @@ if ($PKG) {
     Write-Host ('  ' + (T 'This package installs {1} with kernel {2} (release {3}); nothing is downloaded.' $PM.SYSTEM $PM.KERNEL $PM.TAG))
     Write-Host ('  ' + (T 'Another system or kernel: the zip of that combination, or ./install.sh of the project.'))
     $OSES = @($PM.OS); $BOOT_OS = $PM.OS; $UBUNTU = $(if ($PM.UBUNTU) { $PM.UBUNTU } else { '24.04' })
-    if ($DEVICE -eq 'v50' -and $PM.KERNEL -eq '5.4') { Die (T 'The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18, 7.2 or 7.3 of this release') }
+    if ($DEVICE -eq 'v50' -and $PM.KERNEL -eq '5.4') { Die (T 'The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18 or 7.3 of this release') }
     $need = if ($PM.OS -eq 'ubuntu') { $NEED_UBUNTU } else { $NEED_OPENWRT }
     if ($SIZE -lt $need) {
         $needMib = [int64]($need / 1MB); $haveMib = [int64]($SIZE / 1MB)
@@ -1974,7 +1976,7 @@ $UBUNTU = '24.04'
 if ($OSES -contains 'ubuntu') {
     Say (T 'Which Ubuntu?')
     Write-Host ('  ' + (T '1) 24.04 LTS  the longest tested, supported until 2029'))
-    Write-Host ('  ' + (T '2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18, 7.2 or 7.3'))
+    Write-Host ('  ' + (T '2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18 or 7.3'))
     switch (Ask (T 'Ubuntu') '1' 'MU300_ANS_UBUNTU') {
         { $_ -in '1', '24.04' } { $UBUNTU = '24.04' }
         { $_ -in '2', '26.04' } { $UBUNTU = '26.04' }
@@ -2050,24 +2052,28 @@ Say (T 'Which kernel?')
 Write-Host ('  ' + (T "1) 5.4   Unisoc's vendor kernel (Android 12 base): the longest tested, everything this project supports"))
 Write-Host ('  ' + (T '2) 6.18  mainline Linux, current long-term (LTS) release: newer drivers and security fixes, the same'))
 Write-Host ('  ' + (T '         functions (hotspot, mobile data, SMS, Bluetooth, VPN, GPU); no USB-C video output yet'))
-Write-Host ('  ' + (T '3) 7.2   mainline Linux, stable release: newer drivers, the same functions'))
+Write-Host ('  ' + (T '3) 7.3   mainline Linux, stable release: newer drivers, the same functions'))
 Write-Host ('  ' + (T '         as 6.18; tested less than 6.18'))
-Write-Host ('  ' + (T '4) 7.3   the newest mainline Linux (7.3 for now): the newest drivers, the same functions'))
-Write-Host ('  ' + (T '         as 6.18; tested less than 7.2'))
-Write-Host ('  ' + (T 'This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2|7.3'))
+Write-Host ('  ' + (T 'This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.3'))
 while (-not $KERNEL) {
     switch (Ask (T 'Kernel') $(if ($DEVICE -eq 'v50') { '2' } else { '1' }) 'MU300_ANS_KERNEL') {
         { $_ -in '1', '5.4' } {
             if ($DEVICE -eq 'v50') {
-                Write-Host ('  ' + (T 'The ZTE V50 runs a mainline kernel only (6.18, 7.2 or 7.3).'))
+                Write-Host ('  ' + (T 'The ZTE V50 runs a mainline kernel only (6.18 or 7.3).'))
             } elseif ($UBUNTU -eq '26.04') {
-                Write-Host ('  ' + (T 'Ubuntu 26.04 needs a mainline kernel (6.18, 7.2 or 7.3): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).'))
+                Write-Host ('  ' + (T 'Ubuntu 26.04 needs a mainline kernel (6.18 or 7.3): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).'))
             } else { $KERNEL = '5.4' }
         }
         { $_ -in '2', '6.18' } { $KERNEL = '6.18' }
-        { $_ -in '3', '7.2' } { $KERNEL = '7.2' }
-        { $_ -in '4', '7.3' } { $KERNEL = '7.3' }
-        default { Write-Host ('  ' + (T 'enter 1, 2, 3 or 4')) }
+        # (4 was 7.3 while 7.2 was the third: saved answers of then still mean it)
+        { $_ -in '3', '7.3', '4' } { $KERNEL = '7.3' }
+        # 7.2 is retired (kernel.org ended it with 7.2.15) and no release after it has its bundle: an answer of
+        # before, or a habit, gets the kernel that took its place
+        { $_ -eq '7.2' } {
+            Write-Host ('  ' + (T 'Kernel 7.2 is retired (its last release was 7.2.15): installing 7.3, the kernel that takes its place.'))
+            $KERNEL = '7.3'
+        }
+        default { Write-Host ('  ' + (T 'enter 1, 2 or 3')) }
     }
 }
 }
@@ -2280,7 +2286,7 @@ if ($HAVE54) {
     # kernel is checked below)
     if (($DEVICE -notin @('f50', 'v50')) -and -not (Test-Path "$REL\kernel\modules-$DEVICE")) { Die (T 'release {1} does not support this device yet; use a newer one' $Release) }
 }
-# a mainline kernel (6.18, 7.2, 7.3): its bundle, unpacked
+# a mainline kernel (6.18, 7.3): its bundle, unpacked
 $KMAIN = $null
 if ($KERNEL -ne '5.4') {
     $KMAIN = "$REL\kernel-$KERNEL"
@@ -2319,7 +2325,7 @@ Step 'bootimage' 68
 Say (T 'Building the boot image')
 WriteUnix "$Work\init" (((Get-Content -Raw "$Top\boot\init") -replace '(?m)^ROOT_OFFSET=[0-9]*', "ROOT_OFFSET=$OFF"))
 # a mainline kernel: its kernel, and its generic ramdisk segment behind this one (its init and modules win) - the
-# image that "mu300-update kernel 6.18" (or 7.2, 7.3) writes on the device
+# image that "mu300-update kernel 6.18" (or 7.3) writes on the device
 $bootArgs = @("$Top\boot\build-boot-image.py", '--stock-boot', "$Work\dumps\boot_$ANDROID_SLOT.img", '--misc-head', "$Work\dumps\misc-head.bin",
     '--kernel', $(if ($KMAIN) { "$KMAIN\Image" } else { "$REL\kernel\Image" }),
     '--init', "$Work\init", '--ueventd-perms', "$Top\android-vendor\ueventd-perms.sh",

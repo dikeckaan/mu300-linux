@@ -14,7 +14,7 @@ The full, authoritative instructions are in
 | File | Contents |
 |---|---|
 | `mu300-kernel.tar.gz` | Linux 5.4.254 `Image` and modules (with the U30 Air's own), static busybox and logdw, the generic boot ramdisk segment |
-| `mu300-kernel-6.18.tar.gz`, `mu300-kernel-7.2.tar.gz`, `mu300-kernel-7.3.tar.gz` | the mainline kernels and their modules (7.3 from the next release after v2026.10.19.2 on) |
+| `mu300-kernel-6.18.tar.gz`, `mu300-kernel-7.3.tar.gz` | the mainline kernels and their modules (7.3 from the next release after v2026.10.19.2 on; older releases also have `mu300-kernel-7.2.tar.gz`, 7.2 being retired since) |
 | `mu300-ubuntu-rootfs.tar.gz`, `mu300-ubuntu-26.04-rootfs.tar.gz` | Ubuntu 24.04 and 26.04 |
 | `mu300-openwrt-rootfs.tar.gz`, `mu300-openwrt-luci-rootfs.tar.gz` | OpenWrt 25.12.6, plain and with the control panel |
 | `mu300-extra-lang.tar.gz` | more web interface languages |
@@ -63,7 +63,7 @@ applied (about 10 minutes on Apple silicon). Then:
 * 5.4 kernel: ZTE's GPL release for the U30 Air, mirrored at
   [dikeckaan/zte-ums9620-kernel-5.4.254](https://github.com/dikeckaan/zte-ums9620-kernel-5.4.254).
 * Wi-Fi, Bluetooth and GPU drivers: realme C51/C53 AndroidT kernel release (GPL-2.0).
-* Mainline 6.18, 7.2 and 7.3: kernel.org Linux plus the port in
+* Mainline 6.18 and 7.3: kernel.org Linux plus the port in
   [`upstream/`](https://github.com/dikeckaan/mu300-linux/tree/main/upstream).
 * Each release's notes list the exact source commits.
 

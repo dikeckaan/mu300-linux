@@ -1871,8 +1871,11 @@ msgstr "Çalışan kernel"
 msgid "Kernel chosen"
 msgstr "Seçilen kernel"
 
-msgid "5.4 is the vendor kernel (Android's drivers); 6.18 is the mainline long-term kernel; 7.2 the stable mainline one; 7.3 the newest mainline one. A change downloads the kernel and takes effect at the next reboot."
-msgstr "5.4 üretici kernelidir (Android'in sürücüleri); 6.18 uzun süreli destekli mainline kerneldir; 7.2 kararlı mainline kerneldir; 7.3 en yeni mainline kerneldir. Bir değişiklik kerneli indirir ve sonraki yeniden başlatmada etkili olur."
+msgid "5.4 is the vendor kernel (Android's drivers); 6.18 is the mainline long-term kernel; 7.3 the stable mainline one. A change downloads the kernel and takes effect at the next reboot."
+msgstr "5.4 üretici kernelidir (Android'in sürücüleri); 6.18 uzun süreli destekli mainline kerneldir; 7.3 kararlı mainline kerneldir. Bir değişiklik kerneli indirir ve sonraki yeniden başlatmada etkili olur."
+
+msgid "Kernel 7.2 is retired: the next update installs 7.3, the kernel that takes its place."
+msgstr "Kernel 7.2 artık desteklenmiyor: sonraki güncelleme, yerine geçen 7.3'ü kurar."
 
 msgid "Change the kernel"
 msgstr "Kerneli değiştir"

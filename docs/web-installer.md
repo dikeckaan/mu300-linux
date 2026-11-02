@@ -282,7 +282,7 @@ the first row that does not match.
 | 16 | U30 Air: Make the port a host. | The page loses the device; a flash drive works; a restart brings the USB connection back. | |
 | 17 | System: device name, time zone; login password (then log in over SSH with it); SSH off and on. | `hostname`, `date`, `ssh` refused while off. | OpenWrt without zoneinfo: a time zone is refused as "not available". |
 | 18 | Check for updates; Update now (a release newer than the device's), close the tab half way, reconnect. | The job box shows the update from its start and its end; after a restart the new release. | Update and kernel jobs have no Cancel. |
-| 19 | Kernel 7.2, then back. | `uname -r` after the restart. | |
+| 19 | Kernel 7.3, then back. | `uname -r` after the restart. | |
 | 20 | Extras: install `panel` (Ubuntu) or `lang` (OpenWrt), remove it. | `mu300-extra status`. | |
 | 21 | Read the logs; Save a diagnostics file. | The file has no SSID, no MAC in full, no phone number, no password. | Attach it to the run's notes. |
 | 22 | Make Android the default; restart. | Android starts; from Android, Start Linux again. | |

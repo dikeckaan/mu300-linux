@@ -1871,8 +1871,11 @@ msgstr "正在运行的内核"
 msgid "Kernel chosen"
 msgstr "已选择的内核"
 
-msgid "5.4 is the vendor kernel (Android's drivers); 6.18 is the mainline long-term kernel; 7.2 the stable mainline one; 7.3 the newest mainline one. A change downloads the kernel and takes effect at the next reboot."
-msgstr "5.4 是厂商内核（Android 的驱动）；6.18 是主线长期支持内核；7.2 是主线稳定版内核；7.3 是最新的主线内核。更换会下载内核，并在下次重启时生效。"
+msgid "5.4 is the vendor kernel (Android's drivers); 6.18 is the mainline long-term kernel; 7.3 the stable mainline one. A change downloads the kernel and takes effect at the next reboot."
+msgstr "5.4 是厂商内核（Android 的驱动）；6.18 是主线长期支持内核；7.3 是主线稳定版内核。更换会下载内核，并在下次重启时生效。"
+
+msgid "Kernel 7.2 is retired: the next update installs 7.3, the kernel that takes its place."
+msgstr "7.2 内核已停止维护：下一次更新会安装接替它的 7.3。"
 
 msgid "Change the kernel"
 msgstr "更换内核"

@@ -1,742 +1,742 @@
 # check-parity.py --mainline OUT --record: per mainline series, which of the names parity-5.4.txt and
 # the 5.4 build use it has (ko: a module or built-in object; cfg: a symbol =y or =m)
-cfg ARM_SPRD_CPUFREQ_V2 6.18 7.2 7.3
-cfg BITREVERSE 6.18 7.2 7.3
-cfg CHARGER_BQ256XX 6.18 7.2 7.3
-cfg CHARGER_POLICY_SERVICE 6.18 7.2 7.3
-cfg CPU_FREQ_GOV_CONSERVATIVE 6.18 7.2 7.3
-cfg CPU_THERMAL 6.18 7.2 7.3
-cfg CRC32 6.18 7.2 7.3
-cfg CRYPTO_AES 6.18 7.2 7.3
-cfg CRYPTO_BLAKE2B 6.18 7.2 7.3
-cfg CRYPTO_CHACHA20 6.18 7.2 7.3
-cfg CRYPTO_CRC32C 6.18 7.2 7.3
-cfg CRYPTO_DRBG 6.18 7.2 7.3
+cfg ARM_SPRD_CPUFREQ_V2 6.18 7.3
+cfg BITREVERSE 6.18 7.3
+cfg CHARGER_BQ256XX 6.18 7.3
+cfg CHARGER_POLICY_SERVICE 6.18 7.3
+cfg CPU_FREQ_GOV_CONSERVATIVE 6.18 7.3
+cfg CPU_THERMAL 6.18 7.3
+cfg CRC32 6.18 7.3
+cfg CRYPTO_AES 6.18 7.3
+cfg CRYPTO_BLAKE2B 6.18 7.3
+cfg CRYPTO_CHACHA20 6.18 7.3
+cfg CRYPTO_CRC32C 6.18 7.3
+cfg CRYPTO_DRBG 6.18 7.3
 cfg CRYPTO_GHASH 6.18
-cfg CRYPTO_LIB_AES 6.18 7.2 7.3
-cfg CRYPTO_LIB_CHACHA_ARCH 6.18 7.2 7.3
-cfg CRYPTO_LIB_CURVE25519 6.18 7.2 7.3
-cfg CRYPTO_LIB_GF128HASH 7.2 7.3
-cfg CRYPTO_LIB_NH 7.2 7.3
-cfg CRYPTO_LIB_POLY1305 6.18 7.2 7.3
-cfg CRYPTO_LIB_POLY1305_ARCH 6.18 7.2 7.3
-cfg CRYPTO_LIB_SHA1_ARCH 6.18 7.2 7.3
-cfg CRYPTO_LIB_SHA256_ARCH 6.18 7.2 7.3
+cfg CRYPTO_LIB_AES 6.18 7.3
+cfg CRYPTO_LIB_CHACHA_ARCH 6.18 7.3
+cfg CRYPTO_LIB_CURVE25519 6.18 7.3
+cfg CRYPTO_LIB_GF128HASH 7.3
+cfg CRYPTO_LIB_NH 7.3
+cfg CRYPTO_LIB_POLY1305 6.18 7.3
+cfg CRYPTO_LIB_POLY1305_ARCH 6.18 7.3
+cfg CRYPTO_LIB_SHA1_ARCH 6.18 7.3
+cfg CRYPTO_LIB_SHA256_ARCH 6.18 7.3
 cfg CRYPTO_NHPOLY1305 6.18
-cfg CRYPTO_SHA1 6.18 7.2 7.3
-cfg CRYPTO_SHA256 6.18 7.2 7.3
-cfg CRYPTO_SHA512 6.18 7.2 7.3
-cfg CRYPTO_SKCIPHER 6.18 7.2 7.3
-cfg DEVFREQ_GOV_PASSIVE 6.18 7.2 7.3
-cfg DEVFREQ_THERMAL 6.18 7.2 7.3
-cfg DMABUF_HEAPS 6.18 7.2 7.3
-cfg FIXED_PHY 6.18 7.2 7.3
-cfg FUEL_GAUGE_SC27XX 6.18 7.2 7.3
-cfg HW_RANDOM_SPRD 6.18 7.2 7.3
-cfg I2C_CHARDEV 6.18 7.2 7.3
-cfg INPUT_SC27XX_VIBRA 6.18 7.2 7.3
-cfg IPV6 6.18 7.2 7.3
-cfg LEDS_SC27XX_KPLED 6.18 7.2 7.3
-cfg LEDS_ZTE_LDO 6.18 7.2 7.3
-cfg MFD_SC27XX_PMIC 6.18 7.2 7.3
-cfg MMC_HSQ 6.18 7.2 7.3
-cfg NETFILTER_NETLINK 6.18 7.2 7.3
-cfg NF_TABLES 6.18 7.2 7.3
-cfg PCIE_SPRD 6.18 7.2 7.3
-cfg POWER_SUPPLY 6.18 7.2 7.3
-cfg REGULATOR 6.18 7.2 7.3
-cfg REGULATOR_UMP9621 6.18 7.2 7.3
-cfg SERIAL_CORE 6.18 7.2 7.3
-cfg SPI_SPRD_ADI 6.18 7.2 7.3
-cfg SPRD_7SRESET 6.18 7.2 7.3
-cfg SPRD_BC1P2 6.18 7.2 7.3
-cfg SPRD_CPU_HOTPLUG_COOLING 6.18 7.2 7.3
-cfg SPRD_DMC_DRV 6.18 7.2 7.3
-cfg SPRD_PMIC_SYSCON 6.18 7.2 7.3
-cfg SPRD_SOC_ID 6.18 7.2 7.3
-cfg SPRD_THERMAL_R5P0 6.18 7.2 7.3
-cfg SPRD_TIMER 6.18 7.2 7.3
-cfg SPRD_TOP_DVFS_DEVFREQ 6.18 7.2 7.3
-cfg SPRD_UMP96XX_TSENSOR 6.18 7.2 7.3
-cfg SPRD_UMS9620_IPA_PD 6.18 7.2 7.3
-cfg TYPEC_SC27XX 6.18 7.2 7.3
-cfg TYPEC_TCPM 6.18 7.2 7.3
-cfg TYPEC_UMP9620 6.18 7.2 7.3
-cfg UNIX 6.18 7.2 7.3
-cfg USB_CONFIGFS_ECM_SUBSET 6.18 7.2 7.3
-cfg USB_CONFIGFS_F_HID 6.18 7.2 7.3
-cfg USB_CONFIGFS_F_MIDI 6.18 7.2 7.3
-cfg USB_CONFIGFS_SERIAL 6.18 7.2 7.3
-cfg USB_DWC3 6.18 7.2 7.3
-cfg USB_DWC3_DUAL_ROLE 6.18 7.2 7.3
-cfg USB_DWC3_OF_SIMPLE 6.18 7.2 7.3
-cfg USB_SPRD_UMS9620_SSPHY 6.18 7.2 7.3
-cfg VLAN_8021Q 6.18 7.2 7.3
-cfg XOR_BLOCKS 6.18 7.2 7.3
-cfg ZTE_BOARD_STATE 6.18 7.2 7.3
-cfg ZTE_CARD_HOLDER_DET 6.18 7.2 7.3
-ko 8021q 6.18 7.2 7.3
-ko 8250 6.18 7.2 7.3
-ko 8250_base 6.18 7.2 7.3
-ko 8250_of 6.18 7.2 7.3
-ko 8250_pci 6.18 7.2 7.3
-ko act_bpf 6.18 7.2 7.3
-ko act_gact 6.18 7.2 7.3
-ko act_mirred 6.18 7.2 7.3
-ko act_police 6.18 7.2 7.3
-ko adiantum 6.18 7.2 7.3
-ko aead 6.18 7.2 7.3
+cfg CRYPTO_SHA1 6.18 7.3
+cfg CRYPTO_SHA256 6.18 7.3
+cfg CRYPTO_SHA512 6.18 7.3
+cfg CRYPTO_SKCIPHER 6.18 7.3
+cfg DEVFREQ_GOV_PASSIVE 6.18 7.3
+cfg DEVFREQ_THERMAL 6.18 7.3
+cfg DMABUF_HEAPS 6.18 7.3
+cfg FIXED_PHY 6.18 7.3
+cfg FUEL_GAUGE_SC27XX 6.18 7.3
+cfg HW_RANDOM_SPRD 6.18 7.3
+cfg I2C_CHARDEV 6.18 7.3
+cfg INPUT_SC27XX_VIBRA 6.18 7.3
+cfg IPV6 6.18 7.3
+cfg LEDS_SC27XX_KPLED 6.18 7.3
+cfg LEDS_ZTE_LDO 6.18 7.3
+cfg MFD_SC27XX_PMIC 6.18 7.3
+cfg MMC_HSQ 6.18 7.3
+cfg NETFILTER_NETLINK 6.18 7.3
+cfg NF_TABLES 6.18 7.3
+cfg PCIE_SPRD 6.18 7.3
+cfg POWER_SUPPLY 6.18 7.3
+cfg REGULATOR 6.18 7.3
+cfg REGULATOR_UMP9621 6.18 7.3
+cfg SERIAL_CORE 6.18 7.3
+cfg SPI_SPRD_ADI 6.18 7.3
+cfg SPRD_7SRESET 6.18 7.3
+cfg SPRD_BC1P2 6.18 7.3
+cfg SPRD_CPU_HOTPLUG_COOLING 6.18 7.3
+cfg SPRD_DMC_DRV 6.18 7.3
+cfg SPRD_PMIC_SYSCON 6.18 7.3
+cfg SPRD_SOC_ID 6.18 7.3
+cfg SPRD_THERMAL_R5P0 6.18 7.3
+cfg SPRD_TIMER 6.18 7.3
+cfg SPRD_TOP_DVFS_DEVFREQ 6.18 7.3
+cfg SPRD_UMP96XX_TSENSOR 6.18 7.3
+cfg SPRD_UMS9620_IPA_PD 6.18 7.3
+cfg TYPEC_SC27XX 6.18 7.3
+cfg TYPEC_TCPM 6.18 7.3
+cfg TYPEC_UMP9620 6.18 7.3
+cfg UNIX 6.18 7.3
+cfg USB_CONFIGFS_ECM_SUBSET 6.18 7.3
+cfg USB_CONFIGFS_F_HID 6.18 7.3
+cfg USB_CONFIGFS_F_MIDI 6.18 7.3
+cfg USB_CONFIGFS_SERIAL 6.18 7.3
+cfg USB_DWC3 6.18 7.3
+cfg USB_DWC3_DUAL_ROLE 6.18 7.3
+cfg USB_DWC3_OF_SIMPLE 6.18 7.3
+cfg USB_SPRD_UMS9620_SSPHY 6.18 7.3
+cfg VLAN_8021Q 6.18 7.3
+cfg XOR_BLOCKS 6.18 7.3
+cfg ZTE_BOARD_STATE 6.18 7.3
+cfg ZTE_CARD_HOLDER_DET 6.18 7.3
+ko 8021q 6.18 7.3
+ko 8250 6.18 7.3
+ko 8250_base 6.18 7.3
+ko 8250_of 6.18 7.3
+ko 8250_pci 6.18 7.3
+ko act_bpf 6.18 7.3
+ko act_gact 6.18 7.3
+ko act_mirred 6.18 7.3
+ko act_police 6.18 7.3
+ko adiantum 6.18 7.3
+ko aead 6.18 7.3
 ko aes_arm64 6.18
-ko aes_ce_blk 6.18 7.2 7.3
-ko aes_ce_ccm 6.18 7.2 7.3
+ko aes_ce_blk 6.18 7.3
+ko aes_ce_ccm 6.18 7.3
 ko aes_ce_cipher 6.18
 ko aes_generic 6.18
-ko aes_neon_blk 6.18 7.2 7.3
-ko af_alg 6.18 7.2 7.3
-ko af_key 6.18 7.2 7.3
-ko af_packet 6.18 7.2 7.3
-ko af_packet_diag 6.18 7.2 7.3
-ko akcipher 6.18 7.2 7.3
-ko algif_aead 6.18 7.2 7.3
-ko algif_hash 6.18 7.2 7.3
-ko algif_rng 6.18 7.2 7.3
-ko algif_skcipher 6.18 7.2 7.3
-ko amba_pl011 6.18 7.2 7.3
+ko aes_neon_blk 6.18 7.3
+ko af_alg 6.18 7.3
+ko af_key 6.18 7.3
+ko af_packet 6.18 7.3
+ko af_packet_diag 6.18 7.3
+ko akcipher 6.18 7.3
+ko algif_aead 6.18 7.3
+ko algif_hash 6.18 7.3
+ko algif_rng 6.18 7.3
+ko algif_skcipher 6.18 7.3
+ko amba_pl011 6.18 7.3
 ko ansi_cprng 6.18
-ko aqc111 6.18 7.2 7.3
-ko arc4 6.18 7.2 7.3
-ko arp_tables 6.18 7.2 7.3
-ko arpt_mangle 6.18 7.2 7.3
-ko arptable_filter 6.18 7.2 7.3
-ko asix 6.18 7.2 7.3
-ko asn1_decoder 6.18 7.2 7.3
-ko atkbd 6.18 7.2 7.3
-ko auth_rpcgss 6.18 7.2 7.3
-ko authenc 6.18 7.2 7.3
-ko authencesn 6.18 7.2 7.3
-ko autofs4 6.18 7.2 7.3
-ko ax88179_178a 6.18 7.2 7.3
-ko backlight 6.18 7.2 7.3
-ko binfmt_misc 6.18 7.2 7.3
-ko binfmt_script 6.18 7.2 7.3
+ko aqc111 6.18 7.3
+ko arc4 6.18 7.3
+ko arp_tables 6.18 7.3
+ko arpt_mangle 6.18 7.3
+ko arptable_filter 6.18 7.3
+ko asix 6.18 7.3
+ko asn1_decoder 6.18 7.3
+ko atkbd 6.18 7.3
+ko auth_rpcgss 6.18 7.3
+ko authenc 6.18 7.3
+ko authencesn 6.18 7.3
+ko autofs4 6.18 7.3
+ko ax88179_178a 6.18 7.3
+ko backlight 6.18 7.3
+ko binfmt_misc 6.18 7.3
+ko binfmt_script 6.18 7.3
 ko blake2b_generic 6.18
-ko bluetooth 6.18 7.2 7.3
-ko board_state 6.18 7.2 7.3
-ko brd 6.18 7.2 7.3
-ko bridge 6.18 7.2 7.3
-ko bsd_comp 6.18 7.2 7.3
-ko btbcm 6.18 7.2 7.3
-ko btrfs 6.18 7.2 7.3
-ko btsdio 6.18 7.2 7.3
-ko can 6.18 7.2 7.3
-ko can_bcm 6.18 7.2 7.3
-ko can_dev 6.18 7.2 7.3
-ko can_gw 6.18 7.2 7.3
-ko can_raw 6.18 7.2 7.3
-ko cbc 6.18 7.2 7.3
-ko ccm 6.18 7.2 7.3
-ko cdc_acm 6.18 7.2 7.3
-ko cdc_ether 6.18 7.2 7.3
-ko cdc_mbim 6.18 7.2 7.3
-ko cdc_ncm 6.18 7.2 7.3
-ko cdc_wdm 6.18 7.2 7.3
-ko cfg80211 6.18 7.2 7.3
-ko ch341 6.18 7.2 7.3
-ko chacha20poly1305 6.18 7.2 7.3
-ko charger_policy_service 6.18 7.2 7.3
-ko cifs 6.18 7.2 7.3
-ko clk_sprd 6.18 7.2 7.3
-ko cls_basic 6.18 7.2 7.3
-ko cls_bpf 6.18 7.2 7.3
-ko cls_fw 6.18 7.2 7.3
-ko cls_matchall 6.18 7.2 7.3
-ko cls_u32 6.18 7.2 7.3
-ko cmac 6.18 7.2 7.3
-ko configfs 6.18 7.2 7.3
-ko configs 6.18 7.2 7.3
-ko core 6.18 7.2 7.3
-ko cp210x 6.18 7.2 7.3
-ko cpufreq_conservative 6.18 7.2 7.3
-ko cpufreq_performance 6.18 7.2 7.3
-ko cpufreq_powersave 6.18 7.2 7.3
-ko cpufreq_userspace 6.18 7.2 7.3
-ko crc16 6.18 7.2 7.3
-ko crc32 6.18 7.2 7.3
-ko crc8 6.18 7.2 7.3
-ko crc_ccitt 6.18 7.2 7.3
-ko crc_itu_t 6.18 7.2 7.3
-ko cryptd 6.18 7.2 7.3
-ko crypto 6.18 7.2 7.3
-ko crypto_acompress 6.18 7.2 7.3
-ko crypto_algapi 6.18 7.2 7.3
-ko crypto_engine 6.18 7.2 7.3
-ko crypto_hash 6.18 7.2 7.3
-ko crypto_null 6.18 7.2 7.3
-ko cryptomgr 6.18 7.2 7.3
-ko ctr 6.18 7.2 7.3
-ko cts 6.18 7.2 7.3
-ko deflate 6.18 7.2 7.3
-ko des_generic 6.18 7.2 7.3
-ko dh_generic 6.18 7.2 7.3
-ko dm_bufio 6.18 7.2 7.3
-ko dm_crypt 6.18 7.2 7.3
-ko dm_mod 6.18 7.2 7.3
-ko dm_snapshot 6.18 7.2 7.3
-ko dm_verity 6.18 7.2 7.3
-ko dmc_drv 6.18 7.2 7.3
-ko dns_resolver 6.18 7.2 7.3
-ko drbg 6.18 7.2 7.3
-ko drm 6.18 7.2 7.3
-ko drm_kms_helper 6.18 7.2 7.3
-ko drm_panel_orientation_quirks 6.18 7.2 7.3
-ko dummy 6.18 7.2 7.3
-ko dwc3_haps 6.18 7.2 7.3
-ko dwc3_of_simple 6.18 7.2 7.3
-ko ecb 6.18 7.2 7.3
-ko ecc 6.18 7.2 7.3
-ko ecdh_generic 6.18 7.2 7.3
-ko echainiv 6.18 7.2 7.3
-ko em_u32 6.18 7.2 7.3
-ko encrypted_keys 6.18 7.2 7.3
-ko erofs 6.18 7.2 7.3
-ko esp4 6.18 7.2 7.3
-ko esp6 6.18 7.2 7.3
-ko essiv 6.18 7.2 7.3
-ko evdev 6.18 7.2 7.3
-ko exfat 6.18 7.2 7.3
-ko exportfs 6.18 7.2 7.3
-ko ext4 6.18 7.2 7.3
-ko extcon_core 6.18 7.2 7.3
-ko extcon_usb_gpio 6.18 7.2 7.3
-ko f2fs 6.18 7.2 7.3
-ko fat 6.18 7.2 7.3
-ko ff_memless 6.18 7.2 7.3
-ko firmware_class 6.18 7.2 7.3
-ko fixed_phy 6.18 7.2 7.3
-ko ftdi_sio 6.18 7.2 7.3
-ko fuse 6.18 7.2 7.3
-ko gcm 6.18 7.2 7.3
-ko gf128mul 6.18 7.2 7.3
-ko ghash_ce 6.18 7.2 7.3
+ko bluetooth 6.18 7.3
+ko board_state 6.18 7.3
+ko brd 6.18 7.3
+ko bridge 6.18 7.3
+ko bsd_comp 6.18 7.3
+ko btbcm 6.18 7.3
+ko btrfs 6.18 7.3
+ko btsdio 6.18 7.3
+ko can 6.18 7.3
+ko can_bcm 6.18 7.3
+ko can_dev 6.18 7.3
+ko can_gw 6.18 7.3
+ko can_raw 6.18 7.3
+ko cbc 6.18 7.3
+ko ccm 6.18 7.3
+ko cdc_acm 6.18 7.3
+ko cdc_ether 6.18 7.3
+ko cdc_mbim 6.18 7.3
+ko cdc_ncm 6.18 7.3
+ko cdc_wdm 6.18 7.3
+ko cfg80211 6.18 7.3
+ko ch341 6.18 7.3
+ko chacha20poly1305 6.18 7.3
+ko charger_policy_service 6.18 7.3
+ko cifs 6.18 7.3
+ko clk_sprd 6.18 7.3
+ko cls_basic 6.18 7.3
+ko cls_bpf 6.18 7.3
+ko cls_fw 6.18 7.3
+ko cls_matchall 6.18 7.3
+ko cls_u32 6.18 7.3
+ko cmac 6.18 7.3
+ko configfs 6.18 7.3
+ko configs 6.18 7.3
+ko core 6.18 7.3
+ko cp210x 6.18 7.3
+ko cpufreq_conservative 6.18 7.3
+ko cpufreq_performance 6.18 7.3
+ko cpufreq_powersave 6.18 7.3
+ko cpufreq_userspace 6.18 7.3
+ko crc16 6.18 7.3
+ko crc32 6.18 7.3
+ko crc8 6.18 7.3
+ko crc_ccitt 6.18 7.3
+ko crc_itu_t 6.18 7.3
+ko cryptd 6.18 7.3
+ko crypto 6.18 7.3
+ko crypto_acompress 6.18 7.3
+ko crypto_algapi 6.18 7.3
+ko crypto_engine 6.18 7.3
+ko crypto_hash 6.18 7.3
+ko crypto_null 6.18 7.3
+ko cryptomgr 6.18 7.3
+ko ctr 6.18 7.3
+ko cts 6.18 7.3
+ko deflate 6.18 7.3
+ko des_generic 6.18 7.3
+ko dh_generic 6.18 7.3
+ko dm_bufio 6.18 7.3
+ko dm_crypt 6.18 7.3
+ko dm_mod 6.18 7.3
+ko dm_snapshot 6.18 7.3
+ko dm_verity 6.18 7.3
+ko dmc_drv 6.18 7.3
+ko dns_resolver 6.18 7.3
+ko drbg 6.18 7.3
+ko drm 6.18 7.3
+ko drm_kms_helper 6.18 7.3
+ko drm_panel_orientation_quirks 6.18 7.3
+ko dummy 6.18 7.3
+ko dwc3_haps 6.18 7.3
+ko dwc3_of_simple 6.18 7.3
+ko ecb 6.18 7.3
+ko ecc 6.18 7.3
+ko ecdh_generic 6.18 7.3
+ko echainiv 6.18 7.3
+ko em_u32 6.18 7.3
+ko encrypted_keys 6.18 7.3
+ko erofs 6.18 7.3
+ko esp4 6.18 7.3
+ko esp6 6.18 7.3
+ko essiv 6.18 7.3
+ko evdev 6.18 7.3
+ko exfat 6.18 7.3
+ko exportfs 6.18 7.3
+ko ext4 6.18 7.3
+ko extcon_core 6.18 7.3
+ko extcon_usb_gpio 6.18 7.3
+ko f2fs 6.18 7.3
+ko fat 6.18 7.3
+ko ff_memless 6.18 7.3
+ko firmware_class 6.18 7.3
+ko fixed_phy 6.18 7.3
+ko ftdi_sio 6.18 7.3
+ko fuse 6.18 7.3
+ko gcm 6.18 7.3
+ko gf128mul 6.18 7.3
+ko ghash_ce 6.18 7.3
 ko ghash_generic 6.18
-ko gnss 6.18 7.2 7.3
-ko governor_passive 6.18 7.2 7.3
-ko governor_performance 6.18 7.2 7.3
-ko governor_powersave 6.18 7.2 7.3
-ko governor_simpleondemand 6.18 7.2 7.3
-ko governor_userspace 6.18 7.2 7.3
-ko gpio_eic_sprd 6.18 7.2 7.3
-ko gpio_keys 6.18 7.2 7.3
-ko gpio_pmic_eic_sprd 6.18 7.2 7.3
-ko gpio_sprd 6.18 7.2 7.3
-ko grace 6.18 7.2 7.3
-ko gre 6.18 7.2 7.3
-ko gspca_main 6.18 7.2 7.3
-ko hci_uart 6.18 7.2 7.3
-ko hid 6.18 7.2 7.3
-ko hid_apple 6.18 7.2 7.3
-ko hid_elecom 6.18 7.2 7.3
-ko hid_generic 6.18 7.2 7.3
-ko hid_logitech 6.18 7.2 7.3
-ko hid_logitech_dj 6.18 7.2 7.3
-ko hid_logitech_hidpp 6.18 7.2 7.3
-ko hid_magicmouse 6.18 7.2 7.3
-ko hid_microsoft 6.18 7.2 7.3
-ko hid_multitouch 6.18 7.2 7.3
-ko hid_nintendo 6.18 7.2 7.3
-ko hid_picolcd 6.18 7.2 7.3
-ko hid_plantronics 6.18 7.2 7.3
-ko hid_playstation 6.18 7.2 7.3
-ko hid_prodikeys 6.18 7.2 7.3
-ko hid_roccat 6.18 7.2 7.3
-ko hid_roccat_arvo 6.18 7.2 7.3
-ko hid_roccat_common 6.18 7.2 7.3
-ko hid_roccat_isku 6.18 7.2 7.3
-ko hid_roccat_kone 6.18 7.2 7.3
-ko hid_roccat_koneplus 6.18 7.2 7.3
-ko hid_roccat_konepure 6.18 7.2 7.3
-ko hid_roccat_kovaplus 6.18 7.2 7.3
-ko hid_roccat_lua 6.18 7.2 7.3
-ko hid_roccat_pyra 6.18 7.2 7.3
-ko hid_roccat_ryos 6.18 7.2 7.3
-ko hid_roccat_savu 6.18 7.2 7.3
-ko hid_sony 6.18 7.2 7.3
-ko hid_steam 6.18 7.2 7.3
-ko hid_uclogic 6.18 7.2 7.3
-ko hid_wiimote 6.18 7.2 7.3
-ko hidp 6.18 7.2 7.3
-ko hmac 6.18 7.2 7.3
-ko huawei_cdc_ncm 6.18 7.2 7.3
-ko i2c_algo_bit 6.18 7.2 7.3
-ko i2c_core 6.18 7.2 7.3
-ko i2c_dev 6.18 7.2 7.3
-ko i2c_sprd 6.18 7.2 7.3
-ko ifb 6.18 7.2 7.3
-ko industrialio 6.18 7.2 7.3
-ko inet_diag 6.18 7.2 7.3
-ko input_core 6.18 7.2 7.3
-ko input_leds 6.18 7.2 7.3
-ko iova 6.18 7.2 7.3
-ko ip6_gre 6.18 7.2 7.3
-ko ip6_tables 6.18 7.2 7.3
-ko ip6_tunnel 6.18 7.2 7.3
-ko ip6_udp_tunnel 6.18 7.2 7.3
-ko ip6_vti 6.18 7.2 7.3
-ko ip6t_REJECT 6.18 7.2 7.3
-ko ip6t_rpfilter 6.18 7.2 7.3
-ko ip6table_filter 6.18 7.2 7.3
-ko ip6table_mangle 6.18 7.2 7.3
-ko ip6table_raw 6.18 7.2 7.3
-ko ip_gre 6.18 7.2 7.3
-ko ip_set 6.18 7.2 7.3
-ko ip_tables 6.18 7.2 7.3
-ko ip_tunnel 6.18 7.2 7.3
-ko ip_vti 6.18 7.2 7.3
-ko ipcomp6 6.18 7.2 7.3
-ko ipip 6.18 7.2 7.3
-ko ipt_REJECT 6.18 7.2 7.3
-ko iptable_filter 6.18 7.2 7.3
-ko iptable_mangle 6.18 7.2 7.3
-ko iptable_nat 6.18 7.2 7.3
-ko iptable_raw 6.18 7.2 7.3
-ko iptable_security 6.18 7.2 7.3
+ko gnss 6.18 7.3
+ko governor_passive 6.18 7.3
+ko governor_performance 6.18 7.3
+ko governor_powersave 6.18 7.3
+ko governor_simpleondemand 6.18 7.3
+ko governor_userspace 6.18 7.3
+ko gpio_eic_sprd 6.18 7.3
+ko gpio_keys 6.18 7.3
+ko gpio_pmic_eic_sprd 6.18 7.3
+ko gpio_sprd 6.18 7.3
+ko grace 6.18 7.3
+ko gre 6.18 7.3
+ko gspca_main 6.18 7.3
+ko hci_uart 6.18 7.3
+ko hid 6.18 7.3
+ko hid_apple 6.18 7.3
+ko hid_elecom 6.18 7.3
+ko hid_generic 6.18 7.3
+ko hid_logitech 6.18 7.3
+ko hid_logitech_dj 6.18 7.3
+ko hid_logitech_hidpp 6.18 7.3
+ko hid_magicmouse 6.18 7.3
+ko hid_microsoft 6.18 7.3
+ko hid_multitouch 6.18 7.3
+ko hid_nintendo 6.18 7.3
+ko hid_picolcd 6.18 7.3
+ko hid_plantronics 6.18 7.3
+ko hid_playstation 6.18 7.3
+ko hid_prodikeys 6.18 7.3
+ko hid_roccat 6.18 7.3
+ko hid_roccat_arvo 6.18 7.3
+ko hid_roccat_common 6.18 7.3
+ko hid_roccat_isku 6.18 7.3
+ko hid_roccat_kone 6.18 7.3
+ko hid_roccat_koneplus 6.18 7.3
+ko hid_roccat_konepure 6.18 7.3
+ko hid_roccat_kovaplus 6.18 7.3
+ko hid_roccat_lua 6.18 7.3
+ko hid_roccat_pyra 6.18 7.3
+ko hid_roccat_ryos 6.18 7.3
+ko hid_roccat_savu 6.18 7.3
+ko hid_sony 6.18 7.3
+ko hid_steam 6.18 7.3
+ko hid_uclogic 6.18 7.3
+ko hid_wiimote 6.18 7.3
+ko hidp 6.18 7.3
+ko hmac 6.18 7.3
+ko huawei_cdc_ncm 6.18 7.3
+ko i2c_algo_bit 6.18 7.3
+ko i2c_core 6.18 7.3
+ko i2c_dev 6.18 7.3
+ko i2c_sprd 6.18 7.3
+ko ifb 6.18 7.3
+ko industrialio 6.18 7.3
+ko inet_diag 6.18 7.3
+ko input_core 6.18 7.3
+ko input_leds 6.18 7.3
+ko iova 6.18 7.3
+ko ip6_gre 6.18 7.3
+ko ip6_tables 6.18 7.3
+ko ip6_tunnel 6.18 7.3
+ko ip6_udp_tunnel 6.18 7.3
+ko ip6_vti 6.18 7.3
+ko ip6t_REJECT 6.18 7.3
+ko ip6t_rpfilter 6.18 7.3
+ko ip6table_filter 6.18 7.3
+ko ip6table_mangle 6.18 7.3
+ko ip6table_raw 6.18 7.3
+ko ip_gre 6.18 7.3
+ko ip_set 6.18 7.3
+ko ip_tables 6.18 7.3
+ko ip_tunnel 6.18 7.3
+ko ip_vti 6.18 7.3
+ko ipcomp6 6.18 7.3
+ko ipip 6.18 7.3
+ko ipt_REJECT 6.18 7.3
+ko iptable_filter 6.18 7.3
+ko iptable_mangle 6.18 7.3
+ko iptable_nat 6.18 7.3
+ko iptable_raw 6.18 7.3
+ko iptable_security 6.18 7.3
 ko ipv6 6.18
-ko ipvlan 6.18 7.2 7.3
-ko irqbypass 6.18 7.2 7.3
-ko isofs 6.18 7.2 7.3
-ko jbd2 6.18 7.2 7.3
-ko jitterentropy_rng 6.18 7.2 7.3
-ko kfifo_buf 6.18 7.2 7.3
-ko kheaders 6.18 7.2 7.3
-ko kpp 6.18 7.2 7.3
-ko kyber_iosched 6.18 7.2 7.3
-ko l2tp_core 6.18 7.2 7.3
-ko l2tp_ppp 6.18 7.2 7.3
-ko led_class 6.18 7.2 7.3
-ko led_class_flash 6.18 7.2 7.3
-ko led_class_multicolor 6.18 7.2 7.3
-ko leds_gpio 6.18 7.2 7.3
-ko leds_sc27xx_bltc 6.18 7.2 7.3
-ko ledtrig_pattern 6.18 7.2 7.3
-ko ledtrig_timer 6.18 7.2 7.3
-ko libaes 6.18 7.2 7.3
-ko libarc4 6.18 7.2 7.3
-ko libchacha 6.18 7.2 7.3
-ko libchacha20poly1305 6.18 7.2 7.3
-ko libcomposite 6.18 7.2 7.3
-ko libcurve25519 6.18 7.2 7.3
-ko libdes 6.18 7.2 7.3
-ko libphy 6.18 7.2 7.3
-ko libpoly1305 6.18 7.2 7.3
-ko libps2 6.18 7.2 7.3
-ko libsha256 6.18 7.2 7.3
-ko llc 6.18 7.2 7.3
-ko lockd 6.18 7.2 7.3
-ko loop 6.18 7.2 7.3
-ko lz4 6.18 7.2 7.3
-ko lz4_compress 6.18 7.2 7.3
-ko lz4_decompress 6.18 7.2 7.3
-ko lz4hc_compress 6.18 7.2 7.3
-ko lzo 6.18 7.2 7.3
-ko lzo_compress 6.18 7.2 7.3
-ko lzo_decompress 6.18 7.2 7.3
-ko lzo_rle 6.18 7.2 7.3
-ko mac80211 6.18 7.2 7.3
-ko mac_celtic 6.18 7.2 7.3
-ko mac_centeuro 6.18 7.2 7.3
-ko mac_croatian 6.18 7.2 7.3
-ko mac_cyrillic 6.18 7.2 7.3
-ko mac_gaelic 6.18 7.2 7.3
-ko mac_greek 6.18 7.2 7.3
-ko mac_iceland 6.18 7.2 7.3
-ko mac_inuit 6.18 7.2 7.3
-ko mac_roman 6.18 7.2 7.3
-ko mac_romanian 6.18 7.2 7.3
-ko mac_turkish 6.18 7.2 7.3
-ko macvlan 6.18 7.2 7.3
-ko macvtap 6.18 7.2 7.3
-ko mali_kbase 6.18 7.2 7.3
-ko mbcache 6.18 7.2 7.3
-ko mc 6.18 7.2 7.3
-ko md4 6.18 7.2 7.3
-ko md5 6.18 7.2 7.3
-ko mfd_core 6.18 7.2 7.3
-ko mii 6.18 7.2 7.3
-ko mip6 6.18 7.2 7.3
-ko mmc_block 6.18 7.2 7.3
-ko mmc_core 6.18 7.2 7.3
-ko mmc_hsq 6.18 7.2 7.3
-ko mpi 6.18 7.2 7.3
-ko mq_deadline 6.18 7.2 7.3
-ko msdos 6.18 7.2 7.3
-ko mu300_thermal 6.18 7.2 7.3
-ko nf_conncount 6.18 7.2 7.3
-ko nf_conntrack 6.18 7.2 7.3
-ko nf_conntrack_amanda 6.18 7.2 7.3
-ko nf_conntrack_broadcast 6.18 7.2 7.3
-ko nf_conntrack_ftp 6.18 7.2 7.3
-ko nf_conntrack_h323 6.18 7.2 7.3
-ko nf_conntrack_irc 6.18 7.2 7.3
-ko nf_conntrack_netbios_ns 6.18 7.2 7.3
-ko nf_conntrack_netlink 6.18 7.2 7.3
-ko nf_conntrack_pptp 6.18 7.2 7.3
-ko nf_conntrack_sane 6.18 7.2 7.3
-ko nf_conntrack_tftp 6.18 7.2 7.3
-ko nf_defrag_ipv4 6.18 7.2 7.3
-ko nf_defrag_ipv6 6.18 7.2 7.3
-ko nf_dup_ipv4 6.18 7.2 7.3
-ko nf_dup_ipv6 6.18 7.2 7.3
-ko nf_dup_netdev 6.18 7.2 7.3
-ko nf_flow_table 6.18 7.2 7.3
-ko nf_flow_table_inet 6.18 7.2 7.3
-ko nf_nat 6.18 7.2 7.3
-ko nf_nat_amanda 6.18 7.2 7.3
-ko nf_nat_ftp 6.18 7.2 7.3
-ko nf_nat_h323 6.18 7.2 7.3
-ko nf_nat_irc 6.18 7.2 7.3
-ko nf_nat_pptp 6.18 7.2 7.3
-ko nf_nat_tftp 6.18 7.2 7.3
-ko nf_reject_ipv4 6.18 7.2 7.3
-ko nf_reject_ipv6 6.18 7.2 7.3
-ko nf_socket_ipv4 6.18 7.2 7.3
-ko nf_socket_ipv6 6.18 7.2 7.3
-ko nf_tables 6.18 7.2 7.3
-ko nf_tproxy_ipv4 6.18 7.2 7.3
-ko nf_tproxy_ipv6 6.18 7.2 7.3
+ko ipvlan 6.18 7.3
+ko irqbypass 6.18 7.3
+ko isofs 6.18 7.3
+ko jbd2 6.18 7.3
+ko jitterentropy_rng 6.18 7.3
+ko kfifo_buf 6.18 7.3
+ko kheaders 6.18 7.3
+ko kpp 6.18 7.3
+ko kyber_iosched 6.18 7.3
+ko l2tp_core 6.18 7.3
+ko l2tp_ppp 6.18 7.3
+ko led_class 6.18 7.3
+ko led_class_flash 6.18 7.3
+ko led_class_multicolor 6.18 7.3
+ko leds_gpio 6.18 7.3
+ko leds_sc27xx_bltc 6.18 7.3
+ko ledtrig_pattern 6.18 7.3
+ko ledtrig_timer 6.18 7.3
+ko libaes 6.18 7.3
+ko libarc4 6.18 7.3
+ko libchacha 6.18 7.3
+ko libchacha20poly1305 6.18 7.3
+ko libcomposite 6.18 7.3
+ko libcurve25519 6.18 7.3
+ko libdes 6.18 7.3
+ko libphy 6.18 7.3
+ko libpoly1305 6.18 7.3
+ko libps2 6.18 7.3
+ko libsha256 6.18 7.3
+ko llc 6.18 7.3
+ko lockd 6.18 7.3
+ko loop 6.18 7.3
+ko lz4 6.18 7.3
+ko lz4_compress 6.18 7.3
+ko lz4_decompress 6.18 7.3
+ko lz4hc_compress 6.18 7.3
+ko lzo 6.18 7.3
+ko lzo_compress 6.18 7.3
+ko lzo_decompress 6.18 7.3
+ko lzo_rle 6.18 7.3
+ko mac80211 6.18 7.3
+ko mac_celtic 6.18 7.3
+ko mac_centeuro 6.18 7.3
+ko mac_croatian 6.18 7.3
+ko mac_cyrillic 6.18 7.3
+ko mac_gaelic 6.18 7.3
+ko mac_greek 6.18 7.3
+ko mac_iceland 6.18 7.3
+ko mac_inuit 6.18 7.3
+ko mac_roman 6.18 7.3
+ko mac_romanian 6.18 7.3
+ko mac_turkish 6.18 7.3
+ko macvlan 6.18 7.3
+ko macvtap 6.18 7.3
+ko mali_kbase 6.18 7.3
+ko mbcache 6.18 7.3
+ko mc 6.18 7.3
+ko md4 6.18 7.3
+ko md5 6.18 7.3
+ko mfd_core 6.18 7.3
+ko mii 6.18 7.3
+ko mip6 6.18 7.3
+ko mmc_block 6.18 7.3
+ko mmc_core 6.18 7.3
+ko mmc_hsq 6.18 7.3
+ko mpi 6.18 7.3
+ko mq_deadline 6.18 7.3
+ko msdos 6.18 7.3
+ko mu300_thermal 6.18 7.3
+ko nf_conncount 6.18 7.3
+ko nf_conntrack 6.18 7.3
+ko nf_conntrack_amanda 6.18 7.3
+ko nf_conntrack_broadcast 6.18 7.3
+ko nf_conntrack_ftp 6.18 7.3
+ko nf_conntrack_h323 6.18 7.3
+ko nf_conntrack_irc 6.18 7.3
+ko nf_conntrack_netbios_ns 6.18 7.3
+ko nf_conntrack_netlink 6.18 7.3
+ko nf_conntrack_pptp 6.18 7.3
+ko nf_conntrack_sane 6.18 7.3
+ko nf_conntrack_tftp 6.18 7.3
+ko nf_defrag_ipv4 6.18 7.3
+ko nf_defrag_ipv6 6.18 7.3
+ko nf_dup_ipv4 6.18 7.3
+ko nf_dup_ipv6 6.18 7.3
+ko nf_dup_netdev 6.18 7.3
+ko nf_flow_table 6.18 7.3
+ko nf_flow_table_inet 6.18 7.3
+ko nf_nat 6.18 7.3
+ko nf_nat_amanda 6.18 7.3
+ko nf_nat_ftp 6.18 7.3
+ko nf_nat_h323 6.18 7.3
+ko nf_nat_irc 6.18 7.3
+ko nf_nat_pptp 6.18 7.3
+ko nf_nat_tftp 6.18 7.3
+ko nf_reject_ipv4 6.18 7.3
+ko nf_reject_ipv6 6.18 7.3
+ko nf_socket_ipv4 6.18 7.3
+ko nf_socket_ipv6 6.18 7.3
+ko nf_tables 6.18 7.3
+ko nf_tproxy_ipv4 6.18 7.3
+ko nf_tproxy_ipv6 6.18 7.3
 ko nfnetlink 6.18
-ko nfnetlink_log 6.18 7.2 7.3
-ko nfnetlink_queue 6.18 7.2 7.3
-ko nfs 6.18 7.2 7.3
-ko nfsd 6.18 7.2 7.3
-ko nfsv2 6.18 7.2 7.3
-ko nfsv3 6.18 7.2 7.3
-ko nfsv4 6.18 7.2 7.3
-ko nft_chain_nat 6.18 7.2 7.3
-ko nft_compat 6.18 7.2 7.3
-ko nft_connlimit 6.18 7.2 7.3
-ko nft_ct 6.18 7.2 7.3
-ko nft_fib 6.18 7.2 7.3
-ko nft_fib_inet 6.18 7.2 7.3
-ko nft_fib_ipv4 6.18 7.2 7.3
-ko nft_fib_ipv6 6.18 7.2 7.3
-ko nft_fib_netdev 6.18 7.2 7.3
-ko nft_flow_offload 6.18 7.2 7.3
-ko nft_fwd_netdev 6.18 7.2 7.3
-ko nft_hash 6.18 7.2 7.3
-ko nft_limit 6.18 7.2 7.3
-ko nft_log 6.18 7.2 7.3
-ko nft_masq 6.18 7.2 7.3
-ko nft_meta_bridge 6.18 7.2 7.3
-ko nft_nat 6.18 7.2 7.3
-ko nft_numgen 6.18 7.2 7.3
-ko nft_queue 6.18 7.2 7.3
-ko nft_quota 6.18 7.2 7.3
-ko nft_redir 6.18 7.2 7.3
-ko nft_reject 6.18 7.2 7.3
-ko nft_reject_bridge 6.18 7.2 7.3
-ko nft_reject_inet 6.18 7.2 7.3
-ko nft_reject_ipv4 6.18 7.2 7.3
-ko nft_reject_ipv6 6.18 7.2 7.3
-ko nft_socket 6.18 7.2 7.3
-ko nft_tproxy 6.18 7.2 7.3
+ko nfnetlink_log 6.18 7.3
+ko nfnetlink_queue 6.18 7.3
+ko nfs 6.18 7.3
+ko nfsd 6.18 7.3
+ko nfsv2 6.18 7.3
+ko nfsv3 6.18 7.3
+ko nfsv4 6.18 7.3
+ko nft_chain_nat 6.18 7.3
+ko nft_compat 6.18 7.3
+ko nft_connlimit 6.18 7.3
+ko nft_ct 6.18 7.3
+ko nft_fib 6.18 7.3
+ko nft_fib_inet 6.18 7.3
+ko nft_fib_ipv4 6.18 7.3
+ko nft_fib_ipv6 6.18 7.3
+ko nft_fib_netdev 6.18 7.3
+ko nft_flow_offload 6.18 7.3
+ko nft_fwd_netdev 6.18 7.3
+ko nft_hash 6.18 7.3
+ko nft_limit 6.18 7.3
+ko nft_log 6.18 7.3
+ko nft_masq 6.18 7.3
+ko nft_meta_bridge 6.18 7.3
+ko nft_nat 6.18 7.3
+ko nft_numgen 6.18 7.3
+ko nft_queue 6.18 7.3
+ko nft_quota 6.18 7.3
+ko nft_redir 6.18 7.3
+ko nft_reject 6.18 7.3
+ko nft_reject_bridge 6.18 7.3
+ko nft_reject_inet 6.18 7.3
+ko nft_reject_ipv4 6.18 7.3
+ko nft_reject_ipv6 6.18 7.3
+ko nft_socket 6.18 7.3
+ko nft_tproxy 6.18 7.3
 ko nhpoly1305 6.18
-ko nls_ascii 6.18 7.2 7.3
-ko nls_base 6.18 7.2 7.3
-ko nls_cp1250 6.18 7.2 7.3
-ko nls_cp1251 6.18 7.2 7.3
-ko nls_cp1255 6.18 7.2 7.3
-ko nls_cp437 6.18 7.2 7.3
-ko nls_cp737 6.18 7.2 7.3
-ko nls_cp775 6.18 7.2 7.3
-ko nls_cp850 6.18 7.2 7.3
-ko nls_cp852 6.18 7.2 7.3
-ko nls_cp855 6.18 7.2 7.3
-ko nls_cp857 6.18 7.2 7.3
-ko nls_cp860 6.18 7.2 7.3
-ko nls_cp861 6.18 7.2 7.3
-ko nls_cp862 6.18 7.2 7.3
-ko nls_cp863 6.18 7.2 7.3
-ko nls_cp864 6.18 7.2 7.3
-ko nls_cp865 6.18 7.2 7.3
-ko nls_cp866 6.18 7.2 7.3
-ko nls_cp869 6.18 7.2 7.3
-ko nls_cp874 6.18 7.2 7.3
-ko nls_cp932 6.18 7.2 7.3
-ko nls_cp936 6.18 7.2 7.3
-ko nls_cp949 6.18 7.2 7.3
-ko nls_cp950 6.18 7.2 7.3
-ko nls_euc_jp 6.18 7.2 7.3
-ko nls_iso8859_1 6.18 7.2 7.3
-ko nls_iso8859_13 6.18 7.2 7.3
-ko nls_iso8859_14 6.18 7.2 7.3
-ko nls_iso8859_15 6.18 7.2 7.3
-ko nls_iso8859_2 6.18 7.2 7.3
-ko nls_iso8859_3 6.18 7.2 7.3
-ko nls_iso8859_4 6.18 7.2 7.3
-ko nls_iso8859_5 6.18 7.2 7.3
-ko nls_iso8859_6 6.18 7.2 7.3
-ko nls_iso8859_7 6.18 7.2 7.3
-ko nls_iso8859_9 6.18 7.2 7.3
-ko nls_koi8_r 6.18 7.2 7.3
-ko nls_koi8_ru 6.18 7.2 7.3
-ko nls_koi8_u 6.18 7.2 7.3
-ko nls_utf8 6.18 7.2 7.3
-ko ntfs 7.2 7.3
-ko ntfs3 6.18 7.2 7.3
-ko nvmem_sc27xx_efuse 6.18 7.2 7.3
-ko nvmem_sprd_efuse 6.18 7.2 7.3
-ko of_mdio 6.18 7.2 7.3
-ko oid_registry 6.18 7.2 7.3
-ko option 6.18 7.2 7.3
-ko overlay 6.18 7.2 7.3
-ko pcie_sprd 6.18 7.2 7.3
-ko pinctrl_sprd 6.18 7.2 7.3
-ko pinctrl_sprd_qogirn6pro 6.18 7.2 7.3
-ko pkcs7_message 6.18 7.2 7.3
-ko pl2303 6.18 7.2 7.3
-ko ppp_deflate 6.18 7.2 7.3
-ko ppp_generic 6.18 7.2 7.3
-ko ppp_mppe 6.18 7.2 7.3
-ko pppox 6.18 7.2 7.3
-ko pptp 6.18 7.2 7.3
-ko psnap 6.18 7.2 7.3
-ko pstore 6.18 7.2 7.3
-ko public_key 6.18 7.2 7.3
-ko qmi_wwan 6.18 7.2 7.3
-ko quota_tree 6.18 7.2 7.3
-ko quota_v2 6.18 7.2 7.3
-ko r8152 6.18 7.2 7.3
-ko raid6_pq 6.18 7.2 7.3
-ko ramoops 6.18 7.2 7.3
-ko rc_core 6.18 7.2 7.3
-ko reed_solomon 6.18 7.2 7.3
-ko regmap_i2c 6.18 7.2 7.3
-ko regmap_mmio 6.18 7.2 7.3
-ko regmap_spi 6.18 7.2 7.3
-ko rfcomm 6.18 7.2 7.3
-ko rfkill 6.18 7.2 7.3
-ko rndis_host 6.18 7.2 7.3
-ko rng 6.18 7.2 7.3
-ko rng_core 6.18 7.2 7.3
-ko roles 6.18 7.2 7.3
-ko rpcsec_gss_krb5 6.18 7.2 7.3
-ko rsa_generic 6.18 7.2 7.3
-ko rtc_sc27xx 6.18 7.2 7.3
-ko sblock_bridge 6.18 7.2 7.3
-ko sbuf_bridge 6.18 7.2 7.3
-ko sc27xx_adc 6.18 7.2 7.3
-ko sc27xx_fuel_gauge 6.18 7.2 7.3
-ko sc27xx_typec 6.18 7.2 7.3
-ko sc27xx_vibra 6.18 7.2 7.3
-ko sch_cake 6.18 7.2 7.3
-ko sch_fq_codel 6.18 7.2 7.3
-ko sch_htb 6.18 7.2 7.3
-ko sch_ingress 6.18 7.2 7.3
-ko sch_prio 6.18 7.2 7.3
-ko sch_sfq 6.18 7.2 7.3
-ko sch_tbf 6.18 7.2 7.3
-ko scsi_mod 6.18 7.2 7.3
-ko sd_mod 6.18 7.2 7.3
-ko sdhci 6.18 7.2 7.3
-ko sdhci_pltfm 6.18 7.2 7.3
-ko sdhci_sprd 6.18 7.2 7.3
-ko seqiv 6.18 7.2 7.3
-ko serial_mctrl_gpio 6.18 7.2 7.3
-ko serio 6.18 7.2 7.3
-ko serport 6.18 7.2 7.3
-ko seth 6.18 7.2 7.3
-ko sipa_core 6.18 7.2 7.3
-ko sipa_dele 6.18 7.2 7.3
-ko sipa_eth 6.18 7.2 7.3
-ko sipa_sys 6.18 7.2 7.3
-ko sipc_core 6.18 7.2 7.3
-ko sipx 6.18 7.2 7.3
-ko sit 6.18 7.2 7.3
-ko slhc 6.18 7.2 7.3
-ko slog_bridge 6.18 7.2 7.3
-ko snd 6.18 7.2 7.3
-ko snd_aloop 6.18 7.2 7.3
-ko snd_dummy 6.18 7.2 7.3
-ko snd_hrtimer 6.18 7.2 7.3
-ko snd_hwdep 6.18 7.2 7.3
-ko snd_pcm 6.18 7.2 7.3
-ko snd_rawmidi 6.18 7.2 7.3
-ko snd_timer 6.18 7.2 7.3
-ko snd_usb_audio 6.18 7.2 7.3
-ko snd_usbmidi_lib 6.18 7.2 7.3
-ko soundcore 6.18 7.2 7.3
-ko spi_sprd_adi 6.18 7.2 7.3
-ko spidev 6.18 7.2 7.3
-ko spipe 6.18 7.2 7.3
-ko spool 6.18 7.2 7.3
-ko sprd_7sreset 6.18 7.2 7.3
-ko sprd_bc1p2 6.18 7.2 7.3
-ko sprd_cp_dvfs 6.18 7.2 7.3
-ko sprd_ddr_dvfs 6.18 7.2 7.3
-ko sprd_hwspinlock 6.18 7.2 7.3
-ko sprd_modem_loader 6.18 7.2 7.3
-ko sprd_pmic_syscon 6.18 7.2 7.3
-ko sprd_pmic_wdt 6.18 7.2 7.3
-ko sprd_power_manager 6.18 7.2 7.3
-ko sprd_serial 6.18 7.2 7.3
-ko sprd_shm 6.18 7.2 7.3
-ko sprd_sip_svc 6.18 7.2 7.3
-ko sprd_sipc_virt_bus 6.18 7.2 7.3
-ko sprd_soc_id 6.18 7.2 7.3
-ko sprd_systimer 6.18 7.2 7.3
-ko sprd_thermal_r5p0 6.18 7.2 7.3
-ko sprd_time_sync 6.18 7.2 7.3
-ko sprd_time_sync_cp 6.18 7.2 7.3
-ko sprd_top_dvfs 6.18 7.2 7.3
-ko sprd_trng 6.18 7.2 7.3
-ko sprd_ump96xx_tsensor 6.18 7.2 7.3
-ko sprd_wlan_combo 6.18 7.2 7.3
-ko sprdbt_tty 6.18 7.2 7.3
-ko squashfs 6.18 7.2 7.3
-ko stp 6.18 7.2 7.3
-ko sunrpc 6.18 7.2 7.3
-ko tap 6.18 7.2 7.3
-ko tcp_cubic 6.18 7.2 7.3
-ko tcp_diag 6.18 7.2 7.3
-ko tcpm 6.18 7.2 7.3
-ko thermal_generic_adc 6.18 7.2 7.3
-ko tipc 6.18 7.2 7.3
-ko tipc_diag 6.18 7.2 7.3
-ko tls 6.18 7.2 7.3
-ko trusty 6.18 7.2 7.3
-ko trusty_ipc 6.18 7.2 7.3
-ko trusty_irq 6.18 7.2 7.3
-ko trusty_log 6.18 7.2 7.3
-ko trusty_pm 6.18 7.2 7.3
-ko trusty_virtio 6.18 7.2 7.3
-ko ts_bm 6.18 7.2 7.3
-ko ts_fsm 6.18 7.2 7.3
-ko ts_kmp 6.18 7.2 7.3
-ko tun 6.18 7.2 7.3
-ko tunnel4 6.18 7.2 7.3
-ko tunnel6 6.18 7.2 7.3
-ko twofish_common 6.18 7.2 7.3
-ko twofish_generic 6.18 7.2 7.3
-ko typec 6.18 7.2 7.3
-ko u_ether 6.18 7.2 7.3
-ko u_serial 6.18 7.2 7.3
-ko uas 6.18 7.2 7.3
-ko udc_core 6.18 7.2 7.3
-ko udf 6.18 7.2 7.3
-ko udp_diag 6.18 7.2 7.3
-ko udp_tunnel 6.18 7.2 7.3
-ko uhid 6.18 7.2 7.3
-ko uinput 6.18 7.2 7.3
-ko uio 6.18 7.2 7.3
-ko ump9620_regulator 6.18 7.2 7.3
-ko ump9621_regulator 6.18 7.2 7.3
-ko ums9620_clk 6.18 7.2 7.3
-ko unisoc_mailbox 6.18 7.2 7.3
-ko unix_diag 6.18 7.2 7.3
-ko usb_common 6.18 7.2 7.3
-ko usb_f_acm 6.18 7.2 7.3
-ko usb_f_ecm 6.18 7.2 7.3
-ko usb_f_ecm_subset 6.18 7.2 7.3
-ko usb_f_fs 6.18 7.2 7.3
-ko usb_f_hid 6.18 7.2 7.3
-ko usb_f_mass_storage 6.18 7.2 7.3
-ko usb_f_midi 6.18 7.2 7.3
-ko usb_f_ncm 6.18 7.2 7.3
-ko usb_f_rndis 6.18 7.2 7.3
-ko usb_f_serial 6.18 7.2 7.3
-ko usb_storage 6.18 7.2 7.3
-ko usb_wwan 6.18 7.2 7.3
-ko usbcore 6.18 7.2 7.3
-ko usbhid 6.18 7.2 7.3
-ko usblp 6.18 7.2 7.3
-ko usbnet 6.18 7.2 7.3
-ko usbserial 6.18 7.2 7.3
-ko uvcvideo 6.18 7.2 7.3
-ko v4l2_dv_timings 6.18 7.2 7.3
-ko veth 6.18 7.2 7.3
-ko vfat 6.18 7.2 7.3
-ko vhost 6.18 7.2 7.3
-ko vhost_vsock 6.18 7.2 7.3
-ko videobuf2_common 6.18 7.2 7.3
-ko videobuf2_memops 6.18 7.2 7.3
-ko videobuf2_v4l2 6.18 7.2 7.3
-ko videobuf2_vmalloc 6.18 7.2 7.3
-ko videodev 6.18 7.2 7.3
-ko virtio 6.18 7.2 7.3
-ko virtio_crypto 6.18 7.2 7.3
-ko virtio_ring 6.18 7.2 7.3
-ko virtiofs 6.18 7.2 7.3
-ko vmw_vsock_virtio_transport_common 6.18 7.2 7.3
-ko vsock 6.18 7.2 7.3
-ko vsock_diag 6.18 7.2 7.3
-ko vxlan 6.18 7.2 7.3
-ko wacom 6.18 7.2 7.3
-ko watchdog 6.18 7.2 7.3
-ko wcn_bsp 6.18 7.2 7.3
-ko wireguard 6.18 7.2 7.3
-ko x509_key_parser 6.18 7.2 7.3
-ko x_tables 6.18 7.2 7.3
-ko xcbc 6.18 7.2 7.3
-ko xfrm6_tunnel 6.18 7.2 7.3
-ko xfrm_algo 6.18 7.2 7.3
-ko xfrm_interface 6.18 7.2 7.3
-ko xfrm_ipcomp 6.18 7.2 7.3
-ko xfrm_user 6.18 7.2 7.3
-ko xfs 6.18 7.2 7.3
-ko xhci_hcd 6.18 7.2 7.3
-ko xhci_pci 6.18 7.2 7.3
-ko xhci_plat_hcd 6.18 7.2 7.3
-ko xor 6.18 7.2 7.3
+ko nls_ascii 6.18 7.3
+ko nls_base 6.18 7.3
+ko nls_cp1250 6.18 7.3
+ko nls_cp1251 6.18 7.3
+ko nls_cp1255 6.18 7.3
+ko nls_cp437 6.18 7.3
+ko nls_cp737 6.18 7.3
+ko nls_cp775 6.18 7.3
+ko nls_cp850 6.18 7.3
+ko nls_cp852 6.18 7.3
+ko nls_cp855 6.18 7.3
+ko nls_cp857 6.18 7.3
+ko nls_cp860 6.18 7.3
+ko nls_cp861 6.18 7.3
+ko nls_cp862 6.18 7.3
+ko nls_cp863 6.18 7.3
+ko nls_cp864 6.18 7.3
+ko nls_cp865 6.18 7.3
+ko nls_cp866 6.18 7.3
+ko nls_cp869 6.18 7.3
+ko nls_cp874 6.18 7.3
+ko nls_cp932 6.18 7.3
+ko nls_cp936 6.18 7.3
+ko nls_cp949 6.18 7.3
+ko nls_cp950 6.18 7.3
+ko nls_euc_jp 6.18 7.3
+ko nls_iso8859_1 6.18 7.3
+ko nls_iso8859_13 6.18 7.3
+ko nls_iso8859_14 6.18 7.3
+ko nls_iso8859_15 6.18 7.3
+ko nls_iso8859_2 6.18 7.3
+ko nls_iso8859_3 6.18 7.3
+ko nls_iso8859_4 6.18 7.3
+ko nls_iso8859_5 6.18 7.3
+ko nls_iso8859_6 6.18 7.3
+ko nls_iso8859_7 6.18 7.3
+ko nls_iso8859_9 6.18 7.3
+ko nls_koi8_r 6.18 7.3
+ko nls_koi8_ru 6.18 7.3
+ko nls_koi8_u 6.18 7.3
+ko nls_utf8 6.18 7.3
+ko ntfs 7.3
+ko ntfs3 6.18 7.3
+ko nvmem_sc27xx_efuse 6.18 7.3
+ko nvmem_sprd_efuse 6.18 7.3
+ko of_mdio 6.18 7.3
+ko oid_registry 6.18 7.3
+ko option 6.18 7.3
+ko overlay 6.18 7.3
+ko pcie_sprd 6.18 7.3
+ko pinctrl_sprd 6.18 7.3
+ko pinctrl_sprd_qogirn6pro 6.18 7.3
+ko pkcs7_message 6.18 7.3
+ko pl2303 6.18 7.3
+ko ppp_deflate 6.18 7.3
+ko ppp_generic 6.18 7.3
+ko ppp_mppe 6.18 7.3
+ko pppox 6.18 7.3
+ko pptp 6.18 7.3
+ko psnap 6.18 7.3
+ko pstore 6.18 7.3
+ko public_key 6.18 7.3
+ko qmi_wwan 6.18 7.3
+ko quota_tree 6.18 7.3
+ko quota_v2 6.18 7.3
+ko r8152 6.18 7.3
+ko raid6_pq 6.18 7.3
+ko ramoops 6.18 7.3
+ko rc_core 6.18 7.3
+ko reed_solomon 6.18 7.3
+ko regmap_i2c 6.18 7.3
+ko regmap_mmio 6.18 7.3
+ko regmap_spi 6.18 7.3
+ko rfcomm 6.18 7.3
+ko rfkill 6.18 7.3
+ko rndis_host 6.18 7.3
+ko rng 6.18 7.3
+ko rng_core 6.18 7.3
+ko roles 6.18 7.3
+ko rpcsec_gss_krb5 6.18 7.3
+ko rsa_generic 6.18 7.3
+ko rtc_sc27xx 6.18 7.3
+ko sblock_bridge 6.18 7.3
+ko sbuf_bridge 6.18 7.3
+ko sc27xx_adc 6.18 7.3
+ko sc27xx_fuel_gauge 6.18 7.3
+ko sc27xx_typec 6.18 7.3
+ko sc27xx_vibra 6.18 7.3
+ko sch_cake 6.18 7.3
+ko sch_fq_codel 6.18 7.3
+ko sch_htb 6.18 7.3
+ko sch_ingress 6.18 7.3
+ko sch_prio 6.18 7.3
+ko sch_sfq 6.18 7.3
+ko sch_tbf 6.18 7.3
+ko scsi_mod 6.18 7.3
+ko sd_mod 6.18 7.3
+ko sdhci 6.18 7.3
+ko sdhci_pltfm 6.18 7.3
+ko sdhci_sprd 6.18 7.3
+ko seqiv 6.18 7.3
+ko serial_mctrl_gpio 6.18 7.3
+ko serio 6.18 7.3
+ko serport 6.18 7.3
+ko seth 6.18 7.3
+ko sipa_core 6.18 7.3
+ko sipa_dele 6.18 7.3
+ko sipa_eth 6.18 7.3
+ko sipa_sys 6.18 7.3
+ko sipc_core 6.18 7.3
+ko sipx 6.18 7.3
+ko sit 6.18 7.3
+ko slhc 6.18 7.3
+ko slog_bridge 6.18 7.3
+ko snd 6.18 7.3
+ko snd_aloop 6.18 7.3
+ko snd_dummy 6.18 7.3
+ko snd_hrtimer 6.18 7.3
+ko snd_hwdep 6.18 7.3
+ko snd_pcm 6.18 7.3
+ko snd_rawmidi 6.18 7.3
+ko snd_timer 6.18 7.3
+ko snd_usb_audio 6.18 7.3
+ko snd_usbmidi_lib 6.18 7.3
+ko soundcore 6.18 7.3
+ko spi_sprd_adi 6.18 7.3
+ko spidev 6.18 7.3
+ko spipe 6.18 7.3
+ko spool 6.18 7.3
+ko sprd_7sreset 6.18 7.3
+ko sprd_bc1p2 6.18 7.3
+ko sprd_cp_dvfs 6.18 7.3
+ko sprd_ddr_dvfs 6.18 7.3
+ko sprd_hwspinlock 6.18 7.3
+ko sprd_modem_loader 6.18 7.3
+ko sprd_pmic_syscon 6.18 7.3
+ko sprd_pmic_wdt 6.18 7.3
+ko sprd_power_manager 6.18 7.3
+ko sprd_serial 6.18 7.3
+ko sprd_shm 6.18 7.3
+ko sprd_sip_svc 6.18 7.3
+ko sprd_sipc_virt_bus 6.18 7.3
+ko sprd_soc_id 6.18 7.3
+ko sprd_systimer 6.18 7.3
+ko sprd_thermal_r5p0 6.18 7.3
+ko sprd_time_sync 6.18 7.3
+ko sprd_time_sync_cp 6.18 7.3
+ko sprd_top_dvfs 6.18 7.3
+ko sprd_trng 6.18 7.3
+ko sprd_ump96xx_tsensor 6.18 7.3
+ko sprd_wlan_combo 6.18 7.3
+ko sprdbt_tty 6.18 7.3
+ko squashfs 6.18 7.3
+ko stp 6.18 7.3
+ko sunrpc 6.18 7.3
+ko tap 6.18 7.3
+ko tcp_cubic 6.18 7.3
+ko tcp_diag 6.18 7.3
+ko tcpm 6.18 7.3
+ko thermal_generic_adc 6.18 7.3
+ko tipc 6.18 7.3
+ko tipc_diag 6.18 7.3
+ko tls 6.18 7.3
+ko trusty 6.18 7.3
+ko trusty_ipc 6.18 7.3
+ko trusty_irq 6.18 7.3
+ko trusty_log 6.18 7.3
+ko trusty_pm 6.18 7.3
+ko trusty_virtio 6.18 7.3
+ko ts_bm 6.18 7.3
+ko ts_fsm 6.18 7.3
+ko ts_kmp 6.18 7.3
+ko tun 6.18 7.3
+ko tunnel4 6.18 7.3
+ko tunnel6 6.18 7.3
+ko twofish_common 6.18 7.3
+ko twofish_generic 6.18 7.3
+ko typec 6.18 7.3
+ko u_ether 6.18 7.3
+ko u_serial 6.18 7.3
+ko uas 6.18 7.3
+ko udc_core 6.18 7.3
+ko udf 6.18 7.3
+ko udp_diag 6.18 7.3
+ko udp_tunnel 6.18 7.3
+ko uhid 6.18 7.3
+ko uinput 6.18 7.3
+ko uio 6.18 7.3
+ko ump9620_regulator 6.18 7.3
+ko ump9621_regulator 6.18 7.3
+ko ums9620_clk 6.18 7.3
+ko unisoc_mailbox 6.18 7.3
+ko unix_diag 6.18 7.3
+ko usb_common 6.18 7.3
+ko usb_f_acm 6.18 7.3
+ko usb_f_ecm 6.18 7.3
+ko usb_f_ecm_subset 6.18 7.3
+ko usb_f_fs 6.18 7.3
+ko usb_f_hid 6.18 7.3
+ko usb_f_mass_storage 6.18 7.3
+ko usb_f_midi 6.18 7.3
+ko usb_f_ncm 6.18 7.3
+ko usb_f_rndis 6.18 7.3
+ko usb_f_serial 6.18 7.3
+ko usb_storage 6.18 7.3
+ko usb_wwan 6.18 7.3
+ko usbcore 6.18 7.3
+ko usbhid 6.18 7.3
+ko usblp 6.18 7.3
+ko usbnet 6.18 7.3
+ko usbserial 6.18 7.3
+ko uvcvideo 6.18 7.3
+ko v4l2_dv_timings 6.18 7.3
+ko veth 6.18 7.3
+ko vfat 6.18 7.3
+ko vhost 6.18 7.3
+ko vhost_vsock 6.18 7.3
+ko videobuf2_common 6.18 7.3
+ko videobuf2_memops 6.18 7.3
+ko videobuf2_v4l2 6.18 7.3
+ko videobuf2_vmalloc 6.18 7.3
+ko videodev 6.18 7.3
+ko virtio 6.18 7.3
+ko virtio_crypto 6.18 7.3
+ko virtio_ring 6.18 7.3
+ko virtiofs 6.18 7.3
+ko vmw_vsock_virtio_transport_common 6.18 7.3
+ko vsock 6.18 7.3
+ko vsock_diag 6.18 7.3
+ko vxlan 6.18 7.3
+ko wacom 6.18 7.3
+ko watchdog 6.18 7.3
+ko wcn_bsp 6.18 7.3
+ko wireguard 6.18 7.3
+ko x509_key_parser 6.18 7.3
+ko x_tables 6.18 7.3
+ko xcbc 6.18 7.3
+ko xfrm6_tunnel 6.18 7.3
+ko xfrm_algo 6.18 7.3
+ko xfrm_interface 6.18 7.3
+ko xfrm_ipcomp 6.18 7.3
+ko xfrm_user 6.18 7.3
+ko xfs 6.18 7.3
+ko xhci_hcd 6.18 7.3
+ko xhci_pci 6.18 7.3
+ko xhci_plat_hcd 6.18 7.3
+ko xor 6.18 7.3
 ko xor_neon 6.18
-ko xpad 6.18 7.2 7.3
-ko xt_CLASSIFY 6.18 7.2 7.3
-ko xt_CT 6.18 7.2 7.3
-ko xt_IDLETIMER 6.18 7.2 7.3
-ko xt_MASQUERADE 6.18 7.2 7.3
-ko xt_NETMAP 6.18 7.2 7.3
-ko xt_NFLOG 6.18 7.2 7.3
-ko xt_NFQUEUE 6.18 7.2 7.3
-ko xt_REDIRECT 6.18 7.2 7.3
-ko xt_TCPMSS 6.18 7.2 7.3
-ko xt_TEE 6.18 7.2 7.3
-ko xt_TPROXY 6.18 7.2 7.3
-ko xt_TRACE 6.18 7.2 7.3
-ko xt_bpf 6.18 7.2 7.3
-ko xt_comment 6.18 7.2 7.3
-ko xt_connlimit 6.18 7.2 7.3
-ko xt_connmark 6.18 7.2 7.3
-ko xt_conntrack 6.18 7.2 7.3
-ko xt_ecn 6.18 7.2 7.3
-ko xt_hashlimit 6.18 7.2 7.3
-ko xt_helper 6.18 7.2 7.3
-ko xt_hl 6.18 7.2 7.3
-ko xt_iprange 6.18 7.2 7.3
-ko xt_l2tp 6.18 7.2 7.3
-ko xt_length 6.18 7.2 7.3
-ko xt_limit 6.18 7.2 7.3
-ko xt_mac 6.18 7.2 7.3
-ko xt_mark 6.18 7.2 7.3
-ko xt_nat 6.18 7.2 7.3
-ko xt_owner 6.18 7.2 7.3
-ko xt_pkttype 6.18 7.2 7.3
-ko xt_policy 6.18 7.2 7.3
-ko xt_quota 6.18 7.2 7.3
-ko xt_socket 6.18 7.2 7.3
-ko xt_state 6.18 7.2 7.3
-ko xt_statistic 6.18 7.2 7.3
-ko xt_string 6.18 7.2 7.3
-ko xt_tcpudp 6.18 7.2 7.3
-ko xt_time 6.18 7.2 7.3
-ko xt_u32 6.18 7.2 7.3
-ko xts 6.18 7.2 7.3
-ko xxhash 6.18 7.2 7.3
-ko xz_dec 6.18 7.2 7.3
-ko zlib_deflate 6.18 7.2 7.3
-ko zlib_inflate 6.18 7.2 7.3
-ko zram 6.18 7.2 7.3
-ko zsmalloc 6.18 7.2 7.3
-ko zstd 6.18 7.2 7.3
-ko zstd_compress 6.18 7.2 7.3
-ko zstd_decompress 6.18 7.2 7.3
-ko zte_card_holder_det 6.18 7.2 7.3
-ko zte_sar_stk 6.18 7.2 7.3
+ko xpad 6.18 7.3
+ko xt_CLASSIFY 6.18 7.3
+ko xt_CT 6.18 7.3
+ko xt_IDLETIMER 6.18 7.3
+ko xt_MASQUERADE 6.18 7.3
+ko xt_NETMAP 6.18 7.3
+ko xt_NFLOG 6.18 7.3
+ko xt_NFQUEUE 6.18 7.3
+ko xt_REDIRECT 6.18 7.3
+ko xt_TCPMSS 6.18 7.3
+ko xt_TEE 6.18 7.3
+ko xt_TPROXY 6.18 7.3
+ko xt_TRACE 6.18 7.3
+ko xt_bpf 6.18 7.3
+ko xt_comment 6.18 7.3
+ko xt_connlimit 6.18 7.3
+ko xt_connmark 6.18 7.3
+ko xt_conntrack 6.18 7.3
+ko xt_ecn 6.18 7.3
+ko xt_hashlimit 6.18 7.3
+ko xt_helper 6.18 7.3
+ko xt_hl 6.18 7.3
+ko xt_iprange 6.18 7.3
+ko xt_l2tp 6.18 7.3
+ko xt_length 6.18 7.3
+ko xt_limit 6.18 7.3
+ko xt_mac 6.18 7.3
+ko xt_mark 6.18 7.3
+ko xt_nat 6.18 7.3
+ko xt_owner 6.18 7.3
+ko xt_pkttype 6.18 7.3
+ko xt_policy 6.18 7.3
+ko xt_quota 6.18 7.3
+ko xt_socket 6.18 7.3
+ko xt_state 6.18 7.3
+ko xt_statistic 6.18 7.3
+ko xt_string 6.18 7.3
+ko xt_tcpudp 6.18 7.3
+ko xt_time 6.18 7.3
+ko xt_u32 6.18 7.3
+ko xts 6.18 7.3
+ko xxhash 6.18 7.3
+ko xz_dec 6.18 7.3
+ko zlib_deflate 6.18 7.3
+ko zlib_inflate 6.18 7.3
+ko zram 6.18 7.3
+ko zsmalloc 6.18 7.3
+ko zstd 6.18 7.3
+ko zstd_compress 6.18 7.3
+ko zstd_decompress 6.18 7.3
+ko zte_card_holder_det 6.18 7.3
+ko zte_sar_stk 6.18 7.3

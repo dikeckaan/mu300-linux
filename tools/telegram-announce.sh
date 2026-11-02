@@ -60,13 +60,13 @@ $lead"
 $new"
     text="$text
 
-<a href=\"$URL\">Release page</a> ($nassets files: images, kernels 5.4 / 6.18 / 7.2 / 7.3, installer) · <a href=\"https://github.com/$REPO/wiki/Home\">Wiki</a> · <a href=\"https://kaandikec.com/mu300-linux/\">Site</a>"
+<a href=\"$URL\">Release page</a> ($nassets files: images, kernels 5.4 / 6.18 / 7.3, installer) · <a href=\"https://github.com/$REPO/wiki/Home\">Wiki</a> · <a href=\"https://kaandikec.com/mu300-linux/\">Site</a>"
     ;;
 zips)
     text="<b>MU300 Linux $(printf '%s' "$TAG" | esc)</b>
 Magisk installers attached
 
-$nzips zips on the release page: Ubuntu 24.04 and 26.04, OpenWrt, OpenWrt with the control panel — each with kernel 5.4, 6.18, 7.2 or 7.3. Install from Magisk › Modules on the device; no computer needed.
+$nzips zips on the release page: Ubuntu 24.04 and 26.04, OpenWrt, OpenWrt with the control panel — each with kernel 5.4, 6.18 or 7.3. Install from Magisk › Modules on the device; no computer needed.
 
 <a href=\"$URL\">Release page</a> · <a href=\"https://github.com/$REPO/wiki/Installation\">Installation guide</a>"
     ;;

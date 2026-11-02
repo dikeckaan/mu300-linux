@@ -733,7 +733,7 @@ class App:
         check(i, 'Ubuntu LTS', 'ubuntu', _('The full distribution with apt; about 500 MiB of RAM in use. Needs {1}.', size(f.need('ubuntu'))),
               enabled=not room or room >= f.need('ubuntu'))
         radio(i, _('24.04 LTS: the longest tested, supported until 2029'), 'ubuntu_version', '24.04', enabled=ch.ubuntu, indent=S5)
-        radio(i, _('26.04 LTS: the newest, supported until 2031; needs kernel 6.18, 7.2 or 7.3'), 'ubuntu_version', '26.04', enabled=ch.ubuntu, indent=S5)
+        radio(i, _('26.04 LTS: the newest, supported until 2031; needs kernel 6.18 or 7.3'), 'ubuntu_version', '26.04', enabled=ch.ubuntu, indent=S5)
         ttk.Frame(i, height=S2, style='Card.TFrame').pack()
         check(i, 'OpenWrt 25.12', 'openwrt', _('A router system with the LuCI web interface; about 140 MiB of RAM in use. Needs {1}.', size(f.need('openwrt'))))
         radio(i, _('The standard LuCI web interface'), 'openwrt_flavor', 'plain', enabled=ch.openwrt, indent=S5)
@@ -747,14 +747,13 @@ class App:
         if room and room < f.need('both'):
             ttk.Label(i, text=_('This place has {1}: both systems together need {2}.', size(room), size(f.need('both'))), style='Card.Small.TLabel').pack(anchor='w', pady=(S2, 0))
 
-        o, i = card(body, _('Kernel'), _('It can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2|7.3'))
+        o, i = card(body, _('Kernel'), _('It can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.3'))
         add(o)
         radio(i, _('5.4  —  the vendor kernel: the longest tested, everything this project supports'), 'kernel', '5.4', enabled=ch.kernel_ok('5.4'),
-              note=None if ch.kernel_ok('5.4') else _('The ZTE V50 runs a mainline kernel only (6.18, 7.2 or 7.3).') if ch.device == 'v50'
+              note=None if ch.kernel_ok('5.4') else _('The ZTE V50 runs a mainline kernel only (6.18 or 7.3).') if ch.device == 'v50'
               else _('Not with Ubuntu 26.04: its programs use system calls that 5.4 does not have.'))
         radio(i, _('6.18  —  mainline Linux, long-term release: newer drivers and security fixes; no USB-C video output yet'), 'kernel', '6.18')
-        radio(i, _('7.2  —  mainline Linux, stable release; tested less than 6.18'), 'kernel', '7.2')
-        radio(i, _('7.3  —  the newest mainline Linux; tested less than 7.2'), 'kernel', '7.3')
+        radio(i, _('7.3  —  mainline Linux, stable release; tested less than 6.18'), 'kernel', '7.3')
 
         rel = ctl.releases
         o, i = card(body, _('Release'))
@@ -1348,10 +1347,12 @@ class App:
                 line = ttk.Frame(i, style='Card.TFrame')
                 line.pack(anchor='w', pady=(S3, 0))
                 ttk.Label(line, text=_('Kernel:'), style='Card.TLabel').pack(side='left')
-                kbox = ttk.Combobox(line, values=['5.4', '6.18', '7.2', '7.3'], width=6, state='readonly')
+                kbox = ttk.Combobox(line, values=['5.4', '6.18', '7.3'], width=6, state='readonly')
                 # the kernel it runs, not a fixed 6.18 (seen on F50-B running 7.2.10: the box said 6.18)
                 running = info.get('kernel', '')
-                kbox.set(next((k for k in ('5.4', '6.18', '7.2', '7.3') if running == k or running.startswith(k + '.')), '6.18'))
+                # (a device still on the retired 7.2 is offered 7.3, the kernel that takes its place)
+                kbox.set(next((k for k in ('5.4', '6.18', '7.3') if running == k or running.startswith(k + '.')),
+                              '7.3' if running.startswith('7.2.') else '6.18'))
                 kbox.pack(side='left', padx=S2)
                 action(line, _('Switch to it'), lambda: self._command('kernel-' + kbox.get(), _('Install kernel {1} on the device? It restarts into it afterwards only when you restart it.', kbox.get()))).pack(side='left')
             else:

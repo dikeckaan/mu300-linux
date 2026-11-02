@@ -119,7 +119,17 @@ them from yours. The VPN module is brought to its latest release, its core and i
 does not start sends the device back to Android on its own.</li>
 </ol>
 <p>The kernel can be changed the same way: <code>sudo mu300-update kernel 6.18</code> (or <code>5.4</code>,
-<code>7.2</code>, <code>7.3</code>), then restart. See <a href="../choose/#kernels">choosing a kernel</a>.</p>
+<code>7.3</code>), then restart. See <a href="../choose/#kernels">choosing a kernel</a>.</p>
+<div class="callout">
+<strong>Kernel 7.2 is retired</strong>
+<p>kernel.org ended the 7.2 series (7.2.15 was its last release), so releases no longer carry it. A device that chose
+7.2 gets 7.3, the stable mainline release, with its next <code>sudo mu300-update apply</code> (or <code>mu300-update
+boot</code>), through the normal boot update: the old image is kept for <code>sudo mu300-update rollback-boot</code>,
+and a kernel that does not start sends the device back to Android by itself. The output says that 7.2 is retired, as
+do <code>mu300-update check</code> and <code>mu300-update kernel</code>. <code>sudo mu300-update kernel 7.2</code>
+refuses and suggests <code>sudo mu300-update kernel 7.3</code> (or 6.18). A zip of an older release with
+<code>k7.2</code> still installs the kernel it carries (<a href="../choose/#kernel-72">details</a>).</p>
+</div>
 <p><strong>Release names</strong> are the day a release was built and its number that day: <code>v2026.10.16.1</code>,
 <code>v2026.10.16.2</code>. They are newer than every older three-part name such as <code>v2026.10.27</code>, whose
 "day" was only a counter. A device on v2026.10.27 or older updates to them with <code>sudo mu300-update apply</code> as

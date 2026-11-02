@@ -14,7 +14,7 @@
 set -eu
 TOP=$(cd "$(dirname "$0")/.." && pwd)
 U=$TOP/upstream
-# the build to package: upstream/out (6.18), or MU300_UPSTREAM_OUT=upstream/out-7.2 (out-7.3) for another kernel
+# the build to package: upstream/out (6.18), or MU300_UPSTREAM_OUT=upstream/out-7.3 for another kernel
 UO=${MU300_UPSTREAM_OUT:-$U/out}
 OUT=${1:?usage: upstream/make-bundle.sh OUT.tar.gz [mu300-kernel.tar.gz]}
 REF=${2:-$(ls -t "$TOP"/release/*/mu300-kernel.tar.gz 2>/dev/null | head -1)}

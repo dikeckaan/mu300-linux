@@ -493,7 +493,7 @@ class Model(unittest.TestCase):
                                             'MU300_VPN_URL', 'MU300_VPN_MODULE'}
         every = model.Choices()
         every.__dict__.update(password='hunter2secret', password2='hunter2secret', openwrt_flavor='luci', boot_os='openwrt', ubuntu_version='26.04',
-                              kernel='7.2', release='v2026.10.25', release_url='http://127.0.0.1:8000', vpn=True, vpn_url='http://x/vpn',
+                              kernel='7.3', release='v2026.10.25', release_url='http://127.0.0.1:8000', vpn=True, vpn_url='http://x/vpn',
                               vpn_module='/tmp/m.tar.gz', adb=True, panel=True, storage='sd', existing='wipe', erase_sd_word='ERASE',
                               internal_word='internal', overwrite_word='overwrite', unknown_model=True, sync_bootchain=False, fetch_jobs=2)
         f = facts(device__kind='unknown', sd__device='/dev/block/mmcblk1p1', sd__bytes='63864569856', sd__state='yes', region__dirty='3')
@@ -501,7 +501,7 @@ class Model(unittest.TestCase):
         for name in a:
             self.assertIn(name, known, f'{name} is no variable of install.sh')
         self.assertEqual((a['MU300_ANS_SYSTEMS'], a['MU300_OPENWRT'], a['MU300_ANS_BOOT_OS'], a['MU300_ANS_UBUNTU'], a['MU300_ANS_KERNEL']),
-                         ('3', 'luci', 'openwrt-luci', '26.04', '7.2'))
+                         ('3', 'luci', 'openwrt-luci', '26.04', '7.3'))
         self.assertEqual((a['MU300_RELEASE'], a['MU300_STORAGE'], a['MU300_ANS_EXISTING'], a['MU300_ANS_ERASE_SD'], a['MU300_ANS_UNKNOWN_MODEL']),
                          ('v2026.10.25', 'sd', 'wipe', 'ERASE', 'yes'))
         self.assertNotIn('MU300_ANS_BETA', a)                 # a release was named: that question is not asked

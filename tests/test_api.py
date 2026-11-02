@@ -859,11 +859,13 @@ class Jobs(ApiCase):
             self.ok(shell, 'job.clear')
             self.refused(shell, 'kernel.set', {'version': '6.1'}, 'bad-value', 'version')
             self.refused(shell, 'kernel.set', {'version': '7.4'}, 'bad-value', 'version')
-            self.ok(shell, 'kernel.set', {'version': '7.2'})
+            # (7.2 is retired: no release has it, and the device's tools no longer offer it)
+            self.refused(shell, 'kernel.set', {'version': '7.2'}, 'bad-value', 'version')
+            self.ok(shell, 'kernel.set', {'version': '7.3'})
             self.assertFalse(self.ok(shell, 'job.status')['job']['cancel'])
             self.refused(shell, 'job.cancel', {}, 'unsupported')
             self.wait_job(shell)
-            self.assertIn(['mu300-update', 'kernel', '7.2'], self.calls('mu300-update'))
+            self.assertIn(['mu300-update', 'kernel', '7.3'], self.calls('mu300-update'))
 
     def test_extras(self):
         for shell in self.each_shell():

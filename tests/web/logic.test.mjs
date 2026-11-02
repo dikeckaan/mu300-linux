@@ -8,7 +8,7 @@ import zlib from "node:zlib";
 import { Masker, maskSerial } from "../../site/assets/web-installer/privacy.js";
 import { Sha256, sha256Hex } from "../../site/assets/web-installer/sha256.js";
 import { ZipError, inspectMagiskZip, openZip, parseManifest } from "../../site/assets/web-installer/zip.js";
-import { GithubError, LAST_RELEASE_WITHOUT_WEB, combos, findZip, loadReleases, loadVpnModule, releaseSupportsWeb, zipName } from "../../site/assets/web-installer/github.js";
+import { GithubError, LAST_RELEASE_WITHOUT_WEB, RETIRED_KERNELS, combos, findZip, loadReleases, loadVpnModule, releaseSupportsWeb, zipName } from "../../site/assets/web-installer/github.js";
 import { GIB, MIB, NEED, analyseStorage, answersFor, classifyLine, dataNeeded, deviceBlockers, fmtSize, needFor, parsePlan, stageRisk, validPassword, validateChoices } from "../../site/assets/web-installer/flow.js";
 
 // ------------------------------------------------------------------ privacy
@@ -142,8 +142,8 @@ test("what is not one of our zips is refused with a reason", async () => {
 
 const asset = (name, size = 1000, digest = "sha256:" + "c".repeat(64)) => ({ name, size, digest, browser_download_url: "https://evil.example/" + name });
 const rel = (tag, o = {}) => ({ tag_name: tag, prerelease: false, draft: false, published_at: "2026-11-01T10:00:00Z",
-  assets: ["openwrt", "openwrt-luci", "ubuntu-24.04"].flatMap((s) => ["5.4", "6.18", "7.2"].map((k) => asset(zipName(tag, s, k))))
-    .concat(["6.18", "7.2"].map((k) => asset(zipName(tag, "ubuntu-26.04", k)))), ...o });
+  assets: ["openwrt", "openwrt-luci", "ubuntu-24.04"].flatMap((s) => ["5.4", "6.18", "7.3"].map((k) => asset(zipName(tag, s, k))))
+    .concat(["6.18", "7.3"].map((k) => asset(zipName(tag, "ubuntu-26.04", k)))), ...o });
 const fetchOf = (body, status = 200, headers = {}) => async (url, init) => {
   fetchOf.calls.push([url, init]);
   return { ok: status >= 200 && status < 300, status, headers: { get: (k) => headers[k] }, json: async () => (typeof body === "function" ? body() : body) };
@@ -167,17 +167,19 @@ test("releases: the newest release, and a beta only when it is newer than that",
 
 test("releases: a zip is found by system and kernel, with the checksum GitHub computed and a link built here", async () => {
   const { stable } = await loadReleases(fetchOf([rel("v2026.11.01")]));
-  const z = findZip(stable, "openwrt-luci", "7.2");
-  assert.deepEqual(z, { name: "mu300-magisk-v2026.11.01-openwrt-luci-k7.2.zip", size: 1000, sha256: "c".repeat(64),
-    url: "https://github.com/dikeckaan/mu300-linux/releases/download/v2026.11.01/mu300-magisk-v2026.11.01-openwrt-luci-k7.2.zip" });
+  const z = findZip(stable, "openwrt-luci", "7.3");
+  assert.deepEqual(z, { name: "mu300-magisk-v2026.11.01-openwrt-luci-k7.3.zip", size: 1000, sha256: "c".repeat(64),
+    url: "https://github.com/dikeckaan/mu300-linux/releases/download/v2026.11.01/mu300-magisk-v2026.11.01-openwrt-luci-k7.3.zip" });
   assert.equal(findZip(stable, "ubuntu-26.04", "5.4"), null);
   assert.equal(findZip(stable, "arch", "5.4"), null);
-  assert.deepEqual(combos(stable), { "ubuntu-24.04": ["5.4", "6.18", "7.2"], "ubuntu-26.04": ["6.18", "7.2"], openwrt: ["5.4", "6.18", "7.2"], "openwrt-luci": ["5.4", "6.18", "7.2"] });
-  // a release with the k7.3 zips (7.3, the fourth kernel) offers 7.3 too; one without them (v2026.10.19.2 and older) does not
-  const { stable: with73 } = await loadReleases(fetchOf([rel("v2026.11.01", { assets: rel("v2026.11.01").assets
-    .concat(["openwrt", "ubuntu-26.04"].map((s) => asset(zipName("v2026.11.01", s, "7.3")))) })]));
-  assert.deepEqual(combos(with73).openwrt, ["5.4", "6.18", "7.2", "7.3"]);
-  assert.deepEqual(combos(with73)["ubuntu-26.04"], ["6.18", "7.2", "7.3"]);
+  assert.deepEqual(combos(stable), { "ubuntu-24.04": ["5.4", "6.18", "7.3"], "ubuntu-26.04": ["6.18", "7.3"], openwrt: ["5.4", "6.18", "7.3"], "openwrt-luci": ["5.4", "6.18", "7.3"] });
+  // 7.2 is retired: the k7.2 zips of a release that still had them are not offered, nor found
+  const { stable: with72 } = await loadReleases(fetchOf([rel("v2026.11.01", { assets: rel("v2026.11.01").assets
+    .concat(["openwrt", "ubuntu-26.04"].map((s) => asset(zipName("v2026.11.01", s, "7.2")))) })]));
+  assert.deepEqual(combos(with72).openwrt, ["5.4", "6.18", "7.3"]);
+  assert.deepEqual(combos(with72)["ubuntu-26.04"], ["6.18", "7.3"]);
+  assert.equal(findZip(with72, "openwrt", "7.2"), null);
+  assert.deepEqual(RETIRED_KERNELS, { "7.2": "7.3" });
   assert.equal(releaseSupportsWeb(stable), true);
   assert.equal(releaseSupportsWeb({ tag: LAST_RELEASE_WITHOUT_WEB }), false);
   assert.equal(releaseSupportsWeb({ tag: "v2026.10.19" }), false);
@@ -325,7 +327,8 @@ test("choices the device would refuse are refused here first", () => {
   // the ZTE V50 (FINDINGS 95): mainline only; the F50 and the U30 Air keep 5.4
   assert.deepEqual(check(choices(), status({ device: "v50" })), ["v50-needs-mainline"]);
   assert.deepEqual(check(choices({ kernel: "6.18" }), status({ device: "v50" })), []);
-  assert.deepEqual(check(choices({ kernel: "7.2" }), status({ device: "v50" })), []);
+  assert.deepEqual(check(choices({ kernel: "7.3" }), status({ device: "v50" })), []);
+  assert.deepEqual(check(choices({ kernel: "7.2" })), ["no-kernel"]);    // retired: the wizard proposes 7.3 instead
   assert.deepEqual(check(choices(), status({ device: "u30air" })), []);
   assert.deepEqual(deviceBlockers(status({ device: "v50" })), []);
   assert.deepEqual(check(choices({ bootOs: "openwrt" })), ["boot-os-not-installed"]);

@@ -38,7 +38,7 @@ optional [VPN](VPN) module.
 
 ==> Which Ubuntu?
   1) 24.04 LTS  the longest tested, supported until 2029
-  2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18, 7.2 or 7.3
+  2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18 or 7.3
 ```
 
 `MU300_OPENWRT=plain|luci` answers the OpenWrt question without asking.
@@ -52,7 +52,7 @@ The installer asks for room for the system plus a spare copy kept by updates: ab
 
 * **24.04 LTS** is the default and the longest tested. It works with every kernel.
 * **26.04 LTS** is the newest, supported until 2031. Its programs use system calls the 5.4 kernel does not have (`tar`, for one, cannot
-  unpack folders there), so it **needs kernel 6.18, 7.2 or 7.3**. The installer will not let you combine it with 5.4.
+  unpack folders there), so it **needs kernel 6.18 or 7.3**. The installer will not let you combine it with 5.4.
 
 An installed Ubuntu moves to the other release with `sudo MU300_UBUNTU=26.04 mu300-update apply` (or `24.04`),
 keeping settings and data.

@@ -15,7 +15,7 @@ export function demoReleases() {
     const assets = new Map();
     const sizes = { openwrt: 45e6, "openwrt-luci": 47e6, "ubuntu-24.04": 120e6, "ubuntu-26.04": 130e6 };
     for (const [s, size] of Object.entries(sizes)) {
-      for (const k of ["5.4", "6.18", "7.2", "7.3"]) {
+      for (const k of ["5.4", "6.18", "7.3"]) {
         if (s === "ubuntu-26.04" && k === "5.4") continue;
         const name = `mu300-magisk-${tag}-${s}-k${k}.zip`;
         assets.set(name, asset("dikeckaan/mu300-linux", tag, name, size));
@@ -133,7 +133,7 @@ class DemoAndroid {
 class DemoLinux {
   constructor(log) { this.kind = "linux"; this.log = log; this.serial = "MU300LINUX-324950664950-203d8329"; this.kernel = "6.18"; this.bootOs = "ubuntu"; }
   async info() {
-    return { source: "commands", device: "f50", version: "v2026.10.23", os: "ubuntu 24.04", kernel: this.kernel === "6.18" ? "6.18.56-mu300" : this.kernel === "7.2" ? "7.2.10-mu300" : "5.4.254", kernelChoice: this.kernel,
+    return { source: "commands", device: "f50", version: "v2026.10.23", os: "ubuntu 24.04", kernel: this.kernel === "6.18" ? "6.18.56-mu300" : this.kernel === "7.3" ? "7.3.1-mu300" : "5.4.254", kernelChoice: this.kernel,
       bootOs: this.bootOs, defaultBoot: "linux", attempts: 5, systems: ["ubuntu", "openwrt-luci"], uptime: 5025, isRoot: true };
   }
   async _say(onLine, lines, rc = 0) { for (const l of lines) { this.log(l); if (onLine) onLine(l); await wait(250); } return { rc }; }

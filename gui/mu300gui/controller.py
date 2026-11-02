@@ -25,7 +25,6 @@ LINUX_COMMANDS = {
     'update': '/opt/mu300/bin/mu300-update apply',
     'kernel-5.4': '/opt/mu300/bin/mu300-update kernel 5.4',
     'kernel-6.18': '/opt/mu300/bin/mu300-update kernel 6.18',
-    'kernel-7.2': '/opt/mu300/bin/mu300-update kernel 7.2',
     'kernel-7.3': '/opt/mu300/bin/mu300-update kernel 7.3',
 }
 # ... and a device in Android: start Linux through the on-device switch the installer puts there (a Magisk module)

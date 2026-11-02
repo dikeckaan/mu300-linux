@@ -929,7 +929,7 @@ class Status(test_update.Lock):
             self.assertEqual((k['choice'], k['boot'], k['boot_kernel'], k['slot']), ('6.18', 'v2026.10.25', '6.18', 'b'))
             # Ubuntu 26.04 is on this device: 5.4 is not offered (kernel_cmd refuses it)
             self.assertEqual([(c['name'], c['ok'], c['why']) for c in k['choices']],
-                             [('5.4', 0, 'ubuntu-26.04'), ('6.18', 1, None), ('7.2', 1, None), ('7.3', 1, None)])
+                             [('5.4', 0, 'ubuntu-26.04'), ('6.18', 1, None), ('7.3', 1, None)])
             self.assertEqual((k['previous']['release'], k['previous']['kernel'], k['previous']['usable']), ('v2026.10.18', '5.4', 1))
             self.assertEqual((o['boot_default'], o['boot_attempts'], o['boot_locked']), ('linux', 3, 0))
             self.assertEqual((o['disk']['need_one_kb'], o['disk']['need_all_kb']), (2000000, 3000000))
@@ -1608,7 +1608,7 @@ class Adapter(ShellTest):
             self.assertEqual(self.act(shell, 'apply', systems='openwrt-luci ubuntu', flags='no_reinstall', **ok),
                              {'ok': 1, 'started': 1, 'kind': 'apply'})
             # one at a time: whatever is asked for while it runs is refused, and nothing second is started
-            for op, kw in (('apply', ok), ('check', {}), ('clean', {'confirm': 'clean'}), ('kernel', {'kernel': '7.2', 'confirm': 'kernel'}),
+            for op, kw in (('apply', ok), ('check', {}), ('clean', {'confirm': 'clean'}), ('kernel', {'kernel': '7.3', 'confirm': 'kernel'}),
                            ('rollback', {'confirm': 'rollback'}), ('dismiss', {}), ('upload_begin', {'size': '100'})):
                 self.assertEqual(self.act(shell, op, **kw), {'ok': 0, 'error': 'An update task is already running'}, op)
             self.assertEqual(self.ad(shell, 'job')['job']['state'], 'running')
@@ -1691,7 +1691,7 @@ class Adapter(ShellTest):
             self.put('status', json.dumps(held))
             for op, kw in (('apply', dict(tag='v2026.11.02', confirm='apply')), ('rollback', {'confirm': 'rollback'}),
                            ('rollback_boot', {'confirm': 'rollback'}), ('clean', {'confirm': 'clean'}),
-                           ('kernel', {'kernel': '7.2', 'confirm': 'kernel'})):
+                           ('kernel', {'kernel': '7.3', 'confirm': 'kernel'})):
                 o = self.act(shell, op, **kw)
                 self.assertEqual(o, {'ok': 0, 'busy': 1, 'error': 'Another update is running on the device',
                                      'detail': 'sh /opt/mu300/bin/mu300-update apply (pid 4242)'}, op)
@@ -1714,7 +1714,8 @@ class Adapter(ShellTest):
                 self.assertEqual(self.act(shell, op, **kw), {'ok': 1, 'started': 1, 'kind': op})
                 self.run_job(shell)
                 self.assertEqual(self.calls(), [call])
-            for k in ('', '6.6', '6.18.3', '7.2 --from x', '-h'):
+            # (7.2 is retired: the page no longer offers it, and the adapter refuses it)
+            for k in ('', '6.6', '6.18.3', '7.2', '7.3 --from x', '-h'):
                 self.assertEqual(self.act(shell, 'kernel', kernel=k, confirm='kernel'), {'ok': 0, 'error': 'Invalid update request'})
             self.assertEqual(self.act(shell, 'boot')['error'], 'Unknown update operation')
             self.assertEqual(self.started(), [])
@@ -2074,7 +2075,7 @@ PAGE_STATE = {
                            {'name': 'ubuntu', 'release': 'v2026.10.18', 'ubuntu': '26.04', 'since': 1780000000, 'previous': None}],
                'kernel': {'running': '6.18.3', 'choice': '6.18', 'boot': 'v2026.10.25', 'boot_kernel': '6.18', 'slot': 'b',
                           'choices': [{'name': '5.4', 'ok': 0, 'why': 'ubuntu-26.04'}, {'name': '6.18', 'ok': 1, 'why': None},
-                                      {'name': '7.2', 'ok': 1, 'why': None}],
+                                      {'name': '7.3', 'ok': 1, 'why': None}],
                           'previous': {'release': 'v2026.10.18', 'kernel': '6.18', 'since': 1790000000, 'usable': 1}},
                'boot_default': 'linux', 'boot_attempts': 5, 'boot_locked': 0,
                'disk': {'free_kb': 5000000, 'total_kb': 9000000, 'need_one_kb': 2000000, 'need_all_kb': 3000000},
@@ -2331,14 +2332,14 @@ class Page(unittest.TestCase):
             replies.update_act = { ok: 1, started: 1 }; replies.act = { ok: 1 };
             await click(root, 'mud-upd-kernel-set');                // the kernel in use: nothing to do
             const same = calls.filter((c) => c[0] === 'update_act').length;
-            root.find('mud-upd-kernel-pick').value = '7.2';
+            root.find('mud-upd-kernel-pick').value = '7.3';
             await click(root, 'mud-upd-kernel-set');
             await click(root, 'mud-upd-android');
             return { same: same, asked: asked.map((a) => [a[0], !!a[2].danger]),
                      sent: calls.filter((c) => c[0] === 'update_act' || c[0] === 'act').map((c) => c[1]) };''')
         self.assertEqual(r['same'], 0)
-        self.assertEqual(r['asked'], [['Change the kernel to 7.2?', True], ['Start Android at the next restart?', True]])
-        self.assertEqual(r['sent'], [{'op': 'kernel', 'tag': '', 'systems': '', 'kernel': '7.2', 'sha256': '', 'size': '', 'flags': '',
+        self.assertEqual(r['asked'], [['Change the kernel to 7.3?', True], ['Start Android at the next restart?', True]])
+        self.assertEqual(r['sent'], [{'op': 'kernel', 'tag': '', 'systems': '', 'kernel': '7.3', 'sha256': '', 'size': '', 'flags': '',
                                       'confirm': 'kernel'}, {'op': 'os', 'arg': 'android'}])
 
     def test_someone_elses_update_stops_the_page(self):
