@@ -25,7 +25,7 @@ Messages are English and come from:
   * N_() is an error: the app has no plural messages (tools/po2lmo.py refuses msgid_plural).
 
 The problems `check` prints, one per line as RULE: PATH:LINE: WHAT (spec, Translations):
-  cjk          a CJK character outside the catalogs (po/) and the installers' i18n data
+  cjk          a CJK character outside the app/extra catalogs and the installers' i18n data
   missing      a message without an entry, or with an empty msgstr, in any po/<lang>/mu300.po (or no po/tr,
                po/zh_Hans: the images need both)
   language     a po/<lang> directory without a row in openwrt/luci-languages.tsv (its LuCI code and name)
@@ -80,7 +80,7 @@ BACKEND_DYNAMIC_OK = {('mu300dash', 'refuse', '"$2"'),   # reply_obj passing its
 # CJK: only these files may contain it (repository paths; with --root, only po/ of that copy)
 CJK = re.compile('[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]')
 CJK_SCOPE = ['openwrt', 'rootfs/overlay', 'boot', 'tools', 'install.sh', 'uninstall.sh']
-CJK_ALLOWED = re.compile(r'^(tools/i18n\.sh|i18n/[^/]+\.tsv|openwrt/luci-app-mu300/po/.*|openwrt/luci-languages\.tsv|tests/fixtures/.*|rootfs/overlay/opt/mu300/lib/cpu-voltage-warning\.txt|rootfs/overlay/opt/mu300/lib/image-manifests/[^/]+\.gz)$')   # (compressed data: no text to look at)
+CJK_ALLOWED = re.compile(r'^(tools/i18n\.sh|tools/passwall2-extra/module/i18n/[^/]+\.tsv|i18n/[^/]+\.tsv|openwrt/luci-app-mu300/po/.*|openwrt/luci-languages\.tsv|tests/fixtures/.*|rootfs/overlay/opt/mu300/lib/cpu-voltage-warning\.txt|rootfs/overlay/opt/mu300/lib/image-manifests/[^/]+\.gz)$')   # (compressed data: no text to look at)
 
 PLACEHOLDER = re.compile(r'%(?:%|[-+#0]*\d*(?:\.\d+)?[a-zA-Z])')
 

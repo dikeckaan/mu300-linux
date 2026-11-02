@@ -9,8 +9,8 @@ pw2_languages() {
     pw2_changed=no
     while IFS= read -r pw2_l; do
         case $pw2_l in
-            zh-cn) pw2_key=zh_cn; pw2_label='简体中文 (Simplified Chinese)' ;;
-            zh-tw) pw2_key=zh_tw; pw2_label='繁體中文 (Traditional Chinese)' ;;
+            zh-cn) pw2_key=zh_cn; pw2_label="$(pw2_zh 'Simplified Chinese')" ;;
+            zh-tw) pw2_key=zh_tw; pw2_label="$(pw2_zh 'Traditional Chinese')" ;;
             ru) pw2_key=ru; pw2_label='Русский (Russian)' ;;
             fa) pw2_key=fa; pw2_label='فارسی (Persian)' ;;
             en) continue ;;

@@ -1,6 +1,6 @@
 # Optional Passwall2 extra
 
-[中文](README.zh-CN.md)
+[Chinese documentation](../../docs/passwall2-extra.zh-CN.md)
 
 Passwall2's LuCI UI, configuration and service stay independent of the MU300 VPN
 module. Compatible Xray and sing-box programs can be shared with it; installing

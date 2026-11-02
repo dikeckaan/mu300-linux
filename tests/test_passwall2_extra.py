@@ -109,6 +109,22 @@ else:
         with self.assertRaises(ValueError):
             self.build()
 
+    def test_packaged_cli_catalog_and_english_fallback(self):
+        path = self.build()
+        extracted = self.tmp / 'extracted'
+        with tarfile.open(path) as t:
+            t.extractall(extracted)
+        for shell in self.each_shell():
+            for lang, expected in [('en', 'run as root'), ('zh_cn', '\u8bf7\u4ee5 root \u8eab\u4efd\u8fd0\u884c')]:
+                with self.subTest(shell=shell, lang=lang):
+                    r = self.sh(shell, 'd=$EXTRA; . "$d/lib/messages.sh"; '
+                                'pw2_msg "run as root"; pw2_msg "unknown message"; '
+                                'pw2_zh "Simplified Chinese"',
+                                EXTRA=extracted, MU300_PASSWALL2_LANG=lang)
+                    self.assertEqual(r.returncode, 0, r.stderr)
+                    self.assertEqual(r.stdout, expected + '\nunknown message\n'
+                                     '\u7b80\u4f53\u4e2d\u6587 (Simplified Chinese)\n')
+
     def test_inactive_system_hooks_do_not_run_live_apk_and_refuse_orphans(self):
         inactive = self.tmp / 'inactive'
         (inactive / 'etc/config').mkdir(parents=True)

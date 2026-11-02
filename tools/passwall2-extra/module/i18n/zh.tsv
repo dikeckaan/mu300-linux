@@ -1,0 +1,18 @@
+# English message<TAB>Chinese translation
+OpenWrt only	仅支持 OpenWrt
+run as root	请以 root 身份运行
+this bundle needs aarch64_generic	此插件包需要 aarch64_generic 架构
+this bundle targets OpenWrt 25.12.x; build a bundle for this release first	此插件包适用于 OpenWrt 25.12.x；请为当前系统重新制作匹配的包
+bundle manifest check failed	插件文件校验失败
+native kernel validation failed	原生内核能力检查失败
+offline dependency resolution failed; no packages were changed	离线依赖检查失败，尚未改动软件包
+flock is required	需要 flock 命令
+another installation is running; retry later	另一个安装任务正在运行，请稍后重试
+already installed	此插件版本已安装
+installed; LuCI > Services > Passwall2	已安装；入口：LuCI > 服务 > Passwall2
+bundle applied	插件包已应用
+bundle pending (mu300-passwall2 install)	插件包待应用，请运行 mu300-passwall2 install
+not installed (mu300-passwall2 install)	尚未安装，请运行 mu300-passwall2 install
+could not register LuCI languages; retry installation	无法注册 LuCI 语言选项，请重试安装
+Simplified Chinese	简体中文 (Simplified Chinese)
+Traditional Chinese	繁體中文 (Traditional Chinese)
