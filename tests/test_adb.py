@@ -366,6 +366,24 @@ class Gadget(ShellTest):
             self.assertEqual('0x0302', self.read('bcdDevice'))
             self.assertEqual('1', self.read('os_desc/use'))   # RNDIS needs them: boot/init's, left as they were
 
+    def test_multi_has_its_own_bcd_device(self):
+        # RNDIS + NCM (boot/init's "multi"): 0x0305 without adb, 0x0306 with it, the descriptors as boot/init left them
+        (self.g / 'configs/c.1/f1').unlink()
+        (self.g / 'configs/c.1/f1').symlink_to(self.g / 'functions/rndis.rn0')
+        (self.g / 'configs/c.1/f4').symlink_to(self.g / 'functions/ncm.usb0')
+        (self.g / 'bcdDevice').write_text('0x0305\n')
+        (self.g / 'os_desc/use').write_text('1\n')
+        for shell in self.each_shell():
+            p = self.start(shell)
+            try:
+                self.assertTrue(self.until(self.linked))
+                self.assertEqual('0x0306', self.read('bcdDevice'))
+            finally:
+                rc, out = self.stop(p)
+            self.assertEqual(0, rc, out)
+            self.assertEqual('0x0305', self.read('bcdDevice'))
+            self.assertEqual('1', self.read('os_desc/use'))
+
     def test_binds_again_when_functionfs_unbound_the_gadget(self):
         for shell in self.each_shell():
             p = self.start(shell, MU300_ADBD_GRACE='20')   # 20 ticks of 0.1 s: a 2 s grace, a margin under load

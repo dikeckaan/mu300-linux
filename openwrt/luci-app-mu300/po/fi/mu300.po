@@ -4345,3 +4345,21 @@ msgstr "Kotiverkko"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Modeemin kanavat ovat varattuina muihin lukuihin; reaaliaikainen signaali tulee pian"
+
+msgid "Name on a Linux computer"
+msgstr "Nimi Linux-tietokoneessa"
+
+msgid "usb0 (the default)"
+msgstr "usb0 (oletus)"
+
+msgid "eth0, as with Android"
+msgstr "eth0, kuten Androidissa"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS: yksi kaapeli, joka toimii vanhan ja uuden Windowsin, macOS:n ja Linuxin kanssa. Uudemmat Windowsit ja Linux näyttävät kaksi verkkosovitinta. Ydin ilman RNDIS:ää luo vain NCM:n."
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0: tietokone saa osoitteen valmistajan alueelta, kuten Android sen antaa, ja Linux nimeää yhteyden eth0 eikä usb0. Windows ja macOS eivät muutu."
+
+msgid "Invalid USB network name"
+msgstr "Virheellinen USB-verkon nimi"

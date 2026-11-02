@@ -4345,3 +4345,21 @@ msgstr "Οικιακό δίκτυο"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Τα κανάλια του μόντεμ είναι απασχολημένα με άλλες αναγνώσεις· το ζωντανό σήμα έρχεται σύντομα"
+
+msgid "Name on a Linux computer"
+msgstr "Όνομα σε υπολογιστή Linux"
+
+msgid "usb0 (the default)"
+msgstr "usb0 (προεπιλογή)"
+
+msgid "eth0, as with Android"
+msgstr "eth0, όπως στο Android"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS: ένα καλώδιο που λειτουργεί με παλιά και νέα Windows, macOS και Linux. Τα νεότερα Windows και το Linux εμφανίζουν δύο προσαρμογείς δικτύου. Πυρήνας χωρίς RNDIS δημιουργεί μόνο NCM."
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0: ο υπολογιστής παίρνει διεύθυνση από το εύρος του κατασκευαστή, όπως τη δίνει το Android, και το Linux ονομάζει τη σύνδεση eth0 αντί για usb0. Τα Windows και το macOS δεν επηρεάζονται."
+
+msgid "Invalid USB network name"
+msgstr "Μη έγκυρο όνομα δικτύου USB"

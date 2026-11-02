@@ -187,7 +187,8 @@ cihazın kendi servisleri de (SSH dahil) o ağa kapalıdır. Cihaza USB'den ula�
 <p>Bir bilgisayara takıldığında cihaz ağ adaptörü olarak görünür ve bilgisayar ondan adres alır. Cihazın kendisi
 F50'de <code>192.168.77.1</code>, U30 Air'de <code>192.168.78.1</code>'dir; böylece her birinden biri aynı bilgisayara
 takılabilir. Aynı türden iki cihazı ayırmak için <code>/etc/mu300/lan.conf</code> gerekir.</p>
-<p>USB ağ kipi NCM'dir (yedeği ECM); kontrol paneli bir sonraki açılışta geçerli olmak üzere RNDIS'e çevirebilir. Aynı
+<p>USB ağ kipi NCM'dir (yedeği ECM); kontrol paneli bir sonraki açılışta geçerli olmak üzere RNDIS'e ya da eski ve yeni
+Windows, macOS ve Linux'ta tek kabloyla çalışan NCM + RNDIS'e çevirebilir. Aynı
 kablo bir seri konsol da taşır (<code>ttyGS0</code>): ağ çalışmadığında bile çalışan bir giriş. Mac'te
 <code>screen /dev/cu.usbmodem* 115200</code>. SSH ve telnet açıktır.</p>
 </section>

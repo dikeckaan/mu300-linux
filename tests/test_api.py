@@ -1071,13 +1071,14 @@ class PanelAdapters(ApiCase):
         for shell in self.each_shell():
             for f in ('usb-net', 'usb-net.once'):
                 (self.root / 'etc/mu300' / f).unlink(missing_ok=True)
-            self.assertEqual(self.ok(shell, 'usb.net'), {'ok': 1, 'mode': 'default', 'once': False, 'now': None})
+            (self.root / 'etc/mu300/usb-net-name').unlink(missing_ok=True)
+            self.assertEqual(self.ok(shell, 'usb.net'), {'ok': 1, 'mode': 'default', 'once': False, 'name': 'usb', 'now': None})
             self.assertEqual(self.ok(shell, 'usb.net', {'mode': 'ecm', 'scope': 'once'})['mode'], 'ecm')
             self.assertEqual((self.root / 'etc/mu300/usb-net').read_text(), 'ecm\n')
             self.assertTrue((self.root / 'etc/mu300/usb-net.once').exists())
             (self.root / 'run/mu300').mkdir(parents=True, exist_ok=True)
             (self.root / 'run/mu300/usb-net-applied').write_text('ecm\n')
-            self.assertEqual(self.ok(shell, 'usb.net'), {'ok': 1, 'mode': 'ecm', 'once': True, 'now': 'ecm'})
+            self.assertEqual(self.ok(shell, 'usb.net'), {'ok': 1, 'mode': 'ecm', 'once': True, 'name': 'usb', 'now': 'ecm'})
             # at the next boot the one-boot choice is used up (mu300-usb boot, mu300-fixups)
             r = self.script(shell, self.bin / 'mu300-usb', 'boot', MU300_SYSROOT=self.root, PATH=f'{self.bin}:{self.env()["PATH"]}')
             self.assertEqual(r.returncode, 0, r.stderr)
@@ -1086,9 +1087,21 @@ class PanelAdapters(ApiCase):
             self.ok(shell, 'usb.net', {'mode': 'rndis'})
             self.assertEqual(self.ok(shell, 'usb.net')['mode'], 'rndis')
             self.assertFalse((self.root / 'etc/mu300/usb-net.once').exists())
+            # multi: NCM + RNDIS; "now" says what init made (multi only when both were bound)
+            self.assertEqual(self.ok(shell, 'usb.net', {'mode': 'multi'})['mode'], 'multi')
+            self.assertEqual((self.root / 'etc/mu300/usb-net').read_text(), 'multi\n')
+            (self.root / 'run/mu300/usb-net-applied').write_text('multi\n')
+            self.assertEqual(self.ok(shell, 'usb.net')['now'], 'multi')
+            # the name, apart from the mode
+            r = self.ok(shell, 'usb.net', {'name': 'eth'})
+            self.assertEqual((r['mode'], r['name']), ('multi', 'eth'))
+            self.assertEqual((self.root / 'etc/mu300/usb-net-name').read_text(), 'eth\n')
+            self.assertEqual(self.ok(shell, 'usb.net', {'mode': 'ncm'})['name'], 'eth')
+            self.assertEqual(self.ok(shell, 'usb.net', {'name': 'usb'})['name'], 'usb')
+            self.assertFalse((self.root / 'etc/mu300/usb-net-name').exists())
             self.ok(shell, 'usb.net', {'mode': 'default'})
             self.assertFalse((self.root / 'etc/mu300/usb-net').exists())
-            for bad in ({'mode': 'ppp'}, {'mode': 'ncm', 'scope': 'twice'}, {'mode': '-x'}):
+            for bad in ({'mode': 'ppp'}, {'mode': 'ncm', 'scope': 'twice'}, {'mode': '-x'}, {'name': 'eth0'}, {'name': 'wlan'}):
                 self.refused(shell, 'usb.net', bad, 'bad-value')
             (self.root / 'run/mu300/usb-net-applied').unlink()
 

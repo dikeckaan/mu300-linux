@@ -20,6 +20,7 @@ class USBManagement(ShellTest):
         self.role = self.tmp / 'role'
         self.role.write_text('device\n')
         self.net_file = self.tmp / 'etc' / 'mu300' / 'usb-net'
+        self.name_file = self.tmp / 'etc' / 'mu300' / 'usb-net-name'
         self.applied = self.tmp / 'applied'
         self.net_class = self.tmp / 'net'
         self.net_class.mkdir()
@@ -63,6 +64,7 @@ esac
     def call_usb(self, shell, *args, **env):
         base = dict(MU300_USB_ROLE_FILE=self.role,
                     MU300_USB_NET_FILE=self.net_file,
+                    MU300_USB_NAME_FILE=self.name_file,
                     MU300_USB_APPLIED_FILE=self.applied,
                     MU300_USB_NET_CLASS=self.net_class,
                     MU300_USB_BUS=self.usb_bus,
@@ -97,7 +99,7 @@ esac
 
     def test_mode_file_is_the_bare_mode_init_reads(self):
         for shell in self.each_shell():
-            for mode in ('ncm', 'ecm', 'rndis'):
+            for mode in ('ncm', 'ecm', 'rndis', 'multi'):
                 self.reset()
                 self.assertEqual({'ok': 1}, self.reply(self.call_usb(shell, 'set-net', mode, 'permanent', '1')))
                 self.assertEqual(f'{mode}\n', self.net_file.read_text())
@@ -108,7 +110,7 @@ esac
         block = re.search(r'# --- usb-net begin\n(.*?)# --- usb-net end', INIT, re.S).group(1)
         root = self.net_file.parents[2]
         for shell in self.each_shell():
-            for mode, functions in (('ncm', 'ncm ecm'), ('ecm', 'ecm ncm'), ('rndis', 'rndis ncm ecm')):
+            for mode, functions in (('ncm', 'ncm ecm'), ('ecm', 'ecm ncm'), ('rndis', 'rndis ncm ecm'), ('multi', 'multi ncm ecm')):
                 self.reset()
                 self.call_usb(shell, 'set-net', mode, 'permanent', '1')
                 out = self.sh(shell, block + f'\nusb_net_policy "{root}"').stdout
@@ -121,6 +123,23 @@ esac
             self.assertTrue(self.net_file.exists())
             self.assertEqual({'ok': 1}, self.reply(self.call_usb(shell, 'set-net', 'ecm', 'permanent', '0')))
             self.assertFalse(self.net_file.exists())
+
+    def test_net_name_is_a_file_of_its_own(self):
+        # usb (no file) or eth, for every mode and apart from the mode's policy: the host role does not touch it
+        for shell in self.each_shell():
+            self.reset()
+            self.name_file.unlink(missing_ok=True)
+            self.assertEqual('usb', self.reply(self.call_usb(shell, 'get'))['net_name'])
+            self.assertEqual({'ok': 1}, self.reply(self.call_usb(shell, 'set-net-name', 'eth')))
+            self.assertEqual('eth\n', self.name_file.read_text())
+            self.assertEqual(0o600, self.name_file.stat().st_mode & 0o777)
+            self.assertEqual('eth', self.reply(self.call_usb(shell, 'get'))['net_name'])
+            self.assertFalse(self.net_file.exists())
+            for bad in ('ETH', 'eth0', '', 'usb;x'):
+                self.assertEqual(0, self.reply(self.call_usb(shell, 'set-net-name', bad))['ok'], bad)
+            self.assertEqual('eth\n', self.name_file.read_text())
+            self.assertEqual({'ok': 1}, self.reply(self.call_usb(shell, 'set-net-name', 'usb')))
+            self.assertFalse(self.name_file.exists())
 
     def test_invalid_values_are_refused(self):
         for shell in self.each_shell():
@@ -303,7 +322,7 @@ esac
         gadgets = self.tmp / 'usb_gadget'
         funcs = gadgets / 'g1' / 'functions'
         conf = gadgets / 'g1' / 'configs' / 'b.1'
-        for f in ('ncm.usb0', 'rndis.usb0', 'acm.gs0'):
+        for f in ('ncm.usb0', 'ecm.usb0', 'rndis.usb0', 'acm.gs0'):
             (funcs / f).mkdir(parents=True)
         conf.mkdir(parents=True)
         (conf / 'f1').symlink_to(funcs / 'acm.gs0', target_is_directory=True)
@@ -318,8 +337,17 @@ esac
             self.call_usb(shell, 'set-net', 'rndis', 'permanent', '1')
             r = get()
             self.assertEqual((r['net_mode'], r['net_current']), ('rndis', 'ncm'))
+            # RNDIS beside NCM is boot/init's "multi"; any other mix is "mixed"
             (conf / 'f3').symlink_to(funcs / 'rndis.usb0', target_is_directory=True)
+            self.assertEqual(get()['net_current'], 'multi')
+            (conf / 'f4').symlink_to(funcs / 'ecm.usb0', target_is_directory=True)
             self.assertEqual(get()['net_current'], 'mixed')
+            (conf / 'f4').unlink()
+            (conf / 'f2').unlink()
+            (conf / 'f2').symlink_to(funcs / 'ecm.usb0', target_is_directory=True)
+            self.assertEqual(get()['net_current'], 'mixed')
+            (conf / 'f2').unlink()
+            (conf / 'f2').symlink_to(funcs / 'ncm.usb0', target_is_directory=True)
             (conf / 'f3').unlink()
             udc.write_text('\n')   # not bound to the controller
             self.assertEqual(get()['net_current'], 'none')

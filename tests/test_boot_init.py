@@ -661,6 +661,27 @@ class UsbId(ShellTest):
             out = self.ident(shell, 'console=ttyS1 androidboot.serialno=324950664950 androidboot.emmcid=2128e853 x=1')
             self.assertEqual(out, '324950664950-2128e853 ' + self.mac('324950664950-2128e853'))
 
+    def eth(self, shell, bootargs):
+        b = self.tmp / 'bootargs'
+        b.write_bytes(bootargs.encode() + b'\0')
+        code = 'NET=192.168.77\n' + self.functions() + f'\nusb_id {self.tmp}/none {b}\necho "$ETH_MAC"'
+        return self.sh(shell, code).stdout.strip()
+
+    def test_eth_mac_takes_the_wifi_vendor_block(self):
+        # net-name eth: the Wi-Fi address' first three bytes (globally administered, as stock Android's whole address
+        # is), then this device's own two; never the Wi-Fi address itself (wlan0 has it, in the same bridge)
+        for shell in self.each_shell():
+            out = self.eth(shell, 'androidboot.serialno=324950664950 androidboot.wifimac=5C7DAEB40BD0 x=1')
+            self.assertEqual('5c:7d:ae:' + self.mac('324950664950')[6:11], out)
+            self.assertEqual(0, int(out[:2], 16) & 2)
+
+    def test_eth_mac_without_a_usable_wifi_address(self):
+        # none, a locally administered or a multicast one: MAC with its 0x02 bit cleared
+        for shell in self.each_shell():
+            for extra in ('', ' androidboot.wifimac=02aabbccddee', ' androidboot.wifimac=01aabbccddee', ' androidboot.wifimac=5c7d'):
+                out = self.eth(shell, 'androidboot.serialno=324950664950' + extra)
+                self.assertEqual('00:' + self.mac('324950664950')[3:], out, extra)
+
     def test_clones_differ(self):
         for shell in self.each_shell():
             a = self.ident(shell, 'androidboot.serialno=324950664950 androidboot.emmcid=2128e853')
@@ -764,8 +785,11 @@ class GadgetHarness(ShellTest):
                 '    command mkdir "$@" || return; for d; do case $d in */functions/rndis.rn0) command mkdir -p "$d/os_desc/interface.rndis" ;; esac; done; }\n'
                 'rmdir() { for d; do case $d in */functions/*) command rm -rf "$d" ;; *) command rmdir "$d" ;; esac; done; }\n'
                 'mkdir -p "%s/cfg/usb_gadget/linux/os_desc"\n' % self.tmp +
-                'ifconfig() { echo "ifconfig $*" >> "$T/log"; }; ip() { echo "ip $*" >> "$T/log"; }\n'
-                f'MAC=02:00:00:00:00 NET=192.168.77 T={self.tmp} NO_RNDIS={"1" if no_rndis else ""}\n' + (f'MU300_USBNET="{usbnet}"\n' if usbnet is not None else '')
+                'ifconfig() { echo "ifconfig $*" >> "$T/log"; }\n'
+                # ip link add/del: the netdev comes and goes as the kernel's would
+                'ip() { echo "ip $*" >> "$T/log"; case "$1 $2" in "link add") command mkdir -p "$T/net/$3/bridge" ;;\n'
+                '    "link del") command rm -rf "$T/net/$3" ;; esac; return 0; }\n'
+                f'MAC=02:00:00:00:00 ETH_MAC=5c:7d:ae:00:00 NET=192.168.77 T={self.tmp} NO_RNDIS={"1" if no_rndis else ""}\n' + (f'MU300_USBNET="{usbnet}"\n' if usbnet is not None else '')
                 + body + '\nsetup_usb_gadget\n' + then)
         r = self.sh(shell, code)
         self.assertEqual(0, r.returncode, r.stderr)
@@ -801,6 +825,59 @@ class UsbGadget(GadgetHarness):
                 self.assertEqual('0x0302', (g / 'bcdDevice').read_text().strip())
                 self.tearDown(); self.setUp()
 
+    def test_multi_rndis_and_ncm_in_one_configuration(self):
+        for shell in self.each_shell():
+            g = self.build(shell, 'multi ncm ecm')
+            self.assertEqual(['c.1'], self.configs(g))
+            self.assertEqual({'f1': 'rndis.rn0', 'f4': 'ncm.usb0', 'f2': 'acm.GS0'}, self.links(g, 'c.1'))
+            self.assertEqual(['acm.GS0', 'ncm.usb0', 'rndis.rn0'], sorted(p.name for p in (g / 'functions').iterdir()))
+            self.assertEqual('0x0305', (g / 'bcdDevice').read_text().strip())
+            self.assertEqual('1', (g / 'os_desc' / 'use').read_text().strip())
+            self.assertEqual('RNDIS', (g / 'functions' / 'rndis.rn0' / 'os_desc' / 'interface.rndis' / 'compatible_id').read_text().strip())
+            self.assertEqual('RNDIS + NCM + ACM console', (g / 'configs' / 'c.1' / 'strings' / '0x409' / 'configuration').read_text().strip())
+            self.assertEqual('02:00:00:00:00:02', (g / 'functions' / 'ncm.usb0' / 'host_addr').read_text().strip())
+            self.assertEqual('02:00:00:00:00:04', (g / 'functions' / 'rndis.rn0' / 'host_addr').read_text().strip())
+            log = (self.tmp / 'log').read_text()
+            self.assertIn('ifconfig rndis0 up', log)
+            self.assertIn('ifconfig usb0 up', log)
+            self.assertIn('stage=usb-net-function multi', log)
+            self.tearDown(); self.setUp()
+
+    def test_multi_links_rndis_then_ncm_then_the_console(self):
+        # the interfaces follow the order the links are made in: RNDIS is interface 0 (the MS OS descriptors')
+        block = self.block('usb-gadget')
+        f1 = block.index('ln -s "$g/functions/rndis.rn0" "$g/configs/c.1/f1"')
+        f4 = block.index('ln -s "$g/functions/$netfunc.usb0" "$g/configs/c.1/f4"')
+        f2 = block.index('ln -s "$g/functions/acm.GS0" "$g/configs/c.1/f2"')
+        self.assertLess(f1, f4)
+        self.assertLess(f4, f2)
+        # RNDIS is named first (it took usb0 at the bind), then the CDC function gets usb0
+        self.assertLess(block.index('name rndis0'), block.index('name usb0'))
+
+    def test_multi_without_rndis_is_ncm(self):
+        for shell in self.each_shell():
+            g = self.build(shell, 'multi ncm ecm', no_rndis=True)
+            self.assertEqual({'f1': 'ncm.usb0', 'f2': 'acm.GS0'}, self.links(g, 'c.1'))
+            self.assertEqual('0x0301', (g / 'bcdDevice').read_text().strip())
+            self.assertFalse((g / 'os_desc' / 'use').exists())
+            self.assertIn('stage=usb-net-function ncm', (self.tmp / 'log').read_text())
+            self.tearDown(); self.setUp()
+
+    def test_eth_names_the_computers_side_only(self):
+        # net-name eth: host_addr from ETH_MAC (globally administered: Linux says eth0), dev_addr as before
+        for shell in self.each_shell():
+            for usbnet in ('ncm ecm', 'ecm', 'rndis', 'multi ncm ecm'):
+                g = self.build(shell, None, f'usbname=eth; teardown_usb_gadget; setup_usb_gadget "{usbnet}"')
+                f = g / 'functions'
+                if (f / 'rndis.rn0').exists():
+                    self.assertEqual('5c:7d:ae:00:00:04', (f / 'rndis.rn0' / 'host_addr').read_text().strip(), usbnet)
+                    self.assertEqual('02:00:00:00:00:03', (f / 'rndis.rn0' / 'dev_addr').read_text().strip(), usbnet)
+                for n in ('ncm.usb0', 'ecm.usb0'):
+                    if (f / n).exists():
+                        self.assertEqual('5c:7d:ae:00:00:02', (f / n / 'host_addr').read_text().strip(), usbnet)
+                        self.assertEqual('02:00:00:00:00:01', (f / n / 'dev_addr').read_text().strip(), usbnet)
+                self.tearDown(); self.setUp()
+
     def test_ncm_ecm_unchanged(self):
         for shell in self.each_shell():
             for usbnet in ('ncm ecm', None):
@@ -831,13 +908,25 @@ class UsbNetPolicy(ShellTest):
     def test_each_value(self):
         for shell in self.each_shell():
             for value, functions in (('ncm', 'ncm ecm'), ('ecm', 'ecm ncm'), ('rndis', 'rndis ncm ecm'),
-                                     ('ecm\n', 'ecm ncm')):
+                                     ('multi', 'multi ncm ecm'), ('ecm\n', 'ecm ncm')):
                 self.assertEqual(f'{functions}\nrc=0\n', self.policy(shell, value), value)
 
     def test_garbage_and_missing_say_nothing(self):
         for shell in self.each_shell():
-            for value in ('', 'RNDIS', 'ncm ecm', 'mode=ecm', 'ecm; reboot', '../x', None):
+            for value in ('', 'RNDIS', 'MULTI', 'multi ncm', 'ncm ecm', 'mode=ecm', 'ecm; reboot', '../x', None):
                 self.assertEqual('rc=0\n', self.policy(shell, value), value)
+
+    def test_name_policy(self):
+        f = self.tmp / 'root' / 'etc' / 'mu300' / 'usb-net-name'
+        f.parent.mkdir(parents=True, exist_ok=True)
+        for shell in self.each_shell():
+            for value, name in (('eth\n', 'eth'), ('eth', 'eth'), ('usb\n', 'usb'), ('ETH', 'usb'), ('eth0', 'usb'), ('', 'usb'), (None, 'usb')):
+                if value is None:
+                    f.unlink(missing_ok=True)
+                else:
+                    f.write_text(value)
+                r = self.sh(shell, GadgetHarness.block('usb-net') + f'\nusb_name_policy "{self.tmp}/root"')
+                self.assertEqual(name + '\n', r.stdout, value)
 
     def test_command_line_wins(self):
         for shell in self.each_shell():
@@ -891,6 +980,54 @@ class UsbNetRebind(GadgetHarness):
             self.assertNotIn('usb-no-net-function', (self.tmp / 'log').read_text())
             self.assertIn('ifconfig usb0', (self.tmp / 'log').read_text())
             self.assertEqual('ncm', self.marker())   # what was made, not what was asked for
+            self.tearDown(); self.setUp()
+
+    def name_marker(self):
+        m = self.tmp / 'run' / 'mu300' / 'usb-net-name-applied'
+        return m.read_text().strip() if m.exists() else None
+
+    def test_multi_rebuilds_with_rndis_and_ncm(self):
+        for shell in self.each_shell():
+            g = self.apply(shell, 'multi')
+            self.assertEqual(2, self.binds())
+            self.assertEqual({'f1': 'rndis.rn0', 'f4': 'ncm.usb0', 'f2': 'acm.GS0'}, self.links(g, 'c.1'))
+            self.assertEqual('0x0305', (g / 'bcdDevice').read_text().strip())
+            self.assertEqual('25100000.dwc3', (g / 'UDC').read_text().strip())
+            self.assertEqual('multi', self.marker())
+            self.assertEqual('usb', self.name_marker())
+            self.tearDown(); self.setUp()
+
+    def test_multi_on_a_kernel_without_rndis_is_ncm(self):
+        for shell in self.each_shell():
+            g = self.apply(shell, 'multi', no_rndis=True)
+            self.assertEqual({'f1': 'ncm.usb0', 'f2': 'acm.GS0'}, self.links(g, 'c.1'))
+            self.assertEqual('0x0301', (g / 'bcdDevice').read_text().strip())
+            # what was made, not what was asked for
+            self.assertEqual('ncm', self.marker())
+            self.tearDown(); self.setUp()
+
+    def test_a_name_alone_rebinds_with_the_bound_functions(self):
+        for shell in self.each_shell():
+            (self.tmp / 'root' / 'etc' / 'mu300').mkdir(parents=True, exist_ok=True)
+            (self.tmp / 'root' / 'etc' / 'mu300' / 'usb-net-name').write_text('eth\n')
+            g = self.apply(shell, None)
+            self.assertEqual(2, self.binds())
+            self.assertEqual({'f1': 'ncm.usb0', 'f2': 'acm.GS0'}, self.links(g, 'c.1'))
+            self.assertEqual('5c:7d:ae:00:00:02', (g / 'functions' / 'ncm.usb0' / 'host_addr').read_text().strip())
+            self.assertEqual('ncm', self.marker())
+            self.assertEqual('eth', self.name_marker())
+            self.tearDown(); self.setUp()
+
+    def test_eth_with_a_mode(self):
+        for shell in self.each_shell():
+            (self.tmp / 'root' / 'etc' / 'mu300').mkdir(parents=True, exist_ok=True)
+            (self.tmp / 'root' / 'etc' / 'mu300' / 'usb-net-name').write_text('eth\n')
+            g = self.apply(shell, 'multi')
+            self.assertEqual(2, self.binds())
+            self.assertEqual('5c:7d:ae:00:00:02', (g / 'functions' / 'ncm.usb0' / 'host_addr').read_text().strip())
+            self.assertEqual('5c:7d:ae:00:00:04', (g / 'functions' / 'rndis.rn0' / 'host_addr').read_text().strip())
+            self.assertEqual('multi', self.marker())
+            self.assertEqual('eth', self.name_marker())
             self.tearDown(); self.setUp()
 
     def test_ecm_rebuilds_with_ecm(self):
@@ -1007,12 +1144,48 @@ class EarlyDhcp(GadgetHarness):
             self.assertEqual('02:00:00:00:00:04', (self.tmp / 'run' / 'mu300-usb-host-mac').read_text().strip())
             self.tearDown(); self.setUp()
 
+    def test_multi_serves_both_through_one_bridge(self):
+        # old Windows asks on rndis0, macOS on usb0: one server, one address, on a bridge of the two
+        for shell in self.each_shell():
+            self.netdevs('usb0', 'rndis0')
+            self.build(shell, 'multi ncm ecm')
+            log = (self.tmp / 'log').read_text()
+            self.assertIn('ip link add usbbr type bridge', log)
+            self.assertIn('ip link set usb0 master usbbr', log)
+            self.assertIn('ip link set rndis0 master usbbr', log)
+            self.assertIn('ifconfig usbbr 192.168.77.1 netmask 255.255.255.0 up', log)
+            self.assertNotIn('ifconfig usb0 192.168.77.1', log)
+            self.assertNotIn('ifconfig rndis0 192.168.77.1', log)
+            self.assertIn('interface usbbr\n', self.conf())
+            self.assertEqual('02:00:00:00:00:02', (self.tmp / 'run' / 'mu300-usb-host-mac').read_text().strip())
+            self.tearDown(); self.setUp()
+
+    def test_the_bridge_goes_with_the_gadget(self):
+        for shell in self.each_shell():
+            self.netdevs('usb0', 'rndis0')
+            self.build(shell, 'multi ncm ecm', 'teardown_usb_gadget; usb_bridge_gone')
+            log = (self.tmp / 'log').read_text()
+            self.assertEqual(1, log.count('ip link del usbbr'))
+            self.assertFalse((self.tmp / 'net' / 'usbbr').exists())
+            self.assertIn('ifconfig usb0 0.0.0.0 up', log)
+            self.tearDown(); self.setUp()
+
+    def test_multi_without_a_bridge_serves_usb0(self):
+        for shell in self.each_shell():
+            self.netdevs('usb0', 'rndis0')
+            self.build(shell, 'multi ncm ecm', no_rndis=True)
+            self.assertNotIn('usbbr', (self.tmp / 'log').read_text())
+            self.assertIn('interface usb0\n', self.conf())
+            self.tearDown(); self.setUp()
+
     def test_place_in_init(self):
         block = self.block('usb-gadget')
         self.assertIn('start $NET.200', block)
         self.assertIn('option lease 120', block)
         # gone before the system starts: its own server answers (Ubuntu's dnsmasq, OpenWrt's preinit then dnsmasq)
-        self.assertEqual(1, INIT.count('killall udhcpd 2>/dev/null\n    mkdir -p /newroot/dev'))
+        self.assertEqual(1, INIT.count('killall udhcpd 2>/dev/null\n'
+                                       '    # and with it the early bridge of "multi": the system bridges usb0 and rndis0 itself\n'
+                                       '    usb_bridge_gone\n    mkdir -p /newroot/dev'))
         self.assertLess(INIT.index('killall udhcpd'), INIT.index('exec switch_root'))
         # the standalone fallback starts its own server on usb0 in place of the early one
         tail = INIT[INIT.index('stage=rootfs-unavailable'):]
@@ -1099,7 +1272,7 @@ class BootTries(ShellTest):
 
     def test_the_standalone_fallback_stays_when_locked(self):
         tail = INIT[INIT.index('log "stage=rootfs-unavailable'):]
-        tail = tail[:tail.index('ifconfig usb0')]
+        tail = tail[:tail.index('rescue_net=usb0')]
         self.assertLess(tail.index('if lk_locked; then'), tail.index('restore_android'))
         locked = tail[tail.index('if lk_locked; then'):tail.index('else')]
         self.assertNotIn('restore_android', locked)

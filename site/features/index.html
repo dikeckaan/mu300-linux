@@ -187,8 +187,8 @@ own services (SSH included) are closed to it. Reach the device over USB.</li>
 <p>Plugged into a computer, the device shows up as a network adapter, and the computer gets an address from it. The
 device itself is <code>192.168.77.1</code> on the F50 and <code>192.168.78.1</code> on the U30 Air, so one of each can
 be plugged into the same computer. Two of the same kind need <code>/etc/mu300/lan.conf</code> to tell them apart.</p>
-<p>The USB network mode is NCM (with ECM as the fallback); the control panel can switch it to RNDIS, applied at the next
-start. The same cable also carries a serial console (<code>ttyGS0</code>), a login that works even when networking does
+<p>The USB network mode is NCM (with ECM as the fallback); the control panel can switch it to RNDIS, or to NCM and RNDIS
+together for one cable that works on old and new Windows, macOS and Linux, applied at the next start. The same cable also carries a serial console (<code>ttyGS0</code>), a login that works even when networking does
 not: <code>screen /dev/cu.usbmodem* 115200</code> on a Mac. SSH and telnet are on.</p>
 </section>
 

@@ -4345,3 +4345,21 @@ msgstr "الشبكة المحلية"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "قنوات المودم مشغولة بقراءات أخرى؛ ستصل الإشارة المباشرة قريبًا"
+
+msgid "Name on a Linux computer"
+msgstr "الاسم على حاسوب Linux"
+
+msgid "usb0 (the default)"
+msgstr "usb0 (الافتراضي)"
+
+msgid "eth0, as with Android"
+msgstr "eth0، كما في Android"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS: كابل واحد يعمل مع Windows القديم والجديد وmacOS وLinux. يعرض Windows الأحدث وLinux محوّلَي شبكة. النواة التي لا تدعم RNDIS تنشئ NCM وحده."
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0: يحصل الحاسوب على عنوان من نطاق الشركة المصنّعة كما يعطيه Android، ويسمّي Linux الاتصال eth0 بدلًا من usb0. لا يتأثر Windows وmacOS."
+
+msgid "Invalid USB network name"
+msgstr "اسم شبكة USB غير صالح"

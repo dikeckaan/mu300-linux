@@ -14,11 +14,16 @@
 #                         an OTG adapter or a USB device: host with 5 V out; a PD dock with its charger: charging, and
 #                         "mu300-usb host" asks it for the host role (a data role swap). Kept across reboots
 #                         (/etc/mu300/usb-pd). With it on, host/device ask the port controller instead.
-#   mu300-usb net [ncm|ecm|rndis [once]|default]   the USB network to a computer from the next boot on (both
+#   mu300-usb net [ncm|ecm|rndis|multi [once]|default]   the USB network to a computer from the next boot on (both
 #                         devices; /etc/mu300/usb-net, which boot/init reads): NCM, the default (Windows 10 2004+/11,
 #                         macOS, Linux); ECM (macOS, Linux; no Windows driver); RNDIS (older Windows; no macOS
-#                         driver). "once": for the next boot only, then NCM again. Without an argument: the choice and
-#                         what this boot made. (openwrt-luci: its control panel's Device page keeps this.)
+#                         driver); multi, NCM and RNDIS together: one cable for old and new Windows, macOS and Linux
+#                         (newer Windows and Linux show two adapters; a kernel without RNDIS makes NCM). "once": for
+#                         the next boot only, then NCM again. Without an argument: the choice and what this boot made.
+#                         (openwrt-luci: its control panel's Device page keeps this.)
+#   mu300-usb net-name [usb|eth]   what a Linux computer names the link from the next boot on: usb0, the default, or
+#                         eth0 as with Android (/etc/mu300/usb-net-name; the computer's side gets a MAC Linux takes
+#                         for an Ethernet card's). Goes with every mode; Windows and macOS name it as they always do.
 #   mu300-usb adb on|off  adb over USB to this Linux (F50 and U30 Air): adbd in the USB gadget (mu300-adbd). On by
 #                         default; "off" stays off across reboots and updates (/etc/mu300/adb).
 #   mu300-usb adb auth open|keys   whom adb lets in (/etc/mu300/adb_auth). open, the default: every computer, no key
@@ -218,28 +223,51 @@ fi
 USBNET_FILE=$R/etc/mu300/usb-net
 USBNET_ONCE=$R/etc/mu300/usb-net.once
 USBNET_APPLIED=${MU300_USBNET_APPLIED:-$R/run/mu300/usb-net-applied}
+USBNAME_FILE=$R/etc/mu300/usb-net-name
+USBNAME_APPLIED=${MU300_USBNAME_APPLIED:-$R/run/mu300/usb-net-name-applied}
+if [ "${1:-}" = net-name ]; then
+    [ ! -e "$R/usr/libexec/unisoc-modem/device-usb" ] || die "the control panel's Device page keeps the USB network name here"
+    case ${2:-} in
+        '')
+            m=$(sed -n 1p "$USBNAME_FILE" 2>/dev/null)
+            case $m in eth) ;; *) m=usb ;; esac
+            echo "USB network name from the next boot: $m"
+            a=$(sed -n 1p "$USBNAME_APPLIED" 2>/dev/null | tr -cd 'a-z')
+            case $a in usb|eth) ;; *) a=usb ;; esac
+            echo "this boot: $a" ;;
+        usb|eth)
+            [ "$(id -u)" = 0 ] || [ -n "$R" ] || die "run as root (sudo mu300-usb net-name $2)"
+            [ -z "${3:-}" ] || die "usage: mu300-usb net-name [usb|eth]"
+            if [ "$2" = usb ]; then rm -f "$USBNAME_FILE"
+            else adb_write "$USBNAME_FILE" eth || die "cannot write $USBNAME_FILE"; fi
+            echo "USB network name: ${2}0 on a Linux computer from the next boot" ;;
+        *) die "usage: mu300-usb net-name [usb|eth]" ;;
+    esac
+    exit 0
+fi
 if [ "${1:-}" = net ]; then
     [ ! -e "$R/usr/libexec/unisoc-modem/device-usb" ] || die "the control panel's Device page keeps the USB network mode here"
     case ${2:-} in
         '')
             m=$(sed -n 1p "$USBNET_FILE" 2>/dev/null)
-            case $m in ncm|ecm|rndis) ;; *) m=default ;; esac
+            case $m in ncm|ecm|rndis|multi) ;; *) m=default ;; esac
             [ "$m" = default ] || [ ! -e "$USBNET_ONCE" ] || m="$m once"
             echo "USB network from the next boot: $m"
             a=$(sed -n 1p "$USBNET_APPLIED" 2>/dev/null | tr -cd 'a-z')
             echo "this boot: ${a:-ncm (the default)}" ;;
-        ncm|ecm|rndis|default)
+        ncm|ecm|rndis|multi|default)
             [ "$(id -u)" = 0 ] || [ -n "$R" ] || die "run as root (sudo mu300-usb net $2)"
-            case ${3:-} in ''|once) ;; *) die "usage: mu300-usb net ncm|ecm|rndis [once] | default" ;; esac
+            case ${3:-} in ''|once) ;; *) die "usage: mu300-usb net ncm|ecm|rndis|multi [once] | default" ;; esac
             if [ "$2" = default ]; then
                 rm -f "$USBNET_FILE" "$USBNET_ONCE"
                 echo "USB network: NCM (the default) from the next boot"
             else
                 adb_write "$USBNET_FILE" "$2" || die "cannot write $USBNET_FILE"
                 if [ "${3:-}" = once ]; then : > "$USBNET_ONCE" || die "cannot write $USBNET_ONCE"; else rm -f "$USBNET_ONCE"; fi
-                echo "USB network: $(echo "$2" | tr a-z A-Z) from the next boot${3:+ (that boot only)}; the USB connection to the computer comes back with it"
+                n=$(echo "$2" | tr a-z A-Z); [ "$2" = multi ] && n="NCM + RNDIS"
+                echo "USB network: $n from the next boot${3:+ (that boot only)}; the USB connection to the computer comes back with it"
             fi ;;
-        *) die "usage: mu300-usb net [ncm|ecm|rndis [once]|default]" ;;
+        *) die "usage: mu300-usb net [ncm|ecm|rndis|multi [once]|default]" ;;
     esac
     exit 0
 fi
