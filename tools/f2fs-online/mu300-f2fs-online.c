@@ -36,6 +36,14 @@
 
 #define F2FS_RESIZE _IOW(0xf5, 16, uint64_t)
 #define SB_BYTES 3072
+/* struct f2fs_super_block (the kernel's include/linux/f2fs_fs.h) holds the kernel's own version string, `version`
+ * (VERSION_LEN 256 bytes at offset 0x684), and, with the sb_chksum feature, a crc over the whole block in its last
+ * 4 bytes. The two copies may carry different version strings (seen on a U30 Air whose kernel had been replaced:
+ * the primary named the running kernel, the backup an older build, and nothing else differed), and then their crcs
+ * differ too. Neither says anything about the filesystem, so the copies are compared on every byte but those. */
+#define SB_VERSION 0x684
+#define SB_VERSION_BYTES 256
+#define SB_CRC (SB_BYTES - 4)
 
 struct geometry {
     uint64_t blocks, section_blocks;
@@ -53,11 +61,17 @@ static uint64_t le64(const unsigned char *p)
     return le32(p) | (uint64_t)le32(p + 4) << 32;
 }
 
+static bool same_superblock(const unsigned char *a, const unsigned char *b)
+{
+    const size_t after = SB_VERSION + SB_VERSION_BYTES;
+    return !memcmp(a, b, SB_VERSION) && !memcmp(a + after, b + after, SB_CRC - after);
+}
+
 static int decode(const unsigned char *raw, struct geometry *g)
 {
     const unsigned char *a = raw + 1024, *b = raw + 5120;
     if (le32(a) != 0xf2f52010 || le32(b) != 0xf2f52010 ||
-        memcmp(a, b, SB_BYTES) || le32(a + 16) != 12 ||
+        !same_superblock(a, b) || le32(a + 16) != 12 ||
         le32(a + 20) != 9 || !le32(a + 24) || le32(a + 24) > 65536) {
         errno = EINVAL;
         return -1;
