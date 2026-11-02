@@ -1,6 +1,6 @@
 # Mainline (LTS) kernel on the MU300
 
-Mainline **Linux 6.18.59** (the current longterm series) runs Ubuntu 24.04 and OpenWrt 25.12 on the ZTE F50 /
+Mainline **Linux 6.18.60** (the current longterm series) runs Ubuntu 24.04 and OpenWrt 25.12 on the ZTE F50 /
 MU300 (Unisoc UMS9620): all 8 CPUs (4×A55, 4×A76), eMMC, USB NCM + ACM, the 5 GHz hotspot, Bluetooth, the modem
 with mobile data (downlink and uplink), SMS, the VPN, the Mali GPU, thermal/cpufreq, the PMIC watchdog and
 reboot. `docs/FINDINGS.md` 31-31f has what it took and what is still open.
@@ -27,7 +27,7 @@ merged) describes the same GIC/UART/timer layout; this device is derived from th
 ## Build and test
 ```sh
 docker build -t mu300-mainline-build upstream/
-docker volume create mu300-mainline   # build.sh fetches linux-$KV (default 6.18.59) into it, signatures checked (keys/)
+docker volume create mu300-mainline   # build.sh fetches linux-$KV (default 6.18.60) into it, signatures checked (keys/)
 docker run --rm -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build.sh
 docker run --rm -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build-modules.sh
 upstream/make-bundle.sh mu300-kernel-6.18.tar.gz        # Image for LK, generic ramdisk segment, modules

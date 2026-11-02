@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build mainline for the MU300 inside mu300-mainline-build: Image + DTB. /work = this directory, /src = kernel tree volume
 set -eo pipefail
-KV=${KV:-6.18.59}
+KV=${KV:-6.18.60}
 # where Image, DTB and modules.builtin go: /work/out for 6.18, OUTDIR=out-7.3 keeps another kernel next to it
 OUT=/work/${OUTDIR:-out}
 # the kernel source, fetched once into the volume and unpacked only after verify-kernel-src.sh passed: the signed
