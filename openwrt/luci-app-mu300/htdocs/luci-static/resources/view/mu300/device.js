@@ -42,12 +42,16 @@ return view.extend({
   <h3>${_('USB network mode')}</h3>
   <div class="mud-r"><span class="mud-k">${_('Current sharing protocol')}</span><span class="mud-v" id="mud-usb-net-current">--</span></div>
   <div class="mud-device-field"><label for="mud-usb-net-mode">${_('Network protocol')}</label>
-   <select id="mud-usb-net-mode"><option value="ncm">NCM</option><option value="ecm">ECM</option><option value="rndis">RNDIS</option></select></div>
+   <select id="mud-usb-net-mode"><option value="ncm">NCM</option><option value="ecm">ECM</option><option value="rndis">RNDIS</option><option value="multi">NCM + RNDIS</option></select></div>
   <div class="mud-device-field"><label for="mud-usb-net-scope">${_('Apply duration')}</label>
    <select id="mud-usb-net-scope"><option value="once">${_('Next reboot only')}</option><option value="permanent">${_('Permanent')}</option></select></div>
   <label class="mud-device-toggle"><input type="checkbox" id="mud-usb-net-auto">${_('Enable selected protocol')}</label>
+  <div class="mud-device-field"><label for="mud-usb-net-name">${_('Name on a Linux computer')}</label>
+   <select id="mud-usb-net-name"><option value="usb">${_('usb0 (the default)')}</option><option value="eth">${_('eth0, as with Android')}</option></select></div>
   <div class="mud-device-actions"><button class="mud-btn" id="mud-usb-net-apply">${_('Save; apply after reboot')}</button></div>
   <div class="mud-note" id="mud-usb-net-note">${_('NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM.')}</div>
+  <div class="mud-note">${_('NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone.')}</div>
+  <div class="mud-note">${_('eth0: the computer gets an address from the maker\'s range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected.')}</div>
  </section>
 </div>
 <section class="mud-card" style="margin-top:14px" id="mud-usb-adapters-card">
@@ -88,8 +92,9 @@ return view.extend({
 		this.q('net-mode').value = s.net_mode || 'ncm';
 		this.q('net-scope').value = s.net_scope || 'permanent';
 		this.q('net-auto').checked = !!s.net_auto;
+		this.q('net-name').value = s.net_name === 'eth' ? 'eth' : 'usb';
 		/* what the gadget has bound now (configfs), beside the mode saved for the next boot (kanoqwq's db4e5d2) */
-		var cur = { ncm: 'NCM', ecm: 'ECM', rndis: 'RNDIS', mixed: _('Mixed'), none: _('None') }[s.net_current];
+		var cur = { ncm: 'NCM', ecm: 'ECM', rndis: 'RNDIS', multi: 'NCM + RNDIS', mixed: _('Mixed'), none: _('None') }[s.net_current];
 		this.q('net-current').textContent = cur || '--';
 		this.updateDisabled();
 		this.refreshAdapters();
@@ -99,7 +104,7 @@ return view.extend({
 		this.q('role-auto').disabled = this.q('role').value !== 'host';
 		if (this.q('role').value !== 'host') this.q('role-auto').checked = false;
 		var locked = host || !!this.state.role_auto || hostAuto;
-		[ 'net-mode', 'net-scope', 'net-auto', 'net-apply' ].forEach(function(id) { this.q(id).disabled = locked; }, this);
+		[ 'net-mode', 'net-scope', 'net-auto', 'net-name', 'net-apply' ].forEach(function(id) { this.q(id).disabled = locked; }, this);
 		if (locked) this.q('net-auto').checked = false;
 		this.q('net-note').textContent = locked ? _('USB network mode is unavailable in host mode; host auto-start also disables USB network auto-start.') : _('NCM is the default. Windows does not natively support ECM; RNDIS changes enumeration. With Enable selected protocol off, only your choice is saved. Next reboot only applies once, then returns to NCM.');
 		this.q('refresh').disabled = !host;
@@ -140,11 +145,16 @@ return view.extend({
 		});
 		this.q('net-apply').addEventListener('click', function() {
 			var mode = self.q('net-mode').value, scope = self.q('net-scope').value, auto = self.q('net-auto').checked ? '1' : '0';
+			var name = self.q('net-name').value;
 			M.confirmBox(_('Save USB network mode?'), auto === '1' ? _('The network mode applies on the next reboot; USB management may need to reconnect.') : _('Save the selection only; with the selected protocol disabled, the next boot still uses default NCM.'), { okText: _('Save') }).then(function(yes) {
 				if (!yes) return;
 				var btn = self.q('net-apply'); M.busy(btn, true);
 				var msg = M.toast(_('Saving USB network settings…'), { type: 'busy', timeout: 0 });
+				/* the name a Linux computer gives the link goes apart from the mode (every mode, no scope) */
 				L.resolveDefault(M.callUsbSet('net', mode, scope, auto), {}).then(function(r) {
+					if (!r.ok || name === (self.state.net_name === 'eth' ? 'eth' : 'usb')) return r;
+					return L.resolveDefault(M.callUsbSet('net_name', name, '', '0'), {});
+				}).then(function(r) {
 					M.busy(btn, false); msg.update(r.ok ? _('Settings saved') : _('Save failed: %s').format(M.errText(r)), r.ok ? 'success' : 'error');
 					setTimeout(function() { msg.close(); }, 3500);
 					if (r.ok) self.reloadState();

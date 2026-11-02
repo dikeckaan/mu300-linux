@@ -839,11 +839,15 @@ ids['mu-usbnet-mode'].value = 'rndis'; ids['mu-usbnet-scope'].value = 'once';
 btn(ids['mu-usbnet'], 'Save (used at the next boot)').click(); await flush();
 ids['mu-usbnet-mode'].value = 'default';
 btn(ids['mu-usbnet'], 'Save (used at the next boot)').click(); await flush();
+ids['mu-usbnet-mode'].value = 'multi'; ids['mu-usbnet-scope'].value = 'permanent'; ids['mu-usbnet-name'].value = 'eth';
+btn(ids['mu-usbnet'], 'Save (used at the next boot)').click(); await flush();
 return [h, v, u];""", self.parity())
         self.assertIn('10-18 01:00:00', r['result'][0])
         self.assertEqual(r['result'][1], 'AT+COPS?')
         self.assertIn('ECM (that boot only)', r['result'][2])
-        self.assertEqual([q for m, q in self.api_calls(r, 'usb.net') if q], [{'mode': 'rndis', 'scope': 'once'}, {'mode': 'default'}])
+        self.assertEqual([q for m, q in self.api_calls(r, 'usb.net') if q],
+                         [{'mode': 'rndis', 'scope': 'once', 'name': 'usb'}, {'mode': 'default', 'name': 'usb'},
+                          {'mode': 'multi', 'scope': 'permanent', 'name': 'eth'}])
 
     def test_errors_are_worded(self):
         out = self.run_page(r"""

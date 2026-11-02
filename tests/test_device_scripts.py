@@ -5278,6 +5278,19 @@ class UsbReset(ShellTest):
             self.assertNotIn('re-enumerating', r.stdout)
 
 
+    def test_lease_check_with_multi_takes_either_hosts_lease(self):
+        # "multi": RNDIS' host MAC in f1, NCM's beside it; a Mac leases on NCM's alone
+        r_ = self.gadget / 'functions' / 'rndis.rn0'
+        r_.mkdir(parents=True, exist_ok=True)
+        (r_ / 'host_addr').write_bytes(b'02:50:BB:7E:78:04\x00\n')
+        for shell in self.each_shell():
+            r = self.lease_check(shell, '1 02:50:bb:7e:78:02 192.168.78.200 mac *\n')
+            self.assertNotIn('re-enumerating', r.stdout)
+            r = self.lease_check(shell, '1 02:50:bb:7e:78:04 192.168.78.200 win *\n')
+            self.assertNotIn('re-enumerating', r.stdout)
+            r = self.lease_check(shell, '1 d6:e0:4a:37:0b:4c 192.168.78.100 phone *\n')
+            self.assertIn('re-enumerating', r.stdout)
+
 class Usb(ShellTest):
     """mu300-usb against a fake charger (busybox i2cget/i2cset on files) and a fake role switch."""
 

@@ -4345,3 +4345,21 @@ msgstr "רשת ביתית"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "ערוצי המודם תפוסים בקריאות אחרות; האות החי יגיע בקרוב"
+
+msgid "Name on a Linux computer"
+msgstr "השם במחשב Linux"
+
+msgid "usb0 (the default)"
+msgstr "usb0 (ברירת מחדל)"
+
+msgid "eth0, as with Android"
+msgstr "eth0, כמו ב-Android"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS: כבל אחד שעובד עם Windows ישן וחדש, macOS ו-Linux. Windows חדש ו-Linux מציגים שני מתאמי רשת. ליבה ללא RNDIS יוצרת NCM בלבד."
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0: המחשב מקבל כתובת מטווח היצרן, כפי ש-Android נותן, ו-Linux קורא לחיבור eth0 במקום usb0. אין השפעה על Windows ו-macOS."
+
+msgid "Invalid USB network name"
+msgstr "שם רשת USB לא תקין"

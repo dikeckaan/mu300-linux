@@ -4345,3 +4345,21 @@ msgstr "홈 네트워크"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "모뎀 채널이 다른 읽기로 사용 중입니다. 실시간 신호가 곧 표시됩니다"
+
+msgid "Name on a Linux computer"
+msgstr "Linux 컴퓨터에서의 이름"
+
+msgid "usb0 (the default)"
+msgstr "usb0 (기본값)"
+
+msgid "eth0, as with Android"
+msgstr "eth0, Android와 같음"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS: 구형 및 신형 Windows, macOS, Linux에서 모두 동작하는 케이블 하나. 최신 Windows와 Linux에서는 네트워크 어댑터가 두 개 표시됩니다. RNDIS가 없는 커널은 NCM만 만듭니다."
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0: 컴퓨터가 Android처럼 제조사 범위의 주소를 받고, Linux는 연결 이름을 usb0 대신 eth0으로 정합니다. Windows와 macOS에는 영향이 없습니다."
+
+msgid "Invalid USB network name"
+msgstr "USB 네트워크 이름이 잘못되었습니다"

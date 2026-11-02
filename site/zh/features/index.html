@@ -164,7 +164,7 @@ sudo wifi-client disconnect              <span class="c"># 热点回来，重启
 <section id="usb">
 <h2>USB 网络和串口控制台</h2>
 <p>插到电脑上，设备会显示成一块网卡，电脑从它那里拿到地址。设备自己的地址在 F50 上是 <code>192.168.77.1</code>，在 U30 Air 上是 <code>192.168.78.1</code>，所以两种各一台可以插在同一台电脑上。两台同型号的需要用 <code>/etc/mu300/lan.conf</code> 区分。</p>
-<p>USB 网络模式是 NCM（ECM 作为后备）；控制面板可以把它切换成 RNDIS，下次开机生效。同一根线上还有一个串口控制台（<code>ttyGS0</code>），网络不通时也能登录：Mac 上用 <code>screen /dev/cu.usbmodem* 115200</code>。SSH 和 telnet 都开着。</p>
+<p>USB 网络模式是 NCM（ECM 作为后备）；控制面板可以把它切换成 RNDIS，或切换成 NCM + RNDIS（一根线即可用于新旧 Windows、macOS 和 Linux），下次开机生效。同一根线上还有一个串口控制台（<code>ttyGS0</code>），网络不通时也能登录：Mac 上用 <code>screen /dev/cu.usbmodem* 115200</code>。SSH 和 telnet 都开着。</p>
 </section>
 
 <section id="sms">

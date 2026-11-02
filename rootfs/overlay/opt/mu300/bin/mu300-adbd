@@ -15,7 +15,7 @@
 # (sys.usb.ffs.ready), here the loop of "run" does it, with adb when adbd is ready and without it otherwise, so the
 # network and the console never stay away. Not in the U30 Air's host role (mu300-usb host): the gadget is left alone.
 # Interfaces: the network function, the console, then adb (ff/42/01, "ADB Interface"): adding adb changes no number.
-# bcdDevice 0x0303 (0x0304 with RNDIS) while adb is in the gadget: Windows caches the MS OS descriptors per
+# bcdDevice 0x0303 (0x0304 with RNDIS, 0x0306 with RNDIS + NCM) while adb is in the gadget: Windows caches the MS OS descriptors per
 # VID/PID/bcdDevice, and adbd's ask for WinUSB for its interface, as Android's do. The MS OS descriptors are on in the
 # NCM/ECM configuration too while adb is there (boot/init has them for RNDIS only).
 # Authentication (mu300-usb adb auth open|keys, /etc/mu300/adb_auth), handed to adbd as MU300_ADB_AUTH when it starts:
@@ -124,6 +124,8 @@ host_role() { role_now; [ "$_r" = host ]; }
 ffs_ready() { [ -e "$FFS/ep1" ]; }
 linked() { [ -e "$L" ] || [ -L "$L" ]; }
 rndis() { case $(readlink "$G/configs/c.1/f1" 2>/dev/null) in *rndis*) return 0 ;; esac; return 1; }
+# "multi" (boot/init): RNDIS in f1 and NCM beside it in f4
+multi() { rndis && { [ -e "$G/configs/c.1/f4" ] || [ -L "$G/configs/c.1/f4" ]; }; }
 udc_name() {  # the controller: the one bound now, or the first there is
     u=$(cat "$G/UDC" 2>/dev/null)
     [ -n "$u" ] || u=$(ls "$UDC_CLASS" 2>/dev/null | head -n1)
@@ -134,7 +136,8 @@ unbind() { [ -z "$(cat "$G/UDC" 2>/dev/null)" ] || echo "" > "$G/UDC" 2>/dev/nul
 # the configuration with or without adb (unbound only: configfs refuses links and descriptors of a bound gadget)
 with_adb() {
     linked || ln -s "$F" "$L" || return 1
-    if rndis; then echo 0x0304 > "$G/bcdDevice"; else
+    if multi; then echo 0x0306 > "$G/bcdDevice"
+    elif rndis; then echo 0x0304 > "$G/bcdDevice"; else
         echo 0x0303 > "$G/bcdDevice"
         echo 0xcd > "$G/os_desc/b_vendor_code" 2>/dev/null
         echo MSFT100 > "$G/os_desc/qw_sign" 2>/dev/null
@@ -148,7 +151,8 @@ with_adb() {
 # 2026-10-22; kernel patch 0027). NCM's compatible_id is empty, so the computer sees no other function for it.
 without_adb() {
     rm -f "$L"
-    if rndis; then echo 0x0302 > "$G/bcdDevice"; else
+    if multi; then echo 0x0305 > "$G/bcdDevice"
+    elif rndis; then echo 0x0302 > "$G/bcdDevice"; else
         echo 0x0301 > "$G/bcdDevice"
     fi
     return 0

@@ -54,8 +54,9 @@ UCI
 	if [ -n "$dev" ]; then
 		uci -q delete network.$dev.ports
 		uci add_list network.$dev.ports='usb0'
-		# the gadget's RNDIS netdev (Windows without NCM) exists only when init made RNDIS; the LAN hook
-		# (hotplug.d/iface/10-mu300-usb) bridges it when a later boot does (K27, kanoqwq fork cd4fb28 and 4e70d02)
+		# the gadget's RNDIS netdev (Windows without NCM) exists only when init made RNDIS, alone or with NCM
+		# ("multi"); the LAN hook (hotplug.d/iface/10-mu300-usb) bridges it when a later boot does (K27, kanoqwq fork
+		# cd4fb28 and 4e70d02)
 		[ -e /sys/class/net/rndis0 ] && uci add_list network.$dev.ports='rndis0'
 	fi
 fi

@@ -389,8 +389,9 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
   **Engines** (Xray, sing-box, mihomo, dae: install, update or remove, online or from an uploaded tarball checked
   against the module's release), **Settings** (kill switch, IPv6, LAN ranges that bypass the tunnel, Tailscale, DNS)
   and **Logs**. Without the module every page offers to install it.
-* **Cellular > Device management:** USB role (device or host), the USB network mode (NCM, ECM or RNDIS, applied at the next boot) and
-  adapters in host mode that can join the LAN bridge.
+* **Cellular > Device management:** USB role (device or host), the USB network mode (NCM, ECM, RNDIS or NCM + RNDIS, applied at
+  the next boot; `sudo mu300-usb net multi` on Ubuntu and OpenWrt), the name a Linux computer gives the link (usb0, or eth0 as
+  with Android: `sudo mu300-usb net-name eth`) and adapters in host mode that can join the LAN bridge.
 * **Cellular > Adapter settings:** how the panel reaches the modem (AT backend, serial port, custom AT adapter).
 * **System > Languages:** the language of the interface, and the lang extra: download it, or upload the file.
 * **System > Power:** the active power profile and why (in the page's language), the battery, the power source and the charger's input current, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU), the saver threshold and the charge limit (0-100 %, U30 Air; also `mu300-power charge-limit N`), where charging starts again (`RESUME_AT`), a pause by hand and a one-off full charge (U30 Air; `mu300-power charge pause|resume|full`), and what a boot the charger started does (U30 Air: charge only until the Wi-Fi key or a held power key starts it, off when unplugged; or start normally, `POWER_ON_CHARGER=1`). The U30 Air powers off cleanly on an empty battery by the stock rules (docs/FINDINGS.md 196, 197).

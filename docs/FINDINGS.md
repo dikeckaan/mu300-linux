@@ -194,6 +194,7 @@ what replaced it. The table below gives each section's state.
 | 206 | Linux 7.3 as a fourth kernel: every patch applies unchanged (none upstream, none dropped); `PROC_SYSCTL` folded into `SYSCTL` (`config-ignored.txt`, checked only where the kernel lacks the symbol), the cfg80211 cookie handed in by value, `dma_capable()` with DMA attributes; the checksum list from www.kernel.org (the CDN lagged) | current (F50-B Ubuntu: all checks, the boot fallback; the one hang in a reboot loop was the board's plug pulled by accident, not 7.3; the U30 Air openwrt-luci with the VPN and its kill switch, 2026-10-19; `sprd_wlan_combo` for 6.18.57 and 7.2.11 byte for byte v2026.10.19.3's; released in v2026.10.22.1, F50-B 10/10 boots on 7.3 in a reboot soak) |
 | 213 | A kernel oops on a restart of mu300-adbd: f_ncm and f_rndis free `os_desc_table` at unbind and keep the pointer, and a bind without MS OS descriptors (adbd's `without_adb` wrote `os_desc/use` 0) leaves it for the next unbind to free again - a kmalloc-16 double free that came back as `kstrdup()` oopsing in the UDC store; patch 0027 clears the pointer (6.18.57, 7.2.11 and 7.3 all have the bug), mu300-adbd keeps the descriptors on for every kernel | current (F50 Ubuntu, 2026-10-24: unpatched 7.3 with the release's mu300-adbd went down within 11 restarts of it once, and oopsed at restart 118 a second time - "Unable to handle kernel paging request" at an address made of string bytes; 6.18.58 with 0027 and the same mu300-adbd 200 restarts clean; unpatched 7.3 with the new mu300-adbd 150 restarts clean. A U30 Air on OpenWrt 6.18.58 dropped off the air during the same loop) |
 | 218 | CPU0's cluster power-down: USB, IPA and the Wi-Fi's PCIe were not wake sources of LP_AP_INTC (TF-A's IRQ_EN table); `ums9620_lpintc` adds every SPI the kernel enabled | current (U30 Air OpenWrt 6.18.57: USB pings 9.5 ms avg / 42 ms max instead of 15.7 / 69; F50 Ubuntu 6.18.58: 1.2 / 1.5 ms instead of 30.6 / 150; builds for 7.2.12; suspend path not run) |
+| 242 | USB network "multi": RNDIS and NCM in one configuration (bcdDevice 0x0305, 0x0306 with adb), both netdevs in br-lan; and "net-name eth", a computer's side MAC in the Wi-Fi address' vendor block, which Linux names eth0 as with Android | current (F50-B Ubuntu, 7.3 and 5.4, macOS host; no Windows or Linux host) |
 
 ## Hardware and firmware facts
 
@@ -12733,3 +12734,45 @@ taken out, and an F50.
 after the dial, `/tmp/mu300-sipa-dele.log` says "delegate channel and resource callbacks ready", data flows; `ifdown
 wan; ifup wan` passes the ready check (`/tmp/mu300-sipa-dele-ready.log`). The dashboard of a board with its card taken
 out (or an empty slot selected) says "No SIM card", the IMEIs stay.
+
+### 242. USB network "multi" (NCM + RNDIS in one configuration) and the computer's name for the link
+
+**multi.** `mu300-usb net multi` (the Device page and the web panel: "NCM + RNDIS") makes RNDIS and NCM in the one
+configuration there has always been, RNDIS first, then NCM, then the ACM console (and adb, f3): RNDIS is interface 0,
+the one the MS OS descriptors (compatible ID RNDIS) name, NCM's compatible ID stays empty and Windows 10 2004+/11 bind
+UsbNcm.sys to it by class. It is a single configuration on purpose: Windows makes no composite parent for a device with
+several, and the earlier RNDIS + NCM in two configurations bound the whole device to usbser (K6). bcdDevice is 0x0305
+(0x0306 while adb is in the gadget), apart from NCM's 0x0301/0x0303 and RNDIS' 0x0302/0x0304, because Windows caches
+the MS OS descriptors per VID/PID/bcdDevice. The configfs links are f1 (RNDIS), f4 (NCM) and f2 (ACM); the interfaces
+follow the order the links are made in. At the bind RNDIS registers usb0 and NCM usb1: init names them rndis0 and usb0,
+in that order. The early DHCP server (K5) answers on `usbbr`, a bridge of the two that exists only in the initramfs and
+goes before switch_root (lan-start and the LAN hook bridge usb0 and rndis0 into br-lan, as they did for RNDIS alone;
+OpenWrt's preinit serves usb0). `usb-net-applied` says `multi` only when both functions were made; a kernel whose
+configfs refuses `rndis.rn0` makes NCM (then ECM) and says `ncm`, as for a saved `rndis`. Both kernels here have the
+stock f_rndis built in (the vendor 5.4 and the mainline ones, `CONFIG_USB_F_RNDIS=y`), so that fallback is for other
+kernels; it is covered by the tests only. `mu300-usb-reset --if-no-lease` takes a lease of either host MAC; the LuCI
+backend's `bound_function` says `multi` for RNDIS beside NCM ("mixed" for any other mix).
+
+**net-name.** Linux names a CDC Ethernet, NCM or RNDIS link `usb%d` when the driver marks it point-to-point
+(`FLAG_POINTTOPOINT`: cdc_ether, cdc_ncm and rndis_host all do) and the device's MAC is locally administered (bit
+0x02 of the first byte), `eth%d` otherwise (usbnet_probe). Our host MACs are `02:50:...`: usb0. Stock Android on the
+F50 (measured on F50-B, `sys.usb.config` ecm,mtp,adb) writes the device's Wi-Fi address (`/mnt/vendor/wifimac.txt`,
+vendor block 5c:7d:ae) into both `dev_addr` and `host_addr` of `ecm.gs0` and `ncm.gs0`, so a Linux computer saw eth0.
+`mu300-usb net-name eth` (`/etc/mu300/usb-net-name`, read by boot/init with the mode, one rebind) gives every function's
+`host_addr` the first three bytes of LK's `androidboot.wifimac` and the device's own two bytes after them (:02 for NCM/
+ECM, :04 for RNDIS); `dev_addr` stays as it is. Not the Wi-Fi address itself: wlan0 has it and is a port of the same
+br-lan, where a frame from the computer with the bridge's own port address as its source would be dropped. Without a
+usable `androidboot.wifimac` (missing, multicast or locally administered) it is the usual MAC with bit 0x02 cleared.
+The address is in a vendor's block, as Android's is; it only ever appears on the USB link and the LAN behind it. A
+computer that renames links itself (systemd's predictable names: enx<MAC>) does so either way; macOS sees a new MAC
+and makes a new network service for it. Windows keys its MS OS descriptor cache on bcdDevice, not on the MAC.
+
+**Checked here** (F50-B, Ubuntu 24.04, v2026.11.01.1 with this init appended to the release's generic ramdisk, a Mac
+on USB): 7.3: multi made (`stage=usb-ifnames rndis=usb0->rndis0`, `ncm=usb1->usb0`, `usb-bridge-early usbbr`,
+`usb-bridge-gone`), bcdDevice 0x0306 with adb, `bridge link`: rndis0, usb0, wlan0 in br-lan; the Mac bound NCM
+(AppleUSBNCMControl on interface 2, its known en interface and lease), ACM and adb, and no network service for RNDIS;
+SSH, adb, 50 MB over SSH in 1.5 s; four reboots. 5.4.254: the same, three reboots. net-name eth on 7.3: `host_addr`
+5c:7d:ae:..:..:02 and :04, `dev_addr` unchanged, the Mac made a new interface for the new MAC and had network; RNDIS
+alone (once) and NCM afterwards as before. **Not checked:** Windows (none here: RNDIS on old Windows, both adapters on
+new Windows), a Linux computer (two adapters; eth0 as the name), OpenWrt, a computer taking its first lease from the
+early bridge (the Mac kept its lease), a kernel without f_rndis.
