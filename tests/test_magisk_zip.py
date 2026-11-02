@@ -541,7 +541,7 @@ class ReleaseZips(ShellTest):
 
     def zips(self):
         zs = sorted(Path(os.environ['MU300_MAGISK_ZIPS']).glob('*.zip'))
-        self.assertEqual(len(zs), 15, zs)          # 4 OpenWrt, 4 OpenWrt with the panel, 4 + 3 Ubuntu
+        self.assertEqual(len(zs), 11, zs)          # 3 OpenWrt, 3 OpenWrt with the panel, 3 + 2 Ubuntu (7.2 retired)
         return zs
 
     def test_allow_list_and_manifest(self):
