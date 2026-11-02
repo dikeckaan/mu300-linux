@@ -425,7 +425,12 @@ do_remove() {
     # panel: Cockpit out of this system first (its packages, configuration and page)
     if [ "$1" = panel ] && [ -f "$EXTRA/panel/bin/mu300-panel" ]; then sh "$EXTRA/panel/bin/mu300-panel" remove || true; fi
     # the module out of every system first (its hooks are part of it): what an older image had comes back
-    { extra_is_module "$1" || extra_own "$1"; } && module_hook_all "$1" unlink
+    if extra_is_module "$1" || extra_own "$1"; then
+        module_hook_all "$1" unlink || {
+            echo "$1 was not removed: an unlink hook failed; fix it and retry" >&2
+            return 1
+        }
+    fi
     rm -rf "$EXTRA/$1" "$EXTRA/.$1.new" "$EXTRA/.$1.old" "$EXTRA/.$1.sha256"
     [ "$1" != lang ] || rm -f "$LANGS_ON"
     sync

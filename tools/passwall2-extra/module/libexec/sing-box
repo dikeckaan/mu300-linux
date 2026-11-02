@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+d=${MU300_EXTRA_DIR:-/mnt/mu300-disk/extra/passwall2}
+. "$d/lib/cores.sh"
+core=$(pw2_pick sing-box) || exit 1
+exec "$core" "$@"

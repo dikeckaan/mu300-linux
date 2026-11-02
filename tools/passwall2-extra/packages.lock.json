@@ -1,0 +1,475 @@
+{
+  "schema": 1,
+  "target": "mu300-linux OpenWrt 25.12.x aarch64_generic",
+  "framework_main": "e8258b024da1b3d3ab525c3bfc5d5ee9ca36da54",
+  "passwall2_release": "26.10.29-1",
+  "signed_indices": [
+    {
+      "feed": "base",
+      "sha256": "2e8067bb45fa0974ca35f41327b4af7001d9bcd98ddccc8098d112646df55a52",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/base/packages.adb",
+      "verification": "OpenWrt APK signature verified using OpenWrt 25.12 key and target apk-tools"
+    },
+    {
+      "feed": "packages",
+      "sha256": "1a5689a54f58fcdba8cf0e3ca5e572aded9f11994f2e1f3c036d54c48bd84fd0",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/packages/packages.adb",
+      "verification": "OpenWrt APK signature verified using OpenWrt 25.12 key and target apk-tools"
+    },
+    {
+      "feed": "luci",
+      "sha256": "64202f062357e6e63e47729af22d8539f5ce2f56e75ae8207a0d952cd0dd41f9",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/luci/packages.adb",
+      "verification": "OpenWrt APK signature verified using OpenWrt 25.12 key and target apk-tools"
+    }
+  ],
+  "packages": [
+    {
+      "file": "chinadns-ng-2025.08.09-r1.apk",
+      "sha256": "839e3fb2067e882e5c6fa05e0bc9823ab62bd0a8382d39b98cf0289039c25cfa",
+      "container": {
+        "file": "packages_apk_aarch64_generic.zip",
+        "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/packages_apk_aarch64_generic.zip",
+        "sha256": "2995ee1a73a7058828c6379f8803a69d8f3f822baba50a80dcd7b630f1cf0139"
+      },
+      "member": "chinadns-ng-2025.08.09-r1.apk",
+      "source": "member of digest-verified official Passwall2 release ZIP",
+      "name": "chinadns-ng",
+      "version": "2025.08.09-r1",
+      "arch": "aarch64_generic",
+      "license": "AGPL-3.0-only",
+      "installed_size": 584168
+    },
+    {
+      "file": "coreutils-base64-9.9-r2.apk",
+      "name": "coreutils-base64",
+      "version": "9.9-r2",
+      "sha256": "f9bb0f401e477f8044429e2368917fcd6d425e3f51de76c22c830ea26c52a87b",
+      "adb_hash": "b91d3ce31c208249918ee9427c7b796bc8a3b8088a649ef9bc4d80dc876df1c2",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/packages/coreutils-base64-9.9-r2.apk",
+      "source": "OpenWrt signed index packages",
+      "arch": "aarch64_generic",
+      "license": "GPL-3.0-or-later",
+      "installed_size": 37053
+    },
+    {
+      "file": "coreutils-nohup-9.9-r2.apk",
+      "name": "coreutils-nohup",
+      "version": "9.9-r2",
+      "sha256": "fdf1552bfbcfc0d6d1ad609b0de950f94e04af21a37c314ffd38ed7726117e12",
+      "adb_hash": "066bfa7c4543578a4996f98b21f2a88840616dc9cf85c474ca2972c9a19ff8c7",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/packages/coreutils-nohup-9.9-r2.apk",
+      "source": "OpenWrt signed index packages",
+      "arch": "aarch64_generic",
+      "license": "GPL-3.0-or-later",
+      "installed_size": 32957
+    },
+    {
+      "file": "coreutils-timeout-9.9-r2.apk",
+      "name": "coreutils-timeout",
+      "version": "9.9-r2",
+      "sha256": "f540d53b8f0668d356d40725e62728b4f5a55f65453abcff338aaa9613985595",
+      "adb_hash": "36fe2189688cb15ca7d322b3d9baf11bff5289e4e8f602dec4316638e18109c1",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/packages/coreutils-timeout-9.9-r2.apk",
+      "source": "OpenWrt signed index packages",
+      "arch": "aarch64_generic",
+      "license": "GPL-3.0-or-later",
+      "installed_size": 41624
+    },
+    {
+      "file": "dnsmasq-full-2.93-r2.apk",
+      "name": "dnsmasq-full",
+      "version": "2.93-r2",
+      "sha256": "ff3c644da9571bcd34c1316759440d83f6d3dc1f6b6a1c18d7f60cbfb41c9d0c",
+      "adb_hash": "663af2c4f32addbaa91ab9c5534c0ef02b899dfce2787e90f7bed8f8977351a9",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/base/dnsmasq-full-2.93-r2.apk",
+      "source": "OpenWrt signed index base",
+      "arch": "aarch64_generic",
+      "license": "GPL-2.0",
+      "installed_size": 424046
+    },
+    {
+      "file": "geoview-0.2.9-r1.apk",
+      "sha256": "1e33a6cd75df796d20acc19e5923a96cc984a3bbb87baeaf819fe9a0ceda4a50",
+      "container": {
+        "file": "packages_apk_aarch64_generic.zip",
+        "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/packages_apk_aarch64_generic.zip",
+        "sha256": "2995ee1a73a7058828c6379f8803a69d8f3f822baba50a80dcd7b630f1cf0139"
+      },
+      "member": "geoview-0.2.9-r1.apk",
+      "source": "member of digest-verified official Passwall2 release ZIP",
+      "name": "geoview",
+      "version": "0.2.9-r1",
+      "arch": "aarch64_generic",
+      "license": "Apache-2.0",
+      "installed_size": 7719961
+    },
+    {
+      "file": "libgmp10-6.3.0-r2.apk",
+      "name": "libgmp10",
+      "version": "6.3.0-r2",
+      "sha256": "83e138d7ec3bcf8ee848a69118463c1d5ac530e7be7041fc52786766581c5d44",
+      "adb_hash": "c7f1db1e69c1a3bfa1e0401f31d942975372d5d085b10e6ddda711418accd247",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/base/libgmp10-6.3.0-r2.apk",
+      "source": "OpenWrt signed index base",
+      "arch": "aarch64_generic",
+      "license": "GPL-2.0-or-later",
+      "installed_size": 434305
+    },
+    {
+      "file": "liblua5.1.5-5.1.5-r11.apk",
+      "name": "liblua5.1.5",
+      "version": "5.1.5-r11",
+      "sha256": "3e46c5db416841f374e0402175f0dba25dde6ac01d5b39f9799b53c316e31686",
+      "adb_hash": "d48909196ae17c72c9cd1a70fc194c0beb6cb378c6138c9352de60623718671c",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/base/liblua5.1.5-5.1.5-r11.apk",
+      "source": "OpenWrt signed index base",
+      "arch": "aarch64_generic",
+      "license": "MIT",
+      "installed_size": 172060
+    },
+    {
+      "file": "liblucihttp-lua-2023.03.15~9b5b683f-r1.apk",
+      "name": "liblucihttp-lua",
+      "version": "2023.03.15~9b5b683f-r1",
+      "sha256": "92d900c41fe944acb5ab6b5467538ea67a851bce4d5805fc5204b08247a7fab8",
+      "adb_hash": "6bc3e54062e7796edf4489ef3bbdbec3c7cbbf06a6ecf1d7ce4c1f96b1d7d360",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/luci/liblucihttp-lua-2023.03.15~9b5b683f-r1.apk",
+      "source": "OpenWrt signed index luci",
+      "arch": "aarch64_generic",
+      "license": "ISC",
+      "installed_size": 12315
+    },
+    {
+      "file": "libnetfilter-conntrack3-1.1.0-r1.apk",
+      "name": "libnetfilter-conntrack3",
+      "version": "1.1.0-r1",
+      "sha256": "ae514d72c15ce8f0f2415c329dab1f82f3989679a4bfed23dd44faceb2635e5e",
+      "adb_hash": "9a2ea78afe94c7016fab1129b0cbe985df3636e9de621cfbcb07dbda517df523",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/base/libnetfilter-conntrack3-1.1.0-r1.apk",
+      "source": "OpenWrt signed index base",
+      "arch": "aarch64_generic",
+      "license": "GPL-2.0-or-later",
+      "installed_size": 105337
+    },
+    {
+      "file": "libnettle8-3.10.2-r1.apk",
+      "name": "libnettle8",
+      "version": "3.10.2-r1",
+      "sha256": "3241beb238c9a25fe8cd386c84ff259d3a4a30ad0f7ff9c7f60339d09c634d37",
+      "adb_hash": "e2dec8d5b02b1e33f75797b1569d2678aef8f87ac9e355fef10ff25365667ab0",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/base/libnettle8-3.10.2-r1.apk",
+      "source": "OpenWrt signed index base",
+      "arch": "aarch64_generic",
+      "license": "GPL-2.0-or-later",
+      "installed_size": 606398
+    },
+    {
+      "file": "libnfnetlink0-1.0.2-r1.apk",
+      "name": "libnfnetlink0",
+      "version": "1.0.2-r1",
+      "sha256": "cc2b1276c2f8f65f3417474a68c8d2dcc4076484a502ab343777a734a82e6fe8",
+      "adb_hash": "48b045c4f414147a5bf7dfe0a10ecf72f7d2f86205fbf2293c6b11a95da0e0e6",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/base/libnfnetlink0-1.0.2-r1.apk",
+      "source": "OpenWrt signed index base",
+      "arch": "aarch64_generic",
+      "license": "GPL-2.0+",
+      "installed_size": 24604
+    },
+    {
+      "file": "libubus-lua-2026.06.28~24864e78-r2.apk",
+      "name": "libubus-lua",
+      "version": "2026.06.28~24864e78-r2",
+      "sha256": "cc66ea99bc6b6009b755044794916b89aa6a2982cfa4ad27be3f37fc3cdbab01",
+      "adb_hash": "08544d33d819a80403d6e170266b542c147b439a2a417a89c1117229a08fd5e5",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/base/libubus-lua-2026.06.28~24864e78-r2.apk",
+      "source": "OpenWrt signed index base",
+      "arch": "aarch64_generic",
+      "license": "LGPL-2.1",
+      "installed_size": 20503
+    },
+    {
+      "file": "libuci-lua-2025.12.02~66127cd7-r1.apk",
+      "name": "libuci-lua",
+      "version": "2025.12.02~66127cd7-r1",
+      "sha256": "446bd379b28d7cdb96a5fe6adb8bd39415dbe33578c433d97dee278174a9351a",
+      "adb_hash": "8e5e1d0e03a674218f8f3221809ef45ccf51820b42acf073516abb8dbf36ab93",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/base/libuci-lua-2025.12.02~66127cd7-r1.apk",
+      "source": "OpenWrt signed index base",
+      "arch": "aarch64_generic",
+      "license": "LGPL-2.1",
+      "installed_size": 20502
+    },
+    {
+      "file": "libyaml-0.2.5-r2.apk",
+      "name": "libyaml",
+      "version": "0.2.5-r2",
+      "sha256": "495d517fe854187dc283598ebe87499a4a74d49fc43380951dfcfc92323cb822",
+      "adb_hash": "3121ae175d5532653b2a769db1b779376c815a695f139375fa4597349548cf3b",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/packages/libyaml-0.2.5-r2.apk",
+      "source": "OpenWrt signed index packages",
+      "arch": "aarch64_generic",
+      "license": "MIT",
+      "installed_size": 106651
+    },
+    {
+      "file": "lua-5.1.5-r11.apk",
+      "name": "lua",
+      "version": "5.1.5-r11",
+      "sha256": "195a872322fd03c2147c781b0fdca6f53beff1462ee6ac0cfe18a829ae5e282d",
+      "adb_hash": "7a0c2c4f06cef4320f4b2f088317a34d1f1c1b55199aa3d4345e6e3799aff612",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/base/lua-5.1.5-r11.apk",
+      "source": "OpenWrt signed index base",
+      "arch": "aarch64_generic",
+      "license": "MIT",
+      "installed_size": 12328
+    },
+    {
+      "file": "luci-app-passwall2-26.10.29-r1.apk",
+      "sha256": "9cc86f4af04ff54040039887e70685938e6c265522aaccb8cffb51eadb6d8b97",
+      "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/luci-app-passwall2-26.10.29-r1.apk",
+      "source": "Passwall2 official GitHub release digest",
+      "name": "luci-app-passwall2",
+      "version": "26.10.29-r1",
+      "arch": "noarch",
+      "license": "SEE-UPSTREAM",
+      "installed_size": 1345969
+    },
+    {
+      "file": "luci-compat-26.304.26398~e969939.apk",
+      "name": "luci-compat",
+      "version": "26.304.26398~e969939",
+      "sha256": "da438dedf473dc7b746f8cf9fedea98288a4acb574723543caed72f2671c5b92",
+      "adb_hash": "edba8eb5a1b1e7e864ad7e20505edb3645180219acbf135d3e39607114fd0773",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/luci/luci-compat-26.304.26398~e969939.apk",
+      "source": "OpenWrt signed index luci",
+      "arch": "noarch",
+      "license": "Apache-2.0",
+      "installed_size": 179967
+    },
+    {
+      "file": "luci-i18n-passwall2-fa-26.10.29.apk",
+      "sha256": "c992c797c241e6c17b95cbdb87a93f31692f9c3f27def81ccf3767a9068a7f29",
+      "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/luci-i18n-passwall2-fa-26.10.29.apk",
+      "source": "Passwall2 official GitHub release digest",
+      "language": "fa",
+      "name": "luci-i18n-passwall2-fa",
+      "version": "26.10.29",
+      "arch": "noarch",
+      "license": "SEE-UPSTREAM",
+      "installed_size": 70770
+    },
+    {
+      "file": "luci-i18n-passwall2-ru-26.10.29.apk",
+      "sha256": "af665893104568d17fd4873327eab9ec8110abfb668a242889ec08a9c3d66125",
+      "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/luci-i18n-passwall2-ru-26.10.29.apk",
+      "source": "Passwall2 official GitHub release digest",
+      "language": "ru",
+      "name": "luci-i18n-passwall2-ru",
+      "version": "26.10.29",
+      "arch": "noarch",
+      "license": "SEE-UPSTREAM",
+      "installed_size": 76303
+    },
+    {
+      "file": "luci-i18n-passwall2-zh-cn-26.10.29.apk",
+      "sha256": "a59c6f7ae5e861c4ec587e4013688331d7d792789db42b55fac491be43334f47",
+      "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/luci-i18n-passwall2-zh-cn-26.10.29.apk",
+      "source": "Passwall2 official GitHub release digest",
+      "language": "zh-cn",
+      "name": "luci-i18n-passwall2-zh-cn",
+      "version": "26.10.29",
+      "arch": "noarch",
+      "license": "SEE-UPSTREAM",
+      "installed_size": 43461
+    },
+    {
+      "file": "luci-i18n-passwall2-zh-tw-26.10.29.apk",
+      "sha256": "58450b8eb97ad378258fd6feb54569e5d6ff19a3104c9e441c24c14e091ef9b7",
+      "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/luci-i18n-passwall2-zh-tw-26.10.29.apk",
+      "source": "Passwall2 official GitHub release digest",
+      "language": "zh-tw",
+      "name": "luci-i18n-passwall2-zh-tw",
+      "version": "26.10.29",
+      "arch": "noarch",
+      "license": "SEE-UPSTREAM",
+      "installed_size": 43562
+    },
+    {
+      "file": "luci-lib-base-26.304.26398~e969939.apk",
+      "name": "luci-lib-base",
+      "version": "26.304.26398~e969939",
+      "sha256": "032c748a79d65d1bd20eca70da6ea97503e91c8f4b32071d15c77ad13a80df56",
+      "adb_hash": "d123c7d65abc1d1ab6b529fdb21377e4bac85b4935c7c513462a1991bfeece21",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/luci/luci-lib-base-26.304.26398~e969939.apk",
+      "source": "OpenWrt signed index luci",
+      "arch": "noarch",
+      "license": "Apache-2.0",
+      "installed_size": 30147
+    },
+    {
+      "file": "luci-lib-ip-26.304.26398~e969939.apk",
+      "name": "luci-lib-ip",
+      "version": "26.304.26398~e969939",
+      "sha256": "7605fa9f5ce9038c0bff80079bd969c570d6e01dc16b6776574c1fdc638c8319",
+      "adb_hash": "ba5def1c1336958420d6301ef35630b29affdff45fc466832df087270bbb06a7",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/luci/luci-lib-ip-26.304.26398~e969939.apk",
+      "source": "OpenWrt signed index luci",
+      "arch": "aarch64_generic",
+      "license": "Apache-2.0",
+      "installed_size": 28698
+    },
+    {
+      "file": "luci-lib-jsonc-26.304.26398~e969939.apk",
+      "name": "luci-lib-jsonc",
+      "version": "26.304.26398~e969939",
+      "sha256": "807e7764c25397e97de05398111369dc241e00731b4302d17c0e2b7630816246",
+      "adb_hash": "81e382e719a88c85fc4f2c27f72016196af319b130d5206901597161c12c57be",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/luci/luci-lib-jsonc-26.304.26398~e969939.apk",
+      "source": "OpenWrt signed index luci",
+      "arch": "aarch64_generic",
+      "license": "Apache-2.0",
+      "installed_size": 12317
+    },
+    {
+      "file": "luci-lib-nixio-26.304.26398~e969939.apk",
+      "name": "luci-lib-nixio",
+      "version": "26.304.26398~e969939",
+      "sha256": "fcfbde0d8af696d29689134eeee4fa38f21df01268ba99d2595504366bf5441c",
+      "adb_hash": "bb892507d62e96d84e17cbb644f96fb8a290681f7e1470a0588545c82cccdb87",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/luci/luci-lib-nixio-26.304.26398~e969939.apk",
+      "source": "OpenWrt signed index luci",
+      "arch": "aarch64_generic",
+      "license": "Apache-2.0",
+      "installed_size": 92135
+    },
+    {
+      "file": "luci-lua-runtime-26.304.26398~e969939.apk",
+      "name": "luci-lua-runtime",
+      "version": "26.304.26398~e969939",
+      "sha256": "1fca16251e333eb32e7133d09b64330d59456d9e2d917e11458ae865b98fe43a",
+      "adb_hash": "1fa5c99ba22ce462855f78e585a021eeaa9491afb4e315ffb58583118a30e8c3",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/luci/luci-lua-runtime-26.304.26398~e969939.apk",
+      "source": "OpenWrt signed index luci",
+      "arch": "aarch64_generic",
+      "license": "Apache-2.0",
+      "installed_size": 90870
+    },
+    {
+      "file": "lyaml-6.2.7-r2.apk",
+      "name": "lyaml",
+      "version": "6.2.7-r2",
+      "sha256": "2178c6ca688a49c64816b7a1b4d11eb58719ac49ebf071e1a3c49a59b0b34070",
+      "adb_hash": "e4f147ff2fff54fbc006b0a6185c79714d1b5179370427912de540a96d0aa915",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/packages/lyaml-6.2.7-r2.apk",
+      "source": "OpenWrt signed index packages",
+      "arch": "aarch64_generic",
+      "license": "MIT",
+      "installed_size": 54639
+    },
+    {
+      "file": "sing-box-1.14.4-r1.apk",
+      "sha256": "df33d9a373f09bba9bfa1b73c7695b09ebf7c273d69b0f9744adaa66ee22aadc",
+      "container": {
+        "file": "packages_apk_aarch64_generic.zip",
+        "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/packages_apk_aarch64_generic.zip",
+        "sha256": "2995ee1a73a7058828c6379f8803a69d8f3f822baba50a80dcd7b630f1cf0139"
+      },
+      "member": "sing-box-1.14.4-r1.apk",
+      "source": "member of digest-verified official Passwall2 release ZIP",
+      "name": "sing-box",
+      "version": "1.14.4-r1",
+      "arch": "aarch64_generic",
+      "license": "GPL-3.0-or-later",
+      "installed_size": 55621848
+    },
+    {
+      "file": "tcping-0.3-r1.apk",
+      "sha256": "282cec9fe892822d9c08597935acbb5fdb218e582d45df1b29e4fcad27592b29",
+      "container": {
+        "file": "packages_apk_aarch64_generic.zip",
+        "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/packages_apk_aarch64_generic.zip",
+        "sha256": "2995ee1a73a7058828c6379f8803a69d8f3f822baba50a80dcd7b630f1cf0139"
+      },
+      "member": "tcping-0.3-r1.apk",
+      "source": "member of digest-verified official Passwall2 release ZIP",
+      "name": "tcping",
+      "version": "0.3-r1",
+      "arch": "aarch64_generic",
+      "license": "GPL-2.0-only",
+      "installed_size": 65763
+    },
+    {
+      "file": "ucode-mod-lua-1.apk",
+      "name": "ucode-mod-lua",
+      "version": "1",
+      "sha256": "4ff914d355f3af90949cfc2ba5378c58bed052297a1eb93c8b56106d1e07351a",
+      "adb_hash": "868c70eb52177ab6e40d52d7e3bcb25517db97baae8a74c778513727abb4c4c7",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/luci/ucode-mod-lua-1.apk",
+      "source": "OpenWrt signed index luci",
+      "arch": "aarch64_generic",
+      "license": "ISC",
+      "installed_size": 24600
+    },
+    {
+      "file": "unzip-6.0-r9.apk",
+      "name": "unzip",
+      "version": "6.0-r9",
+      "sha256": "3806d65e7752b9a48057da762cb9ea3e8d44bd6ad94a8351235827763ec409a2",
+      "adb_hash": "3fe75574cd0318c7214e9de2a99d8912819c58d8c647d11f573a0acf9e8990fa",
+      "url": "https://downloads.openwrt.org/releases/25.12.6/packages/aarch64_generic/packages/unzip-6.0-r9.apk",
+      "source": "OpenWrt signed index packages",
+      "arch": "aarch64_generic",
+      "license": "BSD-4-Clause",
+      "installed_size": 269383
+    },
+    {
+      "file": "v2ray-geoip-202610190920.1.apk",
+      "sha256": "b799038bb25ecd97c038b7b1024f5c21e69cf3178e204306ef3d6b2f692a788f",
+      "container": {
+        "file": "packages_apk_aarch64_generic.zip",
+        "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/packages_apk_aarch64_generic.zip",
+        "sha256": "2995ee1a73a7058828c6379f8803a69d8f3f822baba50a80dcd7b630f1cf0139"
+      },
+      "member": "v2ray-geoip-202610190920.1.apk",
+      "source": "member of digest-verified official Passwall2 release ZIP",
+      "name": "v2ray-geoip",
+      "version": "202610190920.1",
+      "arch": "noarch",
+      "license": "CC-BY-SA-4.0",
+      "installed_size": 16587490
+    },
+    {
+      "file": "v2ray-geosite-202610202206.1.apk",
+      "sha256": "28653a31e285fc205786ab1339d3a5420405c69527a862d57d2b835cccfd15ca",
+      "container": {
+        "file": "packages_apk_aarch64_generic.zip",
+        "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/packages_apk_aarch64_generic.zip",
+        "sha256": "2995ee1a73a7058828c6379f8803a69d8f3f822baba50a80dcd7b630f1cf0139"
+      },
+      "member": "v2ray-geosite-202610202206.1.apk",
+      "source": "member of digest-verified official Passwall2 release ZIP",
+      "name": "v2ray-geosite",
+      "version": "202610202206.1",
+      "arch": "noarch",
+      "license": "MIT",
+      "installed_size": 11338674
+    },
+    {
+      "file": "xray-core-26.10.21-r1.apk",
+      "sha256": "5d9da3cc54ff2b1a36884d54f580fcadd95cf1c8917c785acdae4450f920ab17",
+      "container": {
+        "file": "packages_apk_aarch64_generic.zip",
+        "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2/releases/download/26.10.29-1/packages_apk_aarch64_generic.zip",
+        "sha256": "2995ee1a73a7058828c6379f8803a69d8f3f822baba50a80dcd7b630f1cf0139"
+      },
+      "member": "xray-core-26.10.21-r1.apk",
+      "source": "member of digest-verified official Passwall2 release ZIP",
+      "name": "xray-core",
+      "version": "26.10.21-r1",
+      "arch": "aarch64_generic",
+      "license": "MPL-2.0",
+      "installed_size": 29711852
+    }
+  ]
+}
