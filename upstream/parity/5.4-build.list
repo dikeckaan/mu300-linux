@@ -737,8 +737,6 @@ module sipc_core
 module sipx
 module slog_bridge
 module smartpa_stat
-module snd_aloop
-module snd_dummy
 module snd_soc_aw883xx
 module spi_sprd
 module spi_sprd_adi
