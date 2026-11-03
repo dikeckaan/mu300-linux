@@ -32,6 +32,24 @@
 # hijack. The pins are left out; the /64 route does the work. Every value that
 # reaches `ip` is checked to be a plain IPv6 address inside the bearer's /64.
 #
+# The mirror case is the router's own address: odhcpd relays the RA's PIO, so the
+# LAN clients SLAAC out of the same /64 the carrier handed the bearer and treat
+# that /64 as on-link - a client reaching the router's own public address then
+# asks for it on br-lan, where nothing answers (the address lives on the bearer
+# alone, and the kernel answers neighbour solicitations for an address only on
+# the interface that holds it). Measured: from the WAN side every port of the
+# router answers as its firewall pleases, from the LAN side the same ports time
+# out - "the router is reachable from everywhere except its own network". The
+# fix publishes the router's preferred global source address (what its own
+# egress uses, i.e. exactly what NAT66 masquerades into and what a DDNS client
+# publishes) on br-lan as a /128 alias: the kernel then answers those
+# solicitations, and one and the same public address serves both sides. No
+# route is added (a /128 alias leaves the routing table alone, so the /64 route
+# above keeps deciding every lookup), nothing is learnt from the LAN (the
+# published address is the kernel's own), and with masq6 on, the NAT66 egress
+# address IS this address, so LAN access to the router's services keeps working
+# the same way it does from the WAN.
+#
 # Every /64 the bearer holds is routed, not only one (#87). A PDP re-activation the event monitor rides out without
 # an ifdown (+CGEV, mu300cell-v6.sh) can bring a new prefix by RA while the old SLAAC address stays on sipa_eth0
 # (this carrier's lifetimes are infinite; only setup and teardown flush it). odhcpd relays the new RA, so LAN clients
@@ -101,6 +119,46 @@ drop_old_prefix() {
     ip -6 route del "$1" dev br-lan metric $OLD_METRIC 2>/dev/null
 }
 
+# own_addr: the router's preferred global source address on the bearer, or nothing when there is none (no global
+# address, no default route). `ip route get` to a fixed global destination picks it the way egress does - skipping
+# deprecated and temporary addresses, which /proc/net/if_inet6's flags cannot express. 2000::1 is the first global
+# unicast and can never sit inside a routed /64 (MU300_NDP_PROBE_ADDR overrides it). The route must leave via the
+# bearer and the pick must be a global unicast (2xxx/3xxx) plain IPv6 address - the same shape every value that
+# reaches `ip` is held to - or nothing is published; the compressed form `ip` prints is never compared against the
+# fixed-width /proc forms, so a zero hextet in the prefix cannot break the match.
+PROBE=${MU300_NDP_PROBE_ADDR:-2000::1}
+own_addr() {
+    _out=$(ip -6 route get "$PROBE" 2>/dev/null) || return 0
+    case $_out in
+        *" dev $IFACE "*) ;;
+        *) return 0 ;;
+    esac
+    _own=$(echo "$_out" | sed -n 's/.* src \([0-9a-f:]*\).*/\1/p')
+    case $_own in
+        [23]*) return 0 ;;
+        *) _own= ;;
+    esac
+}
+
+# own_publish: keep the router's address on br-lan current (idempotent, so every round can run it): publish the pick,
+# replace the last one when it changed, withdraw it when the bearer has none. The new address goes on before the old
+# comes off, so no round leaves the LAN without an answer. nodad skips duplicate detection on br-lan (the address is
+# the bearer's own; a tentative alias would not answer solicitations for a second); a busybox ip without nodad takes
+# the plain add.
+last_own=
+own_publish() {
+    own_addr
+    [ "$_own" = "$last_own" ] && return 0
+    logger -t ndp-learn "router address on br-lan: ${_own:-none} (was ${last_own:-none})"
+    if [ -n "$_own" ]; then
+        ip -6 addr replace "$_own/128" dev br-lan nodad 2>/dev/null ||
+            { ip -6 addr add "$_own/128" dev br-lan nodad 2>/dev/null ||
+              ip -6 addr add "$_own/128" dev br-lan 2>/dev/null; }
+    fi
+    [ -n "$last_own" ] && ip -6 addr del "$last_own/128" dev br-lan 2>/dev/null
+    last_own=$_own
+}
+
 # has WORD LIST: WORD is one of the whitespace-separated words of LIST
 has() {
     case " $(echo $2) " in
@@ -168,6 +226,9 @@ learn_once() {
         # every round, so a route someone or something removed comes back within one round
         lan_route "$p"
     done
+    # the mirror of the /64 route: the LAN clients can also reach the router's own address (runs before the early
+    # return below, so a bearer that lost its addresses withdraws the last published one)
+    own_publish
     last_prefixes=$(echo $prefixes)
     [ -n "$prefixes" ] || return 0
     # odhcpd's NDP relay can learn a downstream client's /128 on the WAN side.
