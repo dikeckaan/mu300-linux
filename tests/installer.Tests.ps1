@@ -15,7 +15,7 @@ function Check($name, $got, $want) {
 
 # the functions under test, straight from install.ps1
 $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $Top "install.ps1"), [ref]$null, [ref]$null)
-$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'AndroidLines', 'LinuxAdbSerials', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'AdbPubKey', 'BootchainLine', 'BootchainRefused', 'PackageDir', 'PackageManifest', 'PackageCheck', 'SystemsDefault', 'ChoiceThatFits'
+$want = 'FetchPasswall2', 'LoadLanguage', 'T', 'NormalizeAnswer', 'AndroidLines', 'LinuxAdbSerials', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'AdbPubKey', 'BootchainLine', 'BootchainRefused', 'PackageDir', 'PackageManifest', 'PackageCheck', 'SystemsDefault', 'ChoiceThatFits'
 $defs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $want -contains $n.Name }, $true)
 foreach ($d in $defs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in 'LoadLanguage', 'T', 'NormalizeAnswer') {
@@ -1059,6 +1059,38 @@ Check 'package: not in SHA256SUMS' (PackageCheck $px 'mu300-openwrt-rootfs.tar.g
 Remove-Item (Join-Path $px 'payload\mu300-kernel-6.18.tar.gz')
 Check 'package: missing'        (PackageCheck $px 'mu300-kernel-6.18.tar.gz' $hk) 'missing'
 Remove-Item -Recurse -Force $px -ErrorAction SilentlyContinue
+
+# ---- optional Passwall2: the packaged extra or an explicit, checked offline file -------------------------------
+$pwdir = Join-Path ([IO.Path]::GetTempPath()) ('mu300-passwall2-' + [guid]::NewGuid())
+$oldTop = $Top
+$oldExtra = $env:MU300_PASSWALL2_EXTRA
+try {
+    $Top = Join-Path $pwdir 'computer'
+    New-Item -ItemType Directory -Force $Top | Out-Null
+    $extras = Join-Path $pwdir 'mu300/extras'
+    New-Item -ItemType Directory -Force $extras | Out-Null
+    $pwfile = Join-Path $extras 'mu300-extra-passwall2.tar.gz'
+    [IO.File]::WriteAllText($pwfile, 'offline fixture')
+    $pwsums = Join-Path $extras 'SHA256SUMS'
+    $pwhash = (Get-FileHash $pwfile -Algorithm SHA256).Hash.ToLower()
+    [IO.File]::WriteAllText($pwsums, "$pwhash  mu300-extra-passwall2.tar.gz`n")
+    $env:MU300_PASSWALL2_EXTRA = ''
+    FetchPasswall2
+    Check 'Passwall2 bundled file' ([IO.Path]::GetFullPath($script:EXTRA_PASSWALL2)) ([IO.Path]::GetFullPath($pwfile))
+    $env:MU300_PASSWALL2_EXTRA = $pwfile
+    FetchPasswall2
+    Check 'Passwall2 explicit file' $script:EXTRA_PASSWALL2 $pwfile
+    [IO.File]::WriteAllText($pwsums, (('0' * 64) + "  mu300-extra-passwall2.tar.gz`n"))
+    Check 'Passwall2 bad checksum' ((Dies { FetchPasswall2 }) -like '*checksum mismatch*') $true
+    Remove-Item $pwsums
+    Check 'Passwall2 missing checksum' ((Dies { FetchPasswall2 }) -like '*checksum mismatch*') $true
+    $env:MU300_PASSWALL2_EXTRA = Join-Path $pwdir 'missing.tar.gz'
+    Check 'Passwall2 explicit missing file' ((Dies { FetchPasswall2 }) -like '*not found*') $true
+} finally {
+    $Top = $oldTop
+    $env:MU300_PASSWALL2_EXTRA = $oldExtra
+    Remove-Item -Recurse -Force $pwdir
+}
 
 Write-Host "$script:passed passed, $script:failed failed"
 exit $script:failed

@@ -9,8 +9,8 @@ images or to the desktop installer's defaults.
 
 This targets OpenWrt 25.12.x, `aarch64_generic`, and the native MU300 kernel
 capabilities checked by the installer. It uses the custom-extra interface, so it
-is installed explicitly from a file and is not automatically published or updated
-by `mu300-update`.
+can be installed from a file or selected in the desktop installer when its offline
+archive is supplied. It is not automatically published or updated by `mu300-update`.
 
 ## Build and install
 
@@ -53,6 +53,44 @@ package hashes checked against signed indices. The downloader uses verified
 HTTPS, direct connections and TLS 1.2. The archive has a manifest covering every
 other file. Package payloads, private device files and caches are not tracked in
 this repository. Upstream APKs retain their own licenses.
+
+## Installer integration
+
+The GUI and both desktop installers offer **Install Passwall2**, off by default
+and only for OpenWrt. The base rootfs is unchanged. The input is the offline
+archive below; selecting it without that file fails before installation writes.
+It is copied to the Linux extra directory and its link hook installs the app at
+OpenWrt's first boot. First-boot failures remain retryable with
+`mu300-passwall2 install`; inspect its output before enabling the service.
+
+To include a built extra in OpenWrt Magisk/desktop zips:
+
+```sh
+MU300_PASSWALL2_EXTRA=/absolute/path/to/passwall2-full.tar.gz \
+    sh tools/make-magisk-zips.sh RELEASE_DIR OUT_DIR TAG
+```
+
+The archive is stored once at `mu300/extras/mu300-extra-passwall2.tar.gz`, with a
+matching `SHA256SUMS`; desktop and direct Magisk installation use the same copy.
+Ubuntu-only zips do not carry it. A source checkout can instead set
+`MU300_PASSWALL2_EXTRA` to a built archive with its checksum file alongside it;
+`MU300_ANS_PASSWALL2=yes` answers the desktop CLI question. The GUI also has an
+advanced field for the local extra path (empty uses the packaged file). On Windows use the
+same environment variable names in PowerShell.
+
+A direct Magisk install opts in through `MU300_PASSWALL2=yes` in its existing
+`mu300-install.conf` (for example inside the zip). Bundling alone does not opt in.
+The default is `no`; non-OpenWrt systems, missing archives and bad checksums are
+rejected when explicitly requested. This selects installation, not activation
+of a proxy service. Updates preserve the app's existing enabled/disabled state.
+
+Measured archives of the pinned app/dependencies and all four translations:
+**12,099,190 bytes (11.54 MiB)** shared and **42,247,086 bytes (40.29 MiB)** bundled.
+Bundled fallback core files alone expand to **85,333,520 bytes (81.38 MiB)**;
+app/dependency files and the extra's retained APKs add storage beyond that.
+Compatible external cores are still preferred. No fallback core APK is retained
+and expanded a second time. These are payload measurements, not a claim about
+space freed or total installed usage on every device.
 
 ## Core ownership
 

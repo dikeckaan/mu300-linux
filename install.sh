@@ -53,6 +53,8 @@
 #   MU300_ANS_VPN=yes|no                   the VPN module
 #   MU300_ANS_ADB=yes|no                   adb to Linux (on for every computer): this computer's key only
 #   MU300_ANS_PANEL=yes|no                 the web panel for Ubuntu
+#   MU300_ANS_PASSWALL2=yes|no             optional Passwall2 in OpenWrt (default no)
+#   MU300_PASSWALL2_EXTRA=FILE             offline extra, with SHA256SUMS beside it
 #   MU300_ANS_KERNEL=5.4|6.18|7.3      the kernel (7.2, retired, is taken as 7.3)
 #   MU300_ANS_EXISTING=update|wipe         Linux is installed already
 #   MU300_ANS_ERASE_SD=ERASE               a new filesystem on the SD card erases it
@@ -250,6 +252,15 @@ fetch_vpn_module() {
         mv "$_vd/$_f.part" "$_vd/$_f"
     fi
     EXTRA_VPN=$_vd/$_f
+}
+
+fetch_passwall2() {
+    # The archive is shipped in a zip or supplied locally; no published release asset is assumed.
+    _pw=${MU300_PASSWALL2_EXTRA:-$TOP/../mu300/extras/mu300-extra-passwall2.tar.gz}
+    [ -s "$_pw" ] || die "$(t '{1} not found' "$_pw")"
+    _pw_want=$(awk -v f="${_pw##*/}" '$2 == f || $2 == "*" f {print $1; exit}' "$(dirname "$_pw")/SHA256SUMS" 2>/dev/null || true)
+    [ -n "$_pw_want" ] && [ "$(sha256_of "$_pw")" = "$_pw_want" ] || die "$(t 'checksum mismatch for {1}' "$_pw")"
+    EXTRA_PASSWALL2=$_pw
 }
 
 # adb shell/exec-out read stdin; never let them eat the answers typed (or piped) into this script
@@ -876,6 +887,13 @@ fi
 ask vx "$(t 'Install the VPN module (about 40 MB more to download, 120 MB on the device)? (yes/no)')" $vx_default MU300_ANS_VPN
 # its kill switch on too: without the module nothing would enforce it (android-install.sh refuses the same, later)
 [ "$vx" = yes ] || [ -z "$vpn_ks" ] || die "$(t 'The VPN is on with its kill switch in {1}: an update without the VPN module would leave it to nothing. Answer yes to install the module, or turn the VPN off there first (ENABLE=0 in /etc/mu300/vpn.conf).' "${vpn_ks% }")"
+EXTRA_PASSWALL2=
+pw=no
+case " $OSES " in *openwrt*)
+    ask pw "$(t 'Install Passwall2 (optional offline extra)? (yes/no)')" no MU300_ANS_PASSWALL2 ;;
+esac
+# Validate this local input before reading or modifying the device further, in either install mode.
+[ "$pw" != yes ] || fetch_passwall2
 # adb over USB to Linux is on in every system and lets every computer in, with a root shell and no password (the
 # owner's decision of 2026-10-13, FINDINGS 70; on the device: mu300-usb adb auth open|keys, mu300-usb adb off). The
 # one thing to choose here is to close it to all but this computer from the first boot on: its adb key, which the
@@ -1237,7 +1255,7 @@ say "$(t 'Ready to install')"
 echo "  $(t 'source:         {1}' "$([ $MODE = prebuilt ] && t 'prebuilt release {1} + vendor files from this device' "$RELEASE" || t 'local build')")"
 echo "  $(t 'systems:        {1} (boots: {2})' "$OSES$(case " $OSES " in (*" ubuntu "*) echo " (Ubuntu $UBUNTU)" ;; esac)" "$BOOT_OS")"
 echo "  $(t 'kernel:         {1}' "$KERNEL$([ -n "$KMAIN" ] && echo " (mainline, $(cat "$KMAIN/kernel.release"))")")"
-echo "  $(t 'extras:         {1}' "$(x=; [ -z "$EXTRA_VPN" ] || x=vpn; [ -z "$EXTRA_PANEL" ] || x="${x:+$x }panel"; [ -n "$x" ] && echo "$x" || t 'none')")"
+echo "  $(t 'extras:         {1}' "$(x=; [ -z "$EXTRA_VPN" ] || x=vpn; [ -z "$EXTRA_PANEL" ] || x="${x:+$x }panel"; [ -z "$EXTRA_PASSWALL2" ] || x="${x:+$x }passwall2"; [ -n "$x" ] && echo "$x" || t 'none')")"
 echo "  $(t 'adb to Linux:   {1}' "$([ "$ADB" = 1 ] && t 'on, only for the adb key of this computer' || t 'on, for every computer: a root shell without a password (on the device: mu300-usb adb auth keys, or mu300-usb adb off)')")"
 echo "  $(t 'default boot:   {1}' "$([ $DEFAULT_LINUX = 1 ] && t 'Linux (Android after {1} failed boots in a row)' "$BOOT_ATTEMPTS" || t 'Android, Linux on demand')")"
 echo "  $(t 'filesystem:     {1}' "$([ $FORMAT = 0 ] && t 'keep existing' || { [ $SD_MODE = 1 ] && t 'CREATE new ext4 (erases the SD card)' || t 'CREATE new ext4 (erases the Linux region)'; })")"
@@ -1270,6 +1288,7 @@ done
 [ -z "$EXTRA_VPN" ] || adb push "$EXTRA_VPN" $T/mu300-extra-vpn.tar.gz >/dev/null
 # the web panel goes as the panel extra; Ubuntu's first boot installs Cockpit from it in the background (mu300-extra link)
 [ -z "$EXTRA_PANEL" ] || adb push "$EXTRA_PANEL" $T/mu300-extra-panel.tar.gz >/dev/null
+[ -z "$EXTRA_PASSWALL2" ] || adb push "$EXTRA_PASSWALL2" $T/mu300-extra-passwall2.tar.gz >/dev/null
 env=$(mktemp)
 write_install_env > "$env"
 # an update to an older release: the device refuses it unless told (tools/android-install.sh, the downgrade block)

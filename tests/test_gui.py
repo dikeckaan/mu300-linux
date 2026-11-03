@@ -486,7 +486,7 @@ class Model(unittest.TestCase):
         self.assertEqual(list(a.items()), [
             ('MU300_LANG', 'tr'), ('ANDROID_SERIAL', '324950664950'), ('MU300_ANS_BETA', 'no'), ('MU300_ANS_SYSTEMS', '3'),
             ('MU300_OPENWRT', 'plain'), ('MU300_ANS_BOOT_OS', 'ubuntu'), ('MU300_ANS_UBUNTU', '24.04'), ('MU300_ANS_DEFAULT_LINUX', 'yes'),
-            ('MU300_ANS_BOOT_ATTEMPTS', '5'), ('MU300_ANS_HOTSPOT', 'yes'), ('MU300_ANS_GPU', 'yes'), ('MU300_ANS_VPN', 'no'),
+            ('MU300_ANS_BOOT_ATTEMPTS', '5'), ('MU300_ANS_HOTSPOT', 'yes'), ('MU300_ANS_GPU', 'yes'), ('MU300_ANS_VPN', 'no'), ('MU300_ANS_PASSWALL2', 'no'),
             ('MU300_ANS_ADB', 'no'), ('MU300_ANS_PANEL', 'no'), ('MU300_ANS_KERNEL', '5.4'), ('MU300_ANS_PASSWORD', 'hunter2secret'),
             ('MU300_ANS_CONFIRM', '@stdin')])
         known = self.header_variables() | {'MU300_RELEASE', 'MU300_RELEASE_URL', 'MU300_SYNC_BOOTCHAIN', 'MU300_FETCH_JOBS',
@@ -575,6 +575,21 @@ class Model(unittest.TestCase):
             rows = model.summary(good_choices(), facts(), 'v2026.10.23')
             self.assertEqual(len(rows), 6)
             self.assertIn('Ubuntu 24.04', rows[0][1])
+
+
+    def test_passwall2_is_optional_and_only_answered_yes_for_openwrt(self):
+        c = good_choices()
+        self.assertFalse(c.passwall2)
+        self.assertEqual(model.answers(c, facts(), 'en', '')['MU300_ANS_PASSWALL2'], 'no')
+        c.passwall2 = True
+        c.passwall2_extra = '/tmp/passwall2-full.tar.gz'
+        self.assertEqual(model.answers(c, facts(), 'en', '')['MU300_PASSWALL2_EXTRA'], c.passwall2_extra)
+        self.assertEqual(model.answers(c, facts(), 'en', '')['MU300_ANS_PASSWALL2'], 'yes')
+        self.assertIn(i18n._('Passwall2 in OpenWrt'), dict(model.summary(c, facts(), ''))[i18n._('Also')])
+        c.openwrt = False
+        self.assertEqual(model.answers(c, facts(), 'en', '')['MU300_ANS_PASSWALL2'], 'no')
+        self.assertNotIn('MU300_PASSWALL2_EXTRA', model.answers(c, facts(), 'en', ''))
+        self.assertNotIn(i18n._('Passwall2 in OpenWrt'), dict(model.summary(c, facts(), ''))[i18n._('Also')])
 
 
 class Run(unittest.TestCase):

@@ -104,7 +104,7 @@ android_lang() {  # the language of the Android locale: tr, zh or en
 #   untrusted  /sdcard/mu300-install.conf or /sdcard/Download/mu300-install.conf (first found): any app with
 #              storage access can write these, so they choose only what destroys nothing and reveals nothing
 # Trusted values win.
-CONF_KEYS='MU300_STORAGE MU300_SD_ERASE MU300_REGION_OVERWRITE MU300_MODE MU300_DOWNGRADE MU300_UPDATE_KEEP MU300_BOOT_OS MU300_BOOT MU300_BOOT_ATTEMPTS MU300_HOTSPOT MU300_GPU MU300_PASSWORD MU300_PASSWORD_RESET MU300_KEEP_PASSWORD MU300_CURRENT_PASSWORD MU300_PASSWORD_FILE MU300_DEVICE MU300_LANG MU300_DRY_RUN MU300_SYNC_BOOTCHAIN MU300_ADB_KEY'
+CONF_KEYS='MU300_STORAGE MU300_SD_ERASE MU300_REGION_OVERWRITE MU300_MODE MU300_DOWNGRADE MU300_UPDATE_KEEP MU300_BOOT_OS MU300_BOOT MU300_BOOT_ATTEMPTS MU300_HOTSPOT MU300_GPU MU300_PASSWALL2 MU300_PASSWORD MU300_PASSWORD_RESET MU300_KEEP_PASSWORD MU300_CURRENT_PASSWORD MU300_PASSWORD_FILE MU300_DEVICE MU300_LANG MU300_DRY_RUN MU300_SYNC_BOOTCHAIN MU300_ADB_KEY'
 CONF_SET=
 conf_find() { for _f in "$SDCARD/mu300-install.conf" "$SDCARD/Download/mu300-install.conf"; do [ -f "$_f" ] && { echo "$_f"; return 0; }; done; return 0; }
 # erasing, formatting, overriding the model check and the password: only from a trusted file
@@ -207,7 +207,7 @@ conf_valid() {  # conf_valid KEY VALUE: VALUE is exactly one this installer know
         # the password the installed system has now, any characters: it only ever goes to android-pwcheck.sh on stdin
         MU300_CURRENT_PASSWORD) return 0 ;;
         MU300_UPDATE_KEEP) case $2 in all|list) return 0 ;; esac ;;
-        MU300_HOTSPOT|MU300_GPU) case $2 in yes|no) return 0 ;; esac ;;
+        MU300_HOTSPOT|MU300_GPU|MU300_PASSWALL2) case $2 in yes|no) return 0 ;; esac ;;
         MU300_PASSWORD_FILE) [ "$2" = sdcard ] && return 0 ;;
         MU300_DEVICE) case $2 in f50|u30air) return 0 ;; esac ;;
         MU300_LANG) case $2 in en|tr|zh) return 0 ;; esac ;;
@@ -596,10 +596,18 @@ plan_password() {
 # web panel as panel): android-install.sh installs every mu300-extra-<name>.tar.gz of its work directory onto the
 # Linux partition (extra/<name>) and checks what it unpacks. Only these names, and only regular files: D is as
 # trusted as the scripts in it. EXTRAS: the names found.
-EXTRA_NAMES='vpn panel'
+EXTRA_NAMES='vpn panel passwall2'
 extras_find() {
     EXTRAS=
+    if [ "${MU300_PASSWALL2:-no}" = yes ]; then
+        case $OS in openwrt*) ;; *) die "$(t 'Passwall2 needs an OpenWrt system')" ;; esac
+        _pf=$D/extras/mu300-extra-passwall2.tar.gz
+        [ -f "$_pf" ] && [ ! -L "$_pf" ] && [ -s "$_pf" ] || die "$(t '{1} not found' "$_pf")"
+        _ph=$(awk '$2 == "mu300-extra-passwall2.tar.gz" || $2 == "*mu300-extra-passwall2.tar.gz" {print $1; exit}' "$D/extras/SHA256SUMS" 2>/dev/null || true)
+        [ -n "$_ph" ] && [ "$(sha256sum "$_pf" | cut -d' ' -f1)" = "$_ph" ] || die "$(t 'checksum mismatch for {1}' "$_pf")"
+    fi
     for _n in $EXTRA_NAMES; do
+        [ "$_n" != passwall2 ] || [ "${MU300_PASSWALL2:-no}" = yes ] || continue
         _f=$D/extras/mu300-extra-$_n.tar.gz
         if [ -f "$_f" ] && [ ! -L "$_f" ] && [ -s "$_f" ]; then EXTRAS="$EXTRAS $_n"; fi
     done
@@ -747,6 +755,8 @@ write_example() {
         echo "#MU300_HOTSPOT=yes"
         echo "# Mali GPU (OpenCL) files: yes or no"
         echo "#MU300_GPU=yes"
+        echo "# optional Passwall2 extra in an OpenWrt zip: yes or no (default no)"
+        echo "#MU300_PASSWALL2=no"
         echo "# (root) 6+ characters; empty: the images' own (Ubuntu: ubuntu/ubuntu; OpenWrt: root without a password);"
         echo "# for an update only from a mu300-install.conf inside the zip"
         echo "#MU300_PASSWORD="

@@ -85,3 +85,11 @@ MU300_FRAMEWORK=/path/to/main MU300_PASSWALL2_BUNDLE=/path/to/passwall2.tar.gz p
 ```
 
 验收范围见随包 `VALIDATION.txt`；隔离 ARM64 测试不等于真实路由器上的协议/联网验收。
+
+## 安装器入口
+
+桌面 GUI、Linux/macOS 命令行和 Windows PowerShell 安装器现在提供 Passwall2 选项，默认不勾选，仅 OpenWrt 可用，基础 rootfs 不预装。打包时设置 `MU300_PASSWALL2_EXTRA` 指向已构建的离线扩展，OpenWrt ZIP 会携带一份归档及 SHA256SUMS，供桌面和 Magisk 共用；Ubuntu ZIP 不携带。源码安装也可以用相同变量指定文件及同目录校验文件，`MU300_ANS_PASSWALL2=yes` 回答安装问题。
+
+直接使用 Magisk 安装 ZIP 时，在 `mu300-install.conf` 设置 `MU300_PASSWALL2=yes` 才安装，默认 `no`；文件缺失、校验失败或非 OpenWrt 会明确报错。安装选项不会自动开启代理；首次安装保持关闭，更新保留原服务启用状态。首次启动安装失败可以执行 `mu300-passwall2 install` 重试。
+
+共享核心归档为 12,099,190 字节（11.54 MiB）；含备用核心的完整归档为 42,247,086 字节（40.29 MiB）。备用核心文件展开后合计 85,333,520 字节（81.38 MiB），另外还需要应用、依赖和保留 APK 的空间。这不等于总安装占用或设备节省的空间；仍优先复用兼容的现有核心。

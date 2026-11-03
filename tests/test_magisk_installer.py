@@ -1742,6 +1742,36 @@ class WebCaller(InstallerCase):
         for part in ('boot_a', 'boot_b', 'misc'):
             self.assertEqual(now[part], self.before[part], part)
 
+
+    def test_passwall2_extra_requires_opt_in_and_checked_archive(self):
+        ex = self.mu300 / 'extras'
+        ex.mkdir()
+        archive = ex / 'mu300-extra-passwall2.tar.gz'
+        archive.write_bytes(tar_gz({'name': b'passwall2\n'}))
+        sums = ex / 'SHA256SUMS'
+        sums.write_text(sha(archive) + '  ' + archive.name + '\n')
+        r = self.web('MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertEqual(self.plan(r.stdout)['extras'], '')
+        self.fake_install_hook('ls "$MU300_DEVICE_WORK" > "$FAKE/work-ls"')
+        r = self.web('MU300_PASSWALL2=yes\n')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.plan(r.stdout)['extras'], 'passwall2')
+        self.assertIn(archive.name, (self.fake.root / 'work-ls').read_text().split())
+        sums.write_text('0' * 64 + '  ' + archive.name + '\n')
+        r = self.web('MU300_PASSWALL2=yes\nMU300_DRY_RUN=1\n')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('checksum mismatch', r.stdout)
+
+    def test_passwall2_missing_input_and_wrong_os_stop_before_install(self):
+        r = self.web('MU300_PASSWALL2=yes\nMU300_DRY_RUN=1\n')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('not found', r.stdout)
+        self.zip(system='ubuntu-24.04')
+        r = self.web('MU300_PASSWALL2=yes\nMU300_DRY_RUN=1\n')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('Passwall2 needs an OpenWrt system', r.stdout)
+
     def test_extras_beside_the_scripts_reach_android_install(self):
         ex = self.mu300 / 'extras'
         ex.mkdir()
