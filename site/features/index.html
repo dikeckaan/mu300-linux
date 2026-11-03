@@ -187,8 +187,8 @@ own services (SSH included) are closed to it. Reach the device over USB.</li>
 <p>Plugged into a computer, the device shows up as a network adapter, and the computer gets an address from it. The
 device itself is <code>192.168.77.1</code> on the F50 and <code>192.168.78.1</code> on the U30 Air, so one of each can
 be plugged into the same computer. Two of the same kind need <code>/etc/mu300/lan.conf</code> to tell them apart.</p>
-<p>The USB network mode is NCM (with ECM as the fallback); the control panel can switch it to RNDIS, applied at the next
-start. The same cable also carries a serial console (<code>ttyGS0</code>), a login that works even when networking does
+<p>The USB network mode is NCM (with ECM as the fallback); the control panel can switch it to RNDIS, or to NCM and RNDIS
+together for one cable that works on old and new Windows, macOS and Linux, applied at the next start. The same cable also carries a serial console (<code>ttyGS0</code>), a login that works even when networking does
 not: <code>screen /dev/cu.usbmodem* 115200</code> on a Mac. SSH and telnet are on.</p>
 </section>
 
@@ -227,7 +227,7 @@ the device (or by the installer's question) and kept across updates. It keeps pr
 <li>a WireGuard <code>.conf</code> (needs a mainline kernel), an OpenVPN <code>.ovpn</code>,</li>
 <li>a VLESS, VMess, Trojan or Shadowsocks share link,</li>
 <li>a Clash/mihomo YAML (add <code>vpn-mihomo</code>), or a raw Xray or sing-box JSON,</li>
-<li>a hysteria2 or TUIC link, or a dae config, for <a href="https://github.com/daeuniverse/dae">dae</a> (add <code>vpn-dae</code>; kernel 6.18, 7.2 or 7.3 of v2026.10.20 or newer).</li>
+<li>a hysteria2 or TUIC link, or a dae config, for <a href="https://github.com/daeuniverse/dae">dae</a> (add <code>vpn-dae</code>; kernel 6.18 or 7.3 of v2026.10.20 or newer).</li>
 </ul>
 <pre><code>sudo mu300-extra install vpn                         <span class="c"># the module's latest release, checked against its SHA256SUMS; the core and Xray</span>
 sudo mu300-vpn engine install sing-box               <span class="c"># each engine is an extra: xray, sing-box, mihomo, dae</span>
@@ -295,7 +295,7 @@ sudo mu300-cpu profile saving            <span class="c"># or balanced (the defa
 <strong>Experimental: it can damage your device for good</strong>
 <p>This feature is experimental and can permanently damage your device. Use it at your own risk.</p>
 </div>
-<p>On the mainline kernels (6.18, 7.2 and 7.3; on 7.3 not yet tried on a device) the CPU voltage can be moved a little, per core cluster (CPUs 0-3, 4-6 and
+<p>On the mainline kernels (6.18 and 7.3; on 7.3 not yet tried on a device) the CPU voltage can be moved a little, per core cluster (CPUs 0-3, 4-6 and
 7): from 25 mV lower to 12.5 mV higher, in steps of 3.125 mV. Off (0) by default. A new value applies at the next
 reboot as one trial boot; it is kept once that boot has been up 10 minutes, and dropped (back to 0) by any boot that
 ends in a crash, a watchdog reset or a power cut. It is refused on SoC firmware whose encoding is not known (only the
@@ -314,7 +314,7 @@ until you press the Wi-Fi key.</p>
 <h2>U30 Air extras</h2>
 <div class="table-scroll"><table>
 <thead><tr><th scope="col"></th><th scope="col">What it does</th></tr></thead><tbody>
-<tr><th scope="row">Battery</th><td>level, voltage, current, temperature and charging state in <code>mu300-toolkit</code>, the control panel and <code>/sys/class/power_supply</code>, on every kernel. Charging: on 5.4 by the vendor charger stack, on 6.18, 7.2 and 7.3 by the <code>bq256xx</code> driver from v2026.10.12 on; a charge limit of 0-100 % and the Type-C charging current from v2026.10.20</td></tr>
+<tr><th scope="row">Battery</th><td>level, voltage, current, temperature and charging state in <code>mu300-toolkit</code>, the control panel and <code>/sys/class/power_supply</code>, on every kernel. Charging: on 5.4 by the vendor charger stack, on 6.18 and 7.3 by the <code>bq256xx</code> driver from v2026.10.12 on; a charge limit of 0-100 % and the Type-C charging current from v2026.10.20</td></tr>
 <tr><th scope="row">Buttons</th><td>power: a short press wakes the LEDs (they go dark after 60 s), held 3 s shuts down. Wi-Fi key: switches the hotspot between 2.4 and 5 GHz, held 3 s turns it off or on</td></tr>
 <tr><th scope="row">NFC</th><td>a phone held to the device joins the hotspot, as under ZTE's firmware</td></tr>
 <tr><th scope="row">USB host</th><td>with an OTG adapter on the mainline kernels: flash drives (FAT, exFAT), keyboards and mice, USB modems and Ethernet adapters</td></tr>
@@ -368,7 +368,7 @@ would not leave room for an update in the smallest region OpenWrt is installed i
 <p>Images and containers live beside the systems, in <code>/mnt/mu300-disk/docker/&lt;system&gt;</code>: updates and
 rollbacks neither copy nor lose them. Docker uses its nftables backend; containers reach the internet, published ports
 are reachable from the hotspot and USB clients, not from the mobile network, and containers cannot open the
-device's own services (SSH, the web panels). Works on all four kernels.</p>
+device's own services (SSH, the web panels). Works on all three kernels.</p>
 <pre><code>docker run --rm hello-world
 docker compose up -d</code></pre>
 </section>
@@ -378,7 +378,7 @@ docker compose up -d</code></pre>
 <ul>
 <li><strong>Bluetooth:</strong> BlueZ; scanning works.</li>
 <li><strong>GPU:</strong> the Mali-G57 runs OpenCL 3.0, with no screen.</li>
-<li><strong>KVM:</strong> <code>/dev/kvm</code> on all four kernels, for virtual machines.</li>
+<li><strong>KVM:</strong> <code>/dev/kvm</code> on all three kernels, for virtual machines.</li>
 <li><strong>Memory:</strong> about 1.4 GB usable, plus compressed swap in RAM (zram, on by default: half the RAM, lz4;
 <code>sudo mu300-zram off</code> turns it off, <code>/etc/mu300/zram.conf</code> sets size and compressor).</li>
 <li><strong>Web interface languages (OpenWrt):</strong> English, Turkish and Simplified Chinese out of the box; 40

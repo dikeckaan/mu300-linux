@@ -4345,3 +4345,21 @@ msgstr "Домашняя сеть"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Каналы модема заняты другими чтениями; живой сигнал появится вскоре"
+
+msgid "Name on a Linux computer"
+msgstr "Имя на компьютере с Linux"
+
+msgid "usb0 (the default)"
+msgstr "usb0 (по умолчанию)"
+
+msgid "eth0, as with Android"
+msgstr "eth0, как в Android"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS: один кабель для старых и новых Windows, macOS и Linux. Новые Windows и Linux показывают два сетевых адаптера. Ядро без RNDIS создаёт только NCM."
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0: компьютер получает адрес из диапазона производителя, как его даёт Android, и Linux называет соединение eth0 вместо usb0. Windows и macOS это не затрагивает."
+
+msgid "Invalid USB network name"
+msgstr "Недопустимое имя USB-сети"

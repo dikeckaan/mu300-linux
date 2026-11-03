@@ -4338,3 +4338,21 @@ msgstr "Ev şebekesi"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Modem kanalları başka okumalarla meşgul; canlı sinyal birazdan gelir"
+
+msgid "Name on a Linux computer"
+msgstr "Linux bilgisayardaki adı"
+
+msgid "usb0 (the default)"
+msgstr "usb0 (varsayılan)"
+
+msgid "eth0, as with Android"
+msgstr "eth0, Android’deki gibi"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS: eski ve yeni Windows, macOS ve Linux’ta çalışan tek kablo. Yeni Windows ve Linux iki ağ bağdaştırıcısı gösterir. RNDIS’i olmayan bir çekirdek yalnızca NCM kurar."
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0: bilgisayar, Android’in verdiği gibi üreticinin aralığından bir adres alır ve Linux bağlantıyı usb0 yerine eth0 olarak adlandırır. Windows ve macOS etkilenmez."
+
+msgid "Invalid USB network name"
+msgstr "Geçersiz USB ağ adı"

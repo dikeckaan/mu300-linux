@@ -80,6 +80,15 @@ class Library(ShellTest):
             r = self.lib(shell, f'package_load "{d}"; echo "[$PKG_KERNEL][$PKG_SHA256_ROOTFS]"')
             self.assertIn(f'[6.18][{hashlib.sha256(ROOTFS).hexdigest()}]', r.stdout)
 
+    def test_a_zip_of_a_release_that_had_the_retired_7_2_still_loads(self):
+        # 7.2 is retired, but the zips of the releases that carried it install what they hold (mu300-update moves the
+        # device to 7.3 with its next update)
+        d = make_package(self.tmp / 'p72', text=manifest(KERNEL='7.2', KERNEL_ASSET='mu300-kernel-7.2.tar.gz'))
+        for shell in self.each_shell():
+            r = self.lib(shell, f'package_load "{d}"; echo "[$PKG_KERNEL][$PKG_KERNEL_ASSET]"')
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertIn('[7.2][mu300-kernel-7.2.tar.gz]', r.stdout)
+
     def test_every_value_must_be_one_a_release_has(self):
         bad = [dict(TAG='2026.10.27'), dict(TAG='v1/../x'), dict(TAG='v1..2'), dict(TAG='v1;rm'),
                dict(SYSTEM='ubuntu'), dict(OS='ubuntu'), dict(ROOTFS_ASSET='../../etc/passwd'),
@@ -172,7 +181,7 @@ class FromAnUnpackedZip(Device):
                    MU300_ANS_VPN='no', MU300_ANS_ADB='no', MU300_ANS_PASSWORD='hunter2secret', MU300_ANS_CONFIRM='INSTALL')
 
     def test_the_package_answers_the_system_the_kernel_and_the_release(self):
-        pkg = self.unpack('ubuntu-26.04-k7.2')
+        pkg = self.unpack('ubuntu-26.04-k7.3')
         for shell in self.each_shell():
             self.device(pull=False)
             # no MU300_RELEASE: a package is its own release, and nothing asks GitHub (no curl here works)
@@ -182,8 +191,8 @@ class FromAnUnpackedZip(Device):
             facts = {e['key']: e['value'] for e in ev if e['event'] == 'info'}
             self.assertEqual(facts['package'], str(pkg))
             self.assertEqual((facts['package.system'], facts['package.kernel'], facts['package.release'], facts['release']),
-                             ('ubuntu-26.04', '7.2', 'v2026.10.06', 'v2026.10.06'))
-            self.assertIn('This package installs ubuntu-26.04 with kernel 7.2 (release v2026.10.06); nothing is downloaded.', r.stdout)
+                             ('ubuntu-26.04', '7.3', 'v2026.10.06', 'v2026.10.06'))
+            self.assertIn('This package installs ubuntu-26.04 with kernel 7.3 (release v2026.10.06); nothing is downloaded.', r.stdout)
             self.assertIn('It is not part of this package.', r.stdout)            # the web panel
             self.assertNotIn('Updating the installer', r.stdout)                  # no self-update
             self.assertIn('could not read /dev/block/by-name/boot_a from the device', ev[-1]['message'])
@@ -208,7 +217,7 @@ class FromAnUnpackedZip(Device):
             self.device(pull=False, model='V50', device='MU3351', platform='ums9620')
             r, ev, asked = self.install(shell, pkg, self.ANSWERS)
             self.assertEqual(ev[-1]['event'], 'error')
-            self.assertIn('take the zip for kernel 6.18, 7.2 or 7.3 of this release', ev[-1]['message'])
+            self.assertIn('take the zip for kernel 6.18 or 7.3 of this release', ev[-1]['message'])
             self.assertEqual(self.calls('pull'), [])
             self.assert_nothing_written()
 
@@ -297,7 +306,7 @@ class Window(unittest.TestCase):
         c2.apply_package(package.load(str(self.tmp), {'MU300_PACKAGE': str(self.tmp / 'p54')}))
         c2.password = c2.password2 = 'secret123'
         c2.device = 'v50'
-        self.assertIn('take the zip for kernel 6.18, 7.2 or 7.3', ' '.join(m for _f, m in model.problems(c2, facts)))
+        self.assertIn('take the zip for kernel 6.18 or 7.3', ' '.join(m for _f, m in model.problems(c2, facts)))
 
 
 if __name__ == '__main__':

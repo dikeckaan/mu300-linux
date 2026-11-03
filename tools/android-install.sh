@@ -24,7 +24,8 @@
 #   KEEP_PW_OSES="..."  with UPDATE=1: the systems whose accounts and passwords stay exactly as they are (PWHASH and
 #                      PW_SET do not touch them); install.sh: those whose current password the user confirmed
 #   IMPORT_HOTSPOT=0|1 copy Android's hotspot SSID/passphrase into each system
-#   KERNEL=5.4|6.18|7.2|7.3  the kernel in the new boot image; mu300-update keeps installing that one (boot/kernel)
+#   KERNEL=5.4|6.18|7.3  the kernel in the new boot image; mu300-update keeps installing that one (boot/kernel). 7.2
+#                      (retired) still comes from the zips of the releases that had it: mu300-update moves it to 7.3
 #   ADB=0|1 ADB_KEY    adb over USB to each system: 1 lets in only the adb public key ADB_KEY ("BASE64 name",
 #                      etc/mu300/adb_keys; "keys" in etc/mu300/adb_auth); 0 writes nothing, and a system that was
 #                      never told otherwise has adb on for every computer (mu300-adbd)
@@ -1037,6 +1038,8 @@ sd_unmark $M
 echo "$BOOT_OS" > $M/.mu300/boot-os
 # --- install-os end
 case ${BOOT_ATTEMPTS:-} in [1-6]) echo "$BOOT_ATTEMPTS" > $M/.mu300/boot-attempts ;; esac
+# (7.2 too: written down as it is, it is what the image holds, and mu300-update takes it for 7.3. Left out, the choice
+# would read as 5.4, which Ubuntu 26.04 cannot run)
 case ${KERNEL:-5.4} in
     5.4|6.18|7.2|7.3) mkdir -p $M/boot; echo "${KERNEL:-5.4}" > $M/boot/kernel; echo "${KERNEL:-5.4}" > $M/boot/installed.kernel ;;
 esac

@@ -1661,11 +1661,20 @@ msgstr "从下次启动起"
 msgid "The next boot only, then NCM again"
 msgstr "仅下次启动，之后恢复 NCM"
 
+msgid "usb0 (the default)"
+msgstr "usb0（默认）"
+
+msgid "eth0, as with Android"
+msgstr "eth0，与 Android 相同"
+
 msgid "USB network protocol"
 msgstr "USB 网络协议"
 
 msgid "How long"
 msgstr "持续时间"
+
+msgid "Name on a Linux computer"
+msgstr "在 Linux 电脑上的名称"
 
 msgid "Save (used at the next boot)"
 msgstr "保存（下次启动时生效）"
@@ -1678,6 +1687,12 @@ msgstr "已保存：下次启动时与电脑的 USB 连接会短暂中断，并�
 
 msgid "NCM: Windows 10 2004 and newer, macOS, Linux. ECM: macOS, Linux (Windows has no driver). RNDIS: older Windows (macOS has no driver)."
 msgstr "NCM：Windows 10 2004 及更新版本、macOS、Linux。ECM：macOS、Linux（Windows 无驱动）。RNDIS：旧版 Windows（macOS 无驱动）。"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS：一根数据线即可用于新旧 Windows、macOS 和 Linux。较新的 Windows 和 Linux 会显示两个网络适配器。没有 RNDIS 的内核只建立 NCM。"
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0：电脑获得厂商地址段中的地址（与 Android 相同），Linux 将连接命名为 eth0 而不是 usb0。Windows 和 macOS 不受影响。"
 
 msgid "Boot"
 msgstr "启动"
@@ -1856,8 +1871,11 @@ msgstr "正在运行的内核"
 msgid "Kernel chosen"
 msgstr "已选择的内核"
 
-msgid "5.4 is the vendor kernel (Android's drivers); 6.18 is the mainline long-term kernel; 7.2 the stable mainline one; 7.3 the newest mainline one. A change downloads the kernel and takes effect at the next reboot."
-msgstr "5.4 是厂商内核（Android 的驱动）；6.18 是主线长期支持内核；7.2 是主线稳定版内核；7.3 是最新的主线内核。更换会下载内核，并在下次重启时生效。"
+msgid "5.4 is the vendor kernel (Android's drivers); 6.18 is the mainline long-term kernel; 7.3 the stable mainline one. A change downloads the kernel and takes effect at the next reboot."
+msgstr "5.4 是厂商内核（Android 的驱动）；6.18 是主线长期支持内核；7.3 是主线稳定版内核。更换会下载内核，并在下次重启时生效。"
+
+msgid "Kernel 7.2 is retired: the next update installs 7.3, the kernel that takes its place."
+msgstr "7.2 内核已停止维护：下一次更新会安装接替它的 7.3。"
 
 msgid "Change the kernel"
 msgstr "更换内核"

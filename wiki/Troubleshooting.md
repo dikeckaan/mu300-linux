@@ -31,7 +31,7 @@ devices and gives no guide for it.
 
 About one boot in 20 on one board hangs in its first seconds, and the device then falls back to Android (this can take
 around 20 minutes). Start Linux again with `su -c mu300-linux` or the Magisk module's Action button. If it keeps
-happening, try 7.2, 7.3 or 5.4: `sudo mu300-update kernel 7.2`.
+happening, try 7.3 or 5.4: `sudo mu300-update kernel 7.3`.
 [FINDINGS 31m](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md#31m-hard-hangs-in-the-first-seconds-under-618-open)
 
 ## Back in Android after an update

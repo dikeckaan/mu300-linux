@@ -164,7 +164,7 @@ sudo wifi-client disconnect              <span class="c"># 热点回来，重启
 <section id="usb">
 <h2>USB 网络和串口控制台</h2>
 <p>插到电脑上，设备会显示成一块网卡，电脑从它那里拿到地址。设备自己的地址在 F50 上是 <code>192.168.77.1</code>，在 U30 Air 上是 <code>192.168.78.1</code>，所以两种各一台可以插在同一台电脑上。两台同型号的需要用 <code>/etc/mu300/lan.conf</code> 区分。</p>
-<p>USB 网络模式是 NCM（ECM 作为后备）；控制面板可以把它切换成 RNDIS，下次开机生效。同一根线上还有一个串口控制台（<code>ttyGS0</code>），网络不通时也能登录：Mac 上用 <code>screen /dev/cu.usbmodem* 115200</code>。SSH 和 telnet 都开着。</p>
+<p>USB 网络模式是 NCM（ECM 作为后备）；控制面板可以把它切换成 RNDIS，或切换成 NCM + RNDIS（一根线即可用于新旧 Windows、macOS 和 Linux），下次开机生效。同一根线上还有一个串口控制台（<code>ttyGS0</code>），网络不通时也能登录：Mac 上用 <code>screen /dev/cu.usbmodem* 115200</code>。SSH 和 telnet 都开着。</p>
 </section>
 
 <section id="sms">
@@ -187,7 +187,7 @@ sudo mu300-ussd '*101#'                  <span class="c"># USSD 代码，比如�
 <li>WireGuard <code>.conf</code>（需要主线内核）、OpenVPN <code>.ovpn</code>，</li>
 <li>VLESS、VMess、Trojan 或 Shadowsocks 分享链接，</li>
 <li>Clash/mihomo YAML（需加装 <code>vpn-mihomo</code>），或者原始的 Xray、sing-box JSON，</li>
-<li>给 <a href="https://github.com/daeuniverse/dae">dae</a> 用的 hysteria2 或 TUIC 链接、dae 配置（需加装 <code>vpn-dae</code>；要 v2026.10.20 或更新的 6.18/7.2/7.3 内核）。</li>
+<li>给 <a href="https://github.com/daeuniverse/dae">dae</a> 用的 hysteria2 或 TUIC 链接、dae 配置（需加装 <code>vpn-dae</code>；要 v2026.10.20 或更新的 6.18/7.3 内核）。</li>
 </ul>
 <pre><code>sudo mu300-extra install vpn                         <span class="c"># 模块的最新版本，按其 SHA256SUMS 校验；核心和 Xray</span>
 sudo mu300-vpn engine install sing-box               <span class="c"># 每个引擎都是一个扩展：xray、sing-box、mihomo、dae</span>
@@ -239,7 +239,7 @@ sudo mu300-cpu profile saving            <span class="c"># 或 balanced（默认
 <strong>实验性：可能永久损坏设备</strong>
 <p>本功能为实验性功能，可能对您的设备造成永久性损坏。风险由您自行承担。</p>
 </div>
-<p>在主线内核（6.18、7.2 和 7.3；7.3 上尚未在设备上试过）上，可以按核心簇（CPU 0-3、4-6 和 7）小幅调整 CPU 电压：最多降低 25 mV、最多升高 12.5 mV，步进 3.125 mV。默认关闭（0）。新值在下次重启时作为一次试运行开机生效；该次开机运行满 10 分钟后才保留，任何以崩溃、看门狗复位或断电结束的开机都会将其撤销（恢复为 0）。编码未知的 SoC 固件上会被拒绝（目前只有 F50 的已知）。所有设置入口都要求先输入 <code>EXPERIMENTAL</code>：控制面板的“系统 &gt; CPU”、Ubuntu 面板的电源页、<code>mu300-toolkit</code> 和命令行。固件编码由 <a href="https://github.com/kanoqwq">kano</a> 分析得出。</p>
+<p>在主线内核（6.18 和 7.3；7.3 上尚未在设备上试过）上，可以按核心簇（CPU 0-3、4-6 和 7）小幅调整 CPU 电压：最多降低 25 mV、最多升高 12.5 mV，步进 3.125 mV。默认关闭（0）。新值在下次重启时作为一次试运行开机生效；该次开机运行满 10 分钟后才保留，任何以崩溃、看门狗复位或断电结束的开机都会将其撤销（恢复为 0）。编码未知的 SoC 固件上会被拒绝（目前只有 F50 的已知）。所有设置入口都要求先输入 <code>EXPERIMENTAL</code>：控制面板的“系统 &gt; CPU”、Ubuntu 面板的电源页、<code>mu300-toolkit</code> 和命令行。固件编码由 <a href="https://github.com/kanoqwq">kano</a> 分析得出。</p>
 <pre><code>sudo mu300-cpu voltage status
 sudo mu300-cpu voltage set -6250,-3125,0 --confirm EXPERIMENTAL   <span class="c"># 单位 µV：CPU 0-3、4-6、7</span>
 sudo mu300-cpu voltage stress 10                                  <span class="c"># 试运行开机时做压力测试</span>
@@ -251,7 +251,7 @@ sudo mu300-cpu voltage off                                        <span class="c
 <h2>U30 Air 的额外功能</h2>
 <div class="table-scroll"><table>
 <thead><tr><th scope="col"></th><th scope="col">作用</th></tr></thead><tbody>
-<tr><th scope="row">电池</th><td>电量、电压、电流、温度和充电状态，在 <code>mu300-toolkit</code>、控制面板和 <code>/sys/class/power_supply</code> 里都能看到，四个内核都支持。充电：5.4 上由厂商充电驱动负责，6.18、7.2 和 7.3 上从 v2026.10.12 起由 <code>bq256xx</code> 驱动负责；从 v2026.10.20 起有 0-100 % 的充电上限和 Type-C 充电电流</td></tr>
+<tr><th scope="row">电池</th><td>电量、电压、电流、温度和充电状态，在 <code>mu300-toolkit</code>、控制面板和 <code>/sys/class/power_supply</code> 里都能看到，三个内核都支持。充电：5.4 上由厂商充电驱动负责，6.18 和 7.3 上从 v2026.10.12 起由 <code>bq256xx</code> 驱动负责；从 v2026.10.20 起有 0-100 % 的充电上限和 Type-C 充电电流</td></tr>
 <tr><th scope="row">按键</th><td>电源键：短按唤醒指示灯（60 秒后熄灭），长按 3 秒关机。Wi-Fi 键：在 2.4 和 5 GHz 之间切换热点，长按 3 秒开关热点</td></tr>
 <tr><th scope="row">NFC</th><td>手机贴一下设备就能连上热点，和 ZTE 原厂固件一样</td></tr>
 <tr><th scope="row">USB 主机</th><td>主线内核上接 OTG 转接头：U 盘（FAT、exFAT）、键盘鼠标、USB 上网卡和以太网转接器</td></tr>
@@ -288,7 +288,7 @@ sudo mu300-usb adb on                   <span class="c"># 关闭：sudo mu300-us
 （控制面板系统上再加 <code>luci-app-dockerman</code>），然后 <code>/etc/init.d/dockerd start</code>。这 190 MB
 会让 OpenWrt 所装的最小区域没有空间再更新。</p>
 <p>镜像和容器放在系统旁边的 <code>/mnt/mu300-disk/docker/&lt;系统&gt;</code> 中：更新和回滚既不复制也不丢失它们。Docker
-使用 nftables 后端；容器可以上网，发布的端口可从热点和 USB 客户端访问，不能从移动网络访问；容器无法连接设备本身的服务（SSH、网页面板）。四个内核都可用。</p>
+使用 nftables 后端；容器可以上网，发布的端口可从热点和 USB 客户端访问，不能从移动网络访问；容器无法连接设备本身的服务（SSH、网页面板）。三个内核都可用。</p>
 <pre><code>docker run --rm hello-world
 docker compose up -d</code></pre>
 </section>
@@ -298,7 +298,7 @@ docker compose up -d</code></pre>
 <ul>
 <li><strong>蓝牙：</strong>BlueZ；扫描可用。</li>
 <li><strong>GPU：</strong>Mali-G57 支持 OpenCL 3.0，没有屏幕输出。</li>
-<li><strong>KVM：</strong>四个内核都有 <code>/dev/kvm</code>，可以跑虚拟机。</li>
+<li><strong>KVM：</strong>三个内核都有 <code>/dev/kvm</code>，可以跑虚拟机。</li>
 <li><strong>内存：</strong>约 1.4 GB 可用，另外还有内存压缩交换（zram，默认开启：内存的一半，lz4；<code>sudo mu300-zram off</code> 关闭，大小和压缩算法在 <code>/etc/mu300/zram.conf</code> 中设置）。</li>
 <li><strong>网页界面语言（OpenWrt）：</strong>自带英语、土耳其语和简体中文；装上 <code>lang</code> 扩展，LuCI 再多 40 种，控制面板再多 29 种。在“系统 &gt; 系统 &gt; 语言和界面”里切换，控制面板上是“系统 &gt; 语言”（Languages）。面板的其他译文是机器翻译，<a href="https://github.com/dikeckaan/mu300-linux#languages" hreflang="en">欢迎指正</a>。</li>
 </ul>

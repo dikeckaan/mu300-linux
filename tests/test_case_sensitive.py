@@ -181,26 +181,26 @@ class ReleaseAudit(unittest.TestCase):
 
     def test_pairs(self):
         full = PAIRS + ('vhost_net.ko', 'sprd_wlan_combo.ko')
-        for v in ('6.18', '7.2', '7.3'):
+        for v in ('6.18', '7.3'):
             self.bundle(f'mu300-kernel-{v}', full)
         self.assertIn('fail=0', self.run_audit())
-        self.assertEqual(sorted(os.listdir(self.d)), [f'mu300-kernel-{v}.tar.gz' for v in ('6.18', '7.2', '7.3')])
+        self.assertEqual(sorted(os.listdir(self.d)), [f'mu300-kernel-{v}.tar.gz' for v in ('6.18', '7.3')])
         # a bundle like those before v2026.10.23.1: modules.in-tree names both, one file of each pair is there
-        self.bundle('mu300-kernel-7.2', ('xt_DSCP.ko', 'xt_hl.ko', 'xt_TCPMSS.ko', 'xt_RATEEST.ko', 'vhost_net.ko'), full)
+        self.bundle('mu300-kernel-7.3', ('xt_DSCP.ko', 'xt_hl.ko', 'xt_TCPMSS.ko', 'xt_RATEEST.ko', 'vhost_net.ko'), full)
         out = self.run_audit()
         self.assertIn('fail=1', out)
         for m in ('xt_HL.ko', 'xt_dscp.ko', 'xt_tcpmss.ko', 'xt_rateest.ko', 'sprd_wlan_combo.ko'):
-            self.assertIn(f'mu300-kernel-7.2 lacks modules/{m}\n', out)
+            self.assertIn(f'mu300-kernel-7.3 lacks modules/{m}\n', out)
         self.assertNotIn('lacks modules/xt_hl.ko', out)
         self.assertNotIn('mu300-kernel-6.18 lacks', out)
         # a modules.in-tree that lost the pair as well: the TTL and MSS pairs are named on their own
-        self.bundle('mu300-kernel-7.2', ('xt_hl.ko', 'xt_TCPMSS.ko'))
+        self.bundle('mu300-kernel-7.3', ('xt_hl.ko', 'xt_TCPMSS.ko'))
         out = self.run_audit()
-        self.assertIn('mu300-kernel-7.2 lacks modules/xt_HL.ko\n', out)
-        self.assertIn('mu300-kernel-7.2 lacks modules/xt_tcpmss.ko\n', out)
+        self.assertIn('mu300-kernel-7.3 lacks modules/xt_HL.ko\n', out)
+        self.assertIn('mu300-kernel-7.3 lacks modules/xt_tcpmss.ko\n', out)
         # no modules.in-tree at all
-        self.bundle('mu300-kernel-7.2', full, in_tree=False)
-        self.assertIn('mu300-kernel-7.2 has no modules.in-tree', self.run_audit())
+        self.bundle('mu300-kernel-7.3', full, in_tree=False)
+        self.assertIn('mu300-kernel-7.3 has no modules.in-tree', self.run_audit())
 
 
 if __name__ == '__main__':

@@ -364,7 +364,7 @@ do_act() {  # do_act OP TAG SYSTEMS KERNEL SHA256 SIZE FLAGS CONFIRM URL
             start_job clean -- clean ;;
         kernel)
             [ "$confirm" = kernel ] || error 'This needs confirmation'
-            case $kernel in 5.4|6.18|7.2|7.3) ;; *) error 'Invalid update request' ;; esac
+            case $kernel in 5.4|6.18|7.3) ;; *) error 'Invalid update request' ;; esac
             job_running && error 'An update task is already running'
             lock_free
             start_job kernel -- kernel "$kernel" ;;

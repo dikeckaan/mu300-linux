@@ -130,10 +130,11 @@ tar -C "$K" -czf "$D/mu300-kernel.tar.gz" .
 rm -rf "$K"
 
 echo "==> mainline kernel bundles"
-# "mu300-update kernel 6.18|7.2|7.3": built by upstream/build.sh + build-modules.sh at this commit - 6.18 into
-# upstream/out, 7.2 into upstream/out-7.2 (OUTDIR=out-7.2 KV=7.2.x), 7.3 into upstream/out-7.3 (OUTDIR=out-7.3 KV=7.3
-# or 7.3.x; its first release reports 7.3.0); each build must be the version its name says
-for kv in 6.18:out 7.2:out-7.2 7.3:out-7.3; do
+# "mu300-update kernel 6.18|7.3": built by upstream/build.sh + build-modules.sh at this commit - 6.18 into
+# upstream/out, 7.3 into upstream/out-7.3 (OUTDIR=out-7.3 KV=7.3 or 7.3.x; its first release reports 7.3.0); each build
+# must be the version its name says. 7.2 is retired (kernel.org ended it with 7.2.15): no bundle of it is made, and
+# mu300-update moves a device that chose it to 7.3.
+for kv in 6.18:out 7.3:out-7.3; do
     v=${kv%%:*}; o=$TOP/upstream/${kv#*:}
     [ -f "$o/Image" ] || { echo "$o/Image missing (upstream/build.sh, build-modules.sh)" >&2; exit 1; }
     rel=$(strings "$o/Image" | sed -n 's/^Linux version \([^ ]*\) .*/\1/p' | head -1)
@@ -177,7 +178,7 @@ sh "$TOP/tools/make-extra.sh" panel-offline "$D/mu300-extra-panel-offline.tar.gz
 echo "==> audit"
 fail=0
 list_of_image() { tar -tzf "$D/$1.tar.gz" | sed 's|^\./||'; }
-for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.2 mu300-kernel-7.3 mu300-ubuntu-rootfs mu300-ubuntu-26.04-rootfs mu300-openwrt-rootfs \
+for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.3 mu300-ubuntu-rootfs mu300-ubuntu-26.04-rootfs mu300-openwrt-rootfs \
          mu300-openwrt-luci-rootfs; do
     bad=$(tar -tzf "$D/$a.tar.gz" | sed 's|^\./||' | grep -E \
         -e '(^|/)lib/firmware/(wcnmodem|gnssmodem|wifi_board_config|bt_configure)' \
@@ -264,14 +265,14 @@ for x in lang; do
 done
 # mu300-update refuses a kernel bundle without the SD host for a system on the card, and one whose init runs only from
 # slot b for a Linux on slot a: every bundle must say it has both
-for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.2 mu300-kernel-7.3; do
+for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.3; do
     tar -xzOf "$D/$a.tar.gz" ./features 2>/dev/null | grep -qx sdcard || { echo "$a does not list sdcard in ./features"; fail=1; }
     tar -xzOf "$D/$a.tar.gz" ./features 2>/dev/null | grep -qx linux-slot || { echo "$a does not list linux-slot in ./features"; fail=1; }
     tar -xzOf "$D/$a.tar.gz" ./features 2>/dev/null | grep -qx gpt-root || { echo "$a does not list gpt-root in ./features"; fail=1; }
 done
 # every generic ramdisk segment brings init's e2fsck: a root filesystem with recorded errors is checked before it is
 # mounted (FINDINGS 182)
-for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.2 mu300-kernel-7.3; do
+for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.3; do
     tar -xzOf "$D/$a.tar.gz" ./ramdisk-generic.lz4 > "$D/ramdisk.check" 2>/dev/null &&
     python3 -c 'import importlib.util as u, sys
 s = u.spec_from_file_location("b", sys.argv[1]); b = u.module_from_spec(s); s.loader.exec_module(b)
@@ -281,7 +282,7 @@ sys.exit("sbin/e2fsck" not in b.cpio_names(b.unlz4_legacy(open(sys.argv[2], "rb"
 done
 # a mainline bundle carries the kernel's own modules next to the vendor ones (upstream/build-modules.sh): one of each
 # kind - qdisc, filesystem, device mapper, USB modem, vhost - and the vendor Wi-Fi
-for a in mu300-kernel-6.18 mu300-kernel-7.2 mu300-kernel-7.3; do
+for a in mu300-kernel-6.18 mu300-kernel-7.3; do
     l=$(tar -tzf "$D/$a.tar.gz")
     for m in sch_htb.ko ntfs3.ko dm-crypt.ko cdc_mbim.ko vhost_net.ko sprd_wlan_combo.ko; do
         printf '%s\n' "$l" | grep -qx "./modules/$m" || { echo "$a lacks modules/$m"; fail=1; }
@@ -291,7 +292,7 @@ done
 # ignores case xt_HL.ko and xt_hl.ko, xt_TCPMSS.ko and xt_tcpmss.ko, xt_DSCP.ko and xt_dscp.ko, xt_RATEEST.ko and
 # xt_rateest.ko became one file each - in every mainline bundle before v2026.10.23.1 (FINDINGS 212). The TTL and
 # MSS pairs are named as well, so a modules.in-tree that lost them too does not pass.
-for a in mu300-kernel-6.18 mu300-kernel-7.2 mu300-kernel-7.3; do
+for a in mu300-kernel-6.18 mu300-kernel-7.3; do
     tar -tzf "$D/$a.tar.gz" | sed -n 's|^\./modules/||p' > "$D/modules.check"
     want=$(tar -xzOf "$D/$a.tar.gz" ./modules.in-tree 2>/dev/null) || { echo "$a has no modules.in-tree"; fail=1; }
     for m in $(printf '%s\n' $want xt_HL.ko xt_hl.ko xt_TCPMSS.ko xt_tcpmss.ko | sort -u | grep -vxF -f "$D/modules.check"); do
@@ -305,7 +306,7 @@ AUDIO_KO="audio_mem agdsp_access audio_sipc sprd_audcp_boot sprd_audcp_dvfs audi
 mcdt_hw_r2p0 saudio sprd-dmaengine-pcm sprd-platform-pcm-routing sprd-compr-2stage-dma snd-soc-sprd-dai snd-soc-sprd-vaudio
 snd-soc-sprd-vbc-v4 snd-soc-sprd-vbc-fe snd-soc-sprd-codec-ump9620-power snd-soc-sprd-codec-ump9620-power-dev
 snd-soc-sprd-codec-ump9620 snd-soc-sprd-pa-ucp1301 snd-soc-sprd-dummy-codec snd-soc-sprd-card"
-for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.2 mu300-kernel-7.3; do
+for a in mu300-kernel mu300-kernel-6.18 mu300-kernel-7.3; do
     l=$(tar -tzf "$D/$a.tar.gz")
     extra=; [ "$a" = mu300-kernel ] || extra=sprd-dma
     for m in $AUDIO_KO $extra; do
@@ -361,8 +362,7 @@ first with \`./install.sh --check\`.
 |---|---|
 | mu300-kernel.tar.gz | Linux 5.4.254 \`Image\` and modules (with the U30 Air's own in \`modules-u30air/\`), with the patches of \`kernel/patches\` (among them: no panic when a network namespace goes away, #103, and the Wi-Fi driver's routine lines no longer at error level, #140), static busybox, logdw and e2fsck for the boot image, the installers' static password checker \`mu300-pwcheck\`, and the generic boot ramdisk segment \`mu300-update\` uses |
 | mu300-kernel-6.18.tar.gz | mainline Linux 6.18 (longterm) for \`mu300-update kernel 6.18\`: \`Image\`, modules, generic boot ramdisk segment; with BTF and the BPF JIT (so the VPN module's dae engine runs), FunctionFS (for adb) and card detect for the F50's SD slot (an empty slot is no longer polled, #181) |
-| mu300-kernel-7.2.tar.gz | mainline Linux 7.2 (stable) for \`mu300-update kernel 7.2\`: the same parts |
-| mu300-kernel-7.3.tar.gz | mainline Linux 7.3 (the newest mainline release) for \`mu300-update kernel 7.3\`: the same parts |
+| mu300-kernel-7.3.tar.gz | mainline Linux 7.3 (stable) for \`mu300-update kernel 7.3\`: the same parts. Linux 7.2 is retired (its last release was 7.2.15) and has no bundle any more: a device that ran it gets 7.3 with its next \`mu300-update apply\` |
 | mu300-ubuntu-rootfs.tar.gz | Ubuntu 24.04 LTS root filesystem |
 | mu300-ubuntu-26.04-rootfs.tar.gz | Ubuntu 26.04 LTS root filesystem |
 | mu300-openwrt-rootfs.tar.gz | OpenWrt 25.12.6 root filesystem |

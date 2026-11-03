@@ -4345,3 +4345,21 @@ msgstr "Rede local"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Os canais do modem estão ocupados com outras leituras; o sinal ao vivo chega em instantes"
+
+msgid "Name on a Linux computer"
+msgstr "Nome em um computador Linux"
+
+msgid "usb0 (the default)"
+msgstr "usb0 (padrão)"
+
+msgid "eth0, as with Android"
+msgstr "eth0, como no Android"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS: um único cabo que funciona com Windows antigo e novo, macOS e Linux. Windows mais recente e Linux mostram dois adaptadores de rede. Um kernel sem RNDIS cria só NCM."
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0: o computador recebe um endereço da faixa do fabricante, como o Android faz, e o Linux chama a conexão de eth0 em vez de usb0. Windows e macOS não são afetados."
+
+msgid "Invalid USB network name"
+msgstr "Nome de rede USB inválido"

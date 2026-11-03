@@ -22,7 +22,7 @@ same amount.
 | Domains | 0 = CPUs 0-3, 1 = CPUs 4-6, 2 = CPU 7 |
 | Range | -25 mV to +12.5 mV, in steps of 3.125 mV (-25000 to 12500 µV) |
 | Default | 0, 0, 0 (off: the stock voltages) |
-| Kernels | mainline 6.18, 7.2 and 7.3 only (not 5.4; on 7.3 not yet tried on a device) |
+| Kernels | mainline 6.18 and 7.3 only (not 5.4; on 7.3 not yet tried on a device) |
 | Firmware | only the SoC firmware (SML) build whose encoding is known: the F50's. Any other build, the U30 Air's included for now, is refused |
 | Raising | only when the device tree gives the CPU regulator's maximum; a frequency that would then need more than that maximum is not used |
 

@@ -12,7 +12,10 @@ export const VPN_ASSET = "mu300-linux-vpn.tar.gz";
 export const LAST_RELEASE_WITHOUT_WEB = "v2026.10.23";
 
 export const SYSTEMS = ["ubuntu-24.04", "ubuntu-26.04", "openwrt", "openwrt-luci"];
-export const KERNELS = ["5.4", "6.18", "7.2", "7.3"];
+export const KERNELS = ["5.4", "6.18", "7.3"];
+// a kernel the releases no longer carry, and the one that takes its place: 7.2 ended with 7.2.15, and a device that
+// chose it is offered 7.3 (mu300-update moves it there by itself with its next update)
+export const RETIRED_KERNELS = { "7.2": "7.3" };
 
 export class GithubError extends Error {
   constructor(code, message, extra) { super(message || code); this.name = "GithubError"; this.code = code; Object.assign(this, extra || {}); }
@@ -95,7 +98,7 @@ export function findZip(release, system, kernel) {
   return a && a.sha256 ? a : null;
 }
 
-// { "ubuntu-24.04": ["5.4","6.18","7.2","7.3"], ... }: what the release has zips for
+// { "ubuntu-24.04": ["5.4","6.18","7.3"], ... }: what the release has zips for
 export function combos(release) {
   const out = {};
   for (const s of SYSTEMS) {

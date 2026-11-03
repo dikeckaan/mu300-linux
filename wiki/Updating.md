@@ -18,7 +18,7 @@ sudo mu300-update apply           # system, kernel and boot image: download, unp
 sudo mu300-update report          # what the last updates set aside or put back
 sudo mu300-update rollback        # back to the previous system
 sudo mu300-update rollback-boot   # back to the previous kernel and boot image
-sudo mu300-update kernel 7.2      # another kernel: 5.4 (vendor), 6.18 (LTS), 7.2 (stable) or 7.3; no argument shows the current one
+sudo mu300-update kernel 7.3      # another kernel: 5.4 (vendor), 6.18 (LTS) or 7.3 (stable); no argument shows the current one
 sudo mu300-update clean           # delete the kept previous version
 ```
 
@@ -52,7 +52,7 @@ release after v2026.10.25 on). It runs the same `mu300-update`, so everything on
   release page first. One whose signature is wrong is never installed.
 * **Previous version:** *Back to the previous version*, *Back to the previous boot image* and *Remove the previous
   version* are `rollback`, `rollback-boot` and `clean`. Each takes a tick and a confirmation.
-* **Kernel:** switch between 5.4, 6.18, 7.2 and 7.3 (`mu300-update kernel`), and *Start Android at the next restart*.
+* **Kernel:** switch between 5.4, 6.18 and 7.3 (`mu300-update kernel`), and *Start Android at the next restart*.
 
 Only one update runs at a time. If one was started in a terminal, the page shows it and waits.
 
@@ -280,13 +280,28 @@ A new Ubuntu image has no Cockpit in it. The first boot after an update puts the
 background (from the extra when it carries them, else from Ubuntu's archive once the device is online);
 `mu300-panel status` says where it is.
 
+## Kernel 7.2 is retired
+
+kernel.org ended the 7.2 series (7.2.15 was its last release), so releases no longer carry it: there is no
+`mu300-kernel-7.2.tar.gz` and no `-k7.2` Magisk zip any more. Its place is taken by 7.3, the stable mainline release
+(see [Kernels](Kernels#72-is-retired)).
+
+* A device whose kernel choice is 7.2 gets 7.3 with its next `sudo mu300-update apply` (or `sudo mu300-update
+  boot`), through the normal boot update: the old image is kept for `sudo mu300-update rollback-boot`, and a kernel
+  that does not start sends the device back to Android by itself. The output says that 7.2 is retired;
+  `mu300-update check` and `mu300-update kernel` (no argument) say it too.
+* `sudo mu300-update kernel 7.2` refuses: it says that 7.2 is retired and suggests `sudo mu300-update kernel 7.3`
+  (or 6.18).
+* The computer installers' update takes a saved answer of 7.2 as 7.3 and says so; the web installer proposes 7.3.
+* A Magisk zip of an older release with `k7.2` in its name still installs the kernel it carries.
+
 ## Changing the Ubuntu release
 
 ```sh
 sudo MU300_UBUNTU=26.04 mu300-update apply   # or 24.04
 ```
 
-Settings and data are kept. Ubuntu 26.04 needs kernel 6.18, 7.2 or 7.3.
+Settings and data are kept. Ubuntu 26.04 needs kernel 6.18 or 7.3.
 
 ## Release names
 

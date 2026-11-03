@@ -39,19 +39,20 @@ fi
 # waiting (it gave up while the device was booting), re-enumerate once. The host is the one with the gadget's
 # host_addr: a lease of a Wi-Fi client is not one (until 2026-10-29 any lease was, and a phone on the hotspot kept
 # a Mac whose NCM link had stalled at boot on 169.254 for good, FINDINGS 237). A gadget whose host MAC cannot be
-# read falls back to any lease.
+# read falls back to any lease. With "multi" the gadget has two, RNDIS' and NCM's, and a computer uses one of them
+# or both (macOS only NCM's): a lease of either is the host's.
 if [ "${1:-}" = --if-no-lease ]; then
     sleep "${2:-20}"
-    mac=
-    for f in "$G"/configs/c.1/f1 "$G"/functions/ncm.* "$G"/functions/ecm.* "$G"/functions/rndis.*; do
+    macs=
+    for f in "$G"/functions/ncm.* "$G"/functions/ecm.* "$G"/functions/rndis.*; do
         [ -r "$f/host_addr" ] || continue
         # the kernel ends it with a NUL and a newline
-        mac=$(tr -d '\000\n ' < "$f/host_addr" 2>/dev/null | tr 'A-F' 'a-f'); [ -n "$mac" ] && break
+        mac=$(tr -d '\000\n ' < "$f/host_addr" 2>/dev/null | tr 'A-F' 'a-f'); [ -n "$mac" ] && macs="$macs $mac"
     done
     for f in ${MU300_LEASES:-} /tmp/dhcp.leases /var/lib/misc/dnsmasq.leases /var/lib/dnsmasq/dnsmasq.leases; do
         [ -n "$f" ] && [ -s "$f" ] || continue
-        [ -z "$mac" ] && exit 0
-        tr 'A-F' 'a-f' < "$f" | grep -q " $mac " && exit 0
+        [ -z "$macs" ] && exit 0
+        for mac in $macs; do tr 'A-F' 'a-f' < "$f" | grep -q " $mac " && exit 0; done
     done
     set -- --detach
 fi

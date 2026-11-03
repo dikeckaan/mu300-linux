@@ -11,8 +11,8 @@
 #   mu300-update boot             only the kernel and the boot image
 #   mu300-update rollback [OS]    go back to the previous version kept as <os>.old
 #   mu300-update rollback-boot    go back to the previous boot image
-#   mu300-update kernel [5.4|6.18|7.2|7.3]  show, or change, the kernel (vendor 5.4, mainline 6.18 LTS, 7.2 stable or
-#                                 7.3, the newest mainline release) and install it
+#   mu300-update kernel [5.4|6.18|7.3]  show, or change, the kernel (vendor 5.4, mainline 6.18 LTS or 7.3 stable) and
+#                                 install it (7.2 is retired: a device that chose it gets 7.3 with its next update)
 #   mu300-update clean            delete the kept <os>.old copies
 #   mu300-update notice           only look: a note for the login message and mu300-toolkit when a newer release is
 #                                 out (at boot and every 6 hours; nothing is installed without apply)
@@ -506,6 +506,8 @@ check() {
     _xs=; for x in $(extra_installed); do extra_known "$x" && _xs="$_xs $x ($(extra_release "$x"))"; done
     printf 'extras           %s\n' "${_xs:- none (mu300-extra list)}"
     printf 'kernel            %s (boot image: %s; kernel choice %s)\n' "$(uname -r)" "$(cat "$BOOTDIR/installed.tag" 2>/dev/null || echo "from the installer")" "$(kernel_choice)"
+    ! _kn=$(kernel_retired "$(kernel_chosen)") ||
+        printf 'kernel %s was chosen, and it is retired: the next update (mu300-update apply) installs %s instead\n' "$(kernel_chosen)" "$_kn"
     _up=${MU300_BIN:-/opt/mu300/bin}/mu300-user-packages
     [ ! -x "$_up" ] || [ ! -s "$CONF/user-packages/wanted" ] || printf 'your packages     %s\n' "$("$_up" brief)"
     for os in $(installed_systems); do
@@ -2996,12 +2998,41 @@ BOOTDIR=$DISK/boot
 PERSIST_LOG=$((48 << 20))   # the boot partition keeps the persistent init log from 48 MiB on (boot/build-boot-image.py)
 
 # Which kernel this device runs: the vendor 5.4 (mu300-kernel.tar.gz) or a mainline one (mu300-kernel-<version>.tar.gz:
-# 6.18, the long-term release, 7.2, the stable one, and 7.3, the newest mainline release).
+# 6.18, the long-term release, and 7.3, the stable one).
 # Kept on the Linux partition, so both systems and every update follow it - without it an update of a device on
 # 6.18 installed the release's 5.4 kernel. "mu300-update kernel 6.18" changes it.
 KERNEL_CHOICE=$BOOTDIR/kernel
-KERNELS="5.4 6.18 7.2 7.3"
-kernel_choice() { c=$(cat "$KERNEL_CHOICE" 2>/dev/null); case " $KERNELS " in *" $c "*) echo "$c" ;; *) echo 5.4 ;; esac; }
+KERNELS="5.4 6.18 7.3"
+# A series kernel.org has ended, and the one that takes its place: the releases no longer carry its bundle, so a device
+# that chose it gets the next one with its next update, through the same boot update as any other (the image in the
+# slot is kept for rollback-boot, and a kernel that does not start falls back to Android by itself). Never 5.4 instead:
+# an unknown choice means 5.4, and Ubuntu 26.04 does not run there. 7.2 ended with 7.2.15 (2026-11).
+KERNELS_RETIRED="7.2:7.3"
+kernel_retired() {  # kernel_retired VERSION: the kernel that takes its place when VERSION is retired; else status 1
+    for _kr in $KERNELS_RETIRED; do [ "${_kr%%:*}" = "$1" ] && { echo "${_kr#*:}"; return 0; }; done
+    return 1
+}
+kernel_chosen() { cat "$KERNEL_CHOICE" 2>/dev/null; }   # what is written down, which may be a retired kernel
+kernel_choice() { c=$(kernel_chosen); case " $KERNELS " in *" $c "*) echo "$c" ;; *) kernel_retired "$c" || echo 5.4 ;; esac; }
+# kernel_retired_note: a line saying that the kernel this device chose is retired and what it gets instead (once a run)
+KERNEL_RETIRED_SAID=
+kernel_retired_note() {
+    [ -z "$KERNEL_RETIRED_SAID" ] || return 0
+    _kc=$(kernel_chosen); _kn=$(kernel_retired "$_kc") || return 0
+    KERNEL_RETIRED_SAID=1
+    printf 'kernel: %s is retired (kernel.org ended that series) and releases no longer carry it; this device moves to %s, the\n' "$_kc" "$_kn"
+    printf '        kernel that takes its place. The image in the slot now is kept: mu300-update rollback-boot goes back to it.\n'
+}
+# kernel_choice_settle [KERNEL.RELEASE]: once the image of the kernel that took a retired one's place is written, that
+# kernel is the choice written down (the note is not said again). Not when the image holds another kernel (a local
+# MU300_KERNEL_BUNDLE): the choice then stays as it was.
+kernel_choice_settle() {
+    _kc=$(kernel_chosen); _kn=$(kernel_retired "$_kc") || return 0
+    _kv=$(cat "${1:-/nonexistent}" 2>/dev/null)
+    case $_kv in ''|"$_kn".*) ;; *) return 0 ;; esac
+    echo "$_kn" > "$KERNEL_CHOICE"
+    printf 'kernel: the choice is %s now (it was %s)\n' "$_kn" "$_kc"
+}
 kernel_asset() { case $(kernel_choice) in 5.4) echo mu300-kernel.tar.gz ;; *) echo "mu300-kernel-$(kernel_choice).tar.gz" ;; esac; }
 
 # The slot Linux runs from (Android may be on either): what the initramfs published, else the slot LK booted
@@ -3481,6 +3512,7 @@ boot_update_run() {
     tmp=${STAGE:?}/boot
     modules_settle || return 1
     rm -rf "$tmp" "${BOOTDIR:?}/prev.modules.new"; mkdir -p "$tmp" "$BOOTDIR"
+    kernel_retired_note
 
     say "boot: kernel and boot image"
     # the image in the Linux slot now: stock header page, kernel, ramdisk; AVB footer in the last 64 bytes (read
@@ -3570,6 +3602,8 @@ boot_update_run() {
         # Air: v2026.10.30 installed, its boot image still called v2026.10.27)
         echo "$tag" > "$BOOTDIR/installed.tag"
         printf 'boot: already up to date (%s)\n' "$tag"
+        # (a retired choice whose successor is in place already, as after mu300-update kernel 7.3 by hand: written down)
+        kernel_choice_settle "$tmp/kernel.release"
         return 0
     fi
     if [ "$cur" != "$(cat "$BOOTDIR/written.sha256" 2>/dev/null)" ] || [ ! -s "$BOOTDIR/device-ramdisk.lz4" ]; then
@@ -3622,6 +3656,7 @@ boot_update_run() {
     echo "$id" > "$BOOTDIR/installed.id"
     echo "$tag" > "$BOOTDIR/installed.tag"
     kernel_choice > "$BOOTDIR/installed.kernel"
+    kernel_choice_settle "$tmp/kernel.release"
     modules_done
     # the image that was in the slot is the kept one now: the sets neither image needs go (the one the image kept
     # until now ran with, unless it is still needed)
@@ -3637,14 +3672,20 @@ boot_update_run() {
 # which 5.4 does not have (5.6 brought it), and fails with ENOSYS instead of falling back - no update or archive
 # with folders unpacks there. Other programs of that release can expect more of the kernel still.
 ubuntu_release() { sed -n 's/^VERSION_ID="\(.*\)"/\1/p' "$DISK/ubuntu/usr/lib/os-release" 2>/dev/null; }
-UBUNTU_2604_KERNEL="Ubuntu 26.04 needs a mainline kernel (6.18, 7.2 or 7.3): its programs use system calls that 5.4 does not have"
+UBUNTU_2604_KERNEL="Ubuntu 26.04 needs a mainline kernel (6.18 or 7.3): its programs use system calls that 5.4 does not have"
 
-kernel_cmd() {  # kernel [5.4|6.18|7.2|7.3]: show or change the kernel, and install it
+kernel_cmd() {  # kernel [5.4|6.18|7.3]: show or change the kernel, and install it
     mounted_disk
     case ${1:-} in
-        '') printf 'kernel: %s (running %s)\n' "$(kernel_choice)" "$(uname -r)"; return 0 ;;
-        5.4|6.18|7.2|7.3) ;;
-        *) die "usage: mu300-update kernel [5.4|6.18|7.2|7.3]" ;;
+        '') printf 'kernel: %s (running %s)\n' "$(kernel_choice)" "$(uname -r)"
+            ! _kn=$(kernel_retired "$(kernel_chosen)") ||
+                printf 'kernel %s was chosen, and it is retired: the next update (mu300-update apply) installs %s\n' "$(kernel_chosen)" "$_kn"
+            return 0 ;;
+        5.4|6.18|7.3) ;;
+        *) # (a retired one is refused with the one that takes its place, rather than taken for it without a word)
+           _kn=$(kernel_retired "$1") &&
+               die "kernel $1 is retired (kernel.org ended that series) and releases no longer carry it: sudo mu300-update kernel $_kn installs $_kn, the kernel that takes its place (or 6.18, the long-term one)"
+           die "usage: mu300-update kernel [5.4|6.18|7.3]" ;;
     esac
     [ "$1" = 5.4 ] && [ "$(ubuntu_release)" = 26.04 ] &&
         die "$UBUNTU_2604_KERNEL (tar cannot unpack folders there). Stay on a mainline kernel, or move Ubuntu back first: sudo MU300_UBUNTU=24.04 mu300-update apply"
@@ -3691,6 +3732,9 @@ rollback_boot() {
     sync
     printf 'boot: previous boot image (%s) restored. ' "$(cat "$BOOTDIR/prev.tag" 2>/dev/null || echo unknown)"
     reboot_goes_to_android || printf 'Reboot to start it.\n'
+    # (an image of a retired kernel runs as it did, but no release has that kernel: the next update brings its successor)
+    ! _kn=$(kernel_retired "$(kernel_chosen)") ||
+        printf 'Kernel %s is retired: the next update (mu300-update apply) installs %s again; sudo mu300-update kernel 6.18 moves to the long-term one.\n' "$(kernel_chosen)" "$_kn"
 }
 
 # One mu300-update at a time. apply, boot, kernel, rollback, rollback-boot and clean all work in $STAGE: two runs
@@ -3845,7 +3889,7 @@ apply() {
     SYSTEM_CHANGED=
     NO_ROLLBACK=
     [ "${MU300_UBUNTU:-}" = 26.04 ] && [ "$(kernel_choice)" = 5.4 ] &&
-        die "$UBUNTU_2604_KERNEL. Change the kernel first: sudo mu300-update kernel 6.18 (or 7.2, 7.3)"
+        die "$UBUNTU_2604_KERNEL. Change the kernel first: sudo mu300-update kernel 6.18 (or 7.3)"
     todo=
     for os in $list; do
         case $os in ubuntu|openwrt|openwrt-luci) ;; *) die "unknown system '$os'" ;; esac
@@ -3904,6 +3948,7 @@ apply() {
     modules_fetch "$tag" "$todo"
     boot_asset=
     if [ -z "${MU300_KERNEL_BUNDLE:-}" ]; then
+        kernel_retired_note
         boot_asset=$(kernel_asset)
         fetch_verified "$tag" "$boot_asset"; r=$?
         # a release without this bundle leaves the boot image alone (boot_update says so); anything else stops here
@@ -4359,6 +4404,8 @@ from_read() {
         ubuntu:26.04) _fr=mu300-ubuntu-26.04-rootfs.tar.gz ;;
         *) return 1 ;;
     esac
+    # (7.2 is retired, yet the zips and directories of the releases that had it are still read: from_fits says why
+    # one does not fit)
     case $FROM_KERNEL in 5.4) _fk=mu300-kernel.tar.gz ;; 6.18|7.2|7.3) _fk=mu300-kernel-$FROM_KERNEL.tar.gz ;; *) return 1 ;; esac
     [ "$FROM_ROOTFS" = "$_fr" ] && [ "$FROM_KASSET" = "$_fk" ] || return 1
     # the release's own SHA256SUMS where the zip has it (it is what the signature covers); else the two hashes of
@@ -4446,7 +4493,11 @@ from_begin() {
         case $FROM_WHY in
             system-missing) _fw="its system${FROM_OS:+ ($FROM_OS)} is not installed on this device" ;;
             ubuntu-release) _fw="it is Ubuntu $FROM_UBUNTU, and this device has the other release" ;;
-            kernel) _fw="it carries kernel $FROM_KERNEL, and this device uses $(kernel_choice): take the zip for k$(kernel_choice), or change the kernel first" ;;
+            kernel) if kernel_retired "$FROM_KERNEL" >/dev/null; then
+                        _fw="it carries kernel $FROM_KERNEL, which is retired, and this device uses $(kernel_choice): take the zip for k$(kernel_choice) of a newer release"
+                    else
+                        _fw="it carries kernel $FROM_KERNEL, and this device uses $(kernel_choice): take the zip for k$(kernel_choice), or change the kernel first"
+                    fi ;;
             *) _fw="its kernel does not run on the $(this_device)" ;;
         esac
         from_close; die "$MU300_FROM is not for this device: $_fw. Nothing was changed"
@@ -4806,5 +4857,5 @@ case ${1:-check} in
     report) report ;;
     source) shift; source_cmd "$@" ;;
     -h|--help|help) sed -n '2,30s/^# \{0,1\}//p' "$0" ;;
-    *) echo "usage: mu300-update check|version|apply [--no-reinstall] [--no-rollback] [ubuntu|openwrt|openwrt-luci ...]|boot|kernel [5.4|6.18|7.2|7.3]|rollback [os]|rollback-boot|clean|report|notice|source [URL|off]|status|releases|inspect FILE" >&2; exit 2 ;;
+    *) echo "usage: mu300-update check|version|apply [--no-reinstall] [--no-rollback] [ubuntu|openwrt|openwrt-luci ...]|boot|kernel [5.4|6.18|7.3]|rollback [os]|rollback-boot|clean|report|notice|source [URL|off]|status|releases|inspect FILE" >&2; exit 2 ;;
 esac

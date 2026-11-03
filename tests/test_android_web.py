@@ -918,7 +918,8 @@ class Fetch(FetchCase):
         self.assertNotIn(r'\|', code)
         w = self.wget(f'{self.SAYS}exit 1')
         for system in ('openwrt', 'openwrt-luci', 'ubuntu-24.04', 'ubuntu-26.04'):
-            for k in ('5.4', '6.18', '7.2'):
+            # (7.2 is retired; the zips of the releases that had it are still release zips)
+            for k in ('5.4', '6.18', '7.2', '7.3'):
                 for t in ('v2026.10.25', 'v2026.11.01_2', 'v1'):
                     r = self.web('run', 'fetch', f'mu300-magisk-{t}-{system}-k{k}.zip', 10, MU300_WGET=w)
                     self.assertEqual(r.stdout.strip(), 'MU300-WEB-JOB started fetch', f'{t} {system} {k}: {r.stdout}')

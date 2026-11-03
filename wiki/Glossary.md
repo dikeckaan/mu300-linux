@@ -22,7 +22,7 @@ Every word in plain language first, then what it means for this device. Grouped 
 
 **OpenCL / GPU:** The GPU is the graphics processor; OpenCL lets programs use it for number crunching. *Here:* the Mali-G57 runs OpenCL 3.0 without a screen.
 
-**KVM:** A Linux feature for running virtual machines fast. *Here:* `/dev/kvm` exists on all four kernels.
+**KVM:** A Linux feature for running virtual machines fast. *Here:* `/dev/kvm` exists on all three kernels.
 
 **zram:** Compressed swap kept in RAM, so more fits in memory. *Here:* `mu300-zram` adds lz4 zram of half the RAM, on by default; `sudo mu300-zram off` turns it off and `/etc/mu300/zram.conf` sets size, compressor and swappiness.
 
@@ -36,9 +36,9 @@ Every word in plain language first, then what it means for this device. Grouped 
 
 **Boot image:** A package holding the kernel and a small starter program (initramfs) that the bootloader loads. *Here:* the Linux boot image is built from your device's own Android boot image plus this project's kernel.
 
-**Kernel:** The core of an operating system, which talks to the hardware. *Here:* you choose 5.4, 6.18, 7.2 or 7.3 ([Kernels](Kernels)).
+**Kernel:** The core of an operating system, which talks to the hardware. *Here:* you choose 5.4, 6.18 or 7.3 ([Kernels](Kernels)); 7.2 is retired.
 
-**Vendor kernel vs. mainline kernel:** A vendor kernel is the chip maker's own modified Linux; mainline is the official Linux from kernel.org. *Here:* 5.4 is the vendor kernel, 6.18, 7.2 and 7.3 are mainline with this project's patches.
+**Vendor kernel vs. mainline kernel:** A vendor kernel is the chip maker's own modified Linux; mainline is the official Linux from kernel.org. *Here:* 5.4 is the vendor kernel, 6.18 and 7.3 are mainline with this project's patches.
 
 **LTS (long-term support):** A version that gets fixes for years. *Here:* Ubuntu 24.04/26.04 LTS and Linux 6.18 LTS.
 
@@ -90,7 +90,7 @@ Every word in plain language first, then what it means for this device. Grouped 
 
 **WPA2 / WPA3 / SAE:** Wi-Fi password security standards; SAE is the handshake WPA3 uses. *Here:* the driver has no SAE, so WPA3-only networks cannot be joined (WPA2 and mixed mode work), and the hotspot is WPA2-PSK only: WPA3 on it is disabled for security ([U30AIR-SAE.md](https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md)).
 
-**NCM / ECM / RNDIS:** Ways for a USB device to appear as a network card to a computer. *Here:* NCM is the default, ECM the fallback, RNDIS selectable.
+**NCM / ECM / RNDIS:** Ways for a USB device to appear as a network card to a computer. *Here:* NCM is the default, ECM the fallback, RNDIS selectable, and NCM + RNDIS together ("multi") for one cable that works on old and new Windows, macOS and Linux.
 
 **LTE:** 4G mobile data.
 
@@ -130,7 +130,7 @@ Every word in plain language first, then what it means for this device. Grouped 
 
 **OpenVPN:** An older, widely used VPN program. *Here:* install the system's OpenVPN package to use `.ovpn` profiles.
 
-**Xray / sing-box / mihomo / dae:** Proxy engines for protocols such as VLESS, VMess, Trojan and Shadowsocks, for Clash-style configs, and (dae) an eBPF proxy that runs inside the kernel. *Here:* the VPN module picks the engine that speaks your profile; from v2.0.0 each engine is an extra (`vpn-xray`, `vpn-singbox`, `vpn-mihomo`, `vpn-dae`), and dae needs kernel 6.18, 7.2 or 7.3 of v2026.10.20 or newer.
+**Xray / sing-box / mihomo / dae:** Proxy engines for protocols such as VLESS, VMess, Trojan and Shadowsocks, for Clash-style configs, and (dae) an eBPF proxy that runs inside the kernel. *Here:* the VPN module picks the engine that speaks your profile; from v2.0.0 each engine is an extra (`vpn-xray`, `vpn-singbox`, `vpn-mihomo`, `vpn-dae`), and dae needs kernel 6.18 or 7.3 of v2026.10.20 or newer.
 
 **BTF / eBPF:** eBPF lets programs run safely inside the kernel; BTF is the type information such programs need to find their way around. *Here:* the mainline kernels carry BTF from v2026.10.20 so that dae can run.
 

@@ -187,7 +187,8 @@ cihazın kendi servisleri de (SSH dahil) o ağa kapalıdır. Cihaza USB'den ula�
 <p>Bir bilgisayara takıldığında cihaz ağ adaptörü olarak görünür ve bilgisayar ondan adres alır. Cihazın kendisi
 F50'de <code>192.168.77.1</code>, U30 Air'de <code>192.168.78.1</code>'dir; böylece her birinden biri aynı bilgisayara
 takılabilir. Aynı türden iki cihazı ayırmak için <code>/etc/mu300/lan.conf</code> gerekir.</p>
-<p>USB ağ kipi NCM'dir (yedeği ECM); kontrol paneli bir sonraki açılışta geçerli olmak üzere RNDIS'e çevirebilir. Aynı
+<p>USB ağ kipi NCM'dir (yedeği ECM); kontrol paneli bir sonraki açılışta geçerli olmak üzere RNDIS'e ya da eski ve yeni
+Windows, macOS ve Linux'ta tek kabloyla çalışan NCM + RNDIS'e çevirebilir. Aynı
 kablo bir seri konsol da taşır (<code>ttyGS0</code>): ağ çalışmadığında bile çalışan bir giriş. Mac'te
 <code>screen /dev/cu.usbmodem* 115200</code>. SSH ve telnet açıktır.</p>
 </section>
@@ -224,7 +225,7 @@ kurulum programının sorusuyla) kurulur ve güncellemelerde korunur. Pek çok t
 <li>bir WireGuard <code>.conf</code> (ana hat çekirdek ister), bir OpenVPN <code>.ovpn</code>,</li>
 <li>bir VLESS, VMess, Trojan ya da Shadowsocks paylaşım bağlantısı,</li>
 <li>bir Clash/mihomo YAML'ı (<code>vpn-mihomo</code> ekleyin) ya da ham bir Xray veya sing-box JSON'u,</li>
-<li><a href="https://github.com/daeuniverse/dae">dae</a> için bir hysteria2 ya da TUIC bağlantısı ya da bir dae yapılandırması (<code>vpn-dae</code> ekleyin; v2026.10.20 ya da daha yeni bir 6.18/7.2/7.3 çekirdeği ister).</li>
+<li><a href="https://github.com/daeuniverse/dae">dae</a> için bir hysteria2 ya da TUIC bağlantısı ya da bir dae yapılandırması (<code>vpn-dae</code> ekleyin; v2026.10.20 ya da daha yeni bir 6.18/7.3 çekirdeği ister).</li>
 </ul>
 <pre><code>sudo mu300-extra install vpn                         <span class="c"># modülün son sürümü, SHA256SUMS ile denetlenir; çekirdek ve Xray</span>
 sudo mu300-vpn engine install sing-box               <span class="c"># her motor bir eklentidir: xray, sing-box, mihomo, dae</span>
@@ -291,7 +292,7 @@ sudo mu300-cpu profile saving            <span class="c"># ya da balanced (varsa
 <strong>Deneysel: cihazınıza kalıcı zarar verebilir</strong>
 <p>Bu özellik deneyseldir ve cihazınıza kalıcı zarar verebilirsiniz. Tüm risk size aittir.</p>
 </div>
-<p>Mainline çekirdeklerde (6.18, 7.2 ve 7.3; 7.3'te henüz bir cihazda denenmedi) işlemci voltajı çekirdek kümesi başına (CPU 0-3, 4-6 ve 7) biraz
+<p>Mainline çekirdeklerde (6.18 ve 7.3; 7.3'te henüz bir cihazda denenmedi) işlemci voltajı çekirdek kümesi başına (CPU 0-3, 4-6 ve 7) biraz
 kaydırılabilir: 25 mV aşağıdan 12.5 mV yukarıya, 3.125 mV'lik adımlarla. Varsayılan kapalıdır (0). Yeni bir değer bir
 sonraki yeniden başlatmada tek bir deneme açılışı olarak uygulanır; o açılış 10 dakika açık kalırsa kalıcı olur, çökme,
 watchdog sıfırlaması ya da elektrik kesintisiyle biten her açılış onu geri alır (0'a döner). Kodlaması bilinmeyen SoC
@@ -310,7 +311,7 @@ söner, hotspot ve modem kapalı).</p>
 <h2>U30 Air'e özel</h2>
 <div class="table-scroll"><table>
 <thead><tr><th scope="col"></th><th scope="col">Ne yapar</th></tr></thead><tbody>
-<tr><th scope="row">Pil</th><td>doluluk, voltaj, akım, sıcaklık ve şarj durumu <code>mu300-toolkit</code>'te, kontrol panelinde ve <code>/sys/class/power_supply</code>'da, her çekirdekte. Şarj: 5.4'te üreticinin şarj yazılımıyla, 6.18, 7.2 ve 7.3'te v2026.10.12'den beri <code>bq256xx</code> sürücüsüyle; v2026.10.20'den beri %0-100 şarj sınırı ve Type-C şarj akımı</td></tr>
+<tr><th scope="row">Pil</th><td>doluluk, voltaj, akım, sıcaklık ve şarj durumu <code>mu300-toolkit</code>'te, kontrol panelinde ve <code>/sys/class/power_supply</code>'da, her çekirdekte. Şarj: 5.4'te üreticinin şarj yazılımıyla, 6.18 ve 7.3'te v2026.10.12'den beri <code>bq256xx</code> sürücüsüyle; v2026.10.20'den beri %0-100 şarj sınırı ve Type-C şarj akımı</td></tr>
 <tr><th scope="row">Tuşlar</th><td>güç: kısa basış LED'leri uyandırır (60 s sonra kararırlar), 3 s basılı tutmak kapatır. Wi-Fi tuşu: hotspot'u 2.4 ile 5 GHz arasında değiştirir, 3 s basılı tutmak açar ya da kapatır</td></tr>
 <tr><th scope="row">NFC</th><td>cihaza tutulan bir telefon, ZTE'nin yazılımındaki gibi hotspot'a katılır</td></tr>
 <tr><th scope="row">USB host</th><td>ana hat çekirdeklerde OTG adaptörüyle: flash bellekler (FAT, exFAT), klavye ve fareler, USB modemler ve Ethernet adaptörleri</td></tr>
@@ -363,7 +364,7 @@ her açılışta başlatır. <code>docker</code> grubu root ile eşdeğerdir: i�
 <p>İmajlar ve konteynerler sistemlerin yanında, <code>/mnt/mu300-disk/docker/&lt;sistem&gt;</code> içinde durur:
 güncelleme ve geri alma onları ne kopyalar ne de kaybeder. Docker nftables arka ucunu kullanır; konteynerler internete
 çıkar, yayınlanan portlara hotspot ve USB istemcilerinden erişilir, mobil ağdan erişilmez; konteynerler cihazın
-kendi servislerine (SSH, web panelleri) bağlanamaz. Dört çekirdekte de çalışır.</p>
+kendi servislerine (SSH, web panelleri) bağlanamaz. Üç çekirdekte de çalışır.</p>
 <pre><code>docker run --rm hello-world
 docker compose up -d</code></pre>
 </section>
@@ -373,7 +374,7 @@ docker compose up -d</code></pre>
 <ul>
 <li><strong>Bluetooth:</strong> BlueZ; tarama çalışır.</li>
 <li><strong>GPU:</strong> Mali-G57 OpenCL 3.0 çalıştırır, ekransız.</li>
-<li><strong>KVM:</strong> dört çekirdekte de sanal makineler için <code>/dev/kvm</code>.</li>
+<li><strong>KVM:</strong> üç çekirdekte de sanal makineler için <code>/dev/kvm</code>.</li>
 <li><strong>Bellek:</strong> yaklaşık 1.4 GB kullanılabilir, artı RAM'de sıkıştırılmış takas (zram, varsayılan olarak açık:
 RAM'in yarısı, lz4; <code>sudo mu300-zram off</code> kapatır, boyut ve sıkıştırıcı <code>/etc/mu300/zram.conf</code> içinde).</li>
 <li><strong>Web arayüzü dilleri (OpenWrt):</strong> kutudan çıktığı gibi İngilizce, Türkçe ve Basitleştirilmiş Çince;

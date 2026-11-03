@@ -41,7 +41,7 @@ One line of JSON on stdout, exit status 0, nothing on stderr:
 | `system` | string | `ubuntu`, `openwrt` or `openwrt-luci`: the system that is running (the name of its directory on the Linux partition; a system of the user's own has its own name) |
 | `version_id` | string | `VERSION_ID` of the system's `/etc/os-release`: `24.04` or `26.04` for Ubuntu, OpenWrt's version for OpenWrt; empty when there is none |
 | `release` | string | The mu300-linux release the running system's image came from (`/etc/mu300/image-version`), e.g. `v2026.10.23`; `unknown` when the file is missing, `dev` for an image built without a version |
-| `kernel` | string | `uname -r`: `5.4.…`, `6.18.…`, `7.2.…` or `7.3.…` |
+| `kernel` | string | `uname -r`: `5.4.…`, `6.18.…` or `7.3.…` (`7.2.…` on a device that has not updated since 7.2 was retired) |
 | `root` | boolean | Whether the caller is root. Always `true` over adb; `false` when a program runs it over SSH as `ubuntu` |
 | `adb` | string | `open` (every computer is let in), `keys` (only authorised keys), `off`, or `unavailable` (no adbd or no FunctionFS in this system) |
 
@@ -133,7 +133,7 @@ module installed, `vpn_extra` mu300-extra there, `wifi_client`, `sms` (`cli`, `p
 | `sms.forward_set` | `enabled webhook telegram email sms` (bool), `template allow deny keywords clear webhook_url webhook_format webhook_headers webhook_body webhook_expect telegram_token telegram_chat email_host email_port email_tls email_user email_password email_from email_to sms_number` (text; the adapter's own rules; to it on stdin only) | - (openwrt-luci and Ubuntu; FINDINGS 190) |
 | `lan.get`, `lan.set` | -, `ip` (private, ending in `.1`) | `ip default_ip usb_role usb_role_switch adb` |
 | `usb.role` | `role` `host`/`device` (U30 Air) | - |
-| `usb.net` | `mode` (`ncm ecm rndis default`) `scope` (`once`/`permanent`); without `mode` it only reads | `mode once now` (the USB network from the next boot, and this boot's; mu300-usb net, or device-usb on openwrt-luci) |
+| `usb.net` | `mode` (`ncm ecm rndis multi default`) `scope` (`once`/`permanent`) `name` (`usb`/`eth`); without `mode` and `name` it only reads | `mode once name now` (the USB network from the next boot, the name a Linux computer gives it, and this boot's mode; mu300-usb net and net-name, or device-usb on openwrt-luci) |
 | `adb.auth` | `mode` `open`/`keys`, `key` (an adbkey.pub line; required for `keys`) | - |
 | `system.get` | - | `hostname timezone user ssh time release kernel kernel_choice boot extras` |
 | `system.hostname` `system.timezone` `system.password` `system.ssh` | `name`, `zone`, `password`, `state` | `user` for the password |

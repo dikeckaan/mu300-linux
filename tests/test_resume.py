@@ -500,7 +500,7 @@ class FromAnUnpackedZip(ResetAndResume):
 
     def test_prepared_and_resumed_by_the_same_zip(self):
         zip_a = self.unpack('openwrt-k6.18')
-        zip_b = self.unpack('ubuntu-24.04-k7.2')
+        zip_b = self.unpack('ubuntu-24.04-k7.3')
         answers = {k: v for k, v in INSTALL.items() if k not in ('MU300_ANS_SYSTEMS', 'MU300_OPENWRT', 'MU300_ANS_KERNEL')}
         for shell in self.each_shell():
             shutil.rmtree(self.emmc); self.emmc = fakeemmc.make(self.tmp / 'emmc')

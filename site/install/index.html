@@ -254,7 +254,7 @@ another Linux (ext4) filesystem is never formatted.</li>
 <li>Insert it while the device is off. A card inserted while Linux runs can only be read after the next restart.</li>
 <li>A <code>mu300sd</code> card always starts first. Without the card the device starts the internal installation if
 there is one. With none, it waits a few seconds for a card, then returns to Android after about five minutes.</li>
-<li>All four kernels have the card's driver (7.3's not tried on a board yet). The U30 Air has no slot.</li>
+<li>All three kernels have the card's driver (7.3's not tried on a board yet). The U30 Air has no slot.</li>
 <li>The device starts any card labelled <code>mu300sd</code>, so whoever has the device can also start their own
 system from a card.</li>
 </ul>
@@ -290,13 +290,13 @@ there was anything new), and checks the device again. Then come the questions be
 <div class="qa"><span class="ask">What should be installed? 1) Ubuntu LTS 2) OpenWrt 3) both</span><p>Ubuntu is a full Linux system with <code>apt</code> (about 500 MiB of RAM in use). OpenWrt is a router system with a web interface (about 140 MiB). Both installs the two side by side; you switch later with <code>mu300-os</code>.</p><p class="pick">Not sure? 3, both (the default), if the check said both fit. See <a href="../choose/">choose a system</a>.</p></div>
 <div class="qa"><span class="ask">Which OpenWrt? 1) the standard LuCI web interface 2) with the MU300 control panel</span><p>Asked when OpenWrt is chosen. The control panel adds a dashboard, cellular locks, SMS, an AT terminal and USB modes.</p><p class="pick">Not sure? 2 if you want to see signal and SMS in the browser; 1 for plain OpenWrt (the default).</p></div>
 <div class="qa"><span class="ask">Which one should boot (ubuntu/openwrt)</span><p>With two systems: which one starts first. The other stays installed.</p><p class="pick">Press <kbd>Enter</kbd> for Ubuntu.</p></div>
-<div class="qa"><span class="ask">Which Ubuntu? 1) 24.04 LTS 2) 26.04 LTS</span><p>24.04 is the default and the longest tested, supported until 2029. 26.04 is the newest (systemd 259, newer packages), supported until 2031, and needs a mainline kernel (6.18, 7.2 or 7.3).</p><p class="pick">Not sure? 1, 24.04 (the default).</p></div>
+<div class="qa"><span class="ask">Which Ubuntu? 1) 24.04 LTS 2) 26.04 LTS</span><p>24.04 is the default and the longest tested, supported until 2029. 26.04 is the newest (systemd 259, newer packages), supported until 2031, and needs a mainline kernel (6.18 or 7.3).</p><p class="pick">Not sure? 1, 24.04 (the default).</p></div>
 <div class="qa"><span class="ask">Boot Linux by default instead of Android (falls back to Android if Linux fails)? (yes/no)</span><p><code>yes</code>: every start goes to Linux, and Android only after failed starts or when you ask for it. <code>no</code>: Android stays the default and you start Linux when you want it.</p><p class="pick">Press <kbd>Enter</kbd> for yes.</p></div>
 <div class="qa"><span class="ask">Failed boots before Android (1-6)</span><p>How many unfinished starts in a row before the device goes back to Android by itself. A start counts as failed when it never finishes within about a minute: the power goes, the battery runs out, or Linux hangs. Higher forgives a flaky cable; lower gets you to Android sooner. It is also your way back with no computer: cut the power while it is starting this many times in a row.</p><p class="pick">Press <kbd>Enter</kbd> for 5. Change it later with <code>mu300-next-boot attempts N</code>.</p></div>
 <div class="qa"><span class="ask">Copy Android's hotspot name and password to Linux? (yes/no)</span><p>Your phones already know the Android hotspot, so they join Linux's hotspot without new settings.</p><p class="pick">Press <kbd>Enter</kbd> for yes.</p></div>
 <div class="qa"><span class="ask">Include the Mali GPU (OpenCL) userspace (~90 MiB)? (yes/no)</span><p>The graphics chip, for computing with OpenCL. There is no screen either way.</p><p class="pick">Press <kbd>Enter</kbd> for yes; say no to save the space.</p></div>
 <div class="qa"><span class="ask">Install the VPN module (about 40 MB more to download, 120 MB on the device)? (yes/no)</span><p>The optional VPN of <a href="https://github.com/dikeckaan/mu300-linux-vpn">mu300-linux-vpn</a>. You can add it later on the device with <code>sudo mu300-extra install vpn</code>.</p><p class="pick">Not sure? no (the default on a first install).</p></div>
-<div class="qa"><span class="ask">Which kernel? 1) 5.4 2) 6.18 3) 7.2 4) 7.3</span><p>The kernel is the core of Linux that talks to the hardware. 5.4 is Unisoc's vendor kernel, the longest tested. 6.18 is mainline Linux's long-term release with newer drivers and the same functions. 7.2 is the stable 7.2 series, tested less than 6.18. 7.3 is the newest mainline release, with the newest drivers and the same functions, tested less than 7.2 (from the next release after v2026.10.19.2 on).</p><p class="pick">Not sure? 1, 5.4 (the default). Ubuntu 26.04 needs 6.18, 7.2 or 7.3. Change it later with <code>sudo mu300-update kernel 6.18</code>.</p></div>
+<div class="qa"><span class="ask">Which kernel? 1) 5.4 2) 6.18 3) 7.3</span><p>The kernel is the core of Linux that talks to the hardware. 5.4 is Unisoc's vendor kernel, the longest tested. 6.18 is mainline Linux's long-term release with newer drivers and the same functions. 7.3 is mainline Linux's stable release, with newer drivers and the same functions, tested less than 6.18. 7.2 is retired: an answer of 7.2 is taken as 7.3 (<a href="../choose/#kernel-72">why</a>).</p><p class="pick">Not sure? 1, 5.4 (the default). Ubuntu 26.04 needs 6.18 or 7.3. Change it later with <code>sudo mu300-update kernel 6.18</code>.</p></div>
 <div class="qa"><span class="ask">update or wipe</span><p>Asked only when Linux is already installed. <code>update</code> reinstalls the systems and keeps your settings, users, home directories, SSH host keys and OpenWrt's settings. <code>wipe</code> erases the Linux filesystem and starts from scratch.</p><p class="pick">Press <kbd>Enter</kbd> for update.</p></div>
 <div class="qa"><span class="ask">Keep the current password? (yes/no)</span><p>Asked by an update when a system it replaces has a login password of its own. <code>yes</code> asks the current password once for each such system and checks it on the device against that system (press <kbd>Enter</kbd> for none, OpenWrt's <code>root</code> as it ships); after three wrong tries the installer stops and nothing is changed. <code>no</code> asks a new password, typed twice.</p><p class="pick">Press <kbd>Enter</kbd> for yes, then type the password you log in with today.</p></div>
 <div class="qa"><span class="ask">Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)</span><p>The password you will log in with, at least 6 characters, typed twice. Nothing shows while you type.</p><p class="pick">Choose one you will remember: you need it in step 3.</p></div>
@@ -363,23 +363,19 @@ finds the place by itself (the internal storage or an SD card).</p>
 <thead><tr><th scope="col">Zip</th><th scope="col">System</th><th scope="col">Kernel</th></tr></thead><tbody>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k5.4.zip</code></th><td>OpenWrt</td><td>5.4</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k6.18.zip</code></th><td>OpenWrt</td><td>6.18 LTS</td></tr>
-<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k7.2.zip</code></th><td>OpenWrt</td><td>7.2</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-k7.3.zip</code></th><td>OpenWrt</td><td>7.3</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k5.4.zip</code></th><td>OpenWrt with the control panel</td><td>5.4</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k6.18.zip</code></th><td>OpenWrt with the control panel</td><td>6.18 LTS</td></tr>
-<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k7.2.zip</code></th><td>OpenWrt with the control panel</td><td>7.2</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-openwrt-luci-k7.3.zip</code></th><td>OpenWrt with the control panel</td><td>7.3</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k5.4.zip</code></th><td>Ubuntu 24.04</td><td>5.4</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k6.18.zip</code></th><td>Ubuntu 24.04</td><td>6.18 LTS</td></tr>
-<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k7.2.zip</code></th><td>Ubuntu 24.04</td><td>7.2</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-24.04-k7.3.zip</code></th><td>Ubuntu 24.04</td><td>7.3</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-26.04-k6.18.zip</code></th><td>Ubuntu 26.04</td><td>6.18 LTS</td></tr>
-<tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-26.04-k7.2.zip</code></th><td>Ubuntu 26.04</td><td>7.2</td></tr>
 <tr><th scope="row"><code>mu300-magisk-&lt;tag&gt;-ubuntu-26.04-k7.3.zip</code></th><td>Ubuntu 26.04</td><td>7.3</td></tr>
 </tbody></table></div>
 <ol>
 <li><strong>Take one zip</strong> from the <a href="https://github.com/dikeckaan/mu300-linux/releases/latest">latest release</a> and check it with
-<code>SHA256SUMS-magisk</code>. A release has 15 of them (11 up to v2026.10.19.2, before 7.3), OpenWrt with the control panel included.</li>
+<code>SHA256SUMS-magisk</code>. A release has 11 of them, OpenWrt with the control panel included (15 in the releases that carried both 7.2 and 7.3; their <code>k7.2</code> zips still install the kernel they carry).</li>
 <li><strong>Install it</strong> in the Magisk app (Modules, Install from storage), or from <code>adb shell</code>:
 <pre><code>su -c 'magisk --install-module /sdcard/Download/&lt;zip&gt;'</code></pre>
 Not from recovery.</li>

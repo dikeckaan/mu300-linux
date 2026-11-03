@@ -737,7 +737,7 @@ export function renderManager(ui, M) {
         btn(t("linux.check"), () => run("update.check", {}), "", { disabled: off || jobOn }),
         btn(t("linux.apply"), () => run("update.apply", {}), "primary", { disabled: off || jobOn })),
       h("h3", {}, t("choice.kernel")),
-      h("div", { class: "actions" }, ["5.4", "6.18", "7.2", "7.3"].map((k) => btn(k + (s.kernel_choice === k ? " ✓" : ""), () => run("kernel.set", { version: k }), "", { disabled: off || jobOn || s.kernel_choice === k }))),
+      h("div", { class: "actions" }, ["5.4", "6.18", "7.3"].map((k) => btn(k + (s.kernel_choice === k ? " ✓" : ""), () => run("kernel.set", { version: k }), "", { disabled: off || jobOn || s.kernel_choice === k }))),
       h("p", { class: "small muted" }, t("linux.kernel.note")));
     b.append(h("h3", {}, t("mgr.extras")), h("p", { class: "small muted" }, t("mgr.extras.text")),
       table([t("mgr.name"), t("mgr.extras.release"), ""], (s.extras || []).filter((x) => !(x.name === "lang" && M.hello.system === "ubuntu") && !(x.name === "panel" && M.hello.system !== "ubuntu")).map((x) => h("tr", {},

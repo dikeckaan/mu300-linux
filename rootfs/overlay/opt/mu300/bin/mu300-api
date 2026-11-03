@@ -1148,45 +1148,56 @@ m_usb_role() {
     later "$BIN/mu300-usb" "$V"
     ok
 }
-# The USB network to a computer (NCM, ECM or RNDIS) from the next boot on, for good or for one boot: mu300-usb net
-# (Ubuntu, OpenWrt), the control panel's Device page on openwrt-luci (its backend, which keeps it in UCI). boot/init
+# The USB network to a computer (NCM, ECM, RNDIS or multi: NCM + RNDIS) from the next boot on, for good or for one
+# boot, and the name a Linux computer gives the link (name: usb or eth, every mode): mu300-usb net and net-name
+# (Ubuntu, OpenWrt), the control panel's Device page on openwrt-luci (its backend, which keeps them in UCI). boot/init
 # reads the choice from the system it boots; without a request field this only reads it.
 USB_ADAPTER=$R/usr/libexec/unisoc-modem/device-usb
 usbnet_ok() { if is_luci; then [ -x "$USB_ADAPTER" ]; else [ -x "$BIN/mu300-usb" ]; fi; }
 m_usb_net() {
-    only mode scope
-    word mode 'ncm|ecm|rndis|default' && _m=$V || _m=
+    only mode scope name
+    word mode 'ncm|ecm|rndis|multi|default' && _m=$V || _m=
     word scope 'once|permanent' && _s=$V || _s=permanent
+    word name 'usb|eth' && _nm=$V || _nm=
     usbnet_ok || refuse unsupported "USB network mode"
     _a=$(head -n 1 "$R/run/mu300/usb-net-applied" 2>/dev/null | tr -cd 'a-z')
-    case $_a in ncm|ecm|rndis) ;; *) _a= ;; esac
+    case $_a in ncm|ecm|rndis|multi) ;; *) _a= ;; esac
+    [ -z "$_m$_nm" ] || checked
     if is_luci; then
         # the panel's own adapter (device-usb, as mu300dash calls it): the choice in UCI, "auto" whether it is used
         if [ -n "$_m" ]; then
-            checked
             if [ "$_m" = default ]; then tool 20 "$USB_ADAPTER" set-net ncm permanent 0 </dev/null
             else tool 20 "$USB_ADAPTER" set-net "$_m" "$_s" 1 </dev/null; fi
+            case $OUT in *'"ok":1'*) ;; *) refuse failed "$(printf '%s' "$OUT" | sed -n 's/.*"error":"\([^"]*\)".*/\1/p')" ;; esac
+        fi
+        if [ -n "$_nm" ]; then
+            tool 20 "$USB_ADAPTER" set-net-name "$_nm" </dev/null
             case $OUT in *'"ok":1'*) ;; *) refuse failed "$(printf '%s' "$OUT" | sed -n 's/.*"error":"\([^"]*\)".*/\1/p')" ;; esac
         fi
         tool 20 "$USB_ADAPTER" get </dev/null
         _n=$(printf '%s' "$OUT" | sed -n 's/.*"net_mode":"\([a-z]*\)".*/\1/p')
         _sc=$(printf '%s' "$OUT" | sed -n 's/.*"net_scope":"\([a-z]*\)".*/\1/p')
+        _na=$(printf '%s' "$OUT" | sed -n 's/.*"net_name":"\([a-z]*\)".*/\1/p')
         case $OUT in *'"net_auto":1'*) ;; *) _n=default ;; esac
         _o=false; [ "$_n" != default ] && [ "$_sc" = once ] && _o=true
-        case $_n in ncm|ecm|rndis|default) ;; *) _n=default ;; esac
-        ok "\"mode\":\"$_n\",\"once\":$_o,\"now\":$([ -n "$_a" ] && js "$_a" || printf null)"
+        case $_n in ncm|ecm|rndis|multi|default) ;; *) _n=default ;; esac
+        case $_na in eth) ;; *) _na=usb ;; esac
+        ok "\"mode\":\"$_n\",\"once\":$_o,\"name\":\"$_na\",\"now\":$([ -n "$_a" ] && js "$_a" || printf null)"
     fi
     if [ -n "$_m" ]; then
-        checked
         if [ "$_m" = default ]; then tool 20 "$BIN/mu300-usb" net default </dev/null || refuse failed "$ERR"
         elif [ "$_s" = once ]; then tool 20 "$BIN/mu300-usb" net "$_m" once </dev/null || refuse failed "$ERR"
         else tool 20 "$BIN/mu300-usb" net "$_m" </dev/null || refuse failed "$ERR"; fi
     fi
+    if [ -n "$_nm" ]; then tool 20 "$BIN/mu300-usb" net-name "$_nm" </dev/null || refuse failed "$ERR"; fi
+    tool 20 "$BIN/mu300-usb" net-name </dev/null || refuse failed "$ERR"
+    _na=$(printf '%s\n' "$OUT" | sed -n 's/^USB network name from the next boot: //p' | head -n 1)
+    case $_na in eth) ;; *) _na=usb ;; esac
     tool 20 "$BIN/mu300-usb" net </dev/null || refuse failed "$ERR"
     _n=$(printf '%s\n' "$OUT" | sed -n 's/^USB network from the next boot: //p' | head -n 1)
     _o=false; case $_n in *' once') _o=true; _n=${_n% once} ;; esac
-    case $_n in ncm|ecm|rndis|default) ;; *) _n=default ;; esac
-    ok "\"mode\":\"$_n\",\"once\":$_o,\"now\":$([ -n "$_a" ] && js "$_a" || printf null)"
+    case $_n in ncm|ecm|rndis|multi|default) ;; *) _n=default ;; esac
+    ok "\"mode\":\"$_n\",\"once\":$_o,\"name\":\"$_na\",\"now\":$([ -n "$_a" ] && js "$_a" || printf null)"
 }
 # an adb public key as adb writes it (~/.android/adbkey.pub): base64 of the RSA key (524 characters for 2048 bits),
 # then a name (the length is checked apart: POSIX regular expressions count to 255 at most)
@@ -1310,7 +1321,7 @@ m_update_check() { only; job_start update-check 300 "" "$BIN/mu300-update" check
 m_update_apply() { only; job_start update-apply 7200 "" "$BIN/mu300-update" apply; }
 m_kernel_set() {
     only version
-    word version '5\.4|6\.18|7\.2|7\.3'; need version
+    word version '5\.4|6\.18|7\.3'; need version
     job_start kernel 3600 "" "$BIN/mu300-update" kernel "$V"
 }
 EXTRAS='vpn lang panel vpn-xray vpn-singbox vpn-mihomo vpn-dae'

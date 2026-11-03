@@ -1661,11 +1661,20 @@ msgstr "Sonraki açılıştan itibaren"
 msgid "The next boot only, then NCM again"
 msgstr "Yalnızca sonraki açılış, sonra yine NCM"
 
+msgid "usb0 (the default)"
+msgstr "usb0 (varsayılan)"
+
+msgid "eth0, as with Android"
+msgstr "eth0, Android’deki gibi"
+
 msgid "USB network protocol"
 msgstr "USB ağ protokolü"
 
 msgid "How long"
 msgstr "Ne kadar süre"
+
+msgid "Name on a Linux computer"
+msgstr "Linux bilgisayardaki adı"
 
 msgid "Save (used at the next boot)"
 msgstr "Kaydet (sonraki açılışta kullanılır)"
@@ -1678,6 +1687,12 @@ msgstr "Kaydedildi: bilgisayarla USB bağlantısı sonraki açılışta bir an k
 
 msgid "NCM: Windows 10 2004 and newer, macOS, Linux. ECM: macOS, Linux (Windows has no driver). RNDIS: older Windows (macOS has no driver)."
 msgstr "NCM: Windows 10 2004 ve sonrası, macOS, Linux. ECM: macOS, Linux (Windows'ta sürücü yok). RNDIS: eski Windows (macOS'ta sürücü yok)."
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS: eski ve yeni Windows, macOS ve Linux’ta çalışan tek kablo. Yeni Windows ve Linux iki ağ bağdaştırıcısı gösterir. RNDIS’i olmayan bir çekirdek yalnızca NCM kurar."
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0: bilgisayar, Android’in verdiği gibi üreticinin aralığından bir adres alır ve Linux bağlantıyı usb0 yerine eth0 olarak adlandırır. Windows ve macOS etkilenmez."
 
 msgid "Boot"
 msgstr "Açılış"
@@ -1856,8 +1871,11 @@ msgstr "Çalışan kernel"
 msgid "Kernel chosen"
 msgstr "Seçilen kernel"
 
-msgid "5.4 is the vendor kernel (Android's drivers); 6.18 is the mainline long-term kernel; 7.2 the stable mainline one; 7.3 the newest mainline one. A change downloads the kernel and takes effect at the next reboot."
-msgstr "5.4 üretici kernelidir (Android'in sürücüleri); 6.18 uzun süreli destekli mainline kerneldir; 7.2 kararlı mainline kerneldir; 7.3 en yeni mainline kerneldir. Bir değişiklik kerneli indirir ve sonraki yeniden başlatmada etkili olur."
+msgid "5.4 is the vendor kernel (Android's drivers); 6.18 is the mainline long-term kernel; 7.3 the stable mainline one. A change downloads the kernel and takes effect at the next reboot."
+msgstr "5.4 üretici kernelidir (Android'in sürücüleri); 6.18 uzun süreli destekli mainline kerneldir; 7.3 kararlı mainline kerneldir. Bir değişiklik kerneli indirir ve sonraki yeniden başlatmada etkili olur."
+
+msgid "Kernel 7.2 is retired: the next update installs 7.3, the kernel that takes its place."
+msgstr "Kernel 7.2 artık desteklenmiyor: sonraki güncelleme, yerine geçen 7.3'ü kurar."
 
 msgid "Change the kernel"
 msgstr "Kerneli değiştir"

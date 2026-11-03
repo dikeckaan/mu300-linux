@@ -785,9 +785,15 @@ m_usb_set() {
             out=$("$DASH/device-usb" set-role "$value" "$auto" 2>/dev/null)
             ;;
         net)
-            allowed "$value" '(ncm|ecm|rndis)' || { refuse 'Invalid USB network mode'; return; }
+            allowed "$value" '(ncm|ecm|rndis|multi)' || { refuse 'Invalid USB network mode'; return; }
             allowed "$scope" '(once|permanent)' || { refuse 'Invalid USB network scope'; return; }
             out=$("$DASH/device-usb" set-net "$value" "$scope" "$auto" 2>/dev/null)
+            ;;
+        net_name)
+            # usb or eth: the name a Linux computer gives the link, with every mode (no scope; auto is not used)
+            allowed "$value" '(usb|eth)' || { refuse 'Invalid USB network name'; return; }
+            [ -z "$scope" ] || { refuse 'Invalid USB network scope'; return; }
+            out=$("$DASH/device-usb" set-net-name "$value" 2>/dev/null)
             ;;
         *)
             refuse 'Unknown USB setting'; return ;;

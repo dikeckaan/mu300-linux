@@ -4345,3 +4345,21 @@ msgstr "Mạng nhà"
 
 msgid "The modem channels are busy with other readings; the live signal follows shortly"
 msgstr "Các kênh modem đang bận với các lần đọc khác; tín hiệu trực tiếp sẽ có ngay"
+
+msgid "Name on a Linux computer"
+msgstr "Tên trên máy tính Linux"
+
+msgid "usb0 (the default)"
+msgstr "usb0 (mặc định)"
+
+msgid "eth0, as with Android"
+msgstr "eth0, như với Android"
+
+msgid "NCM + RNDIS: one cable that works on old and new Windows, macOS and Linux. Newer Windows and Linux show two network adapters. A kernel without RNDIS makes NCM alone."
+msgstr "NCM + RNDIS: một sợi cáp dùng được với Windows cũ và mới, macOS và Linux. Windows mới hơn và Linux hiển thị hai bộ điều hợp mạng. Nhân không có RNDIS chỉ tạo NCM."
+
+msgid "eth0: the computer gets an address from the maker's range, as Android gives it, and Linux names the link eth0 rather than usb0. Windows and macOS are not affected."
+msgstr "eth0: máy tính nhận địa chỉ trong dải của nhà sản xuất, như Android cấp, và Linux đặt tên kết nối là eth0 thay vì usb0. Windows và macOS không bị ảnh hưởng."
+
+msgid "Invalid USB network name"
+msgstr "Tên mạng USB không hợp lệ"

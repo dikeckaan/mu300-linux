@@ -151,7 +151,7 @@ ALLOWED = MAGISK | COMPUTER
 # a signed release's zips carry its signature too
 SIGNATURE = 'mu300/SHA256SUMS.sig'
 PWCHECK = 'mu300/mu300-pwcheck'       # the password checker, in the zips of releases whose kernel bundle has it
-ASSETS = ('mu300-kernel.tar.gz', 'mu300-kernel-6.18.tar.gz', 'mu300-kernel-7.2.tar.gz', 'mu300-kernel-7.3.tar.gz',
+ASSETS = ('mu300-kernel.tar.gz', 'mu300-kernel-6.18.tar.gz', 'mu300-kernel-7.3.tar.gz',
           'mu300-openwrt-rootfs.tar.gz',
           'mu300-openwrt-luci-rootfs.tar.gz', 'mu300-ubuntu-rootfs.tar.gz', 'mu300-ubuntu-26.04-rootfs.tar.gz')
 
@@ -199,16 +199,17 @@ class Builder(unittest.TestCase):
         r = self.build()
         self.assertEqual(r.returncode, 0, r.stderr)
         names = sorted(p.name for p in (self.tmp / 'out').glob('*.zip'))
-        # four systems on four kernels, less Ubuntu 26.04 on 5.4
-        self.assertEqual(len(names), 15)
+        # four systems on three kernels, less Ubuntu 26.04 on 5.4 (7.2 is retired: no zip of it)
+        self.assertEqual(len(names), 11)
+        self.assertFalse([n for n in names if '-k7.2' in n])
         self.assertNotIn('mu300-magisk-v2026.10.06-ubuntu-26.04-k5.4.zip', names)
         self.assertIn('mu300-magisk-v2026.10.06-openwrt-k6.18.zip', names)
         # OpenWrt with the control panel, on every kernel
-        for k in ('5.4', '6.18', '7.2', '7.3'):
+        for k in ('5.4', '6.18', '7.3'):
             self.assertIn(f'mu300-magisk-v2026.10.06-openwrt-luci-k{k}.zip', names)
         self.assertIn('mu300-magisk-v2026.10.06-ubuntu-26.04-k7.3.zip', names)
         sums = (self.tmp / 'out/SHA256SUMS-magisk').read_text().split('\n')
-        self.assertEqual(len([s for s in sums if s]), 15)
+        self.assertEqual(len([s for s in sums if s]), 11)
         for line in sums:
             if line:
                 h, n = line.split('  ')
@@ -227,17 +228,17 @@ class Builder(unittest.TestCase):
 
     def test_layout_manifest_and_stored_payload(self):
         self.build()
-        z = zipfile.ZipFile(self.tmp / 'out/mu300-magisk-v2026.10.06-ubuntu-24.04-k7.2.zip')
+        z = zipfile.ZipFile(self.tmp / 'out/mu300-magisk-v2026.10.06-ubuntu-24.04-k7.3.zip')
         names = set(z.namelist())
-        self.assertEqual(names - ALLOWED, {'payload/mu300-kernel-7.2.tar.gz', 'payload/mu300-ubuntu-rootfs.tar.gz'})
+        self.assertEqual(names - ALLOWED, {'payload/mu300-kernel-7.3.tar.gz', 'payload/mu300-ubuntu-rootfs.tar.gz'})
         self.assertEqual(ALLOWED - names, set())
         for i in z.infolist():
             if i.filename.startswith('payload/'):
                 self.assertEqual(i.compress_type, zipfile.ZIP_STORED)
         m = dict(l.split('=', 1) for l in z.read('mu300/manifest').decode().split('\n') if '=' in l)
-        self.assertEqual((m['OS'], m['UBUNTU'], m['KERNEL']), ('ubuntu', '24.04', '7.2'))
+        self.assertEqual((m['OS'], m['UBUNTU'], m['KERNEL']), ('ubuntu', '24.04', '7.3'))
         self.assertEqual(m['SHA256_ROOTFS'], hashlib.sha256(z.read('payload/mu300-ubuntu-rootfs.tar.gz')).hexdigest())
-        self.assertEqual(m['SHA256_KERNEL'], hashlib.sha256(z.read('payload/mu300-kernel-7.2.tar.gz')).hexdigest())
+        self.assertEqual(m['SHA256_KERNEL'], hashlib.sha256(z.read('payload/mu300-kernel-7.3.tar.gz')).hexdigest())
         self.assertIn('versionCode=20261006', z.read('module.prop').decode())
         self.assertNotIn('@', z.read('module.prop').decode())
         self.assertEqual(z.read('mu300/busybox'), b'#!busybox\n')
@@ -254,7 +255,7 @@ class Builder(unittest.TestCase):
         r = self.build(rel=rel)
         self.assertEqual(r.returncode, 0, r.stderr)
         zips = sorted((self.tmp / 'out').glob('*.zip'))
-        self.assertEqual(len(zips), 15)
+        self.assertEqual(len(zips), 11)
         for zp in zips:
             self.assertEqual(zipfile.ZipFile(zp).read(PWCHECK), b'\x7fELF pwcheck\n', zp.name)
 
@@ -263,7 +264,7 @@ class Builder(unittest.TestCase):
         r = self.build()
         self.assertEqual(r.returncode, 0, r.stderr)
         zips = sorted((self.tmp / 'out').glob('*.zip'))
-        self.assertEqual(len(zips), 15)
+        self.assertEqual(len(zips), 11)
         for zp in zips:
             z = zipfile.ZipFile(zp)
             self.assertEqual(z.read(SIGNATURE), (self.rel / 'SHA256SUMS.sig').read_bytes(), zp.name)
@@ -322,7 +323,7 @@ class ComputerSide(unittest.TestCase):
         r = subprocess.run(['sh', str(TOP / 'tools/make-magisk-zips.sh'), str(cls.tmp / 'v2026.10.06'), str(cls.tmp / 'out')],
                            capture_output=True, text=True)
         assert r.returncode == 0, r.stderr
-        cls.zip = zipfile.ZipFile(cls.tmp / 'out/mu300-magisk-v2026.10.06-ubuntu-26.04-k7.2.zip')
+        cls.zip = zipfile.ZipFile(cls.tmp / 'out/mu300-magisk-v2026.10.06-ubuntu-26.04-k7.3.zip')
 
     @classmethod
     def tearDownClass(cls):
@@ -348,12 +349,12 @@ class ComputerSide(unittest.TestCase):
     def test_the_payload_is_there_once(self):
         # the computer's installers use payload/ where it is: no second copy of a system or a kernel
         tars = [n for n in self.zip.namelist() if n.endswith('.tar.gz')]
-        self.assertEqual(sorted(tars), ['payload/mu300-kernel-7.2.tar.gz', 'payload/mu300-ubuntu-26.04-rootfs.tar.gz'])
+        self.assertEqual(sorted(tars), ['payload/mu300-kernel-7.3.tar.gz', 'payload/mu300-ubuntu-26.04-rootfs.tar.gz'])
 
     def test_start_here_names_this_zip(self):
         text = self.zip.read('START-HERE.md').decode()
         self.assertIn('ubuntu-26.04', text)
-        self.assertIn('7.2', text)
+        self.assertIn('7.3', text)
         self.assertIn('v2026.10.06', text)
         self.assertNotRegex(text, r'@[A-Z]+@')
         for word in ('Türkçe', '中文', 'start.cmd', 'start-gui.sh', 'platform-tools', 'magisk --install-module'):
@@ -540,7 +541,7 @@ class ReleaseZips(ShellTest):
 
     def zips(self):
         zs = sorted(Path(os.environ['MU300_MAGISK_ZIPS']).glob('*.zip'))
-        self.assertEqual(len(zs), 15, zs)          # 4 OpenWrt, 4 OpenWrt with the panel, 4 + 3 Ubuntu
+        self.assertEqual(len(zs), 11, zs)          # 3 OpenWrt, 3 OpenWrt with the panel, 3 + 2 Ubuntu (7.2 retired)
         return zs
 
     def test_allow_list_and_manifest(self):

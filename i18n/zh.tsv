@@ -89,21 +89,20 @@ Which kernel?	选择哪个内核？
 1) 5.4   Unisoc's vendor kernel (Android 12 base): the longest tested, everything this project supports	1) 5.4   紫光展锐的厂商内核（基于 Android 12）：测试时间最长，支持本项目的全部功能
 2) 6.18  mainline Linux, current long-term (LTS) release: newer drivers and security fixes, the same	2) 6.18  主线 Linux，当前的长期支持（LTS）版本：更新的驱动和安全修复，
          functions (hotspot, mobile data, SMS, Bluetooth, VPN, GPU); no USB-C video output yet	         功能相同（热点、移动数据、短信、蓝牙、VPN、GPU）；暂不支持 USB-C 视频输出
-3) 7.2   mainline Linux, stable release: newer drivers, the same functions	3) 7.2   主线 Linux 稳定版：更新的驱动，功能与 6.18 相同；
+3) 7.3   mainline Linux, stable release: newer drivers, the same functions	3) 7.3   主线 Linux 稳定版：更新的驱动，功能与 6.18 相同；
          as 6.18; tested less than 6.18	         测试比 6.18 少
-4) 7.3   the newest mainline Linux (7.3 for now): the newest drivers, the same functions	4) 7.3   最新的主线 Linux（目前为 7.3）：最新的驱动，功能与 6.18 相同；
-         as 6.18; tested less than 7.2	         测试比 7.2 少
-This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2|7.3	之后可以在设备上更改：sudo mu300-update kernel 5.4|6.18|7.2|7.3
+This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.3	之后可以在设备上更改：sudo mu300-update kernel 5.4|6.18|7.3
 Which Ubuntu?	选择哪个 Ubuntu？
 1) 24.04 LTS  the longest tested, supported until 2029	1) 24.04 LTS  测试时间最长，支持到 2029 年
-2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18, 7.2 or 7.3	2) 26.04 LTS  最新版本（systemd 259，更新的软件包），支持到 2031 年；需要 6.18、7.2 或 7.3 内核
+2) 26.04 LTS  the newest (systemd 259, newer packages), supported until 2031; kernel 6.18 or 7.3	2) 26.04 LTS  最新版本（systemd 259，更新的软件包），支持到 2031 年；需要 6.18 或 7.3 内核
 Ubuntu	Ubuntu
-Ubuntu 26.04 needs a mainline kernel (6.18, 7.2 or 7.3): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).	Ubuntu 26.04 需要主线内核（6.18、7.2 或 7.3）：它的程序使用了 5.4 没有的系统调用（例如 tar 在 5.4 上无法解压包含文件夹的归档）。
+Ubuntu 26.04 needs a mainline kernel (6.18 or 7.3): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).	Ubuntu 26.04 需要主线内核（6.18 或 7.3）：它的程序使用了 5.4 没有的系统调用（例如 tar 在 5.4 上无法解压包含文件夹的归档）。
 this copy has changes of its own, so {1} files were left as they are	此副本有自己的修改，因此 {1} 个文件保持原样
 no answer left for the question: {1}	这个问题已经没有可用的答案了：{1}
 Device	设备
 Kernel	内核
-enter 1, 2, 3 or 4	请输入 1、2、3 或 4
+enter 1, 2 or 3	请输入 1、2 或 3
+Kernel 7.2 is retired (its last release was 7.2.15): installing 7.3, the kernel that takes its place.	7.2 内核已停止维护（最后一个版本是 7.2.15）：改为安装接替它的 7.3。
 A MU300 Linux installation is already on this device.	此设备上已经安装了 MU300 Linux。
 update  install the new release over the systems and keep everything you added or changed in them	update  在系统上安装新版本，保留你添加或修改的一切
         (files, settings, accounts; packages you installed come back at the first boot)	        （文件、设置、账户；你安装的软件包会在首次启动时重新安装）
@@ -236,7 +235,7 @@ MU300_BOOT_OS={1}, but {1} is not installed	MU300_BOOT_OS={1}，但 {1} 未安�
 Magisk's magiskboot was not found; install this zip with Magisk 26 or newer	未找到 Magisk 的 magiskboot；请使用 Magisk 26 或更新版本安装此 zip
 Plan	计划
 Take the card out and install the zip again, or install to the card (MU300_STORAGE=sd in /sdcard/mu300-install.conf).	请取出这张卡后重新安装此 zip，或安装到卡上（在 /sdcard/mu300-install.conf 中写入 MU300_STORAGE=sd）。
-Ubuntu 26.04 is installed, and it needs a mainline kernel (6.18, 7.2 or 7.3): use a zip with one of those kernels, or MU300_MODE=wipe.	已安装 Ubuntu 26.04，它需要主线内核（6.18、7.2 或 7.3）：请使用带有其中一个内核的 zip，或设置 MU300_MODE=wipe。
+Ubuntu 26.04 is installed, and it needs a mainline kernel (6.18 or 7.3): use a zip with one of those kernels, or MU300_MODE=wipe.	已安装 Ubuntu 26.04，它需要主线内核（6.18 或 7.3）：请使用带有其中一个内核的 zip，或设置 MU300_MODE=wipe。
 Unpacking {1} and {2}	正在解压 {1} 和 {2}
 already there:  {1}	已有：          {1}
 boot_a and boot_b are the same partition	boot_a 和 boot_b 是同一个分区
@@ -410,15 +409,14 @@ Systems	系统
 One or both. With both, mu300-os switches between them later.	可选一个或两个。两个都装时，之后可用 mu300-os 在它们之间切换。
 The full distribution with apt; about 500 MiB of RAM in use. Needs {1}.	带 apt 的完整发行版；约占用 500 MiB 内存。需要 {1}。
 24.04 LTS: the longest tested, supported until 2029	24.04 LTS：测试时间最长，支持到 2029 年
-26.04 LTS: the newest, supported until 2031; needs kernel 6.18, 7.2 or 7.3	26.04 LTS：最新版本，支持到 2031 年；需要 6.18、7.2 或 7.3 内核
+26.04 LTS: the newest, supported until 2031; needs kernel 6.18 or 7.3	26.04 LTS：最新版本，支持到 2031 年；需要 6.18 或 7.3 内核
 A router system with the LuCI web interface; about 140 MiB of RAM in use. Needs {1}.	带 LuCI 网页界面的路由器系统；约占用 140 MiB 内存。需要 {1}。
 The standard LuCI web interface	标准的 LuCI 网页界面
 With the MU300 control panel: dashboard, cellular locks, SMS, AT terminal, USB modes	搭配 MU300 控制面板：仪表盘、蜂窝锁定、短信、AT 终端、USB 模式
-It can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2|7.3	之后可以在设备上更改：sudo mu300-update kernel 5.4|6.18|7.2|7.3
+It can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.3	之后可以在设备上更改：sudo mu300-update kernel 5.4|6.18|7.3
 5.4  —  the vendor kernel: the longest tested, everything this project supports	5.4  —  厂商内核：测试时间最长，支持本项目的全部功能
 6.18  —  mainline Linux, long-term release: newer drivers and security fixes; no USB-C video output yet	6.18  —  主线 Linux，长期支持版本：更新的驱动和安全修复；暂不支持 USB-C 视频输出
-7.2  —  mainline Linux, stable release; tested less than 6.18	7.2  —  主线 Linux 稳定版；测试比 6.18 少
-7.3  —  the newest mainline Linux; tested less than 7.2	7.3  —  最新的主线 Linux；测试比 7.2 少
+7.3  —  mainline Linux, stable release; tested less than 6.18	7.3  —  主线 Linux 稳定版；测试比 6.18 少
 Release	版本
 Starting	启动
 Start Linux by default instead of Android	默认启动 Linux 而不是 Android
@@ -751,7 +749,7 @@ This is not a ZTE F50/MU300 or U30 Air.	这不是 ZTE F50/MU300 或 U30 Air。
 The device has not been checked yet.	设备尚未检查。
 Choose at least one system.	请至少选择一个系统。
 That choice needs about {1} and the place has {2}.	该选择需要约 {1}，而此位置只有 {2}。
-Ubuntu 26.04 needs a mainline kernel: choose 6.18, 7.2 or 7.3.	Ubuntu 26.04 需要主线内核：请选择 6.18、7.2 或 7.3。
+Ubuntu 26.04 needs a mainline kernel: choose 6.18 or 7.3.	Ubuntu 26.04 需要主线内核：请选择 6.18 或 7.3。
 Choose a kernel.	请选择内核。
 Failed boots before Android: a number from 1 to 6.	回到 Android 前允许的失败启动次数：1 到 6 之间的数字。
 The password needs {1} characters or more.	密码至少需要 {1} 个字符。
@@ -790,8 +788,8 @@ more than one device runs MU300 Linux and adb could not reboot this one: boot An
 This looks like a ZTE V50 but is not one this installer knows (model V50, device MU3351, platform ums9620): {1}	这看起来是 ZTE V50，但不是本安装程序认识的 V50（型号 V50、设备 MU3351、平台 ums9620）：{1}
 ZTE V50: EXPERIMENTAL, tested by nobody in this project (kano ported it); mainline kernel only; no second SIM, no NFC; USB network 192.168.79.1	ZTE V50：实验性支持，本项目中无人测试过（由 kano 移植）；只能使用主线内核；不支持第二张 SIM 卡和 NFC；USB 网络 192.168.79.1
 The ZTE V50 runs a mainline kernel only: install a prebuilt release (without --build)	ZTE V50 只能使用主线内核：请安装预编译的版本（不加 --build）
-The ZTE V50 runs a mainline kernel only (6.18, 7.2 or 7.3).	ZTE V50 只能使用主线内核（6.18、7.2 或 7.3）。
-The ZTE V50 runs only a mainline kernel of a release that knows it: take the zip for kernel 6.18, 7.2 or 7.3 (of a newer release if this one has none)	ZTE V50 只能使用认识它的版本中的主线内核：请选择 6.18、7.2 或 7.3 内核的 zip（本版本没有时请用更新的版本）
+The ZTE V50 runs a mainline kernel only (6.18 or 7.3).	ZTE V50 只能使用主线内核（6.18 或 7.3）。
+The ZTE V50 runs only a mainline kernel of a release that knows it: take the zip for kernel 6.18 or 7.3 (of a newer release if this one has none)	ZTE V50 只能使用认识它的版本中的主线内核：请选择 6.18 或 7.3 内核的 zip（本版本没有时请用更新的版本）
 a prepared installation is waiting (tools/resume.sh): this installer does not update itself until it is done	有一个已准备的安装正在等待（tools/resume.sh）：在它完成之前，本安装程序不会自我更新
 could not read what identifies this device (serial, eMMC CID, userdata)	无法读取识别本设备的信息（序列号、eMMC CID、userdata）
 the partition table and the running kernel disagree about userdata; reboot Android and try again	分区表与正在运行的内核对 userdata 的认识不一致；请重启 Android 后再试
@@ -838,7 +836,7 @@ Rewrite the partition table and ask Android's recovery for the reset	重写分�
 Package: {1} with kernel {2}, release {3} (unpacked Magisk zip at {4})	安装包：{1}，内核 {2}，版本 {3}（解压的 Magisk zip 位于 {4}）
 This package installs {1} with kernel {2} (release {3}); nothing is downloaded.	本安装包安装 {1}，内核 {2}（版本 {3}）；不下载任何东西。
 Another system or kernel: the zip of that combination, or ./install.sh of the project.	要安装其他系统或内核：请使用对应组合的 zip，或本项目的 ./install.sh。
-The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18, 7.2 or 7.3 of this release	ZTE V50 只能使用主线内核：请使用本版本中 6.18、7.2 或 7.3 内核的 zip
+The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18 or 7.3 of this release	ZTE V50 只能使用主线内核：请使用本版本中 6.18 或 7.3 内核的 zip
 It is not part of this package.	它不包含在本安装包中。
 Checking the files of this package	正在校验本安装包的文件
 no unpacked Magisk zip at {1}	{1} 处没有解压的 Magisk zip

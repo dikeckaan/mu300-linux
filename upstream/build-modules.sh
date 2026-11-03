@@ -3,7 +3,7 @@
 # the kernel's own modules next to them (upstream/out/modules, flat).
 # Run inside the mu300-mainline-build container: bash /work/build-modules.sh [module-dir...]
 set -eo pipefail
-KV=${KV:-6.18.59}
+KV=${KV:-6.18.60}
 K=/src/linux-$KV
 O=/src/out-$KV
 OUT=/work/${OUTDIR:-out}   # as in build.sh

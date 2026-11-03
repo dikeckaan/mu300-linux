@@ -86,7 +86,7 @@ the device lands in Android about 20 minutes later. The cause is still open.
 ## U30 Air: battery, buttons, NFC, USB host
 
 * **Battery (§33d, §36):** level, voltage, current, temperature and charging state in `mu300-toolkit`, the panel and
-  `/sys/class/power_supply` on every kernel. Charging: on 5.4 by the vendor charger stack; on 6.18, 7.2 and 7.3 by the
+  `/sys/class/power_supply` on every kernel. Charging: on 5.4 by the vendor charger stack; on 6.18 and 7.3 by the
   `bq256xx` driver from v2026.10.12 on. `mu300-power` adds profiles (`plugged`, `battery`, `saver`, `auto`), idle radios
   and a **charge limit** (from v2026.10.20: any value from 0 to 100 %, `sudo mu300-power charge-limit 80` or
   `CHARGE_TO`; charging stops at the limit and resumes 5 points below it, 0 never charges, and the battery is never
@@ -137,7 +137,7 @@ The V50 is the F50's platform (`ums9620_2h10_feimao`, T760) with two SIM slots, 
 
 * **How Linux tells it:** its device tree has an AW9523B LED controller at 0x5b on I2C3, which no F50's or U30 Air's
   has (both checked: no such node). The installers take only model `V50`, device `MU3351`, platform `ums9620`.
-* **Kernel:** mainline (6.18, 7.2 or 7.3) of a release whose bundle names the V50; never 5.4. It runs as an F50 does
+* **Kernel:** mainline (6.18 or 7.3) of a release whose bundle names the V50; never 5.4. It runs as an F50 does
   otherwise, USB-powered, no battery: no charger is bound (patch 0016 binds the 0x1a charger only with the U30 Air's
   charger policy service, which the V50 lacks).
 * **LEDs:** NET1 is the network lamp (blue 4G, white 5G, red no service), the Wi-Fi lamp white on 5 GHz and blue on
