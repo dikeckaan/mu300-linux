@@ -816,7 +816,7 @@ Remove-Item function:AnswersFail
 # every question of both installers has its variable
 foreach ($f in 'install.ps1', 'uninstall.ps1') {
     $code = [IO.File]::ReadAllText((Join-Path $Top $f))
-    $bare = @([regex]::Matches($code, '(?m)^.*\bAsk \(?[T''"].*$') | ForEach-Object { $_.Value } | Where-Object { $_ -notmatch "'(MU300_[A-Z_]+)'\)?" })
+    $bare = @([regex]::Matches($code, '(?m)^.*\bAsk \(?[T''"].*$') | ForEach-Object { $_.Value } | Where-Object { $_ -notmatch "'(MU300_[A-Z0-9_]+)'\)?" })
     Check "$f - a question without a variable: $($bare -join ' | ')" $bare.Count 0
 }
 
@@ -1061,6 +1061,8 @@ Check 'package: missing'        (PackageCheck $px 'mu300-kernel-6.18.tar.gz' $hk
 Remove-Item -Recurse -Force $px -ErrorAction SilentlyContinue
 
 # ---- optional Passwall2: the packaged extra or an explicit, checked offline file -------------------------------
+function Die($m) { throw "DIE: $m" }
+LoadLanguage 'en'
 $pwdir = Join-Path ([IO.Path]::GetTempPath()) ('mu300-passwall2-' + [guid]::NewGuid())
 $oldTop = $Top
 $oldExtra = $env:MU300_PASSWALL2_EXTRA
