@@ -208,7 +208,7 @@ Check 'backup, no pull: error'  (LastEvent $r).event 'error'
 # ---- an installation with every answer in a file, as far as the first pull (which the fake refuses) ---------------
 $answers = [ordered]@{ MU300_ANS_SYSTEMS = '3'; MU300_OPENWRT = 'luci'; MU300_ANS_BOOT_OS = 'ubuntu'; MU300_ANS_UBUNTU = '26.04'
     MU300_ANS_DEFAULT_LINUX = 'yes'; MU300_ANS_BOOT_ATTEMPTS = '4'; MU300_ANS_HOTSPOT = 'no'; MU300_ANS_GPU = 'no'
-    MU300_ANS_VPN = 'no'; MU300_ANS_ADB = 'no'; MU300_ANS_PANEL = 'yes'; MU300_ANS_KERNEL = '6.18'
+    MU300_ANS_VPN = 'no'; MU300_ANS_PASSWALL2 = 'no'; MU300_ANS_ADB = 'no'; MU300_ANS_PANEL = 'yes'; MU300_ANS_KERNEL = '6.18'
     MU300_ANS_PASSWORD = 'hunter2secret'; MU300_ANS_CONFIRM = 'INSTALL' }
 function AnswersFileOf($h) {
     $f = Join-Path $fx "answers$($script:run).txt"
@@ -220,11 +220,11 @@ function With($h, [hashtable]$More) { $o = [ordered]@{}; foreach ($k in $h.Keys)
 
 Device 'pull' $false
 $r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf $answers)`""
-Check 'install: every question from its variable' ($r.Asked -join ' ') 'MU300_ANS_SYSTEMS=3 MU300_ANS_BOOT_OS=ubuntu MU300_ANS_UBUNTU=26.04 MU300_ANS_DEFAULT_LINUX=yes MU300_ANS_BOOT_ATTEMPTS=4 MU300_ANS_HOTSPOT=no MU300_ANS_GPU=no MU300_ANS_VPN=no MU300_ANS_ADB=no MU300_ANS_PANEL=yes MU300_ANS_KERNEL=6.18 MU300_ANS_PASSWORD='
-if ($r.Asked.Count -ne 12) { Write-Host $r.Out }
+Check 'install: every question from its variable' ($r.Asked -join ' ') 'MU300_ANS_SYSTEMS=3 MU300_ANS_BOOT_OS=ubuntu MU300_ANS_UBUNTU=26.04 MU300_ANS_DEFAULT_LINUX=yes MU300_ANS_BOOT_ATTEMPTS=4 MU300_ANS_HOTSPOT=no MU300_ANS_GPU=no MU300_ANS_VPN=no MU300_ANS_PASSWALL2=no MU300_ANS_ADB=no MU300_ANS_PANEL=yes MU300_ANS_KERNEL=6.18 MU300_ANS_PASSWORD='
+if ($r.Asked.Count -ne 13) { Write-Host $r.Out }
 Device 'pull' $false 'locked' '1'
 $rl = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf $answers)`""
-Check 'install, locked: warned and not stopped' "$($rl.Out -match 'WARNING: The bootloader is locked') $($rl.Asked.Count) $((LastEvent $rl).message)" 'True 12 pulling boot_a failed'
+Check 'install, locked: warned and not stopped' "$($rl.Out -match 'WARNING: The bootloader is locked') $($rl.Asked.Count) $((LastEvent $rl).message)" 'True 13 pulling boot_a failed'
 Check 'install: steps'          (@($r.Events | Where-Object { $_.event -eq 'step' -and $_.id } | ForEach-Object { $_.id }) -join ' ') 'preflight storage choices pull'
 Check 'install: stops at the pull' "$((LastEvent $r).event): $((LastEvent $r).message)" 'error: pulling boot_a failed'
 Check 'install: exit'           $r.Rc 1
@@ -235,7 +235,7 @@ Check 'install: adb never sees the password' (@(Calls '' | Where-Object { @($_.a
 Check 'install: the release'    $r.Facts['release'] 'v2026.10.23'
 Check "install: nothing written: $(UntouchedWhy)"  (Untouched) 0
 
-foreach ($missing in 'MU300_ANS_SYSTEMS', 'MU300_ANS_KERNEL', 'MU300_ANS_PASSWORD', 'MU300_ANS_DEFAULT_LINUX', 'MU300_OPENWRT', 'MU300_ANS_VPN') {
+foreach ($missing in 'MU300_ANS_SYSTEMS', 'MU300_ANS_KERNEL', 'MU300_ANS_PASSWORD', 'MU300_ANS_DEFAULT_LINUX', 'MU300_OPENWRT', 'MU300_ANS_VPN', 'MU300_ANS_PASSWALL2') {
     Device 'pull' $false
     $r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (Without $answers $missing))`""
     Check "missing ${missing}: exit"        $r.Rc 1
@@ -397,8 +397,8 @@ Check 'stdin: one system, nothing to choose' (@($r.Asked | Where-Object { $_ -li
 # the variables from the environment (-NonInteractive), without a file
 Device 'pull' $false
 $r = RunScript 'install.ps1' '-NonInteractive' @{ MU300_ANS_SYSTEMS = '2'; MU300_OPENWRT = 'plain'; MU300_ANS_DEFAULT_LINUX = 'no'; MU300_ANS_HOTSPOT = 'yes'
-    MU300_ANS_GPU = 'yes'; MU300_ANS_VPN = 'no'; MU300_ANS_ADB = 'no'; MU300_ANS_KERNEL = '5.4'; MU300_ANS_PASSWORD = 'hunter2secret' }
-Check 'environment: questions'  ($r.Asked -join ' ') 'MU300_ANS_SYSTEMS=2 MU300_ANS_DEFAULT_LINUX=no MU300_ANS_HOTSPOT=yes MU300_ANS_GPU=yes MU300_ANS_VPN=no MU300_ANS_ADB=no MU300_ANS_KERNEL=5.4 MU300_ANS_PASSWORD='
+    MU300_ANS_GPU = 'yes'; MU300_ANS_VPN = 'no'; MU300_ANS_PASSWALL2 = 'no'; MU300_ANS_ADB = 'no'; MU300_ANS_KERNEL = '5.4'; MU300_ANS_PASSWORD = 'hunter2secret' }
+Check 'environment: questions'  ($r.Asked -join ' ') 'MU300_ANS_SYSTEMS=2 MU300_ANS_DEFAULT_LINUX=no MU300_ANS_HOTSPOT=yes MU300_ANS_GPU=yes MU300_ANS_VPN=no MU300_ANS_PASSWALL2=no MU300_ANS_ADB=no MU300_ANS_KERNEL=5.4 MU300_ANS_PASSWORD='
 Check 'environment: stops at the pull' (LastEvent $r).message 'pulling boot_a failed'
 Check 'environment: the password is never shown' ($r.Out -match 'hunter2') $false
 Check 'environment: adb sees the answers' (@(Calls '' | Where-Object { @($_.answers | ForEach-Object { "$_".ToUpper() }) -contains 'MU300_ANS_KERNEL' }).Count -gt 0) $true
@@ -415,7 +415,7 @@ $pkManifest = "TAG=v2026.10.27`nSYSTEM=ubuntu-26.04`nOS=ubuntu`nUBUNTU=26.04`nKE
 [IO.File]::WriteAllText((Join-Path $pk 'mu300\manifest'), $pkManifest)
 [IO.File]::WriteAllText((Join-Path $pk 'mu300\SHA256SUMS'), "$hk  mu300-kernel-7.2.tar.gz`n$hr  mu300-ubuntu-26.04-rootfs.tar.gz`n")
 $pkAnswers = [ordered]@{ MU300_ANS_DEFAULT_LINUX = 'yes'; MU300_ANS_BOOT_ATTEMPTS = '5'; MU300_ANS_HOTSPOT = 'yes'; MU300_ANS_GPU = 'no'
-    MU300_ANS_VPN = 'no'; MU300_ANS_ADB = 'no'; MU300_ANS_PASSWORD = 'hunter2secret'; MU300_ANS_CONFIRM = 'INSTALL' }
+    MU300_ANS_VPN = 'no'; MU300_ANS_PASSWALL2 = 'no'; MU300_ANS_ADB = 'no'; MU300_ANS_PASSWORD = 'hunter2secret'; MU300_ANS_CONFIRM = 'INSTALL' }
 Device 'pull' $false
 $r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf $pkAnswers)`"" @{ MU300_PACKAGE = $pk; MU300_RELEASE = '' }
 Check 'package: no question about the system, the kernel or the release' ($r.Asked -join ' ') 'MU300_ANS_DEFAULT_LINUX=yes MU300_ANS_BOOT_ATTEMPTS=5 MU300_ANS_HOTSPOT=yes MU300_ANS_GPU=no MU300_ANS_VPN=no MU300_ANS_ADB=no MU300_ANS_PASSWORD='

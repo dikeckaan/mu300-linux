@@ -26,6 +26,8 @@ openwrt/*.tar.gz
 upstream/stub/*.elf
 upstream/stub/*.bin
 sing-box
+# This is a shell dispatcher, not a downloaded core binary.
+!tools/passwall2-extra/module/libexec/sing-box
 /xray
 /hev-socks5-tunnel
 release/

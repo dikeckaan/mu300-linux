@@ -178,7 +178,7 @@ class FromAnUnpackedZip(Device):
         return r, ev, asked
 
     ANSWERS = dict(MU300_ANS_DEFAULT_LINUX='yes', MU300_ANS_BOOT_ATTEMPTS='5', MU300_ANS_HOTSPOT='yes', MU300_ANS_GPU='no',
-                   MU300_ANS_VPN='no', MU300_ANS_ADB='no', MU300_ANS_PASSWORD='hunter2secret', MU300_ANS_CONFIRM='INSTALL')
+                   MU300_ANS_VPN='no', MU300_ANS_PASSWALL2='no', MU300_ANS_ADB='no', MU300_ANS_PASSWORD='hunter2secret', MU300_ANS_CONFIRM='INSTALL')
 
     def test_the_package_answers_the_system_the_kernel_and_the_release(self):
         pkg = self.unpack('ubuntu-26.04-k7.3')

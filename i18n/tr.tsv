@@ -937,3 +937,9 @@ USB of Android: adb only for this run (was {1}; MTP can stall the connection, Wi
 Android kept its USB functions ({1}); going on with them	Android USB işlevlerini korudu ({1}); onlarla devam ediliyor
 the device did not come back on adb within {1} seconds after its USB was set to adb only: unplug it and plug it in again (or restart Android), then run this again (MU300_USB_ADB_ONLY=0 leaves the USB as it is)	USB'si yalnızca adb yapıldıktan sonra cihaz {1} saniye içinde adb'ye geri gelmedi: çıkarıp yeniden takın (ya da Android'i yeniden başlatın), sonra bunu yeniden çalıştırın (MU300_USB_ADB_ONLY=0 USB'yi olduğu gibi bırakır)
 USB of Android set back to {1}	Android'in USB'si yeniden {1} yapıldı
+Passwall2 in OpenWrt	OpenWrt içinde Passwall2
+Install Passwall2 (optional offline extra)	Passwall2 kur (isteğe bağlı çevrimdışı ek)
+Install Passwall2 (optional offline extra)? (yes/no)	Passwall2 kurulsun mu (isteğe bağlı çevrimdışı ek)? (evet/hayır)
+A separate page in LuCI. Compatible installed cores are reused; a bundled extra can provide fallback cores. Fresh installs stay disabled until configured.	LuCI içinde ayrı bir sayfa. Kurulu uyumlu çekirdekler yeniden kullanılır; paketlenmiş ek yedek çekirdekler sağlayabilir. Yeni kurulumlar yapılandırılana kadar kapalı kalır.
+Passwall2 needs an OpenWrt system	Passwall2 bir OpenWrt sistemi gerektirir
+Passwall2 offline extra (empty: bundled file)	Passwall2 çevrimdışı eki (boş: paketteki dosya)

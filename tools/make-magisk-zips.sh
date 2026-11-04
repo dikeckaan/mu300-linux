@@ -78,6 +78,10 @@ crlf() { tr -d '\r' < "$1" | awk '{ printf "%s\r\n", $0 }' > "$2"; }
 # (the signature of a signed release)
 [ ! -s "$R/SHA256SUMS.sig" ] || COMMON="$COMMON mu300/SHA256SUMS.sig"
 [ ! -s "$W/mu300-pwcheck" ] || COMMON="$COMMON mu300/mu300-pwcheck"
+PW_EXTRA=${MU300_PASSWALL2_EXTRA:-}
+if [ -n "$PW_EXTRA" ]; then
+    [ -s "$PW_EXTRA" ] || { echo "offline Passwall2 extra is missing: $PW_EXTRA" >&2; exit 1; }
+fi
 stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
     S=$1
     mkdir -p "$S/META-INF/com/google/android" "$S/system/bin" "$S/mu300/i18n" "$S/payload"
@@ -99,6 +103,15 @@ stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
     cp "$R/SHA256SUMS" "$S/mu300/SHA256SUMS"
     [ ! -s "$R/SHA256SUMS.sig" ] || cp "$R/SHA256SUMS.sig" "$S/mu300/SHA256SUMS.sig"
     cp "$R/$4" "$R/$5" "$S/payload/"
+    STAGED_EXTRAS=
+    case $2 in openwrt*)
+        if [ -n "$PW_EXTRA" ]; then
+            mkdir -p "$S/mu300/extras"
+            cp "$PW_EXTRA" "$S/mu300/extras/mu300-extra-passwall2.tar.gz"
+            printf '%s  mu300-extra-passwall2.tar.gz\n' "$(sha "$PW_EXTRA")" > "$S/mu300/extras/SHA256SUMS"
+            STAGED_EXTRAS='mu300/extras/mu300-extra-passwall2.tar.gz mu300/extras/SHA256SUMS'
+        fi ;;
+    esac
     printf 'TAG=%s\nSYSTEM=%s\nOS=%s\nUBUNTU=%s\nKERNEL=%s\nKERNEL_ASSET=%s\nROOTFS_ASSET=%s\nSHA256_KERNEL=%s\nSHA256_ROOTFS=%s\n' \
         "$TAG" "$2" "$6" "$7" "$3" "$5" "$4" "$(sha "$R/$5")" "$(sha "$R/$4")" > "$S/mu300/manifest"
     # the computer's side (tools/package.sh): the project's installers of this checkout (in CI the tag's), the guide
@@ -116,7 +129,7 @@ stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
     find "$S/computer" -name '*.sh' -exec chmod 755 {} +
 }
 audit() {  # audit ZIP ROOTFS_ASSET KERNEL_ASSET: exactly the names it should hold, the payload stored
-    printf '%s\n' $COMMON "payload/$2" "payload/$3" | LC_ALL=C sort > "$W/want"
+    printf '%s\n' $COMMON $STAGED_EXTRAS "payload/$2" "payload/$3" | LC_ALL=C sort > "$W/want"
     unzip -Z1 "$1" | LC_ALL=C sort > "$W/have"
     diff "$W/have" "$W/want" >&2 || { echo "$1 does not hold exactly the expected files (< extra, > missing)" >&2; return 1; }
     [ "$(unzip -Zv "$1" 'payload/*' | grep -c 'compression method: *none')" = 2 ] || { echo "$1: the payload is compressed" >&2; return 1; }

@@ -43,6 +43,8 @@
     set up again with USB debugging and root (a transaction in ~\mu300-backups; -Resume, -NoResume, -Transaction FILE;
     tools\resume.py). With an SD card in the slot it asks where the Linux filesystem goes ($env:MU300_STORAGE =
     'internal' or 'sd' answers without asking).
+    Passwall2 is optional, default off: $env:MU300_ANS_PASSWALL2 = 'yes' or 'no'. It uses the offline archive
+    in a packaged zip, or $env:MU300_PASSWALL2_EXTRA with a matching SHA256SUMS beside it. Fresh installs stay disabled.
     The VPN, when wanted, is the module of github.com/dikeckaan/mu300-linux-vpn: its latest release
     ($env:MU300_VPN_URL: another place with its files and SHA256SUMS; $env:MU300_VPN_MODULE: a copy on this computer).
 #>
@@ -387,6 +389,21 @@ function Python { param([Parameter(ValueFromRemainingArguments = $true)][string[
 }
 # the VPN module's latest release (or $env:MU300_VPN_MODULE, a copy on this computer), checked against that release's
 # SHA256SUMS (fetched every time: under releases/latest the same name is a new file with every release), as $EXTRA_VPN
+function FetchPasswall2 {
+    $offline = if ($env:MU300_PASSWALL2_EXTRA) { $env:MU300_PASSWALL2_EXTRA } else { Join-Path $Top '..\mu300\extras\mu300-extra-passwall2.tar.gz' }
+    if (-not (Test-Path $offline -PathType Leaf)) { Die (T '{1} not found' $offline) }
+    $sf = Join-Path (Split-Path $offline) 'SHA256SUMS'
+    $want = $null
+    if (Test-Path $sf) {
+        foreach ($line in Get-Content $sf) {
+            $pair = $line -split '\s+', 2
+            if ($pair.Count -eq 2 -and $pair[1].TrimStart('*') -eq (Split-Path $offline -Leaf)) { $want = $pair[0]; break }
+        }
+    }
+    if (-not $want -or (Get-FileHash $offline -Algorithm SHA256).Hash.ToLower() -ne $want) { Die (T 'checksum mismatch for {1}' $offline) }
+    $script:EXTRA_PASSWALL2 = $offline
+}
+
 function FetchVpnModule {
     $vd = Join-Path $Work 'vpn-module'
     New-Item -ItemType Directory -Force -Path $vd | Out-Null
@@ -2023,6 +2040,12 @@ $vx = Ask (T 'Install the VPN module (about 40 MB more to download, 120 MB on th
 if ($vx -ne 'yes' -and $vpnKs.Count -gt 0) {
     Die (T 'The VPN is on with its kill switch in {1}: an update without the VPN module would leave it to nothing. Answer yes to install the module, or turn the VPN off there first (ENABLE=0 in /etc/mu300/vpn.conf).' ($vpnKs -join ' '))
 }
+$EXTRA_PASSWALL2 = $null
+$pw = 'no'
+if (@($OSES | Where-Object { $_ -like 'openwrt*' }).Count -gt 0) {
+    $pw = Ask (T 'Install Passwall2 (optional offline extra)? (yes/no)') 'no' 'MU300_ANS_PASSWALL2'
+}
+if ($pw -eq 'yes') { FetchPasswall2 }
 # adb over USB to Linux is on in every system and lets every computer in, with a root shell and no password (the
 # owner's decision of 2026-10-13, FINDINGS 70; on the device: mu300-usb adb auth open|keys, mu300-usb adb off). The
 # one thing to choose here is to close it to all but this computer from the first boot on: its adb key, which the
@@ -2348,7 +2371,7 @@ Write-Host ('  ' + (T 'source:         {1}' (T 'prebuilt release {1} + vendor fi
 $sysText = ($OSES -join ' ') + $(if ($OSES -contains 'ubuntu') { " (Ubuntu $UBUNTU)" } else { '' })
 Write-Host ('  ' + (T 'systems:        {1} (boots: {2})' $sysText $BOOT_OS))
 Write-Host ('  ' + (T 'kernel:         {1}' "$KERNEL$(if ($KMAIN) { " (mainline, $((Get-Content "$KMAIN\kernel.release").Trim()))" })"))
-$extras = @($(if ($EXTRA_VPN) { 'vpn' }), $(if ($EXTRA_PANEL) { 'panel' }) | Where-Object { $_ })
+$extras = @($(if ($EXTRA_VPN) { 'vpn' }), $(if ($EXTRA_PANEL) { 'panel' }), $(if ($EXTRA_PASSWALL2) { 'passwall2' }) | Where-Object { $_ })
 Write-Host ('  ' + (T 'extras:         {1}' $(if ($extras.Count -gt 0) { $extras -join ' ' } else { T 'none' })))
 Write-Host ('  ' + (T 'adb to Linux:   {1}' $(if ($ADB -eq 1) { T 'on, only for the adb key of this computer' } else { T 'on, for every computer: a root shell without a password (on the device: mu300-usb adb auth keys, or mu300-usb adb off)' })))
 Write-Host ('  ' + (T 'default boot:   {1}' $(if ($DEFAULT_LINUX -eq 1) { T 'Linux (Android after {1} failed boots in a row)' $BOOT_ATTEMPTS } else { T 'Android, Linux on demand' })))
@@ -2381,6 +2404,7 @@ foreach ($os in $OSES) {
 if ($EXTRA_VPN) { & adb push $EXTRA_VPN "$T/mu300-extra-vpn.tar.gz" | Out-Null }
 # the web panel goes as the panel extra; Ubuntu's first boot installs Cockpit from it in the background (mu300-extra link)
 if ($EXTRA_PANEL) { & adb push $EXTRA_PANEL "$T/mu300-extra-panel.tar.gz" | Out-Null }
+if ($EXTRA_PASSWALL2) { & adb push $EXTRA_PASSWALL2 "$T/mu300-extra-passwall2.tar.gz" | Out-Null }
 $envFile = "$Work\mu300-install.env"
 $envText = (InstallEnvText @{ OFF = $OFF; SIZE = $SIZE; INT_SIZE = $INT_SIZE; FORMAT = $FORMAT; OSES = $OSES
     WIPE_LEGACY = $WIPE_LEGACY; UPDATE = $UPDATE; BOOT_OS = $BOOT_OS; DEFAULT_LINUX = $DEFAULT_LINUX

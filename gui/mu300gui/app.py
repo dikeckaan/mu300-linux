@@ -59,12 +59,12 @@ class App:
                 ('openwrt_flavor', tk.StringVar, False), ('boot_os', tk.StringVar, False), ('kernel', tk.StringVar, False),
                 ('release', tk.StringVar, False), ('release_url', tk.StringVar, False), ('default_linux', tk.BooleanVar, True),
                 ('boot_attempts', tk.StringVar, False), ('hotspot', tk.BooleanVar, False), ('gpu', tk.BooleanVar, False),
-                ('vpn', tk.BooleanVar, False), ('adb', tk.BooleanVar, False), ('panel', tk.BooleanVar, False),
+                ('vpn', tk.BooleanVar, False), ('passwall2', tk.BooleanVar, False), ('adb', tk.BooleanVar, False), ('panel', tk.BooleanVar, False),
                 ('storage', tk.StringVar, True), ('existing', tk.StringVar, True), ('password', tk.StringVar, False),
                 ('password2', tk.StringVar, False), ('keep_password', tk.BooleanVar, True),
                 ('current_password', tk.StringVar, False), ('overwrite_word', tk.StringVar, False), ('erase_sd_word', tk.StringVar, False),
                 ('internal_word', tk.StringVar, False), ('unknown_model', tk.BooleanVar, False), ('sync_bootchain', tk.BooleanVar, False),
-                ('fetch_jobs', tk.StringVar, False), ('vpn_url', tk.StringVar, False), ('vpn_module', tk.StringVar, False))
+                ('fetch_jobs', tk.StringVar, False), ('vpn_url', tk.StringVar, False), ('vpn_module', tk.StringVar, False), ('passwall2_extra', tk.StringVar, False))
         for name, kind, rebuild in spec:
             var = kind(self.root, value=getattr(c, name))
             var.trace_add('write', lambda *_a, n=name, r=rebuild: self._choice(n, r))
@@ -790,6 +790,9 @@ class App:
         check(i, _('The Mali GPU (OpenCL) userspace, about 90 MiB'), 'gpu')
         check(i, _('The VPN module (about 40 MB more to download, 120 MB on the device)'), 'vpn',
               _('mu300-vpn with Xray and sing-box. A system being replaced whose VPN is on needs it: the installer stops otherwise. It can be added later: sudo mu300-extra install vpn'))
+        check(i, _('Install Passwall2 (optional offline extra)'), 'passwall2',
+              _('A separate page in LuCI. Compatible installed cores are reused; a bundled extra can provide fallback cores. Fresh installs stay disabled until configured.'),
+              enabled=ch.openwrt)
         if not ch.package:          # (a file of the release, not of a zip)
             check(i, _('The web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)'), 'panel',
                   _('Cockpit with an MU300 page, on the LAN only. It can be added later: sudo mu300-extra install panel'), enabled=ch.ubuntu)
@@ -841,6 +844,8 @@ class App:
             ttk.Entry(g, textvariable=self.v['vpn_url'], width=32).grid(row=3, column=1, sticky='w', padx=S2)
             ttk.Label(g, text=_('A copy of the VPN module on this computer:'), style='Card.TLabel').grid(row=4, column=0, sticky='w', pady=2)
             ttk.Entry(g, textvariable=self.v['vpn_module'], width=32).grid(row=4, column=1, sticky='w', padx=S2)
+            ttk.Label(g, text=_('Passwall2 offline extra (empty: bundled file)'), style='Card.TLabel').grid(row=5, column=0, sticky='w', pady=S1)
+            ttk.Entry(g, textvariable=self.v['passwall2_extra'], width=32).grid(row=5, column=1, sticky='w', padx=S2)
             check(i, _('Copy the boot chain of Android\'s slot to the Linux slot where they differ'), 'sync_bootchain',
                   _('uboot, sml, teecfg, trustos and vbmeta, backed up first; needed after an Android update. Switch it off only if you know why.'))
             check(i, _('Continue although the device is not recognised as an F50 or U30 Air'), 'unknown_model',

@@ -176,6 +176,7 @@ class Choices:
         self.hotspot = True
         self.gpu = True
         self.vpn = False
+        self.passwall2 = False              # optional offline extra, OpenWrt only
         self.adb = False                    # adb to Linux is on for every computer; True: for this computer's key only
         self.panel = False                  # the web panel for Ubuntu
         self.storage = 'internal'           # internal | sd
@@ -195,6 +196,7 @@ class Choices:
         self.sync_bootchain = True          # advanced: MU300_SYNC_BOOTCHAIN
         self.fetch_jobs = 8                 # advanced: MU300_FETCH_JOBS
         self.vpn_url = ''                   # advanced: MU300_VPN_URL
+        self.passwall2_extra = ''           # advanced: MU300_PASSWALL2_EXTRA
         self.vpn_module = ''                # advanced: MU300_VPN_MODULE
         self.package = None                 # an unpacked Magisk zip (package.load): its system and kernel only
 
@@ -361,6 +363,9 @@ def answers(c, facts, lang, serial):
     a['MU300_ANS_HOTSPOT'] = yn(c.hotspot)
     a['MU300_ANS_GPU'] = yn(c.gpu)
     a['MU300_ANS_VPN'] = yn(c.vpn)
+    a['MU300_ANS_PASSWALL2'] = yn(c.passwall2 and c.openwrt)
+    if c.passwall2 and c.openwrt and c.passwall2_extra:
+        a['MU300_PASSWALL2_EXTRA'] = c.passwall2_extra
     if c.vpn and c.vpn_url:
         a['MU300_VPN_URL'] = c.vpn_url
     if c.vpn and c.vpn_module:
@@ -466,7 +471,7 @@ def summary(c, facts, release):
         if c.existing == 'update':
             rows.append((_('Password'), _('kept: the current one is checked on the device') if c.keep_password else _('the new one')))
     rows.append((_('Default boot'), _('Linux (Android after {1} failed boots in a row)', c.boot_attempts) if c.default_linux else _('Android, Linux on demand')))
-    extras = [n for flag, n in ((c.vpn, _('VPN module')), (c.panel and c.ubuntu, _('web panel for Ubuntu')), (c.gpu, _('GPU userspace')),
+    extras = [n for flag, n in ((c.vpn, _('VPN module')), (c.passwall2 and c.openwrt, _('Passwall2 in OpenWrt')), (c.panel and c.ubuntu, _('web panel for Ubuntu')), (c.gpu, _('GPU userspace')),
                                 (c.hotspot, _('hotspot name and password from Android')), (c.adb, _('adb to Linux for this computer only'))) if flag]
     rows.append((_('Also'), ', '.join(extras) if extras else _('nothing else')))
     return rows

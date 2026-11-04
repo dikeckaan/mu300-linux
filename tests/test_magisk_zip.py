@@ -550,7 +550,16 @@ class ReleaseZips(ShellTest):
                 names = set(z.namelist())
                 m = dict(l.split('=', 1) for l in z.read('mu300/manifest').decode().split('\n') if '=' in l)
                 payload = {f'payload/{m["KERNEL_ASSET"]}', f'payload/{m["ROOTFS_ASSET"]}'}
-                self.assertEqual(names - {SIGNATURE, PWCHECK}, ALLOWED | payload, zp.name)
+                extra = set()
+                pw = 'mu300/extras/mu300-extra-passwall2.tar.gz'
+                if pw in names:
+                    self.assertTrue(m['OS'].startswith('openwrt'))
+                    extra = {pw, 'mu300/extras/SHA256SUMS'}
+                    sums = dict((n, h) for h, n in (line.split() for line in z.read('mu300/extras/SHA256SUMS').decode().splitlines()))
+                    self.assertEqual(sums['mu300-extra-passwall2.tar.gz'], hashlib.sha256(z.read(pw)).hexdigest())
+                    with tarfile.open(fileobj=io.BytesIO(z.read(pw))) as archive:
+                        self.assertEqual(archive.extractfile('./name').read(), b'passwall2\n')
+                self.assertEqual(names - {SIGNATURE, PWCHECK}, ALLOWED | payload | extra, zp.name)
                 for n, key in ((m['KERNEL_ASSET'], 'SHA256_KERNEL'), (m['ROOTFS_ASSET'], 'SHA256_ROOTFS')):
                     h = hashlib.sha256()
                     with z.open(f'payload/{n}') as f:

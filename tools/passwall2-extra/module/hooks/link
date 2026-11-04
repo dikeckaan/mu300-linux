@@ -1,0 +1,9 @@
+#!/bin/sh
+# SYSROOT names an inactive system during updates. Never invoke live apk for it.
+[ -z "${1:-}" ] || exit 0
+[ -f /etc/openwrt_release ] || exit 0
+d=${MU300_EXTRA_DIR:-/mnt/mu300-disk/extra/passwall2}
+sh "$d/bin/mu300-passwall2" install || {
+    echo 'passwall2: not applied; configuration retained. Retry: mu300-passwall2 check; mu300-passwall2 install' >&2
+    exit 1
+}

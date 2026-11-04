@@ -1,0 +1,16 @@
+#!/bin/sh
+# Keep installed apps usable after shared-core dispatchers disappear.
+d=${MU300_EXTRA_DIR:-/mnt/mu300-disk/extra/passwall2}
+[ -z "${1:-}" ] || {
+    if [ -f "$1/etc/openwrt_release" ] && [ -f "$1/etc/config/passwall2" ]; then
+        grep -Fq "$d/libexec/" "$1/etc/config/passwall2" 2>/dev/null
+        result=$?
+        if [ "$result" != 1 ]; then
+            echo 'passwall2: an inactive OpenWrt uses this extra or its configuration cannot be checked; boot it and detach its cores before removing the extra' >&2
+            exit 1
+        fi
+    fi
+    exit 0
+}
+[ -f /etc/openwrt_release ] || exit 0
+sh "$d/bin/mu300-passwall2" detach

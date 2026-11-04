@@ -819,6 +819,10 @@ switch, Tailscale through the tunnel, on Ubuntu and OpenWrt alike. It is a modul
 security model): the images carry none of it, and mu300-linux keeps the kernel support (TUN, WireGuard, nftables)
 and the places that work with it (mobile data, the Wi-Fi client, power saving, the toolkit, the panel).
 
+OpenWrt can also use the optional [Passwall2 extra](tools/passwall2-extra/README.md),
+installed explicitly from a file. Its UI and service are separate; compatible
+cores can be shared with the VPN module, with an optional offline fallback.
+
 Module **v2.0.0** (with mu300-linux v2026.10.20) splits it into a core and engine extras, adds subscriptions (a URL
 that yields profiles, refreshed on a schedule), a `--json` interface the control panel's VPN section is built on, and
 an **IPv6 guard**: `IPV6` is `auto`, `1` or `0`; when the tunnel carries no IPv6, IPv6 is blocked beside it instead

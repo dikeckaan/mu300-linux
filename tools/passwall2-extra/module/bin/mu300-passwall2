@@ -1,0 +1,162 @@
+#!/bin/sh
+# APKs and hooks live outside the system; UCI configuration stays in OpenWrt.
+set -eu
+d=${MU300_EXTRA_DIR:-/mnt/mu300-disk/extra/passwall2}
+. "$d/lib/messages.sh"
+. "$d/lib/cores.sh"
+. "$d/lib/ui-compat.sh"
+die() { printf 'passwall2: %s\n' "$(pw2_msg "$*")" >&2; exit 1; }
+say() { printf 'passwall2: %s\n' "$(pw2_msg "$*")"; }
+running_openwrt() {
+    [ -e /etc/openwrt_release ] || die 'OpenWrt only'
+    [ "$(id -u)" = 0 ] || die 'run as root'
+    . /etc/openwrt_release
+    # --print-arch reports apk-tools' compiled arch (aarch64), not the feed ABI.
+    [ "${DISTRIB_ARCH:-}" = aarch64_generic ] || die 'this bundle needs aarch64_generic'
+    case ${DISTRIB_RELEASE:-} in 25.12.*) ;; *) die 'this bundle targets OpenWrt 25.12.x; build a bundle for this release first' ;; esac
+}
+verify() { (cd "$d" && sha256sum -c manifest >/dev/null) || die 'bundle manifest check failed'; }
+complete() {
+    [ -s /etc/mu300/passwall2-extra.installed ] || return 1
+    [ "$(cat /etc/mu300/passwall2-extra.installed)" = "$(sha256sum "$d/manifest" | cut -d' ' -f1)" ] || return 1
+    while IFS= read -r pkg; do apk info -e "$pkg" >/dev/null 2>&1 || return 1; done < "$d/packages"
+    [ "$(uci -q get 'passwall2.@global_app[0].xray_file')" = "$d/libexec/xray" ] || return 1
+    [ "$(uci -q get 'passwall2.@global_app[0].sing_box_file')" = "$d/libexec/sing-box" ] || return 1
+    [ -s /etc/mu300/passwall2-api.sha256 ] || return 1
+    [ "$(sha256sum /usr/lib/lua/luci/passwall2/api.lua | cut -d' ' -f1)" = "$(cat /etc/mu300/passwall2-api.sha256)" ] || return 1
+    pw2_ui_complete || return 1
+    pw2_pick xray >/dev/null && pw2_pick sing-box >/dev/null
+}
+prepare() {
+    verify
+    [ -z "$(uci -q changes passwall2)" ] || die 'apply or revert pending Passwall2 settings before installation'
+    pw2_pick xray >/dev/null && pw2_pick sing-box >/dev/null || die 'compatible shared cores missing; install matching providers or use the full offline bundle'
+    . "$d/lib/native-check.sh"
+    for native_apk in "$d"/providers/*.apk; do native_check "$(basename "$native_apk" .apk)" || die 'native kernel validation failed'; done
+    set -- "$d"/apks/*.apk
+    for native_apk in "$d"/providers/*.apk; do
+        apk info -e "$(basename "$native_apk" .apk)" >/dev/null 2>&1 || set -- "$@" "$native_apk"
+    done
+    # The solver must prove this is fully offline before it changes packages.
+    apk add --simulate --no-network --allow-untrusted "$@" || die 'offline dependency resolution failed; no packages were changed'
+}
+protect_core_updates() {
+    api=/usr/lib/lua/luci/passwall2/api.lua
+    current=$(sha256sum "$api" | cut -d' ' -f1)
+    if [ -f /etc/mu300/passwall2-api.sha256 ] && [ "$current" = "$(cat /etc/mu300/passwall2-api.sha256)" ]; then return 0; fi
+    [ "$current" = "$(cat "$d/api-original.sha256")" ] || die 'Passwall2 API has custom changes; core update protection was not applied'
+    awk -f "$d/lib/protect-updates.awk" "$api" > "$api.mu300-new"
+    grep -q 'core ownership stays with the shared provider' "$api.mu300-new" || die 'core update protection failed'
+    chmod 644 "$api.mu300-new"
+    mv "$api.mu300-new" "$api"
+    mkdir -p /etc/mu300
+    sha256sum "$api" | cut -d' ' -f1 > /etc/mu300/passwall2-api.sha256
+}
+restore_configs() {
+    [ -n "${backup:-}" ] || return 0
+    for f in dhcp passwall2 passwall2_server; do
+        [ ! -f "$backup/$f" ] || cp -p "$backup/$f" "/etc/config/$f"
+    done
+}
+install() {
+    running_openwrt
+    mkdir -p /var/lock
+    # flock releases the lock even when an APK script or this process is interrupted.
+    command -v flock >/dev/null 2>&1 || die 'flock is required'
+    exec 9>/var/lock/mu300-passwall2.lock
+    flock -n 9 || die 'another installation is running; retry later'
+    complete && { say 'already installed'; return 0; }
+    prepare
+    umask 077
+    backup=/etc/mu300/passwall2-extra-backups/$(date +%Y%m%d-%H%M%S)-$$
+    mkdir -p "$backup"
+    for f in dhcp passwall2 passwall2_server; do
+        [ ! -f "/etc/config/$f" ] || cp -p "/etc/config/$f" "$backup/$f"
+    done
+    previous=no; enabled=no
+    if apk info -e luci-app-passwall2 >/dev/null 2>&1; then
+        previous=yes
+        /etc/init.d/passwall2 enabled >/dev/null 2>&1 && enabled=yes
+    fi
+    # Standard post-install scripts and alternatives must run (nohup/base64/timeout).
+    trap 'restore_configs' EXIT
+    trap 'exit 1' HUP INT TERM
+    set -- "$d"/apks/*.apk
+    for native_apk in "$d"/providers/*.apk; do
+        apk info -e "$(basename "$native_apk" .apk)" >/dev/null 2>&1 || set -- "$@" "$native_apk"
+    done
+    apk add --no-network --allow-untrusted "$@" || die "APK installation failed; saved configuration: $backup"
+    restore_configs
+    protect_core_updates
+    pw2_ui_install || die 'could not apply LuCI detection compatibility; original settings retained'
+    pw2_bind_cores || die 'could not bind shared cores'
+    # A fresh install has no selected node: never turn it into a competing proxy.
+    if [ "$previous" = yes ] && [ "$enabled" = yes ]; then
+        /etc/init.d/passwall2 enable
+    else
+        /etc/init.d/passwall2 disable
+        /etc/init.d/passwall2 stop
+    fi
+    for cmd in nohup base64 timeout; do command -v "$cmd" >/dev/null 2>&1 || die "$cmd missing after install"; done
+    pw2_pick xray >/dev/null && pw2_pick sing-box >/dev/null || die 'shared core validation failed'
+    dnsmasq --version | grep -q ' nftset' || die 'dnsmasq-full lacks nftset support'
+    . "$d/lib/languages.sh"
+    pw2_languages "$d/languages" || die 'could not register LuCI languages; retry installation'
+    mkdir -p /etc/mu300
+    sha256sum "$d/manifest" | cut -d' ' -f1 > /etc/mu300/passwall2-extra.installed.new
+    mv /etc/mu300/passwall2-extra.installed.new /etc/mu300/passwall2-extra.installed
+    backup=
+    rm -f /tmp/luci-indexcache
+    say 'installed; LuCI > Services > Passwall2'
+}
+case ${1:-status} in
+    status)
+        if apk info -e luci-app-passwall2 >/dev/null 2>&1; then
+            apk list --installed luci-app-passwall2 sing-box xray-core dnsmasq-full
+            if complete; then say 'bundle applied'; else say 'bundle pending (mu300-passwall2 install)'; fi
+        else say 'not installed (mu300-passwall2 install)'; fi ;;
+    check) running_openwrt; prepare ;;
+    cores)
+        for core in xray sing-box; do
+            if path=$(pw2_pick "$core"); then printf '%s: %s\n' "$core" "$path"; else exit 1; fi
+        done ;;
+    install) install ;;
+    detach)
+        [ -z "$(uci -q changes passwall2)" ] || die 'apply or revert pending Passwall2 settings before removing this extra'
+        # Resolve both paths before changing either one. A fallback owned by this
+        # extra cannot survive its removal while the app still uses it.
+        if apk info -e luci-app-passwall2 >/dev/null 2>&1; then
+            detach_xray=$(pw2_pick xray) || exit 1
+            detach_sing=$(pw2_pick sing-box) || exit 1
+            for p in "$detach_xray" "$detach_sing"; do
+                case $p in "$d"/*) die 'install compatible shared cores or remove the Passwall2 app before removing its fallback bundle' ;; esac
+            done
+            uci -q set "passwall2.@global_app[0].xray_file=$detach_xray"
+            uci -q set "passwall2.@global_app[0].sing_box_file=$detach_sing"
+            uci -q commit passwall2
+        elif uci -q get 'passwall2.@global_app[0]' >/dev/null; then
+            # Keep a saved configuration usable if the app is installed again
+            # later without this extra. Never leave references to deleted files.
+            for key in xray sing_box; do
+                path=$(uci -q get "passwall2.@global_app[0].${key}_file" || true)
+                case $path in
+                    "$d"/*)
+                        original=$(uci -q get "passwall2.@global_app[0].mu300_original_${key}_file" || true)
+                        case $original in
+                            "$d"/*|'') uci -q delete "passwall2.@global_app[0].${key}_file" || true ;;
+                            *) uci -q set "passwall2.@global_app[0].${key}_file=$original" ;;
+                        esac ;;
+                esac
+            done
+            uci -q commit passwall2
+        fi
+        rm -f /etc/mu300/passwall2-extra.installed ;;
+    remove)
+        running_openwrt
+        /etc/init.d/passwall2 stop
+        /etc/init.d/passwall2 disable
+        apk del --no-network luci-app-passwall2 luci-i18n-passwall2-zh-cn
+        rm -f /etc/mu300/passwall2-extra.installed
+        echo 'passwall2: app removed; shared DNS/core packages retained. Remove the extra too to prevent reinstalling it at next boot.' ;;
+    *) echo 'usage: mu300-passwall2 status|cores|check|install|remove' >&2; exit 2 ;;
+esac

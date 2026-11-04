@@ -1731,6 +1731,24 @@ class OwnExtraTest(ExtrasBase):
             self.assertNotEqual(r.returncode, 0)
             self.assertFalse(self.own().exists())
 
+    def test_remove_keeps_files_and_links_when_unlink_fails(self):
+        f = own_tarball(self.tmp / 'mytool.tar.gz')
+        for shell in self.each_shell():
+            self.versions('v2026.10.17')
+            r = self.ex(shell, 'install', 'mytool', '--from', f)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            hook = self.own() / 'hooks/unlink'
+            hook.write_text('echo still-needed >&2\nexit 1\n')
+            r = self.ex(shell, 'remove', 'mytool')
+            self.assertNotEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertIn('was not removed', r.stderr)
+            self.assertTrue((self.own() / 'bin/mytool').exists())
+            self.assertTrue(os.path.islink(self.links / 'mytool'))
+            hook.write_text('exit 0\n')
+            r = self.ex(shell, 'remove', 'mytool')
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertFalse(self.own().exists())
+
     def test_refused_without_a_manifest_with_a_wrong_one_or_odd_names(self):
         cases = {
             'no manifest': own_tarball(self.tmp / 'a.tar.gz', manifest=False),
