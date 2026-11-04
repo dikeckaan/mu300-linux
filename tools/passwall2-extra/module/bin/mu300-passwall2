@@ -4,6 +4,7 @@ set -eu
 d=${MU300_EXTRA_DIR:-/mnt/mu300-disk/extra/passwall2}
 . "$d/lib/messages.sh"
 . "$d/lib/cores.sh"
+. "$d/lib/ui-compat.sh"
 die() { printf 'passwall2: %s\n' "$(pw2_msg "$*")" >&2; exit 1; }
 say() { printf 'passwall2: %s\n' "$(pw2_msg "$*")"; }
 running_openwrt() {
@@ -23,6 +24,7 @@ complete() {
     [ "$(uci -q get 'passwall2.@global_app[0].sing_box_file')" = "$d/libexec/sing-box" ] || return 1
     [ -s /etc/mu300/passwall2-api.sha256 ] || return 1
     [ "$(sha256sum /usr/lib/lua/luci/passwall2/api.lua | cut -d' ' -f1)" = "$(cat /etc/mu300/passwall2-api.sha256)" ] || return 1
+    pw2_ui_complete || return 1
     pw2_pick xray >/dev/null && pw2_pick sing-box >/dev/null
 }
 prepare() {
@@ -86,6 +88,7 @@ install() {
     apk add --no-network --allow-untrusted "$@" || die "APK installation failed; saved configuration: $backup"
     restore_configs
     protect_core_updates
+    pw2_ui_install || die 'could not apply LuCI detection compatibility; original settings retained'
     pw2_bind_cores || die 'could not bind shared cores'
     # A fresh install has no selected node: never turn it into a competing proxy.
     if [ "$previous" = yes ] && [ "$enabled" = yes ]; then
