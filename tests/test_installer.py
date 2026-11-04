@@ -929,6 +929,16 @@ class Model(ShellTest):
                 f'model="{model}"\n' + m.group(1) + 'echo "DEVICE=$DEVICE"')
         return self.sh(shell, code, stdin=answer + '\n').stdout
 
+    def test_m3_uses_u30air_profile(self):
+        for shell in self.each_shell():
+            out = self.decide(shell, 'MU5352 / MU5352')
+            self.assertIn('DEVICE=u30air', out)
+            self.assertIn('ZTE M3 (MU5352)', out)
+            self.assertNotIn('ASKED', out)
+            self.assertIn('DIE M3/MU5352 requires', self.decide(shell, 'MU5352 / MU5352', 'mt6789'))
+            self.assertNotIn('DEVICE=', self.decide(shell, 'MU5352 / MU5352', ''))
+            self.assertIn('ASKED', self.decide(shell, 'M3 Pro / MU5353D'))
+
     def test_three_devices(self):
         for shell in self.each_shell():
             for model, want in (('F50 / MU300', 'f50'), ('ZTE MU300 / mu300', 'f50'), ('U30_Air / U30Air', 'u30air'),

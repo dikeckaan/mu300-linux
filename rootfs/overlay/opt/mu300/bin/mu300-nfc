@@ -201,7 +201,9 @@ describe() {  # describe HEX: the NDEF message in words (hex on stdin as words)
 
 # --- main -------------------------------------------------------------------------------------------------------
 case $("${MU300_BIN:-/opt/mu300/bin}/mu300-device") in
-    u30air) ;;
+    u30air)
+        # Only the M3 model on this shared path lacks NFC; do not drive its GPIO/I2C lines.
+        [ "$("${MU300_BIN:-/opt/mu300/bin}/mu300-device" --model)" != m3 ] || die "this device has no NFC tag" ;;
     v50)
         # the same tag, I2C2 0x57, on reset line 189 (kano's V50, FINDINGS 95). The line comes from the device tree
         # (ZTE's ntag_fm11_gpio node: phandle, pin, flags, big-endian), and only the one he tested is driven: a V50

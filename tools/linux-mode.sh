@@ -126,7 +126,7 @@ select_device() {  # select_device [quiet]: quiet never asks, it only picks what
     [ -n "${ANDROID_SERIAL:-}" ] && return 0
     _sd_all=$(android_lines)
     [ -n "$_sd_all" ] || return 0
-    _sd_f50=$(printf '%s\n' "$_sd_all" | grep -E 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351' | awk '{print $1}')
+    _sd_f50=$(printf '%s\n' "$_sd_all" | grep -E 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351|device:MU5352( |$)' | awk '{print $1}')
     _sd_one=
     [ -n "$_sd_f50" ] && [ "$(printf '%s\n' "$_sd_f50" | wc -l | tr -d ' ')" = 1 ] && _sd_one=$_sd_f50
     # the only adb device, and an F50/U30 Air: nothing to ask
@@ -152,7 +152,7 @@ select_device() {  # select_device [quiet]: quiet never asks, it only picks what
 
 # call before anything else that needs adb
 # is one of the adb devices an F50/U30 Air?
-target_attached() { android_lines | grep -q -E 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351'; }
+target_attached() { android_lines | grep -q -E 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351|device:MU5352( |$)'; }
 
 require_android() {
     # ANDROID_SERIAL naming the device in Linux: that is the one to send back to Android, not one to work on

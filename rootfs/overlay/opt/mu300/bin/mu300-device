@@ -7,6 +7,7 @@
 # that an older installer labelled f50 is a v50 here; a v50 label on a board without that node is not believed. A
 # U30 Air (the charger policy service) is never a V50, and an F50 or U30 Air answers as it always did.
 #   mu300-device          f50, u30air or v50
+#   mu300-device --model  m3 for a labelled MU5352; the existing hardware identifier otherwise
 #   mu300-device --json   one line of JSON for programs (the web installer, a GUI: "adb shell mu300-device --json"):
 #                         the device, the system that runs, its release, the kernel, whether the caller is root and
 #                         what adb does. The fields are a contract: docs/ADB-INTERFACE.md. New fields may be added;
@@ -36,7 +37,20 @@ device() {
         v50_fix f50
     fi
 }
-[ "${1:-}" = --json ] || { device; exit 0; }
+# A model label never changes hardware dispatch. In particular, battery/USB handlers keep using u30air.
+model() {
+    _profile=$(device)
+    if [ "$_profile" = u30air ] && [ "$(cat "$R/etc/mu300/device-model" 2>/dev/null)" = m3 ]; then
+        echo m3
+    else
+        echo "$_profile"
+    fi
+}
+case ${1:-} in
+    --model) model; exit 0 ;;
+    --json) ;;
+    *) device; exit 0 ;;
+esac
 
 DISK=${MU300_DISK:-/mnt/mu300-disk}
 BIN=${MU300_BIN:-/opt/mu300/bin}
@@ -59,7 +73,9 @@ adb=$("$BIN/mu300-adbd" state 2>/dev/null)
 case $adb in off|open|keys) ;; *) adb=unavailable ;; esac
 [ "$(id -u)" = 0 ] && root=true || root=false
 release=$(cat "$R/etc/mu300/image-version" 2>/dev/null | clean)
-printf '{"mu300":1,"device":"%s","system":"%s","version_id":"%s","release":"%s","kernel":"%s","root":%s,"adb":"%s"}\n' \
-    "$(device | clean)" "$(system | clean)" \
+model_field=
+[ "$(model)" != m3 ] || model_field=',"model":"m3"'
+printf '{"mu300":1,"device":"%s"%s,"system":"%s","version_id":"%s","release":"%s","kernel":"%s","root":%s,"adb":"%s"}\n' \
+    "$(device | clean)" "$model_field" "$(system | clean)" \
     "$(sed -n 's/^VERSION_ID="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$R/etc/os-release" 2>/dev/null | head -n1 | clean)" \
     "${release:-unknown}" "$(uname -r | clean)" "$root" "$adb"

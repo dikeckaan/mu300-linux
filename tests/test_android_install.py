@@ -585,6 +585,14 @@ class Systems(ShellTest):
             self.assertEqual((self.M / '.mu300' / 'boot-os').read_text().strip(), 'openwrt-luci')
             self.assertFalse((self.T / 'mu300-openwrt-luci.tar.gz').exists())
 
+    def test_m3_identity_is_installed_with_the_system(self):
+        self.stub('getprop', 'case "$1" in ro.board.platform) echo ums9620 ;; *) echo MU5352 ;; esac')
+        for shell in self.each_shell():
+            shutil.rmtree(self.M / 'openwrt-luci', ignore_errors=True)
+            self.tarball('openwrt-luci')
+            self.run_install(shell)
+            self.assertEqual((self.M / 'openwrt-luci/etc/mu300/device-model').read_text(), 'm3\n')
+
     def test_update_keeps_openwrt_luci_config(self):
         for shell in self.each_shell():
             old = self.M / 'openwrt-luci' / 'etc' / 'config'

@@ -52,6 +52,8 @@ bc_setup() {
     command -v getprop >/dev/null 2>&1 || { bc_refuse "this is not Android: the boot chain is only ever copied from Android"; return 1; }
     _m="$(getprop ro.product.model) / $(getprop ro.product.device)"
     case $_m in
+        "MU5352 / MU5352")
+            [ "$(getprop ro.board.platform)" = ums9620 ] || { bc_refuse "M3/MU5352 requires the ums9620 platform"; return 1; } ;;
         *U30Air*|*U30_Air*|*"U30 Air"*|*MU300*|*F50*|*mu300*) ;;
         # the ZTE V50 (experimental, FINDINGS 95): exactly V50 / MU3351 on ums9620 (kano read its chain, both slots alike)
         "V50 / MU3351")

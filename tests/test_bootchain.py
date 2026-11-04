@@ -141,6 +141,15 @@ class Refusals(Fixture):
             self.device(model='Pixel 7', product='panther', differ=('trustos',))
             self.refused(shell, 'not a ZTE F50')
 
+    def test_m3_platform_guard(self):
+        for shell in self.each_shell():
+            self.device(model='MU5352', product='MU5352', platform='ums9620')
+            before = self.snapshot()
+            self.assertEqual(self.run_bc(shell, 'check').returncode, 0)
+            self.assertEqual(self.snapshot(), before)
+            self.device(model='MU5352', product='MU5352', platform='mt6789')
+            self.refused(shell, 'requires the ums9620 platform')
+
     def test_u30_air_is_one(self):
         for shell in self.each_shell():
             self.device(model='U30 Air', product='U30Air')

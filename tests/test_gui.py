@@ -150,6 +150,15 @@ ABCDEF                 no permissions (user in plugdev group; are your udev rule
 
 
 class Devices(unittest.TestCase):
+    def test_m3_alias(self):
+        devices = adb.parse_devices('m3-test device product:MU5352 model:MU5352 device:MU5352\n')
+        self.assertEqual(len(devices), 1)
+        self.assertTrue(devices[0].target)
+        self.assertEqual(devices[0].kind, 'u30air')
+        other = adb.parse_devices('other device product:MU5353D model:M3_Pro device:MU5353D\n')[0]
+        self.assertFalse(other.target)
+        self.assertEqual(other.kind, '')
+
     def test_parse(self):
         ds = adb.parse_devices(LIST)
         self.assertEqual([d.serial for d in ds], ['324950664950', '323960377386', 'd16d93c5', '192.168.31.1:55555', '0123456789ABCDEF',
