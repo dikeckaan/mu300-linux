@@ -1057,17 +1057,32 @@ msgstr "Dapat ditulis"
 msgid "This boot image cannot change the boot"
 msgstr "Image boot ini tidak dapat mengubah boot"
 
+msgid "Remaining this year"
+msgstr "Sisa tahun ini"
+
+msgid "Remaining this cycle"
+msgstr "Sisa siklus ini"
+
 msgid "%s of %s"
 msgstr "%s dari %s"
+
+msgid "The yearly cap is reached"
+msgstr "Batas tahunan tercapai"
 
 msgid "The monthly cap is reached"
 msgstr "Batas bulanan tercapai"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "%d%% dari batas tahunan terpakai"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "%d%% dari batas bulanan terpakai"
 
-msgid "This billing cycle"
-msgstr "Siklus tagihan ini"
+msgid "Used this year"
+msgstr "Terpakai tahun ini"
+
+msgid "Used this cycle"
+msgstr "Terpakai dalam siklus ini"
 
 msgid "Link & traffic"
 msgstr "Link & lalu lintas"
@@ -1084,8 +1099,8 @@ msgstr "Total diterima"
 msgid "Total sent"
 msgstr "Total dikirim"
 
-msgid "Used today"
-msgstr "Terpakai hari ini"
+msgid "Today"
+msgstr "Hari ini"
 
 msgid "SIM source"
 msgstr "Sumber SIM"
@@ -2390,8 +2405,17 @@ msgstr "Halaman ini dibuka lewat HTTPS, dan terminal disajikan lewat HTTP di LAN
 msgid "The data usage could not be read"
 msgstr "Penggunaan data tidak dapat dibaca"
 
-msgid "Today"
-msgstr "Hari ini"
+msgid "Year"
+msgstr "Tahun"
+
+msgid "Month"
+msgstr "Bulan"
+
+msgid "Used"
+msgstr "Terpakai"
+
+msgid "Days left this year"
+msgstr "Sisa hari tahun ini"
 
 msgid "Days left in this cycle"
 msgstr "Sisa hari dalam siklus"
@@ -2411,11 +2435,17 @@ msgstr "Batas bulanan"
 msgid "%s, warning at %d%%"
 msgstr "%s, peringatan pada %d%%"
 
+msgid "Yearly cap"
+msgstr "Batas tahunan"
+
 msgid "Daily quota"
 msgstr "Kuota harian"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Batas bulanan tercapai: data seluler dimatikan. Data akan menyala lagi saat siklus berikutnya dimulai."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Batas tahunan tercapai: data seluler dimatikan. Data akan menyala lagi saat tahun berikutnya dimulai."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Kuota harian tercapai: data seluler dimatikan. Data akan aktif lagi tengah malam."
@@ -2483,6 +2513,15 @@ msgstr "Matikan data seluler saat kuota harian tercapai"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Saat pemakaian hari ini mencapai kuota harian, data seluler dimatikan sampai tengah malam, sampai kuota dinaikkan, atau sampai opsi ini dimatikan lagi. Menyalakan data seluler secara manual membuatnya tetap aktif sampai boot ulang berikutnya."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Yang ditampilkan operator sebagai sisa dihitung sebagai terpakai: hitungan dikoreksi ke batas dikurangi nilai itu."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Matikan data seluler saat batas tahunan tercapai"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Saat tahun ini mencapai batas tahunan, data seluler dimatikan: tidak ada internet melalui operator sampai tahun berikutnya dimulai, batas tahunan dinaikkan, atau opsi ini dimatikan lagi. Data seluler yang dinyalakan kembali secara manual tetap menyala sampai reboot berikutnya."
+
 msgid "Both ways"
 msgstr "Dua arah"
 
@@ -2501,9 +2540,6 @@ msgstr "Hapus hitungan"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Semua hari dan siklus tagihan yang dihitung sejauh ini dilupakan. Penghitungan berlanjut mulai sekarang."
 
-msgid "Billing cycle and cap"
-msgstr "Siklus tagihan dan batas"
-
 msgid "A billing cycle starts on day"
 msgstr "Siklus tagihan dimulai pada tanggal"
 
@@ -2513,11 +2549,20 @@ msgstr "31: pada hari terakhir setiap bulan"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Batas bulanan (GB, 0: tidak ada)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Peringatkan pada persentase batas ini"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Peringatkan pada persentase batas dan batas tahunan ini"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Kuota harian (GB, 0: tidak ada)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Batas tahunan (GB, 0: tidak ada)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Tahun tagihan dimulai pada (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Misalnya 01-01; 02-29 menjadi 02-28 pada tahun biasa."
 
 msgid "The cap and the daily quota count"
 msgstr "Yang dihitung batas dan kuota harian"
@@ -2530,6 +2575,18 @@ msgstr "Terpakai sejauh ini dalam siklus ini (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Yang ditampilkan operator untuk siklus ini (misalnya jika penghitungan dimulai di tengah siklus); hitungan dikoreksi sesuai nilai itu."
+
+msgid "Used so far this year (GB)"
+msgstr "Terpakai sejauh ini tahun ini (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Sisa dalam siklus ini menurut operator (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Sisa tahun ini menurut operator (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Siklus tagihan dan batas"
 
 msgid "Current setting"
 msgstr "Pengaturan saat ini"

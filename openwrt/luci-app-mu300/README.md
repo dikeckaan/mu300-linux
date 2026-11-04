@@ -40,12 +40,13 @@ different Unisoc OpenWrt firmware.
 
 ## Data usage and live rates
 
-Cellular > Data usage shows mobile data per day and per billing cycle (a configurable reset day), with an optional
-monthly cap: a warning at a set percentage, and, only when turned on, mobile data off at the cap until the next
-cycle. The page talks to `unisoc-modem/traffic` (mu300dash `traffic_get`/`traffic_set`), which runs the platform's
-`mu300-traffic` (`MU300_TRAFFIC_CMD`); without it the page says data usage is not available. The count is that
-command's, so the panel and its CLI always agree; on MU300 it samples the interface counters once a minute into
-RAM and writes the disk rarely (see `mu300-traffic`).
+Cellular > Data usage shows mobile data per day and per billing cycle (a configurable reset day), what is left of
+the cap first, and an optional monthly cap: a warning at a set percentage and, only when turned on, mobile data
+off at the cap until the next cycle. A yearly cap (off by default) starts on a day of its own (01-01 unless set),
+warns the same way and has an optional cut of its own. The page talks to `unisoc-modem/traffic` (mu300dash
+`traffic_get`/`traffic_set`), which runs the platform's `mu300-traffic` (`MU300_TRAFFIC_CMD`); without it the page
+says data usage is not available. The count is that command's, so the panel and its CLI always agree; on MU300 it
+samples the interface counters once a minute into RAM and writes the disk rarely (see `mu300-traffic`).
 
 The dashboard's download/upload rates come from a lane of their own: one rpcd `file` read of `/proc/net/dev` every
 second (no process, no AT), timed in the browser. That is the only file the read grant names, with

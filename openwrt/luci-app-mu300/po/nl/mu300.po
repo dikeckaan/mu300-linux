@@ -1057,17 +1057,32 @@ msgstr "Beschrijfbaar"
 msgid "This boot image cannot change the boot"
 msgstr "Deze boot-image kan het opstarten niet wijzigen"
 
+msgid "Remaining this year"
+msgstr "Resterend dit jaar"
+
+msgid "Remaining this cycle"
+msgstr "Resterend in deze periode"
+
 msgid "%s of %s"
 msgstr "%s van %s"
+
+msgid "The yearly cap is reached"
+msgstr "De jaarlimiet is bereikt"
 
 msgid "The monthly cap is reached"
 msgstr "De maandlimiet is bereikt"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "%d%% van de jaarlimiet gebruikt"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "%d%% van de maandlimiet gebruikt"
 
-msgid "This billing cycle"
-msgstr "Deze factuurperiode"
+msgid "Used this year"
+msgstr "Gebruikt dit jaar"
+
+msgid "Used this cycle"
+msgstr "Gebruikt in deze periode"
 
 msgid "Link & traffic"
 msgstr "Verbinding & verkeer"
@@ -1084,8 +1099,8 @@ msgstr "Totaal ontvangen"
 msgid "Total sent"
 msgstr "Totaal verzonden"
 
-msgid "Used today"
-msgstr "Vandaag gebruikt"
+msgid "Today"
+msgstr "Vandaag"
 
 msgid "SIM source"
 msgstr "SIM-bron"
@@ -2390,8 +2405,17 @@ msgstr "Deze pagina is via HTTPS geopend en de terminal wordt via HTTP op het LA
 msgid "The data usage could not be read"
 msgstr "Het dataverbruik kon niet worden gelezen"
 
-msgid "Today"
-msgstr "Vandaag"
+msgid "Year"
+msgstr "Jaar"
+
+msgid "Month"
+msgstr "Maand"
+
+msgid "Used"
+msgstr "Gebruikt"
+
+msgid "Days left this year"
+msgstr "Resterende dagen dit jaar"
 
 msgid "Days left in this cycle"
 msgstr "Resterende dagen in deze periode"
@@ -2411,11 +2435,17 @@ msgstr "Maandlimiet"
 msgid "%s, warning at %d%%"
 msgstr "%s, waarschuwing bij %d%%"
 
+msgid "Yearly cap"
+msgstr "Jaarlimiet"
+
 msgid "Daily quota"
 msgstr "Daglimiet"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "De maandlimiet is bereikt: mobiele data is uitgeschakeld. Die gaat weer aan als de volgende periode begint."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "De jaarlimiet is bereikt: mobiele data is uitgeschakeld. Die gaat weer aan als het volgende jaar begint."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "De daglimiet is bereikt: mobiele data is uitgezet. Om middernacht gaat het weer aan."
@@ -2483,6 +2513,15 @@ msgstr "Mobiele data uitzetten bij de daglimiet"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Wanneer het verbruik van vandaag de daglimiet bereikt, gaat mobiele data uit tot middernacht, tot de limiet is verhoogd of tot dit weer wordt uitgezet. Zet u mobiele data handmatig weer aan, dan blijft het aan tot de volgende herstart."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Wat de provider als resterend toont, geldt als gebruikt: de telling wordt gecorrigeerd naar de limiet min dat bedrag."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Mobiele data uitschakelen bij de jaarlimiet"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Bereikt dit jaar de jaarlimiet, dan wordt mobiele data uitgeschakeld: geen internet via de provider tot het volgende jaar begint, de jaarlimiet verhoogd wordt of dit weer wordt uitgezet. Wordt mobiele data met de hand weer aangezet, dan blijft die aan tot de volgende herstart."
+
 msgid "Both ways"
 msgstr "Beide richtingen"
 
@@ -2501,9 +2540,6 @@ msgstr "Telling wissen"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Alle tot nu toe getelde dagen en factuurperiodes worden vergeten. Het tellen gaat vanaf nu verder."
 
-msgid "Billing cycle and cap"
-msgstr "Factuurperiode en limiet"
-
 msgid "A billing cycle starts on day"
 msgstr "Een factuurperiode begint op dag"
 
@@ -2513,11 +2549,20 @@ msgstr "31: op de laatste dag van elke maand"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Maandlimiet (GB, 0: geen)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Waarschuwen bij dit percentage van de limiet"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Waarschuwen bij dit percentage van de limiet en de jaarlimiet"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Daglimiet (GB, 0: geen)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Jaarlimiet (GB, 0: geen)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Een factuurjaar begint op (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Bijvoorbeeld 01-01; 02-29 is 02-28 in een gewoon jaar."
 
 msgid "The cap and the daily quota count"
 msgstr "Wat de limiet en de daglimiet tellen"
@@ -2530,6 +2575,18 @@ msgstr "Tot nu toe gebruikt in deze periode (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Wat de provider voor deze periode toont (bijvoorbeeld als het tellen halverwege begon); de telling wordt daarop gecorrigeerd."
+
+msgid "Used so far this year (GB)"
+msgstr "Tot nu toe dit jaar gebruikt (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Resterend in deze periode zoals de provider het toont (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Resterend dit jaar zoals de provider het toont (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Factuurperiode en limiet"
 
 msgid "Current setting"
 msgstr "Huidige instelling"

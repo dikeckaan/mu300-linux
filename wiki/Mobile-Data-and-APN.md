@@ -84,12 +84,13 @@ device checklist: [FINDINGS 120](https://github.com/dikeckaan/mu300-linux/blob/m
 
 ## Data usage
 
-The device counts its mobile data per day and per billing cycle, both ways, the way the operator counts it. The count
-survives reboots and switching between systems, and nothing is counted twice. On OpenWrt with the control panel this
-is Cellular > Data usage.
+The device counts its mobile data per day, per billing cycle and per billing year, both ways, the way the operator
+counts it. The count survives reboots and switching between systems, and nothing is counted twice. The page shows
+what is left of a cap first; a yearly cap (off by default) counts the same way and starts again by itself on its
+start day. On OpenWrt with the control panel this is Cellular > Data usage.
 
 ```sh
-mu300-traffic                       # today, this billing cycle and the cap
+mu300-traffic                       # today, this cycle, the cap and the yearly plan
 sudo mu300-traffic set reset-day 1  # the day a billing cycle starts
 sudo mu300-traffic set cap 50G      # a monthly cap; it warns at 90 % unless you set another level
 sudo mu300-traffic set cut on       # optional: mobile data off at the cap, back on when the next cycle starts
@@ -97,6 +98,12 @@ sudo mu300-traffic set daily 2G     # optional: a daily quota, warned at the sam
 sudo mu300-traffic set daily-cut on # optional: mobile data off at the daily quota, back on at midnight
 sudo mu300-traffic set count rx     # the cap and the quota count downloads only (tx: uploads; total: both, default)
 sudo mu300-traffic set plan 'Night 50GB'   # a name for the plan, shown with the count
+sudo mu300-traffic set yearly 500G  # optional: a yearly cap, warned at the same percentage
+sudo mu300-traffic set yearly-start 04-01  # the day a billing year starts (default 01-01)
+sudo mu300-traffic set yearly-cut on  # optional: mobile data off at the yearly cap, back on when the next year starts
+sudo mu300-traffic set used-remaining 12G  # what the operator shows as left this cycle: used = cap - remaining
+sudo mu300-traffic yearly-used 120G  # what the operator says this year has used: the yearly count is corrected
+sudo mu300-traffic set yearly-used-remaining 380G  # what the operator shows as left this year
 mu300-traffic days                  # the last days with traffic
 ```
 

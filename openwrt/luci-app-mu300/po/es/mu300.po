@@ -1057,17 +1057,32 @@ msgstr "Escribible"
 msgid "This boot image cannot change the boot"
 msgstr "Esta imagen de arranque no puede cambiar el arranque"
 
+msgid "Remaining this year"
+msgstr "Restante este año"
+
+msgid "Remaining this cycle"
+msgstr "Restante en este ciclo"
+
 msgid "%s of %s"
 msgstr "%s de %s"
+
+msgid "The yearly cap is reached"
+msgstr "Se alcanzó el límite anual"
 
 msgid "The monthly cap is reached"
 msgstr "Se alcanzó el límite mensual"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "%d%% del límite anual usado"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "%d%% del límite mensual usado"
 
-msgid "This billing cycle"
-msgstr "Este ciclo de facturación"
+msgid "Used this year"
+msgstr "Usado este año"
+
+msgid "Used this cycle"
+msgstr "Usado en este ciclo"
 
 msgid "Link & traffic"
 msgstr "Enlace y tráfico"
@@ -1084,8 +1099,8 @@ msgstr "Total recibido"
 msgid "Total sent"
 msgstr "Total enviado"
 
-msgid "Used today"
-msgstr "Usado hoy"
+msgid "Today"
+msgstr "Hoy"
 
 msgid "SIM source"
 msgstr "Origen de la SIM"
@@ -2390,8 +2405,17 @@ msgstr "Esta página se abrió por HTTPS y el terminal se sirve por HTTP en la L
 msgid "The data usage could not be read"
 msgstr "No se pudo leer el uso de datos"
 
-msgid "Today"
-msgstr "Hoy"
+msgid "Year"
+msgstr "Año"
+
+msgid "Month"
+msgstr "Mes"
+
+msgid "Used"
+msgstr "Usado"
+
+msgid "Days left this year"
+msgstr "Días restantes este año"
 
 msgid "Days left in this cycle"
 msgstr "Días restantes en este ciclo"
@@ -2411,11 +2435,17 @@ msgstr "Límite mensual"
 msgid "%s, warning at %d%%"
 msgstr "%s, aviso al %d%%"
 
+msgid "Yearly cap"
+msgstr "Límite anual"
+
 msgid "Daily quota"
 msgstr "Cuota diaria"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Se alcanzó el límite mensual: los datos móviles se apagaron. Vuelven a encenderse cuando empiece el siguiente ciclo."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Se alcanzó el límite anual: los datos móviles se apagaron. Vuelven a encenderse cuando empiece el año siguiente."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Se alcanzó la cuota diaria: los datos móviles se desactivaron. Vuelven a activarse a medianoche."
@@ -2483,6 +2513,15 @@ msgstr "Desactivar los datos móviles al alcanzar la cuota diaria"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Cuando el uso de hoy alcanza la cuota diaria, los datos móviles se desactivan hasta medianoche, hasta que se aumente la cuota o se desactive esta opción. Si los vuelve a activar a mano, siguen activos hasta el próximo reinicio."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Lo que el operador muestra como disponible cuenta como usado: el conteo se corrige al límite menos ese valor."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Apagar los datos móviles al llegar al límite anual"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Cuando este año llegue al límite anual, se apagan los datos móviles: sin internet a través del operador hasta que empiece el año siguiente, se suba el límite anual o se desactive esta opción. Si los datos móviles se vuelven a encender a mano, siguen encendidos hasta el próximo reinicio."
+
 msgid "Both ways"
 msgstr "En ambos sentidos"
 
@@ -2501,9 +2540,6 @@ msgstr "Borrar el conteo"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Se olvidan todos los días y ciclos contados hasta ahora. El conteo sigue desde este momento."
 
-msgid "Billing cycle and cap"
-msgstr "Ciclo de facturación y límite"
-
 msgid "A billing cycle starts on day"
 msgstr "Un ciclo de facturación empieza el día"
 
@@ -2513,11 +2549,20 @@ msgstr "31: el último día de cada mes"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Límite mensual (GB, 0: ninguno)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Avisar a este porcentaje del límite"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Avisar a este porcentaje del límite y del límite anual"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Cuota diaria (GB, 0: ninguna)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Límite anual (GB, 0: ninguno)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Un año de facturación empieza el (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Por ejemplo 01-01; el 02-29 es el 02-28 en los años no bisiestos."
 
 msgid "The cap and the daily quota count"
 msgstr "Qué cuentan el límite y la cuota diaria"
@@ -2530,6 +2575,18 @@ msgstr "Usado hasta ahora en este ciclo (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Lo que muestra el operador para este ciclo (por ejemplo, si el conteo empezó a mitad); el conteo se corrige a ese valor."
+
+msgid "Used so far this year (GB)"
+msgstr "Usado hasta ahora este año (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Restante en este ciclo según el operador (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Restante este año según el operador (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Ciclo de facturación y límite"
 
 msgid "Current setting"
 msgstr "Ajuste actual"

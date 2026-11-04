@@ -1,22 +1,32 @@
 #!/bin/sh
-# mu300-traffic: how much mobile data was used, per day and per billing cycle, with an optional monthly cap
-# (Ubuntu and OpenWrt; the control panel's Data usage page shows the same).
-#   mu300-traffic                 today, this billing cycle, the cap and the daily quota
+# mu300-traffic: how much mobile data was used, per day, per billing cycle and per billing year, with an optional
+# monthly cap (Ubuntu and OpenWrt; the control panel's Data usage page shows the same).
+#   mu300-traffic                 today, this billing cycle, the cap, the daily quota and the yearly plan
 #   mu300-traffic days [N]        the last N days with traffic (default 31)
 #   mu300-traffic cycles [N]      the last N billing cycles (default 12)
 #   mu300-traffic json            all of it as one JSON object (the panel)
 #   mu300-traffic set KEY VALUE   reset-day 1-31     the day a billing cycle starts (31: the month's last day)
 #                                 cap SIZE|off       the monthly cap, e.g. 50G (binary units: 1G = 1024M)
-#                                 warn 1-100         warn at this percentage of the cap (default 90)
+#                                 warn 1-100         warn at this percentage of the cap (default 90); the yearly
+#                                                    cap warns at the same percentage
 #                                 cut on|off         at the cap, turn mobile data off until the next cycle
 #                                 daily SIZE|off     a daily quota, e.g. 2G (warned at the same percentage)
 #                                 daily-cut on|off   at the daily quota, turn mobile data off until midnight
-#                                 count total|rx|tx  what the cap and the quota count: both ways (default),
-#                                                    downloads only or uploads only
+#                                 count total|rx|tx  what the cap, the quota and the yearly cap count: both ways
+#                                                    (default), downloads only or uploads only
 #                                 plan NAME          the plan's name, shown with the count ('' for none)
 #                                 device IFACE|auto  the interface counted (default auto: the one mobile data
 #                                                    uses now, e.g. sipa_eth8 with the internal SIM)
+#                                 yearly SIZE|off    the yearly cap, e.g. 500G (the same warning percentage; off by
+#                                                    default)
+#                                 yearly-start MM-DD the day a billing year starts (default 01-01; 02-29 is 02-28 in
+#                                                    a common year)
+#                                 yearly-cut on|off  at the yearly cap, turn mobile data off until the next year
+#                                 used-remaining SIZE  what the operator shows as left this cycle: the count is
+#                                                    corrected to cap - remaining
+#                                 yearly-used-remaining SIZE  the same for the billing year (yearly cap - remaining)
 #   mu300-traffic used SIZE       what the operator says this cycle has used so far (the count is corrected)
+#   mu300-traffic yearly-used SIZE  what the operator says this year has used so far (the yearly count is corrected)
 #   mu300-traffic clear --yes     forget every count; counting goes on from now
 #   mu300-traffic save            write the count to the disk now
 #   mu300-traffic run             the service (mu300-traffic.service, init.d/mu300-traffic)
@@ -51,6 +61,11 @@
 # ends at midnight. Data comes back on only when neither the cap nor the quota still holds it off. Pending bytes count
 # towards today at once. COUNT (rx or tx) makes the cap, the quota and "used" count one direction only; the days and
 # cycles still show both. A "used" correction belongs to the count mode it was made in: another mode drops it.
+# Billing year (off by default): the same as the cap for one year, which starts on YEARLY-START (MM-DD, 01-01 by
+# default) and rolls over by itself at its next anniversary - a correction of the year (yearly-used) and the year's
+# own cut (yearly-cut, off by default) end with it. Its count is that of the days in the year, so a cap set in the
+# middle of a year starts from the year's real usage; the yearly ledger lines are written only while a yearly cap is
+# set. A remaining shown by the operator corrects a count the other way (used-remaining, yearly-used-remaining).
 # (MU300_SYSROOT, MU300_DISK, MU300_TRAFFIC_STORE, MU300_TRAFFIC_RUN, MU300_TRAFFIC_NOW and MU300_TRAFFIC_TZOFF are
 # for tests/: a fake /, another disk or store, a fixed clock and UTC offset in seconds.)
 export PATH="$PATH:/opt/mu300/bin:/usr/sbin:/sbin"
@@ -80,6 +95,18 @@ conf() {
 }
 # a plan's name: one line, no control character, at most 96 bytes (UTF-8 is fine)
 PLAN_ERE='[^[:cntrl:]]{0,96}'
+# yearly_start_ok MM-DD: a day a year really has (02-29 counts: a leap year has it)
+yearly_start_ok() {
+    _m=${1%-*} _d=${1#*-}
+    case $_d in 0[1-9]|[12][0-9]|3[01]) ;; *) return 1 ;; esac
+    case $_m in
+        01|03|05|07|08|10|12) _max=31 ;;
+        04|06|09|11) _max=30 ;;
+        02) _max=29 ;;
+        *) return 1 ;;
+    esac
+    [ "$_d" -le "$_max" ]
+}
 load_conf() {
     RESET_DAY=$(conf RESET_DAY 1 '[1-9]|[12][0-9]|3[01]')
     CAP=$(conf CAP 0 '[0-9]{1,16}')
@@ -93,6 +120,10 @@ load_conf() {
     # sipa_eth0 was the default before auto, and every saved setting wrote it into the file: it means auto (issue
     # #369: with the internal SIM the bearer is sipa_eth8, and sipa_eth0 counted nothing)
     [ "$DEVICE" != sipa_eth0 ] || DEVICE=auto
+    YEARLY=$(conf YEARLY 0 '[0-9]{1,16}')
+    YEARLY_START=$(conf YEARLY_START 01-01 '[0-9]{2}-[0-9]{2}')
+    yearly_start_ok "$YEARLY_START" || YEARLY_START=01-01
+    YEARLY_CUT=$(conf YEARLY_CUT 0 '[01]')
     INTERVAL=$(conf INTERVAL 60 '[1-9][0-9]{1,3}')
     CHECKPOINT=$(conf CHECKPOINT 1800 '[1-9][0-9]{2,5}')
     CHECKPOINT_BYTES=$(conf CHECKPOINT_BYTES 1073741824 '[1-9][0-9]{5,15}')
@@ -103,9 +134,10 @@ write_conf() {
     mkdir -p "$STORE" || die "cannot create $STORE"
     load_conf
     eval "$1=\$2"
-    printf 'RESET_DAY=%s\nCAP=%s\nWARN=%s\nCUT=%s\nDAILY=%s\nDAILY_CUT=%s\nCOUNT=%s\nPLAN=%s\nDEVICE=%s\nINTERVAL=%s\nCHECKPOINT=%s\nCHECKPOINT_BYTES=%s\nCLOCK=%s\n' \
-        "$RESET_DAY" "$CAP" "$WARN" "$CUT" "$DAILY" "$DAILY_CUT" "$COUNT" "$PLAN" "$DEVICE" "$INTERVAL" "$CHECKPOINT" \
-        "$CHECKPOINT_BYTES" "$CLOCK" > "$CONF.new" && mv "$CONF.new" "$CONF" || die "cannot write $CONF"
+    printf 'RESET_DAY=%s\nCAP=%s\nWARN=%s\nCUT=%s\nDAILY=%s\nDAILY_CUT=%s\nCOUNT=%s\nPLAN=%s\nDEVICE=%s\nYEARLY=%s\nYEARLY_START=%s\nYEARLY_CUT=%s\nINTERVAL=%s\nCHECKPOINT=%s\nCHECKPOINT_BYTES=%s\nCLOCK=%s\n' \
+        "$RESET_DAY" "$CAP" "$WARN" "$CUT" "$DAILY" "$DAILY_CUT" "$COUNT" "$PLAN" "$DEVICE" "$YEARLY" "$YEARLY_START" \
+        "$YEARLY_CUT" "$INTERVAL" "$CHECKPOINT" "$CHECKPOINT_BYTES" "$CLOCK" > "$CONF.new" && mv "$CONF.new" "$CONF" ||
+        die "cannot write $CONF"
 }
 # size_bytes SIZE: 50G, 1.5T, 300M, 1024 (bytes) -> bytes; binary units, as the panel shows them
 size_bytes() {
@@ -203,9 +235,12 @@ data_up() { [ ! -e "$R/run/mu300-mobile-data-down" ]; }
 #   d YYYY-MM-DD RX TX               one local day, oldest first (800 days are kept)
 #   adj CYCLESTART BYTES [COUNT]     the correction "used" made to that billing cycle (may be negative), in that
 #                                    count mode (total without one)
+#   yadj YEARSTART BYTES [COUNT]     the same for the billing year (only while a yearly cap is set)
 #   cut CYCLESTART BOOT OVERRIDE     the cap turned mobile data off in that cycle, in that boot; OVERRIDE 1: someone
 #                                    turned it back on, it stays on
+#   ycut YEARSTART BOOT OVERRIDE     the same for the yearly cap
 #   alert CYCLESTART warn|over       the last warning logged in that cycle
+#   yalert YEARSTART warn|over       the same for the billing year
 #   dcut DAY BOOT OVERRIDE           the same for the daily quota, on that day
 #   dalert DAY warn|over             the last warning about the daily quota logged that day
 # The awk program reads a ledger, adds the reading given in -v (op sample/view), and prints the new ledger (fmt
@@ -241,6 +276,19 @@ function cnext(start,   y, m) {
     if (m > 12) { m = 1; y++ }
     return ymd(y, m, rday(y, m))
 }
+# the first day of the billing year that starts in YEAR: yearly-start SS-MM-DD; 02-29 is 02-28 in a common year
+function yfirst(y,   m, d) {
+    m = substr(ystart, 1, 2) + 0; d = substr(ystart, 4, 2) + 0
+    if (m == 2 && d == 29 && !(y % 4 == 0 && (y % 100 != 0 || y % 400 == 0))) d = 28
+    return ymd(y, m, d)
+}
+# ycycle DAY: the first day of the billing year DAY is in, and of the one after the year starting at START
+function ycycle(day,   y) {
+    y = substr(day, 1, 4) + 0
+    if (day < yfirst(y)) y--
+    return yfirst(y)
+}
+function ynext(start,   y) { y = substr(start, 1, 4) + 0; return yfirst(y + 1) }
 # dnum DAY: the number of the day (1970-01-01 is 0)
 function dnum(s,   y, m, d, era, yoe, doy) {
     y = substr(s, 1, 4) + 0; m = substr(s, 6, 2) + 0; d = substr(s, 9, 2) + 0
@@ -317,8 +365,9 @@ function rank(l) { return l == "over" ? 2 : l == "warn" ? 1 : 0 }
 # cnt RX TX: what the cap and the quota count (count total, rx or tx)
 function cnt(rx, tx) { return mode == "rx" ? rx : mode == "tx" ? tx : rx + tx }
 function lvl(u, lim) { return lim > 0 ? (u >= lim ? "over" : u * 100 >= lim * warn ? "warn" : "ok") : "none" }
-# cutstep I KEY WANT: limit I (1 the cap, per cycle; 2 the daily quota, per day) wants mobile data off for KEY or
-# not; it is cut once per KEY and again after a reboot, unless someone turned it back on in the same boot
+# cutstep I KEY WANT: limit I (1 the cap, per cycle; 2 the daily quota, per day; 3 the yearly cap, per year) wants
+# mobile data off for KEY or not; it is cut once per KEY and again after a reboot, unless someone turned it back on in
+# the same boot
 function cutstep(i, key, want) {
     if (ck[i] != "" && (ck[i] != key || !want)) {
         if (!co[i] && !dataup) rest = 1
@@ -342,25 +391,39 @@ $1 == "base" && NF == 7 && isnum($3) && isnum($5) && isnum($6) && isnum($7) {
 $1 == "p" && NF == 5 && isnum($3) && isnum($4) && isnum($5) { np++; pb[np] = $2; pu[np] = $3; prx[np] = $4; ptx[np] = $5 }
 $1 == "d" && NF == 4 && $2 ~ /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/ && isnum($3) && isnum($4) { addday($2, $3, $4) }
 $1 == "adj" && (NF == 3 || NF == 4) && isnum($3) { adjc = $2; adjb = $3; adjm = NF == 4 ? $4 : "total" }
+$1 == "yadj" && (NF == 3 || NF == 4) && isnum($3) { yadjc = $2; yadjb = $3; yadjm = NF == 4 ? $4 : "total" }
 $1 == "cut" && NF == 4 { ck[1] = $2; cb[1] = $3; co[1] = $4 == 1 }
+$1 == "ycut" && NF == 4 { ck[3] = $2; cb[3] = $3; co[3] = $4 == 1 }
 $1 == "dcut" && NF == 4 { ck[2] = $2; cb[2] = $3; co[2] = $4 == 1 }
 $1 == "alert" && NF == 3 { alc = $2; all = $3 }
+$1 == "yalert" && NF == 3 { yalc = $2; yall = $3 }
 $1 == "dalert" && NF == 3 { dalc = $2; dall = $3 }
 
 END {
     today = civil(now)
-    if (op == "sample" || op == "view" || op == "clear" || op == "used") sample()
+    if (op == "sample" || op == "view" || op == "clear" || op == "used" || op == "yearly-used") sample()
     if (trusted && np) datepend()
     if (trusted && since == "" && op != "view") since = now
-    if (op == "clear") { nk = 0; split("", drx); split("", dtx); np = 0; adjc = ""; ck[1] = ""; ck[2] = ""; alc = ""; dalc = ""; since = trusted ? now : "" }
+    if (op == "clear") {
+        nk = 0; split("", drx); split("", dtx); np = 0; adjc = ""; ck[1] = ""; ck[2] = ""; alc = ""; dalc = ""; since = trusted ? now : ""
+        yadjc = ""; ck[3] = ""; yalc = ""
+    }
     cs = cstart(today); ce = cnext(cs)
+    ys = ycycle(today); ye = ynext(ys)
     prx_all = 0; ptx_all = 0
     for (i = 1; i <= np; i++) { prx_all += prx[i]; ptx_all += ptx[i] }
     sums(cs, ce); crx_c = srx + prx_all; ctx_c = stx + ptx_all
+    sums(ys, ye); yrx_c = srx + prx_all; ytx_c = stx + ptx_all
     if (op == "used") { adjc = cs; adjm = mode; adjb = usedarg - cnt(crx_c, ctx_c) }
+    if (op == "yearly-used") { yadjc = ys; yadjm = mode; yadjb = usedarg - cnt(yrx_c, ytx_c) }
     adj = adjc == cs && adjm == mode ? adjb : 0
     used = cnt(crx_c, ctx_c) + adj; if (used < 0) used = 0
     level = lvl(used, cap); if (level == "none") level = "ok"
+    # a yearly plan that was switched off keeps no correction of its own: only the days count
+    if (yearly == 0) yadjc = ""
+    yadj = yadjc == ys && yadjm == mode ? yadjb : 0
+    yused = cnt(yrx_c, ytx_c) + yadj; if (yused < 0) yused = 0
+    ylevel = lvl(yused, yearly)
     dused = cnt(drx[today] + prx_all, dtx[today] + ptx_all); dlevel = lvl(dused, daily)
     if (op == "sample") {
         if (alc != cs) { alc = cs; all = "ok" }
@@ -371,19 +434,27 @@ END {
             if (rank(dlevel) > rank(dall)) { dalert = dlevel; dall = dlevel }
             if (rank(dlevel) < rank(dall)) dall = dlevel
         } else dalc = ""
+        if (yearly > 0) {
+            if (yalc != ys) { yalc = ys; yall = "ok" }
+            if (rank(ylevel) > rank(yall)) { yalert = ylevel; yall = ylevel }
+            if (rank(ylevel) < rank(yall)) yall = ylevel
+        } else yalc = ""
         cutstep(1, cs, cap > 0 && cut && level == "over")
         cutstep(2, today, daily > 0 && dcut && dlevel == "over")
-        # back on only when neither limit still holds it off
-        restore = rest && !docut && (ck[1] == "" || co[1]) && (ck[2] == "" || co[2])
+        cutstep(3, ys, yearly > 0 && ycut && ylevel == "over")
+        # back on only when no limit still holds it off
+        restore = rest && !docut && (ck[1] == "" || co[1]) && (ck[2] == "" || co[2]) && (ck[3] == "" || co[3])
         # 800 days are kept
         old = civil(now - 800 * 86400); j = 0
         for (i = 1; i <= nk; i++) if (key[i] >= old) key[++j] = key[i]; else { delete drx[key[i]]; delete dtx[key[i]] }
         nk = j
         if (sumfile != "")
-            printf "level=%s\nalert=%s\ncut=%d\ncut_by=%s\nrestore=%d\ncounted=%s\nused=%s\ncap=%s\nwarn=%d\ncycle_start=%s\ntoday_rx=%s\ntoday_tx=%s\npending=%s\nclock=%d\ndaily_level=%s\ndaily_alert=%s\ndaily_used=%s\ndaily=%s\n", \
-                (cap > 0 ? level : "none"), alert, (docut > 0), (docut == 2 ? "daily" : docut ? "cap" : ""), restore, \
+            printf "level=%s\nalert=%s\ncut=%d\ncut_by=%s\nrestore=%d\ncounted=%s\nused=%s\ncap=%s\nwarn=%d\ncycle_start=%s\ntoday_rx=%s\ntoday_tx=%s\npending=%s\nclock=%d\ndaily_level=%s\ndaily_alert=%s\ndaily_used=%s\ndaily=%s\nremaining=%s\nyearly=%s\nyearly_level=%s\nyearly_used=%s\nyearly_remaining=%s\nyearly_alert=%s\nyearly_cut=%d\n", \
+                (cap > 0 ? level : "none"), alert, (docut > 0), (docut == 2 ? "daily" : docut == 3 ? "yearly" : docut ? "cap" : ""), restore, \
                 n(counted), n(used), n(cap), warn, cs, n(drx[today]), n(dtx[today]), n(prx_all + ptx_all), \
-                trusted, dlevel, dalert, n(dused), n(daily) > sumfile
+                trusted, dlevel, dalert, n(dused), n(daily), \
+                n(cap > 0 ? cap - used : 0), n(yearly), (yearly > 0 ? ylevel : "none"), n(yused), \
+                n(yearly > 0 ? yearly - yused : 0), (yalert == "" ? "ok" : yalert), (docut == 3) > sumfile
     }
     if (fmt == "ledger") {
         print "mu300-traffic 1"
@@ -392,14 +463,19 @@ END {
         for (i = 1; i <= np; i++) printf "p %s %s %s %s\n", pb[i], pu[i], n(prx[i]), n(ptx[i])
         for (i = 1; i <= nk; i++) printf "d %s %s %s\n", key[i], n(drx[key[i]]), n(dtx[key[i]])
         if (adjc != "") printf "adj %s %s%s\n", adjc, n(adjb), (adjm != "" && adjm != "total" ? " " adjm : "")
+        if (yadjc != "") printf "yadj %s %s%s\n", yadjc, n(yadjb), (yadjm != "" && yadjm != "total" ? " " yadjm : "")
         if (ck[1] != "") printf "cut %s %s %d\n", ck[1], cb[1], co[1]
+        if (ck[3] != "") printf "ycut %s %s %d\n", ck[3], cb[3], co[3]
         if (alc != "") printf "alert %s %s\n", alc, all
+        if (yalc != "") printf "yalert %s %s\n", yalc, yall
         if (ck[2] != "") printf "dcut %s %s %d\n", ck[2], cb[2], co[2]
         if (dalc != "") printf "dalert %s %s\n", dalc, dall
         exit
     }
     last = prevday(ce)
     left = dnum(last) - dnum(today) + 1
+    ylast = prevday(ye)
+    yleft = dnum(ylast) - dnum(today) + 1
     if (fmt == "json") {
         printf "{\"device\":\"%s\",\"available\":%d,\"clock\":%d,\"since\":%s,\"now\":%s,\"reset_day\":%d,", \
             dev, (avail == 1), trusted, (since == "" ? "null" : n(since)), n(now), reset
@@ -408,8 +484,10 @@ END {
         printf "\"pending\":{\"rx\":%s,\"tx\":%s},", n(prx_all), n(ptx_all)
         printf "\"cycle\":{\"start\":\"%s\",\"last\":\"%s\",\"days_left\":%d,\"rx\":%s,\"tx\":%s,\"adj\":%s,\"used\":%s},", \
             cs, last, left, n(crx_c), n(ctx_c), n(adj), n(used)
-        printf "\"cap\":{\"bytes\":%s,\"warn\":%d,\"cut\":%d,\"level\":\"%s\",\"cut_active\":%d},", \
-            n(cap), warn, cut, (cap > 0 ? level : "none"), (ck[1] == cs && !co[1])
+        printf "\"cap\":{\"bytes\":%s,\"remaining\":%s,\"warn\":%d,\"cut\":%d,\"level\":\"%s\",\"cut_active\":%d},", \
+            n(cap), n(cap > 0 ? cap - used : 0), warn, cut, (cap > 0 ? level : "none"), (ck[1] == cs && !co[1])
+        printf "\"yearly\":{\"start_day\":%s,\"start\":\"%s\",\"last\":\"%s\",\"days_left\":%d,\"bytes\":%s,\"used\":%s,\"remaining\":%s,\"cut\":%d,\"level\":\"%s\",\"cut_active\":%d},", \
+            jstr(ystart), ys, ylast, yleft, n(yearly), n(yused), n(yearly > 0 ? yearly - yused : 0), ycut, (yearly > 0 ? ylevel : "none"), (ck[3] == ys && !co[3])
         printf "\"daily\":{\"bytes\":%s,\"used\":%s,\"cut\":%d,\"level\":\"%s\",\"cut_active\":%d},", \
             n(daily), n(dused), dcut, dlevel, (ck[2] == today && !co[2])
         printf "\"days\":["
@@ -449,7 +527,9 @@ END {
         printf "today         %s  down %s, up %s\n", today, hs(drx[today]), hs(dtx[today])
         printf "this cycle    %s - %s  %s used", cs, last, hs(used)
         if (cap > 0) printf " of %s (%d%%)", hs(cap), int(used * 100 / cap)
-        printf ", %d day%s left\n", left, (left == 1 ? "" : "s")
+        printf ", "
+        if (cap > 0) printf "%s left, ", hs(cap - used > 0 ? cap - used : 0)
+        printf "%d day%s left\n", left, (left == 1 ? "" : "s")
         if (adj) printf "              corrected by %s (mu300-traffic used)\n", (adj < 0 ? "-" hs(-adj) : "+" hs(adj))
         if (prx_all + ptx_all) printf "not dated yet %s: the clock has not been set by NTP (counted in this cycle)\n", hs(prx_all + ptx_all)
         if (cap > 0) {
@@ -462,6 +542,14 @@ END {
                 int(dused * 100 / daily), (dcut ? "is turned off until midnight" : "stays on")
             if (dlevel == "over") print "              the daily quota is reached" (ck[2] == today && !co[2] ? ": mobile data was turned off" : "")
         }
+        if (yearly > 0) {
+            printf "this year     %s - %s  %s used of %s (%d%%), %s left, %d day%s left\n", ys, ylast, hs(yused), hs(yearly), \
+                int(yused * 100 / yearly), hs(yearly - yused > 0 ? yearly - yused : 0), yleft, (yleft == 1 ? "" : "s")
+            printf "yearly cap    %s, warning at %d%%; at the yearly cap mobile data %s\n", hs(yearly), warn, (ycut ? "is turned off" : "stays on")
+            if (ylevel == "over") print "              the yearly cap is reached" (ck[3] == ys && !co[3] ? ": mobile data was turned off" : "")
+            else if (ylevel == "warn") print "              warning: " int(yused * 100 / yearly) "% of the yearly cap is used"
+            if (yadj) printf "              corrected by %s (mu300-traffic yearly-used)\n", (yadj < 0 ? "-" hs(-yadj) : "+" hs(yadj))
+        } else print "yearly        none (mu300-traffic set yearly 500G)"
         if (since != "") printf "counting since %s\n", civil(since)
     }
 }
@@ -478,7 +566,8 @@ ledger_run() {
     MU300_TRAFFIC_PLAN=$PLAN awk -v op="$_op" -v fmt="$_fmt" -v now="$NOW" -v off="$OFF" -v up="${UP:-0}" -v trusted="$_t" \
         -v cboot="$BOOT" -v cidx="$IDX" -v cdev="$DEV" -v crx="$RX" -v ctx="$TX" -v dev="$DEV" -v avail="$AVAIL" \
         -v reset="$RESET_DAY" -v cap="$CAP" -v warn="$WARN" -v cut="$CUT" -v dataup="$_du" \
-        -v daily="$DAILY" -v dcut="$DAILY_CUT" -v mode="$COUNT" \
+        -v daily="$DAILY" -v dcut="$DAILY_CUT" -v mode="$COUNT" -v ystart="$YEARLY_START" \
+        -v yearly="$YEARLY" -v ycut="$YEARLY_CUT" \
         -v ndays="${NDAYS:-31}" -v ncyc="${NCYC:-12}" -v usedarg="${USED:-0}" -v sumfile="${SUMFILE:-}" \
         "$@" "$AWK_LEDGER" "$_src"
 }
@@ -535,12 +624,15 @@ round() {
     unlock
     # the summary's lines, read by the shell (one sed per value used to be most of a round's processes)
     s_counted= s_alert= s_warn= s_used= s_cap= s_cut= s_cut_by= s_restore= s_daily_alert= s_daily_used= s_daily=
+    s_yearly_alert= s_yearly_used= s_yearly=
     { while IFS= read -r _l; do
         case $_l in
             counted=*) s_counted=${_l#*=} ;; alert=*) s_alert=${_l#*=} ;; warn=*) s_warn=${_l#*=} ;;
             used=*) s_used=${_l#*=} ;; cap=*) s_cap=${_l#*=} ;; cut=*) s_cut=${_l#*=} ;; cut_by=*) s_cut_by=${_l#*=} ;;
             restore=*) s_restore=${_l#*=} ;; daily_alert=*) s_daily_alert=${_l#*=} ;;
             daily_used=*) s_daily_used=${_l#*=} ;; daily=*) s_daily=${_l#*=} ;;
+            yearly_alert=*) s_yearly_alert=${_l#*=} ;; yearly_used=*) s_yearly_used=${_l#*=} ;;
+            yearly=*) s_yearly=${_l#*=} ;;
         esac
     done < "$SUMMARY"; } 2>/dev/null
     case $s_counted in ''|*[!0-9]*) s_counted=0 ;; esac
@@ -553,16 +645,22 @@ round() {
         warn) log "$s_warn% of the daily quota is used ($s_daily_used of $s_daily bytes today)" ;;
         over) log "the daily quota is reached ($s_daily_used of $s_daily bytes today)" ;;
     esac
+    case $s_yearly_alert in
+        warn) log "$s_warn% of the yearly cap is used ($s_yearly_used of $s_yearly bytes this year)" ;;
+        over) log "the yearly cap is reached ($s_yearly_used of $s_yearly bytes this year)" ;;
+    esac
     if [ "$s_cut" = 1 ]; then
         if [ "$s_cut_by" = daily ]; then
             log "turning mobile data off at the daily quota until midnight (to keep it on: mu300-traffic set daily-cut off, or a higher quota)"
+        elif [ "$s_cut_by" = yearly ]; then
+            log "turning mobile data off at the yearly cap (to keep it on: mu300-traffic set yearly-cut off, or a higher yearly cap)"
         else
             log "turning mobile data off at the monthly cap (to keep it on: mu300-traffic set cut off, or a higher cap)"
         fi
         data_off >/dev/null 2>&1 &
     fi
     if [ "$s_restore" = 1 ]; then
-        log "turning mobile data back on: neither the cap nor the daily quota holds it off any more"
+        log "turning mobile data back on: no cap, quota or yearly cap holds it off any more"
         data_on >/dev/null 2>&1 &
     fi
 }
@@ -622,6 +720,21 @@ case "${1:-status}" in
     set)
         v=${3:-}
         case ${2:-} in
+            used-remaining)
+                       _b=$(size_bytes "$v") || die "used-remaining: a size like 12.5G"
+                       [ "$CAP" -gt 0 ] || die "used-remaining: no cap is set (mu300-traffic set cap 50G)"
+                       [ "$_b" -le "$CAP" ] || die "used-remaining: the remaining ($v) is more than the cap ($CAP bytes)"
+                       USED=$((CAP - _b)); change used ledger
+                       echo "this cycle now counts as $((CAP - _b)) bytes used (the cap less the remaining)"
+                       exit 0 ;;
+            yearly-used-remaining)
+                       _b=$(size_bytes "$v") || die "yearly-used-remaining: a size like 12.5G"
+                       [ "$YEARLY" -gt 0 ] || die "yearly-used-remaining: no yearly cap is set (mu300-traffic set yearly 500G)"
+                       [ "$_b" -le "$YEARLY" ] ||
+                           die "yearly-used-remaining: the remaining ($v) is more than the yearly cap ($YEARLY bytes)"
+                       USED=$((YEARLY - _b)); change yearly-used ledger
+                       echo "this year now counts as $((YEARLY - _b)) bytes used (the yearly cap less the remaining)"
+                       exit 0 ;;
             reset-day) printf '%s\n' "$v" | grep -Eqx '[1-9]|[12][0-9]|3[01]' || die "reset-day: a day from 1 to 31"
                        write_conf RESET_DAY "$v" ;;
             cap)       case $v in off|0) v=0 ;; *) v=$(size_bytes "$v") || die "cap: a size like 50G, or off" ;; esac
@@ -634,6 +747,12 @@ case "${1:-status}" in
                        write_conf DAILY "$v" ;;
             daily-cut) case $v in on) v=1 ;; off) v=0 ;; *) die "daily-cut: on or off" ;; esac
                        write_conf DAILY_CUT "$v" ;;
+            yearly)    case $v in off|0) v=0 ;; *) v=$(size_bytes "$v") || die "yearly: a size like 500G, or off" ;; esac
+                       write_conf YEARLY "$v" ;;
+            yearly-start) yearly_start_ok "$v" || die "yearly-start: a date MM-DD like 01-01"
+                       write_conf YEARLY_START "$v" ;;
+            yearly-cut) case $v in on) v=1 ;; off) v=0 ;; *) die "yearly-cut: on or off" ;; esac
+                       write_conf YEARLY_CUT "$v" ;;
             count)     case $v in total|rx|tx) ;; *) die "count: total, rx or tx" ;; esac
                        write_conf COUNT "$v" ;;
             plan)      [ "$(printf '%s' "$v" | wc -l)" -eq 0 ] && printf '%s\n' "$v" | LC_ALL=C grep -Eqx -- "$PLAN_ERE" ||
@@ -641,13 +760,18 @@ case "${1:-status}" in
                        write_conf PLAN "$v" ;;
             device)    printf '%s\n' "$v" | grep -Eqx 'auto|[A-Za-z0-9][A-Za-z0-9_.:-]{0,14}' || die "device: an interface name, or auto"
                        write_conf DEVICE "$v" ;;
-            *) die "set reset-day|cap|warn|cut|daily|daily-cut|count|plan|device VALUE" ;;
+            *) die "set reset-day|cap|warn|cut|daily|daily-cut|count|plan|device|yearly|yearly-start|yearly-cut|used-remaining|yearly-used-remaining VALUE" ;;
         esac
         echo "saved" ;;
     used)
         USED=$(size_bytes "${2:-}") || die "used: a size like 12.5G"
         change used ledger
         echo "this cycle now counts as $2 used" ;;
+    yearly-used)
+        USED=$(size_bytes "${2:-}") || die "yearly-used: a size like 12.5G"
+        [ "$YEARLY" -gt 0 ] || die "yearly-used: no yearly cap is set (mu300-traffic set yearly 500G)"
+        change yearly-used ledger
+        echo "this year now counts as $2 used" ;;
     clear)
         [ "${2:-}" = --yes ] || die "clear --yes: forgets every count"
         change clear ledger
@@ -658,5 +782,5 @@ case "${1:-status}" in
         UNSAVED=0; round; save || die "the ledger could not be saved to $STORE" ;;
     run) run ;;
     clock-synced) mkdir -p "${SYNCED%/*}" && : > "$SYNCED" ;;
-    *) sed -n '2,24s/^# \{0,1\}//p' "$0" >&2; exit 2 ;;
+    *) sed -n '2,33s/^# \{0,1\}//p' "$0" >&2; exit 2 ;;
 esac

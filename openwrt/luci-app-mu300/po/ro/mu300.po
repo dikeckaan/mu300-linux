@@ -1057,17 +1057,32 @@ msgstr "Inscriptibil"
 msgid "This boot image cannot change the boot"
 msgstr "Această imagine de pornire nu poate schimba pornirea"
 
+msgid "Remaining this year"
+msgstr "Rămas în acest an"
+
+msgid "Remaining this cycle"
+msgstr "Rămas în acest ciclu"
+
 msgid "%s of %s"
 msgstr "%s din %s"
+
+msgid "The yearly cap is reached"
+msgstr "Limita anuală a fost atinsă"
 
 msgid "The monthly cap is reached"
 msgstr "Limita lunară a fost atinsă"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "%d%% din limita anuală folosit"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "%d%% din limita lunară folosit"
 
-msgid "This billing cycle"
-msgstr "Acest ciclu de facturare"
+msgid "Used this year"
+msgstr "Folosit în acest an"
+
+msgid "Used this cycle"
+msgstr "Folosit în acest ciclu"
 
 msgid "Link & traffic"
 msgstr "Legătură și trafic"
@@ -1084,8 +1099,8 @@ msgstr "Total primit"
 msgid "Total sent"
 msgstr "Total trimis"
 
-msgid "Used today"
-msgstr "Folosit azi"
+msgid "Today"
+msgstr "Azi"
 
 msgid "SIM source"
 msgstr "Sursă SIM"
@@ -2390,8 +2405,17 @@ msgstr "Această pagină a fost deschisă prin HTTPS, iar terminalul este servit
 msgid "The data usage could not be read"
 msgstr "Consumul de date nu a putut fi citit"
 
-msgid "Today"
-msgstr "Azi"
+msgid "Year"
+msgstr "An"
+
+msgid "Month"
+msgstr "Lună"
+
+msgid "Used"
+msgstr "Folosit"
+
+msgid "Days left this year"
+msgstr "Zile rămase în acest an"
 
 msgid "Days left in this cycle"
 msgstr "Zile rămase în ciclu"
@@ -2411,11 +2435,17 @@ msgstr "Limită lunară"
 msgid "%s, warning at %d%%"
 msgstr "%s, avertizare la %d%%"
 
+msgid "Yearly cap"
+msgstr "Limită anuală"
+
 msgid "Daily quota"
 msgstr "Cotă zilnică"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Limita lunară a fost atinsă: datele mobile au fost oprite. Revin când începe ciclul următor."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Limita anuală a fost atinsă: datele mobile au fost oprite. Revin când începe anul următor."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Cota zilnică a fost atinsă: datele mobile au fost oprite. Revin la miezul nopții."
@@ -2483,6 +2513,15 @@ msgstr "Oprește datele mobile la cota zilnică"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Când consumul de azi atinge cota zilnică, datele mobile sunt oprite până la miezul nopții, până când cota este mărită sau până când aceasta este oprită din nou. Repornirea manuală a datelor mobile le păstrează pornite până la următoarea repornire."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Ce arată operatorul ca rămas se consideră folosit: contorul se corectează la limită minus această valoare."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Oprește datele mobile la limita anuală"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Când acest an atinge limita anuală, datele mobile se opresc: fără internet prin operator până începe anul următor, se mărește limita anuală sau se dezactivează din nou această opțiune. Datele mobile repornite manual rămân pornite până la următoarea repornire."
+
 msgid "Both ways"
 msgstr "Ambele sensuri"
 
@@ -2501,9 +2540,6 @@ msgstr "Șterge contorul"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Toate zilele și ciclurile numărate până acum sunt uitate. Numărarea continuă de acum."
 
-msgid "Billing cycle and cap"
-msgstr "Ciclu de facturare și limită"
-
 msgid "A billing cycle starts on day"
 msgstr "Un ciclu de facturare începe în ziua"
 
@@ -2513,11 +2549,20 @@ msgstr "31: în ultima zi a fiecărei luni"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Limită lunară (GB, 0: niciuna)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Avertizează la acest procent din limită"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Avertizează la acest procent din limită și limita anuală"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Cotă zilnică (GB, 0: niciuna)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Limită anuală (GB, 0: niciuna)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Un an de facturare începe în (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "De exemplu 01-01; 02-29 este 02-28 într-un an obișnuit."
 
 msgid "The cap and the daily quota count"
 msgstr "Ce numără limita și cota zilnică"
@@ -2530,6 +2575,18 @@ msgstr "Folosit până acum în acest ciclu (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Ce arată operatorul pentru acest ciclu (de exemplu dacă numărarea a început la mijlocul lui); contorul se corectează la această valoare."
+
+msgid "Used so far this year (GB)"
+msgstr "Folosit până acum în acest an (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Rămas în acest ciclu conform operatorului (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Rămas în acest an conform operatorului (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Ciclu de facturare și limită"
 
 msgid "Current setting"
 msgstr "Setarea curentă"

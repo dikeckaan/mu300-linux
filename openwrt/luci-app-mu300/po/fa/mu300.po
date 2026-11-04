@@ -1057,17 +1057,32 @@ msgstr "قابل نوشتن"
 msgid "This boot image cannot change the boot"
 msgstr "این ایمیج بوت نمی‌تواند بوت را تغییر دهد"
 
+msgid "Remaining this year"
+msgstr "باقی‌مانده امسال"
+
+msgid "Remaining this cycle"
+msgstr "باقی‌مانده این دوره"
+
 msgid "%s of %s"
 msgstr "%s از %s"
+
+msgid "The yearly cap is reached"
+msgstr "سقف سالانه پر شد"
 
 msgid "The monthly cap is reached"
 msgstr "سقف ماهانه پر شد"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "%d%% از سقف سالانه مصرف شده"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "%d%% از سقف ماهانه مصرف شده"
 
-msgid "This billing cycle"
-msgstr "دوره صورتحساب فعلی"
+msgid "Used this year"
+msgstr "مصرف‌شده امسال"
+
+msgid "Used this cycle"
+msgstr "مصرف‌شده در این دوره"
 
 msgid "Link & traffic"
 msgstr "لینک و ترافیک"
@@ -1084,8 +1099,8 @@ msgstr "کل دریافتی"
 msgid "Total sent"
 msgstr "کل ارسالی"
 
-msgid "Used today"
-msgstr "مصرف امروز"
+msgid "Today"
+msgstr "امروز"
 
 msgid "SIM source"
 msgstr "منبع سیم‌کارت"
@@ -2390,8 +2405,17 @@ msgstr "این صفحه با HTTPS باز شده و ترمینال روی LAN ب
 msgid "The data usage could not be read"
 msgstr "مصرف داده خوانده نشد"
 
-msgid "Today"
-msgstr "امروز"
+msgid "Year"
+msgstr "سال"
+
+msgid "Month"
+msgstr "ماه"
+
+msgid "Used"
+msgstr "مصرف‌شده"
+
+msgid "Days left this year"
+msgstr "روزهای باقی‌مانده امسال"
 
 msgid "Days left in this cycle"
 msgstr "روزهای باقی‌مانده دوره"
@@ -2411,11 +2435,17 @@ msgstr "سقف ماهانه"
 msgid "%s, warning at %d%%"
 msgstr "%s، هشدار در %d%%"
 
+msgid "Yearly cap"
+msgstr "سقف سالانه"
+
 msgid "Daily quota"
 msgstr "سهمیه روزانه"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "سقف ماهانه پر شد: داده همراه خاموش شد. با شروع دوره بعد دوباره روشن می‌شود."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "سقف سالانه پر شد: داده همراه خاموش شد. با شروع سال بعد دوباره روشن می‌شود."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "سهمیه روزانه تمام شد: داده همراه خاموش شد. نیمه‌شب دوباره روشن می‌شود."
@@ -2483,6 +2513,15 @@ msgstr "خاموش کردن داده همراه در سهمیه روزانه"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "وقتی مصرف امروز به سهمیه روزانه برسد، داده همراه تا نیمه‌شب، افزایش سهمیه یا خاموش کردن این گزینه خاموش می‌ماند. روشن کردن دستی داده همراه آن را تا راه‌اندازی مجدد بعدی روشن نگه می‌دارد."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "آنچه اپراتور به عنوان باقی‌مانده نشان می‌دهد مصرف‌شده حساب می‌شود: شمارش با سقف منهای این مقدار اصلاح می‌شود."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "خاموش کردن داده همراه در سقف سالانه"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "وقتی این سال به سقف سالانه برسد، داده همراه خاموش می‌شود: تا شروع سال بعد، بالا بردن سقف سالانه یا خاموش کردن دوباره این گزینه، اینترنتی از طریق اپراتور نیست. اگر داده همراه را دستی دوباره روشن کنید، تا راه‌اندازی مجدد بعدی روشن می‌ماند."
+
 msgid "Both ways"
 msgstr "هر دو جهت"
 
@@ -2501,9 +2540,6 @@ msgstr "پاک کردن شمارش"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "همه روزها و دوره‌های صورتحساب شمرده‌شده تا کنون فراموش می‌شوند. شمارش از همین حالا ادامه می‌یابد."
 
-msgid "Billing cycle and cap"
-msgstr "دوره صورتحساب و سقف"
-
 msgid "A billing cycle starts on day"
 msgstr "دوره صورتحساب از این روز شروع می‌شود"
 
@@ -2513,11 +2549,20 @@ msgstr "31: در آخرین روز هر ماه"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "سقف ماهانه (گیگابایت، 0: هیچ)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "هشدار در این درصد از سقف"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "هشدار در این درصد از سقف و سقف سالانه"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "سهمیه روزانه (گیگابایت، 0: هیچ)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "سقف سالانه (گیگابایت، 0: هیچ)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "سال صورتحساب از این تاریخ شروع می‌شود (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "مثلاً 01-01؛ 02-29 در سال عادی 02-28 است."
 
 msgid "The cap and the daily quota count"
 msgstr "آنچه سقف و سهمیه روزانه می‌شمارند"
@@ -2530,6 +2575,18 @@ msgstr "مصرف تا کنون در این دوره (گیگابایت)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "آنچه اپراتور برای این دوره نشان می‌دهد (مثلاً اگر شمارش از وسط دوره شروع شده)؛ شمارش با آن اصلاح می‌شود."
+
+msgid "Used so far this year (GB)"
+msgstr "مصرف تا کنون امسال (گیگابایت)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "باقی‌مانده این دوره طبق نمایش اپراتور (گیگابایت)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "باقی‌مانده امسال طبق نمایش اپراتور (گیگابایت)"
+
+msgid "Billing cycle and cap"
+msgstr "دوره صورتحساب و سقف"
 
 msgid "Current setting"
 msgstr "تنظیم فعلی"

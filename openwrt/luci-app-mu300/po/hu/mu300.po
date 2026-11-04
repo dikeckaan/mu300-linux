@@ -1057,17 +1057,32 @@ msgstr "Írható"
 msgid "This boot image cannot change the boot"
 msgstr "Ez a rendszerindító lemezkép nem tudja módosítani az indítást"
 
+msgid "Remaining this year"
+msgstr "Hátralévő ebben az évben"
+
+msgid "Remaining this cycle"
+msgstr "Hátralévő ebben az időszakban"
+
 msgid "%s of %s"
 msgstr "%s / %s"
+
+msgid "The yearly cap is reached"
+msgstr "Az éves keret elfogyott"
 
 msgid "The monthly cap is reached"
 msgstr "A havi keret elfogyott"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "Az éves keret %d%%-a elhasználva"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "A havi keret %d%%-a elhasználva"
 
-msgid "This billing cycle"
-msgstr "Ez a számlázási időszak"
+msgid "Used this year"
+msgstr "Ebben az évben felhasznált"
+
+msgid "Used this cycle"
+msgstr "Ebben az időszakban felhasznált"
 
 msgid "Link & traffic"
 msgstr "Kapcsolat és forgalom"
@@ -1084,8 +1099,8 @@ msgstr "Összes fogadott"
 msgid "Total sent"
 msgstr "Összes küldött"
 
-msgid "Used today"
-msgstr "Ma felhasznált"
+msgid "Today"
+msgstr "Ma"
 
 msgid "SIM source"
 msgstr "SIM-forrás"
@@ -2390,8 +2405,17 @@ msgstr "Ez az oldal HTTPS-en nyílt meg, a terminál pedig HTTP-n fut a LAN-on: 
 msgid "The data usage could not be read"
 msgstr "Az adatforgalom nem olvasható"
 
-msgid "Today"
-msgstr "Ma"
+msgid "Year"
+msgstr "Év"
+
+msgid "Month"
+msgstr "Hónap"
+
+msgid "Used"
+msgstr "Felhasznált"
+
+msgid "Days left this year"
+msgstr "Hátralévő napok ebben az évben"
 
 msgid "Days left in this cycle"
 msgstr "Hátralévő napok az időszakban"
@@ -2411,11 +2435,17 @@ msgstr "Havi keret"
 msgid "%s, warning at %d%%"
 msgstr "%s, figyelmeztetés %d%%-nál"
 
+msgid "Yearly cap"
+msgstr "Éves keret"
+
 msgid "Daily quota"
 msgstr "Napi keret"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "A havi keret elfogyott: a mobilinternet ki lett kapcsolva. A következő időszak kezdetén újra bekapcsol."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Az éves keret elfogyott: a mobilinternet ki lett kapcsolva. A következő év kezdetén újra bekapcsol."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Elérte a napi keretet: a mobiladat ki lett kapcsolva. Éjfélkor visszakapcsol."
@@ -2483,6 +2513,15 @@ msgstr "Mobiladat kikapcsolása a napi keretnél"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Ha a mai forgalom eléri a napi keretet, a mobiladat éjfélig kikapcsol, vagy amíg a keretet meg nem emelik, illetve ezt ki nem kapcsolják. Ha kézzel visszakapcsolja, a következő újraindításig bekapcsolva marad."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Amit a szolgáltató hátralévőként mutat, az felhasználtnak számít: a számláló a keret mínusz ennyi értékre igazodik."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Mobilinternet kikapcsolása az éves keretnél"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Ha ez az év eléri az éves keretet, a mobilinternet kikapcsol: nincs internet a szolgáltatón keresztül, amíg a következő év el nem kezdődik, az éves keretet meg nem emelik, vagy ezt újra ki nem kapcsolják. A kézzel újra bekapcsolt mobilinternet a következő újraindításig bekapcsolva marad."
+
 msgid "Both ways"
 msgstr "Mindkét irány"
 
@@ -2501,9 +2540,6 @@ msgstr "Számláló törlése"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Minden eddig számolt nap és számlázási időszak törlődik. A számolás mostantól folytatódik."
 
-msgid "Billing cycle and cap"
-msgstr "Számlázási időszak és keret"
-
 msgid "A billing cycle starts on day"
 msgstr "A számlázási időszak kezdőnapja"
 
@@ -2513,11 +2549,20 @@ msgstr "31: minden hónap utolsó napján"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Havi keret (GB, 0: nincs)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Figyelmeztetés a keret ennyi százalékánál"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Figyelmeztetés a keret és az éves keret ennyi százalékánál"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Napi keret (GB, 0: nincs)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Éves keret (GB, 0: nincs)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "A számlázási év kezdőnapja (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Például 01-01; a 02-29 a nem szökőévekben 02-28."
 
 msgid "The cap and the daily quota count"
 msgstr "Mit számol a keret és a napi keret"
@@ -2530,6 +2575,18 @@ msgstr "Eddig felhasznált ebben az időszakban (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Amit a szolgáltató erre az időszakra mutat (például ha a számolás az időszak közepén kezdődött); a számláló ehhez igazodik."
+
+msgid "Used so far this year (GB)"
+msgstr "Eddig felhasznált ebben az évben (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Hátralévő ebben az időszakban a szolgáltató szerint (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Hátralévő ebben az évben a szolgáltató szerint (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Számlázási időszak és keret"
 
 msgid "Current setting"
 msgstr "Jelenlegi beállítás"

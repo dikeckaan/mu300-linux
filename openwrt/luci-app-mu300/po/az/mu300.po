@@ -1057,17 +1057,32 @@ msgstr "Yazıla bilər"
 msgid "This boot image cannot change the boot"
 msgstr "Bu açılış imajı açılışı dəyişə bilməz"
 
+msgid "Remaining this year"
+msgstr "Bu il qalan"
+
+msgid "Remaining this cycle"
+msgstr "Bu dövrdə qalan"
+
 msgid "%s of %s"
 msgstr "%s / %s"
+
+msgid "The yearly cap is reached"
+msgstr "İllik limitə çatıldı"
 
 msgid "The monthly cap is reached"
 msgstr "Aylıq limitə çatıldı"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "İllik limitin %d%%-i istifadə edilib"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "Aylıq limitin %d%%-i istifadə edilib"
 
-msgid "This billing cycle"
-msgstr "Bu hesab dövrü"
+msgid "Used this year"
+msgstr "Bu ildə istifadə olunan"
+
+msgid "Used this cycle"
+msgstr "Bu dövrdə istifadə olunan"
 
 msgid "Link & traffic"
 msgstr "Bağlantı və trafik"
@@ -1084,8 +1099,8 @@ msgstr "Cəmi qəbul edilən"
 msgid "Total sent"
 msgstr "Cəmi göndərilən"
 
-msgid "Used today"
-msgstr "Bu gün istifadə edilən"
+msgid "Today"
+msgstr "Bu gün"
 
 msgid "SIM source"
 msgstr "SIM mənbəyi"
@@ -2390,8 +2405,17 @@ msgstr "Bu səhifə HTTPS ilə açılıb, terminal isə LAN-da HTTP ilə verilir
 msgid "The data usage could not be read"
 msgstr "Məlumat istifadəsi oxuna bilmədi"
 
-msgid "Today"
-msgstr "Bu gün"
+msgid "Year"
+msgstr "İl"
+
+msgid "Month"
+msgstr "Ay"
+
+msgid "Used"
+msgstr "İstifadə olunan"
+
+msgid "Days left this year"
+msgstr "Bu ildə qalan günlər"
 
 msgid "Days left in this cycle"
 msgstr "Dövrdə qalan günlər"
@@ -2411,11 +2435,17 @@ msgstr "Aylıq limit"
 msgid "%s, warning at %d%%"
 msgstr "%s, xəbərdarlıq %d%%-də"
 
+msgid "Yearly cap"
+msgstr "İllik limit"
+
 msgid "Daily quota"
 msgstr "Gündəlik kvota"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Aylıq limitə çatıldı: mobil məlumat söndürüldü. Növbəti dövr başlayanda yenidən açılacaq."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "İllik limitə çatıldı: mobil məlumat söndürüldü. Növbəti il başlayanda yenidən açılacaq."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Gündəlik kvotaya çatıldı: mobil data söndürüldü. Gecə yarısı yenidən açılır."
@@ -2483,6 +2513,15 @@ msgstr "Gündəlik kvotada mobil datanı söndür"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Bugünkü istifadə gündəlik kvotaya çatanda mobil data gecə yarısına, kvota artırılana və ya bu yenidən söndürülənə qədər söndürülür. Mobil datanı əl ilə açmaq onu növbəti yenidən başladılmaya qədər açıq saxlayır."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Operatorun qalan kimi göstərdiyi məbləğ istifadə olunmuş sayılır: hesab limitdən bu məbləğ çıxılmaqla düzəldilir."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "İllik limitdə mobil məlumatı söndür"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Bu il illik limitə çatanda mobil məlumat söndürülür: növbəti il başlayana, illik limit artırılana və ya bu seçim yenidən söndürülənə qədər operator vasitəsilə internet olmur. Mobil məlumatı əllə yenidən açsanız, növbəti yenidən başlamaya qədər açıq qalır."
+
 msgid "Both ways"
 msgstr "Hər iki istiqamət"
 
@@ -2501,9 +2540,6 @@ msgstr "Hesabı sıfırla"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "İndiyə qədər hesablanmış bütün günlər və hesab dövrləri silinir. Hesablama indidən davam edir."
 
-msgid "Billing cycle and cap"
-msgstr "Hesab dövrü və limit"
-
 msgid "A billing cycle starts on day"
 msgstr "Hesab dövrü bu gündə başlayır"
 
@@ -2513,11 +2549,20 @@ msgstr "31: hər ayın son günü"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Aylıq limit (GB, 0: yoxdur)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Limitin bu faizində xəbərdar et"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Limitin və illik limitin bu faizində xəbərdar et"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Gündəlik kvota (GB, 0: yoxdur)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "İllik limit (GB, 0: yoxdur)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Hesab ili bu gündə başlayır (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Məsələn, 01-01; 02-29 adi ildə 02-28 olur."
 
 msgid "The cap and the daily quota count"
 msgstr "Limit və gündəlik kvota nəyi sayır"
@@ -2530,6 +2575,18 @@ msgstr "Bu dövrdə indiyə qədər istifadə edilən (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Operatorun bu dövr üçün göstərdiyi (məsələn, hesablama dövrün ortasında başlayıbsa); hesab buna görə düzəldilir."
+
+msgid "Used so far this year (GB)"
+msgstr "Bu ildə indiyə qədər istifadə edilən (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Operatorun göstərdiyi kimi bu dövrdə qalan (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Operatorun göstərdiyi kimi bu il qalan (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Hesab dövrü və limit"
 
 msgid "Current setting"
 msgstr "Cari ayar"

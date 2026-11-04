@@ -1057,17 +1057,32 @@ msgstr "Có thể ghi"
 msgid "This boot image cannot change the boot"
 msgstr "Ảnh khởi động này không thể thay đổi khởi động"
 
+msgid "Remaining this year"
+msgstr "Còn lại năm nay"
+
+msgid "Remaining this cycle"
+msgstr "Còn lại trong chu kỳ này"
+
 msgid "%s of %s"
 msgstr "%s / %s"
+
+msgid "The yearly cap is reached"
+msgstr "Đã đạt hạn mức hằng năm"
 
 msgid "The monthly cap is reached"
 msgstr "Đã đạt hạn mức hằng tháng"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "Đã dùng %d%% hạn mức hằng năm"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "Đã dùng %d%% hạn mức hằng tháng"
 
-msgid "This billing cycle"
-msgstr "Chu kỳ tính cước này"
+msgid "Used this year"
+msgstr "Đã dùng trong năm nay"
+
+msgid "Used this cycle"
+msgstr "Đã dùng trong chu kỳ này"
 
 msgid "Link & traffic"
 msgstr "Liên kết & lưu lượng"
@@ -1084,8 +1099,8 @@ msgstr "Tổng đã nhận"
 msgid "Total sent"
 msgstr "Tổng đã gửi"
 
-msgid "Used today"
-msgstr "Đã dùng hôm nay"
+msgid "Today"
+msgstr "Hôm nay"
 
 msgid "SIM source"
 msgstr "Nguồn SIM"
@@ -2390,8 +2405,17 @@ msgstr "Trang này được mở qua HTTPS, còn terminal được phục vụ q
 msgid "The data usage could not be read"
 msgstr "Không đọc được lưu lượng dữ liệu"
 
-msgid "Today"
-msgstr "Hôm nay"
+msgid "Year"
+msgstr "Năm"
+
+msgid "Month"
+msgstr "Tháng"
+
+msgid "Used"
+msgstr "Đã dùng"
+
+msgid "Days left this year"
+msgstr "Số ngày còn lại trong năm nay"
 
 msgid "Days left in this cycle"
 msgstr "Số ngày còn lại trong chu kỳ"
@@ -2411,11 +2435,17 @@ msgstr "Hạn mức hằng tháng"
 msgid "%s, warning at %d%%"
 msgstr "%s, cảnh báo ở %d%%"
 
+msgid "Yearly cap"
+msgstr "Hạn mức hằng năm"
+
 msgid "Daily quota"
 msgstr "Hạn mức hằng ngày"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Đã đạt hạn mức hằng tháng: dữ liệu di động đã bị tắt. Nó sẽ bật lại khi chu kỳ tiếp theo bắt đầu."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Đã đạt hạn mức hằng năm: dữ liệu di động đã bị tắt. Nó sẽ bật lại khi năm tiếp theo bắt đầu."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Đã đạt hạn mức hằng ngày: dữ liệu di động đã bị tắt. Sẽ bật lại lúc nửa đêm."
@@ -2483,6 +2513,15 @@ msgstr "Tắt dữ liệu di động khi đạt hạn mức hằng ngày"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Khi lưu lượng hôm nay đạt hạn mức hằng ngày, dữ liệu di động bị tắt cho đến nửa đêm, cho đến khi hạn mức được nâng hoặc tùy chọn này được tắt. Bật lại dữ liệu di động thủ công sẽ giữ nó bật cho đến lần khởi động lại tiếp theo."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Phần nhà mạng hiển thị là còn lại được tính là đã dùng: số đếm được hiệu chỉnh thành hạn mức trừ đi giá trị đó."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Tắt dữ liệu di động khi đạt hạn mức hằng năm"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Khi năm nay đạt hạn mức hằng năm, dữ liệu di động sẽ bị tắt: không có internet qua nhà mạng cho đến khi năm tiếp theo bắt đầu, hạn mức hằng năm được nâng lên hoặc tùy chọn này được tắt lại. Bật lại dữ liệu di động bằng tay thì nó sẽ bật đến lần khởi động lại tiếp theo."
+
 msgid "Both ways"
 msgstr "Cả hai chiều"
 
@@ -2501,9 +2540,6 @@ msgstr "Xóa số đếm"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Mọi ngày và chu kỳ tính cước đã đếm đến nay sẽ bị xóa. Việc đếm tiếp tục từ bây giờ."
 
-msgid "Billing cycle and cap"
-msgstr "Chu kỳ tính cước và hạn mức"
-
 msgid "A billing cycle starts on day"
 msgstr "Chu kỳ tính cước bắt đầu vào ngày"
 
@@ -2513,11 +2549,20 @@ msgstr "31: vào ngày cuối của mỗi tháng"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Hạn mức hằng tháng (GB, 0: không có)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Cảnh báo ở phần trăm hạn mức này"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Cảnh báo ở phần trăm hạn mức và hạn mức hằng năm này"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Hạn mức hằng ngày (GB, 0: không có)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Hạn mức hằng năm (GB, 0: không có)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Năm tính cước bắt đầu vào (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Ví dụ 01-01; 02-29 là 02-28 vào năm thường."
 
 msgid "The cap and the daily quota count"
 msgstr "Hạn mức và hạn mức hằng ngày tính gì"
@@ -2530,6 +2575,18 @@ msgstr "Đã dùng đến nay trong chu kỳ này (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Số liệu nhà mạng hiển thị cho chu kỳ này (ví dụ khi việc đếm bắt đầu giữa chu kỳ); số đếm sẽ được hiệu chỉnh theo đó."
+
+msgid "Used so far this year (GB)"
+msgstr "Đã dùng đến nay trong năm nay (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Còn lại trong chu kỳ này theo nhà mạng (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Còn lại năm nay theo nhà mạng (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Chu kỳ tính cước và hạn mức"
 
 msgid "Current setting"
 msgstr "Cài đặt hiện tại"

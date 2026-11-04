@@ -1057,17 +1057,32 @@ msgstr "Zapisovateľné"
 msgid "This boot image cannot change the boot"
 msgstr "Tento zavádzací obraz nemôže zmeniť spúšťanie"
 
+msgid "Remaining this year"
+msgstr "Zostáva tento rok"
+
+msgid "Remaining this cycle"
+msgstr "Zostáva v tomto období"
+
 msgid "%s of %s"
 msgstr "%s z %s"
+
+msgid "The yearly cap is reached"
+msgstr "Ročný limit je vyčerpaný"
 
 msgid "The monthly cap is reached"
 msgstr "Mesačný limit je vyčerpaný"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "Využitých %d%% ročného limitu"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "Využitých %d%% mesačného limitu"
 
-msgid "This billing cycle"
-msgstr "Toto zúčtovacie obdobie"
+msgid "Used this year"
+msgstr "Využité v tomto roku"
+
+msgid "Used this cycle"
+msgstr "Využité v tomto období"
 
 msgid "Link & traffic"
 msgstr "Linka a prevádzka"
@@ -1084,8 +1099,8 @@ msgstr "Celkom prijaté"
 msgid "Total sent"
 msgstr "Celkom odoslané"
 
-msgid "Used today"
-msgstr "Dnes spotrebované"
+msgid "Today"
+msgstr "Dnes"
 
 msgid "SIM source"
 msgstr "Zdroj SIM"
@@ -2390,8 +2405,17 @@ msgstr "Táto stránka bola otvorená cez HTTPS a terminál beží v LAN cez HTT
 msgid "The data usage could not be read"
 msgstr "Spotrebu dát nemožno načítať"
 
-msgid "Today"
-msgstr "Dnes"
+msgid "Year"
+msgstr "Rok"
+
+msgid "Month"
+msgstr "Mesiac"
+
+msgid "Used"
+msgstr "Využité"
+
+msgid "Days left this year"
+msgstr "Zostávajúce dni v tomto roku"
 
 msgid "Days left in this cycle"
 msgstr "Zostávajúce dni v období"
@@ -2411,11 +2435,17 @@ msgstr "Mesačný limit"
 msgid "%s, warning at %d%%"
 msgstr "%s, varovanie pri %d%%"
 
+msgid "Yearly cap"
+msgstr "Ročný limit"
+
 msgid "Daily quota"
 msgstr "Denná kvóta"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Mesačný limit je vyčerpaný: mobilné dáta boli vypnuté. Znova sa zapnú na začiatku ďalšieho obdobia."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Ročný limit je vyčerpaný: mobilné dáta boli vypnuté. Znova sa zapnú na začiatku ďalšieho roka."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Denná kvóta je vyčerpaná: mobilné dáta boli vypnuté. Znova sa zapnú o polnoci."
@@ -2483,6 +2513,15 @@ msgstr "Vypnúť mobilné dáta pri dennej kvóte"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Keď dnešná prevádzka dosiahne dennú kvótu, mobilné dáta sa vypnú do polnoci, do zvýšenia kvóty alebo do vypnutia tejto voľby. Ručné zapnutie mobilných dát ich ponechá zapnuté do ďalšieho reštartu."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Čo operátor ukazuje ako zostávajúce, sa počíta ako využité: počet sa opraví na limit mínus táto hodnota."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Vypnúť mobilné dáta pri dosiahnutí ročného limitu"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Keď tento rok dosiahne ročný limit, mobilné dáta sa vypnú: žiadny internet cez operátora, kým nezačne ďalší rok, nezvýši sa ročný limit alebo sa táto voľba znova nevypne. Ručne znova zapnuté mobilné dáta zostanú zapnuté do ďalšieho reštartu."
+
 msgid "Both ways"
 msgstr "Oba smery"
 
@@ -2501,9 +2540,6 @@ msgstr "Vymazať počet"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Všetky doteraz započítané dni a zúčtovacie obdobia budú zabudnuté. Počítanie pokračuje odteraz."
 
-msgid "Billing cycle and cap"
-msgstr "Zúčtovacie obdobie a limit"
-
 msgid "A billing cycle starts on day"
 msgstr "Zúčtovacie obdobie začína dňa"
 
@@ -2513,11 +2549,20 @@ msgstr "31: posledný deň každého mesiaca"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Mesačný limit (GB, 0: žiadny)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Varovať pri tomto percente limitu"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Varovať pri tomto percente limitu a ročného limitu"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Denná kvóta (GB, 0: žiadna)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Ročný limit (GB, 0: žiadny)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Zúčtovací rok začína (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Napríklad 01-01; 02-29 je v neprestupnom roku 02-28."
 
 msgid "The cap and the daily quota count"
 msgstr "Čo počíta limit a denná kvóta"
@@ -2530,6 +2575,18 @@ msgstr "Doteraz spotrebované v tomto období (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Čo operátor ukazuje pre toto obdobie (napríklad keď počítanie začalo uprostred); počet sa naň opraví."
+
+msgid "Used so far this year (GB)"
+msgstr "Doteraz spotrebované v tomto roku (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Zostáva v tomto období podľa operátora (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Zostáva tento rok podľa operátora (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Zúčtovacie obdobie a limit"
 
 msgid "Current setting"
 msgstr "Aktuálne nastavenie"

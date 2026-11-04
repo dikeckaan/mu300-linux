@@ -45,8 +45,9 @@ Pick it at install ("Which OpenWrt?" -> 2, or `MU300_OPENWRT=luci`), or switch a
 * **Cellular > SMS:** read, send and delete messages (see [SMS](SMS) for the one rule to remember).
 * **Cellular > SMS forwarding:** pass incoming messages on to a webhook, a Telegram chat or another phone (see
   [SMS](SMS#sms-forwarding)).
-* **Cellular > Data usage:** mobile data per day and per billing cycle, with a reset day, a monthly cap, a daily
-  quota, a count mode and a plan name (`mu300-traffic`, see [Mobile Data and APN](Mobile-Data-and-APN#data-usage)).
+* **Cellular > Data usage:** mobile data per day and per billing cycle, what is left of the cap first, with a reset
+  day, a monthly cap, a daily quota, a yearly cap that starts again every year, a count mode and a plan name
+  (`mu300-traffic`, see [Mobile Data and APN](Mobile-Data-and-APN#data-usage)).
 * **Cellular > AT terminal:** guarded AT commands over the same channel the system uses. A command that scans, changes
   the radio, the APN or the SIM, or writes a setting that persists into Android, is explained first and sent only
   after a click; a network scan runs in the background and the page follows it.

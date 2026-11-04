@@ -1057,17 +1057,32 @@ msgstr "Εγγράψιμο"
 msgid "This boot image cannot change the boot"
 msgstr "Αυτή η εικόνα εκκίνησης δεν μπορεί να αλλάξει την εκκίνηση"
 
+msgid "Remaining this year"
+msgstr "Απομένει φέτος"
+
+msgid "Remaining this cycle"
+msgstr "Απομένει σε αυτή την περίοδο"
+
 msgid "%s of %s"
 msgstr "%s από %s"
+
+msgid "The yearly cap is reached"
+msgstr "Το ετήσιο όριο εξαντλήθηκε"
 
 msgid "The monthly cap is reached"
 msgstr "Το μηνιαίο όριο εξαντλήθηκε"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "Χρησιμοποιήθηκε το %d%% του ετήσιου ορίου"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "Χρησιμοποιήθηκε το %d%% του μηνιαίου ορίου"
 
-msgid "This billing cycle"
-msgstr "Αυτή η περίοδος χρέωσης"
+msgid "Used this year"
+msgstr "Χρήση φέτος"
+
+msgid "Used this cycle"
+msgstr "Χρήση σε αυτή την περίοδο"
 
 msgid "Link & traffic"
 msgstr "Ζεύξη και κίνηση"
@@ -1084,8 +1099,8 @@ msgstr "Σύνολο ληφθέντων"
 msgid "Total sent"
 msgstr "Σύνολο απεσταλμένων"
 
-msgid "Used today"
-msgstr "Χρήση σήμερα"
+msgid "Today"
+msgstr "Σήμερα"
 
 msgid "SIM source"
 msgstr "Πηγή SIM"
@@ -2390,8 +2405,17 @@ msgstr "Αυτή η σελίδα άνοιξε μέσω HTTPS και το τερ�
 msgid "The data usage could not be read"
 msgstr "Η χρήση δεδομένων δεν μπόρεσε να διαβαστεί"
 
-msgid "Today"
-msgstr "Σήμερα"
+msgid "Year"
+msgstr "Έτος"
+
+msgid "Month"
+msgstr "Μήνας"
+
+msgid "Used"
+msgstr "Χρήση"
+
+msgid "Days left this year"
+msgstr "Ημέρες που απομένουν φέτος"
 
 msgid "Days left in this cycle"
 msgstr "Ημέρες που απομένουν στην περίοδο"
@@ -2411,11 +2435,17 @@ msgstr "Μηνιαίο όριο"
 msgid "%s, warning at %d%%"
 msgstr "%s, προειδοποίηση στο %d%%"
 
+msgid "Yearly cap"
+msgstr "Ετήσιο όριο"
+
 msgid "Daily quota"
 msgstr "Ημερήσιο όριο"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "Το μηνιαίο όριο εξαντλήθηκε: τα δεδομένα κινητής απενεργοποιήθηκαν. Ενεργοποιούνται ξανά όταν αρχίσει η επόμενη περίοδος."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "Το ετήσιο όριο εξαντλήθηκε: τα δεδομένα κινητής απενεργοποιήθηκαν. Ενεργοποιούνται ξανά όταν αρχίσει το επόμενο έτος."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "Το ημερήσιο όριο εξαντλήθηκε: τα δεδομένα κινητής απενεργοποιήθηκαν. Ενεργοποιούνται ξανά τα μεσάνυχτα."
@@ -2483,6 +2513,15 @@ msgstr "Απενεργοποίηση δεδομένων κινητής στο η
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "Όταν η σημερινή χρήση φτάσει το ημερήσιο όριο, τα δεδομένα κινητής απενεργοποιούνται έως τα μεσάνυχτα, έως ότου αυξηθεί το όριο ή απενεργοποιηθεί αυτή η επιλογή. Αν τα ενεργοποιήσετε χειροκίνητα, μένουν ενεργά έως την επόμενη επανεκκίνηση."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "Ό,τι δείχνει ο πάροχος ως υπόλοιπο μετρά ως χρήση: ο μετρητής διορθώνεται στο όριο μείον αυτή την τιμή."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "Απενεργοποίηση δεδομένων κινητής στο ετήσιο όριο"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Όταν αυτό το έτος φτάσει το ετήσιο όριο, τα δεδομένα κινητής απενεργοποιούνται: χωρίς internet μέσω του παρόχου μέχρι να αρχίσει το επόμενο έτος, να αυξηθεί το ετήσιο όριο ή να απενεργοποιηθεί ξανά αυτή η επιλογή. Αν ενεργοποιήσετε ξανά χειροκίνητα τα δεδομένα κινητής, μένουν ενεργά μέχρι την επόμενη επανεκκίνηση."
+
 msgid "Both ways"
 msgstr "Και προς τις δύο κατευθύνσεις"
 
@@ -2501,9 +2540,6 @@ msgstr "Μηδενισμός μετρητή"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "Όλες οι ημέρες και οι περίοδοι χρέωσης που μετρήθηκαν ως τώρα ξεχνιούνται. Η μέτρηση συνεχίζεται από τώρα."
 
-msgid "Billing cycle and cap"
-msgstr "Περίοδος χρέωσης και όριο"
-
 msgid "A billing cycle starts on day"
 msgstr "Η περίοδος χρέωσης αρχίζει την ημέρα"
 
@@ -2513,11 +2549,20 @@ msgstr "31: την τελευταία ημέρα κάθε μήνα"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "Μηνιαίο όριο (GB, 0: κανένα)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "Προειδοποίηση σε αυτό το ποσοστό του ορίου"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "Προειδοποίηση σε αυτό το ποσοστό του ορίου και του ετήσιου ορίου"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "Ημερήσιο όριο (GB, 0: κανένα)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "Ετήσιο όριο (GB, 0: κανένα)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "Το έτος χρέωσης αρχίζει στις (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "Για παράδειγμα 01-01· η 02-29 είναι 02-28 σε μη δίσεκτο έτος."
 
 msgid "The cap and the daily quota count"
 msgstr "Τι μετρούν το όριο και το ημερήσιο όριο"
@@ -2530,6 +2575,18 @@ msgstr "Χρήση ως τώρα σε αυτή την περίοδο (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "Ό,τι δείχνει ο πάροχος για αυτή την περίοδο (για παράδειγμα αν η μέτρηση ξεκίνησε στη μέση της); ο μετρητής διορθώνεται σε αυτό."
+
+msgid "Used so far this year (GB)"
+msgstr "Χρήση ως τώρα φέτος (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "Απομένει σε αυτή την περίοδο όπως δείχνει ο πάροχος (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "Απομένει φέτος όπως δείχνει ο πάροχος (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "Περίοδος χρέωσης και όριο"
 
 msgid "Current setting"
 msgstr "Τρέχουσα ρύθμιση"

@@ -1057,17 +1057,32 @@ msgstr "ניתן לכתיבה"
 msgid "This boot image cannot change the boot"
 msgstr "תמונת האתחול הזו אינה יכולה לשנות את האתחול"
 
+msgid "Remaining this year"
+msgstr "נותר השנה"
+
+msgid "Remaining this cycle"
+msgstr "נותר במחזור זה"
+
 msgid "%s of %s"
 msgstr "%s מתוך %s"
+
+msgid "The yearly cap is reached"
+msgstr "המכסה השנתית הושגה"
 
 msgid "The monthly cap is reached"
 msgstr "המכסה החודשית הושגה"
 
+msgid "%d%% of the yearly cap is used"
+msgstr "נוצלו %d%% מהמכסה השנתית"
+
 msgid "%d%% of the monthly cap is used"
 msgstr "נוצלו %d%% מהמכסה החודשית"
 
-msgid "This billing cycle"
-msgstr "מחזור החיוב הנוכחי"
+msgid "Used this year"
+msgstr "נוצל השנה"
+
+msgid "Used this cycle"
+msgstr "נוצל במחזור זה"
 
 msgid "Link & traffic"
 msgstr "קישור ותעבורה"
@@ -1084,8 +1099,8 @@ msgstr "סה״כ התקבל"
 msgid "Total sent"
 msgstr "סה״כ נשלח"
 
-msgid "Used today"
-msgstr "נוצל היום"
+msgid "Today"
+msgstr "היום"
 
 msgid "SIM source"
 msgstr "מקור ה-SIM"
@@ -2390,8 +2405,17 @@ msgstr "הדף הזה נפתח ב-HTTPS, והמסוף מוגש ב-HTTP ברשת 
 msgid "The data usage could not be read"
 msgstr "לא ניתן לקרוא את השימוש בנתונים"
 
-msgid "Today"
-msgstr "היום"
+msgid "Year"
+msgstr "שנה"
+
+msgid "Month"
+msgstr "חודש"
+
+msgid "Used"
+msgstr "נוצל"
+
+msgid "Days left this year"
+msgstr "ימים שנותרו השנה"
 
 msgid "Days left in this cycle"
 msgstr "ימים שנותרו במחזור"
@@ -2411,11 +2435,17 @@ msgstr "מכסה חודשית"
 msgid "%s, warning at %d%%"
 msgstr "%s, אזהרה ב-%d%%"
 
+msgid "Yearly cap"
+msgstr "מכסה שנתית"
+
 msgid "Daily quota"
 msgstr "מכסה יומית"
 
 msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
 msgstr "המכסה החודשית הושגה: הנתונים הסלולריים כובו. הם יחזרו כשהמחזור הבא יתחיל."
+
+msgid "The yearly cap is reached: mobile data was turned off. It comes back on when the next year starts."
+msgstr "המכסה השנתית הושגה: הנתונים הסלולריים כובו. הם יחזרו כשהשנה הבאה תתחיל."
 
 msgid "The daily quota is reached: mobile data was turned off. It comes back on at midnight."
 msgstr "המכסה היומית מוצתה: נתוני הסלולר כובו. הם יחזרו בחצות."
@@ -2483,6 +2513,15 @@ msgstr "כיבוי נתוני סלולר במכסה היומית"
 msgid "When today reaches the daily quota, mobile data is turned off until midnight, the quota is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
 msgstr "כשהשימוש היום מגיע למכסה היומית, נתוני הסלולר נכבים עד חצות, עד שהמכסה מוגדלת או עד שאפשרות זו מכובה. הפעלה ידנית של נתוני הסלולר משאירה אותם פעילים עד האתחול הבא."
 
+msgid "What the operator shows as left is used: the count is corrected to the cap minus it."
+msgstr "מה שהמפעיל מציג כנותר נחשב כנוצל: הספירה מתוקנת למכסה פחות הערך הזה."
+
+msgid "Turn mobile data off at the yearly cap"
+msgstr "כיבוי נתונים סלולריים במכסה השנתית"
+
+msgid "When this year reaches the yearly cap, mobile data is turned off: no internet through the operator until the next year starts, the yearly cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "כשהשנה הזו מגיעה למכסה השנתית, הנתונים הסלולריים כבים: אין אינטרנט דרך המפעיל עד שהשנה הבאה מתחילה, המכסה השנתית מוגדלת או שאפשרות זו מכובה שוב. הדלקה ידנית של הנתונים הסלולריים משאירה אותם דולקים עד ההפעלה מחדש הבאה."
+
 msgid "Both ways"
 msgstr "בשני הכיוונים"
 
@@ -2501,9 +2540,6 @@ msgstr "ניקוי הספירה"
 msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
 msgstr "כל הימים ומחזורי החיוב שנספרו עד כה יישכחו. הספירה ממשיכה מעכשיו."
 
-msgid "Billing cycle and cap"
-msgstr "מחזור חיוב ומכסה"
-
 msgid "A billing cycle starts on day"
 msgstr "מחזור חיוב מתחיל ביום"
 
@@ -2513,11 +2549,20 @@ msgstr "31: ביום האחרון של כל חודש"
 msgid "Monthly cap (GB, 0: none)"
 msgstr "מכסה חודשית (GB, 0: אין)"
 
-msgid "Warning at this percentage of the cap"
-msgstr "אזהרה באחוז זה מהמכסה"
+msgid "Warning at this percentage of the cap and the yearly cap"
+msgstr "אזהרה באחוז זה מהמכסה ומהמכסה השנתית"
 
 msgid "Daily quota (GB, 0: none)"
 msgstr "מכסה יומית (GB, 0: אין)"
+
+msgid "Yearly cap (GB, 0: none)"
+msgstr "מכסה שנתית (GB, 0: אין)"
+
+msgid "A billing year starts on (MM-DD)"
+msgstr "שנת חיוב מתחילה ביום (MM-DD)"
+
+msgid "For example 01-01; 02-29 is 02-28 in a common year."
+msgstr "לדוגמה 01-01; 02-29 הוא 02-28 בשנה רגילה."
 
 msgid "The cap and the daily quota count"
 msgstr "מה המכסה והמכסה היומית סופרות"
@@ -2530,6 +2575,18 @@ msgstr "נוצל עד כה במחזור הזה (GB)"
 
 msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
 msgstr "מה שהמפעיל מציג עבור המחזור הזה (למשל כשהספירה התחילה באמצעו); הספירה מתוקנת לפיו."
+
+msgid "Used so far this year (GB)"
+msgstr "נוצל עד כה השנה (GB)"
+
+msgid "Left in this cycle as the operator shows it (GB)"
+msgstr "נותר במחזור זה כפי שהמפעיל מציג (GB)"
+
+msgid "Left this year as the operator shows it (GB)"
+msgstr "נותר השנה כפי שהמפעיל מציג (GB)"
+
+msgid "Billing cycle and cap"
+msgstr "מחזור חיוב ומכסה"
 
 msgid "Current setting"
 msgstr "הגדרה נוכחית"
