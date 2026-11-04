@@ -10,6 +10,7 @@
 #   tools/carry/mu300-carry (static: an update carries everything of the user's over with it)
 #   upstream/out/modules/*.ko (optional: out-of-tree WCN modules for the mainline 6.18 kernel)
 # openwrt-luci only: MU300_LUCI_THEME_APK, a local copy of the pinned Aurora .apk (offline builds; else downloaded)
+# MU300_APK_MKPKG: optional host apk-tools with mkpkg (default: Alpine 3.23 Docker image).
 # (MU300_SAE_APK_DIR, a hand-built hostapd for the U30 Air's firmware SAE offload, is gone: the offload is
 # disabled, docs/U30AIR-SAE.md, FINDINGS 80. The build refuses it rather than ignore it.)
 [ -z "${MU300_SAE_APK_DIR:-}" ] || {
@@ -155,9 +156,16 @@ ls "$IN/out/modules"/*.ko >/dev/null 2>&1 || {
 for o in firmware android-subset android-gpu-subset tools/logdw/logdw tools/bt-init/mu300-bt-init tools/keys/mu300-keys tools/adbd/adbd tools/carry/mu300-carry tools/gpu/cltest busybox upstream/out/modules; do
     [ -e "$IN/$o" ] && echo "  + $o" || echo "  - $o   (missing: the image is built without it)"
 done
+# These expressions are built into both supported kernel configs, so there are no feed kmods to install (#470).
+# Real APKs own the capability markers and OpenWrt file lists; no fabricated installed-package database entries.
+NFTAPKS=$(mktemp -d)
+trap 'rm -rf "$NFTAPKS"' EXIT
+python3 "$TOP/openwrt/nft-builtins/build.py" --apk "${MU300_APK_MKPKG:-}" \
+    --config "$TOP/kernel/linux.config" --config "$TOP/upstream/mu300-mainline.config" --output "$NFTAPKS"
 # shellcheck disable=SC2046
 docker run --rm --platform linux/arm64 \
   -v "$TOP/rootfs/overlay/opt/mu300":/in/opt-mu300:ro -v "$TOP/openwrt/overlay":/in/overlay:ro \
+  -v "$NFTAPKS:/in/nft-builtins:ro" \
   -v "$FW4PATCH":/in/fw4-sipa-offload.patch:ro \
   -v "$FW4FTPATCH":/in/fw4-old-kernel-flowtable.patch:ro \
   -v "$NODFSPATCH":/in/wifi-scripts-no-dfs.patch:ro \
@@ -202,6 +210,9 @@ apk upgrade >/dev/null
 # systems behave the same
 apk add wpad-basic-mbedtls wifi-scripts iwinfo wireless-regdb iw bash flock ip-full coreutils-stty openssl-util \
     i2c-tools gpiod-tools jq curl >/dev/null
+# The host checked both target kernel configs. This container runs the host kernel, so the live pre-install
+# checks do not apply here. The packages have no other scripts, no modules and no firewall settings.
+apk add --no-network --no-scripts --allow-untrusted /in/nft-builtins/*.apk >/dev/null
 # the router protocols LuCI offers, with their tools: WireGuard, PPTP/L2TP (PPPoE is in the base), 6in4/6rd/DS-Lite,
 # GRE and VXLAN, ipset, and SQM (cake). Their kmod-* dependencies install the 6.12 modules of the feed, removed below like
 # every other kmod: the mainline kernels have them built in or as modules of their own (mu300-mainline.config), 5.4
