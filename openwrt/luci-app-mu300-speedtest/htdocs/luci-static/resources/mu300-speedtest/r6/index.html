@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" data-mode="live">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>SpeedTest</title>
+  <link rel="stylesheet" href="speedtest.css">
+  <script src="speedtest.js" defer></script>
+  <script src="zh-Hans.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="page-width hero-inner">
+        <div class="hero-title">
+          <h1 id="page-title">SpeedTest</h1>
+          <span class="mode-badge" id="mode-badge" hidden>Sample data</span>
+        </div>
+        <div class="language-control">
+          <select id="language-select" aria-label="Language" data-i18n-label="languageLabel">
+            <option id="language-option-zh" value="zh">Chinese</option>
+            <option value="en" lang="en">English</option>
+          </select>
+        </div>
+        <button type="button" id="start-test">Start test</button>
+        <div class="select-wrap">
+          <label class="visually-hidden" for="node-select" data-i18n="nodeLabel">Test server</label>
+          <select id="node-select" aria-describedby="node-description">
+            <option value="mfcyun">MFCYun · Guangdong Mobile</option>
+          </select>
+        </div>
+        <p id="node-description" class="node-description">Internet speed tests use internet data.</p>
+      </div>
+    </section>
+
+    <div class="page-width">
+      <section class="results" aria-labelledby="results-title">
+        <div class="section-heading">
+          <div class="results-heading">
+            <h2 id="results-title" data-i18n="resultsTitle">Test results</h2>
+            <span class="measurement-status" id="test-status" role="status">Ready</span>
+          </div>
+          <div class="unit-control">
+            <span class="visually-hidden" id="unit-label" data-i18n="unitLabel">Speed unit</span>
+            <div class="unit-toggle" id="unit-select" role="group" aria-labelledby="unit-label">
+              <button type="button" data-unit="MB/s" aria-pressed="true">MB/s</button>
+              <button type="button" data-unit="Mbps" aria-pressed="false">Mbps</button>
+            </div>
+          </div>
+        </div>
+
+        <dl class="metrics">
+          <div class="metric metric-ping">
+            <dt data-i18n="ping">Ping latency</dt>
+            <dd hidden><span id="ping-value"></span><span class="metric-unit">ms</span></dd>
+          </div>
+          <div class="metric metric-gauge">
+            <dt>
+              <span data-i18n="download">Download</span>
+              <svg class="gauge-arc" viewBox="8 0 128 99" aria-hidden="true" focusable="false">
+                <path class="gauge-track" d="M20.64 81.69A54 54 0 1 1 123.36 81.69"></path>
+                <path class="gauge-fill" id="download-gauge" d="M20.64 81.69A54 54 0 1 1 123.36 81.69" pathLength="100" stroke-dasharray="0 100"></path>
+              </svg>
+            </dt>
+            <dd hidden><span id="download-value"></span><span class="speed-unit metric-unit">MB/s</span></dd>
+          </div>
+          <div class="metric metric-gauge">
+            <dt>
+              <span data-i18n="upload">Upload</span>
+              <svg class="gauge-arc" viewBox="8 0 128 99" aria-hidden="true" focusable="false">
+                <path class="gauge-track" d="M20.64 81.69A54 54 0 1 1 123.36 81.69"></path>
+                <path class="gauge-fill" id="upload-gauge" d="M20.64 81.69A54 54 0 1 1 123.36 81.69" pathLength="100" stroke-dasharray="0 100"></path>
+              </svg>
+            </dt>
+            <dd hidden><span id="upload-value"></span><span class="speed-unit metric-unit">MB/s</span></dd>
+          </div>
+        </dl>
+
+        <section class="equivalent" aria-labelledby="tier-title">
+          <h3 id="tier-title" data-i18n="equivalentLabel">Equivalent broadband</h3>
+          <div class="equivalent-main" id="plan-main" hidden>
+            <p class="equivalent-headline"><span data-i18n="equivalentPrefix">About</span> <strong id="plan-download"></strong> <span data-i18n="equivalentSuffix">broadband</span></p>
+            <p class="equivalent-upload"><span data-i18n="uploadEquivalent">Upload equivalent</span> <strong id="plan-upload"></strong></p>
+          </div>
+          <p id="plan-detail" class="equivalent-detail" hidden></p>
+        </section>
+      </section>
+
+      <section class="history" aria-labelledby="history-title">
+        <div class="section-heading">
+          <h2 id="history-title" data-i18n="historyTitle">Last 10 tests</h2>
+          <span id="history-count" class="history-count" aria-label="0 saved tests">0 / 10</span>
+        </div>
+        <table class="history-table" role="table" aria-label="Test history" data-i18n-label="historyLabel">
+          <thead role="rowgroup">
+            <tr role="row">
+              <th scope="col" data-i18n="time">Time</th>
+              <th scope="col" data-i18n="node">Server</th>
+              <th scope="col"><span data-i18n="ping">Ping latency</span> <span>ms</span></th>
+              <th scope="col"><span data-i18n="download">Download</span> <span class="speed-unit">MB/s</span></th>
+              <th scope="col"><span data-i18n="upload">Upload</span> <span class="speed-unit">MB/s</span></th>
+              <th scope="col" data-i18n="equivalentLabel">Equivalent broadband</th>
+            </tr>
+          </thead>
+          <tbody id="history-body" role="rowgroup"></tbody>
+        </table>
+        <p id="history-empty" class="history-empty" data-i18n="historyEmpty">Your first result will appear here after the test.</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

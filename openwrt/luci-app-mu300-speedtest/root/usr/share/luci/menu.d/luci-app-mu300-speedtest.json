@@ -1,0 +1,10 @@
+{
+  "admin/services/speedtest": {
+    "title": "SpeedTest",
+    "order": 46,
+    "action": {
+      "type": "view",
+      "path": "mu300-speedtest-r6"
+    }
+  }
+}

@@ -104,6 +104,12 @@ class Catalogs(unittest.TestCase):
         for name in ('luci-i18n.py', 'po2lmo.py'):
             shutil.copy(TOP / 'tools' / name, repo / 'tools' / name)
         (repo / 'tools' / 'i18n.sh').write_text('# %s\n' % CJK, encoding='utf-8')
+        speedtest = repo / 'openwrt' / 'luci-app-mu300-speedtest'
+        catalog = speedtest / 'po' / 'zh_Hans'
+        catalog.mkdir(parents=True)
+        for name in ('mu300-speedtest.po', 'speedtest.js'):
+            (catalog / name).write_text(CJK, encoding='utf-8')
+        (speedtest / 'app.js').write_text(CJK, encoding='utf-8')
         (repo / 'rootfs' / 'overlay').mkdir(parents=True)
         (repo / 'rootfs' / 'overlay' / 'x.sh').write_text('echo %s\n' % CJK, encoding='utf-8')
         subprocess.run(['git', 'init', '-q', str(repo)], check=True)
@@ -111,7 +117,8 @@ class Catalogs(unittest.TestCase):
         r = subprocess.run([sys.executable, str(repo / 'tools' / 'luci-i18n.py'), 'check'], capture_output=True,
                            text=True, encoding='utf-8')
         self.assertNotIn('Traceback', r.stderr)
-        self.assertEqual(r.stdout, 'cjk: rootfs/overlay/x.sh:1: echo %s\n' % CJK)
+        self.assertEqual(r.stdout, f'cjk: openwrt/luci-app-mu300-speedtest/app.js:1: {CJK}\n'
+                                  f'cjk: rootfs/overlay/x.sh:1: echo {CJK}\n')
 
     def test_extract_finds_every_kind_of_message_and_nothing_else(self):
         r = run('extract', '--root', str(self.mini()))

@@ -80,7 +80,10 @@ BACKEND_DYNAMIC_OK = {('mu300dash', 'refuse', '"$2"'),   # reply_obj passing its
 # CJK: only these files may contain it (repository paths; with --root, only po/ of that copy)
 CJK = re.compile('[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]')
 CJK_SCOPE = ['openwrt', 'rootfs/overlay', 'boot', 'tools', 'install.sh', 'uninstall.sh']
-CJK_ALLOWED = re.compile(r'^(tools/i18n\.sh|i18n/[^/]+\.tsv|openwrt/luci-app-mu300/po/.*|openwrt/luci-languages\.tsv|tests/fixtures/.*|rootfs/overlay/opt/mu300/lib/cpu-voltage-warning\.txt|rootfs/overlay/opt/mu300/lib/image-manifests/[^/]+\.gz)$')   # (compressed data: no text to look at)
+CJK_ALLOWED = re.compile(r'^(tools/i18n\.sh|i18n/[^/]+\.tsv|openwrt/luci-app-mu300/po/.*|'
+                         r'openwrt/luci-app-mu300-speedtest/po/zh_Hans/(?:mu300-speedtest\.po|speedtest\.js)|'
+                         r'openwrt/luci-languages\.tsv|tests/fixtures/.*|rootfs/overlay/opt/mu300/lib/cpu-voltage-warning\.txt|'
+                         r'rootfs/overlay/opt/mu300/lib/image-manifests/[^/]+\.gz)$')  # compressed data
 
 PLACEHOLDER = re.compile(r'%(?:%|[-+#0]*\d*(?:\.\d+)?[a-zA-Z])')
 
