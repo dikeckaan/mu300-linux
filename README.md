@@ -203,6 +203,11 @@ and it asks first. Back the device up with `tools/backup-device.sh` before sayin
 neither case, stop and open an issue with what `--check` printed; they identify the variant. With an SD card in the
 slot there is a way that erases nothing: `--check` says so, and the installer offers the card instead.
 
+For an already enabled, authorized TCP adb endpoint, optional [wireless session guards](docs/WIRELESS-ADB-INSTALL.md)
+(`--adb-address IP:PORT` / `-AdbAddress IP:PORT`) add device checks, detached-job status and lost-reply handling to
+the existing installer. They reuse its normal installation and keep-data shrink/recovery, with no separate
+partitioning tool. Connect a stable charger; Wi-Fi does not power the device.
+
 **Making room is a reset, and the installation resumes afterwards (EXPERIMENTAL).** Android keeps its data
 encrypted (file-based encryption, with the metadata key in `/metadata`), and a data filesystem cleared from outside
 is one it cannot mount: it would stop in its recovery, waiting for a person at a screen these devices do not have.
