@@ -1,0 +1,14 @@
+--- a/usr/share/ucode/luci/dashboard/temperature.uc
++++ b/usr/share/ucode/luci/dashboard/temperature.uc
+@@ -261,7 +261,10 @@
+ 				}
+ 				record(sampled);
+ 				schedule();
+-			});
++			// ucode 85922056 only closes the output pipe when an input pipe
++			// exists. Supply an unused input callback so completed tasks are
++			// fully cleaned up instead of leaking one rpcd fd per sample.
++			}, () => null);
+ 			if (!worker) {
+ 				failed();
+ 				return;

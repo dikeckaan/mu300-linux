@@ -156,6 +156,55 @@ fractions), and some pages read the modem inside the request. **Fixed from v2026
 their last readings and say how old they are. On an older release wait it out, or restart `rpcd` and `mu300-atd`.
 [FINDINGS 40](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md)
 
+## The panel loses all readings while mobile data still works
+
+If both `ubus call mu300dash sysinfo` and `ubus call mu300dash status` fail with `Unknown error`, check
+whether `rpcd` has run out of file descriptors before resetting the modem:
+
+```sh
+pid=$(pidof rpcd)
+ls /proc/$pid/fd | wc -l
+grep 'Max open files' /proc/$pid/limits
+```
+
+One affected device had 1022 descriptors against a soft limit of 1024, mostly pipe readers. Directly running
+`printf '{}' | /usr/libexec/rpcd/mu300dash call sysinfo` still returned valid data, including an online modem.
+Restarting only `/etc/init.d/rpcd restart` restored the panel; a browser session may need to log in again.
+This recovers the service but does not stop a leak.
+
+The cause on that device was an additionally installed `luci-mod-dashboard-26.308.17623~e28ced6` with
+`ucode-mod-uloop-2026.01.16~85922056-r2`. Its temperature sampler runs `uloop.task()` every ten seconds,
+even with no browser open. In that ucode version,
+[`uc_uloop_task_clear()`](https://github.com/jow-/ucode/blob/85922056/lib/uloop.c) closes the output pipe only
+when an input callback was supplied. The sampler supplies none, leaking one descriptor per sample until
+unrelated RPC calls fail. This optional temperature module is not maintained in the MU300 source tree;
+the findings do not establish that stock MU300 images or other dashboard versions have this leak.
+
+For that module, [luci-temperature-task-fd.patch](https://github.com/dikeckaan/mu300-linux/blob/main/openwrt/patches/luci-temperature-task-fd.patch)
+adds an unused input callback, so both pipes are closed. It preserves asynchronous sampling and its timeout.
+The patch is an opt-in workaround, not applied automatically during image builds. Copy it to `/tmp` on the
+device, then run the following as root (requires the `patch` command):
+
+```sh
+patch --dry-run --batch --fuzz=0 -d / -p1 -i /tmp/luci-temperature-task-fd.patch &&
+    cp -p /usr/share/ucode/luci/dashboard/temperature.uc /root/temperature.uc.before-fd-fix &&
+    patch --batch --fuzz=0 -d / -p1 -i /tmp/luci-temperature-task-fd.patch &&
+    /etc/init.d/rpcd restart
+```
+
+If the dry run fails, do not force it: the installed module may differ or already have the workaround.
+Package updates can replace this local patch. The underlying fix belongs in ucode's task cleanup.
+After applying it, check that `rpcd`'s descriptor count stays stable over several ten-second samples and
+that the two `mu300dash` calls succeed.
+
+To reproduce independently of `rpcd`, copy
+[temperature-task-fds.uc](https://github.com/dikeckaan/mu300-linux/blob/main/tests/ucode/temperature-task-fds.uc)
+to `/tmp` and run `ucode /tmp/temperature-task-fds.uc baseline`, then
+`ucode /tmp/temperature-task-fds.uc`. The first uses the original two-argument call; the second
+supplies the unused input callback. Both run 100 tasks in a separate, bounded process. The test exits
+nonzero if descriptors grow. On the affected version the baseline leaks, while the workaround keeps
+the original descriptor count.
+
 ## Sending an SMS fails with `SMS FAILED: CODE:600`, or the panel's operations log says `sms_send - killed`
 
 Up to v2026.10.21, on some networks (China Broadnet, issue #176) the modem's IMS stack refused every submission
