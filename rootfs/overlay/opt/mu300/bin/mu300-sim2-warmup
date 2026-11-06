@@ -34,7 +34,7 @@ SIM_CONFIG_U30=1
 . "${MU300_SIM_CONFIG_LIB:-/opt/mu300/lib/sim-config.sh}"
 # a fraction of a second where the static busybox takes one (the image's /bin/sleep takes whole seconds only)
 nap() { "${MU300_BUSYBOX:-/opt/mu300/bin/busybox}" sleep "$1" 2>/dev/null || sleep "$1" 2>/dev/null || sleep 1; }
-# Preserve the charging-only boot's promise to leave both radios off (the pending marker stays for the real boot).
+# Preserve the charging-only boot's promise to leave both radios off. The AT service's worker waits for wake.
 [[ ! -e /run/mu300/charging-boot ]] || exit 0
 SLOT=$(cat /run/mu300/sim-slot 2>/dev/null || echo 1)
 case "$SLOT" in 0|1) ;; *) SLOT=1 ;; esac
@@ -120,6 +120,9 @@ fallback() {  # fallback REASON: see 2. above
     setsid "$ATD_INIT" restart </dev/null >/dev/null 2>&1 &
     exit 1
 }
+# A wake/deferred start has no pending marker from init. Arm it before waiting for brokers or sending commands,
+# so an interrupted real attempt still falls back on the next boot. Charging-only boots never reach this point.
+touch "$PENDING" 2>/dev/null || fallback not-startable
 # the brokers are polled every 0.2 s (the cold start is on the dial's critical path)
 for ((attempt=0; attempt<450; attempt++)); do
     ready=1

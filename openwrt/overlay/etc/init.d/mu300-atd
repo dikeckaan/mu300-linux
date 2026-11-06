@@ -64,6 +64,9 @@ start_sim1() {
 # U30 Air native cold/live mode is opted into by network.wan.sim_slot/sim_hot.
 # Other devices keep their shared boot selector path; legacy U30 files are migrated at startup.
 
+# Do not spend the native workers' readiness budgets while charging deliberately keeps the modem idle.
+CHARGING_WAIT='while [ -e /run/mu300/charging-boot ]; do sleep 1; done; '
+
 # broker NAME CHANNEL DIR URC-CHANNELS LIVE-URC-LOG [WAIT]: one persistent owner of a SIPC tty. WAIT is a shell
 # condition the instance waits for (bounded) before it opens the channel: the second group's channels have a node
 # before the CP is up, and spipe_open returns ENODEV until the sbuf is READY, which the driver's seqfile shows.
@@ -74,7 +77,7 @@ broker() {
     # A literal brace inside ${...:+...} closes the expansion early in ash. Build it separately.
     [ -z "$wait" ] || condition=" && { $wait; }"
     procd_open_instance "$name"
-    procd_set_param command /bin/sh -c "n=0; until [ -c /dev/stty_nr$channel ]$condition; do n=\$((n+1)); [ \"\$n\" -gt 240 ] && { echo 'mu300-atd: /dev/stty_nr$channel never became ready' >&2; exit 1; }; sleep 1; done; exec /opt/mu300/bin/mu300-atd"
+    procd_set_param command /bin/sh -c "${CHARGING_WAIT}n=0; until [ -c /dev/stty_nr$channel ]$condition; do n=\$((n+1)); [ \"\$n\" -gt 240 ] && { echo 'mu300-atd: /dev/stty_nr$channel never became ready' >&2; exit 1; }; sleep 1; done; exec /opt/mu300/bin/mu300-atd"
     procd_set_param env "MU300_AT_DEV=/dev/stty_nr$channel" "MU300_AT_DIR=$directory" \
         "MU300_AT_URC_CHANNELS=$urc" "MU300_AT_LIVE_URC_LOG=$live" \
         MU300_AT_DISABLE_REOPEN=1
@@ -97,9 +100,10 @@ start_sim2() {
     broker atd2 2 /run/mu300-at2 '' /run/mu300-at/urc/stty_nr0.log "$SBUF_READY"
     broker atd4 4 /run/mu300-at4 3 /run/mu300-at4/urc/stty_nr3.log "$SBUF_READY"
     broker atd5 5 /run/mu300-at5 '' /run/mu300-at4/urc/stty_nr3.log "$SBUF_READY"
-    # The cold start (and its fallback to SIM1 when it cannot be done): mu300-sim2-warmup confirms the boot.
+    # A charging-only boot is not a SIM trial. Keep this worker until the key removes the charging marker;
+    # it then starts the selected card without reopening the AT owners. The warm-up arms and confirms the trial.
     procd_open_instance sim2-cold-start
-    procd_set_param command /bin/bash /opt/mu300/bin/mu300-sim2-warmup
+    procd_set_param command /bin/sh -c "${CHARGING_WAIT}exec /bin/bash /opt/mu300/bin/mu300-sim2-warmup"
     procd_set_param stdout 1
     procd_set_param stderr 1
     procd_close_instance
@@ -161,7 +165,9 @@ start_service() {
         0:1|1:[01])
             # The dual-SIM path's helpers are bash, and its one-boot guarantee needs the marker on the disk: without
             # either this is a SIM1 boot, and the settings go back so that the next one does not try again.
-            if command -v bash >/dev/null 2>&1 && touch /etc/mu300-sim-pending 2>/dev/null; then
+            # Charging deliberately defers the trial: no on-disk pending marker until actual SIM startup.
+            if command -v bash >/dev/null 2>&1 &&
+                { [ -e /run/mu300/charging-boot ] || touch /etc/mu300-sim-pending 2>/dev/null; }; then
                 start_sim2
             else
                 sim_fallback not-startable
