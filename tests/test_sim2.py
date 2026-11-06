@@ -2,6 +2,7 @@
 (the fallback to SIM1 when it cannot be done, the first-data check of a second card) and init.d/mu300-atd's dual-SIM
 path, on macOS too."""
 import os
+import shutil
 import subprocess
 import time
 import unittest
@@ -249,12 +250,13 @@ echo OK
         self.assertTrue((self.run / 'mu300/sim-radio-ready').exists())
 
     # --- the warm-up wrapper: confirms the boot, or falls back to SIM1
-    def warmup(self, **env):
-        (self.run / 'mu300/sim-slot').write_text('1\n')
-        (self.etc / 'uci-slot').write_text('1\n')
-        (self.etc / 'uci-hot').write_text('1\n')
-        (self.etc / 'mu300-sim-pending').write_text('')
-        (self.run / 'mu300/sim-managed').touch()
+    def warmup(self, prepare=True, **env):
+        if prepare:
+            (self.run / 'mu300/sim-slot').write_text('1\n')
+            (self.etc / 'uci-slot').write_text('1\n')
+            (self.etc / 'uci-hot').write_text('1\n')
+            (self.etc / 'mu300-sim-pending').write_text('')
+            (self.run / 'mu300/sim-managed').touch()
         # the first-data wait is real seconds (300 by default): one second here unless the test says otherwise
         if not (self.etc / 'uci-sim_data_wait').exists():
             (self.etc / 'uci-sim_data_wait').write_text('1\n')
@@ -268,9 +270,9 @@ echo OK
     def test_charging_boot_sends_nothing(self):
         (self.run / 'mu300/charging-boot').touch()
         self.assertEqual(self.boot().returncode, 0)
-        self.assertEqual(self.warmup().returncode, 0)
+        self.assertEqual(self.warmup(prepare=False).returncode, 0)
         self.assertEqual(self.calls(), [])
-        self.assertTrue((self.etc / 'mu300-sim-pending').exists(), 'the real boot confirms')
+        self.assertFalse((self.etc / 'mu300-sim-pending').exists(), 'charging alone is not a SIM trial')
 
     def check(self):
         p = self.run / 'mu300/sim-boot-check'
@@ -662,6 +664,98 @@ sleep() {{ :; }}
     def instances(self, r):
         return [l.split()[1] for l in r.stdout.splitlines() if l.startswith('instance ')]
 
+    def charging_service(self, slot=1, hot=1):
+        (self.etc / 'uci-slot').write_text(f'{slot}\n')
+        (self.etc / 'uci-hot').write_text(f'{hot}\n')
+        (self.etc / 'uci-sim_data_wait').write_text('0\n')
+        (self.etc / 'uci-sim_restart').write_text('0\n')
+        (self.run / 'mu300/charging-boot').touch()
+        r = self.init_service(pending=self.etc / 'mu300-sim-pending')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return r
+
+    def charging_cycle(self, slot, hot):
+        self.charging_service(slot, hot)
+        self.assertFalse((self.etc / 'mu300-sim-pending').exists())
+        self.assertEqual(self.warmup(prepare=False).returncode, 0)
+        self.assertEqual(self.calls(), [])
+        # A complete new kernel boot loses /run, but must retain the selected card and hot-switch policy.
+        shutil.rmtree(self.run)
+        (self.run / 'mu300').mkdir(parents=True)
+        r = self.init_service(pending=self.etc / 'mu300-sim-pending')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual((self.etc / 'uci-slot').read_text(), f'{slot}\n')
+        self.assertEqual((self.etc / 'uci-hot').read_text(), f'{hot}\n')
+        self.assertEqual((self.run / 'mu300/sim-slot').read_text(), f'{slot}\n')
+        self.assertFalse((self.tmp / 'fallback').exists())
+        self.assertIn('atd4', self.instances(r))
+        self.assertTrue((self.etc / 'mu300-sim-pending').exists(), 'the actual startup is now a trial')
+
+    def test_charging_cycle_keeps_sim2_and_hot_switch(self):
+        self.charging_cycle(1, 1)
+
+    def test_charging_cycle_keeps_sim2_without_hot_switch(self):
+        self.charging_cycle(1, 0)
+
+    def test_charging_cycle_keeps_sim1_with_hot_switch(self):
+        self.charging_cycle(0, 1)
+
+    def test_charging_wake_runs_the_native_worker_and_confirms_its_trial(self):
+        r = self.charging_service()
+        command = next((line.removeprefix('param command /bin/sh -c ') for line in r.stdout.splitlines()
+                        if line.startswith('param command /bin/sh -c ') and 'mu300-sim2-warmup' in line), '')
+        self.assertTrue(command, 'the native warm-up must run through the charging wait worker')
+        command = command.replace('/opt/mu300/bin/mu300-sim2-warmup', str(self.copy_script('mu300-sim2-warmup')))
+        # Observe the real generated wait. sleep is accelerated; all modem operations remain the fake broker's.
+        command = 'sleep() { echo waiting > "$STUBLOG/waiting"; /bin/sleep 0.02; }; ' + command
+        self.stub('mobile-data', '''case $1 in
+ radio-locked) [ -f "$STUBLOG/etc/mu300-sim-pending" ] || exit 93
+               echo armed > "$STUBLOG/armed"; shift; exec "$@" ;;
+ *) echo "$*" >> "$STUBLOG/md" ;;
+esac''')
+        p = subprocess.Popen(self.shells[0] + ['-c', command], env=self.env(),
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        try:
+            end = time.monotonic() + 5
+            while not (self.tmp / 'waiting').exists() and p.poll() is None and time.monotonic() < end:
+                time.sleep(0.01)
+            self.assertTrue((self.tmp / 'waiting').exists(), 'the native worker must wait during charging')
+            self.assertIsNone(p.poll())
+            self.assertFalse((self.etc / 'mu300-sim-pending').exists())
+            self.assertEqual(self.calls(), [])
+            (self.run / 'mu300/charging-boot').unlink()  # the key's wake, without restarting AT owners
+            out, err = p.communicate(timeout=10)
+            self.assertEqual(p.returncode, 0, out + err)
+            self.assertTrue((self.tmp / 'armed').exists())
+            self.assertTrue((self.run / 'mu300/sim2-radio-ready').exists())
+            self.assertFalse((self.etc / 'mu300-sim-pending').exists())
+            self.assertEqual((self.etc / 'uci-slot').read_text(), '1\n')
+            self.assertEqual((self.etc / 'uci-hot').read_text(), '1\n')
+        finally:
+            if p.poll() is None:
+                p.kill()
+                p.communicate()
+
+    def test_charging_boot_does_not_hide_a_genuinely_unconfirmed_trial(self):
+        (self.etc / 'mu300-sim-pending').touch()
+        r = self.charging_service()
+        self.assertEqual(self.instances(r), ['atd', 'atd2', 'radio-warmup'])
+        self.assertEqual((self.etc / 'uci-slot').read_text(), '0\n')
+        self.assertEqual((self.etc / 'uci-hot').read_text(), '0\n')
+        self.assertEqual((self.tmp / 'fallback').read_text(), 'unconfirmed\n')
+
+    def test_deferred_start_requires_a_persistent_trial_marker(self):
+        self.charging_service()
+        (self.run / 'mu300/charging-boot').unlink()
+        self.stub('touch', '''case $1 in
+ "$STUBLOG/etc/mu300-sim-pending") exit 1 ;;
+ *) exec /usr/bin/touch "$@" ;;
+esac''')
+        warmup = self.copy_script('mu300-sim2-warmup')
+        r = self.script(['bash'], warmup, '--deferred')
+        self.assertEqual(self.calls(), [], r.stdout + r.stderr)
+        self.assertEqual((self.etc / 'mu300-sim-fallback').read_text(), 'not-startable\n')
+
     def test_hot_sim1_boot_opens_both_groups_once(self):
         (self.etc / 'uci-slot').write_text('0\n')
         (self.etc / 'uci-hot').write_text('1\n')
@@ -699,6 +793,7 @@ sleep() {{ :; }}
         for c in commands:
             if '/dev/stty_nr' in c:
                 self.assertIn("sbuf_5_006, state: 1,", c); self.assertIn('/dev/sipc_sbuf', c); self.assertIn('-gt 240', c)
+                self.assertLess(c.index('charging-boot'), c.index('n=0'))
             else:
                 self.assertNotIn('sipc_sbuf', c)
         self.assertNotIn('sipc_sbuf', r.stderr)
@@ -707,7 +802,7 @@ sleep() {{ :; }}
         (self.etc / 'uci-slot').write_text('1\n')
         r = self.init_service()
         commands = [l.removeprefix('param command /bin/sh -c ') for l in r.stdout.splitlines()
-                    if l.startswith('param command /bin/sh -c ')]
+                    if l.startswith('param command /bin/sh -c ') and '/dev/stty_nr' in l]
         self.assertEqual(len(commands), 4)
         for command in commands:
             # Execute the real generated command, with only the device/readiness and owner substituted.
@@ -720,6 +815,29 @@ sleep() {{ :; }}
                 result = subprocess.run([shell, '-c', 'sleep() { exit 97; }; ' + command], capture_output=True, text=True, timeout=5)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(result.stdout.strip(), 'owner-started')
+
+    def test_native_brokers_wait_for_charging_before_starting_their_readiness_budget(self):
+        r = self.charging_service()
+        commands = [line.removeprefix('param command /bin/sh -c ') for line in r.stdout.splitlines()
+                    if line.startswith('param command /bin/sh -c ') and '/dev/stty_nr' in line]
+        self.assertEqual(len(commands), 4)
+        for command in commands:
+            import re
+            command = re.sub(r'\[ -c /dev/stty_nr[1245] \]', 'true', command)
+            command = command.replace("[ -c /dev/sipc_sbuf ] && grep -q '^sbuf_5_006, state: 1,' /dev/sipc_sbuf", 'true')
+            command = command.replace('exec /opt/mu300/bin/mu300-atd', 'echo owner-started')
+            for shell in self.each_shell():
+                (self.run / 'mu300/charging-boot').touch()
+                preamble = f'''n=999
+sleep() {{
+    [ "$n" = 999 ] || exit 93
+    rm -f "{self.run}/mu300/charging-boot"
+}}
+'''
+                result = self.sh(shell, preamble + command)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout.strip(), 'owner-started')
+                self.assertFalse((self.run / 'mu300/charging-boot').exists(), 'the owner must wait for wake')
 
     def test_other_devices_ignore_the_dual_sim_files(self):
         (self.etc / 'uci-slot').write_text('1\n')
