@@ -1,0 +1,51 @@
+Bluetooth: leave LE address resolution to the host on Unisoc Marlin3
+
+The kernel turns the controller's address resolution on whenever the
+controller reports LL Privacy: hci_update_accept_list_sync() enables it each
+time it programs the accept list for a passive scan. An L2CAP LE connect made
+while not advertising goes through such a scan (hci_connect_le_scan()): the
+kernel puts the peer's address in the accept list and connects when it sees
+the peer advertise.
+
+On the F50, with an Android head unit as the peer (it advertises with a
+resolvable private address), the Marlin3 firmware (manufacturer 0x01ec)
+reported that peer's advertising as the public identity address
+00:00:00:00:00:00 once address resolution was on, while the host had
+programmed no IRK at all (the resolving list was empty) and other devices
+advertising with private addresses were reported as they were. The accept
+list holds the peer's private address, so none of its reports passed the
+filter, and every connect timed out after about 40 s. The state outlived
+HCI_Reset and LE Clear Resolving List; a power cycle of the device cleared
+it, and it came back after later connections to the same peer. How the
+firmware comes to match that peer is not known.
+
+Measured with raw HCI commands, 5 s passive scans for that peer:
+  address resolution on,  accept list: none of its reports
+  address resolution off, accept list: 42 reports
+  address resolution on,  no filter:   its reports as 00:00:00:00:00:00
+With address resolution turned off during the connect's scan, the
+connection was made within a second.
+
+Clear LL Privacy from the LE features of these controllers, so that the
+kernel never enables address resolution in them and resolves private
+addresses itself.
+
+--- a/net/bluetooth/hci_event.c
++++ b/net/bluetooth/hci_event.c
+@@ -1239,6 +1239,16 @@
+ 		return rp->status;
+ 
+ 	memcpy(hdev->le_features, rp->features, 8);
++
++	/* With address resolution on, the Unisoc (Spreadtrum) Marlin3 firmware
++	 * can report a peer's resolvable private addresses as the identity
++	 * 00:00:00:00:00:00 although the host gave it no IRK, and keeps doing so
++	 * across HCI_Reset. An accept list entry for that peer's address then
++	 * never matches and a connection to it never starts. Leave address
++	 * resolution to the host.
++	 */
++	if (hdev->manufacturer == 0x01ec)
++		hdev->le_features[0] &= ~HCI_LE_LL_PRIVACY;
+ 
+ 	return rp->status;
+ }
