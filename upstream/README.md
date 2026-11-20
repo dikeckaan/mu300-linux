@@ -254,7 +254,8 @@ Fixes needed on top of the port:
   `sprdbt_tty` ported to 6.18 as out-of-tree modules (`build-modules.sh`; `tools/port54.py` does the mechanical
   5.4 API changes, `wcn_bsp/kinclude/mu300_compat.h` the rest). On OpenWrt the chip boots its firmware and the
   5 GHz VHT80 AP beacons. The factory Wi-Fi MAC is read from `androidboot.wifimac` in `/chosen/bootargs`.
-  The WCN modules cannot be unloaded and reloaded (same as on 5.4).
+  The WCN modules cannot be unloaded and reloaded (same as on 5.4). Bluetooth LE: `patches/0034` keeps the
+  controller's address resolution off, which hid peers that advertise with a private address (FINDINGS 243).
 
 Not yet on mainline: modem (sipc/sipa/modem loader), GPU, audio; Bluetooth is built but untested.
 

@@ -1710,6 +1710,8 @@ Three separate traps, and the first one hid the other two for an evening. `mu300
 * Android keeps the real BT address in `/data/vendor/bluetooth/btmac.txt` on encrypted `/data`; Linux uses
   `BDADDR=` from `/etc/mu300/bluetooth.conf` or a stable locally administered address derived from `machine-id`.
 * Verified: `bluetoothd` powers the adapter and LE/BR-EDR scanning lists nearby devices.
+* Mainline: with the controller's address resolution on, an LE connection to a peer that advertises with a private
+  address can never start; `upstream/patches/0034` leaves address resolution to the host (243).
 * Rebuilding with a modified tree appends `-dirty` to the kernel release and breaks module loading; `.scmversion` with
   `-gb50db5b6224c` in the source tree keeps the release string stable.
 
@@ -12776,3 +12778,49 @@ SSH, adb, 50 MB over SSH in 1.5 s; four reboots. 5.4.254: the same, three reboot
 alone (once) and NCM afterwards as before. **Not checked:** Windows (none here: RNDIS on old Windows, both adapters on
 new Windows), a Linux computer (two adapters; eth0 as the name), OpenWrt, a computer taking its first lease from the
 early bridge (the Mac kept its lease), a kernel without f_rndis.
+
+### 243. Bluetooth LE on Marlin3: a peer with a private address never connects while the controller resolves addresses
+
+**Seen.** F50, OpenWrt, 6.18.60, the F50 as LE central: an L2CAP LE connect to an Android head unit (a Carlink app,
+advertising with a resolvable private address, RPA) timed out after about 40 s every time, as `ECONNREFUSED`. An
+active scan found the head unit at once, and the head unit's own log showed no incoming connection.
+
+**Where it stops.** The F50 does not advertise, so `l2cap_chan_connect()` takes `hci_connect_le_scan()`: the peer's
+address goes into the accept list and the kernel connects when it sees the peer advertise in a passive scan.
+`hci_update_accept_list_sync()` turns the controller's address resolution on (`LE Set Address Resolution Enable` 1)
+each time it programs the accept list, whenever the controller reports LL Privacy (`ll_privacy_capable()`), and the
+passive scan uses the accept list (filter policy 1). The HCI trace of a failed connect: no advertising report at all
+for 42 s, and no `LE Create Connection` ever sent. Discovery is not hit because it turns address resolution off before
+its active scan.
+
+**What the controller does.** 5 s passive scans with raw HCI commands (the connecting daemon stopped), the same peer;
+the connects had failed before any raw HCI command was sent, these scans came after:
+
+| address resolution | filter | the peer's reports |
+|---|---|---|
+| on | accept list with its RPA | none (no report from anything) |
+| off | accept list with its RPA | 42 |
+| on | none | 43, all as address type 2 (public identity, resolved) with address 00:00:00:00:00:00 and the peer's own advertising data; 116 reports of 11 other devices with private addresses, connectable ones among them, as type 1 with their addresses |
+
+The host gave the controller no IRK: debugfs `identity_resolving_keys` and `resolv_list` empty, the local IRK zero,
+bluetoothd keeps no LE keys, and the kernel sends `LE Clear Resolving List` at power-on and adds nothing after it.
+The peer's RPAs are not made from an all-zero IRK (`ah()` checked against them). The same after bluetoothd's power off
+and on (`HCI_Reset`, then `LE Clear Resolving List`) and after `LE Clear Resolving List` sent by hand. After a reboot of
+the F50 the peer was reported as type 1 with its RPA, and minutes later, after connections to that peer (no SMP
+pairing in the peer's log), as 00:00:00:00:00:00 again. How the firmware comes to match that peer is not known.
+
+**Fix.** `upstream/patches/0034` clears `HCI_LE_LL_PRIVACY` from the LE features of Spreadtrum controllers
+(manufacturer 0x01ec; the boards here have Marlin3 only), so the kernel never turns their address resolution on and
+resolves private addresses itself (`hci_find_irk_by_rpa()` on each report). Without LL Privacy the accept list cannot match a
+bonded peer that advertises with an RPA: mainline handles that since 397464709a20 ("scan unfiltered for host-resolved
+RPAs", the passive scan goes unfiltered while such a peer is pending), which neither 6.18 nor 7.3 has, so
+`upstream/patches/0033` backports it first. Mainline 5.4 never turns the controller's address resolution on, so 5.4
+should not be affected (the vendor 5.4 tree was not checked).
+
+**Checked here** (F50, OpenWrt, 6.18.60 built by `build.sh` in an Ubuntu 26.04 container with its aarch64 gcc 15.2
+(`.config` the release's but for `CC_VERSION_TEXT` and `CC_CAN_LINK`), with the release's modules): with 0034 alone
+(an earlier wording of the same code), the same head unit connected within a second after boot, cast for 9 minutes,
+and connected again later; first pairings worked; BR/EDR to an iPhone worked as before. With 0033 and 0034, the head
+unit's LE link and its GATT exchange again within a second after boot, and BR/EDR to the iPhone.
+**Not checked:** 7.3 (both patches apply to 7.3.1; not built for it here), a bonded LE peer with an IRK
+(0033's path), Ubuntu, the U30 Air and the V50.
