@@ -1,0 +1,59 @@
+--- a/drivers/ufs/host/ufs-sprd.c
++++ b/drivers/ufs/host/ufs-sprd.c
+@@ -62,8 +62,19 @@
+ static int ufs_sprd_get_reset_ctrl(struct device *dev, struct ufs_sprd_rst *rci)
+ {
+ 	rci->rc = devm_reset_control_get(dev, rci->name);
+ 	if (IS_ERR(rci->rc)) {
++		/* the firmware's own DT names the two resets ufs_soft_rst/ufsdev_soft_rst */
++		const char *legacy = NULL;
++
++		if (!strcmp(rci->name, "controller"))
++			legacy = "ufs_soft_rst";
++		else if (!strcmp(rci->name, "device"))
++			legacy = "ufsdev_soft_rst";
++		if (legacy)
++			rci->rc = devm_reset_control_get(dev, legacy);
++	}
++	if (IS_ERR(rci->rc)) {
+ 		dev_err(dev, "failed to get reset ctrl:%s\n", rci->name);
+ 		return PTR_ERR(rci->rc);
+ 	}
+ 
+@@ -72,8 +83,25 @@
+ 
+ static int ufs_sprd_get_syscon_reg(struct device *dev, struct ufs_sprd_syscon *sysci)
+ {
+ 	sysci->regmap = syscon_regmap_lookup_by_phandle(dev->of_node, sysci->name);
++	if (IS_ERR(sysci->regmap)) {
++		/*
++		 * The firmware's own DT does not carry the two named syscon phandles;
++		 * it describes the same registers as (phandle, reg, mask) triples that
++		 * the vendor driver reads. Take the phandle from the triple that lives
++		 * in the same syscon: phy_sram_* are the ANLG one, aon_apb_* the AON/APB.
++		 */
++		const char *legacy = NULL;
++		u32 args[2];
++
++		if (!strcmp(sysci->name, "sprd,ufs-anlg-syscon"))
++			legacy = "phy_sram_init_done";
++		else if (!strcmp(sysci->name, "sprd,aon-apb-syscon"))
++			legacy = "aon_apb_ufs_clk_en";
++		if (legacy)
++			sysci->regmap = syscon_regmap_lookup_by_phandle_args(dev->of_node, legacy, 2, args);
++	}
+ 	if (IS_ERR(sysci->regmap)) {
+ 		dev_err(dev, "failed to get ufs syscon:%s\n", sysci->name);
+ 		return PTR_ERR(sysci->regmap);
+ 	}
+@@ -406,8 +434,10 @@
+ };
+ 
+ static const struct of_device_id __maybe_unused ufs_sprd_of_match[] = {
+ 	{ .compatible = "sprd,ums9620-ufs", .data = &n6_ufs.ufs_hba_sprd_vops},
++	/* the firmware's own DT (Android 13, UFS 1 TB unit) names the same controller this way */
++	{ .compatible = "sprd,ufshc", .data = &n6_ufs.ufs_hba_sprd_vops},
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ufs_sprd_of_match);
+ 
