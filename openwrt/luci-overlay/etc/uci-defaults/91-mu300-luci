@@ -37,7 +37,7 @@ UCI
 # address: the real public address arrives by SLAAC from the carrier's RA on the bearer.
 # - wan.ipv6 relay + pdptype IPV4V6: mu300cell.sh lets sipa_eth0 accept the RA (accept_ra 2) and runs the event
 #   monitor mu300cell-v6.sh; plain OpenWrt keeps ipv6 'extend' (unset) and pdptype IP
-# - dhcp.wan master: odhcpd relays RS/RA and DHCPv6 both ways between the LAN and wan, so clients SLAAC public
+# - dhcp.wan master: odhcpd relays RS/RA between the LAN and wan, so clients SLAAC public
 #   addresses out of the carrier's /64 (no separate wan6 interface: the relay master is the interface that owns
 #   sipa_eth0); no NDP relay (above)
 # - firewall masq6: egress NAT66 through the device's own public address (the carrier routes one address per bearer;
@@ -46,9 +46,13 @@ UCI
 #   first boot (no fixed ULA: one shared by every device collides when two LANs are joined, and fingerprints them)
 # - init.d/mu300-ndp (ndp-learn) routes the carrier's /64 to br-lan, below the RA route's metric, so NAT66 replies
 #   reach the clients
+# - local stateless DHCPv6 supplies DNS, even when the carrier has no DHCPv6 server
+#   and its RA contains no RDNSS. The monitor learns DNS from CGCONTRDP and owns
+#   lan's advertised DNS list only while wan.dns6_publish is explicitly set.
 uci -q batch <<UCI
 set network.wan.ipv6='relay'
 set network.wan.pdptype='IPV4V6'
+set network.wan.dns6_publish='lan'
 set network.lan.ip6assign='60'
 set dhcp.wan=dhcp
 set dhcp.wan.interface='wan'
@@ -56,7 +60,10 @@ set dhcp.wan.master='1'
 set dhcp.wan.ra='relay'
 set dhcp.wan.dhcpv6='relay'
 set dhcp.lan.ra='relay'
-set dhcp.lan.dhcpv6='relay'
+set dhcp.lan.dhcpv6='server'
+set dhcp.lan.dhcpv6_na='0'
+set dhcp.lan.dhcpv6_pd='0'
+set dhcp.lan.dns_service='1'
 UCI
 zone=$(uci -q show firewall | sed -n "s/^\(firewall\.@zone\[[0-9]*\]\)\.name='wan'$/\1/p")
 [ -n "$zone" ] && uci -q set $zone.masq6='1'

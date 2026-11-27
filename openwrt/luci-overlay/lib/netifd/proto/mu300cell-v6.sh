@@ -39,6 +39,10 @@ prefix4=$4
 dns1=$5
 dns2=$6
 peerdns=$7
+dns6=
+dns6_ready=0
+# Optional downstream DHCPv6 section whose DNS list this bearer owns.
+dns6_publish=$(uci -q get "network.$config.dns6_publish") || dns6_publish=
 SIM_SLOT=0
 if [ -x /opt/mu300/bin/mu300-sim ]; then
     SIM_SLOT=$(/opt/mu300/bin/mu300-sim active) || exit 1
@@ -92,6 +96,52 @@ valid_ipv4() {
 	[ "$n" = 4 ] && [ "$1" != 0.0.0.0 ]
 }
 
+# CGCONTRDP returns IPv6 DNS on a separate record, as sixteen decimal octets.
+# Validate every octet before converting; ignore unspecified and multicast DNS.
+# Read both DNS columns of every record and remove duplicates in carrier order.
+parse_dns6() {
+	awk -F, '
+		/^\+CGCONTRDP:/ {
+			for (field=6; field<=7; field++) {
+				value=$field; gsub(/["\r[:space:]]/, "", value)
+				if (split(value, octet, ".") != 16) continue
+				valid=1; nonzero=0; address=""
+				for (i=1; i<=16; i++) {
+					if (octet[i] !~ /^[0-9]+$/ || length(octet[i])>3 || octet[i]+0>255) valid=0
+					if (octet[i]+0) nonzero=1
+				}
+				if (!valid || !nonzero || octet[1]+0==255) continue
+				for (i=1; i<=16; i+=2)
+					address=address (i==1 ? "" : ":") sprintf("%x", octet[i]*256+octet[i+1])
+				if (!seen[address]++) print address
+			}
+		}'
+}
+
+# Only commit when learned DNS changes, and never commit another editor's
+# pending UCI changes. The target is explicitly opted in via dns6_publish.
+# With no carrier IPv6 DNS, odhcpd falls back to its local DNS service.
+publish_dns6() {
+	local current dns
+	case "$dns6_publish" in ''|*[!a-zA-Z0-9_]*) return 0 ;; esac
+	[ "$(uci -q get "dhcp.$dns6_publish.dhcpv6")" = server ] || return 0
+	[ "${peerdns:-1}" != 0 ] || return 0
+	[ "$dns6_ready" = 1 ] || return 0
+	current=$(uci -q get "dhcp.$dns6_publish.dns")
+	[ "$current" != "$dns6" ] || return 0
+	if [ -n "$(uci -q changes dhcp)" ]; then
+		logger -t "$logtag" "DNS publication deferred: dhcp has uncommitted changes"
+		return 1
+	fi
+	uci -q delete "dhcp.$dns6_publish.dns" || true
+	for dns in $dns6; do
+		uci add_list "dhcp.$dns6_publish.dns=$dns" || return 1
+	done
+	uci commit dhcp || return 1
+	/etc/init.d/odhcpd reload || return 1
+	logger -t "$logtag" "downstream IPv6 DNS updated: ${dns6:-local resolver}"
+}
+
 # One record per address: CIDR|preferred seconds|valid seconds. Including the
 # lifetimes in the snapshot means an RA refresh of an unchanged address is
 # still forwarded to netifd instead of being mistaken for a duplicate event.
@@ -132,7 +182,7 @@ v6_snapshot() {
 }
 
 report() {
-	local v6 route cidr addr prefix preferred valid gw
+	local v6 route cidr addr prefix preferred valid gw dns
 	v6=$(current_v6)
 	route=$(current_v6_route)
 	# The kernel owns SLAAC/RA lifetimes, and this monitor owns bearer IPv4.
@@ -159,8 +209,10 @@ report() {
 	if [ "${peerdns:-1}" != 0 ]; then
 		[ -n "$dns1" ] && proto_add_dns_server "$dns1"
 		[ -n "$dns2" ] && proto_add_dns_server "$dns2"
+		for dns in $dns6; do proto_add_dns_server "$dns"; done
 	fi
 	proto_send_update "$config"
+	publish_dns6
 }
 
 read_bearer() {
@@ -191,21 +243,26 @@ read_bearer() {
 	BEARER_PREFIX4=$new_prefix
 	BEARER_DNS1=$new_dns1
 	BEARER_DNS2=$new_dns2
+	BEARER_DNS6=$(printf '%s\n' "$out" | parse_dns6 | tr '\n' ' ')
+	BEARER_DNS6=${BEARER_DNS6% }
+	dns6_ready=1
 }
 
 refresh_bearer() {
-	local reason=$1 old old_ip4 old_prefix4 old_dns1 old_dns2 have
-	old="$ip4/$prefix4 $dns1 $dns2"
+	local reason=$1 old old_ip4 old_prefix4 old_dns1 old_dns2 old_dns6 have
+	old="$ip4/$prefix4 $dns1 $dns2 $dns6"
 	old_ip4=$ip4; old_prefix4=$prefix4; old_dns1=$dns1; old_dns2=$dns2
+	old_dns6=$dns6
 	if ! read_bearer; then
 		logger -t "$logtag" "$reason: PDP active address is not available; keeping the last netifd state"
 		return 1
 	fi
 	ip4=$BEARER_IP4; prefix4=$BEARER_PREFIX4
 	dns1=$BEARER_DNS1; dns2=$BEARER_DNS2
+	dns6=$BEARER_DNS6
 	# the kernel can lose the address while the bearer keeps it (after kanoqwq's 3cbf37fc): put it back as well
 	have=$(ip -4 -o addr show dev "$ifname" scope global 2>/dev/null | awk '{print $4}')
-	if [ "$old" != "$ip4/$prefix4 $dns1 $dns2" ] || ! printf '%s\n' "$have" | grep -Fxq "$ip4/$prefix4"; then
+	if [ "$old" != "$ip4/$prefix4 $dns1 $dns2 $dns6" ] || ! printf '%s\n' "$have" | grep -Fxq "$ip4/$prefix4"; then
 		# Add the replacement before deleting the old address. There is no
 		# ifdown, CGACT cycle or USB event, so an address handover only loses
 		# packets during the carrier's own transition. A step that fails
@@ -215,6 +272,7 @@ refresh_bearer() {
 			ip -4 addr replace "$ip4/$prefix4" dev "$ifname"; } ||
 			! ip -4 route replace default dev "$ifname"; then
 			ip4=$old_ip4; prefix4=$old_prefix4; dns1=$old_dns1; dns2=$old_dns2
+			dns6=$old_dns6
 			logger -t "$logtag" "$reason: the new address could not be installed; keeping the previous state for a retry"
 			return 1
 		fi
@@ -228,12 +286,16 @@ refresh_bearer() {
 		report
 		logger -t "$logtag" "$reason: bearer updated to $ip4/$prefix4"
 	else
+		publish_dns6
 		logger -t "$logtag" "$reason: bearer unchanged"
 	fi
 }
 
 # tests: the functions only (sourced with MU300CELL_V6_LIB=1)
 [ -z "${MU300CELL_V6_LIB:-}" ] || return 0
+# Initial setup passes IPv4 DNS from mobile-data. Read the complete bearer
+# once here too, so IPv6 DNS is present after boot without waiting for +CGEV.
+if read_bearer; then dns6=$BEARER_DNS6; fi
 last_v6=$(v6_snapshot)
 report
 [ "${8:-}" = --once ] && exit 0
