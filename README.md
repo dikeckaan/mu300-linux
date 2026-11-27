@@ -418,7 +418,8 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
   instance off (`enable`) removes the terminal.
 
 IPv6 on this system is relayed from the carrier (router advertisements and NAT66) instead of the prefix extension
-plain OpenWrt uses. Aurora is the default theme, Bootstrap stays installed. Its boot timings, measured on an F50
+plain OpenWrt uses. [IPv6 DNS](docs/IPV6-DNS.md) explains how DNS reaches downstream routers when the carrier's
+RA has no DNS option. Aurora is the default theme, Bootstrap stays installed. Its boot timings, measured on an F50
 and a U30 Air, are in [FINDINGS 35](docs/FINDINGS.md).
 
 From v2026.10.20 one stuck AT command no longer takes the whole panel down: every modem read has a deadline, the

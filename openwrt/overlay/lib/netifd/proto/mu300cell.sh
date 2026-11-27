@@ -48,6 +48,7 @@ proto_mu300cell_init_config() {
 	proto_config_add_string "iccid"
 	proto_config_add_string "ipv6"
 	proto_config_add_boolean "peerdns"
+	proto_config_add_string "dns6_publish"
 	proto_config_add_array "dns:list(ipaddr)"
 }
 

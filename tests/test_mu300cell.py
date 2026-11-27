@@ -985,16 +985,18 @@ exit 0''')
         return db
 
     def test_first_boot_selects_relay(self):
-        """K30, D9: 91-mu300-luci sets ipv6 relay, pdptype IPV4V6 and the fork's RA/DHCPv6 relay and masq6; run twice
+        """K30, D9: IPv6 RA relay, IPV4V6, local stateless DHCPv6 DNS and masq6; run twice
         (uci is a stand-in over a flat file), the result is the same. Review I1: no NDP relay on lan or wan (odhcpd's
         relay pins any LAN-spoofed neighbour, even off-prefix, as a /128 to br-lan), and an earlier ndp or
         ndproxy_routing value is removed. Review R38: the ULA OpenWrt generated is kept, never a fixed one."""
         db = self.uci_db()
         want = {
-            "network.wan.ipv6": 'relay', "network.wan.pdptype": 'IPV4V6', "network.lan.ip6assign": '60',
+            "network.wan.ipv6": 'relay', "network.wan.pdptype": 'IPV4V6', "network.wan.dns6_publish": 'lan',
+            "network.lan.ip6assign": '60',
             "network.globals.ula_prefix": 'fd12:3456:789a::/48', "dhcp.wan": 'dhcp', "dhcp.wan.interface": 'wan',
             "dhcp.wan.master": '1', "dhcp.wan.ra": 'relay', "dhcp.wan.dhcpv6": 'relay',
-            "dhcp.lan.ra": 'relay', "dhcp.lan.dhcpv6": 'relay',
+            "dhcp.lan.ra": 'relay', "dhcp.lan.dhcpv6": 'server', "dhcp.lan.dhcpv6_na": '0',
+            "dhcp.lan.dhcpv6_pd": '0', "dhcp.lan.dns_service": '1',
             "firewall.@zone[1].masq6": '1', "luci.main.mediaurlbase": '/luci-static/aurora', "luci.main.lang": 'en'}
         before = ("firewall.@zone[0].name='lan'\nfirewall.@zone[1].name='wan'\n"
                   "network.globals.ula_prefix='fd12:3456:789a::/48'\n"     # OpenWrt's own random ULA
@@ -1024,6 +1026,7 @@ exit 0''')
         language the user set since stay; the NDP relay options are deleted on every run, whoever set them."""
         db = self.uci_db()
         user = {'network.wan.pdptype': 'IP', 'network.wan.ipv6': 'extend', 'network.lan.ip6assign': '64',
+                'network.wan.dns6_publish': 'guest',
                 'dhcp.lan.ra': 'server', 'dhcp.lan.dhcpv6': 'server', 'dhcp.wan.master': '0',
                 'firewall.@zone[1].masq6': '0', 'luci.main.mediaurlbase': '/luci-static/bootstrap',
                 'luci.main.lang': 'tr'}
@@ -1437,6 +1440,7 @@ class RelayMonitorBearer(ShellTest):
         self.copy = self.tmp / 'mu300cell-v6.sh'
         self.copy.write_text(text)
         self.stub('mu300-sim', '[ "$1" = active ] && echo "${SLOT:-0}"')
+        self.stub('uci', 'exit 1')
         self.stub('logger', 'shift 2; echo "log $*" >> "$STUBLOG/calls"')
         # mu300-at: records the channel and the command, answers $RDP (printf %b)
         self.stub('mu300-at', 'echo "at ${MU300_AT_DIR##*/} $3" >> "$STUBLOG/calls"\n'
@@ -1499,6 +1503,115 @@ class RelayMonitorBearer(ShellTest):
                 self.assertNotEqual(self.run_lib(shell, f"valid_ipv4 '{a}'")[0].returncode, 0, a)
 
     RDP = '+CGCONTRDP: 1,5,"apn","{addr}","","{dns1}","{dns2}"\\r\\nOK'
+
+    # A separate IPv6 record, including the placeholder address seen on the
+    # real bearer. DNS is sixteen decimal octets, unrelated to that address.
+    RDP6 = ('+CGCONTRDP: 1,5,"apn","0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.1",,"{dns1}","{dns2}"\\r\\nOK')
+    DNS6_A = '32.1.13.184.0.0.0.0.0.0.0.0.0.0.0.83'
+    DNS6_B = '32.1.13.184.0.0.0.0.0.0.0.0.0.0.0.84'
+    DNS6 = '2001:db8:0:0:0:0:0:53 2001:db8:0:0:0:0:0:54'
+
+    def dual_stack_rdp(self, dns1=None, dns2=None):
+        v4 = self.RDP.format(addr='10.0.0.2.255.255.255.0', dns1='1.1.1.1', dns2='8.8.8.8')
+        return v4 + '\\r\\n' + self.RDP6.format(dns1=dns1 or self.DNS6_A, dns2=dns2 or self.DNS6_B)
+
+    def test_ipv6_dns_is_read_from_both_records_and_reported_at_startup(self):
+        for shell in self.each_shell():
+            r, calls = self.run_lib(shell,
+                'read_bearer && echo "$BEARER_IP4/$BEARER_PREFIX4 $BEARER_DNS1 $BEARER_DNS2 [$BEARER_DNS6]"',
+                RDP=self.dual_stack_rdp())
+            self.assertEqual(r.stdout.strip(), f'10.0.0.2/24 1.1.1.1 8.8.8.8 [{self.DNS6}]', r.stderr)
+            # The actual entry point, not just its functions: boot must not wait for +CGEV.
+            (self.tmp / 'calls').write_text('')
+            r = self.script(shell, self.copy, 'wan', 'sipa_eth0', '10.0.0.2', '24', '1.1.1.1', '8.8.8.8', '1',
+                            '--once', RDP=self.dual_stack_rdp(), MU300_CELL_AT_DIRS=self.chan)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            calls = (self.tmp / 'calls').read_text().splitlines()
+            for dns in self.DNS6.split():
+                self.assertIn(f'proto_add_dns_server {dns}', calls)
+            self.assertEqual(sum(c.startswith('at ') for c in calls), 1, calls)
+
+    def test_ipv6_dns_validation_and_duplicate_removal(self):
+        invalid = ['0.' * 15 + '0', '256.' + '.'.join(self.DNS6_A.split('.')[1:]),
+                   '255.' + '.'.join(self.DNS6_A.split('.')[1:]), self.DNS6_A.rsplit('.', 1)[0],
+                   self.DNS6_A + '.1', self.DNS6_A.rsplit('.', 1)[0] + '.bad',
+                   self.DNS6_A.rsplit('.', 1)[0] + '.1;id', '0000.' + '.'.join(self.DNS6_A.split('.')[1:])]
+        for shell in self.each_shell():
+            for value in invalid:
+                r, _ = self.run_lib(shell, 'read_bearer && echo "[$BEARER_DNS6]"',
+                                    RDP=self.dual_stack_rdp(value, self.DNS6_B))
+                self.assertEqual(r.stdout.strip(), '[2001:db8:0:0:0:0:0:54]', (value, r.stderr))
+            r, _ = self.run_lib(shell, 'read_bearer && echo "$BEARER_DNS6"',
+                                RDP=self.dual_stack_rdp(self.DNS6_A, self.DNS6_A))
+            self.assertEqual(r.stdout.strip(), self.DNS6.split()[0], r.stderr)
+
+    def test_dns_only_changes_are_reported_and_a_failed_read_keeps_dns(self):
+        for shell in self.each_shell():
+            r, calls = self.run_lib(shell,
+                'refresh_bearer cgev; RDP=none; refresh_bearer renew; echo "[$dns6]"',
+                RDP=self.dual_stack_rdp(), HAVE='10.0.0.2/24')
+            self.assertEqual(r.stdout.strip(), f'[{self.DNS6}]', r.stderr)
+            for dns in self.DNS6.split():
+                self.assertIn(f'proto_add_dns_server {dns}', calls)
+            self.assertEqual(calls.count('proto_send_update wan'), 1, calls)
+            self.assertIn('log renew: PDP active address is not available; keeping the last netifd state', calls)
+
+    def test_a_valid_bearer_without_ipv6_dns_clears_the_old_list_and_peerdns_is_respected(self):
+        for shell in self.each_shell():
+            r, calls = self.run_lib(shell, f'dns6="{self.DNS6}"; refresh_bearer cgev; echo "[$dns6]"',
+                                    RDP=self.RDP.format(addr='10.0.0.2.255.255.255.0', dns1='1.1.1.1', dns2='8.8.8.8'),
+                                    HAVE='10.0.0.2/24')
+            self.assertEqual(r.stdout.strip(), '[]', r.stderr)
+            self.assertIn('proto_send_update wan', calls)
+            self.assertFalse([c for c in calls if c.startswith('proto_add_dns_server 2001:')], calls)
+            r, calls = self.run_lib(shell, 'peerdns=0; refresh_bearer cgev',
+                                    RDP=self.dual_stack_rdp(), HAVE='10.0.0.2/24')
+            self.assertFalse([c for c in calls if c.startswith('proto_add_dns_server')], calls)
+
+    def dns_publication_stubs(self):
+        self.copy.write_text(self.copy.read_text().replace('/etc/init.d/odhcpd', str(self.stubs / 'odhcpd')))
+        self.stub('odhcpd', 'echo "odhcpd $*" >> "$STUBLOG/calls"')
+        self.stub('uci', '''[ "$1" != -q ] || shift
+case "$1:$2" in
+ get:network.wan.dns6_publish) echo "${PUBLISH:-}" ;;
+ get:dhcp.lan.dhcpv6) echo "${MODE:-server}" ;;
+ get:dhcp.lan.dns) cat "$STUBLOG/dns" 2>/dev/null ;;
+ changes:dhcp) echo "${PENDING:-}" ;;
+ delete:dhcp.lan.dns) rm -f "$STUBLOG/dns" ;;
+ add_list:*) old=$(cat "$STUBLOG/dns" 2>/dev/null); printf '%s%s%s' "$old" "${old:+ }" "${2#*=}" > "$STUBLOG/dns" ;;
+ commit:dhcp) echo 'uci commit dhcp' >> "$STUBLOG/calls" ;;
+ *) exit 1 ;;
+esac''')
+
+    def test_dns_publication_commits_only_changed_learned_dns(self):
+        self.dns_publication_stubs()
+        for shell in self.each_shell():
+            (self.tmp / 'dns').unlink(missing_ok=True)
+            r, calls = self.run_lib(shell,
+                'read_bearer; dns6=$BEARER_DNS6; publish_dns6; publish_dns6',
+                RDP=self.dual_stack_rdp(), PUBLISH='lan')
+            self.assertEqual((self.tmp / 'dns').read_text(), self.DNS6, r.stderr)
+            self.assertEqual(calls.count('uci commit dhcp'), 1, calls)
+            self.assertEqual(calls.count('odhcpd reload'), 1, calls)
+            # A verified carrier withdrawal clears the list, allowing local DNS fallback.
+            r, calls = self.run_lib(shell, 'dns6_ready=1; dns6=; publish_dns6', PUBLISH='lan')
+            self.assertFalse((self.tmp / 'dns').exists())
+            self.assertEqual(calls.count('odhcpd reload'), 1, calls)
+
+    def test_dns_publication_requires_opt_in_and_a_valid_read_and_keeps_pending_edits(self):
+        self.dns_publication_stubs()
+        for shell in self.each_shell():
+            for extra, code in [({}, ''), ({'PUBLISH': 'lan;id'}, ''), ({'MODE': 'relay'}, ''),
+                                ({'PENDING': "dhcp.lan.dns='user choice'"}, ''),
+                                ({}, 'peerdns=0;'), ({}, 'dns6_ready=0;')]:
+                (self.tmp / 'dns').write_text('2001:db8::99')
+                env = {'PUBLISH': 'lan', **extra}
+                if not extra and not code:
+                    env['PUBLISH'] = ''
+                r, calls = self.run_lib(shell, f'dns6_ready=1; dns6="{self.DNS6}"; {code} publish_dns6', **env)
+                self.assertEqual((self.tmp / 'dns').read_text(), '2001:db8::99', (extra, code, r.stderr))
+                self.assertNotIn('uci commit dhcp', calls)
+                self.assertNotIn('odhcpd reload', calls)
 
     def test_read_bearer_believes_only_a_well_formed_answer(self):
         show = 'read_bearer && echo "got $BEARER_IP4/$BEARER_PREFIX4 [$BEARER_DNS1] [$BEARER_DNS2]"'
